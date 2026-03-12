@@ -230,7 +230,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     public static void methodExit(
         @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
-        @Advice.Enter AdviceScope adviceScope) {
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
 
       if (adviceScope != null) {
         adviceScope.end(result, throwable);

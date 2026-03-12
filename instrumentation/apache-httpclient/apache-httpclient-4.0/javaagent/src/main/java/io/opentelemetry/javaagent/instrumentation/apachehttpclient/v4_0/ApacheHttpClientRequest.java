@@ -28,7 +28,7 @@ public final class ApacheHttpClientRequest {
 
   private final HttpRequest delegate;
 
-  public ApacheHttpClientRequest(HttpHost httpHost, HttpRequest httpRequest) {
+  public ApacheHttpClientRequest(@Nullable HttpHost httpHost, HttpRequest httpRequest) {
     URI calculatedUri = getUri(httpRequest);
     if (calculatedUri != null && httpHost != null) {
       uri = getCalculatedUri(httpHost, calculatedUri);
@@ -67,6 +67,7 @@ public final class ApacheHttpClientRequest {
     return delegate.getRequestLine().getMethod();
   }
 
+  @Nullable
   public String getUrl() {
     return uri != null ? uri.toString() : null;
   }
