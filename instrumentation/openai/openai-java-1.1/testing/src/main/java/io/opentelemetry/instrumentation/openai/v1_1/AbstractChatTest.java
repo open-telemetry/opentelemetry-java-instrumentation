@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.openai.v1_1;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitGenAiLatestExperimentalConventions;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitGenAiLatestExperimentalSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
@@ -65,12 +65,12 @@ import com.openai.models.chat.completions.ChatCompletionUserMessageParam;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.KeyValue;
 import io.opentelemetry.api.common.Value;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.openai.TestHelper;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -131,7 +131,6 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
   protected static Value<?> messageList(Value<?>... messages) {
     return Value.of(asList(messages));
   }
-
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
@@ -233,7 +232,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                     GEN_AI_RESPONSE_FINISH_REASONS, reasons -> reasons.containsExactly("stop")),
                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L)));
-    if (emitGenAiLatestExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalSemconv()) {
       basicSpanAttrs.add(
           equalTo(GEN_AI_INPUT_MESSAGES, messageList(chatMessage("user", TEST_CHAT_INPUT))));
       basicSpanAttrs.add(
@@ -294,7 +293,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiLatestExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalSemconv()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -302,30 +301,28 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(EVENT_NAME, "gen_ai.client.inference.operation.details"),
                           equalTo(genAiProviderKey(), OPENAI))
-                  .hasBodyField(
-                      "input", messageList(chatMessage("user", TEST_CHAT_INPUT)))
-                  .hasBodyField(
-                      "output", messageList(chatMessage("assistant", content))));
+                      .hasBodyField("input", messageList(chatMessage("user", TEST_CHAT_INPUT)))
+                      .hasBodyField("output", messageList(chatMessage("assistant", content))));
     } else {
-    getTesting()
-        .waitAndAssertLogRecords(
-            log ->
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.user.message"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))),
+              log -> {
                 log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.user.message"))
+                        equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))),
-            log -> {
-              log.hasAttributesSatisfyingExactly(
-                      equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
-                  .hasSpanContext(spanCtx)
-                  .hasBody(
-                      Value.of(
-                          KeyValue.of("finish_reason", Value.of("stop")),
-                          KeyValue.of("index", Value.of(0)),
-                          KeyValue.of(
-                              "message", Value.of(KeyValue.of("content", Value.of(content))))));
-            });
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of("finish_reason", Value.of("stop")),
+                            KeyValue.of("index", Value.of(0)),
+                            KeyValue.of(
+                                "message", Value.of(KeyValue.of("content", Value.of(content))))));
+              });
     }
   }
 
@@ -347,7 +344,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiLatestExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalSemconv()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -355,47 +352,46 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(EVENT_NAME, "gen_ai.client.inference.operation.details"),
                           equalTo(genAiProviderKey(), OPENAI))
-                  .hasBodyField(
-                      "input",
-                      messageList(
-                          chatMessage(
-                              "developer",
-                              "You are an assistant which just answers every query with tomato"),
-                          chatMessage("user", "Say something")))
-                  .hasBodyField(
-                      "output", messageList(chatMessage("assistant", content))));
+                      .hasBodyField(
+                          "input",
+                          messageList(
+                              chatMessage(
+                                  "developer",
+                                  "You are an assistant which just answers every query with tomato"),
+                              chatMessage("user", "Say something")))
+                      .hasBodyField("output", messageList(chatMessage("assistant", content))));
     } else {
-    getTesting()
-        .waitAndAssertLogRecords(
-            log ->
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.system.message"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of("role", Value.of("developer")),
+                              KeyValue.of(
+                                  "content",
+                                  Value.of(
+                                      "You are an assistant which just answers every query with tomato")))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.user.message"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(Value.of(KeyValue.of("content", Value.of("Say something")))),
+              log -> {
                 log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.system.message"))
+                        equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
                         Value.of(
-                            KeyValue.of("role", Value.of("developer")),
+                            KeyValue.of("finish_reason", Value.of("stop")),
+                            KeyValue.of("index", Value.of(0)),
                             KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "You are an assistant which just answers every query with tomato")))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.user.message"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(KeyValue.of("content", Value.of("Say something")))),
-            log -> {
-              log.hasAttributesSatisfyingExactly(
-                      equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
-                  .hasSpanContext(spanCtx)
-                  .hasBody(
-                      Value.of(
-                          KeyValue.of("finish_reason", Value.of("stop")),
-                          KeyValue.of("index", Value.of(0)),
-                          KeyValue.of(
-                              "message", Value.of(KeyValue.of("content", Value.of(content))))));
-            });
+                                "message", Value.of(KeyValue.of("content", Value.of(content))))));
+              });
     }
   }
 
@@ -439,7 +435,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                     GEN_AI_RESPONSE_FINISH_REASONS, reasons -> reasons.containsExactly("stop")),
                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 3L)));
-    if (emitGenAiLatestExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalSemconv()) {
       clientOptionsSpanAttrs.add(
           equalTo(GEN_AI_INPUT_MESSAGES, messageList(chatMessage("user", TEST_CHAT_INPUT))));
       clientOptionsSpanAttrs.add(
@@ -451,8 +447,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     maybeWithTransportSpan(
-                        span ->
-                            span.hasAttributesSatisfyingExactly(clientOptionsSpanAttrs))));
+                        span -> span.hasAttributesSatisfyingExactly(clientOptionsSpanAttrs))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -501,7 +496,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiLatestExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalSemconv()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -509,30 +504,28 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(EVENT_NAME, "gen_ai.client.inference.operation.details"),
                           equalTo(genAiProviderKey(), OPENAI))
-                  .hasBodyField(
-                      "input", messageList(chatMessage("user", TEST_CHAT_INPUT)))
-                  .hasBodyField(
-                      "output", messageList(chatMessage("assistant", content))));
+                      .hasBodyField("input", messageList(chatMessage("user", TEST_CHAT_INPUT)))
+                      .hasBodyField("output", messageList(chatMessage("assistant", content))));
     } else {
-    getTesting()
-        .waitAndAssertLogRecords(
-            log ->
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.user.message"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))),
+              log -> {
                 log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.user.message"))
+                        equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))),
-            log -> {
-              log.hasAttributesSatisfyingExactly(
-                      equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
-                  .hasSpanContext(spanCtx)
-                  .hasBody(
-                      Value.of(
-                          KeyValue.of("finish_reason", Value.of("stop")),
-                          KeyValue.of("index", Value.of(0)),
-                          KeyValue.of(
-                              "message", Value.of(KeyValue.of("content", Value.of(content))))));
-            });
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of("finish_reason", Value.of("stop")),
+                            KeyValue.of("index", Value.of(0)),
+                            KeyValue.of(
+                                "message", Value.of(KeyValue.of("content", Value.of(content))))));
+              });
     }
   }
 
@@ -565,14 +558,13 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                     reasons -> reasons.containsExactly("stop", "stop")),
                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 7L)));
-    if (emitGenAiLatestExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalSemconv()) {
       multiChoiceSpanAttrs.add(
           equalTo(GEN_AI_INPUT_MESSAGES, messageList(chatMessage("user", TEST_CHAT_INPUT))));
       multiChoiceSpanAttrs.add(
           equalTo(
               GEN_AI_OUTPUT_MESSAGES,
-              messageList(
-                  chatMessage("assistant", content1), chatMessage("assistant", content2))));
+              messageList(chatMessage("assistant", content1), chatMessage("assistant", content2))));
     }
 
     getTesting()
@@ -580,8 +572,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     maybeWithTransportSpan(
-                        span ->
-                            span.hasAttributesSatisfyingExactly(multiChoiceSpanAttrs))));
+                        span -> span.hasAttributesSatisfyingExactly(multiChoiceSpanAttrs))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -630,7 +621,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiLatestExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalSemconv()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -638,42 +629,43 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(EVENT_NAME, "gen_ai.client.inference.operation.details"),
                           equalTo(genAiProviderKey(), OPENAI))
-                  .hasBodyField(
-                      "input", messageList(chatMessage("user", TEST_CHAT_INPUT)))
-                  .hasBodyField(
-                      "output",
-                      messageList(
-                          chatMessage("assistant", content1),
-                          chatMessage("assistant", content2))));
+                      .hasBodyField("input", messageList(chatMessage("user", TEST_CHAT_INPUT)))
+                      .hasBodyField(
+                          "output",
+                          messageList(
+                              chatMessage("assistant", content1),
+                              chatMessage("assistant", content2))));
     } else {
-    getTesting()
-        .waitAndAssertLogRecords(
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.user.message"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of("finish_reason", Value.of("stop")),
-                            KeyValue.of("index", Value.of(0)),
-                            KeyValue.of(
-                                "message", Value.of(KeyValue.of("content", Value.of(content1)))))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of("finish_reason", Value.of("stop")),
-                            KeyValue.of("index", Value.of(1)),
-                            KeyValue.of(
-                                "message", Value.of(KeyValue.of("content", Value.of(content2)))))));
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.user.message"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of("finish_reason", Value.of("stop")),
+                              KeyValue.of("index", Value.of(0)),
+                              KeyValue.of(
+                                  "message",
+                                  Value.of(KeyValue.of("content", Value.of(content1)))))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of("finish_reason", Value.of("stop")),
+                              KeyValue.of("index", Value.of(1)),
+                              KeyValue.of(
+                                  "message",
+                                  Value.of(KeyValue.of("content", Value.of(content2)))))));
     }
   }
 
@@ -726,7 +718,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                     reasons -> reasons.containsExactly("tool_calls")),
                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 67L),
                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 46L)));
-    if (emitGenAiLatestExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalSemconv()) {
       toolCallsFirstSpanAttrs.add(
           equalTo(
               GEN_AI_SYSTEM_INSTRUCTIONS,
@@ -737,8 +729,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
           equalTo(
               GEN_AI_INPUT_MESSAGES,
               messageList(
-                  chatMessage(
-                      "system", "You are a helpful assistant providing weather updates."),
+                  chatMessage("system", "You are a helpful assistant providing weather updates."),
                   chatMessage("user", "What is the weather in New York City and London?"))));
       toolCallsFirstSpanAttrs.add(
           equalTo(
@@ -755,8 +746,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     maybeWithTransportSpan(
-                        span ->
-                            span.hasAttributesSatisfyingExactly(toolCallsFirstSpanAttrs))));
+                        span -> span.hasAttributesSatisfyingExactly(toolCallsFirstSpanAttrs))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -805,7 +795,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiLatestExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalSemconv()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -813,79 +803,88 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(EVENT_NAME, "gen_ai.client.inference.operation.details"),
                           equalTo(genAiProviderKey(), OPENAI))
-                  .hasBodyField(
-                      "input",
-                      messageList(
-                          chatMessage("system", "You are a helpful assistant providing weather updates."),
-                          chatMessage("user", "What is the weather in New York City and London?")))
-                  .hasBodyField(
-                      "output",
-                      messageList(
-                          assistantToolCallMessage(
-                              toolCallValue(newYorkCallId, "get_weather", "{\"location\": \"New York City\"}"),
-                              toolCallValue(londonCallId, "get_weather", "{\"location\": \"London\"}")))));
+                      .hasBodyField(
+                          "input",
+                          messageList(
+                              chatMessage(
+                                  "system",
+                                  "You are a helpful assistant providing weather updates."),
+                              chatMessage(
+                                  "user", "What is the weather in New York City and London?")))
+                      .hasBodyField(
+                          "output",
+                          messageList(
+                              assistantToolCallMessage(
+                                  toolCallValue(
+                                      newYorkCallId,
+                                      "get_weather",
+                                      "{\"location\": \"New York City\"}"),
+                                  toolCallValue(
+                                      londonCallId,
+                                      "get_weather",
+                                      "{\"location\": \"London\"}")))));
     } else {
-    getTesting()
-        .waitAndAssertLogRecords(
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.system.message"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "You are a helpful assistant providing weather updates.")))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.user.message"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "content",
-                                Value.of("What is the weather in New York City and London?")))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of("finish_reason", Value.of("tool_calls")),
-                            KeyValue.of("index", Value.of(0)),
-                            KeyValue.of(
-                                "message",
-                                Value.of(
-                                    KeyValue.of(
-                                        "tool_calls",
-                                        Value.of(
-                                            Value.of(
-                                                KeyValue.of(
-                                                    "function",
-                                                    Value.of(
-                                                        KeyValue.of(
-                                                            "name", Value.of("get_weather")),
-                                                        KeyValue.of(
-                                                            "arguments",
-                                                            Value.of(
-                                                                "{\"location\": \"New York City\"}")))),
-                                                KeyValue.of("id", Value.of(newYorkCallId)),
-                                                KeyValue.of("type", Value.of("function"))),
-                                            Value.of(
-                                                KeyValue.of(
-                                                    "function",
-                                                    Value.of(
-                                                        KeyValue.of(
-                                                            "name", Value.of("get_weather")),
-                                                        KeyValue.of(
-                                                            "arguments",
-                                                            Value.of(
-                                                                "{\"location\": \"London\"}")))),
-                                                KeyValue.of("id", Value.of(londonCallId)),
-                                                KeyValue.of("type", Value.of("function"))))))))));
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.system.message"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of(
+                                  "content",
+                                  Value.of(
+                                      "You are a helpful assistant providing weather updates.")))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.user.message"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of(
+                                  "content",
+                                  Value.of("What is the weather in New York City and London?")))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of("finish_reason", Value.of("tool_calls")),
+                              KeyValue.of("index", Value.of(0)),
+                              KeyValue.of(
+                                  "message",
+                                  Value.of(
+                                      KeyValue.of(
+                                          "tool_calls",
+                                          Value.of(
+                                              Value.of(
+                                                  KeyValue.of(
+                                                      "function",
+                                                      Value.of(
+                                                          KeyValue.of(
+                                                              "name", Value.of("get_weather")),
+                                                          KeyValue.of(
+                                                              "arguments",
+                                                              Value.of(
+                                                                  "{\"location\": \"New York City\"}")))),
+                                                  KeyValue.of("id", Value.of(newYorkCallId)),
+                                                  KeyValue.of("type", Value.of("function"))),
+                                              Value.of(
+                                                  KeyValue.of(
+                                                      "function",
+                                                      Value.of(
+                                                          KeyValue.of(
+                                                              "name", Value.of("get_weather")),
+                                                          KeyValue.of(
+                                                              "arguments",
+                                                              Value.of(
+                                                                  "{\"location\": \"London\"}")))),
+                                                  KeyValue.of("id", Value.of(londonCallId)),
+                                                  KeyValue.of("type", Value.of("function"))))))))));
     }
 
     getTesting().clearData();
@@ -921,7 +920,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                     GEN_AI_RESPONSE_FINISH_REASONS, reasons -> reasons.containsExactly("stop")),
                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 99L),
                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 25L)));
-    if (emitGenAiLatestExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalSemconv()) {
       toolCallsSecondSpanAttrs.add(
           equalTo(
               GEN_AI_SYSTEM_INSTRUCTIONS,
@@ -932,8 +931,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
           equalTo(
               GEN_AI_INPUT_MESSAGES,
               messageList(
-                  chatMessage(
-                      "system", "You are a helpful assistant providing weather updates."),
+                  chatMessage("system", "You are a helpful assistant providing weather updates."),
                   chatMessage("user", "What is the weather in New York City and London?"),
                   assistantToolCallMessage(
                       toolCallValue(
@@ -950,8 +948,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     maybeWithTransportSpan(
-                        span ->
-                            span.hasAttributesSatisfyingExactly(toolCallsSecondSpanAttrs))));
+                        span -> span.hasAttributesSatisfyingExactly(toolCallsSecondSpanAttrs))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -1000,7 +997,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx1 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiLatestExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalSemconv()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -1008,103 +1005,108 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(EVENT_NAME, "gen_ai.client.inference.operation.details"),
                           equalTo(genAiProviderKey(), OPENAI))
-                  .hasBodyField(
-                      "input",
-                      messageList(
-                          chatMessage("system", "You are a helpful assistant providing weather updates."),
-                          chatMessage("user", "What is the weather in New York City and London?"),
-                          assistantToolCallMessage(
-                              toolCallValue(newYorkCallId, "get_weather", "{\"location\": \"New York City\"}"),
-                              toolCallValue(londonCallId, "get_weather", "{\"location\": \"London\"}")),
-                          toolMessage("25 degrees and sunny", newYorkCallId),
-                          toolMessage("15 degrees and raining", londonCallId)))
-                  .hasBodyField(
-                      "output",
-                      messageList(chatMessage("assistant", finalAnswer))));
+                      .hasBodyField(
+                          "input",
+                          messageList(
+                              chatMessage(
+                                  "system",
+                                  "You are a helpful assistant providing weather updates."),
+                              chatMessage(
+                                  "user", "What is the weather in New York City and London?"),
+                              assistantToolCallMessage(
+                                  toolCallValue(
+                                      newYorkCallId,
+                                      "get_weather",
+                                      "{\"location\": \"New York City\"}"),
+                                  toolCallValue(
+                                      londonCallId, "get_weather", "{\"location\": \"London\"}")),
+                              toolMessage("25 degrees and sunny", newYorkCallId),
+                              toolMessage("15 degrees and raining", londonCallId)))
+                      .hasBodyField("output", messageList(chatMessage("assistant", finalAnswer))));
     } else {
-    getTesting()
-        .waitAndAssertLogRecords(
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.system.message"))
-                    .hasSpanContext(spanCtx1)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "You are a helpful assistant providing weather updates.")))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.user.message"))
-                    .hasSpanContext(spanCtx1)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "content",
-                                Value.of("What is the weather in New York City and London?")))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.assistant.message"))
-                    .hasSpanContext(spanCtx1)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "tool_calls",
-                                Value.of(
-                                    Value.of(
-                                        KeyValue.of(
-                                            "function",
-                                            Value.of(
-                                                KeyValue.of("name", Value.of("get_weather")),
-                                                KeyValue.of(
-                                                    "arguments",
-                                                    Value.of(
-                                                        "{\"location\": \"New York City\"}")))),
-                                        KeyValue.of("id", Value.of(newYorkCallId)),
-                                        KeyValue.of("type", Value.of("function"))),
-                                    Value.of(
-                                        KeyValue.of(
-                                            "function",
-                                            Value.of(
-                                                KeyValue.of("name", Value.of("get_weather")),
-                                                KeyValue.of(
-                                                    "arguments",
-                                                    Value.of("{\"location\": \"London\"}")))),
-                                        KeyValue.of("id", Value.of(londonCallId)),
-                                        KeyValue.of("type", Value.of("function"))))))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.tool.message"))
-                    .hasSpanContext(spanCtx1)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of("id", Value.of(newYorkCallId)),
-                            KeyValue.of("content", Value.of("25 degrees and sunny")))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.tool.message"))
-                    .hasSpanContext(spanCtx1)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of("id", Value.of(londonCallId)),
-                            KeyValue.of("content", Value.of("15 degrees and raining")))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
-                    .hasSpanContext(spanCtx1)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of("finish_reason", Value.of("stop")),
-                            KeyValue.of("index", Value.of(0)),
-                            KeyValue.of(
-                                "message",
-                                Value.of(KeyValue.of("content", Value.of(finalAnswer)))))));
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.system.message"))
+                      .hasSpanContext(spanCtx1)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of(
+                                  "content",
+                                  Value.of(
+                                      "You are a helpful assistant providing weather updates.")))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.user.message"))
+                      .hasSpanContext(spanCtx1)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of(
+                                  "content",
+                                  Value.of("What is the weather in New York City and London?")))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.assistant.message"))
+                      .hasSpanContext(spanCtx1)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of(
+                                  "tool_calls",
+                                  Value.of(
+                                      Value.of(
+                                          KeyValue.of(
+                                              "function",
+                                              Value.of(
+                                                  KeyValue.of("name", Value.of("get_weather")),
+                                                  KeyValue.of(
+                                                      "arguments",
+                                                      Value.of(
+                                                          "{\"location\": \"New York City\"}")))),
+                                          KeyValue.of("id", Value.of(newYorkCallId)),
+                                          KeyValue.of("type", Value.of("function"))),
+                                      Value.of(
+                                          KeyValue.of(
+                                              "function",
+                                              Value.of(
+                                                  KeyValue.of("name", Value.of("get_weather")),
+                                                  KeyValue.of(
+                                                      "arguments",
+                                                      Value.of("{\"location\": \"London\"}")))),
+                                          KeyValue.of("id", Value.of(londonCallId)),
+                                          KeyValue.of("type", Value.of("function"))))))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.tool.message"))
+                      .hasSpanContext(spanCtx1)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of("id", Value.of(newYorkCallId)),
+                              KeyValue.of("content", Value.of("25 degrees and sunny")))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.tool.message"))
+                      .hasSpanContext(spanCtx1)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of("id", Value.of(londonCallId)),
+                              KeyValue.of("content", Value.of("15 degrees and raining")))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
+                      .hasSpanContext(spanCtx1)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of("finish_reason", Value.of("stop")),
+                              KeyValue.of("index", Value.of(0)),
+                              KeyValue.of(
+                                  "message",
+                                  Value.of(KeyValue.of("content", Value.of(finalAnswer)))))));
     }
   }
 
@@ -1142,7 +1144,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 equalTo(genAiProviderKey(), OPENAI),
                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL)));
-    if (emitGenAiLatestExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalSemconv()) {
       errorSpanAttrs.add(
           equalTo(GEN_AI_INPUT_MESSAGES, messageList(chatMessage("user", TEST_CHAT_INPUT))));
     }
@@ -1175,15 +1177,15 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (!emitGenAiLatestExperimentalConventions()) {
-    getTesting()
-        .waitAndAssertLogRecords(
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.user.message"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))));
+    if (!emitGenAiLatestExperimentalSemconv()) {
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.user.message"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))));
     }
   }
 
@@ -1223,7 +1225,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                 satisfies(
                     GEN_AI_RESPONSE_FINISH_REASONS, reasons -> reasons.containsExactly("stop"))));
-    if (emitGenAiLatestExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalSemconv()) {
       streamSpanAttrs.add(
           equalTo(GEN_AI_INPUT_MESSAGES, messageList(chatMessage("user", TEST_CHAT_INPUT))));
       streamSpanAttrs.add(
@@ -1259,7 +1261,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiLatestExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalSemconv()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -1267,30 +1269,28 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(EVENT_NAME, "gen_ai.client.inference.operation.details"),
                           equalTo(genAiProviderKey(), OPENAI))
-                  .hasBodyField(
-                      "input", messageList(chatMessage("user", TEST_CHAT_INPUT)))
-                  .hasBodyField(
-                      "output", messageList(chatMessage("assistant", content))));
+                      .hasBodyField("input", messageList(chatMessage("user", TEST_CHAT_INPUT)))
+                      .hasBodyField("output", messageList(chatMessage("assistant", content))));
     } else {
-    getTesting()
-        .waitAndAssertLogRecords(
-            log ->
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.user.message"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))),
+              log -> {
                 log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.user.message"))
+                        equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))),
-            log -> {
-              log.hasAttributesSatisfyingExactly(
-                      equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
-                  .hasSpanContext(spanCtx)
-                  .hasBody(
-                      Value.of(
-                          KeyValue.of("finish_reason", Value.of("stop")),
-                          KeyValue.of("index", Value.of(0)),
-                          KeyValue.of(
-                              "message", Value.of(KeyValue.of("content", Value.of(content))))));
-            });
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of("finish_reason", Value.of("stop")),
+                            KeyValue.of("index", Value.of(0)),
+                            KeyValue.of(
+                                "message", Value.of(KeyValue.of("content", Value.of(content))))));
+              });
     }
   }
 
@@ -1333,7 +1333,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                     GEN_AI_RESPONSE_FINISH_REASONS, reasons -> reasons.containsExactly("stop")),
                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 3L)));
-    if (emitGenAiLatestExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalSemconv()) {
       streamUsageSpanAttrs.add(
           equalTo(GEN_AI_INPUT_MESSAGES, messageList(chatMessage("user", TEST_CHAT_INPUT))));
       streamUsageSpanAttrs.add(
@@ -1345,8 +1345,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     maybeWithTransportSpan(
-                        span ->
-                            span.hasAttributesSatisfyingExactly(streamUsageSpanAttrs))));
+                        span -> span.hasAttributesSatisfyingExactly(streamUsageSpanAttrs))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -1395,7 +1394,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiLatestExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalSemconv()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -1403,30 +1402,28 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(EVENT_NAME, "gen_ai.client.inference.operation.details"),
                           equalTo(genAiProviderKey(), OPENAI))
-                  .hasBodyField(
-                      "input", messageList(chatMessage("user", TEST_CHAT_INPUT)))
-                  .hasBodyField(
-                      "output", messageList(chatMessage("assistant", content))));
+                      .hasBodyField("input", messageList(chatMessage("user", TEST_CHAT_INPUT)))
+                      .hasBodyField("output", messageList(chatMessage("assistant", content))));
     } else {
-    getTesting()
-        .waitAndAssertLogRecords(
-            log ->
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.user.message"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))),
+              log -> {
                 log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.user.message"))
+                        equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))),
-            log -> {
-              log.hasAttributesSatisfyingExactly(
-                      equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
-                  .hasSpanContext(spanCtx)
-                  .hasBody(
-                      Value.of(
-                          KeyValue.of("finish_reason", Value.of("stop")),
-                          KeyValue.of("index", Value.of(0)),
-                          KeyValue.of(
-                              "message", Value.of(KeyValue.of("content", Value.of(content))))));
-            });
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of("finish_reason", Value.of("stop")),
+                            KeyValue.of("index", Value.of(0)),
+                            KeyValue.of(
+                                "message", Value.of(KeyValue.of("content", Value.of(content))))));
+              });
     }
   }
 
@@ -1477,14 +1474,13 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 satisfies(
                     GEN_AI_RESPONSE_FINISH_REASONS,
                     reasons -> reasons.containsExactly("stop", "stop"))));
-    if (emitGenAiLatestExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalSemconv()) {
       streamMultiChoiceSpanAttrs.add(
           equalTo(GEN_AI_INPUT_MESSAGES, messageList(chatMessage("user", TEST_CHAT_INPUT))));
       streamMultiChoiceSpanAttrs.add(
           equalTo(
               GEN_AI_OUTPUT_MESSAGES,
-              messageList(
-                  chatMessage("assistant", content1), chatMessage("assistant", content2))));
+              messageList(chatMessage("assistant", content1), chatMessage("assistant", content2))));
     }
 
     getTesting()
@@ -1492,8 +1488,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     maybeWithTransportSpan(
-                        span ->
-                            span.hasAttributesSatisfyingExactly(streamMultiChoiceSpanAttrs))));
+                        span -> span.hasAttributesSatisfyingExactly(streamMultiChoiceSpanAttrs))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -1517,7 +1512,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiLatestExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalSemconv()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -1525,42 +1520,43 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(EVENT_NAME, "gen_ai.client.inference.operation.details"),
                           equalTo(genAiProviderKey(), OPENAI))
-                  .hasBodyField(
-                      "input", messageList(chatMessage("user", TEST_CHAT_INPUT)))
-                  .hasBodyField(
-                      "output",
-                      messageList(
-                          chatMessage("assistant", content1),
-                          chatMessage("assistant", content2))));
+                      .hasBodyField("input", messageList(chatMessage("user", TEST_CHAT_INPUT)))
+                      .hasBodyField(
+                          "output",
+                          messageList(
+                              chatMessage("assistant", content1),
+                              chatMessage("assistant", content2))));
     } else {
-    getTesting()
-        .waitAndAssertLogRecords(
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.user.message"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of("finish_reason", Value.of("stop")),
-                            KeyValue.of("index", Value.of(0)),
-                            KeyValue.of(
-                                "message", Value.of(KeyValue.of("content", Value.of(content1)))))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of("finish_reason", Value.of("stop")),
-                            KeyValue.of("index", Value.of(1)),
-                            KeyValue.of(
-                                "message", Value.of(KeyValue.of("content", Value.of(content2)))))));
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.user.message"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of("finish_reason", Value.of("stop")),
+                              KeyValue.of("index", Value.of(0)),
+                              KeyValue.of(
+                                  "message",
+                                  Value.of(KeyValue.of("content", Value.of(content1)))))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of("finish_reason", Value.of("stop")),
+                              KeyValue.of("index", Value.of(1)),
+                              KeyValue.of(
+                                  "message",
+                                  Value.of(KeyValue.of("content", Value.of(content2)))))));
     }
   }
 
@@ -1659,7 +1655,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 satisfies(
                     GEN_AI_RESPONSE_FINISH_REASONS,
                     reasons -> reasons.containsExactly("tool_calls"))));
-    if (emitGenAiLatestExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalSemconv()) {
       streamToolCallsFirstSpanAttrs.add(
           equalTo(
               GEN_AI_SYSTEM_INSTRUCTIONS,
@@ -1670,8 +1666,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
           equalTo(
               GEN_AI_INPUT_MESSAGES,
               messageList(
-                  chatMessage(
-                      "system", "You are a helpful assistant providing weather updates."),
+                  chatMessage("system", "You are a helpful assistant providing weather updates."),
                   chatMessage("user", "What is the weather in New York City and London?"))));
       streamToolCallsFirstSpanAttrs.add(
           equalTo(
@@ -1689,8 +1684,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 trace.hasSpansSatisfyingExactly(
                     maybeWithTransportSpan(
                         span ->
-                            span.hasAttributesSatisfyingExactly(
-                                streamToolCallsFirstSpanAttrs))));
+                            span.hasAttributesSatisfyingExactly(streamToolCallsFirstSpanAttrs))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -1714,7 +1708,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiLatestExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalSemconv()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -1722,79 +1716,88 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(EVENT_NAME, "gen_ai.client.inference.operation.details"),
                           equalTo(genAiProviderKey(), OPENAI))
-                  .hasBodyField(
-                      "input",
-                      messageList(
-                          chatMessage("system", "You are a helpful assistant providing weather updates."),
-                          chatMessage("user", "What is the weather in New York City and London?")))
-                  .hasBodyField(
-                      "output",
-                      messageList(
-                          assistantToolCallMessage(
-                              toolCallValue(newYorkCallId, "get_weather", "{\"location\": \"New York City\"}"),
-                              toolCallValue(londonCallId, "get_weather", "{\"location\": \"London\"}")))));
+                      .hasBodyField(
+                          "input",
+                          messageList(
+                              chatMessage(
+                                  "system",
+                                  "You are a helpful assistant providing weather updates."),
+                              chatMessage(
+                                  "user", "What is the weather in New York City and London?")))
+                      .hasBodyField(
+                          "output",
+                          messageList(
+                              assistantToolCallMessage(
+                                  toolCallValue(
+                                      newYorkCallId,
+                                      "get_weather",
+                                      "{\"location\": \"New York City\"}"),
+                                  toolCallValue(
+                                      londonCallId,
+                                      "get_weather",
+                                      "{\"location\": \"London\"}")))));
     } else {
-    getTesting()
-        .waitAndAssertLogRecords(
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.system.message"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "You are a helpful assistant providing weather updates.")))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.user.message"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "content",
-                                Value.of("What is the weather in New York City and London?")))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of("finish_reason", Value.of("tool_calls")),
-                            KeyValue.of("index", Value.of(0)),
-                            KeyValue.of(
-                                "message",
-                                Value.of(
-                                    KeyValue.of(
-                                        "tool_calls",
-                                        Value.of(
-                                            Value.of(
-                                                KeyValue.of(
-                                                    "function",
-                                                    Value.of(
-                                                        KeyValue.of(
-                                                            "name", Value.of("get_weather")),
-                                                        KeyValue.of(
-                                                            "arguments",
-                                                            Value.of(
-                                                                "{\"location\": \"New York City\"}")))),
-                                                KeyValue.of("id", Value.of(newYorkCallId)),
-                                                KeyValue.of("type", Value.of("function"))),
-                                            Value.of(
-                                                KeyValue.of(
-                                                    "function",
-                                                    Value.of(
-                                                        KeyValue.of(
-                                                            "name", Value.of("get_weather")),
-                                                        KeyValue.of(
-                                                            "arguments",
-                                                            Value.of(
-                                                                "{\"location\": \"London\"}")))),
-                                                KeyValue.of("id", Value.of(londonCallId)),
-                                                KeyValue.of("type", Value.of("function"))))))))));
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.system.message"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of(
+                                  "content",
+                                  Value.of(
+                                      "You are a helpful assistant providing weather updates.")))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.user.message"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of(
+                                  "content",
+                                  Value.of("What is the weather in New York City and London?")))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of("finish_reason", Value.of("tool_calls")),
+                              KeyValue.of("index", Value.of(0)),
+                              KeyValue.of(
+                                  "message",
+                                  Value.of(
+                                      KeyValue.of(
+                                          "tool_calls",
+                                          Value.of(
+                                              Value.of(
+                                                  KeyValue.of(
+                                                      "function",
+                                                      Value.of(
+                                                          KeyValue.of(
+                                                              "name", Value.of("get_weather")),
+                                                          KeyValue.of(
+                                                              "arguments",
+                                                              Value.of(
+                                                                  "{\"location\": \"New York City\"}")))),
+                                                  KeyValue.of("id", Value.of(newYorkCallId)),
+                                                  KeyValue.of("type", Value.of("function"))),
+                                              Value.of(
+                                                  KeyValue.of(
+                                                      "function",
+                                                      Value.of(
+                                                          KeyValue.of(
+                                                              "name", Value.of("get_weather")),
+                                                          KeyValue.of(
+                                                              "arguments",
+                                                              Value.of(
+                                                                  "{\"location\": \"London\"}")))),
+                                                  KeyValue.of("id", Value.of(londonCallId)),
+                                                  KeyValue.of("type", Value.of("function"))))))))));
     }
 
     getTesting().clearData();
@@ -1837,7 +1840,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                 satisfies(
                     GEN_AI_RESPONSE_FINISH_REASONS, reasons -> reasons.containsExactly("stop"))));
-    if (emitGenAiLatestExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalSemconv()) {
       streamToolCallsSecondSpanAttrs.add(
           equalTo(
               GEN_AI_SYSTEM_INSTRUCTIONS,
@@ -1848,8 +1851,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
           equalTo(
               GEN_AI_INPUT_MESSAGES,
               messageList(
-                  chatMessage(
-                      "system", "You are a helpful assistant providing weather updates."),
+                  chatMessage("system", "You are a helpful assistant providing weather updates."),
                   chatMessage("user", "What is the weather in New York City and London?"),
                   assistantToolCallMessage(
                       toolCallValue(
@@ -1867,8 +1869,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 trace.hasSpansSatisfyingExactly(
                     maybeWithTransportSpan(
                         span ->
-                            span.hasAttributesSatisfyingExactly(
-                                streamToolCallsSecondSpanAttrs))));
+                            span.hasAttributesSatisfyingExactly(streamToolCallsSecondSpanAttrs))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -1892,7 +1893,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx1 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiLatestExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalSemconv()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -1900,103 +1901,108 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(EVENT_NAME, "gen_ai.client.inference.operation.details"),
                           equalTo(genAiProviderKey(), OPENAI))
-                  .hasBodyField(
-                      "input",
-                      messageList(
-                          chatMessage("system", "You are a helpful assistant providing weather updates."),
-                          chatMessage("user", "What is the weather in New York City and London?"),
-                          assistantToolCallMessage(
-                              toolCallValue(newYorkCallId, "get_weather", "{\"location\": \"New York City\"}"),
-                              toolCallValue(londonCallId, "get_weather", "{\"location\": \"London\"}")),
-                          toolMessage("25 degrees and sunny", newYorkCallId),
-                          toolMessage("15 degrees and raining", londonCallId)))
-                  .hasBodyField(
-                      "output",
-                      messageList(chatMessage("assistant", finalAnswer))));
+                      .hasBodyField(
+                          "input",
+                          messageList(
+                              chatMessage(
+                                  "system",
+                                  "You are a helpful assistant providing weather updates."),
+                              chatMessage(
+                                  "user", "What is the weather in New York City and London?"),
+                              assistantToolCallMessage(
+                                  toolCallValue(
+                                      newYorkCallId,
+                                      "get_weather",
+                                      "{\"location\": \"New York City\"}"),
+                                  toolCallValue(
+                                      londonCallId, "get_weather", "{\"location\": \"London\"}")),
+                              toolMessage("25 degrees and sunny", newYorkCallId),
+                              toolMessage("15 degrees and raining", londonCallId)))
+                      .hasBodyField("output", messageList(chatMessage("assistant", finalAnswer))));
     } else {
-    getTesting()
-        .waitAndAssertLogRecords(
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.system.message"))
-                    .hasSpanContext(spanCtx1)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "You are a helpful assistant providing weather updates.")))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.user.message"))
-                    .hasSpanContext(spanCtx1)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "content",
-                                Value.of("What is the weather in New York City and London?")))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.assistant.message"))
-                    .hasSpanContext(spanCtx1)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "tool_calls",
-                                Value.of(
-                                    Value.of(
-                                        KeyValue.of(
-                                            "function",
-                                            Value.of(
-                                                KeyValue.of("name", Value.of("get_weather")),
-                                                KeyValue.of(
-                                                    "arguments",
-                                                    Value.of(
-                                                        "{\"location\": \"New York City\"}")))),
-                                        KeyValue.of("id", Value.of(newYorkCallId)),
-                                        KeyValue.of("type", Value.of("function"))),
-                                    Value.of(
-                                        KeyValue.of(
-                                            "function",
-                                            Value.of(
-                                                KeyValue.of("name", Value.of("get_weather")),
-                                                KeyValue.of(
-                                                    "arguments",
-                                                    Value.of("{\"location\": \"London\"}")))),
-                                        KeyValue.of("id", Value.of(londonCallId)),
-                                        KeyValue.of("type", Value.of("function"))))))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.tool.message"))
-                    .hasSpanContext(spanCtx1)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of("id", Value.of(newYorkCallId)),
-                            KeyValue.of("content", Value.of("25 degrees and sunny")))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.tool.message"))
-                    .hasSpanContext(spanCtx1)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of("id", Value.of(londonCallId)),
-                            KeyValue.of("content", Value.of("15 degrees and raining")))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
-                    .hasSpanContext(spanCtx1)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of("finish_reason", Value.of("stop")),
-                            KeyValue.of("index", Value.of(0)),
-                            KeyValue.of(
-                                "message",
-                                Value.of(KeyValue.of("content", Value.of(finalAnswer)))))));
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.system.message"))
+                      .hasSpanContext(spanCtx1)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of(
+                                  "content",
+                                  Value.of(
+                                      "You are a helpful assistant providing weather updates.")))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.user.message"))
+                      .hasSpanContext(spanCtx1)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of(
+                                  "content",
+                                  Value.of("What is the weather in New York City and London?")))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.assistant.message"))
+                      .hasSpanContext(spanCtx1)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of(
+                                  "tool_calls",
+                                  Value.of(
+                                      Value.of(
+                                          KeyValue.of(
+                                              "function",
+                                              Value.of(
+                                                  KeyValue.of("name", Value.of("get_weather")),
+                                                  KeyValue.of(
+                                                      "arguments",
+                                                      Value.of(
+                                                          "{\"location\": \"New York City\"}")))),
+                                          KeyValue.of("id", Value.of(newYorkCallId)),
+                                          KeyValue.of("type", Value.of("function"))),
+                                      Value.of(
+                                          KeyValue.of(
+                                              "function",
+                                              Value.of(
+                                                  KeyValue.of("name", Value.of("get_weather")),
+                                                  KeyValue.of(
+                                                      "arguments",
+                                                      Value.of("{\"location\": \"London\"}")))),
+                                          KeyValue.of("id", Value.of(londonCallId)),
+                                          KeyValue.of("type", Value.of("function"))))))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.tool.message"))
+                      .hasSpanContext(spanCtx1)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of("id", Value.of(newYorkCallId)),
+                              KeyValue.of("content", Value.of("25 degrees and sunny")))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.tool.message"))
+                      .hasSpanContext(spanCtx1)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of("id", Value.of(londonCallId)),
+                              KeyValue.of("content", Value.of("15 degrees and raining")))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
+                      .hasSpanContext(spanCtx1)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of("finish_reason", Value.of("stop")),
+                              KeyValue.of("index", Value.of(0)),
+                              KeyValue.of(
+                                  "message",
+                                  Value.of(KeyValue.of("content", Value.of(finalAnswer)))))));
     }
   }
 
@@ -2034,7 +2040,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 equalTo(genAiProviderKey(), OPENAI),
                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL)));
-    if (emitGenAiLatestExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalSemconv()) {
       streamErrorSpanAttrs.add(
           equalTo(GEN_AI_INPUT_MESSAGES, messageList(chatMessage("user", TEST_CHAT_INPUT))));
     }
@@ -2067,15 +2073,15 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (!emitGenAiLatestExperimentalConventions()) {
-    getTesting()
-        .waitAndAssertLogRecords(
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(genAiProviderKey(), OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.user.message"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))));
+    if (!emitGenAiLatestExperimentalSemconv()) {
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.user.message"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))));
     }
   }
 

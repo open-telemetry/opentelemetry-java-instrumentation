@@ -175,8 +175,8 @@ public final class GenAiInstrumenterFactory {
 
   /**
    * Creates an {@link Instrumenter} for invoke_agent operations with inference attributes. When
-   * {@code inferenceGetter} is provided, the agent span will also include GenAI inference attributes
-   * (model, temperature, tokens, etc.) and client metrics.
+   * {@code inferenceGetter} is provided, the agent span will also include GenAI inference
+   * attributes (model, temperature, tokens, etc.) and client metrics.
    *
    * @param agentGetter the agent attributes getter
    * @param inferenceGetter optional inference attributes getter for model/token attributes

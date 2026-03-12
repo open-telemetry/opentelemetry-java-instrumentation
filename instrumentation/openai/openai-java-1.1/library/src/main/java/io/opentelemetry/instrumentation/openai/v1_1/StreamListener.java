@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.openai.v1_1;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitGenAiLatestExperimentalConventions;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitGenAiLatestExperimentalSemconv;
 import static java.util.stream.Collectors.toList;
 
 import com.openai.models.chat.completions.ChatCompletion;
@@ -71,7 +71,7 @@ final class StreamListener {
       if (choice.finishReason().isPresent()) {
         buffer.finishReason = choice.finishReason().get().toString();
 
-        if (!emitGenAiLatestExperimentalConventions()) {
+        if (!emitGenAiLatestExperimentalSemconv()) {
           ChatCompletionEventsHelper.emitCompletionLogEvent(
               context, eventLogger, choice.index(), buffer.finishReason, buffer.toEventBody());
         }
@@ -107,7 +107,7 @@ final class StreamListener {
 
     ChatCompletion result = resultBuilder.build();
 
-    if (emitGenAiLatestExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalSemconv()) {
       ChatCompletionEventsHelper.emitOperationDetailsEvent(
           context, eventLogger, request, result, captureMessageContent);
     }

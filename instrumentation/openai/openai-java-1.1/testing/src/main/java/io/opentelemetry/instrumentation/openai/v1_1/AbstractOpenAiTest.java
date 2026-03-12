@@ -6,7 +6,8 @@
 package io.opentelemetry.instrumentation.openai.v1_1;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitGenAiLatestExperimentalConventions;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitGenAiLatestExperimentalSemconv;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
 
 import com.openai.client.OpenAIClient;
 import com.openai.client.OpenAIClientAsync;
@@ -20,7 +21,6 @@ import io.opentelemetry.instrumentation.testing.recording.RecordingExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.util.List;
 import java.util.function.Consumer;
-import io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.Parameter;
 import org.junit.jupiter.params.ParameterizedClass;
@@ -41,9 +41,7 @@ abstract class AbstractOpenAiTest {
   protected static final AttributeKey<String> GEN_AI_SYSTEM = stringKey("gen_ai.system");
 
   protected static AttributeKey<String> genAiProviderKey() {
-    return emitGenAiLatestExperimentalConventions()
-        ? GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME
-        : GEN_AI_SYSTEM;
+    return emitGenAiLatestExperimentalSemconv() ? GEN_AI_PROVIDER_NAME : GEN_AI_SYSTEM;
   }
 
   private static final String API_URL = "https://api.openai.com/v1";

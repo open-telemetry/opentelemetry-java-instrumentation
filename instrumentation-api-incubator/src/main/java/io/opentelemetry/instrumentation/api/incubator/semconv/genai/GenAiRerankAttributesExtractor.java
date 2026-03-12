@@ -8,11 +8,12 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.genai;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiExtendedAttributes.GEN_AI_RERANK_DOCUMENTS_COUNT;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiExtendedAttributes.GEN_AI_RERANK_INPUT_DOCUMENTS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiExtendedAttributes.GEN_AI_RERANK_OUTPUT_DOCUMENTS;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitGenAiLatestExperimentalSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldGenAiSemconv;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import javax.annotation.Nullable;
 
 /**
@@ -49,15 +50,14 @@ public final class GenAiRerankAttributesExtractor<REQUEST, RESPONSE>
     attributes.put(
         GenAiAttributesExtractor.GEN_AI_OPERATION_NAME,
         GenAiExtendedAttributes.GenAiOperationNameValues.RERANK_DOCUMENTS);
-    if (SemconvStability.emitGenAiLatestExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalSemconv()) {
       attributes.put(
           GenAiAttributesExtractor.GEN_AI_PROVIDER_NAME, getter.getProviderName(request));
     }
-    if (SemconvStability.emitOldGenAiSemconv()) {
+    if (emitOldGenAiSemconv()) {
       attributes.put(GenAiAttributesExtractor.GEN_AI_SYSTEM, getter.getProviderName(request));
     }
-    attributes.put(
-        GenAiAttributesExtractor.GEN_AI_REQUEST_MODEL, getter.getRequestModel(request));
+    attributes.put(GenAiAttributesExtractor.GEN_AI_REQUEST_MODEL, getter.getRequestModel(request));
     attributes.put(GEN_AI_RERANK_DOCUMENTS_COUNT, getter.getDocumentsCount(request));
     Long topK = getter.getTopK(request);
     if (topK != null) {
@@ -76,8 +76,7 @@ public final class GenAiRerankAttributesExtractor<REQUEST, RESPONSE>
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
     if (captureMessageContent) {
-      attributes.put(
-          GEN_AI_RERANK_OUTPUT_DOCUMENTS, getter.getOutputDocuments(request, response));
+      attributes.put(GEN_AI_RERANK_OUTPUT_DOCUMENTS, getter.getOutputDocuments(request, response));
     }
   }
 }
