@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.alibabadruid.v1_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
@@ -12,6 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
 public class DruidInstrumentationModule extends InstrumentationModule
@@ -24,6 +26,11 @@ public class DruidInstrumentationModule extends InstrumentationModule
   @Override
   public boolean isIndyReady() {
     return true;
+  }
+
+  @Override
+  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    return hasClassesNamed("com.alibaba.druid.pool.DruidDataSource");
   }
 
   @Override
