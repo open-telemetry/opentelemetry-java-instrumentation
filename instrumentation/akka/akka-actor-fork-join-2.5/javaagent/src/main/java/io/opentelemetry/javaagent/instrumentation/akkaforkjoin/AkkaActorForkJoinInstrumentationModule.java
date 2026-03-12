@@ -29,7 +29,7 @@ public class AkkaActorForkJoinInstrumentationModule extends InstrumentationModul
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed(AkkaForkJoinTaskInstrumentation.TASK_CLASS_NAME);
+    return hasClassesNamed("akka.dispatch.forkjoin.ForkJoinPool");
   }
 
   @Override
