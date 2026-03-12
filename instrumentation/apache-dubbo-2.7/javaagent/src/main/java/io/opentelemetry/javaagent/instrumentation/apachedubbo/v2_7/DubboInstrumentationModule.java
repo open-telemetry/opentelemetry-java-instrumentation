@@ -37,7 +37,9 @@ public class DubboInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("org.apache.dubbo.rpc.Filter");
+    return hasClassesNamed(
+        // added in 2.7.0
+        "org.apache.dubbo.rpc.Filter");
   }
 
   @Override
