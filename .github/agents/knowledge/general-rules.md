@@ -131,7 +131,7 @@ Use `@Nullable` annotations accurately throughout the codebase:
   Upstream nullability contracts:
 
   | Interface | Method | `@Nullable` Parameters |
-  |-----------|--------|------------------------|
+  | --- | --- | --- |
   | `TextMapGetter<CarrierT>` | `get(CarrierT, String)` | `carrier` is `@Nullable` |
   | `TextMapGetter<CarrierT>` | `getAll(CarrierT, String)` | `carrier` is `@Nullable` |
   | `TextMapGetter<CarrierT>` | `keys(CarrierT)` | none |
