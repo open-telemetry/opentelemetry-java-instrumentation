@@ -49,8 +49,8 @@ public final class OpenTelemetryInstaller {
     }
 
     setForceFlush(sdk);
-    GlobalOpenTelemetry.set(sdk);
     SemconvStability.configure(sdk);
+    GlobalOpenTelemetry.set(sdk);
 
     return SdkAutoconfigureAccess.create(
         sdk, SdkAutoconfigureAccess.getResource(autoConfiguredSdk), configProperties);
