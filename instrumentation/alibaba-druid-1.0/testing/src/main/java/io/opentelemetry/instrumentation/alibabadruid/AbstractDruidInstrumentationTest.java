@@ -19,10 +19,7 @@ import java.util.Set;
 import javax.management.ObjectName;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
 public abstract class AbstractDruidInstrumentationTest {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.alibaba-druid-1.0";
