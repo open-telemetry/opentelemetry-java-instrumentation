@@ -38,10 +38,14 @@ for file in $(find instrumentation -name "*Module.java"); do
     simple_module_name="spring-cloud-gateway"
   fi
 
-  if [ "$module_name" == "$simple_module_name" ]; then
-    expected="super\(\n? *\"$simple_module_name\""
+  # convert kebab-case directory names to snake_case for module name matching
+  module_name_snake=$(echo "$module_name" | tr '-' '_')
+  simple_module_name_snake=$(echo "$simple_module_name" | tr '-' '_')
+
+  if [ "$module_name_snake" == "$simple_module_name_snake" ]; then
+    expected="super\(\n? *\"$simple_module_name_snake\""
   else
-    expected="super\(\n? *\"$simple_module_name\",\n? *\"$module_name\""
+    expected="super\(\n? *\"$simple_module_name_snake\",\n? *\"$module_name_snake\""
   fi
 
   echo "$module_name"
