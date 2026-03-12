@@ -256,11 +256,8 @@ public class AgentInstaller {
 
     VirtualFieldImplementationInstallerFactory virtualFieldInstallerFactory =
         VirtualFieldImplementationInstallerFactory.getInstance();
-    ClassLoader extensionsClassLoader =
-        requireNonNull(
-            Utils.getExtensionsClassLoader(), "Extensions class loader must not be null");
     for (EarlyInstrumentationModule earlyInstrumentationModule :
-        loadOrdered(EarlyInstrumentationModule.class, extensionsClassLoader)) {
+        loadOrdered(EarlyInstrumentationModule.class, Utils.getExtensionsClassLoader())) {
 
       VirtualFieldImplementationInstaller contextProvider =
           virtualFieldInstallerFactory.create(
