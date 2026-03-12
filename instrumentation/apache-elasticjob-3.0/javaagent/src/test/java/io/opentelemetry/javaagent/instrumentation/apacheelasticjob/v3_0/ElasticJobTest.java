@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.co
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.sun.net.httpserver.HttpServer;
 import io.opentelemetry.api.trace.SpanKind;
@@ -363,7 +364,7 @@ class ElasticJobTest {
       String jobName,
       long item,
       long totalCount,
-      String parameter,
+      @Nullable String parameter,
       String codeFunction,
       String codeNamespace,
       String jobType) {
@@ -392,7 +393,7 @@ class ElasticJobTest {
             stringKey("scheduling.apache-elasticjob.task.id"),
             taskId -> {
               if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
-                taskId.contains(jobName);
+                taskId.satisfies(value -> assertThat(value.contains(jobName)).isTrue());
               }
             }));
 

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0;
 
 import static io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0.ElasticJobSingletons.helper;
+import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -27,11 +28,12 @@ public class ScriptJobExecutorInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("process")
+        isMethod()
+            .and(named("process"))
             .and(
                 takesArgument(
                     3, named("org.apache.shardingsphere.elasticjob.api.ShardingContext"))),
-        ScriptJobExecutorInstrumentation.class.getName() + "$ProcessAdvice");
+        getClass().getName() + "$ProcessAdvice");
   }
 
   @SuppressWarnings("unused")

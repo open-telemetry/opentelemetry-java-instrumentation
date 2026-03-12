@@ -37,7 +37,7 @@ public class SimpleJobExecutorInstrumentation implements TypeInstrumentation {
             .and(
                 takesArgument(
                     3, named("org.apache.shardingsphere.elasticjob.api.ShardingContext"))),
-        SimpleJobExecutorInstrumentation.class.getName() + "$ProcessAdvice");
+        getClass().getName() + "$ProcessAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -58,7 +58,8 @@ public class SimpleJobExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Enter ElasticJobHelper.ElasticJobScope scope, @Advice.Thrown Throwable throwable) {
+        @Advice.Enter @Nullable ElasticJobHelper.ElasticJobScope scope,
+        @Advice.Thrown @Nullable Throwable throwable) {
       helper().endSpan(scope, throwable);
     }
   }

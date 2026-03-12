@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0;
 
+import javax.annotation.Nullable;
 import org.apache.shardingsphere.elasticjob.api.ShardingContext;
 
 public final class ElasticJobProcessRequest {
@@ -12,7 +13,7 @@ public final class ElasticJobProcessRequest {
   private final String taskId;
   private final int shardingItemIndex;
   private final int shardingTotalCount;
-  private final String shardingItemParameter;
+  @Nullable private final String shardingItemParameter;
   private final ElasticJobType jobType;
   private final Class<?> userJobClass;
   private final String userMethodName;
@@ -21,7 +22,7 @@ public final class ElasticJobProcessRequest {
       ShardingContext shardingContext,
       ElasticJobType jobType,
       Class<?> userJobClass,
-      String userMethodNam) {
+      String userMethodName) {
     this.jobName = shardingContext.getJobName();
     this.taskId = shardingContext.getTaskId();
     this.shardingItemIndex = shardingContext.getShardingItem();
@@ -29,9 +30,10 @@ public final class ElasticJobProcessRequest {
     this.shardingItemParameter = emptyToNull(shardingContext.getShardingParameter());
     this.jobType = jobType;
     this.userJobClass = userJobClass;
-    this.userMethodName = userMethodNam;
+    this.userMethodName = userMethodName;
   }
 
+  @Nullable
   private static String emptyToNull(String string) {
     return string == null || string.isEmpty() ? null : string;
   }
@@ -60,6 +62,7 @@ public final class ElasticJobProcessRequest {
     return this.shardingTotalCount;
   }
 
+  @Nullable
   public String getShardingItemParameter() {
     return this.shardingItemParameter;
   }
