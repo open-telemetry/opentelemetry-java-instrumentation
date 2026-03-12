@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
 import static io.opentelemetry.instrumentation.apachehttpclient.v4_3.ApacheHttpClientRequest.headersToList;
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -66,7 +67,7 @@ enum ApacheHttpClientHttpAttributesGetter
   @Override
   @Nullable
   public Integer getServerPort(ApacheHttpClientRequest request) {
-    return request.getServerPort();
+    return HttpConstants.portOrDefaultFromScheme(request.getServerPort(), request::getScheme);
   }
 
   @Nullable

@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 import static java.util.Collections.emptyList;
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -93,15 +92,32 @@ public final class ApacheHttpClientRequest {
     if (uri != null) {
       return uri.getHost();
     }
-    return target != null ? target.getHostName() : null;
+    if (target != null) {
+      return target.getHostName();
+    }
+    return null;
   }
 
   @Nullable
   Integer getServerPort() {
-    if (uri == null) {
-      return target != null ? target.getPort() : null;
+    if (uri != null) {
+      return uri.getPort();
     }
-    return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri::getScheme);
+    if (target != null) {
+      return target.getPort();
+    }
+    return null;
+  }
+
+  @Nullable
+  String getScheme() {
+    if (uri != null) {
+      return uri.getScheme();
+    }
+    if (target != null) {
+      return target.getSchemeName();
+    }
+    return null;
   }
 
   @Nullable

@@ -20,6 +20,7 @@ public final class ApacheHttpClientRequest {
 
   @Nullable private final URI uri;
   private final HttpRequest delegate;
+  @Nullable private final HttpHost target;
 
   ApacheHttpClientRequest(@Nullable HttpHost httpHost, HttpRequest httpRequest) {
     URI calculatedUri = getUri(httpRequest);
@@ -29,6 +30,7 @@ public final class ApacheHttpClientRequest {
       uri = calculatedUri;
     }
     delegate = httpRequest;
+    target = httpHost;
   }
 
   /** Returns the actual {@link HttpRequest} being executed by the client. */
@@ -47,7 +49,35 @@ public final class ApacheHttpClientRequest {
 
   @Nullable
   String getScheme() {
-    return uri != null ? uri.getScheme() : null;
+    if (uri != null) {
+      return uri.getScheme();
+    }
+    if (target != null) {
+      return target.getSchemeName();
+    }
+    return null;
+  }
+
+  @Nullable
+  String getServerAddress() {
+    if (uri != null) {
+      return uri.getHost();
+    }
+    if (target != null) {
+      return target.getHostName();
+    }
+    return null;
+  }
+
+  @Nullable
+  Integer getServerPort() {
+    if (uri != null) {
+      return uri.getPort();
+    }
+    if (target != null) {
+      return target.getPort();
+    }
+    return null;
   }
 
   @Nullable
