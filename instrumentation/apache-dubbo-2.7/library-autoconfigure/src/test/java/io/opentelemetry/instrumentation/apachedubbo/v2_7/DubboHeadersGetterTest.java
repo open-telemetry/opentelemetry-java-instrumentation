@@ -40,7 +40,7 @@ class DubboHeadersGetterTest {
     }
     DubboRequest request = DubboRequest.create(rpcInvocation, context);
 
-    Iterator<String> iterator = DubboHeadersGetter.INSTANCE.keys(request).iterator();
+    Iterator<String> iterator = new DubboHeadersGetter().keys(request).iterator();
     assertThat(iterator.hasNext()).isTrue();
     assertThat(iterator.next()).isEqualTo("key");
     assertThat(iterator.hasNext()).isFalse();

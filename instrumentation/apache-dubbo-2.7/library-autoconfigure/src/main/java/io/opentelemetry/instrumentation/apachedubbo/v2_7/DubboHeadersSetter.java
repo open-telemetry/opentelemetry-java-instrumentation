@@ -6,12 +6,15 @@
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
+import javax.annotation.Nullable;
 
-enum DubboHeadersSetter implements TextMapSetter<DubboRequest> {
-  INSTANCE;
+class DubboHeadersSetter implements TextMapSetter<DubboRequest> {
 
   @Override
-  public void set(DubboRequest request, String key, String value) {
+  public void set(@Nullable DubboRequest request, String key, String value) {
+    if (request == null) {
+      return;
+    }
     request.context().setAttachment(key, value);
     request.invocation().setAttachment(key, value);
   }
