@@ -95,6 +95,8 @@
   ([#16423](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16423))
 - Configure `semconv-stability.opt-in` with declarative config API
   ([#16443](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16443))
+- Support `otel.event.name`
+  ([#16220](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16220))
 
 ### 🛠️ Bug fixes
 
@@ -112,6 +114,8 @@
   ([#16258](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16258))
 - Tomcat JMX: ignore negative thread and session limits
   ([#16355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16355))
+- `server.port` is required on HTTP client spans
+  ([#16388](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16388))
 - Fix Ktor server instrumentation resolving peer address
   ([#16392](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16392))
 - Fix class cast exception in servlet instrumentation
