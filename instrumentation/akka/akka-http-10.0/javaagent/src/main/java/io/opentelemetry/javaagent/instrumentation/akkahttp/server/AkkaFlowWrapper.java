@@ -123,7 +123,7 @@ public class AkkaFlowWrapper
                 context = AkkaRouteHolder.init(context);
                 tracingRequest = new TracingRequest(context, request);
               }
-              // event if span wasn't started we need to push TracingRequest to match response
+              // even if span wasn't started we need to push TracingRequest to match response
               // with request
               requests.push(tracingRequest);
 
