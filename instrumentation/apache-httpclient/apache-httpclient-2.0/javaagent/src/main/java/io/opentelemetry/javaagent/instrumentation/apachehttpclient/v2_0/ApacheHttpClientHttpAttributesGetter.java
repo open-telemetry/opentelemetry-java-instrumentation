@@ -101,6 +101,10 @@ final class ApacheHttpClientHttpAttributesGetter
   @Nullable
   public Integer getServerPort(HttpMethod request) {
     HostConfiguration hostConfiguration = request.getHostConfiguration();
-    return hostConfiguration != null ? hostConfiguration.getPort() : null;
+    if (hostConfiguration == null) {
+      return null;
+    }
+    // Returns the effective port directly; scheme fallback is not needed.
+    return hostConfiguration.getPort();
   }
 }

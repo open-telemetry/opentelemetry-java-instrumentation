@@ -98,7 +98,20 @@ final class ReactorNettyHttpClientAttributesGetter
   @Override
   public Integer getServerPort(HttpClientRequest request) {
     String resourceUrl = request.resourceUrl();
-    return resourceUrl == null ? null : UrlParser.getPort(resourceUrl);
+    if (resourceUrl == null) {
+      return null;
+    }
+    Integer port = UrlParser.getPort(resourceUrl);
+    if (port != null) {
+      return port;
+    }
+    if (resourceUrl.startsWith("https://")) {
+      return 443;
+    }
+    if (resourceUrl.startsWith("http://")) {
+      return 80;
+    }
+    return null;
   }
 
   @Nullable
