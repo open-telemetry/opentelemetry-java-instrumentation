@@ -13,6 +13,7 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import javax.annotation.Nullable;
 
 public class AkkaRouteHolder implements ImplicitContextKeyed {
   private static final ContextKey<AkkaRouteHolder> KEY = named("opentelemetry-akka-route");
@@ -57,6 +58,7 @@ public class AkkaRouteHolder implements ImplicitContextKeyed {
     }
   }
 
+  @Nullable
   public String route() {
     return lastWasMatched ? route.toString() : null;
   }
