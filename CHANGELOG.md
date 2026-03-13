@@ -59,6 +59,8 @@
   ([#15561](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15561))
 - Convert Lettuce instrumentation to use `Instrumenter`
   ([#15838](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15838))
+- OpenSearch Java client: capture sanitized search query bodies
+  ([#15634](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15634))
 - Apply stable semantic conventions to Camel JMX metrics
   ([#16088](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16088))
 - Add `jvm.file_descriptor.limit` metric
