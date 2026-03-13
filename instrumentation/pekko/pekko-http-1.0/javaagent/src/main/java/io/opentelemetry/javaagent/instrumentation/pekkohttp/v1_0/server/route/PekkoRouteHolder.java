@@ -30,7 +30,7 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
     return context.get(KEY);
   }
 
-  public void push(Uri.Path beforeMatch, Uri.Path afterMatch, String pathToPush) {
+  public synchronized void push(Uri.Path beforeMatch, Uri.Path afterMatch, String pathToPush) {
     // Only accept the suggested 'pathToPush' if:
     // - either this is the first match, or
     // - the unmatched part of the path from the previous match is what the current match
@@ -47,26 +47,26 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
     lastWasMatched = true;
   }
 
-  public void didNotMatch() {
+  public synchronized void didNotMatch() {
     lastWasMatched = false;
   }
 
-  public void pushIfNotCompletelyMatched(String pathToPush) {
+  public synchronized void pushIfNotCompletelyMatched(String pathToPush) {
     if (lastUnmatchedPath != null && !lastUnmatchedPath.isEmpty()) {
       route.append(pathToPush);
     }
   }
 
-  public String route() {
+  public synchronized String route() {
     return lastWasMatched ? route.toString() : null;
   }
 
-  public void save() {
+  public synchronized void save() {
     savedStates.add(new State(lastUnmatchedPath, route));
     route = new StringBuilder(route);
   }
 
-  public void restore() {
+  public synchronized void restore() {
     State popped = savedStates.pollLast();
     if (popped != null) {
       lastUnmatchedPath = popped.lastUnmatchedPath;
@@ -79,7 +79,7 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
     return context.with(KEY, this);
   }
 
-  private PekkoRouteHolder() {}
+  PekkoRouteHolder() {}
 
   private static class State {
     private final Uri.Path lastUnmatchedPath;
