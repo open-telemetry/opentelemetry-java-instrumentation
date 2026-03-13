@@ -74,9 +74,9 @@ public class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
         return new AdviceScope(context, context.makeCurrent(), request);
       }
 
-      public Promise<HttpResponse> end(Promise<HttpResponse> responsePromise, Throwable throwable) {
+      public Promise<HttpResponse> end(
+          Promise<HttpResponse> responsePromise, @Nullable Throwable throwable) {
         scope.close();
-        Promise<HttpResponse> returnValue = responsePromise;
         if (throwable != null) {
           instrumenter().end(context, httpRequest, null, throwable);
           return responsePromise;
