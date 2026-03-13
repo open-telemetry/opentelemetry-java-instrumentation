@@ -1038,6 +1038,12 @@ targets:
       target: ':instrumentation:struts:struts-7.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:thrift:thrift-0.9.1:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:thrift:thrift-common:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:tomcat:tomcat-10.0:javaagent'
     - type: gradle
       path: ./
@@ -1075,9 +1081,6 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:zio:zio-2.0:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:zio:zio-http-3.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent'
