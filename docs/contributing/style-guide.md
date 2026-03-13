@@ -82,6 +82,7 @@ methods.
 Public non-internal non-test classes should be declared `final` where possible.
 "Internal" here includes `.internal` packages **and** `javaagent/src/main/` classes — javaagent
 instrumentation code is not public API.
+"Test" here includes `src/test/` **and** `testing/` modules (test-support code).
 
 Methods should only be declared `final` if they are in public non-internal non-test non-final classes.
 
