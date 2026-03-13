@@ -102,7 +102,10 @@ Auto-fix boundaries:
 
 - Safe to fix:
   - import cleanup or direct style-guide conformance
-  - obvious assertion API migrations (e.g., AssertJ preference)
+  - obvious assertion API migrations (e.g., AssertJ preference) — but **not** inside
+    `satisfies()` lambdas where the lambda parameter is already an `AbstractAssert` (e.g.,
+    `AbstractStringAssert`). Calls like `taskId.contains(jobName)` on the assert object are
+    already valid AssertJ assertions; do not wrap them in `assertThat(...).isTrue()`
   - deterministic semconv constant handling aligned with repository rules
   - missing test-task wiring patterns with clear canonical form
   - missing `testInstrumentation` cross-version references — when a javaagent module belongs
