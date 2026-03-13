@@ -9,6 +9,9 @@ on:
       no-build-cache:
         type: boolean
         required: false
+      pr-base-sha:
+        type: string
+        required: false
     secrets:
       DEVELOCITY_ACCESS_KEY:
         required: false
@@ -19,7 +22,30 @@ permissions:
   contents: read
 
 jobs:
+  determine-affected:
+    runs-on: ubuntu-latest
+    if: ${{ inputs.pr-base-sha != '' }}
+    outputs:
+      build-scope: ${{ steps.affected.outputs.build-scope }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Determine affected tests
+        id: affected
+        run: |
+          result=$(.github/scripts/determine-affected-tests.sh \
+            "${{ inputs.pr-base-sha }}" /dev/null)
+          echo "build-scope=$result" >> "$GITHUB_OUTPUT"
+          echo "Build scope: $result"
+
   test-latest-deps:
+    needs: determine-affected
+    if: >-
+      always() &&
+      needs.determine-affected.result != 'failure' &&
+      needs.determine-affected.outputs.build-scope != 'SKIP_TESTS'
     name: testLatestDeps${{ matrix.test-partition }}
     runs-on: ubuntu-latest
     strategy:
@@ -32,6 +58,12 @@ jobs:
       fail-fast: false
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: ${{ needs.determine-affected.outputs.build-scope == 'TARGETED' && 0 || 1 }}
+
+      - name: Fetch base ref for targeted diff
+        if: ${{ needs.determine-affected.outputs.build-scope == 'TARGETED' }}
+        run: git fetch origin "${{ inputs.pr-base-sha }}"
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -71,11 +103,19 @@ jobs:
           -PtestPartition=${{ matrix.test-partition }}
           -PtestLatestDeps=true
 
+      - name: Filter affected tests
+        if: ${{ needs.determine-affected.outputs.build-scope == 'TARGETED' }}
+        run: |
+          .github/scripts/determine-affected-tests.sh \
+            "${{ inputs.pr-base-sha }}" test-tasks.txt
+          mv affected-test-tasks.txt test-tasks.txt
+
       - name: Set test tasks
         run: |
           echo "test-tasks=$(cat test-tasks.txt | xargs echo | sed 's/\n/ /g')" >> $GITHUB_ENV
 
       - name: Test
+        if: ${{ env.test-tasks != '' }}
         env:
           DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
         run: >
