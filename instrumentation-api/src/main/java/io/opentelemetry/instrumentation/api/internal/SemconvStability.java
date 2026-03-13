@@ -7,8 +7,8 @@ package io.opentelemetry.instrumentation.api.internal;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -24,90 +24,97 @@ import java.util.Set;
  */
 public final class SemconvStability {
 
-  private static boolean emitOldDatabaseSemconv;
-  private static boolean emitStableDatabaseSemconv;
+  private static final boolean emitOldDatabaseSemconv;
+  private static final boolean emitStableDatabaseSemconv;
 
-  private static boolean emitOldCodeSemconv;
-  private static boolean emitStableCodeSemconv;
+  private static final boolean emitOldCodeSemconv;
+  private static final boolean emitStableCodeSemconv;
 
-  private static boolean emitOldServicePeerSemconv;
-  private static boolean emitStableServicePeerSemconv;
+  private static final boolean emitOldServicePeerSemconv;
+  private static final boolean emitStableServicePeerSemconv;
 
-  private static boolean emitOldRpcSemconv;
-  private static boolean emitStableRpcSemconv;
+  private static final boolean emitOldRpcSemconv;
+  private static final boolean emitStableRpcSemconv;
 
   static {
-    String value = System.getProperty("otel.semconv-stability.opt-in");
-    if (value == null) {
-      value = System.getenv("OTEL_SEMCONV_STABILITY_OPT_IN");
-    }
-    Set<String> values = value != null ? new HashSet<>(asList(value.split(","))) : emptySet();
-    configure(values);
-  }
-
-  private static void configure(Set<String> values) {
-    // set default values
-    emitOldDatabaseSemconv = true;
-    emitStableDatabaseSemconv = false;
-
-    emitOldCodeSemconv = true;
-    emitStableCodeSemconv = false;
-
-    emitOldServicePeerSemconv = true;
-    emitStableServicePeerSemconv = false;
-
-    emitOldRpcSemconv = true;
-    emitStableRpcSemconv = false;
-
-    // no else -- technically it's possible to set "XXX,XXX/dup", in which case we
-    // should emit both sets of attributes for XXX
-
-    if (values.contains("database")) {
-      emitOldDatabaseSemconv = false;
-      emitStableDatabaseSemconv = true;
-    }
-    if (values.contains("database/dup")) {
-      emitOldDatabaseSemconv = true;
-      emitStableDatabaseSemconv = true;
-    }
-
-    if (values.contains("code")) {
-      emitOldCodeSemconv = false;
-      emitStableCodeSemconv = true;
-    }
-    if (values.contains("code/dup")) {
-      emitOldCodeSemconv = true;
-      emitStableCodeSemconv = true;
-    }
-
-    if (values.contains("service.peer")) {
-      emitOldServicePeerSemconv = false;
-      emitStableServicePeerSemconv = true;
-    }
-    if (values.contains("service.peer/dup")) {
-      emitOldServicePeerSemconv = true;
-      emitStableServicePeerSemconv = true;
-    }
-
-    if (values.contains("rpc")) {
-      emitOldRpcSemconv = false;
-      emitStableRpcSemconv = true;
-    }
-    if (values.contains("rpc/dup")) {
-      emitOldRpcSemconv = true;
-      emitStableRpcSemconv = true;
-    }
-  }
-
-  public static void configure(OpenTelemetry openTelemetry) {
-    DeclarativeConfigProperties generalConfig = getGeneralInstrumentationConfig(openTelemetry);
-
+    // Try declarative config via GlobalOpenTelemetry first
+    DeclarativeConfigProperties generalConfig =
+        getGeneralInstrumentationConfig(GlobalOpenTelemetry.get());
     Set<String> values =
         new HashSet<>(
             generalConfig
                 .get("semconv_stability")
                 .getScalarList("opt_in", String.class, new ArrayList<>()));
-    configure(values);
+    if (values.isEmpty()) {
+      // Fall back to system property / env var
+      String value = ConfigPropertiesUtil.getString("otel.semconv-stability.opt-in");
+      if (value != null) {
+        values = new HashSet<>(asList(value.split(",")));
+      }
+    }
+
+    boolean oldDatabase = true;
+    boolean stableDatabase = false;
+
+    boolean oldCode = true;
+    boolean stableCode = false;
+
+    boolean oldServicePeer = true;
+    boolean stableServicePeer = false;
+
+    boolean oldRpc = true;
+    boolean stableRpc = false;
+
+    // no else -- technically it's possible to set "XXX,XXX/dup", in which case we
+    // should emit both sets of attributes for XXX
+
+    if (values.contains("database")) {
+      oldDatabase = false;
+      stableDatabase = true;
+    }
+    if (values.contains("database/dup")) {
+      oldDatabase = true;
+      stableDatabase = true;
+    }
+
+    if (values.contains("code")) {
+      oldCode = false;
+      stableCode = true;
+    }
+    if (values.contains("code/dup")) {
+      oldCode = true;
+      stableCode = true;
+    }
+
+    if (values.contains("service.peer")) {
+      oldServicePeer = false;
+      stableServicePeer = true;
+    }
+    if (values.contains("service.peer/dup")) {
+      oldServicePeer = true;
+      stableServicePeer = true;
+    }
+
+    if (values.contains("rpc")) {
+      oldRpc = false;
+      stableRpc = true;
+    }
+    if (values.contains("rpc/dup")) {
+      oldRpc = true;
+      stableRpc = true;
+    }
+
+    emitOldDatabaseSemconv = oldDatabase;
+    emitStableDatabaseSemconv = stableDatabase;
+
+    emitOldCodeSemconv = oldCode;
+    emitStableCodeSemconv = stableCode;
+
+    emitOldServicePeerSemconv = oldServicePeer;
+    emitStableServicePeerSemconv = stableServicePeer;
+
+    emitOldRpcSemconv = oldRpc;
+    emitStableRpcSemconv = stableRpc;
   }
 
   public static void enableAllStable() {
