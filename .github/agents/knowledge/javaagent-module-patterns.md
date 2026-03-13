@@ -185,7 +185,7 @@ public class MyClassInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("execute")).and(takesArguments(1)),
+        named("execute").and(takesArguments(1)),
         getClass().getName() + "$ExecuteAdvice");
   }
 
@@ -232,6 +232,9 @@ sufficient for optimization.
   `extendsClass(...)` and `implementsInterface(...)` are appropriate when the instrumentation
   targets subclasses or implementors of a type.
 - `transform()` wires method matchers to advice classes via `applyAdviceToMethod()`.
+- Do not add `isMethod()` in method matchers inside `transform()`. `isMethod()` only
+  serves to exclude constructors, but `named(...)` already excludes them because
+  constructors are named `<init>`. Remove `isMethod()` when not needed.
 - Reference the advice class using `getClass().getName() + "$InnerClassName"` — not
   `InnerClassName.class.getName()`, `OuterClass.class.getName()`, or a string literal.
   Any `.class.getName()` reference — whether to the inner advice class or the outer
