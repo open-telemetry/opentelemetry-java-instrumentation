@@ -19,7 +19,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Naming | Module/package naming | New or renamed modules/packages | `module-naming.md` |
 | Javaagent | Advice patterns | `@Advice` classes | `javaagent-advice-patterns.md` |
 | Javaagent | Module structure patterns | `InstrumentationModule`, `TypeInstrumentation`, `Singletons` | `javaagent-module-patterns.md` |
-| Javaagent | Missing `classLoaderMatcher()` | `InstrumentationModule` without `classLoaderMatcher()` override | `javaagent-module-patterns.md` |
+| Javaagent | Incorrect `classLoaderMatcher()` | `classLoaderMatcher()` override that is redundant (muzzle already handles it) or missing when needed (muzzle cannot distinguish version range) | `javaagent-module-patterns.md` |
 | Semconv | Library vs javaagent semconv constant usage | Semconv constants/assertions | — |
 | Semconv | Dual semconv testing | `SemconvStability`, `maybeStable`, semconv Gradle tasks | `testing-semconv-stability.md` |
 | Testing | General test patterns | Test files in scope | `testing-general-patterns.md` |
