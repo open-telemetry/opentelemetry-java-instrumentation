@@ -12,6 +12,7 @@ import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -124,6 +125,9 @@ public final class CommonConfig {
     loggingTraceFlagsKey =
         commonConfig.get("logging").getString("trace_flags", LoggingContextConstants.TRACE_FLAGS);
     v3Preview = commonConfig.getBoolean("v3_preview", false);
+    if (v3Preview) {
+      SemconvStability.enableAllStable();
+    }
   }
 
   public List<String> getClientRequestHeaders() {
