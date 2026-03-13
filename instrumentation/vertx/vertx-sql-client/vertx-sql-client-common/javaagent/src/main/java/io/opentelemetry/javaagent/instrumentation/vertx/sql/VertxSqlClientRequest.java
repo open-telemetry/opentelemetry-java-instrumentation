@@ -8,15 +8,21 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sql;
 import io.vertx.sqlclient.SqlConnectOptions;
 
 public final class VertxSqlClientRequest {
+
   private final String queryText;
   private final SqlConnectOptions sqlConnectOptions;
   private final boolean parameterizedQuery;
+  private final String dbSystemName;
 
   public VertxSqlClientRequest(
-      String queryText, SqlConnectOptions sqlConnectOptions, boolean parameterizedQuery) {
+      String queryText,
+      SqlConnectOptions sqlConnectOptions,
+      boolean parameterizedQuery,
+      String dbSystemName) {
     this.queryText = queryText;
     this.sqlConnectOptions = sqlConnectOptions;
     this.parameterizedQuery = parameterizedQuery;
+    this.dbSystemName = dbSystemName;
   }
 
   public String getQueryText() {
@@ -41,5 +47,14 @@ public final class VertxSqlClientRequest {
 
   public boolean isParameterizedQuery() {
     return parameterizedQuery;
+  }
+
+  @Deprecated // to be removed in 3.0
+  public String getDbSystem() {
+    return VertxSqlClientUtil.getOldDbSystemFromName(dbSystemName);
+  }
+
+  public String getDbSystemName() {
+    return dbSystemName;
   }
 }
