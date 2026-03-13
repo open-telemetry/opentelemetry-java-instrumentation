@@ -32,8 +32,6 @@
 
 ### 🚫 Deprecations
 
-- SQL sanitizer now treats double-quoted fragments as string literals by default
-  ([#15582](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15582))
 - Deprecated individual runtime-telemetry module classes in favor of unified module
   ([#16087](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16087))
 - Deprecated old HTTP server query parameter methods in favor of sensitive query param handling
@@ -100,6 +98,8 @@
 
 ### 🛠️ Bug fixes
 
+- SQL sanitizer now treats double-quoted fragments as string literals by default
+  ([#15582](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15582))
 - Clear recorded exception when request completes
   ([#16138](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16138))
 - Clear URL connection state after ending span
