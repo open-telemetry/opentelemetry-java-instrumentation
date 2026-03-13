@@ -118,10 +118,11 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
+        @Advice.Return @Nullable Object result,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable JdbcAdviceScope adviceScope) {
       if (adviceScope != null) {
-        adviceScope.end(throwable);
+        adviceScope.end(result, throwable);
       }
     }
   }

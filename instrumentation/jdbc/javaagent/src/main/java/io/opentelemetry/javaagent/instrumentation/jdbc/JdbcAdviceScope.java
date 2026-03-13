@@ -11,9 +11,11 @@ import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcSingletons.sta
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
+import io.opentelemetry.instrumentation.jdbc.internal.DbResponse;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcData;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -91,6 +93,10 @@ public class JdbcAdviceScope {
   }
 
   public void end(@Nullable Throwable throwable) {
+    end(null, throwable);
+  }
+
+  public void end(@Nullable Object result, @Nullable Throwable throwable) {
     if (callDepth.decrementAndGet() > 0) {
       return;
     }
@@ -98,6 +104,37 @@ public class JdbcAdviceScope {
       return;
     }
     scope.close();
-    statementInstrumenter().end(context, request, null, throwable);
+
+    // For SELECT queries that return a ResultSet, defer span end to ResultSet.close() so we can
+    // count the rows iterated. The ResultSetInstrumentation will call endSpanForResultSet() later.
+    if (JdbcSingletons.CAPTURE_ROW_COUNT && throwable == null && result instanceof ResultSet) {
+      JdbcSingletons.resultSetInfo.set((ResultSet) result, new ResultSetInfo(context, request));
+      return;
+    }
+
+    statementInstrumenter().end(context, request, DbResponse.create(null), throwable);
+  }
+
+  /** Called by ResultSetInstrumentation when the ResultSet is closed. */
+  public static void endSpanForResultSet(ResultSet resultSet) {
+    ResultSetInfo info = JdbcSingletons.resultSetInfo.get(resultSet);
+    if (info == null) {
+      return;
+    }
+    JdbcSingletons.resultSetInfo.set(resultSet, null);
+
+    long rowCount = info.getRowCount();
+    // rowCount > ROW_COUNT_LIMIT means we overflowed - omit the attribute
+    Long finalCount = rowCount <= JdbcSingletons.ROW_COUNT_LIMIT ? rowCount : null;
+    statementInstrumenter()
+        .end(info.getContext(), info.getRequest(), DbResponse.create(finalCount), null);
+  }
+
+  /** Called by ResultSetInstrumentation on each successful next() call. */
+  public static void incrementResultSetRowCount(ResultSetInfo info) {
+    // Count one row past the limit so we can distinguish "exactly at limit" from "exceeded limit"
+    if (info.getRowCount() <= JdbcSingletons.ROW_COUNT_LIMIT) {
+      info.incrementRowCount();
+    }
   }
 }

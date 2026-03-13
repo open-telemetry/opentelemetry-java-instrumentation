@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCom
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jdbc.datasource.internal.Experimental;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
+import io.opentelemetry.instrumentation.jdbc.internal.DbResponse;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import javax.sql.DataSource;
@@ -25,6 +26,8 @@ public final class JdbcTelemetryBuilder {
   private boolean querySanitizationEnabled = true;
   private boolean transactionInstrumenterEnabled = false;
   private boolean captureQueryParameters = false;
+  private boolean captureRowCount = false;
+  private long rowCountLimit = 10000L;
   private final SqlCommenterBuilder sqlCommenterBuilder = SqlCommenter.builder();
 
   static {
@@ -76,12 +79,34 @@ public final class JdbcTelemetryBuilder {
     return this;
   }
 
+  /**
+   * Configures whether row counts are captured for JDBC operations. Disabled by default.
+   *
+   * <p>For SELECT queries, counts ResultSet.next() calls. For DML operations, captures the
+   * executeUpdate() return value. May have performance impact for large result sets.
+   */
+  @CanIgnoreReturnValue
+  public JdbcTelemetryBuilder setCaptureRowCount(boolean enabled) {
+    this.captureRowCount = enabled;
+    return this;
+  }
+
+  /**
+   * Configures the maximum number of rows to count. When this limit is exceeded, the row count
+   * attribute is omitted. Default is 10000.
+   */
+  @CanIgnoreReturnValue
+  public JdbcTelemetryBuilder setRowCountLimit(long limit) {
+    this.rowCountLimit = limit;
+    return this;
+  }
+
   /** Returns a new {@link JdbcTelemetry} with the settings of this {@link JdbcTelemetryBuilder}. */
   public JdbcTelemetry build() {
     Instrumenter<DataSource, DbInfo> dataSourceInstrumenter =
         JdbcInstrumenterFactory.createDataSourceInstrumenter(
             openTelemetry, dataSourceInstrumenterEnabled);
-    Instrumenter<DbRequest, Void> statementInstrumenter =
+    Instrumenter<DbRequest, DbResponse> statementInstrumenter =
         JdbcInstrumenterFactory.createStatementInstrumenter(
             openTelemetry,
             statementInstrumenterEnabled,
@@ -96,6 +121,8 @@ public final class JdbcTelemetryBuilder {
         statementInstrumenter,
         transactionInstrumenter,
         captureQueryParameters,
-        sqlCommenterBuilder.build());
+        sqlCommenterBuilder.build(),
+        captureRowCount,
+        rowCountLimit);
   }
 }
