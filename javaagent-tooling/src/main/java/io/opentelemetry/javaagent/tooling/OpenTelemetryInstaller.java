@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
@@ -17,6 +18,7 @@ import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.SdkAutoconfigureAccess;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 
 public final class OpenTelemetryInstaller {
@@ -37,15 +39,17 @@ public final class OpenTelemetryInstaller {
             .build();
     OpenTelemetrySdk sdk = autoConfiguredSdk.getOpenTelemetrySdk();
     ConfigProperties configProperties = AutoConfigureUtil.getConfig(autoConfiguredSdk);
-    boolean declarativeConfigUsed = configProperties == null;
 
-    if (!declarativeConfigUsed) {
+    if (configProperties != null) {
       // Provide a fake declarative configuration based on config properties
       // so that declarative configuration API can be used everywhere
       sdk =
           new ExtendedOpenTelemetrySdkWrapper(
               sdk, ConfigPropertiesBackedConfigProvider.create(configProperties));
       AgentDistributionConfig.set(AgentDistributionConfig.fromConfigProperties(configProperties));
+    } else {
+      // Declarative config path: no ConfigProperties available, use empty defaults
+      configProperties = DefaultConfigProperties.createFromMap(emptyMap());
     }
 
     setForceFlush(sdk);

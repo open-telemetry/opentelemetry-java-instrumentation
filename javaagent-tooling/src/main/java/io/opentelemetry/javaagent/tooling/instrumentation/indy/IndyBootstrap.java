@@ -124,6 +124,7 @@ public class IndyBootstrap {
             () -> internalBootstrap(lookup, adviceMethodName, adviceMethodType, args));
   }
 
+  @Nullable
   private static CallSite internalBootstrap(
       MethodHandles.Lookup lookup,
       String adviceMethodName,
