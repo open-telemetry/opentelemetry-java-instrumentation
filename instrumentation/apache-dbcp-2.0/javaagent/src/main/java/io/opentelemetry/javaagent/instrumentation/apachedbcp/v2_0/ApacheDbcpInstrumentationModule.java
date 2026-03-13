@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class ApacheDbcpInstrumentationModule extends InstrumentationModule {
   public ApacheDbcpInstrumentationModule() {
-    super("apache-dbcp", "apache-dbcp-2.0");
+    super("apache_dbcp", "apache_dbcp_2.0");
   }
 
   @Override

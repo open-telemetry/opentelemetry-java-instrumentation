@@ -20,7 +20,7 @@ public class VertxClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public VertxClientInstrumentationModule() {
-    super("vertx-http-client", "vertx-http-client-5.0", "vertx");
+    super("vertx_http_client", "vertx_http_client_5.0", "vertx");
   }
 
   @Override

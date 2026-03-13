@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class WicketInstrumentationModule extends InstrumentationModule {
 
   public WicketInstrumentationModule() {
-    super("wicket", "wicket-8.0");
+    super("wicket", "wicket_8.0");
   }
 
   @Override

@@ -21,7 +21,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class NettyInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public NettyInstrumentationModule() {
-    super("netty", "netty-4.0");
+    super("netty", "netty_4.0");
   }
 
   @Override

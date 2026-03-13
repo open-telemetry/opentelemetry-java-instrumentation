@@ -17,7 +17,7 @@ import java.util.List;
 public class AwsSdkInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public AwsSdkInstrumentationModule() {
-    super("aws-sdk", "aws-sdk-1.11", "aws-sdk-1.11-core");
+    super("aws_sdk", "aws_sdk_1.11", "aws_sdk_1.11_core");
   }
 
   @Override

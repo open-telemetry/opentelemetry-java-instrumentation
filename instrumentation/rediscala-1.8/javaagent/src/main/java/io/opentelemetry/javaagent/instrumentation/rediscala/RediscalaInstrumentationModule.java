@@ -18,7 +18,7 @@ public class RediscalaInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public RediscalaInstrumentationModule() {
-    super("rediscala", "rediscala-1.8");
+    super("rediscala", "rediscala_1.8");
   }
 
   @Override

@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ResteasyInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public ResteasyInstrumentationModule() {
-    super("jaxrs", "jaxrs-3.0", "resteasy", "resteasy-6.0");
+    super("jaxrs", "jaxrs_3.0", "resteasy", "resteasy_6.0");
   }
 
   @Override

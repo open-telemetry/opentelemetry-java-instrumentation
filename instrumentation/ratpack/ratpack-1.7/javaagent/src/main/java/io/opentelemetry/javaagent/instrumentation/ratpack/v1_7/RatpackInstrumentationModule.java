@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class RatpackInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public RatpackInstrumentationModule() {
-    super("ratpack", "ratpack-1.7");
+    super("ratpack", "ratpack_1.7");
   }
 
   @Override

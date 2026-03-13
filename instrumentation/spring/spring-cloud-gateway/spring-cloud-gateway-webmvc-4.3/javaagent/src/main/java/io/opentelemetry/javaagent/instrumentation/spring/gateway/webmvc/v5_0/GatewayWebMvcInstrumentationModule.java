@@ -20,7 +20,7 @@ public class GatewayWebMvcInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public GatewayWebMvcInstrumentationModule() {
-    super("spring-cloud-gateway", "spring-cloud-gateway-webmvc-4.3");
+    super("spring_cloud_gateway", "spring_cloud_gateway_webmvc_4.3");
   }
 
   @Override

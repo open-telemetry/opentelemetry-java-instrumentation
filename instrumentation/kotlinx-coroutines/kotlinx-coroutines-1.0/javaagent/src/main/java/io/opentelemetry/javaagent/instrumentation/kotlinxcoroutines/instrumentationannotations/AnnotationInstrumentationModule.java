@@ -24,10 +24,10 @@ public class AnnotationInstrumentationModule extends InstrumentationModule
 
   public AnnotationInstrumentationModule() {
     super(
-        "kotlinx-coroutines",
-        "kotlinx-coroutines-1.0",
-        "kotlinx-coroutines-opentelemetry-instrumentation-annotations",
-        "opentelemetry-instrumentation-annotations");
+        "kotlinx_coroutines",
+        "kotlinx_coroutines_1.0",
+        "kotlinx_coroutines_opentelemetry_instrumentation_annotations",
+        "opentelemetry_instrumentation_annotations");
   }
 
   @Override

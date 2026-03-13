@@ -17,7 +17,7 @@ import java.util.List;
 public class PekkoHttpClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public PekkoHttpClientInstrumentationModule() {
-    super("pekko-http", "pekko-http-1.0", "pekko-http-client");
+    super("pekko_http", "pekko_http_1.0", "pekko_http_client");
   }
 
   @Override

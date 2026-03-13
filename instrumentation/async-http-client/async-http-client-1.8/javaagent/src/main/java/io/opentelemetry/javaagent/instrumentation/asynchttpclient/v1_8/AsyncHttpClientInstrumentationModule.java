@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class AsyncHttpClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public AsyncHttpClientInstrumentationModule() {
-    super("async-http-client", "async-http-client-1.8");
+    super("async_http_client", "async_http_client_1.8");
   }
 
   @Override

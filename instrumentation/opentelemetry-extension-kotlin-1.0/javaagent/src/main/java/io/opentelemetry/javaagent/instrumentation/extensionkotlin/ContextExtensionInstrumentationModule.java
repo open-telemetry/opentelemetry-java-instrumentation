@@ -18,7 +18,7 @@ public class ContextExtensionInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public ContextExtensionInstrumentationModule() {
-    super("opentelemetry-extension-kotlin", "opentelemetry-extension-kotlin-1.0");
+    super("opentelemetry_extension_kotlin", "opentelemetry_extension_kotlin_1.0");
   }
 
   @Override

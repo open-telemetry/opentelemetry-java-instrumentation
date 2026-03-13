@@ -17,7 +17,7 @@ import java.util.List;
 public class RabbitMqInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public RabbitMqInstrumentationModule() {
-    super("rabbitmq", "rabbitmq-2.7");
+    super("rabbitmq", "rabbitmq_2.7");
   }
 
   @Override

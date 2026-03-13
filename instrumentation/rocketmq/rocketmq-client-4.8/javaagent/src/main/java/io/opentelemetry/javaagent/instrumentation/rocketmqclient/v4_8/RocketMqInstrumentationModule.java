@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class RocketMqInstrumentationModule extends InstrumentationModule {
   public RocketMqInstrumentationModule() {
-    super("rocketmq-client", "rocketmq-client-4.8");
+    super("rocketmq_client", "rocketmq_client_4.8");
   }
 
   @Override

@@ -18,7 +18,7 @@ public class ElasticJobInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public ElasticJobInstrumentationModule() {
-    super("apache-elasticjob", "apache-elasticjob-3.0");
+    super("apache_elasticjob", "apache_elasticjob_3.0");
   }
 
   @Override

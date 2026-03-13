@@ -18,7 +18,7 @@ public class ExternalAnnotationInstrumentationModule extends InstrumentationModu
     implements ExperimentalInstrumentationModule {
 
   public ExternalAnnotationInstrumentationModule() {
-    super("external-annotations");
+    super("external_annotations");
   }
 
   @Override

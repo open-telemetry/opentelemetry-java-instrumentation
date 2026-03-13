@@ -17,7 +17,7 @@ import java.util.List;
 public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public GoogleHttpClientInstrumentationModule() {
-    super("google-http-client", "google-http-client-1.19");
+    super("google_http_client", "google_http_client_1.19");
   }
 
   @Override

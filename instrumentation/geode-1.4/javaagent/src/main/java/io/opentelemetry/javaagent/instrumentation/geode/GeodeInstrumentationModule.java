@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class GeodeInstrumentationModule extends InstrumentationModule {
   public GeodeInstrumentationModule() {
-    super("geode", "geode-1.4");
+    super("geode", "geode_1.4");
   }
 
   @Override

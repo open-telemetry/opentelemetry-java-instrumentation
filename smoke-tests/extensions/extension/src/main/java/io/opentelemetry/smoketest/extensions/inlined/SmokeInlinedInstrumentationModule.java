@@ -16,7 +16,7 @@ import java.util.List;
 public class SmokeInlinedInstrumentationModule extends InstrumentationModule {
 
   public SmokeInlinedInstrumentationModule() {
-    super("smoke-test-extension-inlined");
+    super("smoke_test_extension_inlined");
   }
 
   @Override

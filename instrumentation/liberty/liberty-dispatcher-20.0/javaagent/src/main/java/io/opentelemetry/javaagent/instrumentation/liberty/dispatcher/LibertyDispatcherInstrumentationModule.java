@@ -18,7 +18,7 @@ public class LibertyDispatcherInstrumentationModule extends InstrumentationModul
     implements ExperimentalInstrumentationModule {
 
   public LibertyDispatcherInstrumentationModule() {
-    super("liberty-dispatcher", "liberty-dispatcher-20.0", "liberty");
+    super("liberty_dispatcher", "liberty_dispatcher_20.0", "liberty");
   }
 
   @Override

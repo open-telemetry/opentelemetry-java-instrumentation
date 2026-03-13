@@ -20,7 +20,7 @@ public class Struts2InstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public Struts2InstrumentationModule() {
-    super("struts", "struts-7.0");
+    super("struts", "struts_7.0");
   }
 
   @Override

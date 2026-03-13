@@ -17,7 +17,7 @@ import java.util.List;
 public class AkkaActorForkJoinInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public AkkaActorForkJoinInstrumentationModule() {
-    super("akka-actor-fork-join", "akka-actor-fork-join-2.5", "akka-actor");
+    super("akka_actor_fork_join", "akka_actor_fork_join_2.5", "akka_actor");
   }
 
   @Override

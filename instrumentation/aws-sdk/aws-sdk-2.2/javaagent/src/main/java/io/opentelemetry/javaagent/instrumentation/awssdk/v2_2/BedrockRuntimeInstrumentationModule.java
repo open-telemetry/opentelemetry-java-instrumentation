@@ -22,7 +22,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class BedrockRuntimeInstrumentationModule extends AbstractAwsSdkInstrumentationModule {
 
   public BedrockRuntimeInstrumentationModule() {
-    super("aws-sdk-2.2-bedrock-runtime");
+    super("aws_sdk_2.2_bedrock_runtime");
   }
 
   @Override

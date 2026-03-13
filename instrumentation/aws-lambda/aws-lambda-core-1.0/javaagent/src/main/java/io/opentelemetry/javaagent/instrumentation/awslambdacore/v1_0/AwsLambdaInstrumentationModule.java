@@ -21,7 +21,7 @@ public class AwsLambdaInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public AwsLambdaInstrumentationModule() {
-    super("aws-lambda-core", "aws-lambda-core-1.0", "aws-lambda");
+    super("aws_lambda_core", "aws_lambda_core_1.0", "aws_lambda");
   }
 
   @Override

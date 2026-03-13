@@ -18,7 +18,7 @@ public class SpymemcachedInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public SpymemcachedInstrumentationModule() {
-    super("spymemcached", "spymemcached-2.12");
+    super("spymemcached", "spymemcached_2.12");
   }
 
   @Override

@@ -25,7 +25,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class DubboInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public DubboInstrumentationModule() {
-    super("apache-dubbo", "apache-dubbo-2.7");
+    super("apache_dubbo", "apache_dubbo_2.7");
   }
 
   @Override

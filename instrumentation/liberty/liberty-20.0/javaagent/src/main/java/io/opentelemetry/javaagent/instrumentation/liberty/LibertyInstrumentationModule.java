@@ -31,7 +31,7 @@ public class LibertyInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public LibertyInstrumentationModule() {
-    super("liberty", "liberty-20.0");
+    super("liberty", "liberty_20.0");
   }
 
   @Override

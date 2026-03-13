@@ -27,7 +27,7 @@ public class Servlet3InstrumentationModule extends InstrumentationModule
   private static final String BASE_PACKAGE = "javax.servlet";
 
   public Servlet3InstrumentationModule() {
-    super("servlet", "servlet-3.0");
+    super("servlet", "servlet_3.0");
   }
 
   @Override

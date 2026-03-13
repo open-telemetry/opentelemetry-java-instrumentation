@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class SpringCoreInstrumentationModule extends InstrumentationModule {
   public SpringCoreInstrumentationModule() {
-    super("spring-core", "spring-core-2.0");
+    super("spring_core", "spring_core_2.0");
   }
 
   @Override

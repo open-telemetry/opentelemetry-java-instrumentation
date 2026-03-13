@@ -18,7 +18,7 @@ public class ZioInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public ZioInstrumentationModule() {
-    super("zio", "zio-2.0");
+    super("zio", "zio_2.0");
   }
 
   @Override

@@ -22,7 +22,7 @@ public class GraphqlInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public GraphqlInstrumentationModule() {
-    super("graphql-java", "graphql-java-12.0");
+    super("graphql_java", "graphql_java_12.0");
   }
 
   @Override

@@ -20,7 +20,7 @@ public class TapestryInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public TapestryInstrumentationModule() {
-    super("tapestry", "tapestry-5.4");
+    super("tapestry", "tapestry_5.4");
   }
 
   @Override

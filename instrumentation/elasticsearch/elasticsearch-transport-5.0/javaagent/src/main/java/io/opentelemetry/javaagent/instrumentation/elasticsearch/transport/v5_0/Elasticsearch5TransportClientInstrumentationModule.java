@@ -17,7 +17,7 @@ import java.util.List;
 public class Elasticsearch5TransportClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public Elasticsearch5TransportClientInstrumentationModule() {
-    super("elasticsearch-transport", "elasticsearch-transport-5.0", "elasticsearch");
+    super("elasticsearch_transport", "elasticsearch_transport_5.0", "elasticsearch");
   }
 
   @Override

@@ -18,7 +18,7 @@ public class HikariCpInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public HikariCpInstrumentationModule() {
-    super("hikaricp", "hikaricp-3.0");
+    super("hikaricp", "hikaricp_3.0");
   }
 
   @Override

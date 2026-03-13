@@ -17,7 +17,7 @@ import java.util.List;
 public class EclipseOsgiInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public EclipseOsgiInstrumentationModule() {
-    super("internal-eclipse-osgi", "internal-eclipse-osgi-3.6");
+    super("internal_eclipse_osgi", "internal_eclipse_osgi_3.6");
   }
 
   @Override

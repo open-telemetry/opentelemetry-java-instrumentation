@@ -17,7 +17,7 @@ import java.util.List;
 public class KafkaClientsInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public KafkaClientsInstrumentationModule() {
-    super("kafka-clients", "kafka-clients-0.11", "kafka");
+    super("kafka_clients", "kafka_clients_0.11", "kafka");
   }
 
   @Override
