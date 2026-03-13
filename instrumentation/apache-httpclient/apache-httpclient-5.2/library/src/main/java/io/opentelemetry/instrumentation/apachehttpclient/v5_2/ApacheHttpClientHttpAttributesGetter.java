@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.apachehttpclient.v5_2;
 
 import static java.util.Collections.emptyList;
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.util.ArrayList;
 import java.util.List;
@@ -96,19 +97,13 @@ enum ApacheHttpClientHttpAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(ApacheHttpClientRequest request) {
-    if (request.getRequest().getAuthority() == null) {
-      return null;
-    }
-    return request.getRequest().getAuthority().getHostName();
+    return request.getServerAddress();
   }
 
   @Override
   @Nullable
   public Integer getServerPort(ApacheHttpClientRequest request) {
-    if (request.getRequest().getAuthority() == null) {
-      return null;
-    }
-    return request.getRequest().getAuthority().getPort();
+    return HttpConstants.portOrDefaultFromScheme(request.getServerPort(), request.getScheme());
   }
 
   private static ProtocolVersion getVersion(

@@ -5,7 +5,9 @@
 
 package io.opentelemetry.instrumentation.javahttpclient.internal;
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
+import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -77,7 +79,9 @@ enum JavaHttpClientAttributesGetter
   }
 
   @Override
+  @Nullable
   public Integer getServerPort(HttpRequest request) {
-    return request.uri().getPort();
+    URI uri = request.uri();
+    return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri.getScheme());
   }
 }
