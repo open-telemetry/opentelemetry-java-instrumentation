@@ -167,9 +167,12 @@ final class StreamedMessageBuffer {
 
         tcBuilder =
             lookup.findStatic(
-                ChatCompletionMessageToolCall.class, "builder", MethodType.methodType(builderClass));
+                ChatCompletionMessageToolCall.class,
+                "builder",
+                MethodType.methodType(builderClass));
         bId =
-            lookup.findVirtual(builderClass, "id", MethodType.methodType(builderClass, String.class));
+            lookup.findVirtual(
+                builderClass, "id", MethodType.methodType(builderClass, String.class));
         bFunction =
             lookup.findVirtual(
                 builderClass, "function", MethodType.methodType(builderClass, functionClass));
@@ -240,7 +243,8 @@ final class StreamedMessageBuffer {
     }
   }
 
-  // v3+: ChatCompletionMessageFunctionToolCall.builder().id().function(Function.builder()...).build()
+  // v3+:
+  // ChatCompletionMessageFunctionToolCall.builder().id().function(Function.builder()...).build()
   //      then ChatCompletionMessageToolCall.ofFunction(...)
   private static class V3ToolCallBuilder {
     @Nullable private static final MethodHandle ftcBuilderHandle;
@@ -278,16 +282,14 @@ final class StreamedMessageBuffer {
             Class.forName(
                 "com.openai.models.chat.completions.ChatCompletionMessageFunctionToolCall$Function$Builder");
 
-        ftcBuilder =
-            lookup.findStatic(ftcClass, "builder", MethodType.methodType(ftcBuilderClass));
+        ftcBuilder = lookup.findStatic(ftcClass, "builder", MethodType.methodType(ftcBuilderClass));
         ftcBId =
             lookup.findVirtual(
                 ftcBuilderClass, "id", MethodType.methodType(ftcBuilderClass, String.class));
         ftcBFunction =
             lookup.findVirtual(
                 ftcBuilderClass, "function", MethodType.methodType(ftcBuilderClass, functionClass));
-        ftcBBuild =
-            lookup.findVirtual(ftcBuilderClass, "build", MethodType.methodType(ftcClass));
+        ftcBBuild = lookup.findVirtual(ftcBuilderClass, "build", MethodType.methodType(ftcClass));
         fBuilder =
             lookup.findStatic(functionClass, "builder", MethodType.methodType(funcBuilderClass));
         fName =
