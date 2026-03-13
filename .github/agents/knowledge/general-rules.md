@@ -19,7 +19,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Naming | Module/package naming | New or renamed modules/packages | `module-naming.md` |
 | Javaagent | Advice patterns | `@Advice` classes | `javaagent-advice-patterns.md` |
 | Javaagent | Module structure patterns | `InstrumentationModule`, `TypeInstrumentation`, `Singletons` | `javaagent-module-patterns.md` |
-| Javaagent | Missing `classLoaderMatcher()` | `InstrumentationModule` without `classLoaderMatcher()` override | `javaagent-module-patterns.md` |
+| Javaagent | Incorrect `classLoaderMatcher()` | `classLoaderMatcher()` override that is redundant (muzzle already handles it) or missing when needed (muzzle cannot distinguish version range) | `javaagent-module-patterns.md` |
 | Semconv | Library vs javaagent semconv constant usage | Semconv constants/assertions | — |
 | Semconv | Dual semconv testing | `SemconvStability`, `maybeStable`, semconv Gradle tasks | `testing-semconv-stability.md` |
 | Testing | General test patterns | Test files in scope | `testing-general-patterns.md` |
@@ -55,18 +55,19 @@ Only flag substantive problems, not stylistic preference.
 
 Read and apply `docs/contributing/style-guide.md`.
 
-Exceptions:
+Do not flag the following patterns (common false positives):
 
 - FQCN is acceptable when class-name collision makes import impossible.
-- `@SuppressWarnings` at method level is preferred over class level for tighter scope, but
+
+## [Style] `@SuppressWarnings` Usage
+
+- Method-level `@SuppressWarnings` is preferred over class-level for tighter scope, but
   if more than one method in the class needs the same suppression, class-level is fine.
   Do not flag class-level `@SuppressWarnings` when multiple methods use the suppressed API.
 - **Do not add `@SuppressWarnings("deprecation")` unless the build fails without it.**
   The project disables javac's `-Xlint:deprecation` globally and uses a custom Error Prone
   check (`OtelDeprecatedApiUsage`) instead. Only add the annotation when it is actually
   required to fix an Error Prone error — not speculatively.
-- Per Google Java Style, `UPPER_CASE` naming is only for true constants (deeply immutable
-  values). `static final` fields holding mutable objects should be `camelCase`.
 
 ## [Naming] Getter Naming
 

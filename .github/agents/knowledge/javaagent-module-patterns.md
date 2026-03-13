@@ -140,14 +140,14 @@ public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
 
 #### Rules for `classLoaderMatcher()`
 
-- **Every `InstrumentationModule` should override `classLoaderMatcher()`** with a
-  `hasClassesNamed(...)` check for a class from the module's target library. This allows
-  the agent to skip the entire module early — before evaluating type matchers or muzzle —
-  when the target library is absent.
-  **Exceptions** — do not flag: modules under `instrumentation/internal/` (JDK/agent internals),
-  modules instrumenting JDK classes on all supported Java versions (executors,
-  http-url-connection, java-util-logging, rmi, jdbc), config-driven modules with no fixed
-  target library (`methods`, `external-annotations`), and test-only modules.
+- **Do NOT add `classLoaderMatcher()` for optimization.** The "skip when library is absent"
+  optimization belongs on `TypeInstrumentation.classLoaderOptimization()`, not here.
+  `classLoaderMatcher()` is only for **version-boundary detection** — cases where muzzle
+  alone cannot distinguish the target version range. Most modules do not need it.
+- **Do NOT flag modules that lack a `classLoaderMatcher()` override.** The default (`any()`)
+  is correct when muzzle can detect version boundaries on its own (the common case). Only
+  flag a *missing* override when the module targets a specific version range and the
+  versioning signal (added/removed landmark class) is not part of the classes muzzle inspects.
 - **Version comments on landmark classes.** For multi-class checks, `.and(not(...))`
   chains, or cases where the landmark version differs from the module's base version,
   each `hasClassesNamed()` call must have a `//` comment stating the library version
@@ -185,7 +185,7 @@ public class MyClassInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("execute")).and(takesArguments(1)),
+        named("execute").and(takesArguments(1)),
         getClass().getName() + "$ExecuteAdvice");
   }
 
@@ -195,6 +195,32 @@ public class MyClassInstrumentation implements TypeInstrumentation {
   }
 }
 ```
+
+### `classLoaderOptimization()` — Skip When Library Absent
+
+Override `classLoaderOptimization()` when the `typeMatcher()` uses expensive matchers
+(e.g., `implementsInterface(...)`, `extendsClass(...)`, `isAnnotatedWith(...)`). This is
+a fast pre-filter that runs before type matching: if a class from the target library is
+absent, the expensive type matcher is skipped entirely.
+
+```java
+@Override
+public ElementMatcher<ClassLoader> classLoaderOptimization() {
+  return hasClassesNamed("com.example.library.TargetClass");
+}
+```
+
+**This is the correct place for "skip when library is absent" optimization** — not
+`InstrumentationModule.classLoaderMatcher()`. The module-level `classLoaderMatcher()` is
+ANDed with `classLoaderOptimization()` at runtime, so the type-level check alone is
+sufficient for optimization.
+
+**When to override:**
+
+- The `typeMatcher()` uses hierarchy matchers (`implementsInterface`, `extendsClass`) or
+  annotation matchers — these require bytecode inspection of super classes/interfaces.
+- The `typeMatcher()` uses `named(...)` or `namedOneOf(...)` — no override needed because
+  name-only matchers are already fast (they check only the class name, no bytecode).
 
 ### Rules
 
@@ -206,6 +232,9 @@ public class MyClassInstrumentation implements TypeInstrumentation {
   `extendsClass(...)` and `implementsInterface(...)` are appropriate when the instrumentation
   targets subclasses or implementors of a type.
 - `transform()` wires method matchers to advice classes via `applyAdviceToMethod()`.
+- Do not add `isMethod()` in method matchers inside `transform()`. `isMethod()` only
+  serves to exclude constructors, but `named(...)` already excludes them because
+  constructors are named `<init>`. Remove `isMethod()` when not needed.
 - Reference the advice class using `getClass().getName() + "$InnerClassName"` — not
   `InnerClassName.class.getName()`, `OuterClass.class.getName()`, or a string literal.
   Any `.class.getName()` reference — whether to the inner advice class or the outer

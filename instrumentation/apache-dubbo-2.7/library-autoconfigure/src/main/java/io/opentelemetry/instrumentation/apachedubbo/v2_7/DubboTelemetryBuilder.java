@@ -80,7 +80,7 @@ public final class DubboTelemetryBuilder {
    */
   @SuppressWarnings("deprecation") // RpcMetricsContextCustomizers is deprecated for removal in 3.0
   public DubboTelemetry build() {
-    DubboRpcAttributesGetter rpcAttributesGetter = DubboRpcAttributesGetter.INSTANCE;
+    DubboRpcAttributesGetter rpcAttributesGetter = new DubboRpcAttributesGetter();
     SpanNameExtractor<DubboRequest> spanNameExtractor =
         RpcSpanNameExtractor.create(rpcAttributesGetter);
     SpanNameExtractor<DubboRequest> clientSpanNameExtractor =
@@ -114,7 +114,7 @@ public final class DubboTelemetryBuilder {
                 RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
 
     return new DubboTelemetry(
-        serverInstrumenterBuilder.buildServerInstrumenter(DubboHeadersGetter.INSTANCE),
-        clientInstrumenterBuilder.buildClientInstrumenter(DubboHeadersSetter.INSTANCE));
+        serverInstrumenterBuilder.buildServerInstrumenter(new DubboHeadersGetter()),
+        clientInstrumenterBuilder.buildClientInstrumenter(new DubboHeadersSetter()));
   }
 }

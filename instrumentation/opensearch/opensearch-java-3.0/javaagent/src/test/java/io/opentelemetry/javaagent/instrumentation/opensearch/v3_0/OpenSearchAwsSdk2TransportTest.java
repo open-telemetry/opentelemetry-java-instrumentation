@@ -65,7 +65,7 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
 
   @BeforeAll
   @Override
-  void setUp() throws Exception {
+  void setUp() {
     server.start();
     openSearchClient = buildOpenSearchClient();
     openSearchAsyncClient = buildOpenSearchAsyncClient();
@@ -79,7 +79,7 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
   }
 
   @BeforeEach
-  void prepTest() {
+  void setupForHealthResponse() {
     server.beforeTestExecution(null);
 
     // Mock OpenSearch cluster health response
@@ -113,7 +113,7 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
   }
 
   @Override
-  protected OpenSearchClient buildOpenSearchClient() throws Exception {
+  protected OpenSearchClient buildOpenSearchClient() {
     SdkHttpClient httpClient =
         ApacheHttpClient.builder()
             .buildWithDefaults(
@@ -132,7 +132,7 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
   }
 
   @Override
-  protected OpenSearchAsyncClient buildOpenSearchAsyncClient() throws Exception {
+  protected OpenSearchAsyncClient buildOpenSearchAsyncClient() {
     SdkAsyncHttpClient httpClient =
         NettyNioAsyncHttpClient.builder()
             .buildWithDefaults(
@@ -194,15 +194,11 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
                                 equalTo(SERVER_PORT, httpHost.getPort()),
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                                 equalTo(URL_FULL, httpHost + "/_cluster/health"),
-                                equalTo(
-                                    NETWORK_PEER_ADDRESS,
-                                    httpHost.getHost()), // Netty 4.1 Instrumentation collects
-                                // NETWORK_PEER_ADDRESS
-                                equalTo(
-                                    NETWORK_PEER_PORT,
-                                    httpHost.getPort()), // Netty 4.1 Instrumentation collects
-                                // NETWORK_PEER_PORT
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
+                                // Netty 4.1 Instrumentation collects NETWORK_PEER_ADDRESS
+                                equalTo(NETWORK_PEER_ADDRESS, httpHost.getHost()),
+                                // Netty 4.1 Instrumentation collects NETWORK_PEER_PORT
+                                equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
                                 equalTo(maybeStablePeerService(), "test-peer-service")),
                     span ->
                         span.hasName("callback")

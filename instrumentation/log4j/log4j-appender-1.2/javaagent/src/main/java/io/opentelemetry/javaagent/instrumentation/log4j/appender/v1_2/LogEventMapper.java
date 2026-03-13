@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
+import static io.opentelemetry.semconv.incubating.OtelIncubatingAttributes.OTEL_EVENT_NAME;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.Collections.emptyList;
@@ -26,12 +27,15 @@ import java.time.Instant;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 import org.apache.log4j.Category;
 import org.apache.log4j.MDC;
 import org.apache.log4j.Priority;
 import org.apache.log4j.spi.LocationInfo;
 
 public final class LogEventMapper {
+
+  private static final Logger logger = Logger.getLogger(LogEventMapper.class.getName());
 
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
 
@@ -69,6 +73,11 @@ public final class LogEventMapper {
             .collect(toMap(attr -> attr, LogEventMapper::getMdcAttributeKey));
     this.captureAllMdcAttributes =
         captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
+    if (captureEventName) {
+      logger.warning(
+          "The otel.instrumentation.log4j-appender.experimental.capture-event-name setting is"
+              + " deprecated and will be removed in a future version.");
+    }
   }
 
   boolean captureCodeAttributes =
@@ -162,36 +171,49 @@ public final class LogEventMapper {
   private void captureMdcAttributes(LogRecordBuilder builder) {
 
     Hashtable<?, ?> context = MDC.getContext();
+    if (context == null) {
+      return;
+    }
+
+    // otel.event.name takes priority over event.name
+    Object otelEventName = context.get(OTEL_EVENT_NAME.getKey());
+    if (otelEventName instanceof String) {
+      builder.setEventName((String) otelEventName);
+    } else if (captureEventName) {
+      Object eventName = context.get(EVENT_NAME.getKey());
+      if (eventName != null) {
+        builder.setEventName(eventName.toString());
+      }
+    }
 
     if (captureAllMdcAttributes) {
-      if (context != null) {
-        for (Map.Entry<?, ?> entry : context.entrySet()) {
-          setAttributeOrEventName(
-              builder, getMdcAttributeKey(String.valueOf(entry.getKey())), entry.getValue());
+      for (Map.Entry<?, ?> entry : context.entrySet()) {
+        String key = String.valueOf(entry.getKey());
+        if (!OTEL_EVENT_NAME.getKey().equals(key)
+            && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
+          Object value = entry.getValue();
+          if (value != null) {
+            builder.setAttribute(getMdcAttributeKey(key), value.toString());
+          }
         }
       }
       return;
     }
 
     for (Map.Entry<String, AttributeKey<String>> entry : captureMdcAttributes.entrySet()) {
-      Object value = context.get(entry.getKey());
-      setAttributeOrEventName(builder, entry.getValue(), value);
+      String key = entry.getKey();
+      if (!OTEL_EVENT_NAME.getKey().equals(key)
+          && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
+        Object value = context.get(key);
+        if (value != null) {
+          builder.setAttribute(entry.getValue(), value.toString());
+        }
+      }
     }
   }
 
   private static AttributeKey<String> getMdcAttributeKey(String key) {
     return mdcAttributeKeys.computeIfAbsent(key, AttributeKey::stringKey);
-  }
-
-  private void setAttributeOrEventName(
-      LogRecordBuilder builder, AttributeKey<String> key, Object value) {
-    if (value != null) {
-      if (captureEventName && key.equals(EVENT_NAME)) {
-        builder.setEventName(value.toString());
-      } else {
-        builder.setAttribute(key, value.toString());
-      }
-    }
   }
 
   private static Severity levelToSeverity(Priority level) {
