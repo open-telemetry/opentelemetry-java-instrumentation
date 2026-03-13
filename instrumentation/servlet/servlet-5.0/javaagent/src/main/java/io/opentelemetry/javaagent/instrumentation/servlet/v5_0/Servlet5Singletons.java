@@ -17,6 +17,7 @@ import io.opentelemetry.javaagent.instrumentation.servlet.AgentServletInstrument
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.ResponseInstrumenterFactory;
 import io.opentelemetry.javaagent.instrumentation.servlet.snippet.OutputStreamSnippetInjectionHelper;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.body.Servlet5BodyCaptureRequestWrapper;
 import jakarta.servlet.Filter;
 import jakarta.servlet.Servlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -72,6 +73,14 @@ public final class Servlet5Singletons {
     } else {
       return FILTER_MAPPING_RESOLVER.get((Filter) servletOrFilter);
     }
+  }
+
+  public static HttpServletRequest wrapForBodyCaptureIfNeeded(HttpServletRequest request) {
+    int size = helper().captureRequestBodyMaxSize();
+    if (size <= 0) {
+      return request;
+    }
+    return new Servlet5BodyCaptureRequestWrapper(request, size);
   }
 
   private Servlet5Singletons() {}
