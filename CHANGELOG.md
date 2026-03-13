@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 2.26.0 (2026-03-13)
+
 ### ⚠️ Breaking changes to non-stable APIs
 
 - Remove deprecated AWS Lambda v2.2 wrappers and `forceFlush(int, TimeUnit)` overload
