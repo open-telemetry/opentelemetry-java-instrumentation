@@ -51,17 +51,12 @@ jobs:
     uses: ./.github/workflows/reusable-markdown-lint-check.yml
 
   required-status-check:
-    # test-latest-deps is not included in the required status checks
-    # because any time a new library version is released to maven central
-    # it can fail due to test code incompatibility with the new library version,
-    # or due to slight changes in emitted telemetry
-    # (muzzle can also fail when a new library version is released to maven central
-    # but that happens much less often)
-    #
-    # only the "common" checks are required for release branch PRs in order to avoid any unnecessary
-    # release branch maintenance (especially for patches)
+    # test-latest-deps and muzzle are included in the required status checks because
+    # latest dependency versions are pinned (see .github/config/latest-dep-versions.json),
+    # so they should no longer fail due to newly released library versions.
     needs:
       - common
+      - test-latest-deps
       - muzzle
       - markdown-lint-check
     runs-on: ubuntu-latest
@@ -69,11 +64,7 @@ jobs:
     steps:
       - if: |
           needs.common.result != 'success' ||
-          (
-            !startsWith(github.base_ref, 'release/') &&
-            (
-              needs.muzzle.result != 'success' ||
-              needs.markdown-lint-check.result != 'success'
-            )
-          )
+          needs.test-latest-deps.result != 'success' ||
+          needs.muzzle.result != 'success' ||
+          needs.markdown-lint-check.result != 'success'
         run: exit 1 # fail
