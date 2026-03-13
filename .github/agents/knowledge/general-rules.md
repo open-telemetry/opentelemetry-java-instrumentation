@@ -75,22 +75,16 @@ Public API getters should use `get*` (or `is*` for booleans).
 
 Stateless implementations of telemetry interfaces — `TextMapGetter`, `TextMapSetter`,
 `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`,
-`HttpServerResponseMutator` — should use instance creation (`new MyGetter()`) at the
-usage site instead of singleton patterns.
+`HttpServerResponseMutator` — should use instance creation (`new MyGetter()`) instead of
+singleton patterns.
 
-Flag both forms:
+Replace every singleton reference (`MyGetter.INSTANCE`, `MyGetter.getInstance()`) with
+`new MyGetter()`. Do not restructure surrounding code — if the original used a local
+variable (`MyGetter g = MyGetter.INSTANCE`), keep the variable and only change the
+right-hand side to `new MyGetter()`.
 
-- **Enum singletons**: `enum MyGetter implements TextMapGetter<T> { INSTANCE; ... }`
-  referenced as `MyGetter.INSTANCE`.
-- **Classical singletons**: `private static final MyGetter INSTANCE = new MyGetter();`
-  with a static accessor, referenced as `MyGetter.getInstance()`.
-
-Preferred replacement: pass `new MyImpl()` directly where the implementation is consumed
-(e.g., as an argument to a builder or `Instrumenter` factory method). These are tiny
-stateless objects, so creating a fresh instance at each initialization site is fine even
-if the class is referenced from more than one place.
-If the implementation is a private nested class, marking it as `final` is not
-necessary and it is preferred to omit the `final` keyword.
+Convert the class declaration from `enum` / singleton-holder to a plain `class`.
+If the implementation is a private nested class, omit the `final` keyword.
 
 ## [Style] No Redundant Null Guards on Attribute Puts
 
