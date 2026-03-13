@@ -14,6 +14,7 @@ import dev.failsafe.RetryPolicyConfig;
 import dev.failsafe.event.EventListener;
 import dev.failsafe.event.ExecutionCompletedEvent;
 import io.opentelemetry.instrumentation.failsafe.AbstractFailsafeInstrumentationTest;
+import io.opentelemetry.instrumentation.failsafe.v3_0.internal.RetryPolicyEventListenerBuilders;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.util.Objects;
@@ -50,7 +51,6 @@ final class FailsafeTelemetryTest extends AbstractFailsafeInstrumentationTest {
   @SuppressWarnings("unchecked")
   void createInstrumentedFailureListener() throws Throwable {
     // given
-    FailsafeTelemetry failsafeTelemetry = FailsafeTelemetry.create(testing.getOpenTelemetry());
     RetryPolicyConfig<Object> delegate =
         RetryPolicy.builder()
             .handleResultIf(Objects::isNull)
@@ -61,7 +61,8 @@ final class FailsafeTelemetryTest extends AbstractFailsafeInstrumentationTest {
 
     // when
     EventListener<ExecutionCompletedEvent<Object>> actual =
-        failsafeTelemetry.createInstrumentedFailureListener(delegate, retryPolicyName);
+        RetryPolicyEventListenerBuilders.buildInstrumentedFailureListener(
+            testing.getOpenTelemetry(), delegate, retryPolicyName);
     ExecutionCompletedEvent<Object> event = mock(ExecutionCompletedEvent.class);
     when(event.getAttemptCount()).thenReturn(1);
     actual.accept(event);
@@ -83,7 +84,6 @@ final class FailsafeTelemetryTest extends AbstractFailsafeInstrumentationTest {
   @SuppressWarnings("unchecked")
   void createInstrumentedSuccessListener() throws Throwable {
     // given
-    FailsafeTelemetry failsafeTelemetry = FailsafeTelemetry.create(testing.getOpenTelemetry());
     RetryPolicyConfig<Object> delegate =
         RetryPolicy.builder()
             .handleResultIf(Objects::isNull)
@@ -94,7 +94,8 @@ final class FailsafeTelemetryTest extends AbstractFailsafeInstrumentationTest {
 
     // when
     EventListener<ExecutionCompletedEvent<Object>> actual =
-        failsafeTelemetry.createInstrumentedSuccessListener(delegate, retryPolicyName);
+        RetryPolicyEventListenerBuilders.buildInstrumentedSuccessListener(
+            testing.getOpenTelemetry(), delegate, retryPolicyName);
     ExecutionCompletedEvent<Object> event = mock(ExecutionCompletedEvent.class);
     when(event.getAttemptCount()).thenReturn(1);
     actual.accept(event);

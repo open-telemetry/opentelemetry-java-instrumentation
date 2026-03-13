@@ -5,13 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.failsafe.v3_0;
 
+import static io.opentelemetry.instrumentation.failsafe.v3_0.internal.RetryPolicyEventListenerBuilders.buildInstrumentedFailureListener;
+import static io.opentelemetry.instrumentation.failsafe.v3_0.internal.RetryPolicyEventListenerBuilders.buildInstrumentedSuccessListener;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
 import dev.failsafe.PolicyConfig;
 import dev.failsafe.internal.RetryPolicyImpl;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.failsafe.v3_0.FailsafeTelemetry;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.Field;
@@ -53,20 +54,24 @@ public final class RetryPolicyInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Return Object retryPolicyImpl) throws IllegalAccessException {
+    public static void onExit(@Advice.Return Object retryPolicyImpl) {
       if (FAILURE_LISTENER_FIELD == null || SUCCESS_LISTENER_FIELD == null) {
         return;
       }
 
-      RetryPolicyImpl<?> impl = (RetryPolicyImpl<?>) retryPolicyImpl;
-      FailsafeTelemetry failsafeTelemetry = FailsafeTelemetry.create(GlobalOpenTelemetry.get());
-
-      FAILURE_LISTENER_FIELD.set(
-          impl.getConfig(),
-          failsafeTelemetry.createInstrumentedFailureListener(impl.getConfig(), impl.toString()));
-      SUCCESS_LISTENER_FIELD.set(
-          impl.getConfig(),
-          failsafeTelemetry.createInstrumentedSuccessListener(impl.getConfig(), impl.toString()));
+      try {
+        RetryPolicyImpl<?> impl = (RetryPolicyImpl<?>) retryPolicyImpl;
+        FAILURE_LISTENER_FIELD.set(
+            impl.getConfig(),
+            buildInstrumentedFailureListener(
+                GlobalOpenTelemetry.get(), impl.getConfig(), impl.toString()));
+        SUCCESS_LISTENER_FIELD.set(
+            impl.getConfig(),
+            buildInstrumentedSuccessListener(
+                GlobalOpenTelemetry.get(), impl.getConfig(), impl.toString()));
+      } catch (IllegalAccessException ignored) {
+        // Ignored
+      }
     }
   }
 }
