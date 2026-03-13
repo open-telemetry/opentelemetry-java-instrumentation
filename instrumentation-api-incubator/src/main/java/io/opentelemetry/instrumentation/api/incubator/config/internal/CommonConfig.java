@@ -42,11 +42,6 @@ public final class CommonConfig {
   private final String loggingSpanIdKey;
   private final String loggingTraceFlagsKey;
 
-  interface ValueProvider<T> {
-    @Nullable
-    T get(ConfigProvider configProvider);
-  }
-
   public CommonConfig(OpenTelemetry openTelemetry) {
     DeclarativeConfigProperties generalConfig =
         DeclarativeConfigUtil.getGeneralInstrumentationConfig(openTelemetry);
