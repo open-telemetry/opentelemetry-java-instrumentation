@@ -24,18 +24,14 @@ jobs:
       has_work: ${{ steps.build-matrix.outputs.has_work }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Restore progress cache
-        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
-          path: /tmp/review-progress
-          key: code-review-progress
-          restore-keys: code-review-progress-
+          fetch-depth: 1
 
       - name: Build review matrix
         id: build-matrix
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REVIEW_PROGRESS: ${{ vars.REVIEW_PROGRESS }}
         run: python .github/scripts/build-review-matrix.py
 
   # ---------------------------------------------------------------------------
@@ -160,37 +156,15 @@ jobs:
             echo "PR already exists for $branch — skipping creation"
           fi
 
-  # ---------------------------------------------------------------------------
-  # Job 3: Record reviewed modules only when the entire batch succeeded
-  # ---------------------------------------------------------------------------
-  finalize:
-    needs: [dispatch, review]
-    if: needs.review.result == 'success'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Restore progress cache
-        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
-        with:
-          path: /tmp/review-progress
-          key: code-review-progress
-          restore-keys: code-review-progress-
-
-      - name: Mark batch as reviewed
+      - name: Mark module as reviewed
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir -p /tmp/review-progress
-          touch /tmp/review-progress/reviewed.txt
-
-          matrix='${{ needs.dispatch.outputs.matrix }}'
-          for name in $(echo "$matrix" | jq -r '.include[].short_name'); do
-            echo "$name" >> /tmp/review-progress/reviewed.txt
-            echo "Marking as reviewed: $name"
-          done
-
-          sort -u /tmp/review-progress/reviewed.txt -o /tmp/review-progress/reviewed.txt
-          echo "Total reviewed modules: $(wc -l < /tmp/review-progress/reviewed.txt)"
-
-      - name: Save progress cache
-        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
-        with:
-          path: /tmp/review-progress
-          key: code-review-progress-${{ github.run_id }}
+          # Read current progress, append this module, and save back
+          current="${{ vars.REVIEW_PROGRESS }}"
+          if [[ -n "$current" ]]; then
+            updated=$(printf '%s\n%s' "$current" "$SHORT_NAME" | tr ',' '\n' | sort -u | paste -sd ',')
+          else
+            updated="$SHORT_NAME"
+          fi
+          gh variable set REVIEW_PROGRESS --body "$updated"
