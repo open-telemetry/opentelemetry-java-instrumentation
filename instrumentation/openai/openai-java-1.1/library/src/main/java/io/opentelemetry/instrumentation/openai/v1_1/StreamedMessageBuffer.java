@@ -13,9 +13,13 @@ import com.openai.models.chat.completions.ChatCompletionChunk;
 import com.openai.models.chat.completions.ChatCompletionMessage;
 import com.openai.models.chat.completions.ChatCompletionMessageToolCall;
 import io.opentelemetry.api.common.Value;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -47,8 +51,14 @@ final class StreamedMessageBuffer {
             .content(message != null ? message.toString() : null)
             .refusal(Optional.empty());
     if (toolCalls != null) {
-      msgBuilder.toolCalls(
-          toolCalls.values().stream().map(StreamedMessageBuffer::toSdkToolCall).collect(toList()));
+      List<ChatCompletionMessageToolCall> sdkToolCalls =
+          toolCalls.values().stream()
+              .map(StreamedMessageBuffer::toSdkToolCall)
+              .filter(Objects::nonNull)
+              .collect(toList());
+      if (!sdkToolCalls.isEmpty()) {
+        msgBuilder.toolCalls(sdkToolCalls);
+      }
     }
     choice.message(msgBuilder.build());
     return choice.build();
@@ -110,15 +120,245 @@ final class StreamedMessageBuffer {
     }
   }
 
+  @Nullable
   private static ChatCompletionMessageToolCall toSdkToolCall(ToolCallBuffer tc) {
-    return ChatCompletionMessageToolCall.builder()
-        .id(tc.id)
-        .function(
-            ChatCompletionMessageToolCall.Function.builder()
-                .name(tc.function.name != null ? tc.function.name : "")
-                .arguments(tc.function.arguments != null ? tc.function.arguments.toString() : "")
-                .build())
-        .build();
+    String name = tc.function.name != null ? tc.function.name : "";
+    String arguments = tc.function.arguments != null ? tc.function.arguments.toString() : "";
+    if (V1ToolCallBuilder.isAvailable()) {
+      return V1ToolCallBuilder.build(tc.id, name, arguments);
+    }
+    if (V3ToolCallBuilder.isAvailable()) {
+      return V3ToolCallBuilder.build(tc.id, name, arguments);
+    }
+    return null;
+  }
+
+  // v1.x: ChatCompletionMessageToolCall.builder().id().function(Function.builder()...).build()
+  private static class V1ToolCallBuilder {
+    @Nullable private static final MethodHandle toolCallBuilderHandle;
+    @Nullable private static final MethodHandle builderIdHandle;
+    @Nullable private static final MethodHandle builderFunctionHandle;
+    @Nullable private static final MethodHandle builderBuildHandle;
+    @Nullable private static final MethodHandle funcBuilderHandle;
+    @Nullable private static final MethodHandle funcBuilderNameHandle;
+    @Nullable private static final MethodHandle funcBuilderArgumentsHandle;
+    @Nullable private static final MethodHandle funcBuilderBuildHandle;
+
+    static {
+      MethodHandle tcBuilder = null;
+      MethodHandle bId = null;
+      MethodHandle bFunction = null;
+      MethodHandle bBuild = null;
+      MethodHandle fBuilder = null;
+      MethodHandle fName = null;
+      MethodHandle fArguments = null;
+      MethodHandle fBuild = null;
+      try {
+        MethodHandles.Lookup lookup = MethodHandles.lookup();
+        Class<?> builderClass =
+            Class.forName(
+                "com.openai.models.chat.completions.ChatCompletionMessageToolCall$Builder");
+        Class<?> functionClass =
+            Class.forName(
+                "com.openai.models.chat.completions.ChatCompletionMessageToolCall$Function");
+        Class<?> funcBuilderClass =
+            Class.forName(
+                "com.openai.models.chat.completions.ChatCompletionMessageToolCall$Function$Builder");
+
+        tcBuilder =
+            lookup.findStatic(
+                ChatCompletionMessageToolCall.class, "builder", MethodType.methodType(builderClass));
+        bId =
+            lookup.findVirtual(builderClass, "id", MethodType.methodType(builderClass, String.class));
+        bFunction =
+            lookup.findVirtual(
+                builderClass, "function", MethodType.methodType(builderClass, functionClass));
+        bBuild =
+            lookup.findVirtual(
+                builderClass, "build", MethodType.methodType(ChatCompletionMessageToolCall.class));
+        fBuilder =
+            lookup.findStatic(functionClass, "builder", MethodType.methodType(funcBuilderClass));
+        fName =
+            lookup.findVirtual(
+                funcBuilderClass, "name", MethodType.methodType(funcBuilderClass, String.class));
+        fArguments =
+            lookup.findVirtual(
+                funcBuilderClass,
+                "arguments",
+                MethodType.methodType(funcBuilderClass, String.class));
+        fBuild =
+            lookup.findVirtual(funcBuilderClass, "build", MethodType.methodType(functionClass));
+      } catch (Exception e) {
+        tcBuilder = null;
+        bId = null;
+        bFunction = null;
+        bBuild = null;
+        fBuilder = null;
+        fName = null;
+        fArguments = null;
+        fBuild = null;
+      }
+      toolCallBuilderHandle = tcBuilder;
+      builderIdHandle = bId;
+      builderFunctionHandle = bFunction;
+      builderBuildHandle = bBuild;
+      funcBuilderHandle = fBuilder;
+      funcBuilderNameHandle = fName;
+      funcBuilderArgumentsHandle = fArguments;
+      funcBuilderBuildHandle = fBuild;
+    }
+
+    static boolean isAvailable() {
+      return toolCallBuilderHandle != null;
+    }
+
+    @Nullable
+    static ChatCompletionMessageToolCall build(String id, String name, String arguments) {
+      if (toolCallBuilderHandle == null
+          || builderIdHandle == null
+          || builderFunctionHandle == null
+          || builderBuildHandle == null
+          || funcBuilderHandle == null
+          || funcBuilderNameHandle == null
+          || funcBuilderArgumentsHandle == null
+          || funcBuilderBuildHandle == null) {
+        return null;
+      }
+      try {
+        Object fb = funcBuilderHandle.invoke();
+        fb = funcBuilderNameHandle.invoke(fb, name);
+        fb = funcBuilderArgumentsHandle.invoke(fb, arguments);
+        Object function = funcBuilderBuildHandle.invoke(fb);
+
+        Object b = toolCallBuilderHandle.invoke();
+        b = builderIdHandle.invoke(b, id);
+        b = builderFunctionHandle.invoke(b, function);
+        return (ChatCompletionMessageToolCall) builderBuildHandle.invoke(b);
+      } catch (Throwable ignore) {
+        return null;
+      }
+    }
+  }
+
+  // v3+: ChatCompletionMessageFunctionToolCall.builder().id().function(Function.builder()...).build()
+  //      then ChatCompletionMessageToolCall.ofFunction(...)
+  private static class V3ToolCallBuilder {
+    @Nullable private static final MethodHandle ftcBuilderHandle;
+    @Nullable private static final MethodHandle ftcBuilderIdHandle;
+    @Nullable private static final MethodHandle ftcBuilderFunctionHandle;
+    @Nullable private static final MethodHandle ftcBuilderBuildHandle;
+    @Nullable private static final MethodHandle funcBuilderHandle;
+    @Nullable private static final MethodHandle funcBuilderNameHandle;
+    @Nullable private static final MethodHandle funcBuilderArgumentsHandle;
+    @Nullable private static final MethodHandle funcBuilderBuildHandle;
+    @Nullable private static final MethodHandle ofFunctionHandle;
+
+    static {
+      MethodHandle ftcBuilder = null;
+      MethodHandle ftcBId = null;
+      MethodHandle ftcBFunction = null;
+      MethodHandle ftcBBuild = null;
+      MethodHandle fBuilder = null;
+      MethodHandle fName = null;
+      MethodHandle fArguments = null;
+      MethodHandle fBuild = null;
+      MethodHandle ofFunction = null;
+      try {
+        MethodHandles.Lookup lookup = MethodHandles.lookup();
+        Class<?> ftcClass =
+            Class.forName(
+                "com.openai.models.chat.completions.ChatCompletionMessageFunctionToolCall");
+        Class<?> ftcBuilderClass =
+            Class.forName(
+                "com.openai.models.chat.completions.ChatCompletionMessageFunctionToolCall$Builder");
+        Class<?> functionClass =
+            Class.forName(
+                "com.openai.models.chat.completions.ChatCompletionMessageFunctionToolCall$Function");
+        Class<?> funcBuilderClass =
+            Class.forName(
+                "com.openai.models.chat.completions.ChatCompletionMessageFunctionToolCall$Function$Builder");
+
+        ftcBuilder =
+            lookup.findStatic(ftcClass, "builder", MethodType.methodType(ftcBuilderClass));
+        ftcBId =
+            lookup.findVirtual(
+                ftcBuilderClass, "id", MethodType.methodType(ftcBuilderClass, String.class));
+        ftcBFunction =
+            lookup.findVirtual(
+                ftcBuilderClass, "function", MethodType.methodType(ftcBuilderClass, functionClass));
+        ftcBBuild =
+            lookup.findVirtual(ftcBuilderClass, "build", MethodType.methodType(ftcClass));
+        fBuilder =
+            lookup.findStatic(functionClass, "builder", MethodType.methodType(funcBuilderClass));
+        fName =
+            lookup.findVirtual(
+                funcBuilderClass, "name", MethodType.methodType(funcBuilderClass, String.class));
+        fArguments =
+            lookup.findVirtual(
+                funcBuilderClass,
+                "arguments",
+                MethodType.methodType(funcBuilderClass, String.class));
+        fBuild =
+            lookup.findVirtual(funcBuilderClass, "build", MethodType.methodType(functionClass));
+        ofFunction =
+            lookup.findStatic(
+                ChatCompletionMessageToolCall.class,
+                "ofFunction",
+                MethodType.methodType(ChatCompletionMessageToolCall.class, ftcClass));
+      } catch (Exception e) {
+        ftcBuilder = null;
+        ftcBId = null;
+        ftcBFunction = null;
+        ftcBBuild = null;
+        fBuilder = null;
+        fName = null;
+        fArguments = null;
+        fBuild = null;
+        ofFunction = null;
+      }
+      ftcBuilderHandle = ftcBuilder;
+      ftcBuilderIdHandle = ftcBId;
+      ftcBuilderFunctionHandle = ftcBFunction;
+      ftcBuilderBuildHandle = ftcBBuild;
+      funcBuilderHandle = fBuilder;
+      funcBuilderNameHandle = fName;
+      funcBuilderArgumentsHandle = fArguments;
+      funcBuilderBuildHandle = fBuild;
+      ofFunctionHandle = ofFunction;
+    }
+
+    static boolean isAvailable() {
+      return ftcBuilderHandle != null;
+    }
+
+    @Nullable
+    static ChatCompletionMessageToolCall build(String id, String name, String arguments) {
+      if (ftcBuilderHandle == null
+          || ftcBuilderIdHandle == null
+          || ftcBuilderFunctionHandle == null
+          || ftcBuilderBuildHandle == null
+          || funcBuilderHandle == null
+          || funcBuilderNameHandle == null
+          || funcBuilderArgumentsHandle == null
+          || funcBuilderBuildHandle == null
+          || ofFunctionHandle == null) {
+        return null;
+      }
+      try {
+        Object fb = funcBuilderHandle.invoke();
+        fb = funcBuilderNameHandle.invoke(fb, name);
+        fb = funcBuilderArgumentsHandle.invoke(fb, arguments);
+        Object function = funcBuilderBuildHandle.invoke(fb);
+
+        Object b = ftcBuilderHandle.invoke();
+        b = ftcBuilderIdHandle.invoke(b, id);
+        b = ftcBuilderFunctionHandle.invoke(b, function);
+        Object ftc = ftcBuilderBuildHandle.invoke(b);
+        return (ChatCompletionMessageToolCall) ofFunctionHandle.invoke(ftc);
+      } catch (Throwable ignore) {
+        return null;
+      }
+    }
   }
 
   private static Value<?> buildToolCallEventObject(ToolCallBuffer call) {
