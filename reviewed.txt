@@ -1,1 +1,1 @@
-akka-actor-2.3:javaagent,akka-actor-fork-join-2.5:javaagent,alibaba-druid-1.0:javaagent
+activej-http-6.0:javaagent,akka-actor-2.3:javaagent,akka-actor-fork-join-2.5:javaagent,alibaba-druid-1.0:javaagent
