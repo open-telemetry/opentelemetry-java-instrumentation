@@ -54,6 +54,7 @@ jobs:
     env:
       MODULE_DIR: ${{ matrix.module_dir }}
       SHORT_NAME: ${{ matrix.short_name }}
+      MODELS: "gpt-5.3-codex claude-sonnet-4.6"
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
@@ -83,9 +84,9 @@ jobs:
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
         run: |
-          for model in gpt-5.3-codex claude-sonnet-4.6; do
+          for model in $MODELS; do
             echo "::group::Copilot review ($model) for $MODULE_DIR"
-            copilot -p "review all files under $MODULE_DIR" \
+            copilot -p "review all files under $MODULE_DIR. Write the fix review summary to /tmp/summary-${model}.md" \
               --agent code-review-and-fix \
               --model "$model" \
               --yolo \
@@ -125,6 +126,14 @@ jobs:
           git push -f origin "$branch"
           echo "pushed=true" >> "$GITHUB_OUTPUT"
 
+      - name: Prepare PR body
+        run: |
+          > /tmp/pr-body.md
+          for model in $MODELS; do
+            f="/tmp/summary-${model}.md"
+            [[ -s "$f" ]] && cat "$f" >> /tmp/pr-body.md && echo >> /tmp/pr-body.md
+          done
+
       - uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
         id: otelbot-token
         if: steps.commit.outputs.pushed == 'true'
@@ -143,7 +152,7 @@ jobs:
           if [[ "$existing" -eq 0 ]]; then
             gh pr create \
               --title "Review fixes for ${SHORT_NAME}" \
-              --body "Automated code review fixes for \`${MODULE_DIR}\`." \
+              --body-file /tmp/pr-body.md \
               --base main \
               --head "$branch" \
               --label automated-code-review
