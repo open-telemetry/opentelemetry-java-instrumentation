@@ -282,6 +282,7 @@ readonly INSTRUMENTATIONS=(
   "tomcat:tomcat-jdbc:javaagent:testStableSemconv"
   "twilio-6.6:javaagent:test"
   "twilio-6.6:javaagent:testExperimental"
+  "undertow-1.4:javaagent:test"
   "vertx:vertx-http-client:vertx-http-client-3.0:javaagent:test"
   "vertx:vertx-http-client:vertx-http-client-3.0:javaagent:testStableSemconv"
   "vertx:vertx-http-client:vertx-http-client-4.0:javaagent:test"
