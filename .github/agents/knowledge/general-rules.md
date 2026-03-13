@@ -22,6 +22,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Javaagent | Missing `classLoaderMatcher()` | `InstrumentationModule` without `classLoaderMatcher()` override | `javaagent-module-patterns.md` |
 | Semconv | Library vs javaagent semconv constant usage | Semconv constants/assertions | — |
 | Semconv | Dual semconv testing | `SemconvStability`, `maybeStable`, semconv Gradle tasks | `testing-semconv-stability.md` |
+| Testing | General test patterns | Test files in scope | `testing-general-patterns.md` |
 | Testing | Experimental flag tests | `testExperimental`, experimental attribute assertions, `experimental` flags in JVM args or system properties | `testing-experimental-flags.md` |
 | Library | TelemetryBuilder/getter/setter patterns | Library instrumentation classes | `library-patterns.md` |
 | API | Deprecation and breaking-change policy | Public API changes | `api-deprecation-policy.md` |
@@ -176,10 +177,4 @@ declarative API. Do not flag `DeclarativeConfigUtil` usage as incorrect.
 
 ## [Testing] General Test Patterns
 
-- JUnit 5, AssertJ assertions (not JUnit `assertEquals`/`assertTrue`).
-- Test classes and methods should be package-private (no `public`).
-- Use `span.hasAttributesSatisfyingExactly(...)` with `equalTo(...)`/`satisfies(...)` for
-  attribute checks. Prefer `hasAttributesSatisfyingExactly` over `hasAttributesSatisfying`
-  because it is more precise — the non-exact variant silently ignores unexpected attributes.
-  Prefer `hasAttributesSatisfyingExactly` over non-empty `hasAttributes(...)` for consistency.
-  `hasAttributes(Attributes.empty())` is acceptable.
+See `testing-general-patterns.md` (loaded when test files are in scope).
