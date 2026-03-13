@@ -12,8 +12,8 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.Servi
 import org.apache.dubbo.rpc.Filter;
 
 public final class DubboSingletons {
-  public static final Filter CLIENT_FILTER;
-  public static final Filter SERVER_FILTER;
+  public static final Filter clientFilter;
+  public static final Filter serverFilter;
 
   static {
     DubboTelemetry telemetry =
@@ -22,8 +22,8 @@ public final class DubboSingletons {
                 ServicePeerAttributesExtractor.create(
                     new DubboClientNetworkAttributesGetter(), GlobalOpenTelemetry.get()))
             .build();
-    CLIENT_FILTER = telemetry.newClientFilter();
-    SERVER_FILTER = telemetry.newServerFilter();
+    clientFilter = telemetry.newClientFilter();
+    serverFilter = telemetry.newServerFilter();
   }
 
   private DubboSingletons() {}

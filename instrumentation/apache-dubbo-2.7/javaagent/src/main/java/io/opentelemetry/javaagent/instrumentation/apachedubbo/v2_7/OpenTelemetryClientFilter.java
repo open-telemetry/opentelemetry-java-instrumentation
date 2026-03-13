@@ -19,7 +19,7 @@ public final class OpenTelemetryClientFilter implements Filter {
   private final Filter delegate;
 
   public OpenTelemetryClientFilter() {
-    delegate = DubboSingletons.CLIENT_FILTER;
+    delegate = DubboSingletons.clientFilter;
   }
 
   @Override
