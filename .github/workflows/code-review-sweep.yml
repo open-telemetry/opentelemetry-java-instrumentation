@@ -27,12 +27,20 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Fetch progress branch
+        run: git fetch origin otelbot/code-review-progress || true
+
       - name: Build review matrix
         id: build-matrix
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REVIEW_PROGRESS: ${{ vars.REVIEW_PROGRESS }}
-        run: python .github/scripts/build-review-matrix.py
+        run: |
+          # Read progress from the dedicated orphan branch (if it exists)
+          progress=$(git show origin/otelbot/code-review-progress:reviewed.txt 2>/dev/null || true)
+          if [[ -n "$progress" ]]; then
+            export REVIEW_PROGRESS="$progress"
+          fi
+          python .github/scripts/build-review-matrix.py
 
   # ---------------------------------------------------------------------------
   # Job 2: Run copilot review for each module in the matrix
@@ -47,13 +55,15 @@ jobs:
       max-parallel: 2  # keep low to avoid Copilot API rate limits
     permissions:
       contents: write  # for git push
-      variables: write  # for gh variable set REVIEW_PROGRESS
     env:
       MODULE_DIR: ${{ matrix.module_dir }}
       SHORT_NAME: ${{ matrix.short_name }}
       MODELS: "gpt-5.3-codex claude-sonnet-4.6"
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Fetch progress branch
+        run: git fetch origin otelbot/code-review-progress || true
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -139,7 +149,7 @@ jobs:
           private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
 
       - name: Create PR
-        if: steps.otelbot-token.outcome == 'success'
+        if: steps.commit.outputs.pushed == 'true'
         env:
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
@@ -161,11 +171,21 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Read current progress, append this module, and save back
-          current="${{ vars.REVIEW_PROGRESS }}"
+          # Read current progress from the orphan branch
+          current=$(git show origin/otelbot/code-review-progress:reviewed.txt 2>/dev/null || true)
           if [[ -n "$current" ]]; then
             updated=$(printf '%s\n%s' "$current" "$SHORT_NAME" | tr ',' '\n' | sort -u | paste -sd ',')
           else
             updated="$SHORT_NAME"
           fi
-          gh variable set REVIEW_PROGRESS --body "$updated"
+
+          # Write to the orphan branch
+          blob=$(echo "$updated" | git hash-object -w --stdin)
+          tree=$(printf '100644 blob %s\treviewed.txt\n' "$blob" | git mktree)
+          parent=$(git rev-parse --verify origin/otelbot/code-review-progress 2>/dev/null || true)
+          if [[ -n "$parent" ]]; then
+            commit=$(git commit-tree "$tree" -p "$parent" -m "Mark $SHORT_NAME as reviewed")
+          else
+            commit=$(git commit-tree "$tree" -m "Mark $SHORT_NAME as reviewed")
+          fi
+          git push origin "$commit:refs/heads/otelbot/code-review-progress"
