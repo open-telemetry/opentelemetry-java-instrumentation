@@ -209,25 +209,26 @@ Execute these steps strictly in order — do not reorder:
 Template:
 
 ```
-## Fix Review Summary for <heading>
-
 | Status | File | Category | Note |
 |--------|------|----------|------|
 | Fixed | src/Foo.java:42 | Style | Added class-level deprecation suppression for stable/old semconv dual mode |
 | Needs Manual Fix | src/Bar.java:77 | API | Requires compatibility decision before rename |
 
-Fixed: X
-Needs Manual Fix: Y
-
-To inspect applied edits: git diff HEAD~1
+**Fixed: X · Needs manual fix: Y**
 ```
 
 If no findings:
-> `✅ No fix-review issues found in <heading>.`
+> `No issues found.`
 
-   If the user asks you to write the summary to a file, write the Fix Review Summary
-   section (from the `##` heading through the `git diff HEAD~1` line) to the requested
-   file path.
+When writing the summary to a file (as opposed to printing to the console), the output
+must be **only** the findings table and totals line — nothing else:
+
+- Do **not** include headings (`##`), horizontal rules, or "Fix Review Summary" titles.
+- Do **not** include a "Files reviewed" table, per-file checklist, or notes section
+  when there are zero findings. Write only `No issues found.`
+- Do **not** repeat the module path or scope description — the caller already knows it.
+- The file must contain **only** the table rows + totals (or `No issues found.`).
+  No preamble, no footer, no commentary.
 
 ## Knowledge Loading
 
