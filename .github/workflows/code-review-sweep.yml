@@ -83,7 +83,7 @@ jobs:
         run: |
           for model in $MODELS; do
             echo "::group::Copilot review ($model) for $MODULE_DIR"
-            copilot -p "review all files under $MODULE_DIR. Write the fix review summary to /tmp/summary-${model}.md" \
+            copilot -p "Review all files under $MODULE_DIR. Write ONLY the findings table and totals to /tmp/summary-${model}.md — no headings, no file-reviewed lists, no git diff instructions. If no issues, write 'No issues found.'" \
               --agent code-review-and-fix \
               --model "$model" \
               --yolo \
@@ -125,11 +125,21 @@ jobs:
 
       - name: Prepare PR body
         run: |
-          > /tmp/pr-body.md
-          for model in $MODELS; do
-            f="/tmp/summary-${model}.md"
-            [[ -s "$f" ]] && cat "$f" >> /tmp/pr-body.md && echo >> /tmp/pr-body.md
-          done
+          {
+            echo "Automated code review of \`${MODULE_DIR}\`."
+            echo ""
+            for model in $MODELS; do
+              f="/tmp/summary-${model}.md"
+              if [[ -s "$f" ]]; then
+                echo "<details><summary>${model}</summary>"
+                echo ""
+                cat "$f"
+                echo ""
+                echo "</details>"
+                echo ""
+              fi
+            done
+          } > /tmp/pr-body.md
 
       - uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
         id: otelbot-token
