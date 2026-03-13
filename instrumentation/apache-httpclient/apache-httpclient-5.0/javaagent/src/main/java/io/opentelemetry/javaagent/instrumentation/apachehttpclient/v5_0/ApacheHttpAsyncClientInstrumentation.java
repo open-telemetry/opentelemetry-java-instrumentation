@@ -76,8 +76,8 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Object[] methodEnter(
         @Advice.Argument(0) AsyncRequestProducer requestProducer,
-        @Advice.Argument(3) HttpContext originalHttpContext,
-        @Advice.Argument(4) FutureCallback<?> futureCallback) {
+        @Advice.Argument(3) @Nullable HttpContext originalHttpContext,
+        @Advice.Argument(4) @Nullable FutureCallback<?> futureCallback) {
       HttpContext httpContext = originalHttpContext;
 
       Context parentContext = currentContext();
@@ -175,13 +175,13 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
     private final Context parentContext;
     private final HttpContext httpContext;
-    private final FutureCallback<T> delegate;
+    @Nullable private final FutureCallback<T> delegate;
 
     private volatile Context context;
     private volatile HttpRequest httpRequest;
 
     public WrappedFutureCallback(
-        Context parentContext, HttpContext httpContext, FutureCallback<T> delegate) {
+        Context parentContext, HttpContext httpContext, @Nullable FutureCallback<T> delegate) {
       this.parentContext = parentContext;
       this.httpContext = httpContext;
       // Note: this can be null in real life, so we have to handle this carefully
@@ -198,11 +198,6 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       }
 
       instrumenter().end(context, httpRequest, getResponseFromHttpContext(), null);
-
-      if (parentContext == null) {
-        completeDelegate(result);
-        return;
-      }
 
       try (Scope ignored = parentContext.makeCurrent()) {
         completeDelegate(result);
@@ -221,11 +216,6 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       // end span before calling delegate
       instrumenter().end(context, httpRequest, getResponseFromHttpContext(), ex);
 
-      if (parentContext == null) {
-        failDelegate(ex);
-        return;
-      }
-
       try (Scope ignored = parentContext.makeCurrent()) {
         failDelegate(ex);
       }
@@ -243,11 +233,6 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       // TODO (trask) add "canceled" span attribute
       // end span before calling delegate
       instrumenter().end(context, httpRequest, getResponseFromHttpContext(), null);
-
-      if (parentContext == null) {
-        cancelDelegate();
-        return;
-      }
 
       try (Scope ignored = parentContext.makeCurrent()) {
         cancelDelegate();
