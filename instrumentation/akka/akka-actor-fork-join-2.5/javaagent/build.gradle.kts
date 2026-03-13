@@ -30,6 +30,7 @@ dependencies {
 
   library("com.typesafe.akka:akka-actor_2.11:2.5.0")
 
+  testInstrumentation(project(":instrumentation:akka:akka-actor-2.3:javaagent"))
   testImplementation(project(":instrumentation:executors:testing"))
 }
 
