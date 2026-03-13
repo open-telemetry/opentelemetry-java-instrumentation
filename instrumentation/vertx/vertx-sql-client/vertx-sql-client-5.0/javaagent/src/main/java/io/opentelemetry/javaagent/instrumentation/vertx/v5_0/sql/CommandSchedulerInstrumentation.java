@@ -6,12 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.v5_0.sql;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.vertx.v5_0.sql.VertxSqlClientSingletons.getCommandContext;
+import static io.opentelemetry.javaagent.instrumentation.vertx.v5_0.sql.VertxSqlClientSingletons.setCommandContext;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.vertx.sqlclient.internal.command.CommandBase;
@@ -49,20 +50,17 @@ public class CommandSchedulerInstrumentation implements TypeInstrumentation {
         CommandSchedulerInstrumentation.class.getName() + "$ScheduleAdvice");
   }
 
-  // VirtualField.find requires the raw type; CommandBase is invoked reflectively by ByteBuddy
-  @SuppressWarnings({"unused", "rawtypes"})
+  @SuppressWarnings("unused")
   public static class ScheduleAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     @Nullable
     public static Scope onEnter(@Advice.Argument(0) CommandBase<?> command) {
-      VirtualField<CommandBase, Context> contextField =
-          VirtualField.find(CommandBase.class, Context.class);
-      Context stored = contextField.get(command);
+      Context stored = getCommandContext(command);
       if (stored == null) {
         // First schedule call (query executor → pool or direct connection).
         // The current OpenTelemetry context is correct — store it on the command.
-        contextField.set(command, Context.current());
+        setCommandContext(command, Context.current());
         return null;
       }
       // Subsequent schedule call (pool → connection).
