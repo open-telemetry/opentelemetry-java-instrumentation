@@ -22,6 +22,40 @@ tasks {
         }
       }
 
+      // Resolve an artifact with a stability filter, rejecting pre-release versions.
+      fun resolveStableVersion(project: Project, group: String, module: String, version: String): String? {
+        val detached = project.configurations.detachedConfiguration(
+          project.dependencies.create("$group:$module:$version")
+        )
+        detached.resolutionStrategy.componentSelection.all {
+          if (!AcceptableVersions.isStable(candidate.version)) {
+            reject("pre-release version")
+          }
+        }
+        return try {
+          detached.incoming.resolutionResult.rootComponent.get()
+            .dependencies
+            .filterIsInstance<org.gradle.api.artifacts.result.ResolvedDependencyResult>()
+            .firstOrNull()
+            ?.selected?.moduleVersion?.version
+        } catch (e: Exception) {
+          null
+        }
+      }
+
+      // Returns the stable version for a resolved dependency, or null if it should be skipped.
+      fun stableVersionOf(
+        project: Project,
+        group: String,
+        module: String,
+        reqVersion: String,
+        selectedVersion: String
+      ): String? {
+        if (AcceptableVersions.isStable(selectedVersion)) return selectedVersion
+        // Gradle picked a pre-release — re-resolve with stability filter
+        return resolveStableVersion(project, group, module, reqVersion)
+      }
+
       subprojects {
         configurations
           .filter { it.isCanBeResolved && it.name.contains("test", ignoreCase = true) && it.name.endsWith("RuntimeClasspath") }
@@ -33,10 +67,12 @@ tasks {
                   if (requested is org.gradle.api.artifacts.component.ModuleComponentSelector) {
                     val reqVersion = requested.version
                     val selectedVersion = dep.selected.moduleVersion?.version ?: return@forEach
+                    val version = stableVersionOf(this@subprojects, requested.group, requested.module, reqVersion, selectedVersion)
+                      ?: return@forEach
                     if (reqVersion == "latest.release") {
-                      recordVersion("${requested.group}:${requested.module}#+", selectedVersion)
+                      recordVersion("${requested.group}:${requested.module}#+", version)
                     } else if (reqVersion.contains("+")) {
-                      recordVersion("${requested.group}:${requested.module}#$reqVersion", selectedVersion)
+                      recordVersion("${requested.group}:${requested.module}#$reqVersion", version)
                     }
                   }
                 }
@@ -51,25 +87,9 @@ tasks {
       // The subproject scan doesn't capture these because the Spring Boot Gradle plugin
       // applies the BOM at an already-resolved version, not the original "3.+"/"4.+" range.
       listOf("3.+", "4.+").forEach { range ->
-        val detached = project.configurations.detachedConfiguration(
-          project.dependencies.create("org.springframework.boot:spring-boot-dependencies:$range")
-        )
-        detached.resolutionStrategy.componentSelection.all {
-          if (!AcceptableVersions.isStable(candidate.version)) {
-            reject("pre-release version")
-          }
-        }
-        try {
-          val resolvedVersion = detached.incoming.resolutionResult.rootComponent.get()
-            .dependencies
-            .filterIsInstance<org.gradle.api.artifacts.result.ResolvedDependencyResult>()
-            .first()
-            .selected.moduleVersion?.version
-          if (resolvedVersion != null) {
-            versions["org.springframework.boot:spring-boot-dependencies#$range"] = resolvedVersion
-          }
-        } catch (e: Exception) {
-          logger.warn("Failed to resolve Spring Boot $range: ${e.message}")
+        val resolvedVersion = resolveStableVersion(project, "org.springframework.boot", "spring-boot-dependencies", range)
+        if (resolvedVersion != null) {
+          versions["org.springframework.boot:spring-boot-dependencies#$range"] = resolvedVersion
         }
       }
 
@@ -94,25 +114,9 @@ tasks {
         val key = "$coords#+"
         if (versions.containsKey(key)) return@forEach
         val (group, module) = coords.split(":")
-        val detached = project.configurations.detachedConfiguration(
-          project.dependencies.create("$group:$module:latest.release")
-        )
-        detached.resolutionStrategy.componentSelection.all {
-          if (!AcceptableVersions.isStable(candidate.version)) {
-            reject("pre-release version")
-          }
-        }
-        try {
-          val resolvedVersion = detached.incoming.resolutionResult.rootComponent.get()
-            .dependencies
-            .filterIsInstance<org.gradle.api.artifacts.result.ResolvedDependencyResult>()
-            .firstOrNull()
-            ?.selected?.moduleVersion?.version
-          if (resolvedVersion != null) {
-            recordVersion(key, resolvedVersion)
-          }
-        } catch (e: Exception) {
-          logger.warn("Failed to resolve muzzle artifact $coords: ${e.message}")
+        val resolvedVersion = resolveStableVersion(project, group, module, "latest.release")
+        if (resolvedVersion != null) {
+          recordVersion(key, resolvedVersion)
         }
       }
 
