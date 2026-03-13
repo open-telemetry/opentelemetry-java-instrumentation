@@ -146,13 +146,13 @@ final class StreamedMessageBuffer {
 
     static {
       MethodHandle tcBuilder = null;
-      MethodHandle bId = null;
-      MethodHandle bFunction = null;
-      MethodHandle bBuild = null;
-      MethodHandle fBuilder = null;
-      MethodHandle fName = null;
-      MethodHandle fArguments = null;
-      MethodHandle fBuild = null;
+      MethodHandle builderId = null;
+      MethodHandle builderFunction = null;
+      MethodHandle builderBuild = null;
+      MethodHandle funcBuilder = null;
+      MethodHandle funcName = null;
+      MethodHandle funcArguments = null;
+      MethodHandle funcBuild = null;
       try {
         MethodHandles.Lookup lookup = MethodHandles.lookup();
         Class<?> builderClass =
@@ -170,45 +170,45 @@ final class StreamedMessageBuffer {
                 ChatCompletionMessageToolCall.class,
                 "builder",
                 MethodType.methodType(builderClass));
-        bId =
+        builderId =
             lookup.findVirtual(
                 builderClass, "id", MethodType.methodType(builderClass, String.class));
-        bFunction =
+        builderFunction =
             lookup.findVirtual(
                 builderClass, "function", MethodType.methodType(builderClass, functionClass));
-        bBuild =
+        builderBuild =
             lookup.findVirtual(
                 builderClass, "build", MethodType.methodType(ChatCompletionMessageToolCall.class));
-        fBuilder =
+        funcBuilder =
             lookup.findStatic(functionClass, "builder", MethodType.methodType(funcBuilderClass));
-        fName =
+        funcName =
             lookup.findVirtual(
                 funcBuilderClass, "name", MethodType.methodType(funcBuilderClass, String.class));
-        fArguments =
+        funcArguments =
             lookup.findVirtual(
                 funcBuilderClass,
                 "arguments",
                 MethodType.methodType(funcBuilderClass, String.class));
-        fBuild =
+        funcBuild =
             lookup.findVirtual(funcBuilderClass, "build", MethodType.methodType(functionClass));
       } catch (Exception e) {
         tcBuilder = null;
-        bId = null;
-        bFunction = null;
-        bBuild = null;
-        fBuilder = null;
-        fName = null;
-        fArguments = null;
-        fBuild = null;
+        builderId = null;
+        builderFunction = null;
+        builderBuild = null;
+        funcBuilder = null;
+        funcName = null;
+        funcArguments = null;
+        funcBuild = null;
       }
       toolCallBuilderHandle = tcBuilder;
-      builderIdHandle = bId;
-      builderFunctionHandle = bFunction;
-      builderBuildHandle = bBuild;
-      funcBuilderHandle = fBuilder;
-      funcBuilderNameHandle = fName;
-      funcBuilderArgumentsHandle = fArguments;
-      funcBuilderBuildHandle = fBuild;
+      builderIdHandle = builderId;
+      builderFunctionHandle = builderFunction;
+      builderBuildHandle = builderBuild;
+      funcBuilderHandle = funcBuilder;
+      funcBuilderNameHandle = funcName;
+      funcBuilderArgumentsHandle = funcArguments;
+      funcBuilderBuildHandle = funcBuild;
     }
 
     static boolean isAvailable() {
@@ -262,10 +262,10 @@ final class StreamedMessageBuffer {
       MethodHandle ftcBId = null;
       MethodHandle ftcBFunction = null;
       MethodHandle ftcBBuild = null;
-      MethodHandle fBuilder = null;
-      MethodHandle fName = null;
-      MethodHandle fArguments = null;
-      MethodHandle fBuild = null;
+      MethodHandle funcBuilder = null;
+      MethodHandle funcName = null;
+      MethodHandle funcArguments = null;
+      MethodHandle funcBuild = null;
       MethodHandle ofFunction = null;
       try {
         MethodHandles.Lookup lookup = MethodHandles.lookup();
@@ -290,17 +290,17 @@ final class StreamedMessageBuffer {
             lookup.findVirtual(
                 ftcBuilderClass, "function", MethodType.methodType(ftcBuilderClass, functionClass));
         ftcBBuild = lookup.findVirtual(ftcBuilderClass, "build", MethodType.methodType(ftcClass));
-        fBuilder =
+        funcBuilder =
             lookup.findStatic(functionClass, "builder", MethodType.methodType(funcBuilderClass));
-        fName =
+        funcName =
             lookup.findVirtual(
                 funcBuilderClass, "name", MethodType.methodType(funcBuilderClass, String.class));
-        fArguments =
+        funcArguments =
             lookup.findVirtual(
                 funcBuilderClass,
                 "arguments",
                 MethodType.methodType(funcBuilderClass, String.class));
-        fBuild =
+        funcBuild =
             lookup.findVirtual(funcBuilderClass, "build", MethodType.methodType(functionClass));
         ofFunction =
             lookup.findStatic(
@@ -312,20 +312,20 @@ final class StreamedMessageBuffer {
         ftcBId = null;
         ftcBFunction = null;
         ftcBBuild = null;
-        fBuilder = null;
-        fName = null;
-        fArguments = null;
-        fBuild = null;
+        funcBuilder = null;
+        funcName = null;
+        funcArguments = null;
+        funcBuild = null;
         ofFunction = null;
       }
       ftcBuilderHandle = ftcBuilder;
       ftcBuilderIdHandle = ftcBId;
       ftcBuilderFunctionHandle = ftcBFunction;
       ftcBuilderBuildHandle = ftcBBuild;
-      funcBuilderHandle = fBuilder;
-      funcBuilderNameHandle = fName;
-      funcBuilderArgumentsHandle = fArguments;
-      funcBuilderBuildHandle = fBuild;
+      funcBuilderHandle = funcBuilder;
+      funcBuilderNameHandle = funcName;
+      funcBuilderArgumentsHandle = funcArguments;
+      funcBuilderBuildHandle = funcBuild;
       ofFunctionHandle = ofFunction;
     }
 
