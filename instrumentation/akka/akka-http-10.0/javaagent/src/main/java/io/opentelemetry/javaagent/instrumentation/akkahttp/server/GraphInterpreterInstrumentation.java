@@ -12,6 +12,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -31,6 +32,7 @@ public class GraphInterpreterInstrumentation implements TypeInstrumentation {
   public static class PushAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Nullable
     public static Scope onEnter(@Advice.Argument(0) GraphInterpreter.Connection connection) {
       // processPush is called when execution passes to application or server. Here we propagate the
       // context to the application code.
@@ -42,7 +44,7 @@ public class GraphInterpreterInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exit(@Advice.Enter Scope scope) {
+    public static void exit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }
