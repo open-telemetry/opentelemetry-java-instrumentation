@@ -22,7 +22,7 @@ from pathlib import Path
 SETTINGS_FILE = "settings.gradle.kts"
 PROGRESS_DIR = Path("/tmp/review-progress")
 PROGRESS_FILE = PROGRESS_DIR / "reviewed.txt"
-MAX_PRS = 15
+MAX_PRS = 10
 BATCH_SIZE = 10
 
 
