@@ -48,7 +48,7 @@ declare -A deprecated_added_commits
 declare -A deprecated_removed_commits
 
 format_commit_msg() {
-  git log --format=%s -n 1 "$1" | sed -E 's, *\(#([0-9]+)\)$, ([#\1](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/\1)),'
+  git log --format=%s -n 1 "$1" | sed -E 's, *\(#([0-9]+)\)$,\n  ([#\1](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/\1)),'
 }
 
 while IFS= read -r commit_hash; do
