@@ -2,15 +2,14 @@
 """Build a GitHub Actions matrix of instrumentation modules to review.
 
 Reads module list from settings.gradle.kts, filters out already-reviewed
-modules (from the progress cache), respects the open-PR cap, and writes
-matrix JSON + has_work flag to $GITHUB_OUTPUT.
+modules (stored in the REVIEW_PROGRESS repository variable), respects the
+open-PR cap, and writes matrix JSON + has_work flag to $GITHUB_OUTPUT.
 
 Environment variables:
   GITHUB_OUTPUT      - path to the GitHub Actions output file
-  GH_TOKEN           - token for `gh pr list` (set automatically by the workflow)
-
-Paths:
-  /tmp/review-progress/reviewed.txt - progress cache (restored before this script)
+  GH_TOKEN           - token for `gh` CLI (set automatically by the workflow)
+  REVIEW_PROGRESS    - comma-separated list of reviewed module names
+                       (passed from the repo variable by the workflow)
 """
 
 import json
@@ -20,8 +19,6 @@ import subprocess
 from pathlib import Path
 
 SETTINGS_FILE = "settings.gradle.kts"
-PROGRESS_DIR = Path("/tmp/review-progress")
-PROGRESS_FILE = PROGRESS_DIR / "reviewed.txt"
 MAX_PRS = 10
 BATCH_SIZE = 10
 
@@ -42,10 +39,11 @@ def parse_modules() -> list[tuple[str, str]]:
 
 
 def load_reviewed() -> set[str]:
-    """Load already-reviewed module names from the progress cache."""
-    if PROGRESS_FILE.exists():
-        return set(PROGRESS_FILE.read_text().splitlines()) - {""}
-    return set()
+    """Load already-reviewed module names from the REVIEW_PROGRESS env var."""
+    progress = os.environ.get("REVIEW_PROGRESS", "")
+    if not progress:
+        return set()
+    return set(progress.split(","))
 
 
 def count_open_prs() -> int:
@@ -73,7 +71,7 @@ def main() -> None:
     print(f"Total instrumentation modules: {len(all_modules)}")
 
     reviewed = load_reviewed()
-    print(f"Already reviewed (cached): {len(reviewed)}")
+    print(f"Already reviewed: {len(reviewed)}")
 
     remaining = [(name, d) for name, d in all_modules if name not in reviewed]
     print(f"Remaining modules: {len(remaining)}")
