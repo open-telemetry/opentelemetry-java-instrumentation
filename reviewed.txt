@@ -1,0 +1,1 @@
+akka-actor-2.3:javaagent
