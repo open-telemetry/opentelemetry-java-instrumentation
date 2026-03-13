@@ -13,9 +13,8 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.http.HttpResponse;
 
-enum ApacheHttpClientHttpAttributesGetter
+class ApacheHttpClientHttpAttributesGetter
     implements HttpClientAttributesGetter<ApacheHttpClientRequest, HttpResponse> {
-  INSTANCE;
 
   @Override
   public String getHttpRequestMethod(ApacheHttpClientRequest request) {
