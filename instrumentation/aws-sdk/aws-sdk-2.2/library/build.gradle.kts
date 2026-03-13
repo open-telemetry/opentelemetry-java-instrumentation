@@ -77,6 +77,10 @@ tasks {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
   }
 
+  named<Test>("testBedrockRuntime") {
+    jvmArgs("-Dotel.semconv-stability.opt-in=gen_ai_latest_experimental")
+  }
+
   val testStableSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath

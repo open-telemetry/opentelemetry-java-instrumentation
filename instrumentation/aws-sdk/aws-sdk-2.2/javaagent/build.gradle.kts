@@ -166,6 +166,7 @@ testing {
             // TODO run tests both with and without genai message capture
             systemProperty("otel.instrumentation.genai.capture-message-content", "true")
             systemProperty("collectMetadata", collectMetadata)
+            jvmArgs("-Dotel.semconv-stability.opt-in=gen_ai_latest_experimental")
           }
         }
       }
