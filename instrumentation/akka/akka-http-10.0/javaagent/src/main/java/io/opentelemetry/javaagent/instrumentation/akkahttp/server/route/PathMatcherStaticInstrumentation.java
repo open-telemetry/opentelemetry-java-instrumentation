@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.akkahttp.server.route;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.akkahttp.server.route.AkkaRouteUtil.PREFIX;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -25,6 +26,11 @@ public class PathMatcherStaticInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return extendsClass(named("akka.http.scaladsl.server.PathMatcher"));
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("akka.http.scaladsl.server.PathMatcher");
   }
 
   @Override
