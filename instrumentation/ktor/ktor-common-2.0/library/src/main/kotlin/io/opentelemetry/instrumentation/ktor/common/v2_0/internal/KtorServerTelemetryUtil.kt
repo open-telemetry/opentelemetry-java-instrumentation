@@ -18,14 +18,27 @@ import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil
 import io.opentelemetry.instrumentation.ktor.common.v2_0.AbstractKtorServerTelemetryBuilder
 import io.opentelemetry.instrumentation.ktor.common.v2_0.ApplicationRequestGetter
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.ContinuationInterceptor
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
 object KtorServerTelemetryUtil {
+  val emptyInterceptor = object : ContinuationInterceptor {
+    override val key = ContinuationInterceptor
 
-  fun configureTelemetry(builder: AbstractKtorServerTelemetryBuilder, application: Application, block: suspend (suspend () -> Unit) -> Unit = {}) {
+    override fun <T> interceptContinuation(continuation: Continuation<T>): Continuation<T> = object : Continuation<T> {
+      override val context = continuation.context
+
+      override fun resumeWith(result: Result<T>) {
+        continuation.resumeWith(result)
+      }
+    }
+  }
+
+  fun configureTelemetry(builder: AbstractKtorServerTelemetryBuilder, application: Application) {
     val contextKey = AttributeKey<Context>("OpenTelemetry")
     val errorKey = AttributeKey<Throwable>("OpenTelemetryException")
     val processedKey = AttributeKey<Unit>("OpenTelemetryProcessed")
@@ -40,7 +53,8 @@ object KtorServerTelemetryUtil {
 
       if (context != null) {
         call.attributes.put(contextKey, context)
-        block {
+        // work around issue described in https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/16430
+        withContext(emptyInterceptor) {
           withContext(context.asContextElement()) {
             proceed()
           }
