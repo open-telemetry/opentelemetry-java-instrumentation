@@ -7,8 +7,8 @@ package io.opentelemetry.instrumentation.api.internal;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -22,110 +22,56 @@ import java.util.Set;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
+@SuppressWarnings("deprecation")
 public final class SemconvStability {
 
-  private static boolean emitOldDatabaseSemconv;
-  private static boolean emitStableDatabaseSemconv;
+  private static final boolean emitOldDatabaseSemconv;
+  private static final boolean emitStableDatabaseSemconv;
 
-  private static boolean emitOldCodeSemconv;
-  private static boolean emitStableCodeSemconv;
+  private static final boolean emitOldCodeSemconv;
+  private static final boolean emitStableCodeSemconv;
 
-  private static boolean emitOldServicePeerSemconv;
-  private static boolean emitStableServicePeerSemconv;
+  private static final boolean emitOldServicePeerSemconv;
+  private static final boolean emitStableServicePeerSemconv;
 
-  private static boolean emitOldRpcSemconv;
-  private static boolean emitStableRpcSemconv;
+  private static final boolean emitOldRpcSemconv;
+  private static final boolean emitStableRpcSemconv;
 
   static {
-    String value = System.getProperty("otel.semconv-stability.opt-in");
-    if (value == null) {
-      value = System.getenv("OTEL_SEMCONV_STABILITY_OPT_IN");
-    }
-    Set<String> values = value != null ? new HashSet<>(asList(value.split(","))) : emptySet();
-    configure(values);
+    OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
+    boolean v3Preview =
+        getInstrumentationConfig(openTelemetry, "common").getBoolean("v3_preview", false);
+    Set<String> optInValues = resolveOptInValues(openTelemetry);
+
+    emitOldDatabaseSemconv = shouldEmitOld("database", v3Preview, optInValues);
+    emitStableDatabaseSemconv = shouldEmitStable("database", v3Preview, optInValues);
+
+    emitOldCodeSemconv = shouldEmitOld("code", v3Preview, optInValues);
+    emitStableCodeSemconv = shouldEmitStable("code", v3Preview, optInValues);
+
+    emitOldServicePeerSemconv = shouldEmitOld("service.peer", v3Preview, optInValues);
+    emitStableServicePeerSemconv = shouldEmitStable("service.peer", v3Preview, optInValues);
+
+    emitOldRpcSemconv = shouldEmitOld("rpc", v3Preview, optInValues);
+    emitStableRpcSemconv = shouldEmitStable("rpc", v3Preview, optInValues);
   }
 
-  private static void configure(Set<String> values) {
-    // set default values
-    emitOldDatabaseSemconv = true;
-    emitStableDatabaseSemconv = false;
-
-    emitOldCodeSemconv = true;
-    emitStableCodeSemconv = false;
-
-    emitOldServicePeerSemconv = true;
-    emitStableServicePeerSemconv = false;
-
-    emitOldRpcSemconv = true;
-    emitStableRpcSemconv = false;
-
-    // no else -- technically it's possible to set "XXX,XXX/dup", in which case we
-    // should emit both sets of attributes for XXX
-
-    if (values.contains("database")) {
-      emitOldDatabaseSemconv = false;
-      emitStableDatabaseSemconv = true;
-    }
-    if (values.contains("database/dup")) {
-      emitOldDatabaseSemconv = true;
-      emitStableDatabaseSemconv = true;
-    }
-
-    if (values.contains("code")) {
-      emitOldCodeSemconv = false;
-      emitStableCodeSemconv = true;
-    }
-    if (values.contains("code/dup")) {
-      emitOldCodeSemconv = true;
-      emitStableCodeSemconv = true;
-    }
-
-    if (values.contains("service.peer")) {
-      emitOldServicePeerSemconv = false;
-      emitStableServicePeerSemconv = true;
-    }
-    if (values.contains("service.peer/dup")) {
-      emitOldServicePeerSemconv = true;
-      emitStableServicePeerSemconv = true;
-    }
-
-    if (values.contains("rpc")) {
-      emitOldRpcSemconv = false;
-      emitStableRpcSemconv = true;
-    }
-    if (values.contains("rpc/dup")) {
-      emitOldRpcSemconv = true;
-      emitStableRpcSemconv = true;
-    }
-  }
-
-  public static void configure(OpenTelemetry openTelemetry) {
+  private static Set<String> resolveOptInValues(OpenTelemetry openTelemetry) {
+    // Try declarative config via GlobalOpenTelemetry first
     DeclarativeConfigProperties generalConfig = getGeneralInstrumentationConfig(openTelemetry);
-
     Set<String> values =
         new HashSet<>(
             generalConfig
                 .get("semconv_stability")
                 .getScalarList("opt_in", String.class, new ArrayList<>()));
-    configure(values);
-  }
-
-  public static void enableAllStable() {
-    emitOldDatabaseSemconv = false;
-    emitStableDatabaseSemconv = true;
-    emitOldCodeSemconv = false;
-    emitStableCodeSemconv = true;
-    emitOldServicePeerSemconv = false;
-    emitStableServicePeerSemconv = true;
-    emitOldRpcSemconv = false;
-    emitStableRpcSemconv = true;
-  }
-
-  private static DeclarativeConfigProperties getGeneralInstrumentationConfig(
-      OpenTelemetry openTelemetry) {
-    return openTelemetry instanceof ExtendedOpenTelemetry
-        ? ((ExtendedOpenTelemetry) openTelemetry).getGeneralInstrumentationConfig()
-        : empty();
+    if (values.isEmpty()) {
+      // Fall back to system property / env var
+      String value = ConfigPropertiesUtil.getString("otel.semconv-stability.opt-in");
+      if (value != null) {
+        return new HashSet<>(asList(value.split(",")));
+      }
+    }
+    return values;
   }
 
   public static boolean emitOldDatabaseSemconv() {
@@ -195,6 +141,37 @@ public final class SemconvStability {
   public static String stableRpcSystemName(String oldRpcSystem) {
     String rpcSystemName = rpcSystemNameMap.get(oldRpcSystem);
     return rpcSystemName != null ? rpcSystemName : oldRpcSystem;
+  }
+
+  private static boolean shouldEmitOld(String key, boolean v3Preview, Set<String> optInValues) {
+    if (v3Preview) {
+      return false;
+    }
+    if (optInValues.contains(key + "/dup")) {
+      return true;
+    }
+    return !optInValues.contains(key);
+  }
+
+  private static boolean shouldEmitStable(String key, boolean v3Preview, Set<String> optInValues) {
+    if (v3Preview) {
+      return true;
+    }
+    return optInValues.contains(key) || optInValues.contains(key + "/dup");
+  }
+
+  private static DeclarativeConfigProperties getGeneralInstrumentationConfig(
+      OpenTelemetry openTelemetry) {
+    return openTelemetry instanceof ExtendedOpenTelemetry
+        ? ((ExtendedOpenTelemetry) openTelemetry).getGeneralInstrumentationConfig()
+        : empty();
+  }
+
+  private static DeclarativeConfigProperties getInstrumentationConfig(
+      OpenTelemetry openTelemetry, String instrumentationName) {
+    return openTelemetry instanceof ExtendedOpenTelemetry
+        ? ((ExtendedOpenTelemetry) openTelemetry).getInstrumentationConfig(instrumentationName)
+        : empty();
   }
 
   private SemconvStability() {}
