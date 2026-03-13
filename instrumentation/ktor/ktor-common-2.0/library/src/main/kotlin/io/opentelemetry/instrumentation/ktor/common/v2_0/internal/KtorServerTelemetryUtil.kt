@@ -25,7 +25,7 @@ import kotlinx.coroutines.withContext
  */
 object KtorServerTelemetryUtil {
 
-  fun PluginBuilder<*>.configureTelemetry(builder: AbstractKtorServerTelemetryBuilder, application: Application) {
+  fun configureTelemetry(builder: AbstractKtorServerTelemetryBuilder, application: Application, block: suspend (suspend () -> Unit) -> Unit = {}) {
     val contextKey = AttributeKey<Context>("OpenTelemetry")
     val errorKey = AttributeKey<Throwable>("OpenTelemetryException")
     val processedKey = AttributeKey<Unit>("OpenTelemetryProcessed")
@@ -40,8 +40,10 @@ object KtorServerTelemetryUtil {
 
       if (context != null) {
         call.attributes.put(contextKey, context)
-        withContext(context.asContextElement()) {
-          proceed()
+        block {
+          withContext(context.asContextElement()) {
+            proceed()
+          }
         }
       } else {
         proceed()
