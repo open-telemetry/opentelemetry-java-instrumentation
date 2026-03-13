@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.appender.v1_1;
 
+import static io.opentelemetry.semconv.incubating.OtelIncubatingAttributes.OTEL_EVENT_NAME;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.Collections.emptyList;
@@ -25,6 +26,9 @@ import org.jboss.logmanager.Logger;
 import org.jboss.logmanager.MDC;
 
 public final class LoggingEventMapper {
+
+  private static final java.util.logging.Logger logger =
+      java.util.logging.Logger.getLogger(LoggingEventMapper.class.getName());
 
   public static final LoggingEventMapper INSTANCE = new LoggingEventMapper();
 
@@ -53,6 +57,11 @@ public final class LoggingEventMapper {
             .getScalarList("capture_mdc_attributes/development", String.class, emptyList());
     this.captureAllMdcAttributes =
         captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
+    if (captureEventName) {
+      logger.warning(
+          "The otel.instrumentation.jboss-logmanager.experimental.capture-event-name setting is"
+              + " deprecated and will be removed in a future version.");
+    }
   }
 
   public void capture(Logger logger, ExtLogRecord record) {
@@ -100,35 +109,45 @@ public final class LoggingEventMapper {
   private void captureMdcAttributes(LogRecordBuilder builder) {
 
     Map<String, String> context = MDC.copy();
+    if (context == null) {
+      return;
+    }
+
+    // otel.event.name takes priority over event.name
+    String otelEventName = context.get(OTEL_EVENT_NAME.getKey());
+    if (otelEventName != null) {
+      builder.setEventName(otelEventName);
+    } else if (captureEventName) {
+      String eventName = context.get(EVENT_NAME.getKey());
+      if (eventName != null) {
+        builder.setEventName(eventName);
+      }
+    }
 
     if (captureAllMdcAttributes) {
-      if (context != null) {
-        for (Map.Entry<String, String> entry : context.entrySet()) {
-          setAttributeOrEventName(builder, getMdcAttributeKey(entry.getKey()), entry.getValue());
+      for (Map.Entry<String, String> entry : context.entrySet()) {
+        String key = entry.getKey();
+        if (!OTEL_EVENT_NAME.getKey().equals(key)
+            && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
+          builder.setAttribute(getMdcAttributeKey(key), entry.getValue());
         }
       }
       return;
     }
 
     for (String key : captureMdcAttributes) {
-      Object value = context.get(key);
-      setAttributeOrEventName(builder, getMdcAttributeKey(key), value);
+      if (!OTEL_EVENT_NAME.getKey().equals(key)
+          && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
+        String value = context.get(key);
+        if (value != null) {
+          builder.setAttribute(getMdcAttributeKey(key), value);
+        }
+      }
     }
   }
 
   public static AttributeKey<String> getMdcAttributeKey(String key) {
     return mdcAttributeKeys.computeIfAbsent(key, AttributeKey::stringKey);
-  }
-
-  private void setAttributeOrEventName(
-      LogRecordBuilder builder, AttributeKey<String> key, Object value) {
-    if (value != null) {
-      if (captureEventName && key.equals(EVENT_NAME)) {
-        builder.setEventName(value.toString());
-      } else {
-        builder.setAttribute(key, value.toString());
-      }
-    }
   }
 
   private static Severity levelToSeverity(java.util.logging.Level level) {

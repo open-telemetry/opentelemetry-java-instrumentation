@@ -79,6 +79,21 @@ class LogstashStructuredArgsTest {
   }
 
   @Test
+  void otelEventNameInStructuredArgument() {
+    logger.info(
+        "Event occurred: {}",
+        StructuredArguments.keyValue("key1", "val1"),
+        StructuredArguments.keyValue("otel.event.name", "MyEventName"));
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasBody("Event occurred: key1=val1")
+                .hasEventName("MyEventName")
+                .hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "val1")));
+  }
+
+  @Test
   void structuredArgumentsWithTypedValues() {
     long timestamp = System.currentTimeMillis();
     logger.info(
