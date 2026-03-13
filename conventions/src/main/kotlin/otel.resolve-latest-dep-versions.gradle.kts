@@ -1,4 +1,5 @@
 import io.opentelemetry.javaagent.muzzle.AcceptableVersions
+import io.opentelemetry.javaagent.muzzle.MuzzleExtension
 import org.gradle.util.internal.VersionNumber
 
 tasks {
@@ -69,6 +70,49 @@ tasks {
           }
         } catch (e: Exception) {
           logger.warn("Failed to resolve Spring Boot $range: ${e.message}")
+        }
+      }
+
+      // Resolve muzzle-only artifacts that don't appear in test classpaths.
+      // muzzle pass/fail directives reference artifacts that resolveUpperBound() needs pinned,
+      // but many of these are never pulled into a testLatestDeps configuration.
+      val muzzleArtifacts = mutableSetOf<String>()
+      subprojects {
+        val muzzleExt = extensions.findByType<MuzzleExtension>()
+        if (muzzleExt != null) {
+          muzzleExt.directives.getOrElse(listOf()).forEach { directive ->
+            if (directive.coreJdk.getOrElse(false)) return@forEach
+            val group = directive.group.orNull ?: return@forEach
+            val module = directive.module.orNull ?: return@forEach
+            // Skip template variables like play_$scalaVersion that can't be resolved statically
+            if (group.contains("\$") || module.contains("\$")) return@forEach
+            muzzleArtifacts.add("$group:$module")
+          }
+        }
+      }
+      muzzleArtifacts.forEach { coords ->
+        val key = "$coords#+"
+        if (versions.containsKey(key)) return@forEach
+        val (group, module) = coords.split(":")
+        val detached = project.configurations.detachedConfiguration(
+          project.dependencies.create("$group:$module:latest.release")
+        )
+        detached.resolutionStrategy.componentSelection.all {
+          if (!AcceptableVersions.isStable(candidate.version)) {
+            reject("pre-release version")
+          }
+        }
+        try {
+          val resolvedVersion = detached.incoming.resolutionResult.rootComponent.get()
+            .dependencies
+            .filterIsInstance<org.gradle.api.artifacts.result.ResolvedDependencyResult>()
+            .firstOrNull()
+            ?.selected?.moduleVersion?.version
+          if (resolvedVersion != null) {
+            recordVersion(key, resolvedVersion)
+          }
+        } catch (e: Exception) {
+          logger.warn("Failed to resolve muzzle artifact $coords: ${e.message}")
         }
       }
 
