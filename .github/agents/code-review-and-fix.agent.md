@@ -112,11 +112,14 @@ Auto-fix boundaries:
     to a library family with sibling version modules, it must list all siblings via
     `testInstrumentation`. Check `settings.gradle.kts` for sibling `:javaagent` modules
     under the same parent. After adding, verify by running the module's tests.
-  - missing version comments on `hasClassesNamed()` landmark classes in
-    `classLoaderMatcher()` — look up the library version that introduced each class (check
-    muzzle `versions.set(...)` ranges, module directory name, existing code comments, and
-    Javadoc/release notes) and add a `// added in X.Y` or `// removed in X.Y` comment above
-    each class name string
+  - missing version comments on `hasClassesNamed()` landmark classes in existing
+    `classLoaderMatcher()` overrides (multi-class checks or `.and(not(...))` chains only) —
+    look up the library version that introduced each class (check muzzle `versions.set(...)`
+    ranges, module directory name, existing code comments, and Javadoc/release notes) and
+    add a `// added in X.Y` or `// removed in X.Y` comment above each class name string.
+    Do NOT add a `classLoaderMatcher()` override where one does not already exist —
+    this method is only for version-boundary detection when muzzle is insufficient,
+    not for optimization (use `TypeInstrumentation.classLoaderOptimization()` instead)
   - singleton-to-instance-creation conversion for stateless telemetry interface
     implementations (`TextMapGetter`, `TextMapSetter`, `*AttributesGetter`,
     `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`) — replace
