@@ -47,11 +47,12 @@ public class ApplicationLongUpDownCounterBuilder
   public application.io.opentelemetry.api.metrics.ObservableLongUpDownCounter buildWithCallback(
       Consumer<application.io.opentelemetry.api.metrics.ObservableLongMeasurement>
           applicationCallback) {
+    Consumer<io.opentelemetry.api.metrics.ObservableLongMeasurement> callback =
+        agentMeasurement ->
+            applicationCallback.accept(new ApplicationObservableLongMeasurement(agentMeasurement));
     return new ApplicationObservableLongUpDownCounter(
-        agentBuilder.buildWithCallback(
-            agentMeasurement ->
-                applicationCallback.accept(
-                    new ApplicationObservableLongMeasurement(agentMeasurement))));
+        CallbackAnchor.anchor(agentBuilder::buildWithCallback, callback),
+        () -> CallbackAnchor.remove(callback));
   }
 
   // added in 1.15.0
