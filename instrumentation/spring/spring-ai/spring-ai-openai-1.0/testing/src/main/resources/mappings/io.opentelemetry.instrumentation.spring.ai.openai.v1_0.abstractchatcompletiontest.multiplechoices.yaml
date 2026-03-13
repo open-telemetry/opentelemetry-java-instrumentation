@@ -1,0 +1,44 @@
+---
+id: 5cb55360-eef4-4668-b687-b3f60fc7e201
+name: v1_chat_completions
+request:
+  url: /v1/chat/completions
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "messages" : [ {
+          "content" : "Answer in up to 3 words: Which ocean contains Bouvet Island?",
+          "role" : "user"
+        } ],
+        "model" : "qwen3-coder-flash",
+        "n" : 2,
+        "stream" : false,
+        "temperature" : 0.7
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  body: "{\"choices\":[{\"message\":{\"content\":\"Southern Ocean\",\"role\":\"assistant\"\
+    },\"index\":0,\"finish_reason\":\"stop\",\"logprobs\":null},{\"message\":{\"content\"\
+    :\"South\",\"role\":\"assistant\"},\"index\":1,\"finish_reason\":\"stop\",\"logprobs\"\
+    :null}],\"object\":\"chat.completion\",\"usage\":{\"prompt_tokens\":23,\"completion_tokens\"\
+    :3,\"total_tokens\":26},\"created\":1758119593,\"system_fingerprint\":null,\"\
+    model\":\"qwen3-coder-flash\",\"id\":\"chatcmpl-25a1be03-506a-465a-bdfe-6c9b388ce006\"\
+    }"
+  headers:
+    vary: "Origin,Access-Control-Request-Method,Access-Control-Request-Headers, Accept-Encoding"
+    x-request-id: 25a1be03-506a-465a-bdfe-6c9b388ce006
+    x-dashscope-call-gateway: "true"
+    content-type: application/json
+    req-cost-time: "323"
+    req-arrive-time: "1758119592942"
+    resp-start-time: "1758119593265"
+    x-envoy-upstream-service-time: "322"
+    set-cookie: test_set_cookie
+    date: "Wed, 17 Sep 2025 14:33:12 GMT"
+    server: istio-envoy
+uuid: 5cb55360-eef4-4668-b687-b3f60fc7e201
+persistent: true
+insertionIndex: 10
