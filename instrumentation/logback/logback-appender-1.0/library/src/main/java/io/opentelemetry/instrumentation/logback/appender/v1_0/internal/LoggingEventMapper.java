@@ -231,12 +231,12 @@ public final class LoggingEventMapper {
 
     captureMdcAttributes(builder, loggingEvent.getMDCPropertyMap());
 
-    if (supportsKeyValuePairs) {
-      captureOtelEventName(builder, loggingEvent);
-    }
-
     if (supportsKeyValuePairs && captureKeyValuePairAttributes) {
       captureKeyValuePairAttributes(builder, loggingEvent);
+    }
+
+    if (supportsKeyValuePairs) {
+      captureOtelEventName(builder, loggingEvent);
     }
     // span context
     builder.setContext(Context.current());
