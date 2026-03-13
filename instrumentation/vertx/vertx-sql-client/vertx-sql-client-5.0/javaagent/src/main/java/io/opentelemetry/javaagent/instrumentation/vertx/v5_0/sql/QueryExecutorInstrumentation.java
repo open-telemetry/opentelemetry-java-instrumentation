@@ -103,6 +103,12 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
         }
 
         SqlConnectOptions connectOptions = QueryExecutorUtil.getConnectOptions(queryExecutor);
+        // connectOptions is null when the pool was created via JDBCPool which bypasses the
+        // Pool.pool() factory, in that case we skip vertx-sql-client span creation and let JDBC
+        // instrumentation handle it
+        if (connectOptions == null) {
+          return new AdviceScope(callDepth);
+        }
         String dbSystem = VertxSqlClientSingletons.getConnectOptionsDbSystem(connectOptions);
         VertxSqlClientRequest otelRequest =
             new VertxSqlClientRequest(sql, connectOptions, preparedStatement, dbSystem);

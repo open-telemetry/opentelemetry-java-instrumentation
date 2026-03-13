@@ -41,7 +41,10 @@ public class PoolInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("io.vertx.sqlclient.Pool"));
+    // Match both the Pool interface (for static pool() factory methods) and classes/interfaces
+    // that implement/extend Pool (for instance methods like getConnection())
+    return implementsInterface(named("io.vertx.sqlclient.Pool"))
+        .or(named("io.vertx.sqlclient.Pool"));
   }
 
   @Override
