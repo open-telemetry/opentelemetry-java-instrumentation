@@ -22,38 +22,31 @@ tasks {
         }
       }
 
+      val stableVersionCache = mutableMapOf<Triple<String, String, String>, String?>()
+
       // Resolve an artifact with a stability filter, rejecting pre-release versions.
+      // Results are cached to avoid repeated Maven Central lookups for the same artifact.
       fun resolveStableVersion(project: Project, group: String, module: String, version: String): String? {
-        val detached = project.configurations.detachedConfiguration(
-          project.dependencies.create("$group:$module:$version")
-        )
-        detached.resolutionStrategy.componentSelection.all {
-          if (!AcceptableVersions.isStable(candidate.version)) {
-            reject("pre-release version")
+        return stableVersionCache.getOrPut(Triple(group, module, version)) {
+          val detached = project.configurations.detachedConfiguration(
+            project.dependencies.create("$group:$module:$version")
+          )
+          detached.resolutionStrategy.componentSelection.all {
+            if (!AcceptableVersions.isStable(candidate.version)) {
+              reject("pre-release version")
+            }
+          }
+          try {
+            detached.incoming.resolutionResult.rootComponent.get()
+              .dependencies
+              .filterIsInstance<org.gradle.api.artifacts.result.ResolvedDependencyResult>()
+              .firstOrNull()
+              ?.selected?.moduleVersion?.version
+          } catch (e: Exception) {
+            logger.warn("Failed to resolve stable version for $group:$module:$version: ${e.message}")
+            null
           }
         }
-        return try {
-          detached.incoming.resolutionResult.rootComponent.get()
-            .dependencies
-            .filterIsInstance<org.gradle.api.artifacts.result.ResolvedDependencyResult>()
-            .firstOrNull()
-            ?.selected?.moduleVersion?.version
-        } catch (e: Exception) {
-          null
-        }
-      }
-
-      // Returns the stable version for a resolved dependency, or null if it should be skipped.
-      fun stableVersionOf(
-        project: Project,
-        group: String,
-        module: String,
-        reqVersion: String,
-        selectedVersion: String
-      ): String? {
-        if (AcceptableVersions.isStable(selectedVersion)) return selectedVersion
-        // Gradle picked a pre-release — re-resolve with stability filter
-        return resolveStableVersion(project, group, module, reqVersion)
       }
 
       subprojects {
@@ -67,7 +60,8 @@ tasks {
                   if (requested is org.gradle.api.artifacts.component.ModuleComponentSelector) {
                     val reqVersion = requested.version
                     val selectedVersion = dep.selected.moduleVersion?.version ?: return@forEach
-                    val version = stableVersionOf(this@subprojects, requested.group, requested.module, reqVersion, selectedVersion)
+                    val version = if (AcceptableVersions.isStable(selectedVersion)) selectedVersion
+                      else resolveStableVersion(this@subprojects, requested.group, requested.module, reqVersion)
                       ?: return@forEach
                     if (reqVersion == "latest.release") {
                       recordVersion("${requested.group}:${requested.module}#+", version)
@@ -100,7 +94,7 @@ tasks {
       subprojects {
         val muzzleExt = extensions.findByType<MuzzleExtension>()
         if (muzzleExt != null) {
-          muzzleExt.directives.getOrElse(listOf()).forEach { directive ->
+          muzzleExt.directives.get().forEach { directive ->
             if (directive.coreJdk.getOrElse(false)) return@forEach
             val group = directive.group.orNull ?: return@forEach
             val module = directive.module.orNull ?: return@forEach
