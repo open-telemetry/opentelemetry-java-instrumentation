@@ -30,16 +30,8 @@ public class GenAiToolAttributesExtractor<REQUEST, RESPONSE>
   private static final AttributeKey<String> GEN_AI_TOOL_NAME = stringKey("gen_ai.tool.name");
   private static final AttributeKey<String> GEN_AI_TOOL_TYPE = stringKey("gen_ai.tool.type");
 
-  /** Creates the GenAI tool attributes extractor. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       GenAiToolAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
-    return new GenAiToolAttributesExtractor<>(attributesGetter);
-  }
-
-  /** Creates the GenAI tool attributes extractor with message content capture option. */
-  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      GenAiToolAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-      boolean captureMessageContent) {
     return new GenAiToolAttributesExtractor<>(attributesGetter);
   }
 

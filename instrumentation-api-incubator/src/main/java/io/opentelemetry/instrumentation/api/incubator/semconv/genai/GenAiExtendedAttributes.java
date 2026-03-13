@@ -15,8 +15,6 @@ import io.opentelemetry.api.common.AttributeKey;
 /**
  * Extended GenAI semantic convention attributes that are not yet available in the standard
  * opentelemetry-semconv package. These follow the OTel GenAI semantic conventions (incubating).
- *
- * @see <a href="https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/">gen-ai-spans</a>
  */
 public final class GenAiExtendedAttributes {
 

@@ -32,7 +32,6 @@ public class GenAiSpanNameExtractorTest {
   @MethodSource("spanNameParams")
   void shouldExtractSpanName(
       String operationName, String operationTarget, String expectedSpanName) {
-    // given
     Request request = new Request();
 
     when(getter.getOperationName(request)).thenReturn(operationName);
@@ -40,10 +39,8 @@ public class GenAiSpanNameExtractorTest {
 
     SpanNameExtractor<Request> underTest = GenAiSpanNameExtractor.create(getter);
 
-    // when
     String spanName = underTest.extract(request);
 
-    // then
     assertEquals(expectedSpanName, spanName);
   }
 

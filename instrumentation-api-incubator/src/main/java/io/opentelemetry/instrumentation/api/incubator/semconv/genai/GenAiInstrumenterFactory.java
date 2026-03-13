@@ -265,7 +265,7 @@ public final class GenAiInstrumenterFactory {
         Instrumenter.<REQUEST, RESPONSE>builder(
                 openTelemetry, instrumentationName, GenAiToolSpanNameExtractor.create(getter))
             .addAttributesExtractor(
-                GenAiToolAttributesExtractor.create(getter, captureMessageContent))
+                GenAiToolAttributesExtractor.create(getter))
             .addAttributesExtractors(additionalExtractors);
     return builder.buildInstrumenter();
   }
