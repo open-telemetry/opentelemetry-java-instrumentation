@@ -230,6 +230,20 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
+  void testSpringStarterThreadDetailsMapping() {
+    DeclarativeConfigProperties config =
+        createConfig("otel.instrumentation.common.thread-details.enabled", "true");
+
+    assertThat(
+            config
+                .getStructured("spring_starter")
+                .getStructured("thread_details")
+                .getBoolean("enabled"))
+        .isNotNull()
+        .isTrue();
+  }
+
+  @Test
   void testWithoutJavaPrefix_doesNotMatch() {
     DeclarativeConfigProperties config =
         createConfig("otel.instrumentation.kafka.producer-propagation.enabled", "false");

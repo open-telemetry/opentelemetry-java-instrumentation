@@ -93,6 +93,10 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put("java.jmx.enabled", "otel.jmx.enabled");
     SPECIAL_MAPPINGS.put("java.jmx.config", "otel.jmx.config");
     SPECIAL_MAPPINGS.put("java.jmx.target.system", "otel.jmx.target.system");
+    // spring starter distribution config
+    SPECIAL_MAPPINGS.put(
+        "spring_starter.thread_details.enabled",
+        "otel.instrumentation.common.thread-details.enabled");
   }
 
   private final ConfigProperties configProperties;
