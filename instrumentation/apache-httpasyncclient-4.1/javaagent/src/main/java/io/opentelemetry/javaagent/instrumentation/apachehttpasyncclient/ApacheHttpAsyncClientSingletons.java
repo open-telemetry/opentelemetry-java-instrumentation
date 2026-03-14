@@ -19,7 +19,7 @@ public final class ApacheHttpAsyncClientSingletons {
         JavaagentHttpClientInstrumenters.create(
             INSTRUMENTATION_NAME,
             new ApacheHttpAsyncClientHttpAttributesGetter(),
-            HttpHeaderSetter.INSTANCE);
+            new HttpHeaderSetter());
   }
 
   public static Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter() {
