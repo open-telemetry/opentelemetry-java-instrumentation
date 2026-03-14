@@ -143,8 +143,7 @@ jobs:
               if [[ -s "$f" ]]; then
                 echo "### ${model}"
                 echo ""
-                # Shorten file paths to just the filename (+ line number).
-                sed -e 's#[^ |]*/##g' "$f"
+                cat "$f"
                 echo ""
               fi
             done
