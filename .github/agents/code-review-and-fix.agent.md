@@ -183,7 +183,19 @@ for completion.**
 
 Execute these steps strictly in order — do not reorder:
 
-1. Run targeted verification for changed files when feasible (focused tests or compile checks).
+1. **Run the module's check task.** For every module whose source files were modified, run its
+   `:check` task **twice** — once normally and once with `-PtestLatestDeps=true`:
+
+   ```
+   ./gradlew :<module-path>:check
+   ./gradlew :<module-path>:check -PtestLatestDeps=true
+   ```
+
+   The first run exercises the default test suites (`test`, `testExperimental`, and any other
+   custom test tasks wired into `check`). The second run activates `latestDepTest`, which
+   replaces `library` and `testLibrary` dependency versions with `latest.release`.
+   This is mandatory, not optional — fixes that break tests must be caught and corrected
+   before committing. If a test fails, diagnose the failure, fix it, and re-run until green.
 2. If changes touch Gradle muzzle configuration (for example `muzzle {}`, version ranges,
    `assertInverse.set(true)`, or module wiring affecting muzzle), run the relevant module `:muzzle`
    tasks.
