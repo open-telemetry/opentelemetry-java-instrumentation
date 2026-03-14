@@ -211,7 +211,6 @@ Execute these steps strictly in order — do not reorder:
 5. Print one summary:
    - Heading: `PR #<number>: <title>` (PR mode) or `<paths>` (file/directory mode)
    - Table with status (`Fixed` or `Needs Manual Fix`), file, category, and note
-   - Totals for fixed and unresolved
 
 Template:
 
@@ -220,21 +219,20 @@ Template:
 |--------|------|----------|------|
 | Fixed | src/Foo.java:42 | Style | Added class-level deprecation suppression for stable/old semconv dual mode |
 | Needs Manual Fix | src/Bar.java:77 | API | Requires compatibility decision before rename |
-
-**Fixed: X · Needs manual fix: Y**
 ```
 
 If no findings:
 > `No issues found.`
 
 When writing the summary to a file (as opposed to printing to the console), the output
-must be **only** the findings table and totals line — nothing else:
+must be **only** the findings table — nothing else:
 
 - Do **not** include headings (`##`), horizontal rules, or "Fix Review Summary" titles.
 - Do **not** include a "Files reviewed" table, per-file checklist, or notes section
   when there are zero findings. Write only `No issues found.`
 - Do **not** repeat the module path or scope description — the caller already knows it.
-- The file must contain **only** the table rows + totals (or `No issues found.`).
+- Do **not** include a totals/summary line (e.g. "Fixed: X · Needs manual fix: Y").
+- The file must contain **only** the table rows (or `No issues found.`).
   No preamble, no footer, no commentary.
 
 ## Knowledge Loading
