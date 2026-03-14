@@ -40,15 +40,14 @@ public class AbstractStreamMessageSubscriptionInstrumentation implements TypeIns
                         "com.linecorp.armeria.common.stream.AbstractStreamMessage",
                         "com.linecorp.armeria.common.stream.CancellableStreamMessage")))
             .and(takesArgument(1, named("org.reactivestreams.Subscriber"))),
-        AbstractStreamMessageSubscriptionInstrumentation.class.getName() + "$WrapSubscriberAdvice");
+        getClass().getName() + "$WrapSubscriberAdvice");
     // from 1.9.0 to 1.9.2
     transformer.applyAdviceToMethod(
         isConstructor()
             .and(
                 takesArgument(0, named("com.linecorp.armeria.common.stream.AbstractStreamMessage")))
             .and(takesArgument(4, named("java.util.concurrent.CompletableFuture"))),
-        AbstractStreamMessageSubscriptionInstrumentation.class.getName()
-            + "$WrapCompletableFutureAdvice");
+        getClass().getName() + "$WrapCompletableFutureAdvice");
   }
 
   @SuppressWarnings("unused")
