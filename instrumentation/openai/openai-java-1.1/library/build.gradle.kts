@@ -13,4 +13,14 @@ tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
   }
+
+  val testExperimentalSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=gen_ai_latest_experimental")
+  }
+
+  check {
+    dependsOn(testExperimentalSemconv)
+  }
 }

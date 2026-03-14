@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.openai.v1_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitGenAiLatestExperimentalSemconv;
+
 import com.openai.core.RequestOptions;
 import com.openai.core.http.StreamResponse;
 import com.openai.models.chat.completions.ChatCompletion;
@@ -95,11 +97,18 @@ final class InstrumentedChatCompletionService
       Context context,
       ChatCompletionCreateParams chatCompletionCreateParams,
       RequestOptions requestOptions) {
-    ChatCompletionEventsHelper.emitPromptLogEvents(
-        context, eventLogger, chatCompletionCreateParams, captureMessageContent);
+    if (!emitGenAiLatestExperimentalSemconv()) {
+      ChatCompletionEventsHelper.emitPromptLogEvents(
+          context, eventLogger, chatCompletionCreateParams, captureMessageContent);
+    }
     ChatCompletion result = delegate.create(chatCompletionCreateParams, requestOptions);
-    ChatCompletionEventsHelper.emitCompletionLogEvents(
-        context, eventLogger, result, captureMessageContent);
+    if (emitGenAiLatestExperimentalSemconv()) {
+      ChatCompletionEventsHelper.emitOperationDetailsEvent(
+          context, eventLogger, chatCompletionCreateParams, result, captureMessageContent);
+    } else {
+      ChatCompletionEventsHelper.emitCompletionLogEvents(
+          context, eventLogger, result, captureMessageContent);
+    }
     return result;
   }
 
@@ -125,8 +134,10 @@ final class InstrumentedChatCompletionService
       ChatCompletionCreateParams chatCompletionCreateParams,
       RequestOptions requestOptions,
       boolean newSpan) {
-    ChatCompletionEventsHelper.emitPromptLogEvents(
-        context, eventLogger, chatCompletionCreateParams, captureMessageContent);
+    if (!emitGenAiLatestExperimentalSemconv()) {
+      ChatCompletionEventsHelper.emitPromptLogEvents(
+          context, eventLogger, chatCompletionCreateParams, captureMessageContent);
+    }
     StreamResponse<ChatCompletionChunk> result =
         delegate.createStreaming(chatCompletionCreateParams, requestOptions);
     return new TracingStreamedResponse(

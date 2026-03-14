@@ -32,7 +32,7 @@ public final class OpenAITelemetryBuilder {
   }
 
   /**
-   * Sets whether emitted log events include full content of user and assistant messages.
+   * Sets whether message content should be captured in span attributes and emitted log events.
    *
    * <p>Note that full content can have data privacy and size concerns and care should be taken when
    * enabling this.
@@ -52,7 +52,10 @@ public final class OpenAITelemetryBuilder {
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 GenAiSpanNameExtractor.create(ChatAttributesGetter.INSTANCE))
-            .addAttributesExtractor(GenAiAttributesExtractor.create(ChatAttributesGetter.INSTANCE))
+            .addAttributesExtractor(
+                GenAiAttributesExtractor.builder(ChatAttributesGetter.INSTANCE)
+                    .setCaptureMessageContent(captureMessageContent)
+                    .build())
             .addOperationMetrics(GenAiClientMetrics.get())
             .buildInstrumenter();
 

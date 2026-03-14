@@ -36,6 +36,8 @@ public final class SemconvStability {
   private static boolean emitOldRpcSemconv;
   private static boolean emitStableRpcSemconv;
 
+  private static boolean emitGenAiLatestExperimentalSemconv;
+
   static {
     String value = System.getProperty("otel.semconv-stability.opt-in");
     if (value == null) {
@@ -58,6 +60,8 @@ public final class SemconvStability {
 
     emitOldRpcSemconv = true;
     emitStableRpcSemconv = false;
+
+    emitGenAiLatestExperimentalSemconv = false;
 
     // no else -- technically it's possible to set "XXX,XXX/dup", in which case we
     // should emit both sets of attributes for XXX
@@ -96,6 +100,10 @@ public final class SemconvStability {
     if (values.contains("rpc/dup")) {
       emitOldRpcSemconv = true;
       emitStableRpcSemconv = true;
+    }
+
+    if (values.contains("gen_ai_latest_experimental")) {
+      emitGenAiLatestExperimentalSemconv = true;
     }
   }
 
@@ -172,6 +180,14 @@ public final class SemconvStability {
 
   public static boolean emitStableRpcSemconv() {
     return emitStableRpcSemconv;
+  }
+
+  public static boolean emitOldGenAiSemconv() {
+    return !emitGenAiLatestExperimentalSemconv;
+  }
+
+  public static boolean emitGenAiLatestExperimentalSemconv() {
+    return emitGenAiLatestExperimentalSemconv;
   }
 
   private static final Map<String, String> rpcSystemNameMap = new HashMap<>();
