@@ -1,6 +1,11 @@
 name: Release
 on:
   workflow_dispatch:
+    inputs:
+      skip-maven-publish:
+        description: "Skip the main Maven Central publish (use when artifacts are already published but later steps failed)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -97,6 +102,7 @@ jobs:
         uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
 
       - name: Build and publish artifacts
+        if: ${{ !inputs.skip-maven-publish }}
         env:
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
@@ -104,6 +110,31 @@ jobs:
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
         # run: ./gradlew assemble spdxSbom publishToSonatype closeAndReleaseSonatypeStagingRepository
         run: ./gradlew assemble spdxSbom publishAllPublicationToReleaseRepoRepository generateReleaseBundle uploadReleaseBundle
+
+      - name: Download published artifacts from Maven Central
+        if: ${{ inputs.skip-maven-publish }}
+        run: |
+          until curl --silent \
+                     --show-error \
+                     --output /dev/null \
+                     --head \
+                     --fail \
+                     https://repo1.maven.org/maven2/io/opentelemetry/javaagent/opentelemetry-javaagent/$VERSION/opentelemetry-javaagent-$VERSION.jar
+          do
+            echo "Waiting for Maven Central to have $VERSION..."
+            sleep 60
+          done
+          mkdir -p javaagent/build/libs
+          curl --silent --show-error --fail \
+            -o javaagent/build/libs/opentelemetry-javaagent-${VERSION}.jar \
+            https://repo1.maven.org/maven2/io/opentelemetry/javaagent/opentelemetry-javaagent/$VERSION/opentelemetry-javaagent-$VERSION.jar
+          curl --silent --show-error --fail \
+            -o javaagent/build/libs/opentelemetry-javaagent-${VERSION}.jar.asc \
+            https://repo1.maven.org/maven2/io/opentelemetry/javaagent/opentelemetry-javaagent/$VERSION/opentelemetry-javaagent-$VERSION.jar.asc
+
+      - name: Generate SBOMs
+        if: ${{ inputs.skip-maven-publish }}
+        run: ./gradlew spdxSbom
 
       - name: Build and publish gradle plugins
         env:
