@@ -141,11 +141,10 @@ jobs:
             for model in $MODELS; do
               f="/tmp/summary-${model}.md"
               if [[ -s "$f" ]]; then
-                echo "<details><summary>${model}</summary>"
+                echo "### ${model}"
                 echo ""
-                cat "$f"
-                echo ""
-                echo "</details>"
+                # Shorten file paths to just the filename (+ line number).
+                sed -e 's#[^ |]*/##g' "$f"
                 echo ""
               fi
             done
