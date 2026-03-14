@@ -65,7 +65,7 @@ class ApacheHttpClientTest {
     return client;
   }
 
-  public static class ThreadSafeClientConnManagerFactory implements ClientConnectionManagerFactory {
+  static class ThreadSafeClientConnManagerFactory implements ClientConnectionManagerFactory {
     @Override
     public ClientConnectionManager newInstance(
         HttpParams httpParams, SchemeRegistry schemeRegistry) {
