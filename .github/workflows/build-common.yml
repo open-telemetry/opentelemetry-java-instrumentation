@@ -265,7 +265,7 @@ jobs:
         # This exercises the same Gradle task graph as the release workflow
         # (minus uploadReleaseBundle which requires Sonatype credentials)
         # to catch configuration cache and publishing issues before release time.
-        run: ./gradlew assemble publishAllPublicationToReleaseRepoRepository generateReleaseBundle ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
+        run: ./gradlew assemble publishAllPublicationToReleaseRepoRepository generateReleaseBundle --no-build-cache
 
   test:
     name: test${{ matrix.test-partition }} (${{ matrix.test-java-version }}, ${{ matrix.vm }}, indy ${{ matrix.test-indy }})
