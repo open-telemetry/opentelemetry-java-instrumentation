@@ -175,25 +175,29 @@ jobs:
             echo "PR already exists for $branch — skipping creation"
           fi
 
+      - name: Check out progress branch
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: otelbot/code-review-progress
+          path: progress
+        continue-on-error: true
+
       - name: Mark module as reviewed
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Read current progress from the orphan branch
-          current=$(git show origin/otelbot/code-review-progress:reviewed.txt 2>/dev/null || true)
-          if [[ -n "$current" ]]; then
-            updated=$(printf '%s\n%s' "$current" "$SHORT_NAME" | tr ',' '\n' | sort -u | paste -sd ',')
+          # Initialize progress dir if the branch doesn't exist yet
+          if [[ ! -d progress/.git ]]; then
+            git init progress
+            cd progress
+            git checkout --orphan otelbot/code-review-progress
           else
-            updated="$SHORT_NAME"
+            cd progress
           fi
 
-          # Write to the orphan branch
-          blob=$(echo "$updated" | git hash-object -w --stdin)
-          tree=$(printf '100644 blob %s\treviewed.txt\n' "$blob" | git mktree)
-          parent=$(git rev-parse --verify origin/otelbot/code-review-progress 2>/dev/null || true)
-          if [[ -n "$parent" ]]; then
-            commit=$(git commit-tree "$tree" -p "$parent" -m "Mark $SHORT_NAME as reviewed")
-          else
-            commit=$(git commit-tree "$tree" -m "Mark $SHORT_NAME as reviewed")
-          fi
-          git push origin "$commit:refs/heads/otelbot/code-review-progress"
+          # Append this module (one per line, matching build-review-matrix.py)
+          echo "$SHORT_NAME" >> reviewed.txt
+
+          git add reviewed.txt
+          git commit -m "Mark $SHORT_NAME as reviewed"
+          git push origin HEAD:otelbot/code-review-progress
