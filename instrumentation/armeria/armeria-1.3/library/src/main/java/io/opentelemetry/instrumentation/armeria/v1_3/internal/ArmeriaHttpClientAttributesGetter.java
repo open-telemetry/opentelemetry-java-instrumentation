@@ -16,9 +16,8 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum ArmeriaHttpClientAttributesGetter
+final class ArmeriaHttpClientAttributesGetter
     implements HttpClientAttributesGetter<ClientRequestContext, RequestLog> {
-  INSTANCE;
 
   private static final ClassValue<Method> authorityMethodCache =
       new ClassValue<Method>() {
