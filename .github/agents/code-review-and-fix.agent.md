@@ -199,6 +199,23 @@ Execute these steps strictly in order — do not reorder:
    replaces `library` and `testLibrary` dependency versions with `latest.release`.
    This is mandatory, not optional — fixes that break tests must be caught and corrected
    before committing. If a test fails, diagnose the failure, fix it, and re-run until green.
+
+   **Testing-module dependent validation**: when any modified module is a `testing` module
+   (its Gradle path ends with `:testing`), you must **also** run `:check` (both normal and
+   `-PtestLatestDeps=true`) for every sibling `library` and `javaagent` module under the
+   same instrumentation parent. `testing` modules contain shared abstract test base classes
+   consumed by those siblings — changes to visibility, method signatures, or class structure
+   in the `testing` module can break compilation or tests in dependent modules.
+
+   To find siblings, list the parent directory of the `testing` module and look for
+   `library/`, `javaagent/`, and any version-variant directories that contain `library/`
+   or `javaagent/` submodules. Run `:check` for each.
+
+   Example: if you modify files in
+   `:instrumentation:foo:foo-1.0:testing`, also run `:check` for
+   `:instrumentation:foo:foo-1.0:library`,
+   `:instrumentation:foo:foo-1.0:javaagent`, and any version-variant siblings such as
+   `:instrumentation:foo:foo-2.0:library` if it depends on the `foo-1.0:testing` module.
 2. If changes touch Gradle muzzle configuration (for example `muzzle {}`, version ranges,
    `assertInverse.set(true)`, or module wiring affecting muzzle), run the relevant module `:muzzle`
    tasks.
