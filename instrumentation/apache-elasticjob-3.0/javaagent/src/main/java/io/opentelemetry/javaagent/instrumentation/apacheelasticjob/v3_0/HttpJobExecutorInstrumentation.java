@@ -31,7 +31,7 @@ public class HttpJobExecutorInstrumentation implements TypeInstrumentation {
             .and(
                 takesArgument(
                     3, named("org.apache.shardingsphere.elasticjob.api.ShardingContext"))),
-        HttpJobExecutorInstrumentation.class.getName() + "$ProcessAdvice");
+        getClass().getName() + "$ProcessAdvice");
   }
 
   @SuppressWarnings("unused")

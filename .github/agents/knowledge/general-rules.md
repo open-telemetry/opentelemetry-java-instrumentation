@@ -115,6 +115,10 @@ Use `@Nullable` annotations accurately throughout the codebase:
 
 - **Parameters**: annotate `@Nullable` if and only if `null` is actually passed by callers.
 - **Return types**: annotate `@Nullable` if and only if the method actually returns `null`.
+  Even when an interface or superclass declares a return type as `@Nullable`, do **not** add
+  `@Nullable` to the overriding method if the implementation never returns `null`. The
+  interface annotation permits null, but an implementation that always returns a non-null
+  value is more precise without it.
 - **External interface contracts**: interfaces from the OpenTelemetry SDK
   (`io.opentelemetry.context.propagation`) declare `@Nullable` on certain parameters.
   These annotations are not visible in this repository because the interfaces live in the

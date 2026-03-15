@@ -259,6 +259,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
       return;
     }
 
+    double javaVersion = Double.parseDouble(System.getProperty("java.specification.version"));
     // JFR based metrics
     for (String metric :
         asList(
@@ -273,6 +274,10 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
             "jvm.memory.allocation",
             "jvm.network.io",
             "jvm.thread.count")) {
+      // gc duration is sometimes missing on jdk 26
+      if (javaVersion == 26 && "jvm.gc.duration".equals(metric)) {
+        continue;
+      }
       testing.waitAndAssertMetrics(
           "io.opentelemetry.runtime-telemetry-java17", metric, AbstractIterableAssert::isNotEmpty);
     }

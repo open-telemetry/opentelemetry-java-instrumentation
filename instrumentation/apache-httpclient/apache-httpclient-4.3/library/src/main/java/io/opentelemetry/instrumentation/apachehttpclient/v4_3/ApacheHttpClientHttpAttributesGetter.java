@@ -69,8 +69,8 @@ class ApacheHttpClientHttpAttributesGetter
     return HttpConstants.portOrDefaultFromScheme(request.getServerPort(), request.getScheme());
   }
 
-  @Nullable
   @Override
+  @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       ApacheHttpClientRequest request, @Nullable HttpResponse response) {
     return request.getNetworkPeerAddress();

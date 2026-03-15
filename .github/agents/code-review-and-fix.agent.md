@@ -172,7 +172,10 @@ Auto-fix boundaries:
 
 Comment formatting rules:
 
-- Wrap to max 100 characters per line in the summary table.
+- **File column**: use only the simple class name without the `.java` extension
+  and at most one line number (e.g., `FooClient:42`). For multiple locations,
+  list only the first line and note the others in the Note column
+  (e.g., Note: "… also lines 77, 95").
 - Include reason for non-fix and, when possible, a concrete next action.
 
 ### Phase 4: Validate and Report
@@ -183,7 +186,19 @@ for completion.**
 
 Execute these steps strictly in order — do not reorder:
 
-1. Run targeted verification for changed files when feasible (focused tests or compile checks).
+1. **Run the module's check task.** For every module whose source files were modified, run its
+   `:check` task **twice** — once normally and once with `-PtestLatestDeps=true`:
+
+   ```
+   ./gradlew :<module-path>:check
+   ./gradlew :<module-path>:check -PtestLatestDeps=true
+   ```
+
+   The first run exercises the default test suites (`test`, `testExperimental`, and any other
+   custom test tasks wired into `check`). The second run activates `latestDepTest`, which
+   replaces `library` and `testLibrary` dependency versions with `latest.release`.
+   This is mandatory, not optional — fixes that break tests must be caught and corrected
+   before committing. If a test fails, diagnose the failure, fix it, and re-run until green.
 2. If changes touch Gradle muzzle configuration (for example `muzzle {}`, version ranges,
    `assertInverse.set(true)`, or module wiring affecting muzzle), run the relevant module `:muzzle`
    tasks.
@@ -211,30 +226,28 @@ Execute these steps strictly in order — do not reorder:
 5. Print one summary:
    - Heading: `PR #<number>: <title>` (PR mode) or `<paths>` (file/directory mode)
    - Table with status (`Fixed` or `Needs Manual Fix`), file, category, and note
-   - Totals for fixed and unresolved
 
 Template:
 
 ```
 | Status | File | Category | Note |
 |--------|------|----------|------|
-| Fixed | src/Foo.java:42 | Style | Added class-level deprecation suppression for stable/old semconv dual mode |
-| Needs Manual Fix | src/Bar.java:77 | API | Requires compatibility decision before rename |
-
-**Fixed: X · Needs manual fix: Y**
+| Fixed | Foo:42 | Style | Added class-level deprecation suppression for stable/old semconv dual mode |
+| Needs Manual Fix | Bar:77 | API | Requires compatibility decision before rename |
 ```
 
 If no findings:
 > `No issues found.`
 
 When writing the summary to a file (as opposed to printing to the console), the output
-must be **only** the findings table and totals line — nothing else:
+must be **only** the findings table — nothing else:
 
 - Do **not** include headings (`##`), horizontal rules, or "Fix Review Summary" titles.
 - Do **not** include a "Files reviewed" table, per-file checklist, or notes section
   when there are zero findings. Write only `No issues found.`
 - Do **not** repeat the module path or scope description — the caller already knows it.
-- The file must contain **only** the table rows + totals (or `No issues found.`).
+- Do **not** include a totals/summary line (e.g. "Fixed: X · Needs manual fix: Y").
+- The file must contain **only** the table rows (or `No issues found.`).
   No preamble, no footer, no commentary.
 
 ## Knowledge Loading
