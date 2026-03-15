@@ -12,6 +12,7 @@ import static io.opentelemetry.javaagent.instrumentation.executors.VirtualFieldH
 import static io.opentelemetry.javaagent.instrumentation.executors.VirtualFieldHelper.FORKJOINTASK_PROPAGATED_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.executors.VirtualFieldHelper.FUTURE_PROPAGATED_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.executors.VirtualFieldHelper.RUNNABLE_PROPAGATED_CONTEXT;
+import static java.util.Collections.emptyList;
 import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -30,7 +31,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ForkJoinTask;
@@ -339,8 +339,7 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
       public static CallableCollectionAdviceScope start(
           CallDepth callDepth, Collection<? extends Callable<?>> tasks) {
         if (callDepth.getAndIncrement() > 0) {
-          return new CallableCollectionAdviceScope(
-              callDepth, tasks != null ? tasks : Collections.emptyList());
+          return new CallableCollectionAdviceScope(callDepth, tasks != null ? tasks : emptyList());
         }
         Context context = Context.current();
 

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -18,7 +19,7 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OPENSEARCH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -64,7 +65,7 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
 
   @BeforeAll
   @Override
-  void setUp() throws Exception {
+  void setUp() {
     server.start();
     openSearchClient = buildOpenSearchClient();
     openSearchAsyncClient = buildOpenSearchAsyncClient();
@@ -78,7 +79,7 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
   }
 
   @BeforeEach
-  void prepTest() {
+  void setupForHealthResponse() {
     server.beforeTestExecution(null);
 
     // Mock OpenSearch cluster health response
@@ -112,7 +113,7 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
   }
 
   @Override
-  protected OpenSearchClient buildOpenSearchClient() throws Exception {
+  protected OpenSearchClient buildOpenSearchClient() {
     SdkHttpClient httpClient =
         ApacheHttpClient.builder()
             .buildWithDefaults(
@@ -131,7 +132,7 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
   }
 
   @Override
-  protected OpenSearchAsyncClient buildOpenSearchAsyncClient() throws Exception {
+  protected OpenSearchAsyncClient buildOpenSearchAsyncClient() {
     SdkAsyncHttpClient httpClient =
         NettyNioAsyncHttpClient.builder()
             .buildWithDefaults(
@@ -180,7 +181,7 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), "opensearch"),
+                                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "GET"),
                                 equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health")),
                     span ->
@@ -193,16 +194,12 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
                                 equalTo(SERVER_PORT, httpHost.getPort()),
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                                 equalTo(URL_FULL, httpHost + "/_cluster/health"),
-                                equalTo(
-                                    NETWORK_PEER_ADDRESS,
-                                    httpHost.getHost()), // Netty 4.1 Instrumentation collects
-                                // NETWORK_PEER_ADDRESS
-                                equalTo(
-                                    NETWORK_PEER_PORT,
-                                    httpHost.getPort()), // Netty 4.1 Instrumentation collects
-                                // NETWORK_PEER_PORT
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                                equalTo(PEER_SERVICE, "test-peer-service")),
+                                // Netty 4.1 Instrumentation collects NETWORK_PEER_ADDRESS
+                                equalTo(NETWORK_PEER_ADDRESS, httpHost.getHost()),
+                                // Netty 4.1 Instrumentation collects NETWORK_PEER_PORT
+                                equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
+                                equalTo(maybeStablePeerService(), "test-peer-service")),
                     span ->
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)

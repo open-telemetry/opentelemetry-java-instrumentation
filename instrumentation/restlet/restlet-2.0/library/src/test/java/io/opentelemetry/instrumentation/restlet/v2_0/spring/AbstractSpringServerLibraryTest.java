@@ -23,6 +23,7 @@ import org.restlet.Restlet;
 import org.restlet.data.Status;
 import org.restlet.engine.application.StatusFilter;
 import org.restlet.routing.Filter;
+import org.restlet.routing.Route;
 import org.restlet.routing.Router;
 import org.restlet.routing.Template;
 import org.restlet.routing.TemplateRoute;
@@ -33,7 +34,7 @@ abstract class AbstractSpringServerLibraryTest extends AbstractSpringServerTest 
 
   // org.restlet.routing.Route is deprecated in 2.0 but not deprecated in later versions
   @SuppressWarnings("deprecation")
-  private static final Class<?> ROUTE_CLASS = org.restlet.routing.Route.class;
+  private static final Class<?> ROUTE_CLASS = Route.class;
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forLibrary();
@@ -67,11 +68,11 @@ abstract class AbstractSpringServerLibraryTest extends AbstractSpringServerTest 
           routeClass.getConstructor(Router.class, String.class, Restlet.class);
       Method getTemplate = routeClass.getMethod("getTemplate");
 
-      List<org.restlet.routing.Route> routes = new ArrayList<>();
-      for (org.restlet.routing.Route route : router.getRoutes()) {
+      List<Route> routes = new ArrayList<>();
+      for (Route route : router.getRoutes()) {
         String pattern = ((Template) getTemplate.invoke(route)).getPattern();
         routes.add(
-            (org.restlet.routing.Route)
+            (Route)
                 routeConstructor.newInstance(
                     router, pattern, wrapRestlet(route.getNext(), pattern)));
       }
@@ -86,8 +87,7 @@ abstract class AbstractSpringServerLibraryTest extends AbstractSpringServerTest 
           };
       notFoundRestlet = wrapRestlet(notFoundRestlet, "/*");
 
-      org.restlet.routing.Route route =
-          (org.restlet.routing.Route) routeConstructor.newInstance(router, "/", notFoundRestlet);
+      Route route = (Route) routeConstructor.newInstance(router, "/", notFoundRestlet);
       ((Template) getTemplate.invoke(route)).setMatchingMode(Template.MODE_STARTS_WITH);
       routes.add(route);
 

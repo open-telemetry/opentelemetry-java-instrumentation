@@ -6,29 +6,26 @@
 package io.opentelemetry.javaagent.tooling.instrumentation;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
-import io.opentelemetry.api.incubator.config.ConfigProvider;
-import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedDeclarativeConfigProperties;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import java.util.TreeSet;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class InstrumentationModuleInstallerTest {
 
+  @BeforeEach
   @AfterEach
   void tearDown() {
-    GlobalOpenTelemetry.resetForTest();
+    AgentDistributionConfig.resetForTest();
   }
 
   @ParameterizedTest(name = "isInstrumentationEnabled({0}) = {4}")
@@ -43,13 +40,21 @@ class InstrumentationModuleInstallerTest {
     ConfigProperties config = mock(ConfigProperties.class);
     when(config.getBoolean("otel.instrumentation.first.enabled")).thenReturn(firstEnabled);
     when(config.getBoolean("otel.instrumentation.second.enabled")).thenReturn(secondEnabled);
+    when(config.getBoolean("otel.instrumentation.common.default-enabled", true))
+        .thenReturn(defaultEnabled);
+    when(config.getBoolean("otel.javaagent.experimental.indy", false)).thenReturn(false);
+    when(config.getBoolean("otel.javaagent.experimental.force-synchronous-agent-listeners", false))
+        .thenReturn(false);
+    when(config.getList("otel.javaagent.exclude-classes")).thenReturn(emptyList());
+    when(config.getList("otel.javaagent.exclude-class-loaders")).thenReturn(emptyList());
 
-    OpenTelemetry openTelemetry = createOpenTelemetry(config);
-    GlobalOpenTelemetry.set(openTelemetry);
+    AgentDistributionConfig distributionConfig =
+        AgentDistributionConfig.fromConfigProperties(config);
+    AgentDistributionConfig.set(distributionConfig);
 
     assertThat(
-            InstrumentationModuleInstaller.isInstrumentationEnabled(
-                new TreeSet<>(asList("first", "second")), defaultEnabled))
+            AgentDistributionConfig.get()
+                .isInstrumentationEnabled(asList("first", "second"), defaultEnabled))
         .isEqualTo(expected);
   }
 
@@ -91,15 +96,5 @@ class InstrumentationModuleInstallerTest {
             false,
             true),
         Arguments.of("disabled by default", null, null, false, false));
-  }
-
-  private static OpenTelemetry createOpenTelemetry(ConfigProperties config) {
-    ExtendedOpenTelemetry otel = spy(ExtendedOpenTelemetry.class);
-    ConfigProvider configProvider = spy(ConfigProvider.class);
-    when(otel.getConfigProvider()).thenReturn(configProvider);
-    when(configProvider.getInstrumentationConfig())
-        .thenReturn(
-            ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(config));
-    return otel;
   }
 }

@@ -5,13 +5,15 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singleton;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import java.lang.instrument.Instrumentation;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -53,7 +55,7 @@ public class ModuleOpener {
 
     JavaModule openToModule =
         openTo != null ? JavaModule.of(openTo.getUnnamedModule()) : UNNAMED_BOOT_MODULE;
-    Set<JavaModule> openToModuleSet = Collections.singleton(openToModule);
+    Set<JavaModule> openToModuleSet = singleton(openToModule);
     Map<String, Set<JavaModule>> missingOpens = new HashMap<>();
     for (String packageName : packagesToOpen) {
       if (!targetModule.isOpened(new PackageDescription.Simple(packageName), openToModule)) {
@@ -72,11 +74,11 @@ public class ModuleOpener {
       ClassInjector.UsingInstrumentation.redefineModule(
           instrumentation,
           targetModule,
-          Collections.emptySet(),
-          Collections.emptyMap(),
+          emptySet(),
+          emptyMap(),
           missingOpens,
-          Collections.emptySet(),
-          Collections.emptyMap());
+          emptySet(),
+          emptyMap());
     } catch (Exception e) {
       logger.log(WARNING, "Failed to redefine module '" + targetModule.getActualName() + "'", e);
     }

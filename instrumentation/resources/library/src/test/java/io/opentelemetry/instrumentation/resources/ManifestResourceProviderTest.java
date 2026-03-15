@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.resources;
 
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_VERSION;
+import static java.util.Collections.emptyMap;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
@@ -14,8 +16,6 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
@@ -45,7 +45,7 @@ class ManifestResourceProviderTest {
 
   @TestFactory
   Collection<DynamicTest> createResource() {
-    ConfigProperties config = DefaultConfigProperties.createFromMap(Collections.emptyMap());
+    ConfigProperties config = DefaultConfigProperties.createFromMap(emptyMap());
 
     return Stream.of(
             new TestCase(
@@ -78,6 +78,6 @@ class ManifestResourceProviderTest {
                       assertThat(resource.getAttribute(SERVICE_VERSION))
                           .isEqualTo(t.expectedVersion);
                     }))
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 }

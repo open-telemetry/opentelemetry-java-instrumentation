@@ -6,7 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.ExperimentalHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -16,7 +19,9 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
+import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchException;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -32,23 +37,19 @@ import io.lettuce.core.api.async.RedisAsyncCommands;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.lettuce.core.codec.Utf8StringCodec;
 import io.lettuce.core.protocol.AsyncCommand;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -113,7 +114,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
 
     ConnectionFuture<StatefulRedisConnection<String, String>> connectionFuture =
         testConnectionClient.connectAsync(
-            new Utf8StringCodec(), new RedisURI(host, port, 3, TimeUnit.SECONDS));
+            new Utf8StringCodec(), new RedisURI(host, port, 3, SECONDS));
     StatefulRedisConnection<String, String> connection1 = connectionFuture.get();
     cleanup.deferCleanup(connection1);
     cleanup.deferCleanup(() -> shutdown(testConnectionClient));
@@ -129,8 +130,8 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), "redis"),
-                            equalTo(PEER_SERVICE, "test-peer-service"))));
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStablePeerService(), "test-peer-service"))));
   }
 
   @SuppressWarnings("deprecation") // RedisURI constructor
@@ -144,8 +145,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
             () -> {
               ConnectionFuture<StatefulRedisConnection<String, String>> connectionFuture =
                   testConnectionClient.connectAsync(
-                      new Utf8StringCodec(),
-                      new RedisURI(host, incorrectPort, 3, TimeUnit.SECONDS));
+                      new Utf8StringCodec(), new RedisURI(host, incorrectPort, 3, SECONDS));
               connectionFuture.get();
             });
 
@@ -166,21 +166,19 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, incorrectPort),
-                            equalTo(maybeStable(DB_SYSTEM), "redis"),
-                            equalTo(PEER_SERVICE, "test-peer-service"))
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStablePeerService(), "test-peer-service"))
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event
                                     .hasName("exception")
                                     .hasAttributesSatisfyingExactly(
                                         equalTo(
-                                            AttributeKey.stringKey("exception.type"),
+                                            stringKey("exception.type"),
                                             "io.netty.channel.AbstractChannel.AnnotatedConnectException"),
-                                        equalTo(
-                                            AttributeKey.stringKey("exception.message"),
-                                            expectedMessage),
+                                        equalTo(stringKey("exception.message"), expectedMessage),
                                         satisfies(
-                                            AttributeKey.stringKey("exception.stacktrace"),
+                                            stringKey("exception.stacktrace"),
                                             val -> val.isNotNull())))));
   }
 
@@ -188,7 +186,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   void testSetCommandUsingFutureGetWithTimeout()
       throws ExecutionException, InterruptedException, TimeoutException {
     RedisFuture<String> redisFuture = asyncCommands.set("TESTSETKEY", "TESTSETVAL");
-    String res = redisFuture.get(3, TimeUnit.SECONDS);
+    String res = redisFuture.get(3, SECONDS);
 
     assertThat(res).isEqualTo("OK");
 
@@ -199,7 +197,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"))));
   }
@@ -221,7 +219,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
           redisFuture.thenAccept(consumer);
         });
 
-    assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo("TESTVAL");
+    assertThat(future.get(10, SECONDS)).isEqualTo("TESTVAL");
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -231,7 +229,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY"),
                             equalTo(maybeStable(DB_OPERATION), "GET")),
                 span ->
@@ -277,7 +275,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
           redisFuture.handle(firstStage).thenApply(secondStage);
         });
 
-    assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo(successStr);
+    assertThat(future.get(10, SECONDS)).isEqualTo(successStr);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -288,7 +286,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY"),
                             equalTo(maybeStable(DB_OPERATION), "GET")),
                 span ->
@@ -321,7 +319,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
           redisFuture.whenCompleteAsync(biConsumer);
         });
 
-    assertThat(future.get(10, TimeUnit.SECONDS)).isNotNull();
+    assertThat(future.get(10, SECONDS)).isNotNull();
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -331,7 +329,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY"),
                             equalTo(maybeStable(DB_OPERATION), "RANDOMKEY")),
                 span ->
@@ -368,7 +366,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
           return null;
         });
 
-    assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo(testHashMap);
+    assertThat(future.get(10, SECONDS)).isEqualTo(testHashMap);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -377,7 +375,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                     span.hasName("HMSET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "HMSET TESTHM firstname ? lastname ? age ?"),
@@ -388,7 +386,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                     span.hasName("HGETALL")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "HGETALL TESTHM"),
                             equalTo(maybeStable(DB_OPERATION), "HGETALL"))));
   }
@@ -424,12 +422,12 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
 
     List<AttributeAssertion> assertions =
         new ArrayList<>(
-            Arrays.asList(
-                equalTo(maybeStable(DB_SYSTEM), "redis"),
+            asList(
+                equalTo(maybeStable(DB_SYSTEM), REDIS),
                 equalTo(maybeStable(DB_STATEMENT), "DEL key1 key2"),
                 equalTo(maybeStable(DB_OPERATION), "DEL")));
 
-    if (SemconvStability.emitStableDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv()) {
       assertions.add(equalTo(ERROR_TYPE, "java.lang.IllegalStateException"));
     }
 
@@ -477,7 +475,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SADD SKEY ? ?"),
                             equalTo(maybeStable(DB_OPERATION), "SADD"),
                             equalTo(booleanKey("lettuce.command.cancelled"), experimental(true))),
@@ -502,7 +500,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                     span.hasName("DEBUG")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "DEBUG SEGFAULT"),
                             equalTo(maybeStable(DB_OPERATION), "DEBUG"))));
   }
@@ -522,7 +520,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                     span.hasName("SHUTDOWN")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE"),
                             equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"))));
   }

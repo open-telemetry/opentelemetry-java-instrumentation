@@ -5,13 +5,14 @@
 
 package io.opentelemetry.instrumentation.netty.common.v4_0.internal.client;
 
+import static java.util.Collections.emptyList;
+
 import io.netty.channel.Channel;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.ChannelUtil;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -34,7 +35,7 @@ enum NettyConnectHttpAttributesGetter
   @Override
   public List<String> getHttpRequestHeader(
       NettyConnectionRequest nettyConnectionRequest, String name) {
-    return Collections.emptyList();
+    return emptyList();
   }
 
   @Nullable
@@ -47,7 +48,7 @@ enum NettyConnectHttpAttributesGetter
   @Override
   public List<String> getHttpResponseHeader(
       NettyConnectionRequest nettyConnectionRequest, Channel channel, String name) {
-    return Collections.emptyList();
+    return emptyList();
   }
 
   @Override

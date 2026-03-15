@@ -6,7 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.kafka;
 
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.trace.data.LinkData;
@@ -14,7 +15,6 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -39,13 +39,13 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
 
   @Test
   void shouldCreateSpansForSingleRecordProcess() throws InterruptedException {
-    assertTrue(consumerReady.await(30, TimeUnit.SECONDS));
+    assertThat(consumerReady.await(30, SECONDS)).isTrue();
 
     KafkaProducerRecord<String, String> record =
         KafkaProducerRecord.create("testSingleTopic", "10", "testSpan");
     CountDownLatch sent = new CountDownLatch(1);
     testing().runWithSpan("producer", () -> sendRecord(record, result -> sent.countDown()));
-    assertTrue(sent.await(30, TimeUnit.SECONDS));
+    assertThat(sent.await(30, SECONDS)).isTrue();
 
     AtomicReference<SpanData> producer = new AtomicReference<>();
 
@@ -81,13 +81,13 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
 
   @Test
   void shouldHandleFailureInSingleRecordHandler() throws InterruptedException {
-    assertTrue(consumerReady.await(30, TimeUnit.SECONDS));
+    assertThat(consumerReady.await(30, SECONDS)).isTrue();
 
     KafkaProducerRecord<String, String> record =
         KafkaProducerRecord.create("testSingleTopic", "10", "error");
     CountDownLatch sent = new CountDownLatch(1);
     testing().runWithSpan("producer", () -> sendRecord(record, result -> sent.countDown()));
-    assertTrue(sent.await(30, TimeUnit.SECONDS));
+    assertThat(sent.await(30, SECONDS)).isTrue();
 
     AtomicReference<SpanData> producer = new AtomicReference<>();
 

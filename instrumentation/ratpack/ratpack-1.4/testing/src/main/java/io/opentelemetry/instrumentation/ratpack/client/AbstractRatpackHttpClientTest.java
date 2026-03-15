@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.ratpack.client;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static java.util.Collections.emptySet;
 
 import io.netty.channel.ConnectTimeoutException;
 import io.netty.handler.timeout.ReadTimeoutException;
@@ -17,7 +18,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -148,7 +148,7 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
       case "https://192.0.2.1/": // non routable address
-        return Collections.emptySet();
+        return emptySet();
       default:
         HashSet<AttributeKey<?>> attributes =
             new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);

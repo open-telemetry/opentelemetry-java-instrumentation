@@ -140,11 +140,16 @@ public abstract class AbstractLog4j2Test {
     }
   }
 
-  @Test
-  void testContextData() {
+  private static Stream<Arguments> eventNameProperties() {
+    return Stream.of(Arguments.of("event.name"), Arguments.of("otel.event.name"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("eventNameProperties")
+  void testContextData(String eventNameProperty) {
     ThreadContext.put("key1", "val1");
     ThreadContext.put("key2", "val2");
-    ThreadContext.put("event.name", "MyEventName");
+    ThreadContext.put(eventNameProperty, "MyEventName");
     try {
       logger.info("xyz: {}", 123);
     } finally {
@@ -238,6 +243,37 @@ public abstract class AbstractLog4j2Test {
   }
 
   @Test
+  void testStringMapMessageWinsOverContextData() {
+    ThreadContext.put("key1", "context-value");
+    StringMapMessage message = new StringMapMessage();
+    message.put("key1", "message-value");
+    try {
+      logger.info(message);
+    } finally {
+      ThreadContext.clearMap();
+    }
+
+    // currently, context data uses "key1" while MapMessage uses "log4j.map_message.key1"
+    // once the "log4j.map_message" prefix is removed, both will share the same key "key1"
+    // and the MapMessage value should win (context data is captured first, MapMessage second)
+    List<AttributeAssertion> assertions =
+        addCodeLocationAttributes("testStringMapMessageWinsOverContextData");
+    assertions.addAll(threadAttributesAssertions());
+    assertions.add(equalTo(stringKey("key1"), "context-value"));
+    assertions.add(equalTo(stringKey("log4j.map_message.key1"), "message-value"));
+
+    testing()
+        .waitAndAssertLogRecords(
+            logRecord ->
+                logRecord
+                    .hasBody((Value<?>) null)
+                    .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+                    .hasSeverity(Severity.INFO)
+                    .hasSeverityText("INFO")
+                    .hasAttributesSatisfyingExactly(assertions));
+  }
+
+  @Test
   void testMarker() {
     String markerName = "aMarker";
     Marker marker = MarkerManager.getMarker(markerName);
@@ -250,6 +286,30 @@ public abstract class AbstractLog4j2Test {
 
     testing()
         .waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly(assertions));
+  }
+
+  @Test
+  void testOtelEventNameInMapMessage() {
+    StringMapMessage message = new StringMapMessage();
+    message.put("otel.event.name", "MyEventName");
+    message.put("key1", "val1");
+    logger.info(message);
+
+    List<AttributeAssertion> assertions =
+        addCodeLocationAttributes("testOtelEventNameInMapMessage");
+    assertions.addAll(threadAttributesAssertions());
+    assertions.add(equalTo(stringKey("log4j.map_message.key1"), "val1"));
+
+    testing()
+        .waitAndAssertLogRecords(
+            logRecord ->
+                logRecord
+                    .hasBody((Value<?>) null)
+                    .hasEventName("MyEventName")
+                    .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+                    .hasSeverity(Severity.INFO)
+                    .hasSeverityText("INFO")
+                    .hasAttributesSatisfyingExactly(assertions));
   }
 
   private static void performLogging(

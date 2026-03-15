@@ -5,12 +5,15 @@
 
 package io.opentelemetry.instrumentation.resources;
 
+import static io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes.PROCESS_COMMAND_ARGS;
+import static io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes.PROCESS_COMMAND_LINE;
+import static io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes.PROCESS_EXECUTABLE_PATH;
+import static io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes.PROCESS_PID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.SchemaUrls;
-import io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.OS;
 import org.junitpioneer.jupiter.SetSystemProperty;
@@ -36,20 +39,20 @@ class ProcessResourceTest {
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
     Attributes attributes = resource.getAttributes();
 
-    assertThat(attributes.get(ProcessIncubatingAttributes.PROCESS_PID)).isGreaterThan(1);
-    assertThat(attributes.get(ProcessIncubatingAttributes.PROCESS_EXECUTABLE_PATH))
+    assertThat(attributes.get(PROCESS_PID)).isGreaterThan(1);
+    assertThat(attributes.get(PROCESS_EXECUTABLE_PATH))
         .matches(windows ? ".*[/\\\\]java\\.exe" : ".*[/\\\\]java");
 
     boolean java8 = "1.8".equals(System.getProperty("java.specification.version"));
     if (java8 || IS_WINDOWS) {
-      assertThat(attributes.get(ProcessIncubatingAttributes.PROCESS_COMMAND_LINE))
-          .contains(attributes.get(ProcessIncubatingAttributes.PROCESS_EXECUTABLE_PATH))
+      assertThat(attributes.get(PROCESS_COMMAND_LINE))
+          .contains(attributes.get(PROCESS_EXECUTABLE_PATH))
           .contains("-DtestSecret=***")
           .contains("-DtestPassword=***")
           .contains("-DtestNotRedacted=test");
     } else {
-      assertThat(attributes.get(ProcessIncubatingAttributes.PROCESS_COMMAND_ARGS))
-          .contains(attributes.get(ProcessIncubatingAttributes.PROCESS_EXECUTABLE_PATH))
+      assertThat(attributes.get(PROCESS_COMMAND_ARGS))
+          .contains(attributes.get(PROCESS_EXECUTABLE_PATH))
           .contains("-DtestSecret=***")
           .contains("-DtestPassword=***")
           .contains("-DtestNotRedacted=test");

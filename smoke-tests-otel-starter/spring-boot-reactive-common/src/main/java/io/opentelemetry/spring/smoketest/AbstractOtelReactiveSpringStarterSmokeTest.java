@@ -5,10 +5,12 @@
 
 package io.opentelemetry.spring.smoketest;
 
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,14 +61,14 @@ public class AbstractOtelReactiveSpringStarterSmokeTest extends AbstractSpringSt
                             s ->
                                 assertThat(s.getName())
                                     .isEqualToIgnoringCase("SELECT testdb.PLAYER"))
-                        .hasAttribute(DbIncubatingAttributes.DB_NAME, "testdb")
+                        .hasAttribute(DB_NAME, "testdb")
                         // 2 is not replaced by ?,
                         // otel.instrumentation.common.db-statement-sanitizer.enabled=false
                         .hasAttributesSatisfying(
                             a ->
-                                assertThat(a.get(DbIncubatingAttributes.DB_STATEMENT))
+                                assertThat(a.get(DB_STATEMENT))
                                     .isEqualToIgnoringCase(
                                         "SELECT PLAYER.* FROM PLAYER WHERE PLAYER.ID = $1 LIMIT 2"))
-                        .hasAttribute(DbIncubatingAttributes.DB_SYSTEM, "h2")));
+                        .hasAttribute(DB_SYSTEM, "h2")));
   }
 }

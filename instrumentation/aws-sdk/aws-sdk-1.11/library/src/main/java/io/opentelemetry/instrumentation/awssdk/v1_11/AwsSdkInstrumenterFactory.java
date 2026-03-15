@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
@@ -27,7 +28,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
@@ -71,7 +71,7 @@ final class AwsSdkInstrumenterFactory {
       boolean includeExperimental) {
     List<AttributesExtractor<Request<?>, Response<?>>> extractors =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 httpAttributesExtractor,
                 rpcAttributesExtractor,
                 snsAttributesExtractor,

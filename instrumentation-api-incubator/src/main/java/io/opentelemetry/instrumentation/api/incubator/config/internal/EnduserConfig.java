@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.incubator.config.internal;
 
+import static java.util.Objects.requireNonNull;
+
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import java.util.Objects;
 
 /**
  * Configuration that controls capturing the {@code enduser.*} semantic attributes.
@@ -41,7 +42,7 @@ public class EnduserConfig {
   private final boolean scopeEnabled;
 
   EnduserConfig(DeclarativeConfigProperties commonConfig) {
-    Objects.requireNonNull(commonConfig, "commonConfig must not be null");
+    requireNonNull(commonConfig, "commonConfig must not be null");
 
     /*
      * Capturing enduser.* attributes is disabled by default, because of this requirement in the specification:

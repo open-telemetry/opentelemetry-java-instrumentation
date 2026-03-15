@@ -5,9 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0;
 
+import static java.util.Collections.singleton;
+import static java.util.Collections.singletonList;
+
 import java.io.File;
 import java.nio.file.Files;
-import java.util.Collections;
 import javax.annotation.PreDestroy;
 import javax.jms.ConnectionFactory;
 import org.hornetq.api.core.TransportConfiguration;
@@ -45,10 +47,9 @@ abstract class AbstractConfig {
     config.setSecurityEnabled(false);
     config.setPersistenceEnabled(false);
     config.setQueueConfigurations(
-        Collections.singletonList(
-            new CoreQueueConfiguration("someQueue", "someQueue", null, true)));
+        singletonList(new CoreQueueConfiguration("someQueue", "someQueue", null, true)));
     config.setAcceptorConfigurations(
-        Collections.singleton(new TransportConfiguration(InVMAcceptorFactory.class.getName())));
+        singleton(new TransportConfiguration(InVMAcceptorFactory.class.getName())));
 
     server = HornetQServers.newHornetQServer(config);
     server.start();

@@ -5,8 +5,13 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
@@ -39,7 +44,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder.Transformer;
 import net.bytebuddy.description.type.TypeDescription;
@@ -124,7 +128,7 @@ public class HelperInjector implements Transformer {
                 className ->
                     HelperClassDefinition.create(
                         className, helpersSource, InjectionMode.CLASS_ONLY))
-            .collect(Collectors.toList());
+            .collect(toList());
 
     this.helperClassesGenerator = (cl) -> helpers;
     this.helperResources = helperResources;
@@ -154,10 +158,10 @@ public class HelperInjector implements Transformer {
     List<HelperClassDefinition> helperDefinitions =
         helpers.stream()
             .map(helperType -> HelperClassDefinition.create(helperType, InjectionMode.CLASS_ONLY))
-            .collect(Collectors.toList());
+            .collect(toList());
 
     return new HelperInjector(
-        requestingName, cl -> helperDefinitions, Collections.emptyList(), null, instrumentation);
+        requestingName, cl -> helperDefinitions, emptyList(), null, instrumentation);
   }
 
   public static void setHelperInjectorListener(HelperInjectorListener listener) {
@@ -182,7 +186,7 @@ public class HelperInjector implements Transformer {
               helpers.stream()
                   .filter(helper -> helper.getInjectionMode().shouldInjectClass())
                   .collect(
-                      Collectors.toMap(
+                      toMap(
                           HelperClassDefinition::getClassName,
                           helper -> () -> helper.getBytecode().getBytecode(),
                           (a, b) -> {
@@ -195,7 +199,7 @@ public class HelperInjector implements Transformer {
               helpers.stream()
                   .filter(helper -> helper.getInjectionMode().shouldInjectResource())
                   .collect(
-                      Collectors.toMap(
+                      toMap(
                           helper -> helper.getClassName().replace('.', '/') + ".class",
                           helper -> helper.getBytecode().getUrl()));
 
@@ -239,8 +243,7 @@ public class HelperInjector implements Transformer {
       }
     }
     additionalResources.forEach(
-        (path, url) ->
-            injectResourceToClassloader(classLoader, path, Collections.singletonList(url)));
+        (path, url) -> injectResourceToClassloader(classLoader, path, singletonList(url)));
   }
 
   private static void injectResourceToClassloader(
@@ -380,7 +383,7 @@ public class HelperInjector implements Transformer {
         if (classInjector != null) {
           iterator.remove();
           try {
-            classInjector.injectRaw(Collections.singletonMap(className, entry.getValue()));
+            classInjector.injectRaw(singletonMap(className, entry.getValue()));
           } catch (LinkageError error) {
             // Unlike the ClassInjector.UsingUnsafe.ofBootLoader() ClassInjector.UsingLookup doesn't
             // check whether the class got loaded when there is an exception defining it.

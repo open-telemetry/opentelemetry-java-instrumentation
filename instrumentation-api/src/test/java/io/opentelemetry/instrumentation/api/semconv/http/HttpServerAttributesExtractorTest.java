@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.semconv.http;
 
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -28,7 +29,6 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.entry;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -44,6 +44,7 @@ import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class HttpServerAttributesExtractorTest {
@@ -217,8 +218,7 @@ class HttpServerAttributesExtractorTest {
             entry(HTTP_ROUTE, "/repositories/{id}"),
             entry(CLIENT_ADDRESS, "1.1.1.1"),
             entry(
-                AttributeKey.stringArrayKey("http.request.header.custom-request-header"),
-                asList("123", "456")));
+                stringArrayKey("http.request.header.custom-request-header"), asList("123", "456")));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
@@ -230,7 +230,7 @@ class HttpServerAttributesExtractorTest {
             entry(HTTP_ROUTE, "/repositories/{repoId}"),
             entry(HTTP_RESPONSE_STATUS_CODE, 202L),
             entry(
-                AttributeKey.stringArrayKey("http.response.header.custom-response-header"),
+                stringArrayKey("http.response.header.custom-response-header"),
                 asList("654", "321")));
   }
 
@@ -549,5 +549,41 @@ class HttpServerAttributesExtractorTest {
             entry(HTTP_RESPONSE_STATUS_CODE, 200L),
             entry(NETWORK_PROTOCOL_NAME, "spdy"),
             entry(NETWORK_PROTOCOL_VERSION, "3.1"));
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "paramA=valA&paramB=valB, paramA=valA&paramB=valB",
+    "AWSAccessKeyId=AKIAIOSFODNN7, AWSAccessKeyId=REDACTED",
+    "Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0%3A377, Signature=REDACTED",
+    "sig=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0, sig=REDACTED",
+    "X-Goog-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0, X-Goog-Signature=REDACTED",
+    "paramA=valA&AWSAccessKeyId=AKIAIOSFODNN7&paramB=valB, paramA=valA&AWSAccessKeyId=REDACTED&paramB=valB",
+    "AWSAccessKeyId=AKIAIOSFODNN7&paramA=valA, AWSAccessKeyId=REDACTED&paramA=valA",
+    "paramA=valA&AWSAccessKeyId=AKIAIOSFODNN7, paramA=valA&AWSAccessKeyId=REDACTED",
+    "AWSAccessKeyId=AKIAIOSFODNN7&AWSAccessKeyId=ZGIAIOSFODNN7, AWSAccessKeyId=REDACTED&AWSAccessKeyId=REDACTED",
+    "AWSAccessKeyId=AKIAIOSFODNN7#ref, AWSAccessKeyId=REDACTED#ref",
+    "AWSAccessKeyId=AKIAIOSFODNN7&aa&bb, AWSAccessKeyId=REDACTED&aa&bb",
+    "aa&bb&AWSAccessKeyId=AKIAIOSFODNN7, aa&bb&AWSAccessKeyId=REDACTED",
+    "AWSAccessKeyId=AKIAIOSFODNN7&&, AWSAccessKeyId=REDACTED&&",
+    "&&AWSAccessKeyId=AKIAIOSFODNN7, &&AWSAccessKeyId=REDACTED",
+    "AWSAccessKeyId=AKIAIOSFODNN7&a&b#fragment, AWSAccessKeyId=REDACTED&a&b#fragment"
+  })
+  void shouldRedactQueryParameters(String urlQuery, String expectedQuery) {
+    Map<String, String> request = new HashMap<>();
+    request.put("urlScheme", "https");
+    request.put("urlPath", "/service");
+    request.put("urlQuery", urlQuery);
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+
+    assertThat(attributes.build())
+        .containsEntry(URL_SCHEME, "https")
+        .containsEntry(URL_PATH, "/service")
+        .containsEntry(URL_QUERY, expectedQuery);
   }
 }

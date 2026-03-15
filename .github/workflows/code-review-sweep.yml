@@ -1,0 +1,199 @@
+name: Code Review Sweep
+
+on:
+  schedule:
+    # Every 15 minutes
+    - cron: "*/15 * * * *"
+
+permissions:
+  contents: read
+
+# Prevent overlapping sweeps
+concurrency:
+  group: code-review-sweep
+  cancel-in-progress: false
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Job 1: Determine which modules to review
+  # ---------------------------------------------------------------------------
+  dispatch:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.build-matrix.outputs.matrix }}
+      has_work: ${{ steps.build-matrix.outputs.has_work }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 1
+
+      - name: Fetch progress branch
+        run: git fetch origin otelbot/code-review-progress || true
+
+      - name: Build review matrix
+        id: build-matrix
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Read progress from the dedicated orphan branch (if it exists)
+          progress=$(git show origin/otelbot/code-review-progress:reviewed.txt 2>/dev/null || true)
+          if [[ -n "$progress" ]]; then
+            export REVIEW_PROGRESS="$progress"
+          fi
+          python .github/scripts/build-review-matrix.py
+
+  # ---------------------------------------------------------------------------
+  # Job 2: Run copilot review for each module in the matrix
+  # ---------------------------------------------------------------------------
+  review:
+    needs: dispatch
+    if: needs.dispatch.outputs.has_work == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJSON(needs.dispatch.outputs.matrix) }}
+      fail-fast: false
+      max-parallel: 2  # keep low to avoid Copilot API rate limits
+    permissions:
+      contents: write  # for git push
+    env:
+      MODULE_DIR: ${{ matrix.module_dir }}
+      SHORT_NAME: ${{ matrix.short_name }}
+      MODELS: "gpt-5.3-codex claude-sonnet-4.6"
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Fetch progress branch
+        run: git fetch origin otelbot/code-review-progress || true
+
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
+
+      - name: Set up JDK for running Gradle
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          distribution: temurin
+          java-version-file: .java-version
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
+        with:
+          cache-read-only: true
+
+      - name: Install Copilot CLI
+        run: |
+          curl -fsSL https://gh.io/copilot-install | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Use CLA approved bot
+        run: .github/scripts/use-cla-approved-bot.sh
+
+      - name: Run Copilot review
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+        run: |
+          for model in $MODELS; do
+            echo "::group::Copilot review ($model) for $MODULE_DIR"
+            copilot -p "Review all files under $MODULE_DIR. Write ONLY the findings table and totals to /tmp/summary-${model}.md — no headings, no file-reviewed lists, no git diff instructions. If no issues, write 'No issues found.'" \
+              --agent code-review-and-fix \
+              --model "$model" \
+              --yolo \
+              || echo "::warning::copilot ($model) exited with code $?"
+            echo "::endgroup::"
+          done
+
+      - name: Commit and push fixes
+        id: commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          branch="otelbot/code-review-${SHORT_NAME//:/-}"
+
+          # Skip if a PR already exists — a maintainer may have pushed follow-up commits
+          existing=$(gh pr list --head "$branch" --state open --json number --jq 'length')
+          if [[ "$existing" -ne 0 ]]; then
+            echo "PR already exists for $branch — skipping to avoid overwriting maintainer changes"
+            exit 0
+          fi
+
+          # Reset any copilot commits back to origin/main, keeping changes staged
+          base_sha=$(git rev-parse origin/main)
+          git reset --soft "$base_sha"
+
+          # Stage everything and check if there are real changes vs origin/main
+          git add -A
+          if git diff --cached --quiet origin/main; then
+            echo "No changes to submit"
+            exit 0
+          fi
+
+          git commit -m "Review fixes for ${SHORT_NAME}" \
+                     -m "Automated code review of ${MODULE_DIR}."
+
+          git checkout -b "$branch"
+          git push -f origin "$branch"
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare PR body
+        run: |
+          {
+            echo "Automated code review of \`${MODULE_DIR}\`."
+            echo ""
+            for model in $MODELS; do
+              f="/tmp/summary-${model}.md"
+              if [[ -s "$f" ]]; then
+                echo "### ${model}"
+                echo ""
+                cat "$f"
+                echo ""
+              fi
+            done
+          } > /tmp/pr-body.md
+
+      - uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
+        id: otelbot-token
+        if: steps.commit.outputs.pushed == 'true'
+        with:
+          app-id: ${{ vars.OTELBOT_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+
+      - name: Create PR
+        if: steps.commit.outputs.pushed == 'true'
+        env:
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+        run: |
+          branch="otelbot/code-review-${SHORT_NAME//:/-}"
+          # Create PR (skip if one already exists for this branch)
+          existing=$(gh pr list --head "$branch" --state open --json number --jq 'length')
+          if [[ "$existing" -eq 0 ]]; then
+            gh pr create \
+              --title "Review fixes for ${SHORT_NAME}" \
+              --body-file /tmp/pr-body.md \
+              --base main \
+              --head "$branch" \
+              --label automated-code-review
+          else
+            echo "PR already exists for $branch — skipping creation"
+          fi
+
+      - name: Mark module as reviewed
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Read current progress from the orphan branch
+          current=$(git show origin/otelbot/code-review-progress:reviewed.txt 2>/dev/null || true)
+          if [[ -n "$current" ]]; then
+            updated=$(printf '%s\n%s' "$current" "$SHORT_NAME" | tr ',' '\n' | sort -u | paste -sd ',')
+          else
+            updated="$SHORT_NAME"
+          fi
+
+          # Write to the orphan branch
+          blob=$(echo "$updated" | git hash-object -w --stdin)
+          tree=$(printf '100644 blob %s\treviewed.txt\n' "$blob" | git mktree)
+          parent=$(git rev-parse --verify origin/otelbot/code-review-progress 2>/dev/null || true)
+          if [[ -n "$parent" ]]; then
+            commit=$(git commit-tree "$tree" -p "$parent" -m "Mark $SHORT_NAME as reviewed")
+          else
+            commit=$(git commit-tree "$tree" -m "Mark $SHORT_NAME as reviewed")
+          fi
+          git push origin "$commit:refs/heads/otelbot/code-review-progress"

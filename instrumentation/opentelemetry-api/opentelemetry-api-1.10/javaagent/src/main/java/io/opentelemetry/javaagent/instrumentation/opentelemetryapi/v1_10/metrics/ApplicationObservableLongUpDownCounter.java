@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
-import application.io.opentelemetry.api.metrics.ObservableLongUpDownCounter;
+import io.opentelemetry.api.metrics.ObservableLongUpDownCounter;
 
-public final class ApplicationObservableLongUpDownCounter implements ObservableLongUpDownCounter {
+public final class ApplicationObservableLongUpDownCounter
+    implements application.io.opentelemetry.api.metrics.ObservableLongUpDownCounter {
 
-  private final io.opentelemetry.api.metrics.ObservableLongUpDownCounter agentUpDownCounter;
+  private final ObservableLongUpDownCounter agentUpDownCounter;
 
-  public ApplicationObservableLongUpDownCounter(
-      io.opentelemetry.api.metrics.ObservableLongUpDownCounter agentUpDownCounter) {
+  public ApplicationObservableLongUpDownCounter(ObservableLongUpDownCounter agentUpDownCounter) {
     this.agentUpDownCounter = agentUpDownCounter;
   }
 

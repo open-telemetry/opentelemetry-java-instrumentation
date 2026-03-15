@@ -5,11 +5,12 @@
 
 package io.opentelemetry.instrumentation.spring.security.config.v6_0;
 
+import static java.util.Objects.requireNonNull;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
-import java.util.Objects;
 import javax.annotation.Nullable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -143,7 +144,7 @@ public final class EnduserAttributesCapturer {
 
   public void setRoleGrantedAuthorityPrefix(String roleGrantedAuthorityPrefix) {
     this.roleGrantedAuthorityPrefix =
-        Objects.requireNonNull(roleGrantedAuthorityPrefix, "rolePrefix must not be null");
+        requireNonNull(roleGrantedAuthorityPrefix, "rolePrefix must not be null");
   }
 
   public String getScopeGrantedAuthorityPrefix() {
@@ -152,6 +153,6 @@ public final class EnduserAttributesCapturer {
 
   public void setScopeGrantedAuthorityPrefix(String scopeGrantedAuthorityPrefix) {
     this.scopeGrantedAuthorityPrefix =
-        Objects.requireNonNull(scopeGrantedAuthorityPrefix, "scopePrefix must not be null");
+        requireNonNull(scopeGrantedAuthorityPrefix, "scopePrefix must not be null");
   }
 }

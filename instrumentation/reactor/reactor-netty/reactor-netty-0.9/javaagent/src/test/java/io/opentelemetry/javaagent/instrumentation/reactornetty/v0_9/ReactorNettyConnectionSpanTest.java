@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v0_9;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -16,7 +17,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -85,7 +85,7 @@ class ReactorNettyConnectionSpanTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, server.httpPort()),
-                            equalTo(PEER_SERVICE, "test-peer-service")),
+                            equalTo(maybeStablePeerService(), "test-peer-service")),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(INTERNAL)
@@ -97,7 +97,7 @@ class ReactorNettyConnectionSpanTest {
                             equalTo(SERVER_PORT, server.httpPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative),
-                            equalTo(PEER_SERVICE, "test-peer-service")),
+                            equalTo(maybeStablePeerService(), "test-peer-service")),
                 span -> span.hasName("GET").hasKind(CLIENT).hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(3))));
@@ -145,7 +145,7 @@ class ReactorNettyConnectionSpanTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, PortUtils.UNUSABLE_PORT),
-                            equalTo(PEER_SERVICE, "test-peer-service")),
+                            equalTo(maybeStablePeerService(), "test-peer-service")),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(INTERNAL)
@@ -161,6 +161,6 @@ class ReactorNettyConnectionSpanTest {
                             satisfies(
                                 NETWORK_PEER_PORT,
                                 val -> val.isIn(null, (long) PortUtils.UNUSABLE_PORT)),
-                            equalTo(PEER_SERVICE, "test-peer-service"))));
+                            equalTo(maybeStablePeerService(), "test-peer-service"))));
   }
 }

@@ -10,15 +10,12 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
-import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.vertx.core.Future;
 import io.vertx.redis.client.Command;
 import io.vertx.redis.client.impl.RedisStandaloneConnection;
@@ -48,13 +45,8 @@ public final class VertxRedisClientSingletons {
                 DbClientAttributesExtractor.create(VertxRedisClientAttributesGetter.INSTANCE))
             .addAttributesExtractor(VertxRedisClientAttributesExtractor.INSTANCE)
             .addAttributesExtractor(
-                ServerAttributesExtractor.create(VertxRedisClientNetAttributesGetter.INSTANCE))
-            .addAttributesExtractor(
-                NetworkAttributesExtractor.create(VertxRedisClientNetAttributesGetter.INSTANCE))
-            .addAttributesExtractor(
-                PeerServiceAttributesExtractor.create(
-                    VertxRedisClientNetAttributesGetter.INSTANCE,
-                    AgentCommonConfig.get().getPeerServiceResolver()))
+                ServicePeerAttributesExtractor.create(
+                    VertxRedisClientAttributesGetter.INSTANCE, GlobalOpenTelemetry.get()))
             .addOperationMetrics(DbClientMetrics.get());
 
     INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());

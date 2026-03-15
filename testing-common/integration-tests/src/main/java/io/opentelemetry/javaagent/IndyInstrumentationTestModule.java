@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent;
 
+import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
@@ -14,7 +15,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
-import java.util.Collections;
 import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
@@ -37,7 +37,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Collections.singletonList(new Instrumentation());
+    return singletonList(new Instrumentation());
   }
 
   @Override
@@ -49,7 +49,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
   public List<String> getAdditionalHelperClassNames() {
     // TODO: should not be needed as soon as we automatically add proxied classes to the muzzle root
     // set
-    return Collections.singletonList("indy.ProxyMe");
+    return singletonList("indy.ProxyMe");
   }
 
   @Override

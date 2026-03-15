@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.code;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
@@ -32,7 +32,7 @@ class CodeSpanNameExtractorTest {
     String spanName = underTest.extract(request);
 
     // then
-    assertEquals("TestClass.doSomething", spanName);
+    assertThat(spanName).isEqualTo("TestClass.doSomething");
   }
 
   @Test
@@ -50,7 +50,7 @@ class CodeSpanNameExtractorTest {
     String spanName = underTest.extract(request);
 
     // then
-    assertEquals(getClass().getSimpleName() + "$1.doSomething", spanName);
+    assertThat(spanName).isEqualTo(getClass().getSimpleName() + "$1.doSomething");
   }
 
   @Test
@@ -68,7 +68,7 @@ class CodeSpanNameExtractorTest {
     String spanName = underTest.extract(request);
 
     // then
-    assertEquals(getClass().getSimpleName() + "$$Lambda.doSomething", spanName);
+    assertThat(spanName).isEqualTo(getClass().getSimpleName() + "$$Lambda.doSomething");
   }
 
   static class TestClass {}

@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.jmx.internal.engine;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -19,9 +20,9 @@ class UnitConverter {
   private static final Map<String, UnitConverter> conversionMappings = new HashMap<>();
 
   static {
-    registerConversion("ms", "s", value -> value.doubleValue() / TimeUnit.SECONDS.toMillis(1));
-    registerConversion("us", "s", value -> value.doubleValue() / TimeUnit.SECONDS.toMicros(1));
-    registerConversion("ns", "s", value -> value.doubleValue() / TimeUnit.SECONDS.toNanos(1));
+    registerConversion("ms", "s", value -> value.doubleValue() / SECONDS.toMillis(1));
+    registerConversion("us", "s", value -> value.doubleValue() / SECONDS.toMicros(1));
+    registerConversion("ns", "s", value -> value.doubleValue() / SECONDS.toNanos(1));
     registerConversion("%", "1", value -> value.doubleValue() / 100d);
   }
 

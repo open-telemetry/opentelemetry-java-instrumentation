@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.testing.recording;
 
 import static com.github.tomakehurst.wiremock.common.AbstractFileSource.byFileExtension;
 import static com.github.tomakehurst.wiremock.common.Exceptions.throwUnchecked;
+import static java.util.stream.Collectors.toList;
 
 import com.github.tomakehurst.wiremock.common.FileSource;
 import com.github.tomakehurst.wiremock.common.Json;
@@ -39,7 +40,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 // Mostly the same as
@@ -162,7 +162,7 @@ final class YamlFileMappingsSource implements MappingsSource {
     List<TextFile> mappingFiles =
         mappingsFileSource.listFilesRecursively().stream()
             .filter(byFileExtension("yaml"))
-            .collect(Collectors.toList());
+            .collect(toList());
     for (TextFile mappingFile : mappingFiles) {
       try {
         List<StubMapping> mappings =

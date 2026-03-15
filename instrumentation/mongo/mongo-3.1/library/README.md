@@ -28,7 +28,7 @@ implementation("io.opentelemetry.instrumentation:instrumentation:opentelemetry-m
 
 ## Usage
 
-The instrumentation is initialized by passing a `MongoTelemetry::newCommandListener()` to the `MongoClientSettings` builder. You must set the `OpenTelemetry` to use with the feature.
+The instrumentation is initialized by passing a `MongoTelemetry::createCommandListener()` to the `MongoClientSettings` builder. You must set the `OpenTelemetry` to use with the feature.
 
 ```java
 OpenTelemetry openTelemetry = ...;

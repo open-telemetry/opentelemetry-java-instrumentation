@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0;
 
 import static io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0.ElasticJobSingletons.helper;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -29,15 +28,14 @@ public class SimpleJobExecutorInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("process"))
+        named("process")
             .and(
                 takesArgument(
                     0, named("org.apache.shardingsphere.elasticjob.simple.job.SimpleJob")))
             .and(
                 takesArgument(
                     3, named("org.apache.shardingsphere.elasticjob.api.ShardingContext"))),
-        SimpleJobExecutorInstrumentation.class.getName() + "$ProcessAdvice");
+        getClass().getName() + "$ProcessAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -58,7 +56,8 @@ public class SimpleJobExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Enter ElasticJobHelper.ElasticJobScope scope, @Advice.Thrown Throwable throwable) {
+        @Advice.Enter @Nullable ElasticJobHelper.ElasticJobScope scope,
+        @Advice.Thrown @Nullable Throwable throwable) {
       helper().endSpan(scope, throwable);
     }
   }

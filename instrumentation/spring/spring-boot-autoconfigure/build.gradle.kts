@@ -68,8 +68,7 @@ dependencies {
   implementation(project(":instrumentation:logback:logback-mdc-1.0:library"))
   compileOnly("ch.qos.logback:logback-classic:1.0.0")
   implementation(project(":instrumentation:jdbc:library"))
-  implementation(project(":instrumentation:runtime-telemetry:runtime-telemetry-java8:library"))
-  implementation(project(":instrumentation:runtime-telemetry:runtime-telemetry-java17:library"))
+  implementation(project(":instrumentation:runtime-telemetry:library"))
 
   library("org.springframework.boot:spring-boot-starter-actuator:$springBootVersion")
   library("org.springframework.boot:spring-boot-starter-aop:$springBootVersion")
@@ -302,6 +301,8 @@ tasks {
 
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    // for @SetEnvironmentVariable
+    jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   }
 

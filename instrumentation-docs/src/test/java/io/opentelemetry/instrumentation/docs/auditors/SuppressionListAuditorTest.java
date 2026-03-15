@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
@@ -21,7 +22,6 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,7 +37,7 @@ class SuppressionListAuditorTest {
     when(mockResponse.statusCode()).thenReturn(200);
     when(mockResponse.body()).thenReturn(createDisableListContent());
 
-    try (MockedStatic<FileManager> fileManagerMock = Mockito.mockStatic(FileManager.class)) {
+    try (MockedStatic<FileManager> fileManagerMock = mockStatic(FileManager.class)) {
       fileManagerMock
           .when(() -> FileManager.readFileToString(any()))
           .thenReturn(createInstrumentationListContent());
@@ -58,7 +58,7 @@ class SuppressionListAuditorTest {
     when(mockResponse.statusCode()).thenReturn(200);
     when(mockResponse.body()).thenReturn(createDisableListContentMissing());
 
-    try (MockedStatic<FileManager> fileManagerMock = Mockito.mockStatic(FileManager.class)) {
+    try (MockedStatic<FileManager> fileManagerMock = mockStatic(FileManager.class)) {
       fileManagerMock
           .when(() -> FileManager.readFileToString(any()))
           .thenReturn(createInstrumentationListContent());

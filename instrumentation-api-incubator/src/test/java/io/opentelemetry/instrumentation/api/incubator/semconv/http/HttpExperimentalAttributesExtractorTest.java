@@ -6,7 +6,12 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.http;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.semconv.incubating.HttpIncubatingAttributes.HTTP_REQUEST_BODY_SIZE;
+import static io.opentelemetry.semconv.incubating.HttpIncubatingAttributes.HTTP_RESPONSE_BODY_SIZE;
+import static io.opentelemetry.semconv.incubating.UrlIncubatingAttributes.URL_TEMPLATE;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -16,9 +21,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpCommonAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
-import io.opentelemetry.semconv.incubating.HttpIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.UrlIncubatingAttributes;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -38,15 +40,12 @@ class HttpExperimentalAttributesExtractorTest {
     runTest(
         clientGetter,
         HttpExperimentalAttributesExtractor.create(clientGetter),
-        Collections.singletonMap(UrlIncubatingAttributes.URL_TEMPLATE, "template"));
+        singletonMap(URL_TEMPLATE, "template"));
   }
 
   @Test
   void shouldExtractRequestAndResponseSizes_server() {
-    runTest(
-        serverGetter,
-        HttpExperimentalAttributesExtractor.create(serverGetter),
-        Collections.emptyMap());
+    runTest(serverGetter, HttpExperimentalAttributesExtractor.create(serverGetter), emptyMap());
   }
 
   void runTest(
@@ -64,8 +63,8 @@ class HttpExperimentalAttributesExtractorTest {
 
     extractor.onEnd(attributes, Context.root(), "request", "response", null);
     Map<AttributeKey<?>, Object> expectedAttributes = new HashMap<>(expected);
-    expectedAttributes.put(HttpIncubatingAttributes.HTTP_REQUEST_BODY_SIZE, 123L);
-    expectedAttributes.put(HttpIncubatingAttributes.HTTP_RESPONSE_BODY_SIZE, 42L);
+    expectedAttributes.put(HTTP_REQUEST_BODY_SIZE, 123L);
+    expectedAttributes.put(HTTP_RESPONSE_BODY_SIZE, 42L);
     assertThat(attributes.build().asMap()).containsExactlyInAnyOrderEntriesOf(expectedAttributes);
   }
 }

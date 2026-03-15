@@ -5,19 +5,19 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyMap;
 import static java.util.logging.Level.SEVERE;
+import static java.util.stream.Collectors.toMap;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 final class ConfigurationFile {
@@ -65,7 +65,7 @@ final class ConfigurationFile {
 
     Properties properties = new Properties();
     try (InputStreamReader reader =
-        new InputStreamReader(new FileInputStream(configurationFile), StandardCharsets.UTF_8)) {
+        new InputStreamReader(new FileInputStream(configurationFile), UTF_8)) {
       properties.load(reader);
     } catch (FileNotFoundException fnf) {
       fileLoadErrorMessage = "Configuration file \"" + configurationFilePath + "\" not found.";
@@ -77,7 +77,7 @@ final class ConfigurationFile {
     }
 
     return properties.entrySet().stream()
-        .collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue().toString()));
+        .collect(toMap(e -> e.getKey().toString(), e -> e.getValue().toString()));
   }
 
   static void logErrorIfAny() {

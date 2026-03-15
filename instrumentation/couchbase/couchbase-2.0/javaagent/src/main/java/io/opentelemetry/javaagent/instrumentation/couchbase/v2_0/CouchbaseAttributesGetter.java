@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
@@ -14,10 +14,9 @@ import javax.annotation.Nullable;
 final class CouchbaseAttributesGetter
     implements DbClientAttributesGetter<CouchbaseRequestInfo, Void> {
 
-  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
   public String getDbSystemName(CouchbaseRequestInfo couchbaseRequest) {
-    return DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE;
+    return DbSystemNameIncubatingValues.COUCHBASE;
   }
 
   @Override
@@ -29,11 +28,11 @@ final class CouchbaseAttributesGetter
   @Override
   @Nullable
   public String getDbQueryText(CouchbaseRequestInfo couchbaseRequest) {
-    if (couchbaseRequest.getSqlStatementInfoWithSummary() != null) {
-      return couchbaseRequest.getSqlStatementInfoWithSummary().getQueryText();
+    if (couchbaseRequest.getSqlQueryWithSummary() != null) {
+      return couchbaseRequest.getSqlQueryWithSummary().getQueryText();
     }
-    if (couchbaseRequest.getSqlStatementInfo() != null) {
-      return couchbaseRequest.getSqlStatementInfo().getQueryText();
+    if (couchbaseRequest.getSqlQuery() != null) {
+      return couchbaseRequest.getSqlQuery().getQueryText();
     }
     return null;
   }
@@ -41,8 +40,8 @@ final class CouchbaseAttributesGetter
   @Override
   @Nullable
   public String getDbQuerySummary(CouchbaseRequestInfo couchbaseRequest) {
-    if (couchbaseRequest.getSqlStatementInfoWithSummary() != null) {
-      return couchbaseRequest.getSqlStatementInfoWithSummary().getQuerySummary();
+    if (couchbaseRequest.getSqlQueryWithSummary() != null) {
+      return couchbaseRequest.getSqlQueryWithSummary().getQuerySummary();
     }
     return null;
   }

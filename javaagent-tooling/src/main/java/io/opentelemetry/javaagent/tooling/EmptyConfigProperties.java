@@ -5,9 +5,11 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -53,11 +55,11 @@ public enum EmptyConfigProperties implements ConfigProperties {
 
   @Override
   public List<String> getList(String name) {
-    return Collections.emptyList();
+    return emptyList();
   }
 
   @Override
   public Map<String, String> getMap(String name) {
-    return Collections.emptyMap();
+    return emptyMap();
   }
 }

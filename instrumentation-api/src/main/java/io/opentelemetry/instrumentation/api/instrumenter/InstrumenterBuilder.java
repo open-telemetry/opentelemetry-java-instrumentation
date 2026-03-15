@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.WARNING;
+import static java.util.stream.Collectors.toSet;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
@@ -22,6 +23,7 @@ import io.opentelemetry.api.trace.TracerBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterBuilderAccess;
@@ -37,7 +39,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -354,7 +355,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
                   String url = provider.internalGetSchemaUrl();
                   return url == null ? Stream.of() : Stream.of(url);
                 })
-            .collect(Collectors.toSet());
+            .collect(toSet());
     switch (computedSchemaUrls.size()) {
       case 0:
         return null;
@@ -390,7 +391,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     String result =
         commonConfig.getString(
             "span_suppression_strategy/development",
-            io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil.getString(
+            ConfigPropertiesUtil.getString(
                 "otel.instrumentation.experimental.span-suppression-strategy", ""));
     return result.isEmpty() ? null : result;
   }
@@ -404,7 +405,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
               SpanKey spanKey = provider.internalGetSpanKey();
               return spanKey == null ? Stream.of() : Stream.of(spanKey);
             })
-        .collect(Collectors.toSet());
+        .collect(toSet());
   }
 
   private void propagateOperationListenersToOnEnd() {

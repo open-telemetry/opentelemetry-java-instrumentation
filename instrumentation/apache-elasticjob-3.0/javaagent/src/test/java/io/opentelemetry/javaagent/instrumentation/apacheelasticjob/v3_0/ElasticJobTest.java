@@ -154,7 +154,7 @@ class ElasticJobTest {
             regCenter,
             job,
             JobConfiguration.newBuilder("simpleElasticJob", 2)
-                .cron("0/30 * * * * ?")
+                .cron("0/15 * * * * ?")
                 .shardingItemParameters("0=A,1=B")
                 .build());
 
@@ -363,7 +363,7 @@ class ElasticJobTest {
       String jobName,
       long item,
       long totalCount,
-      String parameter,
+      @Nullable String parameter,
       String codeFunction,
       String codeNamespace,
       String jobType) {
@@ -393,6 +393,8 @@ class ElasticJobTest {
             taskId -> {
               if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
                 taskId.contains(jobName);
+              } else {
+                taskId.isNull();
               }
             }));
 

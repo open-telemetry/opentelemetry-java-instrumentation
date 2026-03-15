@@ -5,7 +5,9 @@
 
 package io.opentelemetry.instrumentation.ratpack.v1_7.internal;
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
+import java.net.URI;
 import java.util.List;
 import javax.annotation.Nullable;
 import ratpack.http.client.HttpResponse;
@@ -55,7 +57,9 @@ enum RatpackHttpClientAttributesGetter
   }
 
   @Override
+  @Nullable
   public Integer getServerPort(RequestSpec request) {
-    return request.getUri().getPort();
+    URI uri = request.getUri();
+    return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri.getScheme());
   }
 }

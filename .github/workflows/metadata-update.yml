@@ -30,15 +30,9 @@ jobs:
       pull-requests: write # for adding label and assignee to PR
 
     steps:
-      - uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
-        id: otelbot-token
-        with:
-          app-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_APP_ID }}
-          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
-
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          token: ${{ steps.otelbot-token.outputs.token }}
+          persist-credentials: false # we'll use a bot token for pushing changes
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -50,12 +44,12 @@ jobs:
           java-version-file: .java-version
 
       - name: Set up gradle
-        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
+        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
 
       - name: Collect telemetry
         env:
           DEBUG_LOGGING: ${{ inputs.debug_logging || 'false' }}
-        run: ./instrumentation-docs/ci-collect.sh
+        run: ./.github/scripts/metadata-ci-collect.sh
 
       - name: Run documentation analyzer
         run: ./gradlew :instrumentation-docs:runAnalysis
@@ -70,9 +64,17 @@ jobs:
             echo "has_diff=false" >> $GITHUB_OUTPUT
           fi
 
+      # we need to create the bot token after the workflow is completed to avoid 1 hour expiration
       - name: Use CLA approved github bot
         if: steps.diffcheck.outputs.has_diff == 'true'
         run: .github/scripts/use-cla-approved-bot.sh
+
+      - uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
+        if: steps.diffcheck.outputs.has_diff == 'true'
+        id: otelbot-token
+        with:
+          app-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
 
       - name: Find or create metadata update branch
         if: steps.diffcheck.outputs.has_diff == 'true'
@@ -88,8 +90,10 @@ jobs:
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           BRANCH_NAME="${{ steps.findbranch.outputs.branch }}"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
           git commit -m "chore: update instrumentation list [automated]" || echo "No changes to commit."
           git push --force origin "$BRANCH_NAME"
+          git remote set-url origin "https://github.com/${{ github.repository }}.git"
 
       - name: Create PR if needed
         if: steps.diffcheck.outputs.has_diff == 'true'

@@ -1,4 +1,4 @@
-import com.diffplug.gradle.spotless.SpotlessExtension
+import io.opentelemetry.instrumentation.gradle.StaticImportFormatter
 
 plugins {
   id("com.diffplug.spotless")
@@ -6,6 +6,7 @@ plugins {
 
 spotless {
   java {
+    custom("staticImports", StaticImportFormatter())
     googleJavaFormat()
     licenseHeaderFile(
       rootProject.file("buildscripts/spotless.license.java"),
@@ -75,8 +76,6 @@ spotless {
   }
 }
 
-// Use root declared tool deps to avoid issues with high concurrency.
-// see https://github.com/diffplug/spotless/tree/main/plugin-gradle#dependency-resolution-modes
 if (project == rootProject) {
   spotless {
     format("misc") {
@@ -92,22 +91,6 @@ if (project == rootProject) {
       leadingTabsToSpaces()
       trimTrailingWhitespace()
       endWithNewline()
-    }
-    predeclareDeps()
-  }
-
-  with(extensions["spotlessPredeclare"] as SpotlessExtension) {
-    java {
-      googleJavaFormat()
-    }
-    scala {
-      scalafmt()
-    }
-    kotlin {
-      ktlint()
-    }
-    kotlinGradle {
-      ktlint()
     }
   }
 }

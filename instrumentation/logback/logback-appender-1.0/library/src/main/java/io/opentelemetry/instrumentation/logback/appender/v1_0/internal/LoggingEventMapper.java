@@ -5,39 +5,37 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableCodeSemconv;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.stream.Collectors.toList;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.ThrowableProxy;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
-import io.opentelemetry.semconv.ExceptionAttributes;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.logstash.logback.marker.LogstashMarker;
 import net.logstash.logback.marker.MapEntriesAppendingMarker;
@@ -76,6 +74,9 @@ public final class LoggingEventMapper {
       AttributeKey.stringKey("log.body.template");
   private static final AttributeKey<List<String>> LOG_BODY_PARAMETERS =
       AttributeKey.stringArrayKey("log.body.parameters");
+  // copied from OtelIncubatingAttributes
+  private static final AttributeKey<String> OTEL_EVENT_NAME =
+      AttributeKey.stringKey("otel.event.name");
 
   private final boolean captureExperimentalAttributes;
   private final List<String> captureMdcAttributes;
@@ -135,7 +136,7 @@ public final class LoggingEventMapper {
       setTimestampFromInstant(builder, loggingEvent);
     } else {
       long timestamp = loggingEvent.getTimeStamp();
-      builder.setTimestamp(timestamp, TimeUnit.MILLISECONDS);
+      builder.setTimestamp(timestamp, MILLISECONDS);
     }
 
     // level
@@ -154,10 +155,8 @@ public final class LoggingEventMapper {
       throwable = ((ThrowableProxy) throwableProxy).getThrowable();
     }
     if (throwable != null) {
-      setThrowable(builder, throwable);
+      builder.setException(throwable);
     }
-
-    captureMdcAttributes(builder, loggingEvent.getMDCPropertyMap());
 
     if (captureExperimentalAttributes) {
       builder.setAttribute(THREAD_NAME, loggingEvent.getThreadName());
@@ -173,7 +172,7 @@ public final class LoggingEventMapper {
         String fileName = firstStackElement.getFileName();
         int lineNumber = firstStackElement.getLineNumber();
 
-        if (SemconvStability.isEmitOldCodeSemconv()) {
+        if (emitOldCodeSemconv()) {
           if (fileName != null) {
             builder.setAttribute(CODE_FILEPATH, fileName);
           }
@@ -183,7 +182,7 @@ public final class LoggingEventMapper {
             builder.setAttribute(CODE_LINENO, (long) lineNumber);
           }
         }
-        if (SemconvStability.isEmitStableCodeSemconv()) {
+        if (emitStableCodeSemconv()) {
           if (fileName != null) {
             builder.setAttribute(CODE_FILE_PATH, fileName);
           }
@@ -202,21 +201,6 @@ public final class LoggingEventMapper {
       captureMarkerAttribute(builder, loggingEvent, skipLogstashMarkers);
     }
 
-    if (supportsKeyValuePairs && captureKeyValuePairAttributes) {
-      captureKeyValuePairAttributes(builder, loggingEvent);
-    }
-
-    if (supportsLogstashStructuredArguments
-        && captureLogstashStructuredArguments
-        && loggingEvent.getArgumentArray() != null
-        && loggingEvent.getArgumentArray().length > 0) {
-      captureLogstashStructuredArguments(builder, loggingEvent.getArgumentArray());
-    }
-
-    if (captureLoggerContext) {
-      captureLoggerContext(builder, loggingEvent.getLoggerContextVO().getPropertyMap());
-    }
-
     if (captureTemplate
         && loggingEvent.getArgumentArray() != null
         && loggingEvent.getArgumentArray().length > 0) {
@@ -229,8 +213,30 @@ public final class LoggingEventMapper {
       captureArguments(builder, loggingEvent.getArgumentArray());
     }
 
-    if (supportsLogstashMarkers && captureLogstashMarkerAttributes) {
-      captureLogstashMarkerAttributes(builder, loggingEvent);
+    // Event name priority (last writer wins): KVP > MDC > structured args > logstash markers
+    // > logger context. Sources are called in ascending priority order.
+    if (captureLoggerContext) {
+      captureLoggerContext(builder, loggingEvent.getLoggerContextVO().getPropertyMap());
+    }
+
+    if (supportsLogstashMarkers) {
+      processLogstashMarkers(builder, loggingEvent);
+    }
+
+    if (supportsLogstashStructuredArguments
+        && loggingEvent.getArgumentArray() != null
+        && loggingEvent.getArgumentArray().length > 0) {
+      processLogstashStructuredArguments(builder, loggingEvent.getArgumentArray());
+    }
+
+    captureMdcAttributes(builder, loggingEvent.getMDCPropertyMap());
+
+    if (supportsKeyValuePairs && captureKeyValuePairAttributes) {
+      captureKeyValuePairAttributes(builder, loggingEvent);
+    }
+
+    if (supportsKeyValuePairs) {
+      captureOtelEventName(builder, loggingEvent);
     }
     // span context
     builder.setContext(Context.current());
@@ -260,16 +266,36 @@ public final class LoggingEventMapper {
 
   // visible for testing
   void captureMdcAttributes(LogRecordBuilder builder, Map<String, String> mdcProperties) {
+    // otel.event.name takes priority over event.name
+    String otelEventName = mdcProperties.get(OTEL_EVENT_NAME.getKey());
+    if (otelEventName != null) {
+      builder.setEventName(otelEventName);
+    } else if (captureEventName) {
+      String eventName = mdcProperties.get(EVENT_NAME.getKey());
+      if (eventName != null) {
+        builder.setEventName(eventName);
+      }
+    }
+
     if (captureAllMdcAttributes) {
       for (Map.Entry<String, String> entry : mdcProperties.entrySet()) {
-        setAttributeOrEventName(builder, getAttributeKey(entry.getKey()), entry.getValue());
+        String key = entry.getKey();
+        if (!OTEL_EVENT_NAME.getKey().equals(key)
+            && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
+          builder.setAttribute(getAttributeKey(key), entry.getValue());
+        }
       }
       return;
     }
 
     for (String key : captureMdcAttributes) {
-      String value = mdcProperties.get(key);
-      setAttributeOrEventName(builder, getAttributeKey(key), value);
+      if (!OTEL_EVENT_NAME.getKey().equals(key)
+          && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
+        String value = mdcProperties.get(key);
+        if (value != null) {
+          builder.setAttribute(getAttributeKey(key), value);
+        }
+      }
     }
   }
 
@@ -279,20 +305,7 @@ public final class LoggingEventMapper {
 
   private static void captureArguments(LogRecordBuilder builder, Object[] arguments) {
     builder.setAttribute(
-        LOG_BODY_PARAMETERS,
-        Arrays.stream(arguments).map(String::valueOf).collect(Collectors.toList()));
-  }
-
-  private static void setThrowable(LogRecordBuilder builder, Throwable throwable) {
-    if (builder instanceof ExtendedLogRecordBuilder) {
-      ((ExtendedLogRecordBuilder) builder).setException(throwable);
-    } else {
-      builder.setAttribute(ExceptionAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
-      builder.setAttribute(ExceptionAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
-      StringWriter writer = new StringWriter();
-      throwable.printStackTrace(new PrintWriter(writer));
-      builder.setAttribute(ExceptionAttributes.EXCEPTION_STACKTRACE, writer.toString());
-    }
+        LOG_BODY_PARAMETERS, Arrays.stream(arguments).map(String::valueOf).collect(toList()));
   }
 
   private static Severity levelToSeverity(Level level) {
@@ -315,11 +328,26 @@ public final class LoggingEventMapper {
   }
 
   @NoMuzzle
+  private static void captureOtelEventName(LogRecordBuilder builder, ILoggingEvent loggingEvent) {
+    List<KeyValuePair> keyValuePairs = loggingEvent.getKeyValuePairs();
+    if (keyValuePairs != null) {
+      for (KeyValuePair keyValuePair : keyValuePairs) {
+        if (OTEL_EVENT_NAME.getKey().equals(keyValuePair.key) && keyValuePair.value != null) {
+          builder.setEventName(keyValuePair.value.toString());
+          break;
+        }
+      }
+    }
+  }
+
+  @NoMuzzle
   private void captureKeyValuePairAttributes(LogRecordBuilder builder, ILoggingEvent loggingEvent) {
     List<KeyValuePair> keyValuePairs = loggingEvent.getKeyValuePairs();
     if (keyValuePairs != null) {
       for (KeyValuePair keyValuePair : keyValuePairs) {
-        captureAttribute(builder, this.captureEventName, keyValuePair.key, keyValuePair.value);
+        if (!OTEL_EVENT_NAME.getKey().equals(keyValuePair.key)) {
+          captureAttribute(builder, this.captureEventName, keyValuePair.key, keyValuePair.value);
+        }
       }
     }
   }
@@ -411,6 +439,10 @@ public final class LoggingEventMapper {
     }
   }
 
+  // Logger context properties are application-wide static metadata (e.g. app.version), not
+  // per-log-event data. The deprecated event.name handling via setAttributeOrEventName is
+  // maintained here for backwards compatibility only. otel.event.name is not supported in logger
+  // context properties — use MDC, key-value pairs, or structured arguments instead.
   private void captureLoggerContext(
       LogRecordBuilder builder, Map<String, String> loggerContextProperties) {
     for (Map.Entry<String, String> entry : loggerContextProperties.entrySet()) {
@@ -451,7 +483,7 @@ public final class LoggingEventMapper {
       LogRecordBuilder builder, ILoggingEvent loggingEvent, boolean skipLogstashMarkers) {
     Marker marker = loggingEvent.getMarker();
     if (marker != null && (!skipLogstashMarkers || !isLogstashMarker(marker))) {
-      builder.setAttribute(LOG_MARKER, Collections.singletonList(marker.getName()));
+      builder.setAttribute(LOG_MARKER, singletonList(marker.getName()));
     }
   }
 
@@ -485,8 +517,7 @@ public final class LoggingEventMapper {
     return true;
   }
 
-  private void captureLogstashMarkerAttributes(
-      LogRecordBuilder builder, ILoggingEvent loggingEvent) {
+  private void processLogstashMarkers(LogRecordBuilder builder, ILoggingEvent loggingEvent) {
     if (supportsMultipleMarkers && hasMultipleMarkers(loggingEvent)) {
       captureMultipleLogstashMarkers(builder, loggingEvent);
     } else {
@@ -499,7 +530,7 @@ public final class LoggingEventMapper {
     return marker instanceof LogstashMarker;
   }
 
-  @SuppressWarnings("deprecation") // getMarker is deprecate since 1.3.0
+  @SuppressWarnings("deprecation") // getMarker is deprecated since 1.3.0
   private void captureSingleLogstashMarker(LogRecordBuilder builder, ILoggingEvent loggingEvent) {
     Marker marker = loggingEvent.getMarker();
     if (isLogstashMarker(marker)) {
@@ -520,7 +551,7 @@ public final class LoggingEventMapper {
   @NoMuzzle
   private void captureLogstashMarkerAndReferences(LogRecordBuilder builder, Marker marker) {
     LogstashMarker logstashMarker = (LogstashMarker) marker;
-    captureLogstashMarker(builder, logstashMarker);
+    captureLogstashMarker(builder, logstashMarker, captureLogstashMarkerAttributes);
 
     if (logstashMarker.hasReferences()) {
       for (Iterator<Marker> it = logstashMarker.iterator(); it.hasNext(); ) {
@@ -532,10 +563,19 @@ public final class LoggingEventMapper {
     }
   }
 
-  private void captureLogstashMarker(LogRecordBuilder builder, Object logstashMarker) {
+  private void captureLogstashMarker(
+      LogRecordBuilder builder, Object logstashMarker, boolean captureAllAttributes) {
     FieldReader fieldReader = LogstashFieldReaderHolder.valueField.get(logstashMarker.getClass());
     if (fieldReader != null) {
-      fieldReader.read(builder, logstashMarker, this.captureEventName);
+      fieldReader.read(
+          logstashMarker,
+          (name, value) -> {
+            if (OTEL_EVENT_NAME.getKey().equals(name) && value != null) {
+              builder.setEventName(value.toString());
+            } else if (captureAllAttributes) {
+              captureAttribute(builder, captureEventName, name, value);
+            }
+          });
     }
   }
 
@@ -574,10 +614,10 @@ public final class LoggingEventMapper {
     if (field == null) {
       return null;
     }
-    return (builder, logstashMarker, captureEventName) -> {
+    return (logstashMarker, consumer) -> {
       String fieldName = getSingleFieldAppendingMarkerName(logstashMarker);
       Object fieldValue = extractFieldValue(field, logstashMarker);
-      captureAttribute(builder, captureEventName, fieldName, fieldValue);
+      consumer.accept(fieldName, fieldValue);
     };
   }
 
@@ -586,14 +626,15 @@ public final class LoggingEventMapper {
     if (field == null) {
       return null;
     }
-    return (attributes, logstashMarker, captureEventName) -> {
+    return (logstashMarker, consumer) -> {
       Object fieldValue = extractFieldValue(field, logstashMarker);
       if (fieldValue instanceof Map) {
         Map<?, ?> map = (Map<?, ?>) fieldValue;
         for (Map.Entry<?, ?> entry : map.entrySet()) {
           Object key = entry.getKey();
-          Object value = entry.getValue();
-          captureAttribute(attributes, captureEventName, key, value);
+          if (key != null) {
+            consumer.accept(key.toString(), entry.getValue());
+          }
         }
       }
     };
@@ -648,10 +689,10 @@ public final class LoggingEventMapper {
   }
 
   @NoMuzzle
-  private void captureLogstashStructuredArguments(LogRecordBuilder builder, Object[] arguments) {
+  private void processLogstashStructuredArguments(LogRecordBuilder builder, Object[] arguments) {
     for (Object argument : arguments) {
       if (isLogstashStructuredArgument(argument)) {
-        captureLogstashMarker(builder, argument);
+        captureLogstashMarker(builder, argument, captureLogstashStructuredArguments);
       }
     }
   }
@@ -665,7 +706,7 @@ public final class LoggingEventMapper {
   }
 
   private interface FieldReader {
-    void read(LogRecordBuilder builder, Object logstashMarker, boolean captureEventName);
+    void read(Object logstashMarker, BiConsumer<String, Object> consumer);
   }
 
   private static class LogstashFieldReaderHolder {

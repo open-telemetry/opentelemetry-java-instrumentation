@@ -13,6 +13,8 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
 
 import io.helidon.http.HeaderNames;
 import io.helidon.webserver.WebServer;
@@ -22,7 +24,6 @@ import io.helidon.webserver.http.ServerResponse;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.testing.internal.armeria.common.QueryParams;
-import java.util.Collections;
 import java.util.Map;
 
 public abstract class AbstractHelidonTest extends AbstractHttpServerTest<WebServer> {
@@ -30,7 +31,7 @@ public abstract class AbstractHelidonTest extends AbstractHttpServerTest<WebServ
   protected void configureRoutes(HttpRouting.Builder routing) {}
 
   static void sendResponse(ServerResponse res, int status, String response) {
-    sendResponse(res, status, Collections.emptyMap(), response);
+    sendResponse(res, status, emptyMap(), response);
   }
 
   static void sendResponse(ServerResponse res, int status, Map<String, String> headers) {
@@ -70,7 +71,7 @@ public abstract class AbstractHelidonTest extends AbstractHttpServerTest<WebServ
                         sendResponse(
                             res,
                             REDIRECT.getStatus(),
-                            Collections.singletonMap("Location", REDIRECT.getBody()))));
+                            singletonMap("Location", REDIRECT.getBody()))));
 
     routing.get(
         ERROR.getPath(),
@@ -114,7 +115,7 @@ public abstract class AbstractHelidonTest extends AbstractHttpServerTest<WebServ
                         sendResponse(
                             res,
                             CAPTURE_HEADERS.getStatus(),
-                            Collections.singletonMap(
+                            singletonMap(
                                 "X-Test-Response",
                                 req.headers().get(HeaderNames.create("X-Test-Request")).get()),
                             CAPTURE_HEADERS.getBody())));

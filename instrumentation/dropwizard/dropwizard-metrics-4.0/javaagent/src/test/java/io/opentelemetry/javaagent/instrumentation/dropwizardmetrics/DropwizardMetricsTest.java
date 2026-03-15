@@ -6,6 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.dropwizardmetrics;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Histogram;
@@ -14,7 +17,6 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
@@ -170,8 +172,8 @@ class DropwizardMetricsTest {
 
     // when
     Timer timer = metricRegistry.timer("test#timer");
-    timer.update(1, TimeUnit.MILLISECONDS);
-    timer.update(234_000, TimeUnit.NANOSECONDS);
+    timer.update(1, MILLISECONDS);
+    timer.update(234_000, NANOSECONDS);
 
     // then
     testing.waitAndAssertMetrics(
@@ -190,7 +192,7 @@ class DropwizardMetricsTest {
 
     // when
     metricRegistry.remove("test#timer");
-    timer.update(12, TimeUnit.SECONDS);
+    timer.update(12, SECONDS);
 
     // then
     Thread.sleep(100); // interval of the test metrics exporter

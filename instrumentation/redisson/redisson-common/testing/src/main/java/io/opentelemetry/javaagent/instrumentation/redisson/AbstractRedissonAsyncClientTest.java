@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
@@ -15,9 +16,12 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NetworkTypeValues.IPV4;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
@@ -112,7 +116,7 @@ public abstract class AbstractRedissonAsyncClientTest {
   void futureSet() throws ExecutionException, InterruptedException, TimeoutException {
     RBucket<String> keyObject = redisson.getBucket("foo");
     RFuture<Void> future = keyObject.setAsync("bar");
-    future.get(30, TimeUnit.SECONDS);
+    future.get(30, SECONDS);
 
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT),
@@ -122,10 +126,10 @@ public abstract class AbstractRedissonAsyncClientTest {
                     span.hasName("SET")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, "ipv4"),
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, (long) port),
-                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"))));
   }
@@ -144,7 +148,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                     testing.runWithSpan("callback", () -> {});
                   });
             });
-    result.toCompletableFuture().get(30, TimeUnit.SECONDS);
+    result.toCompletableFuture().get(30, SECONDS);
 
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName("parent", "SADD", "callback"),
@@ -155,10 +159,10 @@ public abstract class AbstractRedissonAsyncClientTest {
                     span.hasName("SADD")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, "ipv4"),
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, (long) port),
-                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SADD set1 ?"),
                             equalTo(maybeStable(DB_OPERATION), "SADD"))
                         .hasParent(trace.getSpan(0)),
@@ -188,7 +192,7 @@ public abstract class AbstractRedissonAsyncClientTest {
     return executorService
         .getClass()
         .getMethod("schedule", Callable.class, long.class, TimeUnit.class)
-        .invoke(executorService, new MyCallable(), 0, TimeUnit.SECONDS);
+        .invoke(executorService, new MyCallable(), 0, SECONDS);
   }
 
   @Test
@@ -218,7 +222,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                     testing.runWithSpan("callback", () -> {});
                   });
             });
-    result.toCompletableFuture().get(30, TimeUnit.SECONDS);
+    result.toCompletableFuture().get(30, SECONDS);
 
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName("parent", "SADD", "callback"),
@@ -229,20 +233,20 @@ public abstract class AbstractRedissonAsyncClientTest {
                     span.hasName(emitStableDatabaseSemconv() ? "redis" : "DB Query")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, "ipv4"),
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, (long) port),
-                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "MULTI;SET batch1 ?"))
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("SET")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, "ipv4"),
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, (long) port),
-                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET batch2 ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"))
                         .hasParent(trace.getSpan(0)),
@@ -250,10 +254,10 @@ public abstract class AbstractRedissonAsyncClientTest {
                     span.hasName("EXEC")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, "ipv4"),
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, (long) port),
-                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "EXEC"),
                             equalTo(maybeStable(DB_OPERATION), "EXEC"))
                         .hasParent(trace.getSpan(0)),

@@ -15,7 +15,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -46,9 +45,9 @@ class SpringWebInstrumentationTest extends AbstractHttpClientTest<HttpEntity<Str
         .add(
             SpringWebTelemetry.builder(testing.getOpenTelemetry())
                 .setCapturedRequestHeaders(
-                    Collections.singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
+                    singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
                 .setCapturedResponseHeaders(
-                    Collections.singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
+                    singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
                 .build()
                 .createInterceptor());
   }

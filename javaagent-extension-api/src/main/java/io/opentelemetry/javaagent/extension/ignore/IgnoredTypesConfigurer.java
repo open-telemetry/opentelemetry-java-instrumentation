@@ -23,9 +23,7 @@ public interface IgnoredTypesConfigurer extends Ordered {
    * instrumenting.
    */
   // TODO remove default implementation in next major release when deleting the deprecated method
-  default void configure(IgnoredTypesBuilder builder) {
-    throw new UnsupportedOperationException();
-  }
+  default void configure(IgnoredTypesBuilder builder) {}
 
   /**
    * Configure the passed {@code builder} and define which classes should be ignored when
@@ -34,5 +32,7 @@ public interface IgnoredTypesConfigurer extends Ordered {
    * @deprecated Use {@link #configure(IgnoredTypesBuilder)} instead.
    */
   @Deprecated
-  default void configure(IgnoredTypesBuilder builder, ConfigProperties config) {}
+  default void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
+    configure(builder);
+  }
 }

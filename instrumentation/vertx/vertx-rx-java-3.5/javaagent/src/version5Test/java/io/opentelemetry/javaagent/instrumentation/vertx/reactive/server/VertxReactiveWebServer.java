@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.reactive.server;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
@@ -30,7 +31,6 @@ import io.vertx.reactivex.sqlclient.SqlConnection;
 import io.vertx.sqlclient.PoolOptions;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +76,7 @@ public class VertxReactiveWebServer extends AbstractVerticle {
             });
 
     // block until vertx server is up
-    future.get(30, TimeUnit.SECONDS);
+    future.get(30, SECONDS);
 
     return server;
   }

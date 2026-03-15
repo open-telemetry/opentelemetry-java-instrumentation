@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.testreport;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.FileVisitResult.CONTINUE;
+import static java.util.Collections.singletonList;
 
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.sheets.v4.Sheets;
@@ -18,7 +19,6 @@ import com.google.auth.oauth2.GoogleCredentials;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,7 +32,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -262,11 +261,10 @@ public class FlakyTestReporter {
       return;
     }
 
-    NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
+    NetHttpTransport transport = new NetHttpTransport.Builder().build();
     GoogleCredentials credentials =
-        GoogleCredentials.fromStream(
-                new ByteArrayInputStream(accessKey.getBytes(StandardCharsets.UTF_8)))
-            .createScoped(Collections.singletonList(SheetsScopes.SPREADSHEETS));
+        GoogleCredentials.fromStream(new ByteArrayInputStream(accessKey.getBytes(UTF_8)))
+            .createScoped(singletonList(SheetsScopes.SPREADSHEETS));
     Sheets service =
         new Sheets.Builder(
                 transport,

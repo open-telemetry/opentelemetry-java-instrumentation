@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.config.bridge;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -12,7 +13,6 @@ import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,13 +28,7 @@ import javax.annotation.Nullable;
 public final class ConfigPropertiesBackedDeclarativeConfigProperties
     implements DeclarativeConfigProperties {
 
-  private static final String GENERAL_PEER_SERVICE_MAPPING = "general.peer.service_mapping";
-
-  private static final String AGENT_INSTRUMENTATION_MODE = "java.agent.instrumentation_mode";
-  private static final String SPRING_STARTER_INSTRUMENTATION_MODE =
-      "java.spring_starter.instrumentation_mode";
-  private static final String COMMON_DEFAULT_ENABLED =
-      "otel.instrumentation.common.default-enabled";
+  private static final String JAVA_COMMON_SERVICE_PEER_MAPPING = "java.common.service_peer_mapping";
 
   private static final Map<String, String> SPECIAL_MAPPINGS;
 
@@ -53,6 +47,10 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put(
         "general.http.server.response_captured_headers",
         "otel.instrumentation.http.server.capture-response-headers");
+    SPECIAL_MAPPINGS.put(
+        "general.sanitization.url.sensitive_query_parameters/development",
+        "otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters");
+    SPECIAL_MAPPINGS.put("general.semconv_stability.opt_in", "otel.semconv-stability.opt-in");
     // moving common http, database, messaging, and gen_ai configs under common
     SPECIAL_MAPPINGS.put(
         "java.common.http.known_methods", "otel.instrumentation.http.known-methods");
@@ -102,8 +100,7 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
 
   public static DeclarativeConfigProperties createInstrumentationConfig(
       ConfigProperties configProperties) {
-    return new ConfigPropertiesBackedDeclarativeConfigProperties(
-        configProperties, Collections.emptyList());
+    return new ConfigPropertiesBackedDeclarativeConfigProperties(configProperties, emptyList());
   }
 
   private ConfigPropertiesBackedDeclarativeConfigProperties(
@@ -115,17 +112,6 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
   @Nullable
   @Override
   public String getString(String name) {
-    String fullPath = pathWithName(name);
-
-    if (fullPath.equals(AGENT_INSTRUMENTATION_MODE)
-        || fullPath.equals(SPRING_STARTER_INSTRUMENTATION_MODE)) {
-      Boolean value = configProperties.getBoolean(COMMON_DEFAULT_ENABLED);
-      if (value != null) {
-        return value ? "default" : "none";
-      }
-      return null;
-    }
-
     return configProperties.getString(resolvePropertyKey(name));
   }
 
@@ -191,6 +177,10 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     }
     List<String> list = configProperties.getList(resolvePropertyKey(name));
     if (list.isEmpty()) {
+      // returning null instead of empty list here has some implications,
+      // such as that there's no way to explicitly set an empty list using env var / sys props,
+      // e.g. for known_methods or sensitive_query_parameters,
+      // but it seems safer to return null and use the default value in these cases
       return null;
     }
     return (List<T>) list;
@@ -200,8 +190,8 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
   @Override
   public List<DeclarativeConfigProperties> getStructuredList(String name) {
     String fullPath = pathWithName(name);
-    if (GENERAL_PEER_SERVICE_MAPPING.equals(fullPath)) {
-      return PeerServiceMapping.getList(configProperties);
+    if (JAVA_COMMON_SERVICE_PEER_MAPPING.equals(fullPath)) {
+      return ServicePeerMapping.getList(configProperties);
     }
     return null;
   }
@@ -241,15 +231,7 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
       translatedPath.append(translateName(segments[i]));
     }
 
-    String translated = translatedPath.toString();
-
-    // Handle agent prefix: java.agent.* → otel.javaagent.*
-    if (translated.startsWith("agent.")) {
-      return "otel.java" + translated;
-    }
-
-    // Standard mapping
-    return "otel.instrumentation." + translated;
+    return "otel.instrumentation." + translatedPath;
   }
 
   private String pathWithName(String name) {

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v7_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
@@ -20,11 +21,11 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.H2;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Named.named;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -32,7 +33,6 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import jakarta.persistence.Timeout;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
@@ -116,10 +116,7 @@ class SessionTest extends AbstractHibernateTest {
                       span,
                       trace.getSpan(0),
                       "Transaction.commit",
-                      trace
-                          .getSpan(1)
-                          .getAttributes()
-                          .get(AttributeKey.stringKey("hibernate.session_id"))));
+                      trace.getSpan(1).getAttributes().get(stringKey("hibernate.session_id"))));
 
           trace.hasSpansSatisfyingExactly(assertions);
         });
@@ -157,10 +154,7 @@ class SessionTest extends AbstractHibernateTest {
                         span,
                         trace.getSpan(0),
                         "Transaction.commit",
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id"))),
+                        trace.getSpan(1).getAttributes().get(stringKey("hibernate.session_id"))),
                 span -> assertClientSpan(span, trace.getSpan(3))));
   }
 
@@ -200,10 +194,7 @@ class SessionTest extends AbstractHibernateTest {
                         span,
                         trace.getSpan(0),
                         "Transaction.commit",
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id")))));
+                        trace.getSpan(1).getAttributes().get(stringKey("hibernate.session_id")))));
   }
 
   @ParameterizedTest(name = "{index}: {0}")
@@ -237,10 +228,7 @@ class SessionTest extends AbstractHibernateTest {
                         span,
                         trace.getSpan(0),
                         "Transaction.commit",
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id"))),
+                        trace.getSpan(1).getAttributes().get(stringKey("hibernate.session_id"))),
                 span -> assertClientSpan(span, trace.getSpan(2))));
   }
 
@@ -268,7 +256,7 @@ class SessionTest extends AbstractHibernateTest {
                     span.hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
                             equalTo(maybeStable(DB_NAME), "db1"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -290,10 +278,7 @@ class SessionTest extends AbstractHibernateTest {
                         span,
                         trace.getSpan(0),
                         "Transaction.commit",
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id")))));
+                        trace.getSpan(1).getAttributes().get(stringKey("hibernate.session_id")))));
   }
 
   @Test
@@ -332,10 +317,7 @@ class SessionTest extends AbstractHibernateTest {
                       trace.getSpan(0),
                       "Session.merge io.opentelemetry.javaagent.instrumentation.hibernate.v7_0.Value");
                   sessionId1.set(
-                      trace
-                          .getSpan(1)
-                          .getAttributes()
-                          .get(AttributeKey.stringKey("hibernate.session_id")));
+                      trace.getSpan(1).getAttributes().get(stringKey("hibernate.session_id")));
                 },
                 span -> {
                   assertSessionSpan(
@@ -343,10 +325,7 @@ class SessionTest extends AbstractHibernateTest {
                       trace.getSpan(0),
                       "Session.insert io.opentelemetry.javaagent.instrumentation.hibernate.v7_0.Value");
                   sessionId2.set(
-                      trace
-                          .getSpan(2)
-                          .getAttributes()
-                          .get(AttributeKey.stringKey("hibernate.session_id")));
+                      trace.getSpan(2).getAttributes().get(stringKey("hibernate.session_id")));
                 },
                 span -> assertClientSpan(span, trace.getSpan(2), "INSERT"),
                 span -> {
@@ -355,10 +334,7 @@ class SessionTest extends AbstractHibernateTest {
                       trace.getSpan(0),
                       "Session.merge io.opentelemetry.javaagent.instrumentation.hibernate.v7_0.Value");
                   sessionId3.set(
-                      trace
-                          .getSpan(4)
-                          .getAttributes()
-                          .get(AttributeKey.stringKey("hibernate.session_id")));
+                      trace.getSpan(4).getAttributes().get(stringKey("hibernate.session_id")));
                 },
                 span ->
                     assertSpanWithSessionId(
@@ -372,15 +348,15 @@ class SessionTest extends AbstractHibernateTest {
                 span -> assertClientSpan(span, trace.getSpan(6), "INSERT")));
 
     if (ExperimentalTestHelper.isEnabled) {
-      assertNotEquals(sessionId1.get(), sessionId2.get());
-      assertNotEquals(sessionId2.get(), sessionId3.get());
-      assertNotEquals(sessionId1.get(), sessionId3.get());
+      assertThat(sessionId2.get()).isNotEqualTo(sessionId1.get());
+      assertThat(sessionId3.get()).isNotEqualTo(sessionId2.get());
+      assertThat(sessionId3.get()).isNotEqualTo(sessionId1.get());
     }
   }
 
   private static Stream<Arguments> provideHibernateActionParameters() {
     List<BiConsumer<Session, Value>> sessionMethodTests =
-        Arrays.asList(
+        asList(
             (session, val) -> session.lock(val, LockMode.READ),
             (session, val) -> session.lock(val, LockMode.READ, Timeout.seconds(1)),
             (session, val) -> session.refresh(val),
@@ -427,7 +403,7 @@ class SessionTest extends AbstractHibernateTest {
 
   private static Stream<Arguments> provideHibernateActionWithStatelessSessionParameters() {
     List<BiConsumer<StatelessSession, Value>> statelessSessionMethodTests =
-        Arrays.asList(
+        asList(
             (statelessSession, val) -> statelessSession.refresh(val),
             (statelessSession, val) ->
                 statelessSession.refresh(
@@ -565,7 +541,7 @@ class SessionTest extends AbstractHibernateTest {
 
   private static Stream<Arguments> provideHibernateReplicateParameters() {
     List<BiConsumer<Session, Value>> sessionMethodTests =
-        Arrays.asList(
+        asList(
             (session, val) -> {
               Value replicated = new Value(val.getName() + " replicated");
               replicated.setId(val.getId());
@@ -595,7 +571,7 @@ class SessionTest extends AbstractHibernateTest {
 
   private static Stream<Arguments> provideHibernateCommitActionParameters() {
     List<BiConsumer<Session, Value>> sessionMethodTests =
-        Arrays.asList(
+        asList(
             (session, val) -> session.merge(new Value("merge me in")),
             (session, val) -> session.merge("Value", new Value("merge me in")),
             (session, val) -> session.persist(new Value("merge me in")),
@@ -655,7 +631,7 @@ class SessionTest extends AbstractHibernateTest {
 
   private static Stream<Arguments> provideAttachesStateToQueryParameters() {
     List<Function<Session, SelectionQuery<?>>> queryBuildMethods =
-        Arrays.asList(
+        asList(
             session -> session.createQuery("from Value"),
             session -> session.getNamedQuery("TestNamedQuery"),
             session -> session.createNativeQuery("SELECT * FROM Value"),
@@ -742,7 +718,7 @@ class SessionTest extends AbstractHibernateTest {
     return span.hasKind(SpanKind.CLIENT)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
             equalTo(maybeStable(DB_NAME), "db1"),
             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
             equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "h2:mem:"),
@@ -776,7 +752,7 @@ class SessionTest extends AbstractHibernateTest {
         .hasKind(SpanKind.CLIENT)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
             equalTo(maybeStable(DB_NAME), "db1"),
             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
             equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "h2:mem:"),

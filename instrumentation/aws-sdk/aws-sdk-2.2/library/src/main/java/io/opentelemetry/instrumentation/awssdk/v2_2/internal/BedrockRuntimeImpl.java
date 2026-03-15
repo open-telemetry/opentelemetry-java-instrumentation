@@ -7,6 +7,9 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Value;
@@ -19,14 +22,11 @@ import io.opentelemetry.context.Scope;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.awscore.eventstream.EventStreamResponseHandler;
 import software.amazon.awssdk.core.SdkBytes;
@@ -443,7 +443,7 @@ public final class BedrockRuntimeImpl {
       return stopSequences.asList().stream()
           .filter(Document::isString)
           .map(Document::asString)
-          .collect(Collectors.toList());
+          .collect(toList());
     }
     return null;
   }
@@ -460,7 +460,7 @@ public final class BedrockRuntimeImpl {
     if (sdkResponse instanceof ConverseResponse) {
       StopReason reason = ((ConverseResponse) sdkResponse).stopReason();
       if (reason != null) {
-        return Collections.singletonList(reason.toString());
+        return singletonList(reason.toString());
       }
     } else {
       BedrockRuntimeStreamResponseHandler<?, ?> streamHandler =
@@ -535,7 +535,7 @@ public final class BedrockRuntimeImpl {
       return stopReasons;
     }
     if (stopReason != null && stopReason.isString()) {
-      return Collections.singletonList(stopReason.asString());
+      return singletonList(stopReason.asString());
     }
     return null;
   }
@@ -799,7 +799,7 @@ public final class BedrockRuntimeImpl {
               .content(ContentBlock.fromText(inputText.asString()))
               .build();
       recordRequestMessageEvents(
-          otelContext, eventLogger, Collections.singletonList(message), captureMessageContent);
+          otelContext, eventLogger, singletonList(message), captureMessageContent);
       return;
     }
 
@@ -1039,7 +1039,7 @@ public final class BedrockRuntimeImpl {
                         return null;
                       })
                   .filter(Objects::nonNull)
-                  .collect(Collectors.toList());
+                  .collect(toList());
           resultBlockBuilder.content(toolResultContentBlocks);
         }
         return ContentBlock.fromToolResult(resultBlockBuilder.build());
@@ -1723,7 +1723,7 @@ public final class BedrockRuntimeImpl {
       List<Value<?>> toolCallValues =
           toolCalls.stream()
               .map(tool -> convertToolCall(tool, captureMessageContent))
-              .collect(Collectors.toList());
+              .collect(toList());
       body.put("toolCalls", Value.of(toolCallValues));
     }
     if (stopReason != null) {
@@ -1750,7 +1750,7 @@ public final class BedrockRuntimeImpl {
     SdkJsonGenerator generator = new SdkJsonGenerator(JSON_FACTORY, "application/json");
     DocumentTypeJsonMarshaller marshaller = new DocumentTypeJsonMarshaller(generator);
     document.accept(marshaller);
-    return new String(generator.getBytes(), StandardCharsets.UTF_8);
+    return new String(generator.getBytes(), UTF_8);
   }
 
   private static Document deserializeDocument(String json) {

@@ -54,10 +54,9 @@ public final class EarlyInitAgentConfig {
     return getInt("otel.javaagent.logging.application.logs-buffer-max-records", 2048);
   }
 
-  // visible for testing
-
+  // Full visibility for distributions
   @Nullable
-  String getString(String propertyName) {
+  public String getString(String propertyName) {
     String value = System.getProperty(propertyName);
     if (value == null) {
       value = System.getenv(toEnvVarName(propertyName));
@@ -68,16 +67,14 @@ public final class EarlyInitAgentConfig {
     return value;
   }
 
-  // visible for testing
-
-  boolean getBoolean(String propertyName, boolean defaultValue) {
+  // Full visibility for distributions
+  public boolean getBoolean(String propertyName, boolean defaultValue) {
     String value = getString(propertyName);
     return value != null ? Boolean.parseBoolean(value) : defaultValue;
   }
 
-  // visible for testing
-
-  int getInt(String propertyName, int defaultValue) {
+  // Full visibility for distributions
+  public int getInt(String propertyName, int defaultValue) {
     try {
       String value = getString(propertyName);
       return value != null ? Integer.parseInt(value) : defaultValue;

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -12,7 +14,6 @@ import io.vertx.core.VertxOptions;
 import io.vertx.core.json.JsonObject;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 class Vertx5HttpServerTest extends AbstractVertxHttpServerTest {
@@ -49,7 +50,7 @@ class Vertx5HttpServerTest extends AbstractVertxHttpServerTest {
               future.complete(null);
             });
 
-    future.get(30, TimeUnit.SECONDS);
+    future.get(30, SECONDS);
     return server;
   }
 

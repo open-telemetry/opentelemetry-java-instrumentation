@@ -5,6 +5,12 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcCommonAttributesExtractor.RPC_METHOD;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcMetricsContextCustomizers.OLD_RPC_METHOD_CONTEXT_KEY;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
@@ -19,8 +25,8 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * {@link OperationListener} which keeps track of <a
@@ -29,43 +35,68 @@ import java.util.logging.Logger;
  */
 public final class RpcClientMetrics implements OperationListener {
 
-  private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
+  private static final double NANOS_PER_MS = MILLISECONDS.toNanos(1);
+  private static final double NANOS_PER_S = SECONDS.toNanos(1);
 
   private static final ContextKey<RpcClientMetrics.State> RPC_CLIENT_REQUEST_METRICS_STATE =
       ContextKey.named("rpc-client-request-metrics-state");
 
   private static final Logger logger = Logger.getLogger(RpcClientMetrics.class.getName());
 
-  private final DoubleHistogram clientDurationHistogram;
-  private final LongHistogram clientRequestSize;
-  private final LongHistogram clientResponseSize;
+  @Nullable private final DoubleHistogram oldClientDurationHistogram;
+  @Nullable private final DoubleHistogram stableClientDurationHistogram;
+  @Nullable private final LongHistogram oldClientRequestSize;
+  @Nullable private final LongHistogram oldClientResponseSize;
 
   private RpcClientMetrics(Meter meter) {
-    DoubleHistogramBuilder durationBuilder =
-        meter
-            .histogramBuilder("rpc.client.duration")
-            .setDescription("The duration of an outbound RPC invocation.")
-            .setUnit("ms");
-    RpcMetricsAdvice.applyClientDurationAdvice(durationBuilder);
-    clientDurationHistogram = durationBuilder.build();
+    // Old metric (milliseconds)
+    if (emitOldRpcSemconv()) {
+      DoubleHistogramBuilder oldDurationBuilder =
+          meter
+              .histogramBuilder("rpc.client.duration")
+              .setDescription("The duration of an outbound RPC invocation.")
+              .setUnit("ms");
+      RpcMetricsAdvice.applyClientDurationAdvice(oldDurationBuilder, false);
+      oldClientDurationHistogram = oldDurationBuilder.build();
+    } else {
+      oldClientDurationHistogram = null;
+    }
 
-    LongHistogramBuilder requestSizeBuilder =
-        meter
-            .histogramBuilder("rpc.client.request.size")
-            .setUnit("By")
-            .setDescription("Measures the size of RPC request messages (uncompressed).")
-            .ofLongs();
-    RpcMetricsAdvice.applyClientRequestSizeAdvice(requestSizeBuilder);
-    clientRequestSize = requestSizeBuilder.build();
+    // Stable metric (seconds)
+    if (emitStableRpcSemconv()) {
+      DoubleHistogramBuilder stableDurationBuilder =
+          meter
+              .histogramBuilder("rpc.client.call.duration")
+              .setDescription("Measures the duration of outbound remote procedure calls (RPC).")
+              .setUnit("s");
+      RpcMetricsAdvice.applyClientDurationAdvice(stableDurationBuilder, true);
+      stableClientDurationHistogram = stableDurationBuilder.build();
+    } else {
+      stableClientDurationHistogram = null;
+    }
 
-    LongHistogramBuilder responseSizeBuilder =
-        meter
-            .histogramBuilder("rpc.client.response.size")
-            .setUnit("By")
-            .setDescription("Measures the size of RPC response messages (uncompressed).")
-            .ofLongs();
-    RpcMetricsAdvice.applyClientRequestSizeAdvice(responseSizeBuilder);
-    clientResponseSize = responseSizeBuilder.build();
+    if (emitOldRpcSemconv()) {
+      LongHistogramBuilder requestSizeBuilder =
+          meter
+              .histogramBuilder("rpc.client.request.size")
+              .setUnit("By")
+              .setDescription("Measures the size of RPC request messages (uncompressed).")
+              .ofLongs();
+      RpcMetricsAdvice.applyOldClientRequestSizeAdvice(requestSizeBuilder);
+      oldClientRequestSize = requestSizeBuilder.build();
+
+      LongHistogramBuilder responseSizeBuilder =
+          meter
+              .histogramBuilder("rpc.client.response.size")
+              .setUnit("By")
+              .setDescription("Measures the size of RPC response messages (uncompressed).")
+              .ofLongs();
+      RpcMetricsAdvice.applyOldClientRequestSizeAdvice(responseSizeBuilder);
+      oldClientResponseSize = responseSizeBuilder.build();
+    } else {
+      oldClientRequestSize = null;
+      oldClientResponseSize = null;
+    }
   }
 
   /**
@@ -81,7 +112,8 @@ public final class RpcClientMetrics implements OperationListener {
   public Context onStart(Context context, Attributes startAttributes, long startNanos) {
     return context.with(
         RPC_CLIENT_REQUEST_METRICS_STATE,
-        new AutoValue_RpcClientMetrics_State(startAttributes, startNanos));
+        new AutoValue_RpcClientMetrics_State(
+            startAttributes, startNanos, context.get(OLD_RPC_METHOD_CONTEXT_KEY)));
   }
 
   @Override
@@ -95,18 +127,38 @@ public final class RpcClientMetrics implements OperationListener {
       return;
     }
     Attributes attributes = state.startAttributes().toBuilder().putAll(endAttributes).build();
-    clientDurationHistogram.record(
-        (endNanos - state.startTimeNanos()) / NANOS_PER_MS, attributes, context);
+    double durationNanos = endNanos - state.startTimeNanos();
 
-    Long rpcClientRequestBodySize = attributes.get(RpcSizeAttributesExtractor.RPC_REQUEST_SIZE);
-    if (rpcClientRequestBodySize != null) {
-      clientRequestSize.record(rpcClientRequestBodySize, attributes, context);
+    if (emitOldRpcSemconv()) {
+      Attributes oldAttributes = getOldAttributes(attributes, state);
+
+      if (oldClientDurationHistogram != null) {
+        oldClientDurationHistogram.record(durationNanos / NANOS_PER_MS, oldAttributes, context);
+      }
+
+      Long rpcClientRequestBodySize = attributes.get(RpcSizeAttributesExtractor.RPC_REQUEST_SIZE);
+      if (oldClientRequestSize != null && rpcClientRequestBodySize != null) {
+        oldClientRequestSize.record(rpcClientRequestBodySize, oldAttributes, context);
+      }
+
+      Long rpcClientResponseBodySize = attributes.get(RpcSizeAttributesExtractor.RPC_RESPONSE_SIZE);
+      if (oldClientResponseSize != null && rpcClientResponseBodySize != null) {
+        oldClientResponseSize.record(rpcClientResponseBodySize, oldAttributes, context);
+      }
     }
 
-    Long rpcClientResponseBodySize = attributes.get(RpcSizeAttributesExtractor.RPC_RESPONSE_SIZE);
-    if (rpcClientResponseBodySize != null) {
-      clientResponseSize.record(rpcClientResponseBodySize, attributes, context);
+    if (stableClientDurationHistogram != null) {
+      stableClientDurationHistogram.record(durationNanos / NANOS_PER_S, attributes, context);
     }
+  }
+
+  private static Attributes getOldAttributes(Attributes attributes, State state) {
+    String oldRpcMethod = state.oldRpcMethod();
+    if (oldRpcMethod != null) {
+      // dup mode: replace stable rpc.method with old value
+      return attributes.toBuilder().put(RPC_METHOD, oldRpcMethod).build();
+    }
+    return attributes;
   }
 
   @AutoValue
@@ -115,5 +167,8 @@ public final class RpcClientMetrics implements OperationListener {
     abstract Attributes startAttributes();
 
     abstract long startTimeNanos();
+
+    @Nullable
+    abstract String oldRpcMethod();
   }
 }

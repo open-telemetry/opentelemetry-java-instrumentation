@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_0;
 
+import static java.util.Collections.singletonList;
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING;
 
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.AbstractElasticsearchNodeClientTest;
 import java.io.File;
-import java.util.Collections;
 import java.util.UUID;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
@@ -48,7 +48,7 @@ class Elasticsearch5NodeClientTest extends AbstractElasticsearchNodeClientTest {
     testNode =
         new Node(
             new Environment(InternalSettingsPreparer.prepareSettings(settings)),
-            Collections.singletonList(Netty3Plugin.class)) {};
+            singletonList(Netty3Plugin.class)) {};
     startNode(testNode);
 
     client = testNode.client();

@@ -33,14 +33,11 @@ public final class MongoTelemetry {
   MongoTelemetry(
       OpenTelemetry openTelemetry,
       String instrumentationName,
-      boolean statementSanitizationEnabled,
+      boolean querySanitizationEnabled,
       int maxNormalizedQueryLength) {
     this.instrumenter =
         MongoInstrumenterFactory.createInstrumenter(
-            openTelemetry,
-            instrumentationName,
-            statementSanitizationEnabled,
-            maxNormalizedQueryLength);
+            openTelemetry, instrumentationName, querySanitizationEnabled, maxNormalizedQueryLength);
   }
 
   /**
@@ -49,16 +46,5 @@ public final class MongoTelemetry {
    */
   public CommandListener createCommandListener() {
     return new TracingCommandListener(instrumenter);
-  }
-
-  /**
-   * Returns a new {@link CommandListener} that can be used with methods like {@link
-   * com.mongodb.MongoClientOptions.Builder#addCommandListener(CommandListener)}.
-   *
-   * @deprecated Use {@link #createCommandListener()} instead.
-   */
-  @Deprecated
-  public CommandListener newCommandListener() {
-    return createCommandListener();
   }
 }

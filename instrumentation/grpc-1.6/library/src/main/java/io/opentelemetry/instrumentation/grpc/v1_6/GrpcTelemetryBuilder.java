@@ -5,12 +5,14 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
+import static java.util.Collections.emptyList;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.grpc.Status;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcMetricsContextCustomizers;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSizeAttributesExtractor;
@@ -24,20 +26,15 @@ import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExt
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcClientNetworkAttributesGetter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.UnaryOperator;
-import javax.annotation.Nullable;
 
 /** A builder of {@link GrpcTelemetry}. */
 public final class GrpcTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.grpc-1.6";
-  // copied from PeerIncubatingAttributes
-  private static final AttributeKey<String> PEER_SERVICE = AttributeKey.stringKey("peer.service");
 
   private final OpenTelemetry openTelemetry;
-  @Nullable private String peerService;
 
   private UnaryOperator<SpanNameExtractor<GrpcRequest>> clientSpanNameExtractorCustomizer =
       UnaryOperator.identity();
@@ -52,8 +49,8 @@ public final class GrpcTelemetryBuilder {
 
   private boolean captureExperimentalSpanAttributes;
   private boolean emitMessageEvents = true;
-  private List<String> capturedClientRequestMetadata = Collections.emptyList();
-  private List<String> capturedServerRequestMetadata = Collections.emptyList();
+  private List<String> capturedClientRequestMetadata = emptyList();
+  private List<String> capturedServerRequestMetadata = emptyList();
 
   GrpcTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -116,13 +113,6 @@ public final class GrpcTelemetryBuilder {
     return this;
   }
 
-  /** Sets the {@code peer.service} attribute for http client spans. */
-  @CanIgnoreReturnValue
-  public GrpcTelemetryBuilder setPeerService(String peerService) {
-    this.peerService = peerService;
-    return this;
-  }
-
   /**
    * Determines whether to add span event for each individual message received and sent. The default
    * is true. Set this to false in case of streaming large volumes of messages.
@@ -162,6 +152,7 @@ public final class GrpcTelemetryBuilder {
   }
 
   /** Returns a new {@link GrpcTelemetry} with the settings of this {@link GrpcTelemetryBuilder}. */
+  @SuppressWarnings("deprecation") // RpcMetricsContextCustomizers is deprecated for removal in 3.0
   public GrpcTelemetry build() {
     SpanNameExtractor<GrpcRequest> originalSpanNameExtractor = new GrpcSpanNameExtractor();
     SpanNameExtractor<? super GrpcRequest> clientSpanNameExtractor =
@@ -190,7 +181,9 @@ public final class GrpcTelemetryBuilder {
         .addAttributesExtractor(
             new GrpcAttributesExtractor(
                 GrpcRpcAttributesGetter.INSTANCE, capturedClientRequestMetadata))
-        .addOperationMetrics(RpcClientMetrics.get());
+        .addOperationMetrics(RpcClientMetrics.get())
+        .addContextCustomizer(
+            RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
     Experimental.addOperationListenerAttributesExtractor(
         clientInstrumenterBuilder, RpcSizeAttributesExtractor.create(rpcAttributesGetter));
     serverInstrumenterBuilder
@@ -203,14 +196,11 @@ public final class GrpcTelemetryBuilder {
             new GrpcAttributesExtractor(
                 GrpcRpcAttributesGetter.INSTANCE, capturedServerRequestMetadata))
         .addAttributesExtractors(additionalServerExtractors)
-        .addOperationMetrics(RpcServerMetrics.get());
+        .addOperationMetrics(RpcServerMetrics.get())
+        .addContextCustomizer(
+            RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
     Experimental.addOperationListenerAttributesExtractor(
         serverInstrumenterBuilder, RpcSizeAttributesExtractor.create(rpcAttributesGetter));
-
-    if (peerService != null) {
-      clientInstrumenterBuilder.addAttributesExtractor(
-          AttributesExtractor.constant(PEER_SERVICE, peerService));
-    }
 
     return new GrpcTelemetry(
         serverInstrumenterBuilder.buildServerInstrumenter(GrpcRequestGetter.INSTANCE),

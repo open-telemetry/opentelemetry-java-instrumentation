@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs;
 
+import io.opentelemetry.api.logs.Logger;
+
 public interface ApplicationLoggerFactory {
 
-  ApplicationLogger newLogger(io.opentelemetry.api.logs.Logger agentLogger);
+  ApplicationLogger newLogger(Logger agentLogger);
 }

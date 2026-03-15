@@ -18,13 +18,9 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.HSQLDB;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -91,7 +87,7 @@ public abstract class AbstractSpringJpaTest<
                 .hasKind(SpanKind.CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
-                    equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
+                    equalTo(maybeStable(DB_SYSTEM), HSQLDB),
                     equalTo(maybeStable(DB_NAME), "test"),
                     equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                     equalTo(
@@ -127,7 +123,7 @@ public abstract class AbstractSpringJpaTest<
                       }
                     })
                 .hasAttributesSatisfyingExactly(
-                    equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
+                    equalTo(maybeStable(DB_SYSTEM), HSQLDB),
                     equalTo(maybeStable(DB_NAME), "test"),
                     equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                     equalTo(
@@ -151,7 +147,7 @@ public abstract class AbstractSpringJpaTest<
                 .hasKind(SpanKind.CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
-                    equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
+                    equalTo(maybeStable(DB_SYSTEM), HSQLDB),
                     equalTo(maybeStable(DB_NAME), "test"),
                     equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                     equalTo(
@@ -176,8 +172,8 @@ public abstract class AbstractSpringJpaTest<
 
     ENTITY customer = newCustomer("Bob", "Anonymous");
 
-    assertNull(id(customer));
-    assertFalse(repo.findAll().iterator().hasNext());
+    assertThat(id(customer)).isNull();
+    assertThat(repo.findAll().iterator().hasNext()).isFalse();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -195,7 +191,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
+                            equalTo(maybeStable(DB_SYSTEM), HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -214,7 +210,7 @@ public abstract class AbstractSpringJpaTest<
     clearData();
 
     repo.save(customer);
-    assertNotNull(id(customer));
+    assertThat(id(customer)).isNotNull();
     Long savedId = id(customer);
     if (isHibernate4) {
       testing.waitAndAssertTraces(trace -> assertHibernate4Trace(trace, repoClassName));
@@ -225,7 +221,7 @@ public abstract class AbstractSpringJpaTest<
 
     setFirstName(customer, "Bill");
     repo.save(customer);
-    assertEquals(id(customer), savedId);
+    assertThat(id(customer)).isEqualTo(savedId);
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -242,7 +238,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
+                            equalTo(maybeStable(DB_SYSTEM), HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -266,7 +262,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
+                            equalTo(maybeStable(DB_SYSTEM), HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -301,7 +297,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
+                            equalTo(maybeStable(DB_SYSTEM), HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -336,7 +332,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
+                            equalTo(maybeStable(DB_SYSTEM), HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -360,7 +356,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
+                            equalTo(maybeStable(DB_SYSTEM), HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -385,7 +381,7 @@ public abstract class AbstractSpringJpaTest<
     String repoClassName = repositoryClass().getName();
     List<ENTITY> customers = findSpecialCustomers(repo);
 
-    assertTrue(customers.isEmpty());
+    assertThat(customers.isEmpty()).isTrue();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -403,7 +399,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
+                            equalTo(maybeStable(DB_SYSTEM), HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -440,7 +436,7 @@ public abstract class AbstractSpringJpaTest<
             IncorrectResultSizeDataAccessException.class);
 
     // then
-    assertNotNull(expectedException);
+    assertThat(expectedException).isNotNull();
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -459,7 +455,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
+                            equalTo(maybeStable(DB_SYSTEM), HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(

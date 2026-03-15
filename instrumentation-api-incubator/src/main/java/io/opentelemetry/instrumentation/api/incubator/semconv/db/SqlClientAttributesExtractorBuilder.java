@@ -5,11 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
-import static java.util.Objects.requireNonNull;
-
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import javax.annotation.Nullable;
 
 /** A builder of {@link SqlClientAttributesExtractor}. */
 public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
@@ -18,8 +17,8 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   private static final AttributeKey<String> DB_SQL_TABLE = AttributeKey.stringKey("db.sql.table");
 
   final SqlClientAttributesGetter<REQUEST, RESPONSE> getter;
-  AttributeKey<String> oldSemconvTableAttribute = DB_SQL_TABLE;
-  boolean statementSanitizationEnabled = true;
+  @Nullable AttributeKey<String> oldSemconvTableAttribute = DB_SQL_TABLE;
+  boolean querySanitizationEnabled = true;
   boolean captureQueryParameters = false;
 
   SqlClientAttributesExtractorBuilder(SqlClientAttributesGetter<REQUEST, RESPONSE> getter) {
@@ -27,13 +26,16 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * @deprecated not needed anymore since the new semantic conventions always use db.collection.name
+   * Sets the attribute key for the old semconv table attribute. Pass {@code null} to disable
+   * emitting any table attribute under old semconv.
+   *
+   * @deprecated new semantic conventions always use db.collection.name
    */
   @CanIgnoreReturnValue
-  @Deprecated
+  @Deprecated // to be removed in 3.0
   public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setTableAttribute(
-      AttributeKey<String> oldSemconvTableAttribute) {
-    this.oldSemconvTableAttribute = requireNonNull(oldSemconvTableAttribute);
+      @Nullable AttributeKey<String> oldSemconvTableAttribute) {
+    this.oldSemconvTableAttribute = oldSemconvTableAttribute;
     return this;
   }
 
@@ -43,16 +45,16 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * can potentially contain sensitive information will be masked. Enabled by default.
    */
   @CanIgnoreReturnValue
-  public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setStatementSanitizationEnabled(
-      boolean statementSanitizationEnabled) {
-    this.statementSanitizationEnabled = statementSanitizationEnabled;
+  public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setQuerySanitizationEnabled(
+      boolean querySanitizationEnabled) {
+    this.querySanitizationEnabled = querySanitizationEnabled;
     return this;
   }
 
   /**
    * Sets whether the query parameters should be captured as span attributes named {@code
-   * db.query.parameter.<key>}. Enabling this option disables the statement sanitization. Disabled
-   * by default.
+   * db.query.parameter.<key>}. Enabling this option disables the query sanitization. Disabled by
+   * default.
    *
    * <p>WARNING: captured query parameters may contain sensitive information such as passwords,
    * personally identifiable information or protected health info.
@@ -70,6 +72,6 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    */
   public AttributesExtractor<REQUEST, RESPONSE> build() {
     return new SqlClientAttributesExtractor<>(
-        getter, oldSemconvTableAttribute, statementSanitizationEnabled, captureQueryParameters);
+        getter, oldSemconvTableAttribute, querySanitizationEnabled, captureQueryParameters);
   }
 }

@@ -5,10 +5,12 @@
 
 package io.opentelemetry.instrumentation.spring.web.v3_1;
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.net.URI;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.springframework.http.HttpRequest;
@@ -102,7 +104,9 @@ enum SpringWebHttpAttributesGetter
   }
 
   @Override
+  @Nullable
   public Integer getServerPort(HttpRequest httpRequest) {
-    return httpRequest.getURI().getPort();
+    URI uri = httpRequest.getURI();
+    return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri.getScheme());
   }
 }

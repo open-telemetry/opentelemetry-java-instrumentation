@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.semconv.http;
 
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpStatusCodeConverter.CLIENT;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -18,7 +18,7 @@ class HttpStatusCodeConverterClientTest {
   @ParameterizedTest
   @MethodSource("spanStatusCodes")
   void httpStatusCodeToOtelStatus(int numeric, boolean isError) {
-    assertEquals(isError, CLIENT.isError(numeric));
+    assertThat(CLIENT.isError(numeric)).isEqualTo(isError);
   }
 
   static Stream<Arguments> spanStatusCodes() {

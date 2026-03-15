@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static java.util.stream.Collectors.toList;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
@@ -94,6 +95,6 @@ enum SqsReceiveRequestAttributesGetter
     return StreamSupport.stream(request.getMessages().spliterator(), false)
         .map(message -> message.getMessageAttribute(name))
         .filter(value -> value != null)
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 }
