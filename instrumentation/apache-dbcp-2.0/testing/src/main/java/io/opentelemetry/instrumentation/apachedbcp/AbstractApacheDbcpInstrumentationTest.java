@@ -79,9 +79,15 @@ public abstract class AbstractApacheDbcpInstrumentationTest {
                 emitStableDatabaseSemconv()
                     ? "db.client.connection.count"
                     : "db.client.connections.usage",
-                "db.client.connections.idle.min",
-                "db.client.connections.idle.max",
-                "db.client.connections.max"));
+                emitStableDatabaseSemconv()
+                    ? "db.client.connection.idle.min"
+                    : "db.client.connections.idle.min",
+                emitStableDatabaseSemconv()
+                    ? "db.client.connection.idle.max"
+                    : "db.client.connections.idle.max",
+                emitStableDatabaseSemconv()
+                    ? "db.client.connection.max"
+                    : "db.client.connections.max"));
     assertThat(testing().metrics())
         .filteredOn(
             metricData ->
