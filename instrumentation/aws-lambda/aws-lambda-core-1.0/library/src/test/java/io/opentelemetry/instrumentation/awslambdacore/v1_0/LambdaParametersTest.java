@@ -14,15 +14,15 @@ import org.junit.jupiter.api.Test;
 
 class LambdaParametersTest {
 
-  public void onlyContext(Context context) {}
+  void onlyContext(Context context) {}
 
-  public void contextOnThird(String one, String two, Context context) {}
+  void contextOnThird(String one, String two, Context context) {}
 
   @Test
   void shouldSetContextOnFirstPosition() throws NoSuchMethodException {
     // given
     Context context = mock(Context.class);
-    Method method = getClass().getMethod("onlyContext", Context.class);
+    Method method = getClass().getDeclaredMethod("onlyContext", Context.class);
     // when
     Object[] params = LambdaParameters.toArray(method, "", context);
     // then
@@ -35,7 +35,7 @@ class LambdaParametersTest {
     // given
     Context context = mock(Context.class);
     Method method =
-        getClass().getMethod("contextOnThird", String.class, String.class, Context.class);
+        getClass().getDeclaredMethod("contextOnThird", String.class, String.class, Context.class);
     // when
     Object[] params = LambdaParameters.toArray(method, "", context);
     // then
