@@ -62,9 +62,7 @@ final class ApiGatewayProxyAttributesExtractor
 
     Map<String, String> headers = lowercaseMap(request.getHeaders());
     String userAgent = headers.get("user-agent");
-    if (userAgent != null) {
-      attributes.put(USER_AGENT_ORIGINAL, userAgent);
-    }
+    attributes.put(USER_AGENT_ORIGINAL, userAgent);
 
     attributes.put(URL_FULL, getHttpUrl(request, headers));
   }
@@ -109,10 +107,8 @@ final class ApiGatewayProxyAttributesExtractor
       @Nullable Object response,
       @Nullable Throwable error) {
     if (response instanceof APIGatewayProxyResponseEvent) {
-      Integer statusCode = ((APIGatewayProxyResponseEvent) response).getStatusCode();
-      if (statusCode != null) {
-        attributes.put(HTTP_RESPONSE_STATUS_CODE, statusCode);
-      }
+      attributes.put(
+          HTTP_RESPONSE_STATUS_CODE, ((APIGatewayProxyResponseEvent) response).getStatusCode());
     }
   }
 }
