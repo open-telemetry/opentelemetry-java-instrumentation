@@ -79,13 +79,25 @@ When reviewing a `javaagent/` module:
    versioned subdirectories for the same library. For example, if the module is
    `instrumentation/netty/netty-4.0/javaagent`, the grouping directory is
    `instrumentation/netty`.
-2. List the subdirectories of the grouping directory to find sibling version modules that
-   also have a `javaagent/` subdirectory. For example, `instrumentation/netty/` contains
-   `netty-3.8/javaagent`, `netty-4.0/javaagent`, and `netty-4.1/javaagent`.
-3. Exclude the current module itself from the list.
-4. For each remaining sibling, check whether `build.gradle.kts` contains a
+2. List the subdirectories of the grouping directory to find candidate modules that
+   also have a `javaagent/` subdirectory.
+3. **Filter to true version siblings.** A sibling is a module whose directory name shares
+   the **same component prefix** and differs **only in the trailing version number**.
+   Strip the trailing `-<version>` from each directory name to obtain the component
+   prefix. Only modules with the **same** prefix are siblings.
+
+   Examples:
+   - `apache-httpclient-2.0`, `apache-httpclient-4.0`, `apache-httpclient-5.0` → prefix
+     `apache-httpclient` → **all siblings**.
+   - `netty-3.8`, `netty-4.0`, `netty-4.1` → prefix `netty` → **all siblings**.
+   - `akka-actor-2.3`, `akka-actor-fork-join-2.5`, `akka-http-10.0` → prefixes
+     `akka-actor`, `akka-actor-fork-join`, `akka-http` → **not siblings** of each
+     other (different components that happen to share a parent grouping directory).
+
+4. Exclude the current module itself from the filtered list.
+5. For each remaining sibling, check whether `build.gradle.kts` contains a
    `testInstrumentation(project(":instrumentation:...:javaagent"))` entry for it.
-5. If any sibling is missing, add the `testInstrumentation` dependency and verify by running
+6. If any sibling is missing, add the `testInstrumentation` dependency and verify by running
    the module's tests.
 
 ## Unnecessary Dependencies

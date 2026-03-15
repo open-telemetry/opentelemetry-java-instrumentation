@@ -110,8 +110,13 @@ Auto-fix boundaries:
   - missing test-task wiring patterns with clear canonical form
   - missing `testInstrumentation` cross-version references — when a javaagent module belongs
     to a library family with sibling version modules, it must list all siblings via
-    `testInstrumentation`. Check `settings.gradle.kts` for sibling `:javaagent` modules
-    under the same parent. After adding, verify by running the module's tests.
+    `testInstrumentation`. A sibling is a module under the same grouping directory whose
+    directory name shares the **same component prefix** and differs **only in the trailing
+    version number** (e.g., `apache-httpclient-2.0` and `apache-httpclient-4.0` are siblings;
+    `akka-actor-2.3` and `akka-actor-fork-join-2.5` are **not** — they instrument different
+    components). Check `settings.gradle.kts` for sibling `:javaagent` modules under the
+    same parent and apply the step-by-step procedure in `gradle-conventions.md`.
+    After adding, verify by running the module's tests.
   - missing version comments on `hasClassesNamed()` landmark classes in existing
     `classLoaderMatcher()` overrides (multi-class checks or `.and(not(...))` chains only) —
     look up the library version that introduced each class (check muzzle `versions.set(...)`
