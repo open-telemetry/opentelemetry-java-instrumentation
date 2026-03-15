@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.armeria.grpc.v1_14;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -27,14 +26,13 @@ public class ArmeriaGrpcServiceBuilderInstrumentation implements TypeInstrumenta
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(named("build")),
-        ArmeriaGrpcServiceBuilderInstrumentation.class.getName() + "$BuildAdvice");
+        isPublic().and(named("build")), getClass().getName() + "$BuildAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class BuildAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.This GrpcServiceBuilder builder) {
       builder.intercept(GrpcTelemetry.create(GlobalOpenTelemetry.get()).createServerInterceptor());
     }
