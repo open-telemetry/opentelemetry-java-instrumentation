@@ -195,6 +195,11 @@ jobs:
             cd progress
           fi
 
+          # the use-cla-approved-bot.sh script doesn't exist
+          # in the otelbot/code-review-progress branch
+          git config user.name otelbot
+          git config user.email 197425009+otelbot@users.noreply.github.com
+
           # Append this module (one per line, matching build-review-matrix.py)
           echo "$SHORT_NAME" >> reviewed.txt
 
