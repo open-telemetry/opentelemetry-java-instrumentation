@@ -104,10 +104,7 @@ class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Respo
 
     ResponseMetadata responseMetadata = getResponseMetadata(response);
     if (responseMetadata != null) {
-      String requestId = responseMetadata.getRequestId();
-      if (requestId != null) {
-        attributes.put(AWS_REQUEST_ID, requestId);
-      }
+      attributes.put(AWS_REQUEST_ID, responseMetadata.getRequestId());
     }
   }
 
@@ -127,10 +124,7 @@ class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Respo
       AttributeKey<String> key,
       Object carrier,
       Function<Object, String> getter) {
-    String value = getter.apply(carrier);
-    if (value != null) {
-      attributes.put(key, value);
-    }
+    attributes.put(key, getter.apply(carrier));
   }
 
   private static Object getAwsResponse(Response<?> response) {

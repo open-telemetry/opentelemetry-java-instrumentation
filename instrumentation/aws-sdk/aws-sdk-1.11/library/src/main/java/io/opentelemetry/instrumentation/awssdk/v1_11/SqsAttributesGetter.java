@@ -14,8 +14,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum SqsAttributesGetter implements MessagingAttributesGetter<Request<?>, Response<?>> {
-  INSTANCE;
+class SqsAttributesGetter implements MessagingAttributesGetter<Request<?>, Response<?>> {
 
   // copied from MessagingIncubatingAttributes.MessagingSystemIncubatingValues
   private static final String AWS_SQS = "aws_sqs";
