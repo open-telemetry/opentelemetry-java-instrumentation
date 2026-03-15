@@ -12964,6 +12964,7 @@ libraries:
     source_path: instrumentation/servlet/servlet-2.2
     scope:
       name: io.opentelemetry.servlet-2.2
+      schema_url: https://opentelemetry.io/schemas/1.37.0
     javaagent_target_versions:
     - javax.servlet:servlet-api:[2.2, 3.0)
     configurations:
@@ -13045,6 +13046,7 @@ libraries:
     source_path: instrumentation/servlet/servlet-3.0
     scope:
       name: io.opentelemetry.servlet-3.0
+      schema_url: https://opentelemetry.io/schemas/1.37.0
     has_standalone_library: true
     javaagent_target_versions:
     - javax.servlet:javax.servlet-api:[3.0,)
