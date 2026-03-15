@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.avaje.jex.v3_0;
 import io.avaje.jex.Jex;
 import io.avaje.jex.Jex.Server;
 
-public class TestJexJavaApplication {
+class TestJexJavaApplication {
 
   private TestJexJavaApplication() {}
 
