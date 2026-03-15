@@ -773,6 +773,61 @@ class InstrumenterTest {
     assertThat(spanKey.fromContextOrNull(context)).isSameAs(span);
   }
 
+  @Test
+  void startSuppressesException() {
+    AtomicReference<Boolean> extractorCalled = new AtomicReference<>(false);
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(),
+                "test",
+                unused -> {
+                  extractorCalled.set(true);
+                  throw new RuntimeException("span name extractor error");
+                })
+            .buildInstrumenter();
+
+    Context parentContext = Context.root();
+    Context result = instrumenter.start(parentContext, REQUEST);
+
+    assertThat(extractorCalled.get()).isTrue();
+    assertThat(result).isSameAs(parentContext);
+  }
+
+  @Test
+  void endSuppressesException() {
+    AtomicReference<Boolean> extractorCalled = new AtomicReference<>(false);
+    AttributesExtractor<Map<String, String>, Map<String, String>> throwingExtractor =
+        new AttributesExtractor<Map<String, String>, Map<String, String>>() {
+          @Override
+          public void onStart(
+              AttributesBuilder attributes, Context parentContext, Map<String, String> request) {}
+
+          @Override
+          public void onEnd(
+              AttributesBuilder attributes,
+              Context context,
+              Map<String, String> request,
+              @Nullable Map<String, String> response,
+              @Nullable Throwable error) {
+            extractorCalled.set(true);
+            throw new RuntimeException("attributes extractor onEnd error");
+          }
+        };
+
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .addAttributesExtractor(throwingExtractor)
+            .buildInstrumenter();
+
+    Context context = instrumenter.start(Context.root(), REQUEST);
+    assertThat(Span.fromContext(context).getSpanContext().isValid()).isTrue();
+
+    instrumenter.end(context, REQUEST, RESPONSE, null);
+
+    assertThat(extractorCalled.get()).isTrue();
+  }
+
   private static LinkData expectedSpanLink() {
     return LinkData.create(
         SpanContext.create(
