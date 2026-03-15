@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
@@ -19,6 +20,8 @@ import java.util.function.UnaryOperator;
 public interface InternalInstrumenterCustomizer<REQUEST, RESPONSE> {
 
   String getInstrumentationName();
+
+  OpenTelemetry getOpenTelemetry();
 
   boolean hasType(SpanKey type);
 

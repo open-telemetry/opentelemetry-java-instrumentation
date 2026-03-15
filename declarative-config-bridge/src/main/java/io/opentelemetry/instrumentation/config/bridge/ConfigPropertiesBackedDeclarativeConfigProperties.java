@@ -93,6 +93,10 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put("java.jmx.enabled", "otel.jmx.enabled");
     SPECIAL_MAPPINGS.put("java.jmx.config", "otel.jmx.config");
     SPECIAL_MAPPINGS.put("java.jmx.target.system", "otel.jmx.target.system");
+    // spring starter distribution config
+    SPECIAL_MAPPINGS.put(
+        "spring_starter.thread_details.enabled",
+        "otel.instrumentation.common.thread-details.enabled");
   }
 
   private final ConfigProperties configProperties;
@@ -229,6 +233,11 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
         translatedPath.append(".");
       }
       translatedPath.append(translateName(segments[i]));
+    }
+
+    // java.agent.* maps to otel.javaagent.* (not otel.instrumentation.agent.*)
+    if (segments.length > 0 && segments[0].equals("agent")) {
+      return "otel.javaagent." + translatedPath.toString().substring("agent.".length());
     }
 
     return "otel.instrumentation." + translatedPath;
