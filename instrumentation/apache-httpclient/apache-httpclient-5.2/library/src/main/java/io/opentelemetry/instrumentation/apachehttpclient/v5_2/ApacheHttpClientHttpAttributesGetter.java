@@ -17,9 +17,8 @@ import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.MessageHeaders;
 import org.apache.hc.core5.http.ProtocolVersion;
 
-enum ApacheHttpClientHttpAttributesGetter
+class ApacheHttpClientHttpAttributesGetter
     implements HttpClientAttributesGetter<ApacheHttpClientRequest, HttpResponse> {
-  INSTANCE;
 
   @Override
   public String getHttpRequestMethod(ApacheHttpClientRequest request) {
