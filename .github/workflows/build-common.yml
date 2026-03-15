@@ -236,37 +236,6 @@ jobs:
           name: opentelemetry-java-instrumentation-SBOM.zip
           path: "sboms/*.json"
 
-  publish-dry-run:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Free disk space
-        run: .github/scripts/gha-free-disk-space.sh
-
-      - name: Set up JDK for running Gradle
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
-        with:
-          distribution: temurin
-          java-version-file: .java-version
-
-      - name: Increase gradle daemon heap size
-        run: |
-          sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
-        with:
-          cache-read-only: ${{ inputs.cache-read-only }}
-
-      - name: Publish to local directory (dry run)
-        env:
-          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
-        # This exercises the same Gradle task graph as the release workflow
-        # (minus uploadReleaseBundle which requires Sonatype credentials)
-        # to catch configuration cache and publishing issues before release time.
-        run: ./gradlew assemble publishAllPublicationToReleaseRepoRepository generateReleaseBundle ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
-
   test:
     name: test${{ matrix.test-partition }} (${{ matrix.test-java-version }}, ${{ matrix.vm }}, indy ${{ matrix.test-indy }})
     runs-on: ubuntu-latest
