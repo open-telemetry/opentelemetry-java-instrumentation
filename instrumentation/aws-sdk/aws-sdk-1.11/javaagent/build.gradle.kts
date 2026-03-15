@@ -111,6 +111,7 @@ testing {
         all {
           testTask.configure {
             jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+            usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
           }
         }
       }
@@ -125,6 +126,14 @@ testing {
           implementation("com.amazonaws:aws-java-sdk-sqs:1.12.583")
         } else {
           implementation("com.amazonaws:aws-java-sdk-sqs:1.11.106")
+        }
+      }
+
+      targets {
+        all {
+          testTask.configure {
+            usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+          }
         }
       }
     }
@@ -146,21 +155,21 @@ tasks {
 
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", collectMetadata)
   }
 
   withType<Test>().configureEach {
     // TODO run tests both with and without experimental span attributes
     jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("collectMetadata", collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("collectMetadata", collectMetadata)
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
