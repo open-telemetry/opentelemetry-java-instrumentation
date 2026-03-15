@@ -8,9 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.armeria.v1_3;
 import com.linecorp.armeria.common.ResponseHeadersBuilder;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
 
-enum ArmeriaHttpResponseMutator implements HttpServerResponseMutator<ResponseHeadersBuilder> {
-  INSTANCE;
-
+class ArmeriaHttpResponseMutator implements HttpServerResponseMutator<ResponseHeadersBuilder> {
   @Override
   public void appendHeader(ResponseHeadersBuilder response, String name, String value) {
     response.add(name, value);

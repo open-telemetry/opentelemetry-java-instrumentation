@@ -38,7 +38,7 @@ class ResponseCustomizingDecorator extends SimpleDecoratingHttpService {
         ResponseHeaders headers = (ResponseHeaders) obj;
         ResponseHeadersBuilder headersBuilder = headers.toBuilder();
         HttpServerResponseCustomizerHolder.getCustomizer()
-            .customize(context, headersBuilder, ArmeriaHttpResponseMutator.INSTANCE);
+            .customize(context, headersBuilder, new ArmeriaHttpResponseMutator());
 
         return headersBuilder.build();
       }
