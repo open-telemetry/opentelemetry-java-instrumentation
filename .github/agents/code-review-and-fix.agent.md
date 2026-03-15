@@ -144,7 +144,12 @@ Auto-fix boundaries:
     Do **not** convert `hasAttributes(Attributes.empty())` — that is acceptable as-is.
   - redundant `if (value != null)` guards around `AttributesBuilder.put()` calls —
     `put` is a no-op for null values, so remove the conditional and pass the value
-    directly (same for span, log, and metrics attribute setters)
+    directly (same for span, log, and metrics attribute setters).
+    **Exception**: when the `AttributeKey` is typed as `Long`, `Double`, or `Boolean`,
+    the `put` overload takes a **primitive** (`long`, `double`, `boolean`). If the
+    source value is a boxed type (`Integer`, `Long`, `Double`, `Boolean`) that may be
+    `null`, the null guard is **required** — removing it causes an auto-unboxing
+    `NullPointerException` before `put()` is reached. Do not remove the guard in this case
   - defensive `if (param == null)` checks on parameters not annotated `@Nullable` —
     these contradict the framework's nullability contract; remove the guard. Conversely,
     if a call site passes `null` or a method returns `null`, add `@Nullable` to the

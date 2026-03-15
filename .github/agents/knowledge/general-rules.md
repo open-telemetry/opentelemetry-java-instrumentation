@@ -94,6 +94,13 @@ All `put` / `setAttribute` methods on `AttributesBuilder`, `Span`, `SpanBuilder`
 `LogRecordBuilder` are no-ops when the value is `null` (upstream SDK guarantee).
 Do not wrap these calls in `if (value != null)` guards — pass the value directly.
 
+**Exception — primitive-typed attribute keys**: when the `AttributeKey` is typed as
+`Long`, `Double`, or `Boolean`, the `put` overload accepts a **primitive** parameter
+(`long`, `double`, `boolean`). If the source value is a boxed type (`Integer`, `Long`,
+`Double`, `Boolean`) that may be `null`, Java auto-unboxes it **before** `put()` is
+reached, causing a `NullPointerException`. In this case the null guard is **required** —
+do not remove it.
+
 Flag patterns like:
 
 ```java
@@ -107,6 +114,15 @@ Preferred:
 
 ```java
 attributes.put(SOME_KEY, getSomething());
+```
+
+Do **not** flag (the guard is required):
+
+```java
+Integer statusCode = response.getStatusCode(); // may return null
+if (statusCode != null) {
+  attributes.put(HTTP_RESPONSE_STATUS_CODE, statusCode); // AttributeKey<Long> → put(long)
+}
 ```
 
 ## [Style] Nullability Correctness
