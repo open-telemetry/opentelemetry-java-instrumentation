@@ -142,12 +142,20 @@ Any test task whose tests use Testcontainers **must** declare:
 usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 ```
 
-Place the declaration in `withType<Test>().configureEach` when all test tasks in the module
-use Testcontainers. Otherwise place it on the specific task(s) that do.
+Place the declaration in `withType<Test>().configureEach` when **all** test tasks in the
+module use Testcontainers. Otherwise place it on **only** the specific task(s) that do.
 
-**How to detect a missing declaration:** if `build.gradle.kts` has a dependency on any
-`org.testcontainers:*` artifact (directly or via a `testing` module that pulls one in) but
-no test task calls `usesService(...)` for `testcontainersBuildService`, flag it.
+**Do not over-apply.** Adding `usesService` to a task that does not use Testcontainers
+unnecessarily throttles it against the 2-slot concurrency limit. A module may have some
+suites that use Testcontainers (e.g., `LocalStackContainer`) and others that use in-process
+test servers (e.g., ElasticMQ `SQSRestServerBuilder`, MockWebServer, WireMock). Only the
+Testcontainers-using suites need the declaration.
+
+**How to detect a missing declaration:** if a test task's source set (or the shared testing
+module it extends) imports or instantiates Testcontainers types (`GenericContainer`,
+`LocalStackContainer`, etc.), it needs `usesService`. Check the actual test sources — do not
+rely solely on the presence of an `org.testcontainers:*` dependency in `build.gradle.kts`,
+because the dependency may only be used by some suites in the module.
 
 ## Prefer `withType<Test>().configureEach` (when multiple test tasks exist)
 
