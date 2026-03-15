@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.alibabadruid;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.alibaba.druid.pool.DruidDataSource;
@@ -14,8 +12,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
 import io.opentelemetry.instrumentation.testing.junit.db.MockDriver;
 import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.Set;
 import javax.management.ObjectName;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -68,21 +64,10 @@ public abstract class AbstractDruidInstrumentationTest {
     Thread.sleep(100);
 
     // then
-    Set<String> metricNames =
-        new HashSet<>(
-            asList(
-                emitStableDatabaseSemconv()
-                    ? "db.client.connection.count"
-                    : "db.client.connections.usage",
-                "db.client.connections.idle.min",
-                "db.client.connections.idle.max",
-                "db.client.connections.max",
-                "db.client.connections.pending_requests"));
     assertThat(testing().metrics())
         .filteredOn(
             metricData ->
-                metricData.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME)
-                    && metricNames.contains(metricData.getName()))
+                metricData.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
         .isEmpty();
   }
 }
