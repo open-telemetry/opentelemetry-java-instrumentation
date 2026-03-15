@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## Version 2.26.0 (2026-03-13)
+## Version 2.26.0 (2026-03-14)
 
 ### ⚠️ Breaking changes to non-stable APIs
 

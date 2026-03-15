@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
 import java.net.URI;
+import javax.annotation.Nullable;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.HttpHost;
@@ -17,7 +18,7 @@ public class RequestWithHost extends HttpRequestWrapper implements ClassicHttpRe
   private final String scheme;
   private final URIAuthority authority;
 
-  public RequestWithHost(HttpHost httpHost, ClassicHttpRequest httpRequest) {
+  public RequestWithHost(@Nullable HttpHost httpHost, ClassicHttpRequest httpRequest) {
     super(httpRequest);
     if (httpHost != null) {
       this.scheme = httpHost.getSchemeName();

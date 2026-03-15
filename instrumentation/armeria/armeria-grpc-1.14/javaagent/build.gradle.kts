@@ -37,7 +37,7 @@ protobuf {
   }
   plugins {
     id("grpc") {
-      val grpcVersion = if (latestDepTest) "1.43.2" else "1.68.1"
+      val grpcVersion = if (latestDepTest) "1.68.1" else "1.43.2"
       artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
     }
   }
@@ -71,8 +71,15 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc")
   }
 
+  val testBothSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc/dup")
+  }
+
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testStableSemconv, testBothSemconv)
   }
 }
 

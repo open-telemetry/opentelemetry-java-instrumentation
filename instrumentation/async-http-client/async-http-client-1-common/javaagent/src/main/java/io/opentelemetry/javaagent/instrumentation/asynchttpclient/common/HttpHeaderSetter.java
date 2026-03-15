@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.asynchttpclient.common;
 
 import com.ning.http.client.Request;
 import io.opentelemetry.context.propagation.TextMapSetter;
+import javax.annotation.Nullable;
 
 final class HttpHeaderSetter implements TextMapSetter<Request> {
 
@@ -17,7 +18,10 @@ final class HttpHeaderSetter implements TextMapSetter<Request> {
   }
 
   @Override
-  public void set(Request carrier, String key, String value) {
+  public void set(@Nullable Request carrier, String key, String value) {
+    if (carrier == null) {
+      return;
+    }
     helper.setHeader(carrier, key, value);
   }
 }

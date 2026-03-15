@@ -28,6 +28,7 @@ final class AsyncHttpClientHttpAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getUrlFull(Request request) {
     return helper.getUrlFull(request);
   }

@@ -52,7 +52,7 @@ class OtelExecChainHandler implements ExecChainHandler {
     }
 
     Context context = instrumenter.start(parentContext, instrumenterRequest);
-    propagators.getTextMapPropagator().inject(context, request, HttpHeaderSetter.INSTANCE);
+    propagators.getTextMapPropagator().inject(context, request, new HttpHeaderSetter());
 
     return execute(request, instrumenterRequest, chain, scope, context);
   }
