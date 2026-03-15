@@ -37,10 +37,7 @@ class AwsSdkExperimentalAttributesExtractor
       AttributeKey<String> key,
       Object request,
       Function<Object, String> getter) {
-    String value = getter.apply(request);
-    if (value != null) {
-      attributes.put(key, value);
-    }
+    attributes.put(key, getter.apply(request));
   }
 
   @Override
