@@ -15,8 +15,7 @@ import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.SdkResponse;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 
-enum SqsAttributesGetter implements MessagingAttributesGetter<ExecutionAttributes, Response> {
-  INSTANCE;
+class SqsAttributesGetter implements MessagingAttributesGetter<ExecutionAttributes, Response> {
 
   // copied from MessagingIncubatingAttributes.MessagingSystemIncubatingValues
   private static final String AWS_SQS = "aws_sqs";

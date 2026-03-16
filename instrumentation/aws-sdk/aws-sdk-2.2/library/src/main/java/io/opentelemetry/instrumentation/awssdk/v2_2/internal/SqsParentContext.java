@@ -13,6 +13,7 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import java.util.Map;
+import javax.annotation.Nullable;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
 /**
@@ -21,8 +22,7 @@ import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
  */
 public final class SqsParentContext {
 
-  enum StringMapGetter implements TextMapGetter<Map<String, String>> {
-    INSTANCE;
+  private static class StringMapGetter implements TextMapGetter<Map<String, String>> {
 
     @Override
     public Iterable<String> keys(Map<String, String> map) {
@@ -30,13 +30,16 @@ public final class SqsParentContext {
     }
 
     @Override
-    public String get(Map<String, String> map, String s) {
+    public String get(@Nullable Map<String, String> map, String s) {
+      if (map == null) {
+        return null;
+      }
       return map.get(s);
     }
   }
 
-  enum MessageAttributeValueMapGetter implements TextMapGetter<Map<String, MessageAttributeValue>> {
-    INSTANCE;
+  private static class MessageAttributeValueMapGetter
+      implements TextMapGetter<Map<String, MessageAttributeValue>> {
 
     @Override
     public Iterable<String> keys(Map<String, MessageAttributeValue> map) {
@@ -45,7 +48,7 @@ public final class SqsParentContext {
 
     @Override
     @NoMuzzle
-    public String get(Map<String, MessageAttributeValue> map, String s) {
+    public String get(@Nullable Map<String, MessageAttributeValue> map, String s) {
       if (map == null) {
         return null;
       }
@@ -62,14 +65,14 @@ public final class SqsParentContext {
   static Context ofMessageAttributes(
       Map<String, MessageAttributeValue> messageAttributes, TextMapPropagator propagator) {
     return propagator.extract(
-        Context.root(), messageAttributes, MessageAttributeValueMapGetter.INSTANCE);
+        Context.root(), messageAttributes, new MessageAttributeValueMapGetter());
   }
 
   static Context ofSystemAttributes(Map<String, String> systemAttributes) {
     String traceHeader = systemAttributes.get(AWS_TRACE_SYSTEM_ATTRIBUTE);
     return AwsXrayPropagator.getInstance()
         .extract(
-            Context.root(), singletonMap("X-Amzn-Trace-Id", traceHeader), StringMapGetter.INSTANCE);
+            Context.root(), singletonMap("X-Amzn-Trace-Id", traceHeader), new StringMapGetter());
   }
 
   public static Context ofMessage(SqsMessage message, TracingExecutionInterceptor config) {

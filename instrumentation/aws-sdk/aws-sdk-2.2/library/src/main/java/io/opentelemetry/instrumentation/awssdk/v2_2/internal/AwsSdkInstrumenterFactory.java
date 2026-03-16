@@ -45,7 +45,7 @@ public final class AwsSdkInstrumenterFactory {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-sdk-2.2";
 
   private static final AttributesExtractor<ExecutionAttributes, Response> rpcAttributesExtractor =
-      RpcClientAttributesExtractor.create(AwsSdkRpcAttributesGetter.INSTANCE);
+      RpcClientAttributesExtractor.create(new AwsSdkRpcAttributesGetter());
   private static final AwsSdkExperimentalAttributesExtractor experimentalAttributesExtractor =
       new AwsSdkExperimentalAttributesExtractor();
 
@@ -128,7 +128,7 @@ public final class AwsSdkInstrumenterFactory {
 
   public Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter() {
     MessageOperation operation = MessageOperation.RECEIVE;
-    SqsReceiveRequestAttributesGetter getter = SqsReceiveRequestAttributesGetter.INSTANCE;
+    SqsReceiveRequestAttributesGetter getter = new SqsReceiveRequestAttributesGetter();
     AttributesExtractor<SqsReceiveRequest, Response> messagingAttributeExtractor =
         messagingAttributesExtractor(getter, operation);
 
@@ -143,7 +143,7 @@ public final class AwsSdkInstrumenterFactory {
 
   public Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter() {
     MessageOperation operation = MessageOperation.PROCESS;
-    SqsProcessRequestAttributesGetter getter = SqsProcessRequestAttributesGetter.INSTANCE;
+    SqsProcessRequestAttributesGetter getter = new SqsProcessRequestAttributesGetter();
 
     InstrumenterBuilder<SqsProcessRequest, Response> builder =
         Instrumenter.<SqsProcessRequest, Response>builder(
@@ -195,7 +195,7 @@ public final class AwsSdkInstrumenterFactory {
 
   public Instrumenter<ExecutionAttributes, Response> producerInstrumenter() {
     MessageOperation operation = MessageOperation.PUBLISH;
-    SqsAttributesGetter getter = SqsAttributesGetter.INSTANCE;
+    SqsAttributesGetter getter = new SqsAttributesGetter();
     AttributesExtractor<ExecutionAttributes, Response> messagingAttributeExtractor =
         messagingAttributesExtractor(getter, operation);
 
@@ -224,13 +224,13 @@ public final class AwsSdkInstrumenterFactory {
   public Instrumenter<ExecutionAttributes, Response> bedrockRuntimeInstrumenter() {
     return createInstrumenter(
         openTelemetry,
-        GenAiSpanNameExtractor.create(BedrockRuntimeAttributesGetter.INSTANCE),
+        GenAiSpanNameExtractor.create(new BedrockRuntimeAttributesGetter()),
         SpanKindExtractor.alwaysClient(),
         attributesExtractors(),
         builder ->
             builder
                 .addAttributesExtractor(
-                    GenAiAttributesExtractor.create(BedrockRuntimeAttributesGetter.INSTANCE))
+                    GenAiAttributesExtractor.create(new BedrockRuntimeAttributesGetter()))
                 .addOperationMetrics(GenAiClientMetrics.get()),
         true);
   }

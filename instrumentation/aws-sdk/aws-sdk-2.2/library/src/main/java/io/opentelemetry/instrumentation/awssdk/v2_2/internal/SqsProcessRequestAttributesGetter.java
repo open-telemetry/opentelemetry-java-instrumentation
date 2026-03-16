@@ -13,9 +13,8 @@ import java.util.List;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
 
-enum SqsProcessRequestAttributesGetter
+class SqsProcessRequestAttributesGetter
     implements MessagingAttributesGetter<SqsProcessRequest, Response> {
-  INSTANCE;
 
   // copied from MessagingIncubatingAttributes.MessagingSystemIncubatingValues
   private static final String AWS_SQS = "aws_sqs";
