@@ -17,7 +17,6 @@ import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHt
  * any time.
  */
 public class ArmeriaInstrumenterBuilderFactory {
-  private ArmeriaInstrumenterBuilderFactory() {}
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.armeria-1.3";
 
@@ -38,4 +37,6 @@ public class ArmeriaInstrumenterBuilderFactory {
         new ArmeriaHttpClientAttributesGetter(),
         new ClientRequestContextSetter());
   }
+
+  private ArmeriaInstrumenterBuilderFactory() {}
 }
