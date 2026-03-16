@@ -94,12 +94,24 @@ All `put` / `setAttribute` methods on `AttributesBuilder`, `Span`, `SpanBuilder`
 `LogRecordBuilder` are no-ops when the value is `null` (upstream SDK guarantee).
 Do not wrap these calls in `if (value != null)` guards — pass the value directly.
 
-**Exception — primitive-typed attribute keys**: when the `AttributeKey` is typed as
-`Long`, `Double`, or `Boolean`, the `put` overload accepts a **primitive** parameter
-(`long`, `double`, `boolean`). If the source value is a boxed type (`Integer`, `Long`,
-`Double`, `Boolean`) that may be `null`, Java auto-unboxes it **before** `put()` is
-reached, causing a `NullPointerException`. In this case the null guard is **required** —
-do not remove it.
+**Exception — `AttributeKey<Long>` with `Integer` value**: the only primitive-typed
+overload on these interfaces is a convenience method that accepts `int`:
+
+- `AttributesBuilder.put(AttributeKey<Long> key, int value)`
+- `Span.setAttribute(AttributeKey<Long> key, int value)`
+
+When the `AttributeKey` is typed as `Long` and the source value is `Integer`, Java
+cannot bind `Integer` to `T = Long` in the generic overload (type mismatch), so it
+resolves to the `int` convenience overload via auto-unboxing (`Integer` → `int`). If
+the `Integer` is `null`, this auto-unboxing causes a `NullPointerException` **before**
+`put()` / `setAttribute()` is reached. In this case the null guard is **required** — do
+not remove it.
+
+When the value type **matches** the `AttributeKey` type parameter (e.g.,
+`Boolean` → `AttributeKey<Boolean>`, `Long` → `AttributeKey<Long>`,
+`Double` → `AttributeKey<Double>`), the generic `@Nullable T` overload is selected
+directly — no auto-unboxing occurs and `null` is safe. Do **not** add a null guard in
+this case.
 
 Flag patterns like:
 
@@ -116,12 +128,27 @@ Preferred:
 attributes.put(SOME_KEY, getSomething());
 ```
 
-Do **not** flag (the guard is required):
+Also flag (the guard is unnecessary — types match, generic overload handles null):
+
+```java
+Boolean enabled = metadata.getEnabled();       // may return null
+if (enabled != null) {
+  span.setAttribute(META_ENABLED, enabled);    // AttributeKey<Boolean> + Boolean → generic overload
+}
+```
+
+Preferred:
+
+```java
+span.setAttribute(META_ENABLED, metadata.getEnabled()); // null is a no-op
+```
+
+Do **not** flag (the guard is required — type mismatch forces `int` overload):
 
 ```java
 Integer statusCode = response.getStatusCode(); // may return null
 if (statusCode != null) {
-  attributes.put(HTTP_RESPONSE_STATUS_CODE, statusCode); // AttributeKey<Long> → put(long)
+  attributes.put(HTTP_RESPONSE_STATUS_CODE, statusCode); // AttributeKey<Long> + Integer → put(int)
 }
 ```
 
