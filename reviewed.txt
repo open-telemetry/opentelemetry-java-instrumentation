@@ -68,3 +68,4 @@ cdi-testing
 clickhouse-client-v1-0.5:javaagent
 clickhouse-client-common:javaagent
 couchbase-2-common:javaagent
+clickhouse-client-v2-0.8:javaagent
