@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.armeria.v1_3;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.linecorp.armeria.client.WebClient;
@@ -20,7 +21,6 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -67,8 +67,7 @@ class ArmeriaStreamCollectTest {
     testing.runWithSpan(
         "parent",
         () -> {
-          HttpResponse response =
-              WebClient.builder(server.httpUri()).build().get("/stream");
+          HttpResponse response = WebClient.builder(server.httpUri()).build().get("/stream");
           // collect() in Armeria 1.9.x uses a SubscriptionImpl with NoopSubscriber + a
           // CompletableFuture as arg 4. The CompletableFutureWrapper is the only mechanism
           // propagating context here since SubscriberWrapper skips NoopSubscriber.
@@ -86,7 +85,7 @@ class ArmeriaStreamCollectTest {
                   });
         });
 
-    List<HttpObject> collected = collectFuture.get(10, TimeUnit.SECONDS);
+    List<HttpObject> collected = collectFuture.get(10, SECONDS);
     assertThat(collected).isNotEmpty();
 
     testing.waitAndAssertTraces(
@@ -102,8 +101,7 @@ class ArmeriaStreamCollectTest {
           // Without the wrapper (or with a broken wrapper), context would be lost because
           // NoopSubscriber is used and SubscriberWrapper skips it.
           assertThat(collectContext.get()).isNotNull();
-          assertThat(collectContext.get().getTraceId())
-              .isEqualTo(parentSpanContext.getTraceId());
+          assertThat(collectContext.get().getTraceId()).isEqualTo(parentSpanContext.getTraceId());
         });
   }
 }
