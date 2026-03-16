@@ -316,7 +316,6 @@ abstract class AbstractApacheHttpClientTest {
       HttpClientResult httpClientResult) {
     return response -> {
       try {
-        response.close();
         httpClientResult.complete(getResponseCode(response));
       } catch (Throwable t) {
         httpClientResult.complete(t);
