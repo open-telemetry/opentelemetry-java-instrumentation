@@ -76,6 +76,7 @@ muzzle {
     // Used by all SDK services, the only case it isn't is an SDK extension such as a custom HTTP
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
+    assertInverse.set(true)
 
     excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
     excludeInstrumentationName("aws-sdk-2.2-sqs")
@@ -91,6 +92,7 @@ muzzle {
     // Used by all SDK services, the only case it isn't is an SDK extension such as a custom HTTP
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
+    assertInverse.set(true)
 
     excludeInstrumentationName("aws-sdk-2.2-lambda")
     excludeInstrumentationName("aws-sdk-2.2-sqs")
@@ -149,6 +151,14 @@ testing {
         implementation("software.amazon.awssdk.crt:aws-crt:" + if (latestDepTest) "latest.release" else "0.30.11")
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
         implementation("org.testcontainers:testcontainers-localstack")
+      }
+
+      targets {
+        all {
+          testTask.configure {
+            usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+          }
+        }
       }
     }
 

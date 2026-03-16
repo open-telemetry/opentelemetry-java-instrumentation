@@ -11,6 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -37,19 +38,20 @@ class AwsXrayPropagatorTest {
             singletonMap(
                 "X-Amzn-Trace-Id",
                 "Root=1-35a77be2-beae321878f706079d392ac3;Parent=df79f9d51134dc0b;Sampled=1"),
-            StringMapGetter.INSTANCE);
+            new StringMapGetter());
   }
 
-  private enum StringMapGetter implements TextMapGetter<Map<String, String>> {
-    INSTANCE;
-
+  private static class StringMapGetter implements TextMapGetter<Map<String, String>> {
     @Override
     public Iterable<String> keys(Map<String, String> map) {
       return map.keySet();
     }
 
     @Override
-    public String get(Map<String, String> map, String s) {
+    public String get(@Nullable Map<String, String> map, String s) {
+      if (map == null) {
+        return null;
+      }
       return map.get(s);
     }
   }

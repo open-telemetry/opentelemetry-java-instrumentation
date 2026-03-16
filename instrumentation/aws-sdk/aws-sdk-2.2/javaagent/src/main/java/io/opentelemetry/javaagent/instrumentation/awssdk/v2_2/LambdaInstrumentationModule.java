@@ -25,14 +25,15 @@ public class LambdaInstrumentationModule extends AbstractAwsSdkInstrumentationMo
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return hasClassesNamed(
+        // added in 2.2.0
         "software.amazon.awssdk.services.lambda.model.InvokeRequest",
+        // added in 2.17.0
         "software.amazon.awssdk.protocols.jsoncore.JsonNode");
   }
 
   @Override
   public void doTransform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        none(), LambdaInstrumentationModule.class.getName() + "$RegisterAdvice");
+    transformer.applyAdviceToMethod(none(), getClass().getName() + "$RegisterAdvice");
   }
 
   @SuppressWarnings("unused")

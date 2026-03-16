@@ -27,7 +27,9 @@ public class BedrockRuntimeInstrumentationModule extends AbstractAwsSdkInstrumen
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient");
+    return hasClassesNamed(
+        // added in 2.20.157
+        "software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient");
   }
 
   @Override
@@ -39,8 +41,7 @@ public class BedrockRuntimeInstrumentationModule extends AbstractAwsSdkInstrumen
 
   @Override
   public void doTransform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        none(), BedrockRuntimeInstrumentationModule.class.getName() + "$RegisterAdvice");
+    transformer.applyAdviceToMethod(none(), getClass().getName() + "$RegisterAdvice");
   }
 
   @SuppressWarnings("unused")
