@@ -16,12 +16,9 @@ import com.linecorp.armeria.common.HttpStatus;
 import com.linecorp.armeria.common.ResponseHeaders;
 import com.linecorp.armeria.server.ServerBuilder;
 import com.linecorp.armeria.testing.junit5.server.ServerExtension;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -61,7 +58,6 @@ class ArmeriaStreamCollectTest {
 
   @Test
   void collectPropagatesContext() throws Exception {
-    AtomicReference<SpanContext> collectContext = new AtomicReference<>();
     CompletableFuture<List<HttpObject>> collectFuture = new CompletableFuture<>();
 
     testing.runWithSpan(
@@ -75,7 +71,7 @@ class ArmeriaStreamCollectTest {
               .collect()
               .thenAccept(
                   objects -> {
-                    collectContext.set(Span.current().getSpanContext());
+                    testing.runWithSpan("child", () -> {});
                     collectFuture.complete(objects);
                   })
               .exceptionally(
@@ -89,19 +85,11 @@ class ArmeriaStreamCollectTest {
     assertThat(collected).isNotEmpty();
 
     testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("parent").hasNoParent(),
-              span -> span.hasName("GET").hasParent(trace.getSpan(0)),
-              span -> span.hasName("GET /stream").hasParent(trace.getSpan(1)));
-
-          SpanContext parentSpanContext = trace.getSpan(0).getSpanContext();
-
-          // The collect() callback should have context propagated via CompletableFutureWrapper.
-          // Without the wrapper (or with a broken wrapper), context would be lost because
-          // NoopSubscriber is used and SubscriberWrapper skips it.
-          assertThat(collectContext.get()).isNotNull();
-          assertThat(collectContext.get().getTraceId()).isEqualTo(parentSpanContext.getTraceId());
-        });
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span -> span.hasName("GET").hasParent(trace.getSpan(0)),
+                span -> span.hasName("GET /stream").hasParent(trace.getSpan(1)),
+                span -> span.hasName("child").hasParent(trace.getSpan(0))));
   }
 }

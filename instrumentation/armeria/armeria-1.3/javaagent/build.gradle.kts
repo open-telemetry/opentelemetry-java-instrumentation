@@ -56,8 +56,7 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv)
-    dependsOn("testArmeria19")
+    dependsOn(testing.suites, testStableSemconv)
   }
 
   if (findProperty("denyUnsafe") as Boolean) {
