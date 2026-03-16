@@ -85,13 +85,9 @@ public final class AwsLambdaFunctionAttributesExtractor
 
   private String getAccountId(String arn) {
     if (accountId == null) {
-      synchronized (this) {
-        if (accountId == null) {
-          String[] arnParts = arn.split(":");
-          if (arnParts.length >= 5) {
-            accountId = arnParts[4];
-          }
-        }
+      String[] arnParts = arn.split(":");
+      if (arnParts.length >= 5) {
+        accountId = arnParts[4];
       }
     }
     return accountId;
