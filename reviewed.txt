@@ -19,3 +19,4 @@ apache-httpclient-4.3:testing
 apache-httpclient-5.0:javaagent
 apache-httpclient-4.0:javaagent
 apache-shenyu-2.4:javaagent
+apache-httpclient-5.2:library
