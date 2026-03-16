@@ -154,6 +154,8 @@ Auto-fix boundaries:
     these contradict the framework's nullability contract; remove the guard. Conversely,
     if a call site passes `null` or a method returns `null`, add `@Nullable` to the
     parameter or return type instead of adding a null guard in the caller/callee.
+    **Exception — test files**: do not add `@Nullable` in test code.
+    If a PR adds `@Nullable` to test files, flag it for removal.
     **Exception**: when the method overrides an interface from the upstream OpenTelemetry
     SDK (e.g., `TextMapGetter`, `TextMapSetter`), the interface may declare the parameter
     `@Nullable` even though the annotation is not visible in this repository. Consult
