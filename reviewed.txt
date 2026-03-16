@@ -59,3 +59,4 @@ c3p0-0.9:testing
 camel-2.20:javaagent-unit-tests
 camel-2.20:javaagent
 cassandra-3.0:javaagent
+cassandra-4.0:javaagent
