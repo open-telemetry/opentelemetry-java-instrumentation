@@ -1,2 +1,3 @@
 akka-actor-2.3:javaagent
 activej-http-6.0:javaagent
+akka-actor-fork-join-2.5:javaagent
