@@ -291,19 +291,19 @@ fun configureImage(
     } else if (isWindows) {
       when (jdk) {
         "8" -> "eclipse-temurin:8u472-b08-jdk-windowsservercore-ltsc2022@sha256:2f2dc58147a9877ecde8644961b1e3c0f26f838af038ec8b8fc04dfbea61a4d0"
-        "11" -> "eclipse-temurin:11.0.30_7-jdk-windowsservercore-ltsc2022@sha256:c9427691ad6574152a9a5712df8f0cb4286aaa338ca9ba243107f0b52a5dfa66"
-        "17" -> "eclipse-temurin:17.0.18_8-jdk-windowsservercore-ltsc2022@sha256:f40141cdea36932804f722f33664695f3d630f264c2159c4f8fde033ac40a8d8"
-        "21" -> "eclipse-temurin:21.0.10_7-jdk-windowsservercore-ltsc2022@sha256:0fe161dd961fb138e6b419f8e3166920207daa81225790b05346c930da8c6574"
-        "25" -> "eclipse-temurin:25.0.2_10-jdk-windowsservercore-ltsc2022@sha256:a6c7695677fe92f8e1e74ef4cf3b369fae6c5bb6d9331c617fc7a026097ae4e3"
+        "11" -> "eclipse-temurin:11.0.30_7-jdk-windowsservercore-ltsc2022@sha256:996fe6073799e604ee06c94d195c72e31ff6c1815bd4bc86672f086ec57979f3"
+        "17" -> "eclipse-temurin:17.0.18_8-jdk-windowsservercore-ltsc2022@sha256:ecfbf3e67cc6375b4c9c1d1fff4f59e789fc97189886c18ad15840a2e5a0b70a"
+        "21" -> "eclipse-temurin:21.0.10_7-jdk-windowsservercore-ltsc2022@sha256:fc3ff870d7aef09224903913ad3dcb2606ba240f59b102297abccde678fffb13"
+        "25" -> "eclipse-temurin:25.0.2_10-jdk-windowsservercore-ltsc2022@sha256:e4e01927a54d4033545f76294e7f5e9315c03692947c0603d374e0719454e50f"
         else -> throw GradleException("Unexpected jdk version for Windows: $jdk")
       }
     } else {
       when (jdk) {
         "8" -> "eclipse-temurin:8u472-b08-jdk@sha256:0b793df1b9217f3d25c5f820d47e85a20b0a78b0ccd0ab6deb9051502493c855"
-        "11" -> "eclipse-temurin:11.0.30_7-jdk@sha256:e73fba329aceb94a75d2438dcd0271ea26ebd0e19e5c3689873f054c2b4c7528"
-        "17" -> "eclipse-temurin:17.0.18_8-jdk@sha256:b624cb9175b71aaeb654dd9def666035332d5abf70318537c1a46e61564dbecd"
-        "21" -> "eclipse-temurin:21.0.10_7-jdk@sha256:c880d7bdbcab3bb1e82159d5781760832e94b72b65dfa1835b4c23b241232b45"
-        "25" -> "eclipse-temurin:25.0.2_10-jdk@sha256:acab08ae09273ee938c1da6111ed60ff51ab0ab18325e4b1b81178039059f86e"
+        "11" -> "eclipse-temurin:11.0.30_7-jdk@sha256:1f08c7810d59ee43cbb954840603c2b1e684d4aff7ea67ce0140f161176ca68b"
+        "17" -> "eclipse-temurin:17.0.18_8-jdk@sha256:d838da85ec7aa8fd72b613e30b5f7629d8f5ac70a4264d45735a8a2ed9af447c"
+        "21" -> "eclipse-temurin:21.0.10_7-jdk@sha256:6bf56c5ca5598a09f1d1c7d42c3e3819be11626398aae344e5a30b9eea1efa80"
+        "25" -> "eclipse-temurin:25.0.2_10-jdk@sha256:dd23c917b42d5ba34b726c3b339ba0f71fac76a8bdebb936b511bb98832dc287"
         else -> throw GradleException("Unexpected jdk version for Linux: $jdk")
       }
     }
