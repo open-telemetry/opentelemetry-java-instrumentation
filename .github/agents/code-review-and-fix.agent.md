@@ -145,11 +145,14 @@ Auto-fix boundaries:
   - redundant `if (value != null)` guards around `AttributesBuilder.put()` calls —
     `put` is a no-op for null values, so remove the conditional and pass the value
     directly (same for span, log, and metrics attribute setters).
-    **Exception**: when the `AttributeKey` is typed as `Long`, `Double`, or `Boolean`,
-    the `put` overload takes a **primitive** (`long`, `double`, `boolean`). If the
-    source value is a boxed type (`Integer`, `Long`, `Double`, `Boolean`) that may be
-    `null`, the null guard is **required** — removing it causes an auto-unboxing
-    `NullPointerException` before `put()` is reached. Do not remove the guard in this case
+    **Exception**: when the `AttributeKey` is typed as `Long` and the source value is
+    `Integer`, the generic overload cannot match (`Integer ≠ Long`), so Java resolves
+    to the `int` convenience overload `put(AttributeKey<Long>, int)` via auto-unboxing.
+    If the `Integer` is `null`, auto-unboxing causes a `NullPointerException` before
+    `put()` is reached — the null guard is **required** in this case. Do not remove it.
+    When the value type **matches** the `AttributeKey` type parameter (e.g.,
+    `Boolean` → `AttributeKey<Boolean>`, `Long` → `AttributeKey<Long>`), the generic
+    `@Nullable T` overload is selected directly, null is safe, and the guard is redundant.
   - defensive `if (param == null)` checks on parameters not annotated `@Nullable` —
     these contradict the framework's nullability contract; remove the guard. Conversely,
     if a call site passes `null` or a method returns `null`, add `@Nullable` to the
