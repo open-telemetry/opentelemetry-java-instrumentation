@@ -49,3 +49,4 @@ azure-core-1.14:library-instrumentation-shaded
 azure-core-1.19:javaagent
 aws-sdk-2.2:testing
 azure-core-1.19:library-instrumentation-shaded
+azure-core-1.36:javaagent
