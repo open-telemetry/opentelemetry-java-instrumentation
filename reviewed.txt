@@ -30,3 +30,4 @@ async-http-client-1.9:javaagent
 avaje-jex-3.0:javaagent
 async-http-client-2.0:javaagent
 aws-lambda-core-1.0:javaagent
+aws-lambda-core-1.0:library
