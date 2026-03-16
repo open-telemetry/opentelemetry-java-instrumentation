@@ -35,8 +35,7 @@ final class TracingCqlSession {
     this.instrumenter = instrumenter;
   }
 
-  @Nullable
-  CqlSession wrapSession(@Nullable CqlSession session) {
+  CqlSession wrapSession(CqlSession session) {
     if (session == null) {
       return null;
     }
