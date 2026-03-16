@@ -135,6 +135,9 @@ Use `@Nullable` annotations accurately throughout the codebase:
   `@Nullable` to the overriding method if the implementation never returns `null`. The
   interface annotation permits null, but an implementation that always returns a non-null
   value is more precise without it.
+  When justifying `@Nullable` on a return type, cite the concrete reason the implementation
+  can return null (e.g., it delegates to a `@Nullable`-returning method without adding a
+  non-null guarantee), not merely that an interface or upstream contract permits null.
 - **External interface contracts**: interfaces from the OpenTelemetry SDK
   (`io.opentelemetry.context.propagation`) declare `@Nullable` on certain parameters.
   These annotations are not visible in this repository because the interfaces live in the
