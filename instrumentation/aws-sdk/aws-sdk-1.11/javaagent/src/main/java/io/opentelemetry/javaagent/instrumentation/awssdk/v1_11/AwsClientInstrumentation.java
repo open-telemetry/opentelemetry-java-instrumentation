@@ -31,8 +31,7 @@ public class AwsClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isConstructor(), AwsClientInstrumentation.class.getName() + "$AwsClientAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$AwsClientAdvice");
   }
 
   @SuppressWarnings("unused")

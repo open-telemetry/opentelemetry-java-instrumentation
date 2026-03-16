@@ -31,6 +31,7 @@ muzzle {
     group.set("com.amazonaws")
     module.set("aws-java-sdk-sqs")
     versions.set("[1.10.33,)")
+    assertInverse.set(true)
   }
 }
 
@@ -54,6 +55,7 @@ dependencies {
 
   // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
+  testInstrumentation(project(":instrumentation:aws-sdk:aws-sdk-2.2:javaagent"))
 
   // needed for kinesis:
   testImplementation("com.fasterxml.jackson.dataformat:jackson-dataformat-cbor")
@@ -146,13 +148,13 @@ tasks {
 
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", collectMetadata)
   }
 
   withType<Test>().configureEach {
     // TODO run tests both with and without experimental span attributes
     jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("collectMetadata", collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {
@@ -160,7 +162,6 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("collectMetadata", collectMetadata)
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
