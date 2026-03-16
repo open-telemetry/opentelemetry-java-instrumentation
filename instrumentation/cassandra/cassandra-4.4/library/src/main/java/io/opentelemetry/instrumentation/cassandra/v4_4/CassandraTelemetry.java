@@ -9,6 +9,7 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import javax.annotation.Nullable;
 
 /** Entrypoint for instrumenting cassandra sessions. */
 public class CassandraTelemetry {
@@ -38,7 +39,8 @@ public class CassandraTelemetry {
    * @param session An instance of CqlSession configured as desired.
    * @return a {@link TracingCqlSession}.
    */
-  public CqlSession wrap(CqlSession session) {
+  @Nullable
+  public CqlSession wrap(@Nullable CqlSession session) {
     return tracingCqlSession.wrapSession(session);
   }
 }

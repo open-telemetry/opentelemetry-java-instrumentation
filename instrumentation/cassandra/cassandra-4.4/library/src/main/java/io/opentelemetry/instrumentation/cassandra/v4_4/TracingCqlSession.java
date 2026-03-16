@@ -35,7 +35,8 @@ final class TracingCqlSession {
     this.instrumenter = instrumenter;
   }
 
-  CqlSession wrapSession(CqlSession session) {
+  @Nullable
+  CqlSession wrapSession(@Nullable CqlSession session) {
     if (session == null) {
       return null;
     }
@@ -178,6 +179,7 @@ final class TracingCqlSession {
     return query == null ? "" : query;
   }
 
+  @Nullable
   private static ExecutionInfo getExecutionInfo(
       @Nullable AsyncResultSet asyncResultSet, @Nullable Throwable throwable) {
     if (asyncResultSet != null) {
@@ -187,6 +189,7 @@ final class TracingCqlSession {
     }
   }
 
+  @Nullable
   private static ExecutionInfo getExecutionInfo(@Nullable Throwable throwable) {
     if (throwable instanceof DriverException) {
       return ((DriverException) throwable).getExecutionInfo();
