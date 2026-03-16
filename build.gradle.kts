@@ -16,6 +16,9 @@ plugins {
   > Cannot set the value of task ':smoke-tests-otel-starter:spring-boot-3.2:collectReachabilityMetadata' property 'metadataService' of type org.graalvm.buildtools.gradle.internal.GraalVMReachabilityMetadataService using a provider of type org.graalvm.buildtools.gradle.internal.GraalVMReachabilityMetadataService.
 
   See https://github.com/gradle/gradle/issues/17559#issuecomment-1327991512
+
+  The plugin is conditionally applied in smoke-tests-otel-starter subprojects only when
+  nativeTest is in the requested task names (see reusable-native-tests.yml).
    */
   id("org.graalvm.buildtools.native") apply false
 }
