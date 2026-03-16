@@ -72,19 +72,13 @@ class KafkaSpanDecorator extends MessagingSpanDecorator {
 
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       String partitionKey = (String) exchange.getIn().getHeader(PARTITION_KEY);
-      if (partitionKey != null) {
-        attributes.put("camel.kafka.partitionKey", partitionKey);
-      }
+      attributes.put("camel.kafka.partitionKey", partitionKey);
 
       String key = (String) exchange.getIn().getHeader(KEY);
-      if (key != null) {
-        attributes.put("camel.kafka.key", key);
-      }
+      attributes.put("camel.kafka.key", key);
 
       String offset = getValue(exchange, OFFSET, Long.class);
-      if (offset != null) {
-        attributes.put("camel.kafka.offset", offset);
-      }
+      attributes.put("camel.kafka.offset", offset);
     }
   }
 
