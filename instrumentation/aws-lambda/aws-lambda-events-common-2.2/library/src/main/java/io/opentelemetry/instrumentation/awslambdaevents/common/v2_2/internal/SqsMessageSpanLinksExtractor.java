@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
 import java.util.Locale;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 class SqsMessageSpanLinksExtractor implements SpanLinksExtractor<SQSMessage> {
   private static final String AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY = "AWSTraceHeader";
@@ -33,7 +34,7 @@ class SqsMessageSpanLinksExtractor implements SpanLinksExtractor<SQSMessage> {
               .extract(
                   Context.root(), // We don't want the ambient context.
                   singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentHeader),
-                  MapGetter.INSTANCE);
+                  new MapGetter());
       SpanContext messageSpanCtx = Span.fromContext(xrayContext).getSpanContext();
       if (messageSpanCtx.isValid()) {
         spanLinks.addLink(messageSpanCtx);
@@ -41,16 +42,17 @@ class SqsMessageSpanLinksExtractor implements SpanLinksExtractor<SQSMessage> {
     }
   }
 
-  private enum MapGetter implements TextMapGetter<Map<String, String>> {
-    INSTANCE;
-
+  private static class MapGetter implements TextMapGetter<Map<String, String>> {
     @Override
     public Iterable<String> keys(Map<String, String> map) {
       return map.keySet();
     }
 
     @Override
-    public String get(Map<String, String> map, String s) {
+    public String get(@Nullable Map<String, String> map, String s) {
+      if (map == null) {
+        return null;
+      }
       return map.get(s.toLowerCase(Locale.ROOT));
     }
   }
