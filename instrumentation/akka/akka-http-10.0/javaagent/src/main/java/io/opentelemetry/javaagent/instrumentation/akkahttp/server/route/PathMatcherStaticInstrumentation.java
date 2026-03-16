@@ -43,7 +43,7 @@ public class PathMatcherStaticInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ApplyAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.This PathMatcher<?> pathMatcher,
         @Advice.Argument(0) Uri.Path path,
