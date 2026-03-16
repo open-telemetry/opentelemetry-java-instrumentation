@@ -28,3 +28,4 @@ async-http-client-1-common:javaagent
 async-http-client-1.8:javaagent
 async-http-client-1.9:javaagent
 avaje-jex-3.0:javaagent
+async-http-client-2.0:javaagent
