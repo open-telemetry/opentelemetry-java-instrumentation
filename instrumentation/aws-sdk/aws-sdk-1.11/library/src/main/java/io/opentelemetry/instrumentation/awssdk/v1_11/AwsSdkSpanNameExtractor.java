@@ -11,15 +11,16 @@ import java.util.concurrent.ConcurrentHashMap;
 
 class AwsSdkSpanNameExtractor implements SpanNameExtractor<Request<?>> {
 
+  private static final AwsSdkRpcAttributesGetter RPC_ATTRIBUTES_GETTER =
+      new AwsSdkRpcAttributesGetter();
   private final NamesCache namesCache = new NamesCache();
 
   @SuppressWarnings("deprecation") // for getMethod()
   @Override
   public String extract(Request<?> request) {
-    AwsSdkRpcAttributesGetter rpcAttributes = new AwsSdkRpcAttributesGetter();
     return qualifiedOperation(
-        rpcAttributes.getService(request),
-        rpcAttributes.getMethod(request),
+        RPC_ATTRIBUTES_GETTER.getService(request),
+        RPC_ATTRIBUTES_GETTER.getMethod(request),
         request.getOriginalRequest().getClass());
   }
 

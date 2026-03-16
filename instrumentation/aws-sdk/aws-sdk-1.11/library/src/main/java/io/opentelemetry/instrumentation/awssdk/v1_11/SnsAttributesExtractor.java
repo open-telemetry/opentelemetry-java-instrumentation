@@ -30,6 +30,7 @@ public class SnsAttributesExtractor implements AttributesExtractor<Request<?>, R
    * Attempt to discover the destination of the SNS message by first checking for a topic ARN and
    * falling back to the target ARN. If neither is found null is returned.
    */
+  @Nullable
   private static String findMessageDestination(AmazonWebServiceRequest request) {
     String destination = RequestAccess.getSnsTopicArn(request);
     if (destination != null) {

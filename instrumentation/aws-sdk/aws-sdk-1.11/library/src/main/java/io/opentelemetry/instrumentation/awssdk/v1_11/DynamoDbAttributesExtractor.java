@@ -57,6 +57,7 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Res
     }
   }
 
+  @Nullable
   private static String getOperationName(Object request) {
     String name = request.getClass().getSimpleName();
     if (!name.endsWith("Request")) {

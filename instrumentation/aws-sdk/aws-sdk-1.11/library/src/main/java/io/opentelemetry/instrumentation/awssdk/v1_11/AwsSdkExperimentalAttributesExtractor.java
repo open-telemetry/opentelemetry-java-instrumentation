@@ -53,7 +53,8 @@ class AwsSdkExperimentalAttributesExtractor
     }
   }
 
-  private static Object getAwsResponse(Response<?> response) {
+  @Nullable
+  private static Object getAwsResponse(@Nullable Response<?> response) {
     if (response == null) {
       return null;
     }
