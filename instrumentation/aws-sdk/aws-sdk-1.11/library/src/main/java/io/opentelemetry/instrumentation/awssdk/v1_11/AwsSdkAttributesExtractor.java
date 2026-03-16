@@ -109,7 +109,7 @@ class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Respo
   }
 
   @NoMuzzle
-  private static ResponseMetadata getResponseMetadata(Response<?> response) {
+  private static ResponseMetadata getResponseMetadata(@Nullable Response<?> response) {
     if (CAN_GET_RESPONSE_METADATA
         && response != null
         && response.getAwsResponse() instanceof AmazonWebServiceResult) {
@@ -127,7 +127,8 @@ class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Respo
     attributes.put(key, getter.apply(carrier));
   }
 
-  private static Object getAwsResponse(Response<?> response) {
+  @Nullable
+  private static Object getAwsResponse(@Nullable Response<?> response) {
     if (response == null) {
       return null;
     }
