@@ -31,3 +31,4 @@ avaje-jex-3.0:javaagent
 async-http-client-2.0:javaagent
 aws-lambda-core-1.0:javaagent
 aws-lambda-core-1.0:library
+aws-lambda-core-1.0:testing
