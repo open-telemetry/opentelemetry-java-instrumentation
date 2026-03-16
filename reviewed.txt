@@ -67,3 +67,4 @@ cassandra-common-4.0:testing
 cdi-testing
 clickhouse-client-v1-0.5:javaagent
 clickhouse-client-common:javaagent
+couchbase-2-common:javaagent
