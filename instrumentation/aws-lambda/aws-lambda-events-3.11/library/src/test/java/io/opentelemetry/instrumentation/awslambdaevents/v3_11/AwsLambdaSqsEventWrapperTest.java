@@ -26,6 +26,7 @@ import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrappedLambd
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.lang.reflect.Constructor;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -97,6 +98,7 @@ class AwsLambdaSqsEventWrapperTest {
   public static final class TestRequestHandler
       implements RequestHandler<SQSEvent, SQSBatchResponse> {
     @Override
+    @Nullable
     public SQSBatchResponse handleRequest(SQSEvent input, Context context) {
       return null;
     }

@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.awslambdaevents.v2_2.AbstractAwsLambdaSq
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class AwsLambdaSqsEventHandlerTest extends AbstractAwsLambdaSqsEventHandlerTest {
@@ -37,6 +38,7 @@ class AwsLambdaSqsEventHandlerTest extends AbstractAwsLambdaSqsEventHandlerTest 
     }
 
     @Override
+    @Nullable
     protected SQSBatchResponse handleEvent(SQSEvent event, Context context) {
       return null;
     }
