@@ -41,3 +41,4 @@ aws-sdk-1.11:javaagent
 aws-sdk-1.11:library-autoconfigure
 aws-sdk-1.11:library
 aws-sdk-1.11:testing
+aws-sdk-2.2:javaagent
