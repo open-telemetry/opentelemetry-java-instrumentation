@@ -175,28 +175,27 @@ jobs:
             echo "PR already exists for $branch — skipping creation"
           fi
 
+      - name: Ensure progress branch exists
+        run: |
+          if ! git rev-parse --verify origin/otelbot/code-review-progress >/dev/null 2>&1; then
+            git checkout --orphan otelbot/code-review-progress
+            git reset --hard
+            git commit --allow-empty -m "Initialize progress tracking"
+            git push origin HEAD:otelbot/code-review-progress || true
+          fi
+
       - name: Check out progress branch
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: otelbot/code-review-progress
           path: progress
-        continue-on-error: true
 
       - name: Mark module as reviewed
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Initialize progress dir if the branch doesn't exist yet
-          if [[ ! -d progress/.git ]]; then
-            git init progress
-            cd progress
-            git checkout --orphan otelbot/code-review-progress
-          else
-            cd progress
-          fi
+          cd progress
 
-          # the use-cla-approved-bot.sh script doesn't exist
-          # in the otelbot/code-review-progress branch
           git config user.name otelbot
           git config user.email 197425009+otelbot@users.noreply.github.com
 
