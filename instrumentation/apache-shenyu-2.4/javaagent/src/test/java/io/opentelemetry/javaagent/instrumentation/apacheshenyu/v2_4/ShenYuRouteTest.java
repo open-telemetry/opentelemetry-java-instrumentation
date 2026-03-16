@@ -6,7 +6,19 @@
 package io.opentelemetry.javaagent.instrumentation.apacheshenyu.v2_4;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
+import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
@@ -15,6 +27,8 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import org.apache.shenyu.common.dto.MetaData;
+import org.assertj.core.api.AbstractLongAssert;
+import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -112,8 +126,19 @@ class ShenYuRouteTest {
                 span ->
                     span.hasName("GET /a/b/c")
                         .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(HTTP_ROUTE, "/a/b/c"),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(URL_PATH, "/a/b/c"),
+                            equalTo(URL_SCHEME, "http"),
+                            satisfies(CLIENT_ADDRESS, AbstractStringAssert::isNotBlank),
+                            satisfies(NETWORK_PEER_ADDRESS, AbstractStringAssert::isNotBlank),
+                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isPositive),
+                            satisfies(NETWORK_PROTOCOL_VERSION, AbstractStringAssert::isNotBlank),
+                            satisfies(SERVER_ADDRESS, AbstractStringAssert::isNotBlank),
+                            satisfies(SERVER_PORT, AbstractLongAssert::isPositive),
+                            satisfies(USER_AGENT_ORIGINAL, AbstractStringAssert::isNotBlank),
                             equalTo(META_ID_ATTRIBUTE, "123"),
                             equalTo(META_ENABLED_ATTRIBUTE, true),
                             equalTo(METHOD_NAME_ATTRIBUTE, "hello"),

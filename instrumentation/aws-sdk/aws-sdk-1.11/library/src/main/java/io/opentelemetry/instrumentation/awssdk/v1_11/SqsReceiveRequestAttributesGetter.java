@@ -13,9 +13,8 @@ import java.util.List;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 
-enum SqsReceiveRequestAttributesGetter
+class SqsReceiveRequestAttributesGetter
     implements MessagingAttributesGetter<SqsReceiveRequest, Response<?>> {
-  INSTANCE;
 
   // copied from MessagingIncubatingAttributes.MessagingSystemIncubatingValues
   private static final String AWS_SQS = "aws_sqs";

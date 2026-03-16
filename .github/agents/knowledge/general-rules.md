@@ -94,6 +94,13 @@ All `put` / `setAttribute` methods on `AttributesBuilder`, `Span`, `SpanBuilder`
 `LogRecordBuilder` are no-ops when the value is `null` (upstream SDK guarantee).
 Do not wrap these calls in `if (value != null)` guards — pass the value directly.
 
+**Exception — primitive-typed attribute keys**: when the `AttributeKey` is typed as
+`Long`, `Double`, or `Boolean`, the `put` overload accepts a **primitive** parameter
+(`long`, `double`, `boolean`). If the source value is a boxed type (`Integer`, `Long`,
+`Double`, `Boolean`) that may be `null`, Java auto-unboxes it **before** `put()` is
+reached, causing a `NullPointerException`. In this case the null guard is **required** —
+do not remove it.
+
 Flag patterns like:
 
 ```java
@@ -109,6 +116,15 @@ Preferred:
 attributes.put(SOME_KEY, getSomething());
 ```
 
+Do **not** flag (the guard is required):
+
+```java
+Integer statusCode = response.getStatusCode(); // may return null
+if (statusCode != null) {
+  attributes.put(HTTP_RESPONSE_STATUS_CODE, statusCode); // AttributeKey<Long> → put(long)
+}
+```
+
 ## [Style] Nullability Correctness
 
 Use `@Nullable` annotations accurately throughout the codebase:
@@ -119,6 +135,9 @@ Use `@Nullable` annotations accurately throughout the codebase:
   `@Nullable` to the overriding method if the implementation never returns `null`. The
   interface annotation permits null, but an implementation that always returns a non-null
   value is more precise without it.
+  When justifying `@Nullable` on a return type, cite the concrete reason the implementation
+  can return null (e.g., it delegates to a `@Nullable`-returning method without adding a
+  non-null guarantee), not merely that an interface or upstream contract permits null.
 - **External interface contracts**: interfaces from the OpenTelemetry SDK
   (`io.opentelemetry.context.propagation`) declare `@Nullable` on certain parameters.
   These annotations are not visible in this repository because the interfaces live in the

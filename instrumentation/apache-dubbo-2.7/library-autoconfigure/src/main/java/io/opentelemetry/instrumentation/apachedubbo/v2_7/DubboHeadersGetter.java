@@ -48,6 +48,7 @@ final class DubboHeadersGetter implements TextMapGetter<DubboRequest> {
 
   @Override
   @SuppressWarnings("deprecation") // deprecation for dubbo 3.2.15
+  @Nullable
   public String get(@Nullable DubboRequest request, String key) {
     if (request == null) {
       return null;

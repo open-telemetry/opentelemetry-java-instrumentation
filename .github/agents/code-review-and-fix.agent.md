@@ -110,8 +110,13 @@ Auto-fix boundaries:
   - missing test-task wiring patterns with clear canonical form
   - missing `testInstrumentation` cross-version references — when a javaagent module belongs
     to a library family with sibling version modules, it must list all siblings via
-    `testInstrumentation`. Check `settings.gradle.kts` for sibling `:javaagent` modules
-    under the same parent. After adding, verify by running the module's tests.
+    `testInstrumentation`. A sibling is a module under the same grouping directory whose
+    directory name shares the **same component prefix** and differs **only in the trailing
+    version number** (e.g., `apache-httpclient-2.0` and `apache-httpclient-4.0` are siblings;
+    `akka-actor-2.3` and `akka-actor-fork-join-2.5` are **not** — they instrument different
+    components). Check `settings.gradle.kts` for sibling `:javaagent` modules under the
+    same parent and apply the step-by-step procedure in `gradle-conventions.md`.
+    After adding, verify by running the module's tests.
   - missing version comments on `hasClassesNamed()` landmark classes in existing
     `classLoaderMatcher()` overrides (multi-class checks or `.and(not(...))` chains only) —
     look up the library version that introduced each class (check muzzle `versions.set(...)`
@@ -139,7 +144,12 @@ Auto-fix boundaries:
     Do **not** convert `hasAttributes(Attributes.empty())` — that is acceptable as-is.
   - redundant `if (value != null)` guards around `AttributesBuilder.put()` calls —
     `put` is a no-op for null values, so remove the conditional and pass the value
-    directly (same for span, log, and metrics attribute setters)
+    directly (same for span, log, and metrics attribute setters).
+    **Exception**: when the `AttributeKey` is typed as `Long`, `Double`, or `Boolean`,
+    the `put` overload takes a **primitive** (`long`, `double`, `boolean`). If the
+    source value is a boxed type (`Integer`, `Long`, `Double`, `Boolean`) that may be
+    `null`, the null guard is **required** — removing it causes an auto-unboxing
+    `NullPointerException` before `put()` is reached. Do not remove the guard in this case
   - defensive `if (param == null)` checks on parameters not annotated `@Nullable` —
     these contradict the framework's nullability contract; remove the guard. Conversely,
     if a call site passes `null` or a method returns `null`, add `@Nullable` to the
@@ -186,14 +196,47 @@ for completion.**
 
 Execute these steps strictly in order — do not reorder:
 
-1. Run targeted verification for changed files when feasible (focused tests or compile checks).
+1. **Run the module's check task.** For every module whose source files were modified, run its
+   `:check` task **twice** — once normally and once with `-PtestLatestDeps=true`:
+
+   ```
+   ./gradlew :<module-path>:check
+   ./gradlew :<module-path>:check -PtestLatestDeps=true
+   ```
+
+   The first run exercises the default test suites (`test`, `testExperimental`, and any other
+   custom test tasks wired into `check`). The second run activates `latestDepTest`, which
+   replaces `library` and `testLibrary` dependency versions with `latest.release`.
+   This is mandatory, not optional — fixes that break tests must be caught and corrected
+   before committing. If a test fails, diagnose the failure, fix it, and re-run until green.
+
+   **Testing-module dependent validation**: when any modified module is a `testing` module
+   (its Gradle path ends with `:testing`), you must **also** run `:check` (both normal and
+   `-PtestLatestDeps=true`) for every sibling `library` and `javaagent` module under the
+   same instrumentation parent. `testing` modules contain shared abstract test base classes
+   consumed by those siblings — changes to visibility, method signatures, or class structure
+   in the `testing` module can break compilation or tests in dependent modules.
+
+   To find siblings, list the parent directory of the `testing` module and look for
+   `library/`, `javaagent/`, and any version-variant directories that contain `library/`
+   or `javaagent/` submodules. Run `:check` for each.
+
+   Example: if you modify files in
+   `:instrumentation:foo:foo-1.0:testing`, also run `:check` for
+   `:instrumentation:foo:foo-1.0:library`,
+   `:instrumentation:foo:foo-1.0:javaagent`, and any version-variant siblings such as
+   `:instrumentation:foo:foo-2.0:library` if it depends on the `foo-1.0:testing` module.
 2. If changes touch Gradle muzzle configuration (for example `muzzle {}`, version ranges,
    `assertInverse.set(true)`, or module wiring affecting muzzle), run the relevant module `:muzzle`
    tasks.
 3. **Last, after all validation is done**, run `./gradlew spotlessApply` to fix formatting
    across all modified files.
    `spotlessApply` must be the final build command — never run it before tests or muzzle.
-4. Commit all changes in a single commit. The subject line must always be
+4. **Verify substantive changes remain.** Run `git diff --ignore-all-space --ignore-blank-lines`
+   and confirm non-empty output. If the only remaining diffs are whitespace changes, **stop
+   here** — reset the working tree (`git checkout -- .`), do not commit. Report "No issues
+   found." and exit.
+5. Commit all changes in a single commit. The subject line must always be
    `Review fixes for <module>` where `<module>` is the short module name (e.g.,
    `apache-elasticjob-3.0 javaagent`). The body is a bulleted list of changes:
 
@@ -211,7 +254,7 @@ Execute these steps strictly in order — do not reorder:
    ```
 
    Create exactly one commit for all fixes — do not commit incrementally.
-5. Print one summary:
+6. Print one summary:
    - Heading: `PR #<number>: <title>` (PR mode) or `<paths>` (file/directory mode)
    - Table with status (`Fixed` or `Needs Manual Fix`), file, category, and note
 
