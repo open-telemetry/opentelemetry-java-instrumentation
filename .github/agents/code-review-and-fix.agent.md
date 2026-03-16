@@ -232,7 +232,11 @@ Execute these steps strictly in order — do not reorder:
 3. **Last, after all validation is done**, run `./gradlew spotlessApply` to fix formatting
    across all modified files.
    `spotlessApply` must be the final build command — never run it before tests or muzzle.
-4. Commit all changes in a single commit. The subject line must always be
+4. **Verify substantive changes remain.** Run `git diff --ignore-all-space --ignore-blank-lines`
+   and confirm non-empty output. If the only remaining diffs are whitespace changes, **stop
+   here** — reset the working tree (`git checkout -- .`), do not commit. Report "No issues
+   found." and exit.
+5. Commit all changes in a single commit. The subject line must always be
    `Review fixes for <module>` where `<module>` is the short module name (e.g.,
    `apache-elasticjob-3.0 javaagent`). The body is a bulleted list of changes:
 
@@ -250,7 +254,7 @@ Execute these steps strictly in order — do not reorder:
    ```
 
    Create exactly one commit for all fixes — do not commit incrementally.
-5. Print one summary:
+6. Print one summary:
    - Heading: `PR #<number>: <title>` (PR mode) or `<paths>` (file/directory mode)
    - Table with status (`Fixed` or `Needs Manual Fix`), file, category, and note
 
