@@ -35,3 +35,4 @@ aws-lambda-core-1.0:testing
 aws-lambda-events-2.2:library
 aws-lambda-events-2.2:javaagent
 aws-lambda-events-2.2:testing
+aws-lambda-events-3.11:library
