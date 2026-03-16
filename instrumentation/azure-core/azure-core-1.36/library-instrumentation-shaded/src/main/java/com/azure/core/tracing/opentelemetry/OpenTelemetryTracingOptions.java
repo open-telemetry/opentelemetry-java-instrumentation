@@ -11,6 +11,6 @@ import com.azure.core.util.TracingOptions;
  * Replace {@link OpenTelemetryTracingOptions} from com.azure:azure-core-tracing-opentelemetry with
  * a stub. Auto instrumentation does not use {@link OpenTelemetryTracingOptions}. This is needed
  * because {@link OpenTelemetryTracingOptions} calls super constructor in {@link TracingOptions}
- * that does exist in com.azure:azure-core:1.36.0 which triggers muzzle failure.
+ * that does not exist in com.azure:azure-core:1.36.0, which triggers muzzle failure.
  */
-public class OpenTelemetryTracingOptions extends TracingOptions {}
+public final class OpenTelemetryTracingOptions extends TracingOptions {}
