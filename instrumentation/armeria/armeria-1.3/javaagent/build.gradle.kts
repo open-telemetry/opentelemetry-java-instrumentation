@@ -24,6 +24,24 @@ dependencies {
   testCompileOnly("com.google.errorprone:error_prone_annotations")
 }
 
+testing {
+  suites {
+    val testArmeria19 by registering(JvmTestSuite::class) {
+      sources {
+        java {
+          setSrcDirs(listOf("src/test/java", "src/testArmeria19/java"))
+        }
+      }
+      dependencies {
+        implementation("com.linecorp.armeria:armeria:1.9.2")
+        implementation("com.linecorp.armeria:armeria-junit5:1.9.2")
+        implementation(project(":instrumentation:armeria:armeria-1.3:testing"))
+        compileOnly("com.google.errorprone:error_prone_annotations")
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
@@ -38,7 +56,7 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites, testStableSemconv)
   }
 
   if (findProperty("denyUnsafe") as Boolean) {
