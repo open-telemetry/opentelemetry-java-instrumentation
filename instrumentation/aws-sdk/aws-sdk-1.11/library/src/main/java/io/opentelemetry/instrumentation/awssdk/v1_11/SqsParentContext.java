@@ -23,6 +23,7 @@ final class SqsParentContext {
     }
 
     @Override
+    @Nullable
     public String get(@Nullable Map<String, String> map, String s) {
       if (map == null) {
         return null;
