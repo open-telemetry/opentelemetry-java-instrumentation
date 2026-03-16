@@ -143,7 +143,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     span ->
                         span.hasName("chat amazon.titan-text-lite-v1")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
@@ -254,7 +254,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     span ->
                         span.hasName("chat amazon.titan-text-lite-v1")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
@@ -386,7 +386,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     span ->
                         span.hasName("chat amazon.nova-micro-v1:0")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
@@ -536,7 +536,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     span ->
                         span.hasName("chat amazon.nova-micro-v1:0")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
@@ -767,7 +767,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     span ->
                         span.hasName("chat amazon.nova-micro-v1:0")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
@@ -936,7 +936,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     span ->
                         span.hasName("chat amazon.nova-micro-v1:0")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
@@ -1146,7 +1146,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     span ->
                         span.hasName("chat amazon.titan-text-lite-v1")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
@@ -1272,7 +1272,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     span ->
                         span.hasName("chat amazon.titan-text-lite-v1")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
@@ -1355,7 +1355,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     span ->
                         span.hasName("text_completion amazon.titan-text-lite-v1")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, TEXT_COMPLETION),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
@@ -1499,7 +1499,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     span ->
                         span.hasName("text_completion amazon.titan-text-lite-v1")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, TEXT_COMPLETION),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
@@ -1652,7 +1652,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     span ->
                         span.hasName("chat amazon.nova-micro-v1:0")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
@@ -1816,7 +1816,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     span ->
                         span.hasName("chat amazon.nova-micro-v1:0")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
@@ -1955,7 +1955,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     span ->
                         span.hasName("chat " + modelId)
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
@@ -2083,7 +2083,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     span ->
                         span.hasName("chat meta.llama3-3-70b-instruct-v1:0")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
@@ -2139,7 +2139,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     span ->
                         span.hasName("chat cohere.command-r-v1:0")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
@@ -2204,7 +2204,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     span ->
                         span.hasName("chat cohere.command-light-text-v14")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
@@ -2262,7 +2262,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     span ->
                         span.hasName("chat mistral.mistral-7b-instruct-v0:2")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
@@ -2351,7 +2351,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     span ->
                         span.hasName("chat anthropic.claude-v2")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
@@ -2549,7 +2549,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     span ->
                         span.hasName("chat amazon.nova-micro-v1:0")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
@@ -2727,7 +2727,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     span ->
                         span.hasName("chat amazon.nova-micro-v1:0")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
@@ -3026,7 +3026,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     span ->
                         span.hasName("chat amazon.nova-micro-v1:0")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
@@ -3247,7 +3247,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     span ->
                         span.hasName("chat amazon.nova-micro-v1:0")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
@@ -3478,7 +3478,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     span ->
                         span.hasName("chat anthropic.claude-3-5-sonnet-20240620-v1:0")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
@@ -3634,7 +3634,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     span ->
                         span.hasName("chat anthropic.claude-3-5-sonnet-20240620-v1:0")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
@@ -3939,7 +3939,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     span ->
                         span.hasName("chat anthropic.claude-3-5-sonnet-20240620-v1:0")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
@@ -4135,7 +4135,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     span ->
                         span.hasName("chat anthropic.claude-3-5-sonnet-20240620-v1:0")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),

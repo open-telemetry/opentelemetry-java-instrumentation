@@ -132,7 +132,7 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
-  public void testSendDynamoDbRequestWithRetries() {
+  void testSendDynamoDbRequestWithRetries() {
     cleanResponses();
     // Setup and configuration
     String service = "DynamoDb";
