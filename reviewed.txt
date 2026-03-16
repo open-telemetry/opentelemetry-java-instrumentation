@@ -74,3 +74,4 @@ couchbase-2.0:javaagent
 couchbase-3.1.6:javaagent
 couchbase-2.6:javaagent
 couchbase-3.1.6:tracing-opentelemetry-shaded
+couchbase-3.1:javaagent
