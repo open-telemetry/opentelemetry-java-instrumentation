@@ -104,8 +104,7 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Argument(value = 0, typing = Typing.DYNAMIC) Object arg,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
         adviceScope.end(throwable);
