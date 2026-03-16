@@ -17,3 +17,4 @@ apache-httpclient-2.0:javaagent
 apache-httpclient-4.3:library
 apache-httpclient-4.3:testing
 apache-httpclient-5.0:javaagent
+apache-httpclient-4.0:javaagent
