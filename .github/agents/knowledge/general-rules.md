@@ -138,6 +138,8 @@ Use `@Nullable` annotations accurately throughout the codebase:
   When justifying `@Nullable` on a return type, cite the concrete reason the implementation
   can return null (e.g., it delegates to a `@Nullable`-returning method without adding a
   non-null guarantee), not merely that an interface or upstream contract permits null.
+- **Test files**: do **not** add `@Nullable` in test code.
+  If a PR adds `@Nullable` to test files, flag it for removal.
 - **External interface contracts**: interfaces from the OpenTelemetry SDK
   (`io.opentelemetry.context.propagation`) declare `@Nullable` on certain parameters.
   These annotations are not visible in this repository because the interfaces live in the

@@ -100,6 +100,8 @@ Annotate all parameters and fields that can be `null` with `@Nullable`
 
 `@NonNull` is unnecessary as it is the default.
 
+**Test code**: Do not add `@Nullable` annotations in test code.
+
 **Defensive programming**: Public APIs should still check for `null` parameters even if not
 annotated with `@Nullable`. Internal APIs do not need these checks.
 
