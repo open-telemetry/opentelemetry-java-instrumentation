@@ -59,7 +59,7 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
 
   @ParameterizedTest
   @MethodSource("provideArguments")
-  public void testSendRequestWithMockedResponse(
+  void testSendRequestWithMockedResponse(
       String operation,
       String method,
       Function<AmazonS3, Object> call,
@@ -94,7 +94,7 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
   }
 
   @Test
-  public void testSendRequestToClosedPort() {
+  void testSendRequestToClosedPort() {
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, ""));
 
     AmazonS3 client =

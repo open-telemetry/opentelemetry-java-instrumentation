@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_ME
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.AmazonWebServiceClient;
@@ -84,8 +85,9 @@ public abstract class AbstractBaseAwsClientTest {
     assertThat(requestHandler2s).isNotNull();
     assertThat(
             requestHandler2s.stream()
-                .filter(h -> "TracingRequestHandler".equals(h.getClass().getSimpleName())))
-        .isNotNull();
+                .filter(h -> "TracingRequestHandler".equals(h.getClass().getSimpleName()))
+                .collect(toList()))
+        .isNotEmpty();
 
     testing()
         .waitAndAssertTraces(
