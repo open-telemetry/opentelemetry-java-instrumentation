@@ -64,7 +64,7 @@ class CamelPropagationUtilTest {
     // then
     Span parentSpan = Span.fromContext(parent);
     SpanContext parentSpanContext = parentSpan.getSpanContext();
-    assertThat(parentSpanContext.isValid()).isEqualTo(false);
+    assertThat(parentSpanContext.isValid()).isFalse();
   }
 
   @Test
@@ -79,7 +79,7 @@ class CamelPropagationUtilTest {
     // then
     Span parentSpan = Span.fromContext(parent);
     SpanContext parentSpanContext = parentSpan.getSpanContext();
-    assertThat(parentSpanContext.isValid()).isEqualTo(false);
+    assertThat(parentSpanContext.isValid()).isFalse();
   }
 
   @Test
