@@ -10,9 +10,12 @@ import org.apache.shenyu.common.dto.MetaData;
 
 public final class ApacheShenYuSingletons {
 
+  private static final HttpServerRouteGetter<MetaData> HTTP_ROUTE_GETTER =
+      (context, metaData) -> metaData.getPath();
+
   private ApacheShenYuSingletons() {}
 
   public static HttpServerRouteGetter<MetaData> httpRouteGetter() {
-    return (context, metaData) -> metaData.getPath();
+    return HTTP_ROUTE_GETTER;
   }
 }

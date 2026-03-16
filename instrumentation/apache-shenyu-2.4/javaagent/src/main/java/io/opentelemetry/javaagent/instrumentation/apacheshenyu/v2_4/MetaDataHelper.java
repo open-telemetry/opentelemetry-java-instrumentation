@@ -82,6 +82,9 @@ public final class MetaDataHelper {
     serverSpan.setAttribute(METHOD_NAME_ATTRIBUTE, metadata.getMethodName());
     serverSpan.setAttribute(PARAMETER_TYPES_ATTRIBUTE, metadata.getParameterTypes());
     serverSpan.setAttribute(RPC_EXT_ATTRIBUTE, metadata.getRpcExt());
-    serverSpan.setAttribute(META_ENABLED_ATTRIBUTE, metadata.getEnabled());
+    Boolean enabled = metadata.getEnabled();
+    if (enabled != null) {
+      serverSpan.setAttribute(META_ENABLED_ATTRIBUTE, enabled);
+    }
   }
 }
