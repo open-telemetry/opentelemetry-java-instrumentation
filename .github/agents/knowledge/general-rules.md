@@ -29,7 +29,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Config | Config property stability/renames/removals | `otel.instrumentation.*` property changes, `DeclarativeConfigUtil` or `ConfigProperties` usage | `config-property-stability.md` |
 | Build | Gradle conventions, muzzle, test tasks, plugins | `build.gradle.kts`, `settings.gradle.kts` | `gradle-conventions.md` |
 | Build | `testcontainersBuildService` declaration | Testcontainers dependency without `usesService` | `gradle-conventions.md` |
-| Style | Prefer instance creation over singletons for stateless interface impls | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`, enum/static singletons | — |
+| Style | Prefer instance creation over singletons for stateless interface impls (except on hot paths) | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`, enum/static singletons | — |
 | Style | Remove redundant null guards on attribute puts | `AttributesBuilder.put`, `onStart`, `onEnd`, attribute extraction methods | — |
 | Style | Nullability correctness — no guards for non-nullable params; add `@Nullable` when null is actually passed/returned; respect upstream SDK `@Nullable` contracts for `TextMapGetter`/`TextMapSetter` | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `*Extractor` implementations, null checks, missing `@Nullable` | — |
 | Architecture | Library vs javaagent boundaries | Always | — |
@@ -87,6 +87,13 @@ right-hand side to `new MyGetter()`.
 
 Convert the class declaration from `enum` / singleton-holder to a plain `class`.
 If the implementation is a private nested class, omit the `final` keyword.
+
+**Exception — hot paths**: when the getter/setter is used in a per-request or
+per-message code path (e.g., inside `propagator.extract()` or `propagator.inject()`
+called at request time), keep the singleton instance (`INSTANCE` field) to avoid
+allocating on every invocation. The instance-creation style is intended for
+registration-time call sites such as `Instrumenter` builder chains and `Singletons`
+initialization — not for code that runs on every request.
 
 ## [Style] No Redundant Null Guards on Attribute Puts
 
