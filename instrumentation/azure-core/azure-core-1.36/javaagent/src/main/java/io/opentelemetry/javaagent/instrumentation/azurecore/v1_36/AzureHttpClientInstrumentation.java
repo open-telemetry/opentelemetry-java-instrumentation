@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.azurecore.v1_36;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.azurecore.v1_36.SuppressNestedClientHelper.disallowNestedClientSpanMono;
 import static io.opentelemetry.javaagent.instrumentation.azurecore.v1_36.SuppressNestedClientHelper.disallowNestedClientSpanSync;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -36,15 +35,13 @@ public class AzureHttpClientInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("send"))
             .and(takesArgument(1, named("com.azure.core.util.Context")))
             .and(returns(named("reactor.core.publisher.Mono"))),
         this.getClass().getName() + "$SuppressNestedClientMonoAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("sendSync"))
             .and(takesArgument(1, named("com.azure.core.util.Context")))
             .and(returns(named("com.azure.core.http.HttpResponse"))),
@@ -70,7 +67,7 @@ public class AzureHttpClientInstrumentation implements TypeInstrumentation {
       return disallowNestedClientSpanSync(azContext);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void syncSendExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
