@@ -34,8 +34,8 @@ public abstract class AbstractKinesisClientTest extends AbstractBaseAwsClientTes
 
   @ParameterizedTest
   @MethodSource("provideArguments")
-  public void testSendRequestWithMockedResponse(
-      String operation, Function<AmazonKinesis, Object> call) throws Exception {
+  void testSendRequestWithMockedResponse(String operation, Function<AmazonKinesis, Object> call)
+      throws Exception {
     AmazonKinesisClientBuilder clientBuilder = AmazonKinesisClientBuilder.standard();
 
     AmazonKinesis client =

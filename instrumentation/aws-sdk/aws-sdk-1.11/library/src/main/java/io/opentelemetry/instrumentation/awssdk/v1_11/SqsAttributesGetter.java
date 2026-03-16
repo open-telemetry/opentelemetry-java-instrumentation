@@ -28,6 +28,9 @@ class SqsAttributesGetter implements MessagingAttributesGetter<Request<?>, Respo
   public String getDestination(Request<?> request) {
     Object originalRequest = request.getOriginalRequest();
     String queueUrl = RequestAccess.getQueueUrl(originalRequest);
+    if (queueUrl == null) {
+      return null;
+    }
     int i = queueUrl.lastIndexOf('/');
     return i > 0 ? queueUrl.substring(i + 1) : null;
   }

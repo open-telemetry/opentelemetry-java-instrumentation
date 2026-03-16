@@ -28,6 +28,9 @@ class SqsReceiveRequestAttributesGetter
   public String getDestination(SqsReceiveRequest request) {
     Object originalRequest = request.getRequest().getOriginalRequest();
     String queueUrl = RequestAccess.getQueueUrl(originalRequest);
+    if (queueUrl == null) {
+      return null;
+    }
     int i = queueUrl.lastIndexOf('/');
     return i > 0 ? queueUrl.substring(i + 1) : null;
   }
