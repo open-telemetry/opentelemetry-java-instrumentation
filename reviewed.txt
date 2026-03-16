@@ -56,3 +56,4 @@ azure-core-1.53:javaagent
 c3p0-0.9:library
 c3p0-0.9:javaagent
 c3p0-0.9:testing
+camel-2.20:javaagent-unit-tests
