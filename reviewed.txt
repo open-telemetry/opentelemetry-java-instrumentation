@@ -88,3 +88,4 @@ elasticsearch-api-client-7.16:javaagent-unit-tests
 elasticsearch-api-client-7.16:javaagent
 elasticsearch-rest-5.0:javaagent
 elasticsearch-rest-6.4:javaagent
+elasticsearch-rest-7.0:javaagent
