@@ -34,9 +34,9 @@ class CouchbaseClient34Test {
 
   private static final Logger logger = LoggerFactory.getLogger("couchbase-container");
 
-  static CouchbaseContainer couchbase;
-  static Cluster cluster;
-  static Collection collection;
+  private static CouchbaseContainer couchbase;
+  private static Cluster cluster;
+  private static Collection collection;
 
   @BeforeAll
   static void setup() {
