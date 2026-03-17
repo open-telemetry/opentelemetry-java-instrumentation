@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.apiclient;
 
 import static io.opentelemetry.javaagent.instrumentation.elasticsearch.apiclient.ElasticsearchApiClientSingletons.ENDPOINT_DEFINITION;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -30,8 +29,7 @@ public class RestClientTransportInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("prepareLowLevelRequest"))
+        named("prepareLowLevelRequest")
             .and(takesArgument(1, named("co.elastic.clients.transport.Endpoint")))
             .and(returns(named("org.elasticsearch.client.Request"))),
         this.getClass().getName() + "$RestClientTransportAdvice");
@@ -40,7 +38,7 @@ public class RestClientTransportInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RestClientTransportAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onPrepareLowLevelRequest(
         @Advice.Argument(1) Endpoint<?, ?, ?> endpoint, @Advice.Return Request request) {
       String endpointId = endpoint.id();
