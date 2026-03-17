@@ -29,7 +29,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Config | Config property stability/renames/removals | `otel.instrumentation.*` property changes, `DeclarativeConfigUtil` or `ConfigProperties` usage | `config-property-stability.md` |
 | Build | Gradle conventions, muzzle, test tasks, plugins | `build.gradle.kts`, `settings.gradle.kts` | `gradle-conventions.md` |
 | Build | `testcontainersBuildService` declaration | Testcontainers dependency without `usesService` | `gradle-conventions.md` |
-| Style | Prefer instance creation over singletons for stateless interface impls | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`, enum/static singletons | — |
+| Style | Prefer instance creation over singletons for stateless interface impls (except on hot paths) | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`, enum/static singletons | — |
 | Style | Remove redundant null guards on attribute puts | `AttributesBuilder.put`, `onStart`, `onEnd`, attribute extraction methods | — |
 | Style | Nullability correctness — no guards for non-nullable params; add `@Nullable` when null is actually passed/returned; respect upstream SDK `@Nullable` contracts for `TextMapGetter`/`TextMapSetter` | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `*Extractor` implementations, null checks, missing `@Nullable` | — |
 | Architecture | Library vs javaagent boundaries | Always | — |
@@ -88,18 +88,37 @@ right-hand side to `new MyGetter()`.
 Convert the class declaration from `enum` / singleton-holder to a plain `class`.
 If the implementation is a private nested class, omit the `final` keyword.
 
+**Exception — hot paths**: when the getter/setter is used in a per-request or
+per-message code path (e.g., inside `propagator.extract()` or `propagator.inject()`
+called at request time), keep the singleton instance (`INSTANCE` field) to avoid
+allocating on every invocation. The instance-creation style is intended for
+registration-time call sites such as `Instrumenter` builder chains and `Singletons`
+initialization — not for code that runs on every request.
+
 ## [Style] No Redundant Null Guards on Attribute Puts
 
 All `put` / `setAttribute` methods on `AttributesBuilder`, `Span`, `SpanBuilder`, and
 `LogRecordBuilder` are no-ops when the value is `null` (upstream SDK guarantee).
 Do not wrap these calls in `if (value != null)` guards — pass the value directly.
 
-**Exception — primitive-typed attribute keys**: when the `AttributeKey` is typed as
-`Long`, `Double`, or `Boolean`, the `put` overload accepts a **primitive** parameter
-(`long`, `double`, `boolean`). If the source value is a boxed type (`Integer`, `Long`,
-`Double`, `Boolean`) that may be `null`, Java auto-unboxes it **before** `put()` is
-reached, causing a `NullPointerException`. In this case the null guard is **required** —
-do not remove it.
+**Exception — `AttributeKey<Long>` with `Integer` value**: the only primitive-typed
+overload on these interfaces is a convenience method that accepts `int`:
+
+- `AttributesBuilder.put(AttributeKey<Long> key, int value)`
+- `Span.setAttribute(AttributeKey<Long> key, int value)`
+
+When the `AttributeKey` is typed as `Long` and the source value is `Integer`, Java
+cannot bind `Integer` to `T = Long` in the generic overload (type mismatch), so it
+resolves to the `int` convenience overload via auto-unboxing (`Integer` → `int`). If
+the `Integer` is `null`, this auto-unboxing causes a `NullPointerException` **before**
+`put()` / `setAttribute()` is reached. In this case the null guard is **required** — do
+not remove it.
+
+When the value type **matches** the `AttributeKey` type parameter (e.g.,
+`Boolean` → `AttributeKey<Boolean>`, `Long` → `AttributeKey<Long>`,
+`Double` → `AttributeKey<Double>`), the generic `@Nullable T` overload is selected
+directly — no auto-unboxing occurs and `null` is safe. Do **not** add a null guard in
+this case.
 
 Flag patterns like:
 
@@ -116,12 +135,27 @@ Preferred:
 attributes.put(SOME_KEY, getSomething());
 ```
 
-Do **not** flag (the guard is required):
+Also flag (the guard is unnecessary — types match, generic overload handles null):
+
+```java
+Boolean enabled = metadata.getEnabled();       // may return null
+if (enabled != null) {
+  span.setAttribute(META_ENABLED, enabled);    // AttributeKey<Boolean> + Boolean → generic overload
+}
+```
+
+Preferred:
+
+```java
+span.setAttribute(META_ENABLED, metadata.getEnabled()); // null is a no-op
+```
+
+Do **not** flag (the guard is required — type mismatch forces `int` overload):
 
 ```java
 Integer statusCode = response.getStatusCode(); // may return null
 if (statusCode != null) {
-  attributes.put(HTTP_RESPONSE_STATUS_CODE, statusCode); // AttributeKey<Long> → put(long)
+  attributes.put(HTTP_RESPONSE_STATUS_CODE, statusCode); // AttributeKey<Long> + Integer → put(int)
 }
 ```
 
@@ -138,6 +172,8 @@ Use `@Nullable` annotations accurately throughout the codebase:
   When justifying `@Nullable` on a return type, cite the concrete reason the implementation
   can return null (e.g., it delegates to a `@Nullable`-returning method without adding a
   non-null guarantee), not merely that an interface or upstream contract permits null.
+- **Test files**: do **not** add `@Nullable` in test code.
+  If a PR adds `@Nullable` to test files, flag it for removal.
 - **External interface contracts**: interfaces from the OpenTelemetry SDK
   (`io.opentelemetry.context.propagation`) declare `@Nullable` on certain parameters.
   These annotations are not visible in this repository because the interfaces live in the

@@ -1,2 +1,6 @@
-description: Instrumentation for the vibur-dbcp library, which provides connection pool metrics.
+display_name: Vibur DBCP
+description: >
+  This instrumentation enables database connection pool metrics for Vibur DBCP data sources.
 library_link: https://www.vibur.org/
+semantic_conventions:
+  - DATABASE_POOL_METRICS

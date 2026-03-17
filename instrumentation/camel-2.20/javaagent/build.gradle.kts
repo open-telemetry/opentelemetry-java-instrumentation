@@ -85,6 +85,8 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
   val testExperimental by registering(Test::class) {

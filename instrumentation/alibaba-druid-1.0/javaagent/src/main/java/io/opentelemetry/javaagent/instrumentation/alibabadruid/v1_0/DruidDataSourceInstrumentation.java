@@ -50,6 +50,7 @@ public class DruidDataSourceInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class RemoveDataSourceAdvice {
+
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.Argument(0) Object dataSource) {
       DruidDataSourceMBean druidDataSource = (DruidDataSourceMBean) dataSource;

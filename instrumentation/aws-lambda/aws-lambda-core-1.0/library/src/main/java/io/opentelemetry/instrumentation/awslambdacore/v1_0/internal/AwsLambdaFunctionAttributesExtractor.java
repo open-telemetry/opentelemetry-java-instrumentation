@@ -28,6 +28,7 @@ public final class AwsLambdaFunctionAttributesExtractor
   // copied from CloudIncubatingAttributes
   private static final AttributeKey<String> CLOUD_ACCOUNT_ID =
       AttributeKey.stringKey("cloud.account.id");
+  // copied from CloudIncubatingAttributes
   private static final AttributeKey<String> CLOUD_RESOURCE_ID =
       AttributeKey.stringKey("cloud.resource_id");
 
@@ -47,7 +48,7 @@ public final class AwsLambdaFunctionAttributesExtractor
   }
 
   // cached accountId value
-  private volatile String accountId;
+  @Nullable private volatile String accountId;
 
   @Override
   public void onStart(
@@ -57,10 +58,8 @@ public final class AwsLambdaFunctionAttributesExtractor
     Context awsContext = request.getAwsContext();
     attributes.put(FAAS_INVOCATION_ID, awsContext.getAwsRequestId());
     String arn = getFunctionArn(awsContext);
-    if (arn != null) {
-      attributes.put(CLOUD_RESOURCE_ID, arn);
-      attributes.put(CLOUD_ACCOUNT_ID, getAccountId(arn));
-    }
+    attributes.put(CLOUD_RESOURCE_ID, arn);
+    attributes.put(CLOUD_ACCOUNT_ID, getAccountId(arn));
   }
 
   @Override
@@ -83,7 +82,11 @@ public final class AwsLambdaFunctionAttributesExtractor
     }
   }
 
-  private String getAccountId(String arn) {
+  @Nullable
+  private String getAccountId(@Nullable String arn) {
+    if (arn == null) {
+      return null;
+    }
     if (accountId == null) {
       String[] arnParts = arn.split(":");
       if (arnParts.length >= 5) {

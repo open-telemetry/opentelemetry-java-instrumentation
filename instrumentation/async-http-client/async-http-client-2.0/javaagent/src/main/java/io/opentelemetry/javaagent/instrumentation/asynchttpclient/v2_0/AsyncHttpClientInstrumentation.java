@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0.AsyncHttpClientSingletons.ASYNC_HANDLER_REQUEST_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0.AsyncHttpClientSingletons.instrumenter;
@@ -25,6 +26,11 @@ import org.asynchttpclient.AsyncHandler;
 import org.asynchttpclient.Request;
 
 public class AsyncHttpClientInstrumentation implements TypeInstrumentation {
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("org.asynchttpclient.AsyncHttpClient");
+  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

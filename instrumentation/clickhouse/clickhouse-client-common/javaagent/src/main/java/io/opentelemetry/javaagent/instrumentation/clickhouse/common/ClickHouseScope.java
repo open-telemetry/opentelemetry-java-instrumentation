@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.clickhouse.common;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import javax.annotation.Nullable;
 
 /** Container used to carry state between enter and exit advices */
 public final class ClickHouseScope {
@@ -27,6 +28,7 @@ public final class ClickHouseScope {
     this.instrumenter = instrumenter;
   }
 
+  @Nullable
   public static ClickHouseScope start(
       Instrumenter<ClickHouseDbRequest, Void> instrumenter,
       Context parentContext,

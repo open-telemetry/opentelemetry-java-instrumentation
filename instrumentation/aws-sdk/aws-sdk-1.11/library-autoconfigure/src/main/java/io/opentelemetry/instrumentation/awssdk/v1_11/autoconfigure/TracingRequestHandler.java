@@ -21,7 +21,7 @@ import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetry;
 /**
  * A {@link RequestHandler2} for use as an SPI by the AWS SDK to automatically trace all requests.
  */
-public class TracingRequestHandler extends RequestHandler2 {
+public final class TracingRequestHandler extends RequestHandler2 {
 
   private static final RequestHandler2 DELEGATE = buildDelegate(GlobalOpenTelemetry.get());
 

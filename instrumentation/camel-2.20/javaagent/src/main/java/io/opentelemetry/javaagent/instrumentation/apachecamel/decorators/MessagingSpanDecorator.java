@@ -62,10 +62,7 @@ class MessagingSpanDecorator extends BaseSpanDecorator {
 
     attributes.put(MESSAGING_DESTINATION_NAME, getDestination(exchange, endpoint));
 
-    String messageId = getMessageId(exchange);
-    if (messageId != null) {
-      attributes.put(MESSAGING_MESSAGE_ID, messageId);
-    }
+    attributes.put(MESSAGING_MESSAGE_ID, getMessageId(exchange));
   }
 
   /**
