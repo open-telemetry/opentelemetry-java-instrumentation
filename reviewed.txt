@@ -97,3 +97,4 @@ elasticsearch-transport-6.0:javaagent
 elasticsearch-transport-5.3:javaagent
 elasticsearch-transport-common:javaagent
 elasticsearch-transport-6.0:testing
+elasticsearch-transport-common:testing
