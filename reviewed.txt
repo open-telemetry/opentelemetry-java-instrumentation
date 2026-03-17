@@ -91,3 +91,4 @@ elasticsearch-rest-6.4:javaagent
 elasticsearch-rest-7.0:javaagent
 elasticsearch-rest-7.0:library
 elasticsearch-rest-common-5.0:library
+elasticsearch-rest-common-5.0:javaagent
