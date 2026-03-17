@@ -42,7 +42,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.testcontainers.Testcontainers;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.selenium.BrowserWebDriverContainer;
-import org.testcontainers.utility.DockerImageName;
 
 public abstract class AbstractVaadinTest
     extends AbstractHttpServerUsingTest<ConfigurableApplicationContext> {
@@ -70,13 +69,6 @@ public abstract class AbstractVaadinTest
     }
   }
 
-  private static DockerImageName getDockerImage() {
-    return System.getProperty("os.arch").equals("aarch64")
-        ? DockerImageName.parse("seleniarm/standalone-chromium")
-            .asCompatibleSubstituteFor("selenium/standalone-chrome")
-        : DockerImageName.parse("selenium/standalone-chrome");
-  }
-
   @BeforeAll
   protected void setup() throws URISyntaxException {
     startServer();
@@ -84,7 +76,7 @@ public abstract class AbstractVaadinTest
     Testcontainers.exposeHostPorts(port);
 
     browser =
-        new BrowserWebDriverContainer(getDockerImage())
+        new BrowserWebDriverContainer("selenium/standalone-chrome")
             .withLogConsumer(new Slf4jLogConsumer(logger));
     browser.start();
 
