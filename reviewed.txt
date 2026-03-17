@@ -83,3 +83,4 @@ couchbase-3.4:javaagent
 couchbase-common:testing
 dropwizard-metrics-4.0:javaagent
 dropwizard:dropwizard-testing
+dropwizard-views-0.7:javaagent
