@@ -64,6 +64,7 @@ public final class ExecutorAdviceHelper {
    * is attached, {@link TaskAdviceHelper} can be used to make that context current during {@code
    * task} execution.
    */
+  @Nullable
   public static <T> PropagatedContext attachContextToTask(
       Context context, VirtualField<T, PropagatedContext> virtualField, T task) {
 
