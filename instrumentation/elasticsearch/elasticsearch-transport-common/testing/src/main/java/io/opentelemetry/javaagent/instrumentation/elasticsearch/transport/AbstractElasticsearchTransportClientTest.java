@@ -164,7 +164,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                             event ->
                                 event
                                     .hasName("exception")
-                                    .hasAttributesSatisfying(
+                                    .hasAttributesSatisfyingExactly(
                                         equalTo(
                                             EXCEPTION_TYPE,
                                             RemoteTransportException.class.getName())))
