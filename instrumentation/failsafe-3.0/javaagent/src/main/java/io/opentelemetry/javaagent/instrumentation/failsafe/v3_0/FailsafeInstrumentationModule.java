@@ -27,6 +27,11 @@ public class FailsafeInstrumentationModule extends InstrumentationModule
   }
 
   @Override
+  public boolean defaultEnabled() {
+    return false;
+  }
+
+  @Override
   public boolean isIndyReady() {
     return true;
   }
