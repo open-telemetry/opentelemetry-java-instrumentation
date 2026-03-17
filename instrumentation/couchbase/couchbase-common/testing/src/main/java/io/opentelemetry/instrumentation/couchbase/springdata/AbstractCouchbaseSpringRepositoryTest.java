@@ -49,7 +49,7 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
   private TestRepository repository;
 
   @BeforeAll
-  void setUp() {
+  void setUpSpring() {
     CouchbaseEnvironment environment = envBuilder(bucketCouchbase).build();
     Cluster couchbaseCluster = CouchbaseCluster.create(environment, singletonList("127.0.0.1"));
 
