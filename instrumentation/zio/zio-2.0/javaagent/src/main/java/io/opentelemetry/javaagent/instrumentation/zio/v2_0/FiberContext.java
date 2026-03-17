@@ -5,10 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.zio.v2_0;
 
+import static java.util.Objects.requireNonNull;
+
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import javax.annotation.Nullable;
 
 public final class FiberContext {
   private Context context;
+  @Nullable private Context initialContext;
+  @Nullable private Scope scope;
 
   private FiberContext(Context context) {
     this.context = context;
@@ -19,17 +25,21 @@ public final class FiberContext {
   }
 
   public void onSuspend() {
-    this.context = Context.current();
+    // First we try closing the scope that was opened in onResume. This may fail if user code has
+    // left an open scope because only the latest scope can be closed.
+    // See https://github.com/open-telemetry/opentelemetry-java/issues/5303
+    requireNonNull(scope).close();
 
-    // Reset context to avoid leaking it to other fibers
-    Context.root().makeCurrent();
+    // If the current context doesn't match the initial context then there must be an open scope,
+    // reset the state to the initial context.
+    this.context = Context.current();
+    if (this.context != initialContext) {
+      requireNonNull(initialContext).makeCurrent();
+    }
   }
 
   public void onResume() {
-    // Not using returned Scope because we can't reliably close it. If fiber also opens a Scope and
-    // does not close it before onSuspend is called then the attempt to close the scope returned
-    // here would not work because it is not the current scope.
-    // See https://github.com/open-telemetry/opentelemetry-java/issues/5303
-    this.context.makeCurrent();
+    initialContext = Context.current();
+    scope = this.context.makeCurrent();
   }
 }
