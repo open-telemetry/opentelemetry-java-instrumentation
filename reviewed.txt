@@ -82,3 +82,4 @@ couchbase-3.4:tracing-opentelemetry-shaded
 couchbase-3.4:javaagent
 couchbase-common:testing
 dropwizard-metrics-4.0:javaagent
+dropwizard:dropwizard-testing
