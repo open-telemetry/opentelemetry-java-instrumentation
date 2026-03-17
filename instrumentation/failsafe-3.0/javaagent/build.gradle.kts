@@ -18,3 +18,9 @@ dependencies {
 
   testImplementation(project(":instrumentation:failsafe-3.0:testing"))
 }
+
+tasks {
+  withType<Test>().configureEach {
+    jvmArgs("-Dotel.instrumentation.failsafe.enabled=true")
+  }
+}
