@@ -92,11 +92,15 @@ public final class DubboTelemetryBuilder {
     DubboNetworkServerAttributesGetter netServerAttributesGetter =
         new DubboNetworkServerAttributesGetter();
 
+    DubboAttributesExtractor dubboAttributesExtractor = new DubboAttributesExtractor();
+
     InstrumenterBuilder<DubboRequest, Result> serverInstrumenterBuilder =
         Instrumenter.<DubboRequest, Result>builder(
                 openTelemetry, INSTRUMENTATION_NAME, serverSpanNameExtractor)
+            .setSpanStatusExtractor(DubboSpanStatusExtractor.SERVER)
             .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
             .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
+            .addAttributesExtractor(dubboAttributesExtractor)
             .addAttributesExtractors(attributesExtractors)
             .addOperationMetrics(RpcServerMetrics.get())
             .addContextCustomizer(
@@ -105,9 +109,11 @@ public final class DubboTelemetryBuilder {
     InstrumenterBuilder<DubboRequest, Result> clientInstrumenterBuilder =
         Instrumenter.<DubboRequest, Result>builder(
                 openTelemetry, INSTRUMENTATION_NAME, clientSpanNameExtractor)
+            .setSpanStatusExtractor(DubboSpanStatusExtractor.CLIENT)
             .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
             .addAttributesExtractor(ServerAttributesExtractor.create(netClientAttributesGetter))
             .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
+            .addAttributesExtractor(dubboAttributesExtractor)
             .addAttributesExtractors(attributesExtractors)
             .addOperationMetrics(RpcClientMetrics.get())
             .addContextCustomizer(

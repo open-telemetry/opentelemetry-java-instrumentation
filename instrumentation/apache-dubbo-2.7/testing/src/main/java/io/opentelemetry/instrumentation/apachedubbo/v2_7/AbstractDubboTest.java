@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
@@ -155,6 +156,9 @@ public abstract class AbstractDubboTest {
                                         ? "org.apache.dubbo.rpc.service.GenericService/$invoke"
                                         : "$invoke"),
                                 equalTo(
+                                    RPC_RESPONSE_STATUS_CODE,
+                                    emitStableRpcSemconv() ? "OK" : null),
+                                equalTo(
                                     maybeStablePeerService(),
                                     hasServicePeerName() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
@@ -184,6 +188,9 @@ public abstract class AbstractDubboTest {
                                     emitStableRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"
                                         : "hello"),
+                                equalTo(
+                                    RPC_RESPONSE_STATUS_CODE,
+                                    emitStableRpcSemconv() ? "OK" : null),
                                 satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
                                 satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)))));
 
@@ -253,7 +260,9 @@ public abstract class AbstractDubboTest {
                                                   equalTo(RPC_SYSTEM_NAME, "dubbo"),
                                                   equalTo(
                                                       RPC_METHOD,
-                                                      "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"))))));
+                                                      "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"),
+                                                  equalTo(
+                                                      RPC_RESPONSE_STATUS_CODE, "OK"))))));
 
       testing()
           .waitAndAssertMetrics(
@@ -273,6 +282,8 @@ public abstract class AbstractDubboTest {
                                                   equalTo(
                                                       RPC_METHOD,
                                                       "org.apache.dubbo.rpc.service.GenericService/$invoke"),
+                                                  equalTo(
+                                                      RPC_RESPONSE_STATUS_CODE, "OK"),
                                                   equalTo(SERVER_ADDRESS, "localhost"),
                                                   satisfies(
                                                       SERVER_PORT,
@@ -341,6 +352,9 @@ public abstract class AbstractDubboTest {
                                         ? "org.apache.dubbo.rpc.service.GenericService/$invokeAsync"
                                         : "$invokeAsync"),
                                 equalTo(
+                                    RPC_RESPONSE_STATUS_CODE,
+                                    emitStableRpcSemconv() ? "OK" : null),
+                                equalTo(
                                     maybeStablePeerService(),
                                     hasServicePeerName() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
@@ -370,6 +384,9 @@ public abstract class AbstractDubboTest {
                                     emitStableRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"
                                         : "hello"),
+                                equalTo(
+                                    RPC_RESPONSE_STATUS_CODE,
+                                    emitStableRpcSemconv() ? "OK" : null),
                                 satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
                                 satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)),
                                 // this attribute is not filled reliably, it is either null or
@@ -451,7 +468,9 @@ public abstract class AbstractDubboTest {
                                                   equalTo(RPC_SYSTEM_NAME, "dubbo"),
                                                   equalTo(
                                                       RPC_METHOD,
-                                                      "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"))))));
+                                                      "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"),
+                                                  equalTo(
+                                                      RPC_RESPONSE_STATUS_CODE, "OK"))))));
 
       testing()
           .waitAndAssertMetrics(
@@ -471,6 +490,8 @@ public abstract class AbstractDubboTest {
                                                   equalTo(
                                                       RPC_METHOD,
                                                       "org.apache.dubbo.rpc.service.GenericService/$invokeAsync"),
+                                                  equalTo(
+                                                      RPC_RESPONSE_STATUS_CODE, "OK"),
                                                   equalTo(SERVER_ADDRESS, "localhost"),
                                                   satisfies(
                                                       SERVER_PORT,
