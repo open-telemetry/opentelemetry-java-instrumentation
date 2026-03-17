@@ -102,10 +102,7 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
           "Dropwizard metric name ''{0}'' exceeds 255 character limit, truncating to ''{1}''",
           new Object[] {name, sanitized.substring(0, 255)});
       sanitized = sanitized.substring(0, 255);
-    }
-
-    // Log if sanitization changed the name
-    if (!sanitized.equals(name)) {
+    } else if (!sanitized.equals(name)) {
       logger.log(
           WARNING,
           "Dropwizard metric name ''{0}'' has been sanitized to ''{1}''",
