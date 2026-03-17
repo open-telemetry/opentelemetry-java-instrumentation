@@ -94,3 +94,4 @@ elasticsearch-rest-common-5.0:library
 elasticsearch-rest-common-5.0:javaagent
 elasticsearch-transport-5.0:javaagent
 elasticsearch-transport-6.0:javaagent
+elasticsearch-transport-5.3:javaagent
