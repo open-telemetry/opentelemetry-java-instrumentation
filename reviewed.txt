@@ -105,3 +105,4 @@ external-annotations:javaagent
 executors:testing
 external-annotations:javaagent-unit-tests
 failsafe-3.0:library
+finagle-http-23.11:javaagent
