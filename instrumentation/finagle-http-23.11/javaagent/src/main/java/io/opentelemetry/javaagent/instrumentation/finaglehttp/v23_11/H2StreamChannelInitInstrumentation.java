@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
@@ -27,21 +26,17 @@ public class H2StreamChannelInitInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("initServer"))
-            .and(returns(named("io.netty.channel.ChannelInitializer"))),
-        H2StreamChannelInitInstrumentation.class.getName() + "$InitServerAdvice");
+        named("initServer").and(returns(named("io.netty.channel.ChannelInitializer"))),
+        getClass().getName() + "$InitServerAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("initClient"))
-            .and(returns(named("io.netty.channel.ChannelInitializer"))),
-        H2StreamChannelInitInstrumentation.class.getName() + "$InitClientAdvice");
+        named("initClient").and(returns(named("io.netty.channel.ChannelInitializer"))),
+        getClass().getName() + "$InitClientAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class InitServerAdvice {
 
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(suppress = Throwable.class)
     @Advice.AssignReturned.ToReturned
     public static ChannelInitializer<Channel> handleExit(
         @Advice.Return ChannelInitializer<Channel> initializer) {
@@ -52,7 +47,7 @@ public class H2StreamChannelInitInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InitClientAdvice {
 
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(suppress = Throwable.class)
     @Advice.AssignReturned.ToReturned
     public static ChannelInitializer<Channel> handleExit(
         @Advice.Return ChannelInitializer<Channel> initializer) {
