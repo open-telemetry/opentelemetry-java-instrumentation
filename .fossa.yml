@@ -426,7 +426,7 @@ targets:
       target: ':instrumentation:clickhouse:clickhouse-client-common:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:clickhouse:clickhouse-client-v1-0.5:javaagent'
+      target: ':instrumentation:clickhouse:clickhouse-client-v1-0.3:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:clickhouse:clickhouse-client-v2-0.8:javaagent'

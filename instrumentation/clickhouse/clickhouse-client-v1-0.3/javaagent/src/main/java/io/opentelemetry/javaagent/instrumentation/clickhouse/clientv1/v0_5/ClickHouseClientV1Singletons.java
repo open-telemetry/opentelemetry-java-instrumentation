@@ -12,7 +12,7 @@ import io.opentelemetry.javaagent.instrumentation.clickhouse.common.ClickHouseIn
 
 public final class ClickHouseClientV1Singletons {
 
-  private static final String INSTRUMENTER_NAME = "io.opentelemetry.clickhouse-client-v1-0.5";
+  private static final String INSTRUMENTER_NAME = "io.opentelemetry.clickhouse-client-v1-0.3";
   private static final Instrumenter<ClickHouseDbRequest, Void> INSTRUMENTER;
 
   static {
