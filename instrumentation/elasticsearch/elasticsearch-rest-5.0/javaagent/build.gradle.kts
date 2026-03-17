@@ -14,6 +14,7 @@ muzzle {
     group.set("org.elasticsearch.client")
     module.set("elasticsearch-rest-client")
     versions.set("[5.0,6.4)")
+    assertInverse.set(true)
   }
 }
 
@@ -24,6 +25,8 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:apache-httpasyncclient-4.1:javaagent"))
+  testInstrumentation(project(":instrumentation:elasticsearch:elasticsearch-rest-6.4:javaagent"))
+  testInstrumentation(project(":instrumentation:elasticsearch:elasticsearch-rest-7.0:javaagent"))
 
   testImplementation("org.apache.logging.log4j:log4j-core:2.11.0")
   testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
