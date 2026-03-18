@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.grpc.v1_6.GrpcSingletons.MANAGED_CHANNEL_BUILDER_INSTRUMENTED;
 import static net.bytebuddy.matcher.ElementMatchers.declaresField;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.grpc.ClientInterceptor;
@@ -35,9 +34,7 @@ public class GrpcClientBuilderBuildInstrumentation implements TypeInstrumentatio
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isMethod().and(named("build")),
-        GrpcClientBuilderBuildInstrumentation.class.getName() + "$AddInterceptorAdvice");
+    transformer.applyAdviceToMethod(named("build"), getClass().getName() + "$AddInterceptorAdvice");
   }
 
   @SuppressWarnings("unused")
