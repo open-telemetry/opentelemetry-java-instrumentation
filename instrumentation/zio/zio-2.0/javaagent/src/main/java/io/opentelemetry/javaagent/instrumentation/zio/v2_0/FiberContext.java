@@ -25,7 +25,7 @@ public final class FiberContext {
   }
 
   public void onSuspend() {
-    Context suspendedContext = Context.current();
+    context = Context.current();
 
     // First we try closing the scope that was opened in onResume. This may fail if user code has
     // left an open scope because only the latest scope can be closed.
@@ -37,12 +37,10 @@ public final class FiberContext {
     if (Context.current() != initialContext) {
       requireNonNull(initialContext).makeCurrent();
     }
-
-    this.context = suspendedContext;
   }
 
   public void onResume() {
     initialContext = Context.current();
-    scope = this.context.makeCurrent();
+    scope = context.makeCurrent();
   }
 }
