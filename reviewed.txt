@@ -160,3 +160,4 @@ java-http-server:javaagent
 java-http-client:testing
 java-http-server:library
 java-http-server:testing
+java-util-logging:javaagent
