@@ -164,3 +164,4 @@ java-util-logging:javaagent
 java-util-logging:shaded-stub-for-instrumenting
 javalin-5.0:javaagent
 javalin-7.0:javaagent
+javalin:testing
