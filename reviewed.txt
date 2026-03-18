@@ -146,3 +146,4 @@ influxdb-2.4:javaagent
 internal-application-logger:bootstrap
 internal-class-loader:compile-stub
 internal-application-logger:javaagent
+internal-class-loader:javaagent
