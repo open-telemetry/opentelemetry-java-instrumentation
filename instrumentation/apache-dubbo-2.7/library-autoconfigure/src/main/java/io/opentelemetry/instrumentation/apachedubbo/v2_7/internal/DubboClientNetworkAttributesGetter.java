@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGet
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
+import org.apache.dubbo.common.URL;
 import org.apache.dubbo.rpc.Result;
 
 /**
@@ -28,7 +29,8 @@ public final class DubboClientNetworkAttributesGetter
     if (registryAddress != null) {
       return registryAddress + "/" + buildServiceTarget(request.url());
     }
-    return request.url().getHost();
+    URL url = request.url();
+    return url != null ? url.getHost() : null;
   }
 
   @Nullable
@@ -37,7 +39,11 @@ public final class DubboClientNetworkAttributesGetter
     if (request.registryAddress() != null) {
       return null;
     }
-    int port = request.url().getPort();
+    URL url = request.url();
+    if (url == null) {
+      return null;
+    }
+    int port = url.getPort();
     return port > 0 ? port : null;
   }
 
