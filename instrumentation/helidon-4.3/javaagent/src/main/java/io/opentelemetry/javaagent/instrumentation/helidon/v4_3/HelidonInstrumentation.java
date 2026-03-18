@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.helidon.v4_3;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -27,8 +26,7 @@ public class HelidonInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(isStatic()).and(named("builder")),
-        HelidonInstrumentation.class.getName() + "$BuildAdvice");
+        isPublic().and(isStatic()).and(named("builder")), getClass().getName() + "$BuildAdvice");
   }
 
   @SuppressWarnings("unused")
