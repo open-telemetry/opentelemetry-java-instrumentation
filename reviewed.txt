@@ -123,3 +123,4 @@ guava-10.0:javaagent
 guava-10.0:library
 grpc-1.6:testing
 helidon-4.3:javaagent
+helidon-4.3:library
