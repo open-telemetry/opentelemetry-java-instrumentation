@@ -26,7 +26,7 @@ class ResteasyProxyClientTest extends AbstractHttpClientTest<ResteasyProxyResour
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  static ResteasyClient client = new ResteasyClientBuilder().connectionPoolSize(4).build();
+  static final ResteasyClient client = new ResteasyClientBuilder().connectionPoolSize(4).build();
 
   @Override
   public ResteasyProxyResource buildRequest(String method, URI uri, Map<String, String> headers) {
