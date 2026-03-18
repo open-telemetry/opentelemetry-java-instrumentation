@@ -13,7 +13,6 @@ import dev.failsafe.CircuitBreaker;
 import dev.failsafe.CircuitBreakerOpenException;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.LongPointAssert;
@@ -129,14 +128,20 @@ final class FailsafeTelemetryTest {
                                     .hasCount(3)
                                     .hasMin(1)
                                     .hasMax(3)
-                                    .hasAttributes(buildExpectedRetryPolicyAttributes("success"))
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("failsafe.retry_policy.name"), "testing"),
+                                        equalTo(
+                                            stringKey("failsafe.retry_policy.outcome"), "success"))
                                     .hasBucketCounts(1L, 1L, 1L, 0L, 0L),
                             histogramPointAssert ->
                                 histogramPointAssert
                                     .hasCount(2)
                                     .hasMin(3)
                                     .hasMax(3)
-                                    .hasAttributes(buildExpectedRetryPolicyAttributes("failure"))
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("failsafe.retry_policy.name"), "testing"),
+                                        equalTo(
+                                            stringKey("failsafe.retry_policy.outcome"), "failure"))
                                     .hasBucketCounts(0L, 0L, 2L, 0L, 0L))));
   }
 
@@ -155,13 +160,8 @@ final class FailsafeTelemetryTest {
     return longSumAssert ->
         longSumAssert
             .hasValue(expectedValue)
-            .hasAttributes(buildExpectedRetryPolicyAttributes(expectedOutcomeValue));
-  }
-
-  private static Attributes buildExpectedRetryPolicyAttributes(String expectedOutcome) {
-    return Attributes.builder()
-        .put("failsafe.retry_policy.name", "testing")
-        .put("failsafe.retry_policy.outcome", expectedOutcome)
-        .build();
+            .hasAttributesSatisfyingExactly(
+                equalTo(stringKey("failsafe.retry_policy.name"), "testing"),
+                equalTo(stringKey("failsafe.retry_policy.outcome"), expectedOutcomeValue));
   }
 }
