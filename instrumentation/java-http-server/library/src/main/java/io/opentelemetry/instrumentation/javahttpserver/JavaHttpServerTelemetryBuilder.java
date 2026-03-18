@@ -36,8 +36,8 @@ public final class JavaHttpServerTelemetryBuilder {
         DefaultHttpServerInstrumenterBuilder.create(
             INSTRUMENTATION_NAME,
             openTelemetry,
-            JavaHttpServerAttributesGetter.INSTANCE,
-            JavaHttpServerExchangeGetter.INSTANCE);
+            new JavaHttpServerAttributesGetter(),
+            new JavaHttpServerExchangeGetter());
   }
 
   /** Customizes the {@link SpanStatusExtractor} by transforming the default instance. */
