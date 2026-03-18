@@ -108,3 +108,4 @@ failsafe-3.0:library
 finagle-http-23.11:javaagent
 geode-1.4:javaagent
 finatra-2.9:javaagent
+grails-3.0:javaagent
