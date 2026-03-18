@@ -15,8 +15,7 @@ import java.util.List;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 
-enum GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, Status> {
-  INSTANCE;
+final class GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, Status> {
 
   @Override
   public String getSystem(GrpcRequest request) {
