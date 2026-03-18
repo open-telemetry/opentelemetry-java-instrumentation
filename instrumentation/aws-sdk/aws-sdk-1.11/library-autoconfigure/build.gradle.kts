@@ -24,9 +24,18 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-    systemProperty("otel.instrumentation.messaging.experimental.capture-headers", "Test-Message-Header")
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      excludeTestsMatching("SqsSuppressReceiveSpansTest")
+    }
+
+    jvmArgs(
+      "-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true",
+      "-Dotel.instrumentation.messaging.experimental.capture-headers=Test-Message-Header",
+    )
   }
 
   val testReceiveSpansDisabled by registering(Test::class) {
@@ -47,7 +56,7 @@ tasks {
   }
 
   check {
-    dependsOn(testReceiveSpansDisabled)
+    dependsOn(testExperimental, testReceiveSpansDisabled)
   }
 }
 
