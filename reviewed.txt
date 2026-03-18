@@ -139,3 +139,4 @@ hikaricp-3.0:library
 hikaricp-3.0:javaagent
 hikaricp-3.0:testing
 http-url-connection:javaagent
+iceberg-1.8:library
