@@ -7,6 +7,7 @@ muzzle {
     group.set("com.netflix.hystrix")
     module.set("hystrix-core")
     versions.set("[1.4.0,)")
+    assertInverse.set(true)
   }
 }
 
