@@ -797,17 +797,16 @@ class SessionTest extends AbstractHibernateTest {
         Arguments.of(
             named(
                 "createQuery",
-                ((Consumer<Session>) session -> session.createQuery("from Value").list())),
-            Arguments.of(
-                named(
-                    "getNamedQuery",
-                    ((Consumer<Session>)
-                        session -> session.getNamedQuery("TestNamedQuery").list())),
-                Arguments.of(
-                    named(
-                        "createSQLQuery",
-                        (Consumer<Session>)
-                            session -> session.createSQLQuery("SELECT * FROM Value").list())))));
+                ((Consumer<Session>) session -> session.createQuery("from Value").list()))),
+        Arguments.of(
+            named(
+                "getNamedQuery",
+                ((Consumer<Session>) session -> session.getNamedQuery("TestNamedQuery").list()))),
+        Arguments.of(
+            named(
+                "createSQLQuery",
+                (Consumer<Session>)
+                    session -> session.createSQLQuery("SELECT * FROM Value").list())));
   }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation

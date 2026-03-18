@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v4_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Hibernate4Singletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
@@ -41,8 +40,8 @@ public class CriteriaInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(namedOneOf("list", "uniqueResult", "scroll")),
-        CriteriaInstrumentation.class.getName() + "$CriteriaMethodAdvice");
+        namedOneOf("list", "uniqueResult", "scroll"),
+        getClass().getName() + "$CriteriaMethodAdvice");
   }
 
   @SuppressWarnings("unused")
