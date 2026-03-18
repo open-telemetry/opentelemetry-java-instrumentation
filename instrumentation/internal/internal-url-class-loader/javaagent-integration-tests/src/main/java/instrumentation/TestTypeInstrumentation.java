@@ -29,14 +29,14 @@ public class TestTypeInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("getHostName"), TestTypeInstrumentation.class.getName() + "$GetHostNameAdvice");
+        named("getHostName"), getClass().getName() + "$GetHostNameAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class GetHostNameAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static String methodExit() {
       return "not-the-host-name";
     }
