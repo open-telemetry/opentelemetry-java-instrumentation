@@ -188,22 +188,14 @@ public abstract class AbstractGrpcStreamingTest {
           event ->
               assertThat(event)
                   .hasName("message")
-                  .hasAttributesSatisfying(
-                      attrs ->
-                          assertThat(attrs)
-                              .hasSize(2)
-                              .containsEntry(MESSAGE_TYPE, "SENT")
-                              .containsEntry(MESSAGE_ID, clientMessageId)));
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(MESSAGE_TYPE, "SENT"), equalTo(MESSAGE_ID, clientMessageId)));
       serverEvents.add(
           event ->
               assertThat(event)
                   .hasName("message")
-                  .hasAttributesSatisfying(
-                      attrs ->
-                          assertThat(attrs)
-                              .hasSize(2)
-                              .containsEntry(MESSAGE_TYPE, "RECEIVED")
-                              .containsEntry(MESSAGE_ID, clientMessageId)));
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(MESSAGE_TYPE, "RECEIVED"), equalTo(MESSAGE_ID, clientMessageId)));
 
       for (long j = 0; j < serverMessageCount; j++) {
         long serverMessageId = i * serverMessageCount + j + 1;
@@ -211,22 +203,14 @@ public abstract class AbstractGrpcStreamingTest {
             event ->
                 assertThat(event)
                     .hasName("message")
-                    .hasAttributesSatisfying(
-                        attrs ->
-                            assertThat(attrs)
-                                .hasSize(2)
-                                .containsEntry(MESSAGE_TYPE, "RECEIVED")
-                                .containsEntry(MESSAGE_ID, serverMessageId)));
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(MESSAGE_TYPE, "RECEIVED"), equalTo(MESSAGE_ID, serverMessageId)));
         serverEvents.add(
             event ->
                 assertThat(event)
                     .hasName("message")
-                    .hasAttributesSatisfying(
-                        attrs ->
-                            assertThat(attrs)
-                                .hasSize(2)
-                                .containsEntry(MESSAGE_TYPE, "SENT")
-                                .containsEntry(MESSAGE_ID, serverMessageId)));
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(MESSAGE_TYPE, "SENT"), equalTo(MESSAGE_ID, serverMessageId)));
       }
     }
 
