@@ -11,6 +11,8 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.guava.v10_0.GuavaAsyncOperationEndStrategy;
 
 public final class InstrumentationHelper {
+  private static final GuavaAsyncOperationEndStrategy asyncOperationEndStrategy;
+
   static {
     asyncOperationEndStrategy =
         GuavaAsyncOperationEndStrategy.builder()
@@ -21,8 +23,6 @@ public final class InstrumentationHelper {
 
     registerAsyncSpanEndStrategy();
   }
-
-  private static final GuavaAsyncOperationEndStrategy asyncOperationEndStrategy;
 
   private static void registerAsyncSpanEndStrategy() {
     AsyncOperationEndStrategies.instance().registerStrategy(asyncOperationEndStrategy);
