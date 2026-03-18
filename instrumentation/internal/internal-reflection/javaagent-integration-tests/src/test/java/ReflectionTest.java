@@ -36,8 +36,9 @@ class ReflectionTest {
     // to them
     assertThat(VirtualFieldInstalledMarker.class.isAssignableFrom(TestClass.class)).isTrue();
     assertThat(VirtualFieldAccessorMarker.class.isAssignableFrom(TestClass.class)).isTrue();
-    assertThat(TestClass.class.getInterfaces().length).isEqualTo(2);
-    assertThat(TestClass.class.getInterfaces()).isInstanceOfAny(Runnable.class, Serializable.class);
+    assertThat(TestClass.class.getInterfaces()).hasSize(2);
+    assertThat(TestClass.class.getInterfaces())
+        .containsExactlyInAnyOrder(Runnable.class, Serializable.class);
   }
 
   @Test
@@ -45,7 +46,7 @@ class ReflectionTest {
     // expected value is computed with serialver utility that comes with jdk
     assertThat(ObjectStreamClass.lookup(TestClass.class).getSerialVersionUID())
         .isEqualTo(-4292813100633930936L);
-    assertThat(TestClass.class.getDeclaredFields().length).isEqualTo(0);
+    assertThat(TestClass.class.getDeclaredFields()).isEmpty();
   }
 
   @Test
