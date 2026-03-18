@@ -120,3 +120,4 @@ grpc-1.6:javaagent
 grizzly-2.3:javaagent
 grpc-1.6:library
 guava-10.0:javaagent
+guava-10.0:library
