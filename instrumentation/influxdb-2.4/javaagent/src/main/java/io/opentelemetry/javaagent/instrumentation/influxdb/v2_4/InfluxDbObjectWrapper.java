@@ -10,7 +10,7 @@ import io.opentelemetry.context.Scope;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-public final class InfluxDbObjetWrapper {
+public final class InfluxDbObjectWrapper {
 
   @SuppressWarnings("unchecked") // we check types before casting
   public static Object wrap(Object object, Context parentContext) {
@@ -40,5 +40,5 @@ public final class InfluxDbObjetWrapper {
     return object;
   }
 
-  private InfluxDbObjetWrapper() {}
+  private InfluxDbObjectWrapper() {}
 }
