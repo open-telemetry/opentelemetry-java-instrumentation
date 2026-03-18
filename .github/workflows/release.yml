@@ -19,6 +19,7 @@ jobs:
   # and this is not a reason to hold up the release
 
   release:
+    environment: protected
     permissions:
       contents: write # for creating the release
       id-token: write # for signing artifacts with Sigstore

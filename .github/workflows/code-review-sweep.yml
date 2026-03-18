@@ -53,6 +53,7 @@ jobs:
       matrix: ${{ fromJSON(needs.dispatch.outputs.matrix) }}
       fail-fast: false
       max-parallel: 2  # keep low to avoid Copilot API rate limits
+    environment: protected
     permissions:
       contents: write  # for git push
     env:
