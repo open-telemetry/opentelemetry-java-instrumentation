@@ -135,3 +135,4 @@ hibernate-procedure-call-4.3:javaagent
 hibernate-reactive-1.0:javaagent
 hibernate-reactive-1.0:hibernate-reactive-2.0-testing
 hibernate:testing
+hikaricp-3.0:library
