@@ -152,3 +152,4 @@ internal-class-loader:javaagent-integration-tests
 internal-lambda:javaagent
 internal-reflection:javaagent
 internal-reflection:javaagent-integration-tests
+internal-url-class-loader:javaagent
