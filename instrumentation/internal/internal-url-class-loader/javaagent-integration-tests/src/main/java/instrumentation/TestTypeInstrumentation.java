@@ -36,7 +36,7 @@ public class TestTypeInstrumentation implements TypeInstrumentation {
   public static class GetHostNameAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit
     public static String methodExit() {
       return "not-the-host-name";
     }
