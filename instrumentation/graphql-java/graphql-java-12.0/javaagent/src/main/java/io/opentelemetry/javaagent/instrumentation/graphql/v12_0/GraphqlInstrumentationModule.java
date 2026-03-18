@@ -27,9 +27,13 @@ public class GraphqlInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // added in 20.0
-    return not(
-        hasClassesNamed("graphql.execution.instrumentation.SimplePerformantInstrumentation"));
+    // graphql.GraphQL has been present since version 1.0
+    return hasClassesNamed("graphql.GraphQL")
+        // added in 20.0
+        .and(
+            not(
+                hasClassesNamed(
+                    "graphql.execution.instrumentation.SimplePerformantInstrumentation")));
   }
 
   @Override
