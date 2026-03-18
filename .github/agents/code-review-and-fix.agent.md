@@ -244,9 +244,28 @@ Execute these steps strictly in order — do not reorder:
    `:instrumentation:foo:foo-1.0:library`,
    `:instrumentation:foo:foo-1.0:javaagent`, and any version-variant siblings such as
    `:instrumentation:foo:foo-2.0:library` if it depends on the `foo-1.0:testing` module.
-2. If changes touch Gradle muzzle configuration (for example `muzzle {}`, version ranges,
-   `assertInverse.set(true)`, or module wiring affecting muzzle), run the relevant module `:muzzle`
-   tasks.
+2. **Run muzzle validation when muzzle config changed.** If any review fix touched Gradle
+   muzzle configuration (for example `muzzle {}`, version ranges, `assertInverse.set(true)`,
+   or module wiring affecting muzzle), run the relevant module's `:muzzle` task:
+
+   ```
+   ./gradlew :<module-path>:muzzle
+   ```
+
+   This is mandatory, not optional — muzzle failures indicate the change is incorrect.
+   If a muzzle task fails:
+
+   1. Diagnose the root cause. Determine whether the failure is caused by a review fix
+      applied in Phase 3 (e.g., an `assertInverse.set(true)` that was added but the
+      instrumentation actually passes on versions outside the declared range).
+   2. If the failure is caused by a review fix and a correct alternative fix is obvious,
+      apply it and re-run. Repeat at most **three times** per failing fix.
+   3. If the failure cannot be resolved after three attempts — or if the only correct
+      resolution is to revert the review fix — **revert that specific change**
+      (`git checkout -- <file>` for the affected lines) and record the item as
+      `Needs Manual Fix` in the summary table with a note explaining the muzzle failure.
+   4. After reverting, re-run the `:muzzle` task to confirm the revert restored a green
+      build. Never commit code that fails muzzle validation.
 3. **Last, after all validation is done**, run `./gradlew spotlessApply` to fix formatting
    across all modified files.
    `spotlessApply` must be the final build command — never run it before tests or muzzle.
