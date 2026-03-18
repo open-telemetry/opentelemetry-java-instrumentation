@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.failsafe.v3_0;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -19,9 +17,7 @@ import io.opentelemetry.instrumentation.failsafe.AbstractFailsafeInstrumentation
 import io.opentelemetry.instrumentation.failsafe.v3_0.internal.RetryPolicyEventListenerBuilders;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.LongPointAssert;
 import java.util.Objects;
-import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -115,15 +111,5 @@ final class FailsafeTelemetryTest extends AbstractFailsafeInstrumentationTest {
                         sum.isMonotonic()
                             .hasPointsSatisfying(
                                 buildRetryPolicyAssertion(1, retryPolicyName, "success"))));
-  }
-
-  private static Consumer<LongPointAssert> buildRetryPolicyAssertion(
-      long expectedValue, String expectedOutcomeValue) {
-    return longSumAssert ->
-        longSumAssert
-            .hasValue(expectedValue)
-            .hasAttributesSatisfyingExactly(
-                equalTo(stringKey("failsafe.retry_policy.name"), "testing"),
-                equalTo(stringKey("failsafe.retry_policy.outcome"), expectedOutcomeValue));
   }
 }
