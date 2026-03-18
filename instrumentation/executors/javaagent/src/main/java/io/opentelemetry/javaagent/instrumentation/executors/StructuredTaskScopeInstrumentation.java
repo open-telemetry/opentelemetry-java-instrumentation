@@ -17,6 +17,7 @@ import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.Callable;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -53,8 +54,8 @@ public class StructuredTaskScopeInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitCallableFork(
         @Advice.Argument(0) Callable<?> task,
-        @Advice.Enter PropagatedContext propagatedContext,
-        @Advice.Thrown Throwable throwable) {
+        @Advice.Enter @Nullable PropagatedContext propagatedContext,
+        @Advice.Thrown @Nullable Throwable throwable) {
       ExecutorAdviceHelper.cleanUpAfterSubmit(
           propagatedContext, throwable, CALLABLE_PROPAGATED_CONTEXT, task);
     }
