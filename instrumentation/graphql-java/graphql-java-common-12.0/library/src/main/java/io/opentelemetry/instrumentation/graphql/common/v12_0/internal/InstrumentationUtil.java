@@ -9,6 +9,7 @@ import graphql.execution.instrumentation.ChainedInstrumentation;
 import graphql.execution.instrumentation.Instrumentation;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -17,7 +18,7 @@ import java.util.List;
 public final class InstrumentationUtil {
 
   public static Instrumentation addInstrumentation(
-      Instrumentation instrumentation, Instrumentation ourInstrumentation) {
+      @Nullable Instrumentation instrumentation, Instrumentation ourInstrumentation) {
     if (instrumentation == null) {
       return ourInstrumentation;
     }

@@ -22,8 +22,6 @@ public final class ElasticsearchRestJavaagentInstrumenterFactory {
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "elasticsearch")
           .getBoolean("capture_search_query", false);
 
-  private ElasticsearchRestJavaagentInstrumenterFactory() {}
-
   public static Instrumenter<ElasticsearchRestRequest, Response> create(
       String instrumentationName) {
     return ElasticsearchRestInstrumenterFactory.create(
@@ -34,4 +32,6 @@ public final class ElasticsearchRestJavaagentInstrumenterFactory {
         AgentCommonConfig.get().getKnownHttpRequestMethods(),
         CAPTURE_SEARCH_QUERY);
   }
+
+  private ElasticsearchRestJavaagentInstrumenterFactory() {}
 }

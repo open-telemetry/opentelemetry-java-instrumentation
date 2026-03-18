@@ -32,7 +32,6 @@ dependencies {
   testImplementation("com.fasterxml.jackson.core:jackson-databind")
 
   testImplementation("org.testcontainers:testcontainers-elasticsearch")
-  testLibrary("org.elasticsearch.client:elasticsearch-rest-client:6.4.0")
 
   latestDepTestLibrary("org.elasticsearch.client:elasticsearch-rest-client:6.+") // see elasticsearch-rest-7.0 module
 }

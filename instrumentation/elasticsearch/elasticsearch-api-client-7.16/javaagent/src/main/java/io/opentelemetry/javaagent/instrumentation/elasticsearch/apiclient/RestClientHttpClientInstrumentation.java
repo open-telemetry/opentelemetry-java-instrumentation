@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.apiclient;
 
 import static io.opentelemetry.javaagent.instrumentation.elasticsearch.apiclient.ElasticsearchApiClientSingletons.ENDPOINT_DEFINITION;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -32,14 +31,10 @@ public class RestClientHttpClientInstrumentation implements TypeInstrumentation 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(namedOneOf("performRequest", "performRequestAsync"))
-            .and(takesArgument(0, String.class)),
+        namedOneOf("performRequest", "performRequestAsync").and(takesArgument(0, String.class)),
         this.getClass().getName() + "$PerformRequestAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("createRestRequest"))
-            .and(returns(named("org.elasticsearch.client.Request"))),
+        named("createRestRequest").and(returns(named("org.elasticsearch.client.Request"))),
         this.getClass().getName() + "$CreateRestRequestAdvice");
   }
 
@@ -62,7 +57,7 @@ public class RestClientHttpClientInstrumentation implements TypeInstrumentation 
   @SuppressWarnings("unused")
   public static class CreateRestRequestAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.Return Request request) {
       String endpointId = EndpointId.get(Context.current());
       if (endpointId == null) {

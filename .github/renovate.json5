@@ -256,16 +256,6 @@
       ],
     },
     {
-      // vaadin 14 tests require node 16
-      matchPackageNames: [
-        'actions/node-versions',
-      ],
-      matchUpdateTypes: [
-        'major',
-      ],
-      enabled: false,
-    },
-    {
       // intentionally using Spring Boot 2 to make sure the earliest version is supported
       matchFileNames: [
         'smoke-tests/images/spring-boot/build.gradle.kts',

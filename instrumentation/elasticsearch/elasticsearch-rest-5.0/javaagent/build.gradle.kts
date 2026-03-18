@@ -19,7 +19,7 @@ muzzle {
 }
 
 dependencies {
-  compileOnly("org.elasticsearch.client:rest:5.0.0")
+  library("org.elasticsearch.client:rest:5.0.0")
 
   implementation(project(":instrumentation:elasticsearch:elasticsearch-rest-common-5.0:javaagent"))
 
@@ -33,7 +33,6 @@ dependencies {
   testImplementation("com.fasterxml.jackson.core:jackson-databind")
 
   testImplementation("org.testcontainers:testcontainers-elasticsearch")
-  testLibrary("org.elasticsearch.client:rest:5.0.0")
 
   latestDepTestLibrary("org.elasticsearch.client:elasticsearch-rest-client:6.3.+") // see elasticsearch-rest-6.4 module
 }

@@ -7,6 +7,7 @@ muzzle {
     group.set("io.dropwizard")
     module.set("dropwizard-views")
     versions.set("(,3.0.0)")
+    assertInverse.set(true)
   }
 }
 

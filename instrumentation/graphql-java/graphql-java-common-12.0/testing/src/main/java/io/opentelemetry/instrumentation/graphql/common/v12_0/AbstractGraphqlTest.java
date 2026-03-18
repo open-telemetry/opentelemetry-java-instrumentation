@@ -227,9 +227,9 @@ public abstract class AbstractGraphqlTest {
                           .hasKind(SpanKind.INTERNAL)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
-                              equalTo(stringKey("graphql.operation.type"), "query"),
+                              equalTo(GRAPHQL_OPERATION_TYPE, "query"),
                               normalizedQueryEqualsTo(
-                                  stringKey("graphql.document"), "{ bookById(id: ?) { name } }")));
+                                  GRAPHQL_DOCUMENT, "{ bookById(id: ?) { name } }")));
               if (includeDataFetcher()) {
                 assertions.add(
                     span ->
