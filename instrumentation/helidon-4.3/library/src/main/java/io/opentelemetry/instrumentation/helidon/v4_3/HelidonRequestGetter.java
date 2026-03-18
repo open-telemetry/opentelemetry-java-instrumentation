@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.helidon.v4_3;
 
 import static java.util.Collections.emptyIterator;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 import io.helidon.http.Header;
@@ -16,14 +15,10 @@ import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
 import java.util.Iterator;
 import javax.annotation.Nullable;
 
-enum HelidonRequestGetter implements ExtendedTextMapGetter<ServerRequest> {
-  INSTANCE;
+class HelidonRequestGetter implements ExtendedTextMapGetter<ServerRequest> {
 
   @Override
-  public Iterable<String> keys(@Nullable ServerRequest req) {
-    if (req == null) {
-      return emptyList();
-    }
+  public Iterable<String> keys(ServerRequest req) {
     // Materialize the stream to avoid Helidon's HeaderIterator bug where customHeadersIterator
     // can be null when iterating through the lazy iterator
     return req.headers().stream().map(Header::name).collect(toList());
