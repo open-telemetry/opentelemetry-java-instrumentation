@@ -132,3 +132,4 @@ hibernate-6.0:spring-testing
 hibernate-6.0:javaagent
 hibernate-common:javaagent
 hibernate-procedure-call-4.3:javaagent
+hibernate-reactive-1.0:javaagent
