@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v4_3;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
@@ -36,8 +35,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(returns(implementsInterface(named("org.hibernate.procedure.ProcedureCall")))),
+        returns(implementsInterface(named("org.hibernate.procedure.ProcedureCall"))),
         SessionInstrumentation.class.getName() + "$GetProcedureCallAdvice");
   }
 
