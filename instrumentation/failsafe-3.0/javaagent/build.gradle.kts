@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("dev.failsafe")
     module.set("failsafe")
-    versions.set("[3.0.1,)")
+    versions.set("[3.0.0,)")
     assertInverse.set(true)
   }
 }
