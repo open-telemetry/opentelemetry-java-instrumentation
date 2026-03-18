@@ -165,3 +165,4 @@ java-util-logging:shaded-stub-for-instrumenting
 javalin-5.0:javaagent
 javalin-7.0:javaagent
 javalin:testing
+jaxrs-client:jaxrs-client-1.1-testing
