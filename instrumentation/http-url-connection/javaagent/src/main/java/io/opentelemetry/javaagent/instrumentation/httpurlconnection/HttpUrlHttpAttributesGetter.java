@@ -47,14 +47,12 @@ class HttpUrlHttpAttributesGetter
     return value == null ? emptyList() : singletonList(value);
   }
 
-  @Nullable
   @Override
   public String getNetworkProtocolName(HttpURLConnection connection, @Nullable Integer integer) {
     // HttpURLConnection hardcodes the protocol name&version
     return "http";
   }
 
-  @Nullable
   @Override
   public String getNetworkProtocolVersion(HttpURLConnection connection, @Nullable Integer integer) {
     // HttpURLConnection hardcodes the protocol name&version
