@@ -159,3 +159,4 @@ java-http-client:javaagent
 java-http-server:javaagent
 java-http-client:testing
 java-http-server:library
+java-http-server:testing
