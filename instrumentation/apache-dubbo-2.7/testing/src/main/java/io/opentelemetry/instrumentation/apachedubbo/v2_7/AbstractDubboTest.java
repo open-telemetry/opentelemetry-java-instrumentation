@@ -22,14 +22,19 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SE
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService;
+import io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.impl.HelloServiceImpl;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
@@ -51,11 +56,18 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractDubboTest {
 
+  private static final AttributeKey<String> RPC_METHOD_ORIGINAL =
+      AttributeKey.stringKey("rpc.method_original");
+
   private final ProtocolConfig protocolConfig = new ProtocolConfig();
 
   protected abstract InstrumentationExtension testing();
 
   protected abstract boolean hasServicePeerName();
+
+  protected boolean canCaptureUnknownServiceSpans() {
+    return false;
+  }
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
@@ -476,6 +488,99 @@ public abstract class AbstractDubboTest {
                                                       SERVER_PORT,
                                                       k -> k.isInstanceOf(Long.class)))))));
     }
+  }
+
+  @Test
+  void testUnknownService() throws ReflectiveOperationException {
+    int port = PortUtils.findOpenPort();
+    protocolConfig.setPort(port);
+
+    DubboBootstrap bootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(bootstrap::destroy);
+    bootstrap
+        .application(new ApplicationConfig("dubbo-test-unknown-provider"))
+        .service(configureServer())
+        .protocol(protocolConfig)
+        .start();
+
+    ReferenceConfig<MiddleService> unknownRef = new ReferenceConfig<>();
+    unknownRef.setInterface(MiddleService.class);
+    unknownRef.setGeneric("true");
+    unknownRef.setRetries(0);
+    unknownRef.setUrl("dubbo://localhost:" + port + "/?timeout=30000");
+
+    ProtocolConfig consumerProtocolConfig = new ProtocolConfig();
+    consumerProtocolConfig.setRegister(false);
+
+    DubboBootstrap consumerBootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(consumerBootstrap::destroy);
+    consumerBootstrap
+        .application(new ApplicationConfig("dubbo-test-unknown-consumer"))
+        .reference(unknownRef)
+        .protocol(consumerProtocolConfig)
+        .start();
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    ReferenceConfig<GenericService> reference = (ReferenceConfig) unknownRef;
+    GenericService genericService = reference.get();
+
+    try {
+      genericService.$invoke("hello", new String[] {String.class.getName()}, new Object[] {"test"});
+    } catch (Throwable ignored) {
+      // expected: service not exported on provider
+    }
+
+    testing()
+        .waitAndAssertTraces(
+            trace -> {
+              List<Consumer<SpanDataAssert>> spanAsserts = new ArrayList<>();
+              spanAsserts.add(
+                  span ->
+                      span.hasName("org.apache.dubbo.rpc.service.GenericService/$invoke")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasNoParent()
+                          .hasStatus(io.opentelemetry.sdk.trace.data.StatusData.error())
+                          .hasAttributesSatisfying(
+                              equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
+                              equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "dubbo" : null),
+                              equalTo(
+                                  RPC_SERVICE,
+                                  emitOldRpcSemconv()
+                                      ? "org.apache.dubbo.rpc.service.GenericService"
+                                      : null),
+                              equalTo(
+                                  RPC_METHOD,
+                                  emitStableRpcSemconv()
+                                      ? "org.apache.dubbo.rpc.service.GenericService/$invoke"
+                                      : "$invoke"),
+                              equalTo(SERVER_ADDRESS, "localhost"),
+                              satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class))));
+
+              if (canCaptureUnknownServiceSpans() && emitStableRpcSemconv()) {
+                spanAsserts.add(
+                    span ->
+                        span.hasName("_OTHER")
+                            .hasKind(SpanKind.SERVER)
+                            .hasParent(trace.getSpan(0))
+                            .hasStatus(io.opentelemetry.sdk.trace.data.StatusData.error())
+                            .hasAttributesSatisfying(
+                                equalTo(RPC_SYSTEM_NAME, "dubbo"),
+                                equalTo(RPC_METHOD, "_OTHER"),
+                                satisfies(
+                                    RPC_METHOD_ORIGINAL,
+                                    val ->
+                                        val.satisfiesAnyOf(
+                                            v ->
+                                                assertThat(v)
+                                                    .contains(
+                                                        "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),
+                                            v -> assertThat(v).contains("MiddleService"))),
+                                satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
+                                satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class))));
+              }
+
+              trace.hasSpansSatisfyingExactly(spanAsserts);
+            });
   }
 
   static void assertNetworkType(AbstractStringAssert<?> stringAssert) {
