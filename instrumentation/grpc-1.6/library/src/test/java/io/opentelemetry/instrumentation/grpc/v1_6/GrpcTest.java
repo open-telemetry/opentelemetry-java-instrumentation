@@ -162,9 +162,7 @@ class GrpcTest extends AbstractGrpcTest {
       Metadata metadata = grpcRequest.getMetadata();
       if (metadata != null && metadata.containsKey(CUSTOM_METADATA_KEY)) {
         String value = metadata.get(CUSTOM_METADATA_KEY);
-        if (value != null) {
-          attributes.put(CUSTOM_KEY, value);
-        }
+        attributes.put(CUSTOM_KEY, value);
       }
     }
   }
