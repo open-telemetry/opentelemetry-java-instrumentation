@@ -11,11 +11,11 @@ import static java.util.stream.Collectors.toList;
 import io.helidon.http.Header;
 import io.helidon.http.HeaderNames;
 import io.helidon.webserver.http.ServerRequest;
-import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Iterator;
 import javax.annotation.Nullable;
 
-class HelidonRequestGetter implements ExtendedTextMapGetter<ServerRequest> {
+class HelidonRequestGetter implements TextMapGetter<ServerRequest> {
 
   @Override
   public Iterable<String> keys(ServerRequest req) {
