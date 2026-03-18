@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.grails;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -31,12 +30,11 @@ public class UrlMappingsInfoHandlerAdapterInstrumentation implements TypeInstrum
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("handle"))
             .and(takesArgument(2, named(Object.class.getName())))
             .and(takesArguments(3)),
-        UrlMappingsInfoHandlerAdapterInstrumentation.class.getName() + "$ServerSpanNameAdvice");
+        getClass().getName() + "$ServerSpanNameAdvice");
   }
 
   @SuppressWarnings("unused")
