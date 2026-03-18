@@ -123,6 +123,20 @@ class ZioRuntimeInstrumentationTest {
     )
   }
 
+  @Test
+  def yieldingFiberKeepsParentContextAfterParentScopeCloses(): Unit = {
+    runYieldingFiberAfterParentScopeCloses()
+
+    testing.waitAndAssertTraces(
+      assertTrace { trace =>
+        trace.hasSpansSatisfyingExactly(
+          assertSpan(_.hasName("parent").hasNoParent),
+          assertSpan(_.hasName("child").hasParent(trace.getSpan(0)))
+        )
+      }
+    )
+  }
+
   def withSpan(name: String, fun: Unit => Unit): Unit = {
     testing.runWithSpan(
       name,

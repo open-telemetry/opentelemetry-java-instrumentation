@@ -25,6 +25,8 @@ public final class FiberContext {
   }
 
   public void onSuspend() {
+    Context suspendedContext = Context.current();
+
     // First we try closing the scope that was opened in onResume. This may fail if user code has
     // left an open scope because only the latest scope can be closed.
     // See https://github.com/open-telemetry/opentelemetry-java/issues/5303
@@ -32,10 +34,11 @@ public final class FiberContext {
 
     // If the current context doesn't match the initial context then there must be an open scope,
     // reset the state to the initial context.
-    this.context = Context.current();
-    if (this.context != initialContext) {
+    if (Context.current() != initialContext) {
       requireNonNull(initialContext).makeCurrent();
     }
+
+    this.context = suspendedContext;
   }
 
   public void onResume() {
