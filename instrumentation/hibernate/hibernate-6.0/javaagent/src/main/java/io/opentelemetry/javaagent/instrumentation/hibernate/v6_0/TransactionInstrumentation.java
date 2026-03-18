@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v6_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Hibernate6Singletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -40,8 +39,7 @@ public class TransactionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("commit")).and(takesArguments(0)),
-        TransactionInstrumentation.class.getName() + "$TransactionCommitAdvice");
+        named("commit").and(takesArguments(0)), getClass().getName() + "$TransactionCommitAdvice");
   }
 
   @SuppressWarnings("unused")
