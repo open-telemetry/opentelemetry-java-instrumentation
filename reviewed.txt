@@ -115,3 +115,4 @@ graphql-java-20.0:javaagent
 graphql-java-12.0:javaagent
 graphql-java-20.0:library
 graphql-java-common-12.0:library
+graphql-java-common-12.0:testing
