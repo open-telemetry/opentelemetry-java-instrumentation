@@ -142,3 +142,4 @@ http-url-connection:javaagent
 iceberg-1.8:library
 iceberg-1.8:testing
 hystrix-1.4:javaagent
+influxdb-2.4:javaagent
