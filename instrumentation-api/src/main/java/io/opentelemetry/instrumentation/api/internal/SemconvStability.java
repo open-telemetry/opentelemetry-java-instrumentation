@@ -38,7 +38,7 @@ public final class SemconvStability {
   private static final boolean emitStableRpcSemconv;
 
   static {
-    OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
+    OpenTelemetry openTelemetry = GlobalOpenTelemetry.getOrNoop();
     boolean v3Preview =
         getInstrumentationConfig(openTelemetry, "common").getBoolean("v3_preview", false);
     Set<String> optInValues = resolveOptInValues(openTelemetry);
