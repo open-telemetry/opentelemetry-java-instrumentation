@@ -130,3 +130,4 @@ hibernate-3.3:javaagent
 hibernate-4.0:javaagent
 hibernate-6.0:spring-testing
 hibernate-6.0:javaagent
+hibernate-common:javaagent
