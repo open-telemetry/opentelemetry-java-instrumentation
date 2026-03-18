@@ -49,8 +49,7 @@ public class TestInstrumentationModule2 extends InstrumentationModule {
 
     @Override
     public void transform(TypeTransformer transformer) {
-      transformer.applyAdviceToMethod(
-          none(), getClass().getName() + "$TestAdvice");
+      transformer.applyAdviceToMethod(none(), getClass().getName() + "$TestAdvice");
     }
 
     @SuppressWarnings("unused")
