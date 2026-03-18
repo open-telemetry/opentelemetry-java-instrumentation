@@ -23,7 +23,7 @@ public final class GwtSingletons {
   private static final Instrumenter<Method, Void> INSTRUMENTER;
 
   static {
-    GwtRpcAttributesGetter rpcAttributesGetter = GwtRpcAttributesGetter.INSTANCE;
+    GwtRpcAttributesGetter rpcAttributesGetter = new GwtRpcAttributesGetter();
     INSTRUMENTER =
         Instrumenter.<Method, Void>builder(
                 GlobalOpenTelemetry.get(),
