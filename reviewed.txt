@@ -126,3 +126,4 @@ helidon-4.3:javaagent
 helidon-4.3:library
 gwt-2.0:javaagent
 helidon-4.3:testing
+hibernate-3.3:javaagent
