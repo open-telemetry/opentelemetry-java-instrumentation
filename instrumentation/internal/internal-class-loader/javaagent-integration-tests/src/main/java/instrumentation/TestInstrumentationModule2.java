@@ -50,15 +50,15 @@ public class TestInstrumentationModule2 extends InstrumentationModule {
     @Override
     public void transform(TypeTransformer transformer) {
       transformer.applyAdviceToMethod(
-          none(), getClass().getEnclosingClass().getName() + "$TestAdvice");
+          none(), getClass().getName() + "$TestAdvice");
     }
-  }
 
-  @SuppressWarnings("unused")
-  public static class TestAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static String onEnter() {
-      return TestFailableCallable.class.getName();
+    @SuppressWarnings("unused")
+    public static class TestAdvice {
+      @Advice.OnMethodEnter(suppress = Throwable.class)
+      public static String onEnter() {
+        return TestFailableCallable.class.getName();
+      }
     }
   }
 }
