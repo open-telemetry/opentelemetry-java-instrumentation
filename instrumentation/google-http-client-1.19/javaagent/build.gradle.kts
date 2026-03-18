@@ -9,6 +9,7 @@ muzzle {
 
     // 1.19.0 is the first release.  The versions before are betas and RCs
     versions.set("[1.19.0,)")
+    assertInverse.set(true)
   }
 }
 
@@ -17,7 +18,7 @@ dependencies {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 

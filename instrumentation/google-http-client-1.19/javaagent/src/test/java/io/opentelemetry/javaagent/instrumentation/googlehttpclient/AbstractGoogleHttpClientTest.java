@@ -45,7 +45,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTest<HttpRequest> {
+abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTest<HttpRequest> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
