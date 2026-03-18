@@ -213,7 +213,20 @@ Execute these steps strictly in order — do not reorder:
    custom test tasks wired into `check`). The second run activates `latestDepTest`, which
    replaces `library` and `testLibrary` dependency versions with `latest.release`.
    This is mandatory, not optional — fixes that break tests must be caught and corrected
-   before committing. If a test fails, diagnose the failure, fix it, and re-run until green.
+   before committing. If a test fails:
+
+   1. Diagnose the root cause. Determine whether the failure is caused by one of the
+      review fixes applied in Phase 3.
+   2. If the failure is caused by a review fix and a correct alternative fix is obvious,
+      apply it and re-run. Repeat at most **three times** per failing fix.
+   3. If the failure cannot be resolved after three attempts — or if the only correct
+      resolution is to revert the review fix — **revert that specific change**
+      (`git checkout -- <file>` for the affected lines) and record the item as
+      `Needs Manual Fix` in the summary table with a note explaining the test failure.
+   4. After reverting, re-run the affected `:check` tasks to confirm the revert restored
+      a green build. If tests still fail on code you did not change, that is a
+      pre-existing failure — note it in the summary but do not block the commit.
+   5. Never commit code that fails tests you can reproduce locally.
 
    **Testing-module dependent validation**: when any modified module is a `testing` module
    (its Gradle path ends with `:testing`), you must **also** run `:check` (both normal and
@@ -238,9 +251,11 @@ Execute these steps strictly in order — do not reorder:
    across all modified files.
    `spotlessApply` must be the final build command — never run it before tests or muzzle.
 4. **Verify substantive changes remain.** Run `git diff --ignore-all-space --ignore-blank-lines`
-   and confirm non-empty output. If the only remaining diffs are whitespace changes, **stop
-   here** — reset the working tree (`git checkout -- .`), do not commit. Report "No issues
-   found." and exit.
+   and confirm non-empty output. If the only remaining diffs are whitespace changes — or if
+   all review fixes were reverted during validation — **stop here**: reset the working tree
+   (`git checkout -- .`), do not commit or push. If any reverted items were recorded as
+   `Needs Manual Fix`, print the summary table with those items. Otherwise report
+   "No issues found." and exit.
 5. Commit all changes in a single commit. The subject line must always be
    `Review fixes for <module>` where `<module>` is the short module name (e.g.,
    `apache-elasticjob-3.0 javaagent`). The body is a bulleted list of changes:
