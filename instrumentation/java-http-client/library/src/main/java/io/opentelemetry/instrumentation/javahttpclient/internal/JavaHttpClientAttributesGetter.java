@@ -14,9 +14,8 @@ import java.net.http.HttpResponse;
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum JavaHttpClientAttributesGetter
+final class JavaHttpClientAttributesGetter
     implements HttpClientAttributesGetter<HttpRequest, HttpResponse<?>> {
-  INSTANCE;
 
   @Override
   public String getHttpRequestMethod(HttpRequest httpRequest) {
@@ -45,7 +44,6 @@ enum JavaHttpClientAttributesGetter
     return httpResponse.headers().allValues(name);
   }
 
-  @Nullable
   @Override
   public String getNetworkProtocolName(HttpRequest request, @Nullable HttpResponse<?> response) {
     return "http";
