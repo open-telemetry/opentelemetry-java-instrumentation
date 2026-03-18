@@ -167,7 +167,7 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetResponseCodeAdvice {
 
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static void methodExit(
         @Advice.This HttpURLConnection connection, @Advice.Return int returnValue) {
 
