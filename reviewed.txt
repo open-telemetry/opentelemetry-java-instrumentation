@@ -169,3 +169,4 @@ jaxrs-client:jaxrs-client-1.1-testing
 jaxrs-client:jaxrs-client-2.0-testing
 jaxrs-2.0-annotations:javaagent
 jaxrs-2.0:jaxrs-2.0-arquillian-testing
+jaxrs-1.0:javaagent
