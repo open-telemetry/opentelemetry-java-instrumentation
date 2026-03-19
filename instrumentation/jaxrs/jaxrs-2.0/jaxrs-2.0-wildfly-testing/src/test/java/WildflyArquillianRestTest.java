@@ -3,4 +3,4 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-public class WildflyArquillianRestTest extends AbstractArquillianRestTest {}
+class WildflyArquillianRestTest extends AbstractArquillianRestTest {}

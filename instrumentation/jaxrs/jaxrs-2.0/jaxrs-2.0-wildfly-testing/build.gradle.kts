@@ -51,8 +51,6 @@ tasks {
     dependsOn(modifyLogbackJar)
     dependsOn(setupServer)
 
-    // --add-modules is unrecognized on jdk8, ignore it instead of failing
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
     // needed for java 11 to avoid org.jboss.modules.ModuleNotFoundException: java.se
     jvmArgs("--add-modules=java.se")
     // add offset to default port values
