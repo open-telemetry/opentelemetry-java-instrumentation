@@ -62,7 +62,6 @@ public final class LogEventMapper<T> {
   private final boolean captureCodeAttributes;
   private final boolean captureMapMessageAttributes;
   private final boolean captureMarkerAttribute;
-  private final List<String> captureContextDataAttributes;
   private final List<AttributeKey<String>> precomputedContextDataKeys;
   private final boolean captureAllContextDataAttributes;
   private final boolean captureEventName;
@@ -95,7 +94,6 @@ public final class LogEventMapper<T> {
       }
       this.precomputedContextDataKeys = keys;
     }
-    this.captureContextDataAttributes = captureContextDataAttributes;
     this.captureEventName = captureEventName;
   }
 

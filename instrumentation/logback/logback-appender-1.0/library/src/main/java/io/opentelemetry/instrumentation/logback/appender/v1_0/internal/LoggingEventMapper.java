@@ -79,7 +79,6 @@ public final class LoggingEventMapper {
       AttributeKey.stringKey("otel.event.name");
 
   private final boolean captureExperimentalAttributes;
-  private final List<String> captureMdcAttributes;
   private final List<AttributeKey<String>> precomputedMdcKeys;
   private final boolean captureAllMdcAttributes;
   private final boolean captureCodeAttributes;
@@ -95,7 +94,6 @@ public final class LoggingEventMapper {
   private LoggingEventMapper(Builder builder) {
     this.captureExperimentalAttributes = builder.captureExperimentalAttributes;
     this.captureCodeAttributes = builder.captureCodeAttributes;
-    this.captureMdcAttributes = builder.captureMdcAttributes;
     this.captureMarkerAttribute = builder.captureMarkerAttribute;
     this.captureKeyValuePairAttributes = builder.captureKeyValuePairAttributes;
     this.captureLoggerContext = builder.captureLoggerContext;
