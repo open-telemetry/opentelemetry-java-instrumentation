@@ -196,3 +196,4 @@ jaxws:jaxws-2.0-wildfly-testing
 jaxws:jaxws-3.0-axis2-2.0-testing
 jaxws-2.0:javaagent
 jaxws:jaxws-3.0-common-testing
+jaxws:jaxws-3.0-metro-3.0-testing
