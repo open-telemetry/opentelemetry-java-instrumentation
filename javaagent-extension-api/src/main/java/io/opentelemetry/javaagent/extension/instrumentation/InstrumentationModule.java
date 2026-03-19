@@ -128,6 +128,11 @@ public abstract class InstrumentationModule implements Ordered {
    * techniques. The non-inlining of advice will be enforced by muzzle (TODO)
    */
   public boolean isIndyModule() {
+    if (getClass().getName().startsWith("io.opentelemetry.javaagent.instrumentation.")) {
+      // agent internal instrumentation modules are all compatible with indy.
+      return true;
+    }
+
     return IndyConfigurationHolder.indyEnabled;
   }
 
