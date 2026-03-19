@@ -23,7 +23,7 @@ public final class JaxrsContextPath {
   private JaxrsContextPath() {}
 
   @Nullable
-  public static Context init(Context context, String path) {
+  public static Context init(Context context, @Nullable String path) {
     if (path == null || path.isEmpty() || path.equals("/")) {
       return null;
     }
