@@ -106,8 +106,12 @@ Auto-fix boundaries:
 
 - Safe to fix:
   - import cleanup or direct style-guide conformance
-  - obvious assertion API migrations (e.g., AssertJ preference) — but **not** inside
-    `satisfies()` lambdas where the lambda parameter is already an `AbstractAssert` (e.g.,
+  - obvious assertion API migrations (e.g., AssertJ preference) and idiomatic
+    simplifications listed in `testing-general-patterns.md` § AssertJ Idiomatic
+    Simplifications (e.g., `assertThat(list.size()).isEqualTo(N)` →
+    `assertThat(list).hasSize(N)`, sequential `assertThat(list.get(i)).isEqualTo(...)`
+    → `assertThat(list).containsExactly(...)`) — but **not** inside `satisfies()`
+    lambdas where the lambda parameter is already an `AbstractAssert` (e.g.,
     `AbstractStringAssert`). Calls like `taskId.contains(jobName)` on the assert object are
     already valid AssertJ assertions; do not wrap them in `assertThat(...).isTrue()`
   - deterministic semconv constant handling aligned with repository rules
