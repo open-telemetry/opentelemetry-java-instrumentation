@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import javax.annotation.Nullable;
 
 public final class JFinalSingletons {
 
@@ -43,7 +44,7 @@ public final class JFinalSingletons {
     return INSTRUMENTER;
   }
 
-  public static void updateRoute(Action action) {
+  public static void updateRoute(@Nullable Action action) {
     if (action == null) {
       return;
     }
