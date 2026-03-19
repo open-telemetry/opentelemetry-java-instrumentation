@@ -29,7 +29,7 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
   private HttpClient httpsClient;
 
   @BeforeEach
-  public void before() throws Exception {
+  void before() throws Exception {
     // Start the main Jetty HttpClient and a https client
     client = createStandardClient();
     client.setConnectTimeout(CONNECTION_TIMEOUT.toMillis());
@@ -42,7 +42,7 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
   }
 
   @AfterEach
-  public void after() throws Exception {
+  void after() throws Exception {
     client.stop();
     httpsClient.stop();
   }
