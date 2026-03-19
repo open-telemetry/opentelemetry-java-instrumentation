@@ -18,6 +18,7 @@ import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.jboss.logmanager.ExtLogRecord;
@@ -38,6 +39,7 @@ public final class LoggingEventMapper {
   private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
 
   private final List<String> captureMdcAttributes;
+  private final List<AttributeKey<String>> precomputedMdcKeys;
 
   private static final boolean captureExperimentalAttributes =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jboss_logmanager")
@@ -57,6 +59,18 @@ public final class LoggingEventMapper {
             .getScalarList("capture_mdc_attributes/development", String.class, emptyList());
     this.captureAllMdcAttributes =
         captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
+    if (captureAllMdcAttributes) {
+      this.precomputedMdcKeys = emptyList();
+    } else {
+      List<AttributeKey<String>> keys = new ArrayList<>(captureMdcAttributes.size());
+      for (String key : captureMdcAttributes) {
+        if (!OTEL_EVENT_NAME.getKey().equals(key)
+            && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
+          keys.add(getMdcAttributeKey(key));
+        }
+      }
+      this.precomputedMdcKeys = keys;
+    }
     if (captureEventName) {
       logger.warning(
           "The otel.instrumentation.jboss-logmanager.experimental.capture-event-name setting is"
@@ -135,14 +149,9 @@ public final class LoggingEventMapper {
       return;
     }
 
-    for (String key : captureMdcAttributes) {
-      if (!OTEL_EVENT_NAME.getKey().equals(key)
-          && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
-        String value = context.get(key);
-        if (value != null) {
-          builder.setAttribute(getMdcAttributeKey(key), value);
-        }
-      }
+    for (AttributeKey<String> attributeKey : precomputedMdcKeys) {
+      String value = context.get(attributeKey.getKey());
+      builder.setAttribute(attributeKey, value);
     }
   }
 

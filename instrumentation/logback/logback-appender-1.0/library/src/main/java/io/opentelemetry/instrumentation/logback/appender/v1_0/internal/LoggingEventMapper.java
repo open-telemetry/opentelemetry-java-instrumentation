@@ -80,6 +80,7 @@ public final class LoggingEventMapper {
 
   private final boolean captureExperimentalAttributes;
   private final List<String> captureMdcAttributes;
+  private final List<AttributeKey<String>> precomputedMdcKeys;
   private final boolean captureAllMdcAttributes;
   private final boolean captureCodeAttributes;
   private final boolean captureMarkerAttribute;
@@ -104,6 +105,18 @@ public final class LoggingEventMapper {
     this.captureLogstashStructuredArguments = builder.captureLogstashStructuredArguments;
     this.captureAllMdcAttributes =
         builder.captureMdcAttributes.size() == 1 && builder.captureMdcAttributes.get(0).equals("*");
+    if (captureAllMdcAttributes) {
+      this.precomputedMdcKeys = emptyList();
+    } else {
+      List<AttributeKey<String>> keys = new ArrayList<>(builder.captureMdcAttributes.size());
+      for (String key : builder.captureMdcAttributes) {
+        if (!OTEL_EVENT_NAME.getKey().equals(key)
+            && !(builder.captureEventName && EVENT_NAME.getKey().equals(key))) {
+          keys.add(getAttributeKey(key));
+        }
+      }
+      this.precomputedMdcKeys = keys;
+    }
     this.captureEventName = builder.captureEventName;
   }
 
@@ -288,14 +301,9 @@ public final class LoggingEventMapper {
       return;
     }
 
-    for (String key : captureMdcAttributes) {
-      if (!OTEL_EVENT_NAME.getKey().equals(key)
-          && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
-        String value = mdcProperties.get(key);
-        if (value != null) {
-          builder.setAttribute(getAttributeKey(key), value);
-        }
-      }
+    for (AttributeKey<String> attributeKey : precomputedMdcKeys) {
+      String value = mdcProperties.get(attributeKey.getKey());
+      builder.setAttribute(attributeKey, value);
     }
   }
 
