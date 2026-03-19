@@ -61,6 +61,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
@@ -926,7 +927,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
    * connection.
    */
   @Test
-  void highConcurrencyOnSingleConnection() {
+  void highConcurrencyOnSingleConnection() throws Exception {
     SingleConnection singleConnection =
         options.getSingleConnectionFactory().apply("localhost", server.httpPort());
     assumeTrue(singleConnection != null);
@@ -938,6 +939,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     CountDownLatch latch = new CountDownLatch(1);
     ExecutorService pool = Executors.newFixedThreadPool(4);
+    List<Future<?>> futures = new ArrayList<>();
     for (int i = 0; i < count; i++) {
       int index = i;
       Runnable job =
@@ -964,9 +966,13 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               throw new AssertionError(throwable);
             }
           };
-      pool.submit(job);
+      futures.add(pool.submit(job));
     }
     latch.countDown();
+
+    for (Future<?> future : futures) {
+      future.get(10, SECONDS);
+    }
 
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
     for (int i = 0; i < count; i++) {
