@@ -201,3 +201,4 @@ jaxws:jaxws-3.0-cxf-4.0-testing
 jaxws-common:javaagent
 jaxws-cxf-3.0:javaagent
 jaxws-jws-api-1.1:javaagent
+jaxws-cxf-3.0:javaagent-unit-tests
