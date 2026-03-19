@@ -15,6 +15,7 @@ import io.opentelemetry.javaagent.tooling.muzzle.HelperResource;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceCollector;
+import io.opentelemetry.javaagent.tooling.muzzle.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRefBuilder;
