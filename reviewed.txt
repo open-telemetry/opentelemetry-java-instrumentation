@@ -171,3 +171,4 @@ jaxrs-2.0-annotations:javaagent
 jaxrs-2.0:jaxrs-2.0-arquillian-testing
 jaxrs-1.0:javaagent
 jaxrs-2.0-common:javaagent
+jaxrs-2.0-common:testing
