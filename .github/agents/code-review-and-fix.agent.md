@@ -199,6 +199,11 @@ Comment formatting rules:
 this repository can take several minutes — never treat slow output as a hang. Always wait
 for completion.**
 
+**Never pipe Gradle output through `tail`, `head`, `grep`, or any other command** (e.g.,
+`./gradlew :foo:check 2>&1 | tail -30`). Piping masks the Gradle exit code because the
+shell reports the exit code of the last pipe segment, not Gradle. A failing build will
+appear to succeed. Always run Gradle commands directly without pipes.
+
 Execute these steps strictly in order — do not reorder:
 
 1. **Run the module's check task.** For every module whose source files were modified, run its
