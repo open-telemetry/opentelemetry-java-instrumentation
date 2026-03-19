@@ -227,3 +227,4 @@ jetty-common:javaagent
 jfinal-3.2:javaagent
 jms-3.0:javaagent
 jms-1.1:javaagent
+jms-common:bootstrap
