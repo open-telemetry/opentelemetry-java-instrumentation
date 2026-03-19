@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import org.apache.camel.builder.RouteBuilder;
 
-public class CamelTestRouter extends RouteBuilder {
+public final class CamelTestRouter extends RouteBuilder {
   private static final long DEFAULT_EXCHANGE_DELAY_MS = 50;
   private static final long MAXIMUM_EXCHANGE_DELAY_DELTA = 20;
 
@@ -24,7 +24,7 @@ public class CamelTestRouter extends RouteBuilder {
           7L, "Garrulus glandarius");
 
   @Override
-  public void configure() throws Exception {
+  public void configure() {
     from("direct:bird-species")
         .routeId("Bird-Species-Route")
         .process(
