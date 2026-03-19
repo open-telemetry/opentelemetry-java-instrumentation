@@ -208,3 +208,4 @@ jboss-logmanager-mdc-1.1:javaagent
 jdbc:bootstrap
 jdbc:javaagent
 jdbc:testing
+jdbc:library
