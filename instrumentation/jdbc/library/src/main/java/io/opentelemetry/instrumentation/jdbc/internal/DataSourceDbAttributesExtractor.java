@@ -19,8 +19,7 @@ import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
 
-enum DataSourceDbAttributesExtractor implements AttributesExtractor<DataSource, DbInfo> {
-  INSTANCE;
+final class DataSourceDbAttributesExtractor implements AttributesExtractor<DataSource, DbInfo> {
 
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_NAME = AttributeKey.stringKey("db.name");

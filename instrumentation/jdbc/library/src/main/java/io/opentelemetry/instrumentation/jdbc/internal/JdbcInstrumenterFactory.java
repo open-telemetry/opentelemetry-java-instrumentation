@@ -76,9 +76,9 @@ public final class JdbcInstrumenterFactory {
     return Instrumenter.<DbRequest, Void>builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
-            DbClientSpanNameExtractor.create(JdbcAttributesGetter.INSTANCE))
+            DbClientSpanNameExtractor.create(new JdbcAttributesGetter()))
         .addAttributesExtractor(
-            SqlClientAttributesExtractor.builder(JdbcAttributesGetter.INSTANCE)
+            SqlClientAttributesExtractor.builder(new JdbcAttributesGetter())
                 .setQuerySanitizationEnabled(querySanitizationEnabled)
                 .setCaptureQueryParameters(captureQueryParameters)
                 .build())
@@ -90,11 +90,11 @@ public final class JdbcInstrumenterFactory {
 
   public static Instrumenter<DataSource, DbInfo> createDataSourceInstrumenter(
       OpenTelemetry openTelemetry, boolean enabled) {
-    DataSourceCodeAttributesGetter getter = DataSourceCodeAttributesGetter.INSTANCE;
+    DataSourceCodeAttributesGetter getter = new DataSourceCodeAttributesGetter();
     return Instrumenter.<DataSource, DbInfo>builder(
             openTelemetry, INSTRUMENTATION_NAME, CodeSpanNameExtractor.create(getter))
         .addAttributesExtractor(CodeAttributesExtractor.create(getter))
-        .addAttributesExtractor(DataSourceDbAttributesExtractor.INSTANCE)
+        .addAttributesExtractor(new DataSourceDbAttributesExtractor())
         .setEnabled(enabled)
         .buildInstrumenter();
   }
@@ -124,8 +124,8 @@ public final class JdbcInstrumenterFactory {
     return Instrumenter.<DbRequest, Void>builder(
             openTelemetry, INSTRUMENTATION_NAME, DbRequest::getOperationName)
         .addAttributesExtractor(
-            SqlClientAttributesExtractor.builder(JdbcAttributesGetter.INSTANCE).build())
-        .addAttributesExtractor(TransactionAttributeExtractor.INSTANCE)
+            SqlClientAttributesExtractor.builder(new JdbcAttributesGetter()).build())
+        .addAttributesExtractor(new TransactionAttributeExtractor())
         .addAttributesExtractors(extractors)
         .setEnabled(enabled)
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
