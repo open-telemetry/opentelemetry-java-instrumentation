@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0;
 
 import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0.JettyHttpClientSingletons.JETTY_CLIENT_CONTEXT_KEY;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameContains;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -34,23 +33,17 @@ public class JettyClient12ResponseListenersInstrumentation implements TypeInstru
   public void transform(TypeTransformer transformer) {
     // for response listeners
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(
-                nameContains("notify")
-                    .and(isPublic())
-                    .and(takesArgument(0, named("org.eclipse.jetty.client.Response")))),
-        JettyClient12ResponseListenersInstrumentation.class.getName()
-            + "$JettyHttpClient12RespListenersNotifyAdvice");
+        nameContains("notify")
+            .and(isPublic())
+            .and(takesArgument(0, named("org.eclipse.jetty.client.Response"))),
+        getClass().getName() + "$JettyHttpClient12RespListenersNotifyAdvice");
 
     // for complete listeners
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(
-                nameContains("notifyComplete")
-                    .and(isPublic())
-                    .and(takesArgument(0, named("org.eclipse.jetty.client.Result")))),
-        JettyClient12ResponseListenersInstrumentation.class.getName()
-            + "$JettyHttpClient12CompleteListenersNotifyAdvice");
+        nameContains("notifyComplete")
+            .and(isPublic())
+            .and(takesArgument(0, named("org.eclipse.jetty.client.Result"))),
+        getClass().getName() + "$JettyHttpClient12CompleteListenersNotifyAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -80,6 +73,7 @@ public class JettyClient12ResponseListenersInstrumentation implements TypeInstru
   @SuppressWarnings("unused")
   public static class JettyHttpClient12CompleteListenersNotifyAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope onEnterComplete(@Advice.Argument(0) Result result) {
 
