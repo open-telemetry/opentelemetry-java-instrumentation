@@ -236,3 +236,4 @@ jmx-metrics:library
 testing-apps:testing-webapp
 jodd-http-4.2:javaagent
 jodd-http-4.2:javaagent-unit-tests
+jsf-jakarta-common:javaagent
