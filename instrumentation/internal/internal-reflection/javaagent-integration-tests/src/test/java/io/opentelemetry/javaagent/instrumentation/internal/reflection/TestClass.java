@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.internal.reflection;
+
 import java.io.Serializable;
 
 public class TestClass implements Runnable, Serializable {

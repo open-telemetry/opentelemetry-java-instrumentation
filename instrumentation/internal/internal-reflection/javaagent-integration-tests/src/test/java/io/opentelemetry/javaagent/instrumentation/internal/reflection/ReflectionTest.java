@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.internal.reflection;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import instrumentation.TestHelperClass;
@@ -45,7 +47,7 @@ class ReflectionTest {
   void testGeneratedSerialVersionUid() {
     // expected value is computed with serialver utility that comes with jdk
     assertThat(ObjectStreamClass.lookup(TestClass.class).getSerialVersionUID())
-        .isEqualTo(-4292813100633930936L);
+        .isEqualTo(1115158932483123524L);
     assertThat(TestClass.class.getDeclaredFields()).isEmpty();
   }
 

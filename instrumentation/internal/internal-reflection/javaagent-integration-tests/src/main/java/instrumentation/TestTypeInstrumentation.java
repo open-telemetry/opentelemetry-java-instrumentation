@@ -19,7 +19,7 @@ public class TestTypeInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("TestClass");
+    return named("io.opentelemetry.javaagent.instrumentation.internal.reflection.TestClass");
   }
 
   @Override
