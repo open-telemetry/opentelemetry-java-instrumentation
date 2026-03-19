@@ -39,7 +39,7 @@ public class JmsMessageListenerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("onMessage").and(takesArgument(0, named("jakarta.jms.Message"))).and(isPublic()),
-        JmsMessageListenerInstrumentation.class.getName() + "$MessageListenerAdvice");
+        getClass().getName() + "$MessageListenerAdvice");
   }
 
   @SuppressWarnings("unused")
