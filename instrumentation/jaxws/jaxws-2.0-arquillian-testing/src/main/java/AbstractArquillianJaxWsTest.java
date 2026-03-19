@@ -38,7 +38,7 @@ public abstract class AbstractArquillianJaxWsTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  public final WebClient client = WebClient.of();
+  final WebClient client = WebClient.of();
 
   @ArquillianResource public URI url;
 
@@ -64,12 +64,12 @@ public abstract class AbstractArquillianJaxWsTest {
   }
 
   @Test
-  public void testHelloService() {
+  void testHelloService() {
     testHelloRequest("HelloService");
   }
 
   @Test
-  public void testEjbHelloService() {
+  void testEjbHelloService() {
     testHelloRequest("EjbHelloService");
   }
 
