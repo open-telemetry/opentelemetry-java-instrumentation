@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
@@ -29,9 +28,7 @@ public class CxfRsHttpListenerInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isMethod().and(named("doInvoke")),
-        CxfRsHttpListenerInstrumentation.class.getName() + "$InvokeAdvice");
+    transformer.applyAdviceToMethod(named("doInvoke"), getClass().getName() + "$InvokeAdvice");
   }
 
   @SuppressWarnings("unused")
