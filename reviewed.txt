@@ -185,3 +185,4 @@ jaxrs-3.0-common:testing
 jaxrs-3.0-common:javaagent
 jaxrs-3.0-jersey-3.0:javaagent
 jaxrs-common:bootstrap
+jaxrs-3.0-resteasy-6.0:javaagent
