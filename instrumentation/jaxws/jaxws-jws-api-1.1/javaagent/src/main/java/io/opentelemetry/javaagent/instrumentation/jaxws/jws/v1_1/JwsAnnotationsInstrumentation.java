@@ -57,7 +57,7 @@ public class JwsAnnotationsInstrumentation implements TypeInstrumentation {
             .and(
                 hasSuperMethod(
                     methodIsDeclaredByType(inheritsAnnotation(named(JWS_WEB_SERVICE_ANNOTATION))))),
-        JwsAnnotationsInstrumentation.class.getName() + "$JwsAnnotationsAdvice");
+        getClass().getName() + "$JwsAnnotationsAdvice");
   }
 
   @SuppressWarnings("unused")
