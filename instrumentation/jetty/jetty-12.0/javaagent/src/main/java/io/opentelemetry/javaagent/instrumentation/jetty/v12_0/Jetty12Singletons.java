@@ -21,7 +21,7 @@ public final class Jetty12Singletons {
         JavaagentHttpServerInstrumenters.create(
             INSTRUMENTATION_NAME,
             new Jetty12HttpAttributesGetter(),
-            Jetty12TextMapGetter.INSTANCE,
+            new Jetty12TextMapGetter(),
             builder ->
                 builder.addContextCustomizer(
                     (context, request, attributes) ->
