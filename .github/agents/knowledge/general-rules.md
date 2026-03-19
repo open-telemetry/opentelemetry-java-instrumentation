@@ -31,7 +31,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Build | `testcontainersBuildService` declaration | Testcontainers dependency without `usesService` | `gradle-conventions.md` |
 | Style | Prefer instance creation over singletons for stateless interface impls (except on hot paths) | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`, enum/static singletons | — |
 | Style | Remove redundant null guards on attribute puts | `AttributesBuilder.put`, `onStart`, `onEnd`, attribute extraction methods | — |
-| Style | Nullability correctness — no guards for non-nullable params; add `@Nullable` when null is actually passed/returned; respect upstream SDK `@Nullable` contracts for `TextMapGetter`/`TextMapSetter` | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `*Extractor` implementations, null checks, missing `@Nullable` | — |
+| Style | Nullability correctness — no guards for non-nullable params; add `@Nullable` when null is actually passed/returned/stored; respect upstream SDK `@Nullable` contracts for `TextMapGetter`/`TextMapSetter` | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `*Extractor` implementations, null checks, missing `@Nullable`, fields assigned from `@Nullable` sources | — |
 | Architecture | Library vs javaagent boundaries | Always | — |
 | NewModule | New instrumentation module checklist | New modules | _(inline below)_ |
 
@@ -163,6 +163,10 @@ if (statusCode != null) {
 
 Use `@Nullable` annotations accurately throughout the codebase:
 
+- **Fields**: annotate `@Nullable` if and only if the field can hold `null` at any point
+  after construction (e.g., it is assigned from a `@Nullable` method, set to `null`
+  explicitly, or left uninitialized). If the field is always non-null after the
+  constructor completes, do not annotate it.
 - **Parameters**: annotate `@Nullable` if and only if `null` is actually passed by callers.
 - **Return types**: annotate `@Nullable` if and only if the method actually returns `null`.
   Even when an interface or superclass declares a return type as `@Nullable`, do **not** add
