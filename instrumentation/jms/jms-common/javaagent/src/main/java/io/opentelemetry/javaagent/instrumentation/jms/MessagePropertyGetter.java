@@ -8,9 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.jms;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
+import javax.annotation.Nullable;
 
-enum MessagePropertyGetter implements TextMapGetter<MessageWithDestination> {
-  INSTANCE;
+final class MessagePropertyGetter implements TextMapGetter<MessageWithDestination> {
 
   @Override
   public Iterable<String> keys(MessageWithDestination message) {
@@ -22,7 +22,10 @@ enum MessagePropertyGetter implements TextMapGetter<MessageWithDestination> {
   }
 
   @Override
-  public String get(MessageWithDestination carrier, String key) {
+  public String get(@Nullable MessageWithDestination carrier, String key) {
+    if (carrier == null) {
+      return null;
+    }
     String propName = key.replace("-", MessagePropertySetter.DASH);
     Object value;
     try {

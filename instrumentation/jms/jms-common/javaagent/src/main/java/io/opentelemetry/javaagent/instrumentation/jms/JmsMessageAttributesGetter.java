@@ -14,8 +14,8 @@ import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
-enum JmsMessageAttributesGetter implements MessagingAttributesGetter<MessageWithDestination, Void> {
-  INSTANCE;
+final class JmsMessageAttributesGetter
+    implements MessagingAttributesGetter<MessageWithDestination, Void> {
 
   private static final Logger logger = Logger.getLogger(JmsMessageAttributesGetter.class.getName());
 
