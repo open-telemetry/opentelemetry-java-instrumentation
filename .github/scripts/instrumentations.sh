@@ -278,6 +278,8 @@ readonly INSTRUMENTATIONS=(
   "struts:struts-2.3:javaagent:test"
   "struts:struts-7.0:javaagent:test"
   "tapestry-5.4:javaagent:test"
+  "tomcat:tomcat-7.0:javaagent:test"
+  "tomcat:tomcat-10.0:javaagent:test"
   "tomcat:tomcat-jdbc:javaagent:test"
   "tomcat:tomcat-jdbc:javaagent:testStableSemconv"
   "twilio-6.6:javaagent:test"
