@@ -189,3 +189,4 @@ jaxrs-3.0-resteasy-6.0:javaagent
 jaxrs-common:testing
 jaxrs-common:javaagent
 jaxws:jaxws-2.0-arquillian-testing
+jaxws-2.0-axis2-1.6:javaagent
