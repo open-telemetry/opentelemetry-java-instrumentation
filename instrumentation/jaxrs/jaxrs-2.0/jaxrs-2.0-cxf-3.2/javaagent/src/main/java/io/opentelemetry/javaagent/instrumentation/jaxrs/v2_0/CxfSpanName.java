@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.jaxrs.JaxrsContextPath;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
+import javax.annotation.Nullable;
 import org.apache.cxf.jaxrs.model.ClassResourceInfo;
 import org.apache.cxf.jaxrs.model.OperationResourceInfo;
 import org.apache.cxf.jaxrs.model.URITemplate;
@@ -31,6 +32,7 @@ public final class CxfSpanName implements HttpServerRouteGetter<String> {
     return JaxrsContextPath.init(context, jaxrsName);
   }
 
+  @Nullable
   private static String calculateJaxrsName(Context context, Exchange exchange) {
     OperationResourceInfo ori = exchange.get(OperationResourceInfo.class);
     ClassResourceInfo cri = ori.getClassResourceInfo();
