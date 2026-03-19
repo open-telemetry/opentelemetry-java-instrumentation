@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package oldbytecode;
+
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
