@@ -231,3 +231,4 @@ jms-common:bootstrap
 jms-common:javaagent-unit-tests
 jms-common:javaagent
 jmx-metrics:javaagent
+testing-apps:camel-testing-app
