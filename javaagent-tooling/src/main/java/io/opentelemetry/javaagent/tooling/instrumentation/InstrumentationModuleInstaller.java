@@ -78,7 +78,27 @@ public final class InstrumentationModuleInstaller {
       return parentAgentBuilder;
     }
 
-    if (instrumentationModule.isIndyModule()) {
+    boolean indyModule = instrumentationModule.isIndyModule();
+
+    if (indyModule && instrumentationModule instanceof InstrumentationModuleMuzzle) {
+      Boolean incompatible =
+          ((InstrumentationModuleMuzzle) instrumentationModule).isMuzzleIndyIncompatible();
+      if (incompatible == null) {
+        indyModule = false;
+        logger.log(
+            WARNING,
+            "Instrumentation {0} will use inline as it has unknown indy-compatibility",
+            instrumentationModule.instrumentationName());
+      } else if (incompatible) {
+        indyModule = false;
+        logger.log(
+            WARNING,
+            "Instrumentation {0} will use inline as it has known indy-incompatible code",
+            instrumentationModule.instrumentationName());
+      }
+    }
+
+    if (indyModule) {
       return installIndyModule(instrumentationModule, parentAgentBuilder);
     } else {
       return installInjectingModule(instrumentationModule, parentAgentBuilder);
