@@ -18,7 +18,7 @@ public final class JoddHttpSingletons {
   static {
     INSTRUMENTER =
         JavaagentHttpClientInstrumenters.create(
-            INSTRUMENTATION_NAME, new JoddHttpHttpAttributesGetter(), HttpHeaderSetter.INSTANCE);
+            INSTRUMENTATION_NAME, new JoddHttpHttpAttributesGetter(), new HttpHeaderSetter());
   }
 
   public static Instrumenter<HttpRequest, HttpResponse> instrumenter() {
