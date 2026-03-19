@@ -174,3 +174,4 @@ jaxrs-2.0-common:javaagent
 jaxrs-2.0-common:testing
 jaxrs-2.0-cxf-3.2:javaagent
 jaxrs-2.0:jaxrs-2.0-payara-testing
+jaxrs-2.0-jersey-2.0:javaagent
