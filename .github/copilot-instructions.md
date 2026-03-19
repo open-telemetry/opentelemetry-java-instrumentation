@@ -23,3 +23,7 @@ Never use `--rerun-tasks`. Use `--rerun` when needed.
 Builds and tests in this repository can take several minutes.
 Run Gradle commands with timeout `0` (no timeout), and wait for completion.
 Do not treat slow output as a hang by default.
+
+Never pipe Gradle output through `tail`, `head`, `grep`, or any other command.
+Piping masks the Gradle exit code — the shell reports the exit code of the last
+pipe segment, not Gradle, so a failing build silently appears to succeed.
