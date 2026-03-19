@@ -18,14 +18,35 @@ import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil
 import io.opentelemetry.instrumentation.ktor.common.v2_0.AbstractKtorServerTelemetryBuilder
 import io.opentelemetry.instrumentation.ktor.common.v2_0.ApplicationRequestGetter
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.ContinuationInterceptor
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
 object KtorServerTelemetryUtil {
+  // A no-op ContinuationInterceptor. There seems to be a bug in Ktor where when propagate otel
+  // context by using withContext(context.asContextElement()) updateThreadContext, that activates
+  // the otel scope, gets called in
+  // https://github.com/open-telemetry/opentelemetry-java/blob/main/extensions/kotlin/src/main/java/io/opentelemetry/extension/kotlin/KotlinContextElement.java
+  // but the restoreThreadContext is not always called, which causes the otel context to leak across
+  // requests. This issue can be worked around by adding -Dio.ktor.internal.disable.sfg=true to jvm
+  // arguments. Adding this no-op interceptor seems to also work around the issue.
+  // See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/16430
+  val emptyInterceptor = object : ContinuationInterceptor {
+    override val key = ContinuationInterceptor
 
-  fun PluginBuilder<*>.configureTelemetry(builder: AbstractKtorServerTelemetryBuilder, application: Application) {
+    override fun <T> interceptContinuation(continuation: Continuation<T>): Continuation<T> = object : Continuation<T> {
+      override val context = continuation.context
+
+      override fun resumeWith(result: Result<T>) {
+        continuation.resumeWith(result)
+      }
+    }
+  }
+
+  fun configureTelemetry(builder: AbstractKtorServerTelemetryBuilder, application: Application) {
     val contextKey = AttributeKey<Context>("OpenTelemetry")
     val errorKey = AttributeKey<Throwable>("OpenTelemetryException")
     val processedKey = AttributeKey<Unit>("OpenTelemetryProcessed")
@@ -40,8 +61,10 @@ object KtorServerTelemetryUtil {
 
       if (context != null) {
         call.attributes.put(contextKey, context)
-        withContext(context.asContextElement()) {
-          proceed()
+        withContext(emptyInterceptor) {
+          withContext(context.asContextElement()) {
+            proceed()
+          }
         }
       } else {
         proceed()
