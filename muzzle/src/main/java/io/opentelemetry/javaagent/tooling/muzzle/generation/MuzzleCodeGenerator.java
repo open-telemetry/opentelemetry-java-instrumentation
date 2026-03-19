@@ -57,6 +57,7 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
   private static final String MUZZLE_REFERENCES_METHOD_NAME = "getMuzzleReferences";
   private static final String MUZZLE_HELPER_CLASSES_METHOD_NAME = "getMuzzleHelperClassNames";
   private static final String MUZZLE_VIRTUAL_FIELDS_METHOD_NAME = "registerMuzzleVirtualFields";
+  private static final String MUZZLE_INDY_INCOMPATIBLE_METHOD_NAME = "isMuzzleIndyIncompatible";
   private final URLClassLoader classLoader;
 
   public MuzzleCodeGenerator(URLClassLoader classLoader) {
@@ -98,6 +99,7 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
     private boolean generateReferencesMethod = true;
     private boolean generateHelperClassNamesMethod = true;
     private boolean generateVirtualFieldsMethod = true;
+    private boolean generateMuzzleIndyIncompatibleMethod = true;
 
     GenerateMuzzleMethodsAndFields(ClassVisitor classVisitor, URLClassLoader classLoader) {
       super(AsmApi.VERSION, classVisitor);
@@ -153,6 +155,10 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
         generateVirtualFieldsMethod = false;
         logMethodAlreadyExistsMessage(MUZZLE_VIRTUAL_FIELDS_METHOD_NAME);
       }
+      if (MUZZLE_INDY_INCOMPATIBLE_METHOD_NAME.equals(name)) {
+        generateMuzzleIndyIncompatibleMethod = false;
+        logMethodAlreadyExistsMessage(MUZZLE_INDY_INCOMPATIBLE_METHOD_NAME);
+      }
       return super.visitMethod(access, name, descriptor, signature, exceptions);
     }
 
@@ -167,7 +173,12 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
 
     @Override
     public void visitEnd() {
-      ReferenceCollector collector = collectReferences();
+      AdviceClassNameCollector adviceClassNameCollector = new AdviceClassNameCollector();
+      for (TypeInstrumentation typeInstrumentation : instrumentationModule.typeInstrumentations()) {
+        typeInstrumentation.transform(adviceClassNameCollector);
+      }
+      ReferenceCollector collector =
+          collectReferences(adviceClassNameCollector.getAdviceClassNames());
       if (generateReferencesMethod) {
         generateMuzzleReferencesMethod(collector);
       }
@@ -177,15 +188,47 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
       if (generateVirtualFieldsMethod) {
         generateMuzzleVirtualFieldsMethod(collector);
       }
+      if (generateMuzzleIndyIncompatibleMethod) {
+        boolean isIndyIncompatible =
+            checkAdviceIndyIncompatibility(
+                instrumentationModule.instrumentationName(),
+                adviceClassNameCollector.getAdviceClassNames());
+
+        generateMuzzleIndyIncompatibleMethod(isIndyIncompatible);
+      }
       super.visitEnd();
     }
 
-    private ReferenceCollector collectReferences() {
-      AdviceClassNameCollector adviceClassNameCollector = new AdviceClassNameCollector();
-      for (TypeInstrumentation typeInstrumentation : instrumentationModule.typeInstrumentations()) {
-        typeInstrumentation.transform(adviceClassNameCollector);
-      }
+    /**
+     * Check and log warnings if any advice of the instrumentation module has known
+     * incompatibilities with indy
+     *
+     * @param moduleName module name
+     * @param adviceClassNames list of advice class names
+     * @return true if there is any known incompatibility, false if no such known incompatibility is
+     *     found.
+     */
+    private boolean checkAdviceIndyIncompatibility(
+        String moduleName, Set<String> adviceClassNames) {
+      ClassLoader resourceLoader = new URLClassLoader(classLoader.getURLs(), null);
+      boolean incompatibilityFound = false;
+      for (String adviceClassName : adviceClassNames) {
+        AdviceIndyChecker.IndyCheckResult checkResult =
+            AdviceIndyChecker.checkIndyAdvice(resourceLoader, adviceClassName);
 
+        if (checkResult.isIndyIncompatible()) {
+          incompatibilityFound = true;
+          logger.warning(
+              "Instrumentation module "
+                  + moduleName
+                  + " is not compatible with invoke-dynamic advice delegation : "
+                  + checkResult.getMessage());
+        }
+      }
+      return incompatibilityFound;
+    }
+
+    private ReferenceCollector collectReferences(Set<String> adviceClassNames) {
       // the class loader has a parent including the Gradle classpath, such as buildSrc
       // dependencies.
       // These may have resources take precedence over ones we define, so we need to make sure to
@@ -194,7 +237,7 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
       ClassLoader resourceLoader = new URLClassLoader(classLoader.getURLs(), null);
       ReferenceCollector collector =
           new ReferenceCollector(instrumentationModule::isHelperClass, resourceLoader);
-      for (String adviceClass : adviceClassNameCollector.getAdviceClassNames()) {
+      for (String adviceClass : adviceClassNames) {
         collector.collectReferencesFromAdvice(adviceClass);
       }
       HelperResourceBuilderImpl helperResourceBuilder = new HelperResourceBuilderImpl();
@@ -563,6 +606,31 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
       mv.visitInsn(Opcodes.RETURN);
 
       mv.visitMaxs(0, 0);
+      mv.visitEnd();
+    }
+
+    private void generateMuzzleIndyIncompatibleMethod(boolean incompatible) {
+      /*
+       * public Boolean isMuzzleIndyIncompatible() {
+       *   return Boolean.FALSE; // or Boolean.TRUE
+       * }
+       */
+      MethodVisitor mv =
+          super.visitMethod(
+              Opcodes.ACC_PUBLIC,
+              MUZZLE_INDY_INCOMPATIBLE_METHOD_NAME,
+              "()Ljava/lang/Boolean",
+              null,
+              null);
+      mv.visitCode();
+      mv.visitFieldInsn(
+          Opcodes.GETSTATIC,
+          "java/lang/Boolean",
+          incompatible ? "TRUE" : "FALSE",
+          "Ljava/lang/Boolean;");
+      mv.visitInsn(Opcodes.ARETURN);
+      mv.visitMaxs(1, 1);
+
       mv.visitEnd();
     }
   }

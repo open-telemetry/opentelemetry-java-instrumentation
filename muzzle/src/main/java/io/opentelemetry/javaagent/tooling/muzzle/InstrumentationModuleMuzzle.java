@@ -72,4 +72,15 @@ public interface InstrumentationModuleMuzzle {
     result.addAll(additionalHelperClassNames);
     return result;
   }
+
+  /**
+   * returns {@link Boolean#TRUE} if this module has known incompatibility with indy advice
+   * delegation
+   *
+   * @return false if no known incompatibility exists in advice bytecode, true if there is one, and
+   *     null if unknown (for modules that were produced with a previous muzzle version).
+   */
+  default Boolean isMuzzleIndyIncompatible() {
+    return Boolean.TRUE;
+  }
 }
