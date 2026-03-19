@@ -217,3 +217,4 @@ jedis-4.0:javaagent
 jetty-httpclient-12.0:javaagent
 jetty-httpclient-12.0:testing
 jetty-httpclient-12.0:library
+jetty-httpclient-9.2:javaagent
