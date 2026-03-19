@@ -18,9 +18,8 @@ import org.eclipse.jetty.http.HttpVersion;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public enum JettyClientHttpAttributesGetter
+public class JettyClientHttpAttributesGetter
     implements HttpClientAttributesGetter<Request, Response> {
-  INSTANCE;
 
   @Override
   @Nullable
@@ -50,7 +49,6 @@ public enum JettyClientHttpAttributesGetter
     return response.getHeaders().getValuesList(name);
   }
 
-  @Nullable
   @Override
   public String getNetworkProtocolName(Request request, @Nullable Response response) {
     return "http";
