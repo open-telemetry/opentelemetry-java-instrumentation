@@ -214,3 +214,4 @@ jedis-1.4:testing
 jedis-3.0:javaagent
 jedis-common:javaagent
 jedis-4.0:javaagent
+jetty-httpclient-12.0:javaagent
