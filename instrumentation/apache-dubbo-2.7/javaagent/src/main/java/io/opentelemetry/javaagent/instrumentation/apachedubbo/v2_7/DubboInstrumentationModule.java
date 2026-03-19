@@ -57,7 +57,8 @@ public class DubboInstrumentationModule extends InstrumentationModule
     return asList(
         new ResourceInjectingTypeInstrumentation(),
         new DubboProtocolInstrumentation(),
-        new DecodeableRpcInvocationInstrumentation());
+        new DecodeableRpcInvocationInstrumentation(),
+        new GrpcRequestHandlerMappingInstrumentation());
   }
 
   // A type instrumentation is needed to trigger resource injection.

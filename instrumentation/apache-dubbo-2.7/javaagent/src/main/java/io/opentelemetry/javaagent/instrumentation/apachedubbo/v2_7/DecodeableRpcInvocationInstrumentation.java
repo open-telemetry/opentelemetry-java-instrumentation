@@ -17,12 +17,12 @@ import org.apache.dubbo.rpc.RpcInvocation;
 
 /**
  * Instruments {@code DecodeableRpcInvocation.decode(Channel, InputStream)} to capture unknown
- * service spans that fail during the decode phase.
+ * service spans for the Dubbo protocol (binary) that fail during the decode phase.
  *
- * <p>In Dubbo 3.x, when a typed (non-generic) invocation arrives for an unknown service, the decode
- * fails with "Service not found" before {@code DubboProtocol.getInvoker()} is ever called. This
- * instrumentation complements {@link DubboProtocolInstrumentation} which handles the Dubbo 2.7 case
- * where decode succeeds but getInvoker() throws.
+ * <p>When {@code PermittedSerializationKeeper} is enforced (newer Dubbo versions), typed
+ * invocations to unknown services fail during decode before {@code DubboProtocol.getInvoker()} is
+ * ever called. This instrumentation complements {@link DubboProtocolInstrumentation} which handles
+ * the case where decode succeeds but getInvoker() throws.
  */
 public class DecodeableRpcInvocationInstrumentation implements TypeInstrumentation {
 

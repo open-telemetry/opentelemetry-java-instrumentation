@@ -33,8 +33,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
@@ -530,34 +528,168 @@ public abstract class AbstractDubboTest {
       // expected: service not exported on provider
     }
 
+    Consumer<SpanDataAssert> clientSpanAssert =
+        span ->
+            span.hasName("org.apache.dubbo.rpc.service.GenericService/$invoke")
+                .hasKind(SpanKind.CLIENT)
+                .hasNoParent()
+                .hasStatus(io.opentelemetry.sdk.trace.data.StatusData.error())
+                .hasAttributesSatisfying(
+                    equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
+                    equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "dubbo" : null),
+                    equalTo(
+                        RPC_SERVICE,
+                        emitOldRpcSemconv() ? "org.apache.dubbo.rpc.service.GenericService" : null),
+                    equalTo(
+                        RPC_METHOD,
+                        emitStableRpcSemconv()
+                            ? "org.apache.dubbo.rpc.service.GenericService/$invoke"
+                            : "$invoke"),
+                    equalTo(SERVER_ADDRESS, "localhost"),
+                    satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)));
+
+    if (canCaptureUnknownServiceSpans()
+        && emitStableRpcSemconv()
+        && Boolean.getBoolean("testLatestDeps")) {
+      // Dubbo protocol (binary) with newer Dubbo versions (3.x / latest):
+      // DecodeableRpcInvocation.decode() fails at PermittedSerializationKeeper before attachments
+      // (which carry traceparent) are read from the wire. The server _OTHER span cannot extract
+      // trace context, so it becomes a root span in a separate (disconnected) trace.
+      testing()
+          .waitAndAssertTraces(
+              trace -> trace.hasSpansSatisfyingExactly(clientSpanAssert),
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName("_OTHER")
+                              .hasKind(SpanKind.SERVER)
+                              .hasNoParent()
+                              .hasStatus(io.opentelemetry.sdk.trace.data.StatusData.error())
+                              .hasAttributesSatisfying(
+                                  equalTo(RPC_SYSTEM_NAME, "dubbo"),
+                                  equalTo(RPC_METHOD, "_OTHER"),
+                                  satisfies(
+                                      RPC_METHOD_ORIGINAL,
+                                      val ->
+                                          val.satisfiesAnyOf(
+                                              v ->
+                                                  assertThat(v)
+                                                      .contains(
+                                                          "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),
+                                              v -> assertThat(v).contains("MiddleService"))),
+                                  satisfies(
+                                      NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
+                                  satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)))));
+    } else if (canCaptureUnknownServiceSpans() && emitStableRpcSemconv()) {
+      // Dubbo protocol (binary) with older Dubbo versions (2.7.x):
+      // decode succeeds past PermittedSerializationKeeper (not present or not enforced),
+      // DubboProtocol.getInvoker() fails, but attachments (with traceparent) have already been
+      // read from the wire. The server _OTHER span is a child of the client span (1 trace).
+      testing()
+          .waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      clientSpanAssert,
+                      span ->
+                          span.hasName("_OTHER")
+                              .hasKind(SpanKind.SERVER)
+                              .hasParent(trace.getSpan(0))
+                              .hasStatus(io.opentelemetry.sdk.trace.data.StatusData.error())
+                              .hasAttributesSatisfying(
+                                  equalTo(RPC_SYSTEM_NAME, "dubbo"),
+                                  equalTo(RPC_METHOD, "_OTHER"),
+                                  satisfies(
+                                      RPC_METHOD_ORIGINAL,
+                                      val ->
+                                          val.satisfiesAnyOf(
+                                              v ->
+                                                  assertThat(v)
+                                                      .contains(
+                                                          "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),
+                                              v -> assertThat(v).contains("MiddleService"))),
+                                  satisfies(
+                                      NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
+                                  satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)))));
+    } else {
+      testing().waitAndAssertTraces(trace -> trace.hasSpansSatisfyingExactly(clientSpanAssert));
+    }
+  }
+
+  /**
+   * Tests unknown service span capture for the Triple protocol (gRPC over HTTP/2). Unlike the Dubbo
+   * binary protocol, Triple transmits trace context as HTTP/2 headers, so the server _OTHER span is
+   * always a child of the client span — resulting in 1 trace with 2 spans.
+   */
+  @Test
+  void testTripleUnknownService() throws ReflectiveOperationException {
+    // Triple protocol requires Dubbo 3.x
+    org.junit.jupiter.api.Assumptions.assumeTrue(
+        Boolean.getBoolean("testLatestDeps"), "Triple protocol requires Dubbo 3.x");
+    org.junit.jupiter.api.Assumptions.assumeTrue(
+        canCaptureUnknownServiceSpans(), "Requires agent instrumentation");
+    org.junit.jupiter.api.Assumptions.assumeTrue(
+        emitStableRpcSemconv(), "Requires stable RPC semconv");
+
+    int port = PortUtils.findOpenPort();
+
+    ProtocolConfig tripleProtocol = new ProtocolConfig();
+    tripleProtocol.setName("tri");
+    tripleProtocol.setPort(port);
+
+    DubboBootstrap bootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(bootstrap::destroy);
+    bootstrap
+        .application(new ApplicationConfig("dubbo-test-triple-unknown-provider"))
+        .service(configureServer())
+        .protocol(tripleProtocol)
+        .start();
+
+    ReferenceConfig<MiddleService> unknownRef = new ReferenceConfig<>();
+    unknownRef.setInterface(MiddleService.class);
+    unknownRef.setGeneric("true");
+    unknownRef.setRetries(0);
+    unknownRef.setUrl("tri://localhost:" + port + "/?timeout=30000");
+
+    ProtocolConfig consumerProtocolConfig = new ProtocolConfig();
+    consumerProtocolConfig.setRegister(false);
+
+    DubboBootstrap consumerBootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(consumerBootstrap::destroy);
+    consumerBootstrap
+        .application(new ApplicationConfig("dubbo-test-triple-unknown-consumer"))
+        .reference(unknownRef)
+        .protocol(consumerProtocolConfig)
+        .start();
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    ReferenceConfig<GenericService> reference = (ReferenceConfig) unknownRef;
+    GenericService genericService = reference.get();
+
+    try {
+      genericService.$invoke("hello", new String[] {String.class.getName()}, new Object[] {"test"});
+    } catch (Throwable ignored) {
+      // expected: MiddleService not exported on provider
+    }
+
+    // Triple uses HTTP/2 headers for trace context propagation, so the server _OTHER span
+    // is always a child of the client span (1 trace), unlike the Dubbo binary protocol
+    // which may produce 2 separate traces when attachments are unreachable.
     testing()
         .waitAndAssertTraces(
-            trace -> {
-              List<Consumer<SpanDataAssert>> spanAsserts = new ArrayList<>();
-              spanAsserts.add(
-                  span ->
-                      span.hasName("org.apache.dubbo.rpc.service.GenericService/$invoke")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasNoParent()
-                          .hasStatus(io.opentelemetry.sdk.trace.data.StatusData.error())
-                          .hasAttributesSatisfying(
-                              equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
-                              equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "dubbo" : null),
-                              equalTo(
-                                  RPC_SERVICE,
-                                  emitOldRpcSemconv()
-                                      ? "org.apache.dubbo.rpc.service.GenericService"
-                                      : null),
-                              equalTo(
-                                  RPC_METHOD,
-                                  emitStableRpcSemconv()
-                                      ? "org.apache.dubbo.rpc.service.GenericService/$invoke"
-                                      : "$invoke"),
-                              equalTo(SERVER_ADDRESS, "localhost"),
-                              satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class))));
-
-              if (canCaptureUnknownServiceSpans() && emitStableRpcSemconv()) {
-                spanAsserts.add(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("org.apache.dubbo.rpc.service.GenericService/$invoke")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasNoParent()
+                            .hasStatus(io.opentelemetry.sdk.trace.data.StatusData.error())
+                            .hasAttributesSatisfying(
+                                equalTo(RPC_SYSTEM_NAME, "dubbo"),
+                                equalTo(
+                                    RPC_METHOD,
+                                    "org.apache.dubbo.rpc.service.GenericService/$invoke"),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class))),
                     span ->
                         span.hasName("_OTHER")
                             .hasKind(SpanKind.SERVER)
@@ -574,13 +706,7 @@ public abstract class AbstractDubboTest {
                                                 assertThat(v)
                                                     .contains(
                                                         "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),
-                                            v -> assertThat(v).contains("MiddleService"))),
-                                satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
-                                satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class))));
-              }
-
-              trace.hasSpansSatisfyingExactly(spanAsserts);
-            });
+                                            v -> assertThat(v).contains("MiddleService"))))));
   }
 
   static void assertNetworkType(AbstractStringAssert<?> stringAssert) {
