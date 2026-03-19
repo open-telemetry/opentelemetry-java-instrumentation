@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -40,11 +39,10 @@ public class ContainerRequestFilterInstrumentation implements TypeInstrumentatio
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("filter"))
+        named("filter")
             .and(takesArguments(1))
             .and(takesArgument(0, named("javax.ws.rs.container.ContainerRequestContext"))),
-        ContainerRequestFilterInstrumentation.class.getName() + "$RequestFilterAdvice");
+        getClass().getName() + "$RequestFilterAdvice");
   }
 
   @SuppressWarnings("unused")
