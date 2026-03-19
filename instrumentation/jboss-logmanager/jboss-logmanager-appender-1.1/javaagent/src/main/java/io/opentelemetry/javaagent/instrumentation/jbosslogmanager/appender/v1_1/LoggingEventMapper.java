@@ -38,8 +38,7 @@ public final class LoggingEventMapper {
   // copied from EventIncubatingAttributes
   private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
 
-  private final List<String> captureMdcAttributes;
-  private final List<AttributeKey<String>> precomputedMdcKeys;
+  private final List<AttributeKey<String>> captureMdcAttributeKeys;
 
   private static final boolean captureExperimentalAttributes =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jboss_logmanager")
@@ -53,14 +52,14 @@ public final class LoggingEventMapper {
           .getBoolean("capture_event_name/development", false);
 
   private LoggingEventMapper() {
-    this.captureMdcAttributes =
+    List<String> captureMdcAttributes =
         DeclarativeConfigUtil.getInstrumentationConfig(
                 GlobalOpenTelemetry.get(), "jboss_logmanager")
             .getScalarList("capture_mdc_attributes/development", String.class, emptyList());
     this.captureAllMdcAttributes =
         captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
     if (captureAllMdcAttributes) {
-      this.precomputedMdcKeys = emptyList();
+      this.captureMdcAttributeKeys = emptyList();
     } else {
       List<AttributeKey<String>> keys = new ArrayList<>(captureMdcAttributes.size());
       for (String key : captureMdcAttributes) {
@@ -69,7 +68,7 @@ public final class LoggingEventMapper {
           keys.add(getMdcAttributeKey(key));
         }
       }
-      this.precomputedMdcKeys = keys;
+      this.captureMdcAttributeKeys = keys;
     }
     if (captureEventName) {
       logger.warning(
@@ -149,7 +148,7 @@ public final class LoggingEventMapper {
       return;
     }
 
-    for (AttributeKey<String> attributeKey : precomputedMdcKeys) {
+    for (AttributeKey<String> attributeKey : captureMdcAttributeKeys) {
       String value = context.get(attributeKey.getKey());
       builder.setAttribute(attributeKey, value);
     }

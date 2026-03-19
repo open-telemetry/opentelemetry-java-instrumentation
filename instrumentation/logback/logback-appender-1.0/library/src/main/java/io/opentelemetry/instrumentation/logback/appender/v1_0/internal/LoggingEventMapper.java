@@ -79,7 +79,7 @@ public final class LoggingEventMapper {
       AttributeKey.stringKey("otel.event.name");
 
   private final boolean captureExperimentalAttributes;
-  private final List<AttributeKey<String>> precomputedMdcKeys;
+  private final List<AttributeKey<String>> captureMdcAttributeKeys;
   private final boolean captureAllMdcAttributes;
   private final boolean captureCodeAttributes;
   private final boolean captureMarkerAttribute;
@@ -104,7 +104,7 @@ public final class LoggingEventMapper {
     this.captureAllMdcAttributes =
         builder.captureMdcAttributes.size() == 1 && builder.captureMdcAttributes.get(0).equals("*");
     if (captureAllMdcAttributes) {
-      this.precomputedMdcKeys = emptyList();
+      this.captureMdcAttributeKeys = emptyList();
     } else {
       List<AttributeKey<String>> keys = new ArrayList<>(builder.captureMdcAttributes.size());
       for (String key : builder.captureMdcAttributes) {
@@ -113,7 +113,7 @@ public final class LoggingEventMapper {
           keys.add(getAttributeKey(key));
         }
       }
-      this.precomputedMdcKeys = keys;
+      this.captureMdcAttributeKeys = keys;
     }
     this.captureEventName = builder.captureEventName;
   }
@@ -299,7 +299,7 @@ public final class LoggingEventMapper {
       return;
     }
 
-    for (AttributeKey<String> attributeKey : precomputedMdcKeys) {
+    for (AttributeKey<String> attributeKey : captureMdcAttributeKeys) {
       String value = mdcProperties.get(attributeKey.getKey());
       builder.setAttribute(attributeKey, value);
     }

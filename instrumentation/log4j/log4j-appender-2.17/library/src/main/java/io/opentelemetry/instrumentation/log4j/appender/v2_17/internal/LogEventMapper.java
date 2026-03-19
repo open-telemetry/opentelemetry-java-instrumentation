@@ -62,7 +62,7 @@ public final class LogEventMapper<T> {
   private final boolean captureCodeAttributes;
   private final boolean captureMapMessageAttributes;
   private final boolean captureMarkerAttribute;
-  private final List<AttributeKey<String>> precomputedContextDataKeys;
+  private final List<AttributeKey<String>> captureContextDataAttributeKeys;
   private final boolean captureAllContextDataAttributes;
   private final boolean captureEventName;
 
@@ -83,7 +83,7 @@ public final class LogEventMapper<T> {
     this.captureAllContextDataAttributes =
         captureContextDataAttributes.size() == 1 && captureContextDataAttributes.get(0).equals("*");
     if (captureAllContextDataAttributes) {
-      this.precomputedContextDataKeys = emptyList();
+      this.captureContextDataAttributeKeys = emptyList();
     } else {
       List<AttributeKey<String>> keys = new ArrayList<>(captureContextDataAttributes.size());
       for (String key : captureContextDataAttributes) {
@@ -92,7 +92,7 @@ public final class LogEventMapper<T> {
           keys.add(getContextDataAttributeKey(key));
         }
       }
-      this.precomputedContextDataKeys = keys;
+      this.captureContextDataAttributeKeys = keys;
     }
     this.captureEventName = captureEventName;
   }
@@ -253,7 +253,7 @@ public final class LogEventMapper<T> {
       return;
     }
 
-    for (AttributeKey<String> attributeKey : precomputedContextDataKeys) {
+    for (AttributeKey<String> attributeKey : captureContextDataAttributeKeys) {
       String value = contextDataAccessor.getValue(contextData, attributeKey.getKey());
       builder.setAttribute(attributeKey, value);
     }

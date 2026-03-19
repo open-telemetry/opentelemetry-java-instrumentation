@@ -55,7 +55,7 @@ public final class LogEventMapper {
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "log4j_appender")
           .getBoolean("experimental_log_attributes/development", false);
 
-  private final List<AttributeKey<String>> precomputedMdcKeys;
+  private final List<AttributeKey<String>> captureMdcAttributeKeys;
 
   // cached as an optimization
   private final boolean captureAllMdcAttributes;
@@ -71,7 +71,7 @@ public final class LogEventMapper {
     this.captureAllMdcAttributes =
         captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
     if (captureAllMdcAttributes) {
-      this.precomputedMdcKeys = emptyList();
+      this.captureMdcAttributeKeys = emptyList();
     } else {
       List<AttributeKey<String>> keys = new ArrayList<>(captureMdcAttributes.size());
       for (String key : captureMdcAttributes) {
@@ -80,7 +80,7 @@ public final class LogEventMapper {
           keys.add(getMdcAttributeKey(key));
         }
       }
-      this.precomputedMdcKeys = keys;
+      this.captureMdcAttributeKeys = keys;
     }
     if (captureEventName) {
       logger.warning(
@@ -209,7 +209,7 @@ public final class LogEventMapper {
       return;
     }
 
-    for (AttributeKey<String> attributeKey : precomputedMdcKeys) {
+    for (AttributeKey<String> attributeKey : captureMdcAttributeKeys) {
       Object value = context.get(attributeKey.getKey());
       if (value != null) {
         builder.setAttribute(attributeKey, value.toString());
