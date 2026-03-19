@@ -14,7 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 
 // servlet that will be used for javax servlet containers
 @WebServlet(urlPatterns = "/javax/*", name = "javaxServlet")
-public class JavaxSimpleServlet extends HttpServlet {
+public final class JavaxSimpleServlet extends HttpServlet {
 
   private static final long serialVersionUID = 1L;
 

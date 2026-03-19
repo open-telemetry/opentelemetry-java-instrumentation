@@ -14,7 +14,7 @@ import java.io.PrintWriter;
 
 // servlet that will be used for jakarta servlet containers
 @WebServlet(urlPatterns = "/jakarta/*", name = "jakartaServlet")
-public class JakartaSimpleServlet extends HttpServlet {
+public final class JakartaSimpleServlet extends HttpServlet {
 
   private static final long serialVersionUID = 1L;
 
