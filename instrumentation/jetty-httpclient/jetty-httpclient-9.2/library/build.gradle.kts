@@ -8,7 +8,7 @@ val jettyVers_base9 = "9.2.0.v20140526"
 dependencies {
   library("org.eclipse.jetty:jetty-client:$jettyVers_base9")
 
-  testImplementation(project(":instrumentation:jetty-httpclient::jetty-httpclient-9.2:testing"))
+  testImplementation(project(":instrumentation:jetty-httpclient:jetty-httpclient-9.2:testing"))
 
   latestDepTestLibrary("org.eclipse.jetty:jetty-client:9.+") // documented limitation
 }
@@ -24,8 +24,10 @@ testing {
       }
       dependencies {
         implementation(project())
-        implementation(project(":instrumentation:jetty-httpclient::jetty-httpclient-9.2:testing"))
-        val jettyVersion = if (findProperty("testLatestDeps") as Boolean) "9.4.43.v20210629" else "9.4.24.v20191120"
+        implementation(project(":instrumentation:jetty-httpclient:jetty-httpclient-9.2:testing"))
+        val testLatestDeps = findProperty("testLatestDeps")?.toString()?.toBoolean() == true
+        val jettyVersion =
+          if (testLatestDeps) "9.4.43.v20210629" else "9.4.24.v20191120"
         implementation("org.eclipse.jetty:jetty-client:$jettyVersion")
       }
     }
