@@ -75,9 +75,7 @@ public final class JdbcInstrumenterFactory {
       boolean captureQueryParameters) {
     JdbcAttributesGetter getter = new JdbcAttributesGetter();
     return Instrumenter.<DbRequest, Void>builder(
-            openTelemetry,
-            INSTRUMENTATION_NAME,
-            DbClientSpanNameExtractor.create(getter))
+            openTelemetry, INSTRUMENTATION_NAME, DbClientSpanNameExtractor.create(getter))
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(getter)
                 .setQuerySanitizationEnabled(querySanitizationEnabled)
