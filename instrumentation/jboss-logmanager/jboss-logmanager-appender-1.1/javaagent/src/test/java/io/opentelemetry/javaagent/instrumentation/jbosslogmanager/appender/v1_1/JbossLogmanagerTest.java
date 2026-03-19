@@ -62,7 +62,7 @@ class JbossLogmanagerTest {
 
   @ParameterizedTest
   @MethodSource("provideParameters")
-  public void test(boolean withParam, boolean logException, boolean withParent)
+  void test(boolean withParam, boolean logException, boolean withParent)
       throws InterruptedException {
     test(
         java.util.logging.Level.FINE,

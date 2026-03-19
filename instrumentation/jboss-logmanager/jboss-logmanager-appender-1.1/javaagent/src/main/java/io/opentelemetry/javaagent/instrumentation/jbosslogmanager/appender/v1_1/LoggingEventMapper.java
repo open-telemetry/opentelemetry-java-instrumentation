@@ -138,10 +138,7 @@ public final class LoggingEventMapper {
     for (String key : captureMdcAttributes) {
       if (!OTEL_EVENT_NAME.getKey().equals(key)
           && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
-        String value = context.get(key);
-        if (value != null) {
-          builder.setAttribute(getMdcAttributeKey(key), value);
-        }
+        builder.setAttribute(getMdcAttributeKey(key), context.get(key));
       }
     }
   }
