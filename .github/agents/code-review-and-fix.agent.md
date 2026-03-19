@@ -87,6 +87,10 @@ For each file in scope:
    - binary files
    - files under `licenses/`
    - `*.md` except `CHANGELOG.md`
+   - files in **stub/shaded-stub modules** — these are minimal stand-ins for external
+     library classes and must not be modified (their API shape must match the real class).
+     Skip any file whose path contains `compile-stub/`, `shaded-stub-for-instrumenting/`,
+     or `library-instrumentation-shaded/`.
 2. Read file content.
 3. Determine line set:
    - PR mode: changed lines only (plus minimal nearby lines if required by a safe fix)
