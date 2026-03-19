@@ -52,12 +52,12 @@ public abstract class AbstractArquillianRestTest {
   }
 
   @Test
-  public void testHelloCdiRestResource() {
+  void testHelloCdiRestResource() {
     testHelloRequest("rest-app/cdiHello", "CdiRestResource");
   }
 
   @Test
-  public void testHelloEjbRestResource() {
+  void testHelloEjbRestResource() {
     testHelloRequest("rest-app/ejbHello", "EjbRestResource");
   }
 
