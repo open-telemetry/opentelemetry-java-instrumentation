@@ -80,7 +80,7 @@ public final class ReferenceCollector {
     }
 
     List<String> spiImplementations = new ArrayList<>();
-    try (InputStream stream = getResourceStream(helperResource.getAgentPath())) {
+    try (InputStream stream = Utils.getResourceStream(resourceLoader, helperResource.getAgentPath())) {
       BufferedReader reader = new BufferedReader(new InputStreamReader(stream, UTF_8));
       while (reader.ready()) {
         String line = reader.readLine();
@@ -132,7 +132,7 @@ public final class ReferenceCollector {
       String visitedClassName = instrumentationQueue.remove();
       visitedClasses.add(visitedClassName);
 
-      try (InputStream in = getClassFileStream(visitedClassName)) {
+      try (InputStream in = Utils.getClassFileStream(resourceLoader, visitedClassName)) {
         // only start from method bodies for the advice class (skips class/method references)
         ReferenceCollectingClassVisitor cv =
             new ReferenceCollectingClassVisitor(helperClassPredicate, isAdviceClass);
@@ -162,24 +162,6 @@ public final class ReferenceCollector {
         isAdviceClass = false;
       }
     }
-  }
-
-  private InputStream getClassFileStream(String className) throws IOException {
-    return getResourceStream(Utils.getResourceName(className));
-  }
-
-  private InputStream getResourceStream(String resource) throws IOException {
-    URLConnection connection =
-        Preconditions.checkNotNull(
-                resourceLoader.getResource(resource), "Couldn't find resource %s", resource)
-            .openConnection();
-
-    // Since the JarFile cache is not per class loader, but global with path as key, using cache may
-    // cause the same instance of JarFile being used for consecutive builds, even if the file has
-    // been changed. There is still another cache in ZipFile.Source which checks last modified time
-    // as well, so the zip index is not scanned again on every class.
-    connection.setUseCaches(false);
-    return connection.getInputStream();
   }
 
   private void addReference(String refClassName, ClassRef reference) {
