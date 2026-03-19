@@ -207,3 +207,4 @@ jaxws-metro-2.2:javaagent
 jboss-logmanager-mdc-1.1:javaagent
 jdbc:bootstrap
 jdbc:javaagent
+jdbc:testing
