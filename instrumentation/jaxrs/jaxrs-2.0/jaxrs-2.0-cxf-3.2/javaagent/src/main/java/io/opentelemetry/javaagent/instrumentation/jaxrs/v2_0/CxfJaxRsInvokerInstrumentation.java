@@ -32,7 +32,7 @@ public class CxfJaxRsInvokerInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("org.apache.cxf.message.Exchange")))
             .and(takesArgument(1, Object.class))
             .and(takesArgument(2, Object.class)),
-        CxfJaxRsInvokerInstrumentation.class.getName() + "$InvokeAdvice");
+        getClass().getName() + "$InvokeAdvice");
   }
 
   @SuppressWarnings("unused")
