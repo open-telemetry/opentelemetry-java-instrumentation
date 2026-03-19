@@ -30,7 +30,7 @@ public class ActionMappingInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetActionAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static void exitGetAction(@Advice.Return Action action) {
       JFinalSingletons.updateRoute(action);
     }
