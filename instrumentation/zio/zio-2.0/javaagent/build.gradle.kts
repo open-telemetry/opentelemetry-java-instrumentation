@@ -32,8 +32,8 @@ dependencies {
   testCompileOnly("org.scala-lang:scala-library:2.12.20")
 }
 
-// tasks {
-//  withType<Test>().configureEach {
-//    jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
-//  }
-// }
+tasks {
+  withType<Test>().configureEach {
+    jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
+  }
+}
