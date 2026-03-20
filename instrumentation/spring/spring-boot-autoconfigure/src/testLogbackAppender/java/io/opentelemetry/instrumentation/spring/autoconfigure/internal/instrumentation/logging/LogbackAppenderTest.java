@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.read.ListAppender;
@@ -29,6 +30,9 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -38,6 +42,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 class LogbackAppenderTest {
+
+  private static final Class<?> openTelemetryAppenderClass =
+      io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender.class;
+  private static final Class<?> openTelemetryMdcAppenderClass =
+      io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender.class;
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
@@ -59,10 +68,11 @@ class LogbackAppenderTest {
     }
   }
 
-  @Test
-  void shouldInitializeAppender() {
+  @ParameterizedTest
+  @ValueSource(strings = {"logback-test.xml", "logback-test-no-mdc.xml"})
+  void shouldInitializeAppender(String configurationFile) {
     Map<String, Object> properties = new HashMap<>();
-    properties.put("logging.config", "classpath:logback-test.xml");
+    properties.put("logging.config", "classpath:" + configurationFile);
     properties.put(
         "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "*");
     properties.put(
@@ -75,6 +85,9 @@ class LogbackAppenderTest {
     app.setDefaultProperties(properties);
     ConfigurableApplicationContext context = app.run();
     cleanup.deferCleanup(context);
+
+    assertThat(countAppenders(openTelemetryAppenderClass)).isEqualTo(1);
+    assertThat(countAppenders(openTelemetryMdcAppenderClass)).isEqualTo(1);
 
     ListAppender<ILoggingEvent> listAppender = getListAppender();
     listAppender.list.clear();
@@ -127,6 +140,9 @@ class LogbackAppenderTest {
     app.setDefaultProperties(properties);
     ConfigurableApplicationContext context = app.run();
     cleanup.deferCleanup(context);
+
+    assertThat(countAppenders(openTelemetryAppenderClass)).isEqualTo(1);
+    assertThat(countAppenders(openTelemetryMdcAppenderClass)).isEqualTo(1);
 
     LoggerFactory.getLogger("test").info("test log message");
 
@@ -186,6 +202,9 @@ class LogbackAppenderTest {
     ConfigurableApplicationContext context = app.run();
     cleanup.deferCleanup(context);
 
+    assertThat(countAppenders(openTelemetryAppenderClass)).isEqualTo(0);
+    assertThat(countAppenders(openTelemetryMdcAppenderClass)).isEqualTo(1);
+
     ListAppender<ILoggingEvent> listAppender = getListAppender();
     listAppender.list.clear();
 
@@ -220,6 +239,9 @@ class LogbackAppenderTest {
     app.setDefaultProperties(properties);
     ConfigurableApplicationContext context = app.run();
     cleanup.deferCleanup(context);
+
+    assertThat(countAppenders(openTelemetryAppenderClass)).isEqualTo(0);
+    assertThat(countAppenders(openTelemetryMdcAppenderClass)).isEqualTo(0);
 
     ListAppender<ILoggingEvent> listAppender = getListAppender();
     listAppender.list.clear();
@@ -264,5 +286,37 @@ class LogbackAppenderTest {
       }
     }
     return (ListAppender<ILoggingEvent>) mdcAppender.getAppender("List");
+  }
+
+  private static int countAppenders(Appender<?> appender, Class<?> appenderClass) {
+    int count = 0;
+    if (appenderClass.isInstance(appender)) {
+      count++;
+    } else if (appender instanceof AppenderAttachable) {
+      for (Iterator<? extends Appender<?>> iterator =
+              ((AppenderAttachable<?>) appender).iteratorForAppenders();
+          iterator.hasNext(); ) {
+        Appender<?> childAppender = iterator.next();
+        count += countAppenders(childAppender, appenderClass);
+      }
+    }
+    return count;
+  }
+
+  private static int countAppenders(Class<?> appenderClass) {
+    ILoggerFactory loggerFactorySpi = LoggerFactory.getILoggerFactory();
+    if (!(loggerFactorySpi instanceof LoggerContext)) {
+      return 0;
+    }
+    int count = 0;
+    LoggerContext loggerContext = (LoggerContext) loggerFactorySpi;
+    for (ch.qos.logback.classic.Logger logger : loggerContext.getLoggerList()) {
+      Iterator<Appender<ILoggingEvent>> appenderIterator = logger.iteratorForAppenders();
+      while (appenderIterator.hasNext()) {
+        Appender<ILoggingEvent> appender = appenderIterator.next();
+        count += countAppenders(appender, appenderClass);
+      }
+    }
+    return count;
   }
 }
