@@ -6,7 +6,7 @@ FROM mcr.microsoft.com/windows/servercore:ltsc2022@sha256:d4c6d1a8a1a306b12691c3
 ARG version
 ARG baseDownloadUrl
 
-RUN curl.exe --retry 5 --retry-delay 3 --retry-all-errors -fLo /server.zip ${baseDownloadUrl}.zip
+RUN curl.exe --retry 5 --retry-delay 3 --retry-all-errors -fLo /server.zip "${baseDownloadUrl}.zip"
 RUN ["powershell", "-Command", "expand-archive -Path /server.zip -DestinationPath /server"]
 
 FROM ${jdkImageName}@sha256:${jdkImageHash}
