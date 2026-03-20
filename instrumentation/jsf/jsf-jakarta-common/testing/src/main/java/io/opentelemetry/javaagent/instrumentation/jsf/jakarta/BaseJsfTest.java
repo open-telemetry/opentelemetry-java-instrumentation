@@ -259,7 +259,7 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
                         span, trace, 0, "#{greetingForm.submit()}", expectedException)));
   }
 
-  private void assertHandlerSpan(
+  private static void assertHandlerSpan(
       SpanDataAssert span,
       TraceAssert trace,
       int parentIndex,
