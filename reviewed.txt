@@ -239,3 +239,4 @@ jodd-http-4.2:javaagent-unit-tests
 jsf-jakarta-common:javaagent
 jsf-jakarta-common:testing
 jsf-javax-common:javaagent
+jsf-javax-common:testing
