@@ -153,7 +153,7 @@ public final class AnnotationInstrumentationHelper {
     } else if (value instanceof Byte) {
       Span.current().setAttribute(name, (Byte) value);
     } else if (value instanceof Character) {
-      Span.current().setAttribute(name, (Character) value);
+      Span.current().setAttribute(name, String.valueOf((char) (Character) value));
     } else if (value instanceof Double) {
       Span.current().setAttribute(name, (Double) value);
     } else if (value instanceof Float) {
