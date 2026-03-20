@@ -50,7 +50,9 @@ dependencies {
   implementation(project(":instrumentation:jsf:jsf-javax-common:javaagent"))
 
   testImplementation(project(":instrumentation:jsf:jsf-javax-common:testing"))
+
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
+  testInstrumentation(project(":instrumentation:jsf:jsf-mojarra-3.0:javaagent"))
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
