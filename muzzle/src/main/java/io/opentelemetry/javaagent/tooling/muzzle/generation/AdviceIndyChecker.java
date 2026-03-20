@@ -113,15 +113,6 @@ class AdviceIndyChecker {
     }
 
     @Override
-    public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
-      if (descriptor.equals(Type.getDescriptor(Advice.OnMethodEnter.class))
-          || descriptor.equals(Type.getDescriptor(Advice.OnMethodExit.class))) {
-        return new AdviceAnnotationVisitor(result);
-      }
-      return null;
-    }
-
-    @Override
     public void visitMethodInsn(
         int opcode, String owner, String name, String descriptor, boolean isInterface) {
 
