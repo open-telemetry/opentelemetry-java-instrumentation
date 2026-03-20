@@ -269,3 +269,4 @@ kubernetes-client-7.0:javaagent
 lettuce-4.0:javaagent
 lettuce-5.0:javaagent
 lettuce-5.1:library
+lettuce-5.1:javaagent
