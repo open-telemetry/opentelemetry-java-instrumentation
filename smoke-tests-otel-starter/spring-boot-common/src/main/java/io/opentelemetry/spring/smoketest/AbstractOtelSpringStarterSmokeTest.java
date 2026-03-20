@@ -267,6 +267,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
             "jvm.buffer.count",
             "jvm.class.count",
             "jvm.cpu.context_switch",
+            "jvm.cpu.longlock",
             "jvm.system.cpu.utilization",
             "jvm.gc.duration",
             "jvm.memory.init",
