@@ -1,6 +1,7 @@
 [tools]
 lychee = "0.23.0"
 markdownlint-cli2 = "0.22.0"
+"ubi:google/google-java-format" = "1.34.1"
 
 [settings]
 # Only install tools explicitly defined in the [tools] section above
@@ -17,17 +18,33 @@ use_file_shell_for_executable_tasks = true
 description = "Check for broken links in changed files + all local links"
 file = "https://raw.githubusercontent.com/grafana/flint/8a39d96e17327c54974623b252eb5260d67ed68a/tasks/lint/links.sh" # v0.9.1
 
-[tasks."lint:spotless"]
-description = "Check Java formatting with Spotless"
-run = "./gradlew spotlessCheck"
+[tasks."lint:java"]
+description = "Check Java formatting and license headers (changed files only)"
+run = """
+files=$(git diff --name-only --diff-filter=d origin/main...HEAD -- '*.java')
+[ -z "$files" ] && exit 0
+failed=0
+for f in $files; do
+  if ! head -4 "$f" | grep -q "SPDX-License-Identifier: Apache-2.0"; then
+    echo "Missing license header: $f"
+    failed=1
+  fi
+done
+google-java-format --dry-run --set-exit-if-changed $files || failed=1
+exit $failed
+"""
 
 [tasks.lint]
 description = "Run all lints"
-depends = ["lint:links", "lint:markdown", "lint:spotless"]
+depends = ["lint:links", "lint:markdown", "lint:java"]
 
 [tasks.fix]
 description = "Auto-fix lint issues"
-run = ["./gradlew spotlessApply", "mise run lint:markdown -- --fix"]
+run = """
+files=$(git diff --name-only --diff-filter=d origin/main...HEAD -- '*.java')
+[ -n "$files" ] && google-java-format -i $files
+mise run lint:markdown -- --fix
+"""
 
 [tasks.pre-commit]
 description = "Pre-commit hook: lint changed files"
