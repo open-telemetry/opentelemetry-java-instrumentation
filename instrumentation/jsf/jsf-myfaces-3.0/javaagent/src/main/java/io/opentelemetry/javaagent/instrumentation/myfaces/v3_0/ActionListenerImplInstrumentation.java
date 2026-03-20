@@ -29,8 +29,7 @@ public class ActionListenerImplInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("processAction"),
-        ActionListenerImplInstrumentation.class.getName() + "$ProcessActionAdvice");
+        named("processAction"), getClass().getName() + "$ProcessActionAdvice");
   }
 
   @SuppressWarnings("unused")
