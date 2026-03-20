@@ -19,6 +19,10 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
+/**
+ * Utility class that checks if an advice has known incompatibility with indy by analyzing its
+ * bytecode.
+ */
 class AdviceIndyChecker {
 
   private AdviceIndyChecker() {}
@@ -42,12 +46,20 @@ class AdviceIndyChecker {
       return cause != null;
     }
 
+    /**
+     * Provides human-friendly description of incompatibility, if there is any.
+     *
+     * @return incompatibility description or null if there is none
+     */
     @Nullable
     String getMessage() {
+      if (cause == null) {
+        return null;
+      }
       return String.format("advice method %s.%s : %s", className, methodName, cause);
     }
 
-    private void markNotIndy(String cause) {
+    private void markIncompatible(String cause) {
       // only consider the first cause of incompatibility
       if (this.cause == null) {
         this.cause = cause;
@@ -116,7 +128,7 @@ class AdviceIndyChecker {
       if (opcode == Opcodes.INVOKESTATIC
           && VIRTUAL_FIELD_TYPE.getInternalName().equals(owner)
           && "find".equals(name)) {
-        result.markNotIndy(
+        result.markIncompatible(
             "advice contains call to VirtualField.find, which is not supported in indy advice");
       }
     }
@@ -126,7 +138,7 @@ class AdviceIndyChecker {
         int parameter, String descriptor, boolean visible) {
 
       if (descriptor.equals(Type.getDescriptor(Advice.Local.class))) {
-        result.markNotIndy(
+        result.markIncompatible(
             "parameter annotated with Advice.Local, which is not supported in indy advice");
       } else if (descriptor.equals(Type.getDescriptor(Advice.Return.class))
           || descriptor.equals(Type.getDescriptor(Advice.Argument.class))) {
@@ -135,8 +147,6 @@ class AdviceIndyChecker {
 
       return null;
     }
-
-    // TODO: verify the lack of VirtualField.find calls in non-inline advice here
   }
 
   private static class AdviceAnnotationVisitor extends AnnotationVisitor {
@@ -151,7 +161,7 @@ class AdviceIndyChecker {
     @Override
     public void visit(String name, Object value) {
       if ("readOnly".equals(name) && Boolean.FALSE.equals(value)) {
-        result.markNotIndy("advice method parameter with @Argument(readOnly=false)");
+        result.markIncompatible("advice method parameter with @Argument(readOnly=false)");
       } else if ("inline".equals(name) && Boolean.FALSE.equals(value)) {
         hasInlineFalse = true;
       }
@@ -160,7 +170,7 @@ class AdviceIndyChecker {
     @Override
     public void visitEnd() {
       if (!hasInlineFalse) {
-        result.markNotIndy(
+        result.markIncompatible(
             "advice method without @OnMethodEnter(inline=false) or @OnMethodExit(inline=false)");
       }
     }
