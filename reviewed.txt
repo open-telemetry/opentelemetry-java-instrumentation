@@ -278,3 +278,4 @@ liberty-dispatcher-20.0:javaagent
 log4j-appender-1.2:javaagent
 log4j-appender-2.17:javaagent
 log4j-appender-2.17:library
+log4j-appender-2.17:testing
