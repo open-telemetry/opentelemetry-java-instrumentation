@@ -123,14 +123,14 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
   void testRecordsWithTopicPartitionKafkaConsume()
       throws ExecutionException, InterruptedException, TimeoutException {
     String greeting = "Hello from MockConsumer!";
-    producer.send(new ProducerRecord<>(SHARED_TOPIC, partition, null, greeting)).get(5, SECONDS);
+    producer.send(new ProducerRecord<>(SHARED_TOPIC, PARTITION, null, greeting)).get(5, SECONDS);
 
     testing.waitForTraces(1);
 
     awaitUntilConsumerIsReady();
     ConsumerRecords<?, ?> consumerRecords = poll(Duration.ofSeconds(5));
     List<? extends ConsumerRecord<?, ?>> recordsInPartition =
-        consumerRecords.records(KafkaClientBaseTest.topicPartition);
+        consumerRecords.records(KafkaClientBaseTest.TOPIC_PARTITION);
     assertThat(recordsInPartition.size()).isEqualTo(1);
 
     // iterate over records to generate spans
