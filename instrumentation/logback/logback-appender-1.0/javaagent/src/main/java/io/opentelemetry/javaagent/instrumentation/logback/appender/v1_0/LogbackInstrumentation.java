@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.logback.appender.v1_0;
 
 import static io.opentelemetry.javaagent.instrumentation.logback.appender.v1_0.LogbackSingletons.mapper;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -32,12 +31,11 @@ class LogbackInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("callAppenders"))
             .and(takesArguments(1))
             .and(takesArgument(0, named("ch.qos.logback.classic.spi.ILoggingEvent"))),
-        LogbackInstrumentation.class.getName() + "$CallAppendersAdvice");
+        getClass().getName() + "$CallAppendersAdvice");
   }
 
   @SuppressWarnings("unused")
