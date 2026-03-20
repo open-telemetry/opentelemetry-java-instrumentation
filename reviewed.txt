@@ -276,3 +276,4 @@ lettuce-5.1:testing
 liberty-20.0:javaagent
 liberty-dispatcher-20.0:javaagent
 log4j-appender-1.2:javaagent
+log4j-appender-2.17:javaagent
