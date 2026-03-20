@@ -57,7 +57,7 @@ import org.testcontainers.utility.MountableFile;
 @SuppressWarnings({"deprecation"})
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvider {
+abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvider {
 
   @RegisterExtension
   protected static final InstrumentationExtension testing =
@@ -132,7 +132,7 @@ public abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetriever
   }
 
   @BeforeAll
-  public void setupBase() {
+  void setupBase() {
     network = Network.newNetwork();
 
     // Start backend container first (like smoke tests)
@@ -306,7 +306,7 @@ public abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetriever
   }
 
   @BeforeEach
-  public void resetBase() throws Exception {
+  void resetBase() throws Exception {
     deleteConnectorIfExists();
     clearDatabaseData();
   }
@@ -340,7 +340,7 @@ public abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetriever
   }
 
   @AfterAll
-  public void cleanupBase() {
+  void cleanupBase() {
     telemetryRetriever.close();
     openTelemetry.close();
 
