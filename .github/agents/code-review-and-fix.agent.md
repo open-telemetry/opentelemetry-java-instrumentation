@@ -251,6 +251,13 @@ Execute these steps strictly in order — do not reorder:
       pre-existing failure — note it in the summary but do not block the commit.
    5. Never commit code that fails tests you can reproduce locally.
 
+   **Stale UP-TO-DATE detection**: after modifying source files, inspect the `:check` output.
+   If every test task (`test`, `testExperimental`, `latestDepTest`, etc.) reports `UP-TO-DATE`
+   or `NO-SOURCE`, your edits may not have reached the filesystem in time and **no tests
+   actually ran**. When this happens, stop the Gradle daemon (`./gradlew --stop`) and re-run
+   the same `:check` command. Do not skip the normal `:check` run or substitute it with only
+   `-PtestLatestDeps=true` — both runs are mandatory.
+
    **Testing-module dependent validation**: when any modified module is a `testing` module
    (its Gradle path ends with `:testing`), you must **also** run `:check` (both normal and
    `-PtestLatestDeps=true`) for every sibling `library` and `javaagent` module under the
