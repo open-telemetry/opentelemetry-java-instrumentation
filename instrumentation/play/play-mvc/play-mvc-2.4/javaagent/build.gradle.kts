@@ -8,6 +8,9 @@ muzzle {
     module.set("play_2.11")
     versions.set("[2.4.0,2.6)")
     assertInverse.set(true)
+    // versions 2.3.9 and 2.3.10 depends on com.typesafe.netty:netty-http-pipelining:1.1.2
+    // which does not exist
+    skip("2.3.9", "2.3.10")
   }
   fail {
     group.set("com.typesafe.play")

@@ -8,6 +8,8 @@ muzzle {
     group.set("org.springframework")
     module.set("spring-webmvc")
     versions.set("[3.1.0.RELEASE,6)")
+    // 3.2.1.RELEASE has transitive dependencies like spring-web as "provided" instead of "compile"
+    skip("3.2.1.RELEASE")
     extraDependency("javax.servlet:javax.servlet-api:3.0.1")
     assertInverse.set(true)
   }
