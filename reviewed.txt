@@ -284,3 +284,4 @@ log4j-context-data-2.17:javaagent
 log4j-context-data-2.7:javaagent
 log4j-mdc-1.2:javaagent
 log4j-context-data-common:testing
+logback-appender-1.0:library
