@@ -266,3 +266,4 @@ ktor-common-2.0:library
 ktor-3.0:testing
 kubernetes-client-7.0:javaagent-unit-tests
 kubernetes-client-7.0:javaagent
+lettuce-4.0:javaagent
