@@ -197,9 +197,7 @@ class MetricRegistrar {
     AttributesBuilder attrBuilder = Attributes.builder();
     for (MetricAttribute metricAttribute : extractor.getAttributes()) {
       String attributeValue = metricAttribute.acquireAttributeValue(connection, objectName);
-      if (attributeValue != null) {
-        attrBuilder = attrBuilder.put(metricAttribute.getAttributeName(), attributeValue);
-      }
+      attrBuilder = attrBuilder.put(metricAttribute.getAttributeName(), attributeValue);
     }
     return attrBuilder.build();
   }

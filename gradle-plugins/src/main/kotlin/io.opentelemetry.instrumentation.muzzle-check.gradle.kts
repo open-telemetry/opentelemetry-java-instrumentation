@@ -308,7 +308,14 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
   }
 
   val muzzleTask = tasks.register(taskName) {
-    val configFiles = config.incoming.files
+    // Some old library versions have broken or missing transitive dependencies
+    // on Maven Central (e.g. SNAPSHOTs, Maven 1 POMs, deleted artifacts).
+    // Use lenient resolution so these don't break configuration cache
+    // serialization. For assertFail this is always safe: fewer classes can only
+    // add more mismatches. For assertPass a missing transitive can cause a
+    // false muzzle failure but never a false pass; such versions should be
+    // skipped in the module's build.gradle.kts when found.
+    val configFiles = config.incoming.artifactView { lenient(true) }.files
     val muzzleShadowJarFile = shadowModule.flatMap { it.archiveFile }
     val muzzleToolingShadowJarFile = shadowMuzzleTooling.flatMap { it.archiveFile }
     val muzzleBootstrapShadowJarFile = shadowMuzzleBootstrap.flatMap { it.archiveFile }
