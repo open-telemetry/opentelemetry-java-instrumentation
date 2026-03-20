@@ -23,6 +23,7 @@ jobs:
       # it's rare for only the openj9 tests, openj9 smoke variants, or the windows smoke tests to break
       skip-openj9-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test openj9') }}
       skip-windows-smoke-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test windows') }}
+      reduced-smoke-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test full smoke') }}
       cache-read-only: true
 
   test-latest-deps:

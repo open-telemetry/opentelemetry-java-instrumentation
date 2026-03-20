@@ -15,6 +15,9 @@ on:
       skip-windows-smoke-tests:
         type: boolean
         required: false
+      reduced-smoke-tests:
+        type: boolean
+        required: false
     secrets:
       DEVELOCITY_ACCESS_KEY:
         required: false
@@ -457,6 +460,7 @@ jobs:
           ./gradlew
           :smoke-tests:test
           -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
+          ${{ inputs.reduced-smoke-tests && '-PreducedSmokeTests=true' || '' }}
           ${{ inputs.skip-openj9-tests && matrix.smoke-test-suite != 'websphere' && '-PskipOpenJ9SmokeTests=true' || '' }}
           ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 

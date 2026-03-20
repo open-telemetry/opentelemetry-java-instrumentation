@@ -177,6 +177,23 @@ val targets = mapOf(
   ),
 )
 
+// In reduced mode (PR builds), shrink the matrix to a representative subset.
+// Tomcat covers all JDKs (hotspot), TomEE covers all JDKs (openj9),
+// other servers test only their minimum supported JDK on hotspot.
+fun reduceTargets(full: Map<String, List<ImageTarget>>): Map<String, List<ImageTarget>> {
+  return full.mapValues { (server, matrices) ->
+    when (server) {
+      "tomcat" -> matrices.map { it.copy(vm = listOf("hotspot")) }
+      "tomee" -> matrices.map { it.copy(vm = listOf("openj9")) }
+      "websphere" -> matrices
+      else -> matrices.map { it.copy(vm = listOf("hotspot"), jdk = listOf(it.jdk.first())) }
+    }
+  }
+}
+
+val reducedSmokeTests: Boolean = findProperty("reducedSmokeTests") != null
+val activeTargets = if (reducedSmokeTests) reduceTargets(targets) else targets
+
 tasks {
   val buildLinuxTestImages by registering {
     group = "build"
@@ -188,8 +205,8 @@ tasks {
     description = "Builds all Windows Docker images for the test matrix"
   }
 
-  val linuxImages = createDockerTasks(buildLinuxTestImages, false)
-  val windowsImages = createDockerTasks(buildWindowsTestImages, true)
+  val linuxImages = createDockerTasks(buildLinuxTestImages, false, activeTargets)
+  val windowsImages = createDockerTasks(buildWindowsTestImages, true, activeTargets)
 
   val pushLinuxImages by registering(DockerPushImage::class) {
     dependsOn(buildLinuxTestImages)
@@ -207,7 +224,7 @@ tasks {
 
   val printSmokeTestsConfigurations by registering {
     doFirst {
-      for ((server, matrices) in targets) {
+      for ((server, matrices) in activeTargets) {
         val smokeTestServer = findProperty("smokeTestServer")
         if (smokeTestServer != null && server != smokeTestServer) {
           continue
@@ -370,7 +387,7 @@ fun configureImage(
   return image
 }
 
-fun createDockerTasks(parentTask: TaskProvider<out Task>, isWindows: Boolean): Set<String> {
+fun createDockerTasks(parentTask: TaskProvider<out Task>, isWindows: Boolean, targets: Map<String, List<ImageTarget>>): Set<String> {
   val resultImages = mutableSetOf<String>()
   for ((server, matrices) in targets) {
     val smokeTestServer = findProperty("smokeTestServer")

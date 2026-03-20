@@ -31,6 +31,7 @@ import io.opentelemetry.testing.internal.armeria.common.HttpMethod;
 import io.opentelemetry.testing.internal.armeria.common.RequestHeaders;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import org.junit.jupiter.api.AfterAll;
@@ -51,12 +52,55 @@ public abstract class AppServerTest extends AbstractSmokeTest<AppServerImage> {
     var jdk = appServer.jdk();
     isWindows = TestContainerManager.useWindowsContainers();
 
+    // In reduced mode (PR builds), only run a representative subset of the full matrix.
+    // The full matrix runs on merge to main.
+    if (Boolean.getBoolean("reducedSmokeTests")) {
+      skipIfNotReduced();
+    }
+
     // ibm-semeru-runtimes doesn't publish windows images
     // adoptopenjdk is deprecated and doesn't publish Windows 2022 images
     assumeFalse(isWindows && jdk.endsWith("-openj9"));
 
     serverVersion = appServer.version();
     startWithoutCleanup(new AppServerImage(jdk, serverVersion, isWindows));
+  }
+
+  // Reduced smoke test subset for PR builds. The full matrix runs on merge to main.
+  // Tomcat covers all JDKs (hotspot), TomEE covers all JDKs (openj9),
+  // other servers test only their minimum supported JDK on hotspot.
+  // Keep in sync with reduceTargets() in smoke-tests/images/servlet/build.gradle.kts.
+  @SuppressWarnings("NonApiType")
+  private static final Set<String> REDUCED_TESTS =
+      Set.of(
+          // Jetty: hotspot, minimum JDK per version
+          "Jetty9Jdk8", "Jetty10Jdk11", "Jetty11Jdk11", "Jetty12Jdk17",
+          "Jetty11JpmsJdk11",
+          // Liberty: hotspot, minimum JDK per version
+          "Liberty20Jdk8", "Liberty21Jdk8", "Liberty22Jdk8", "Liberty23Jdk8",
+          "LibertyServletOnly21Jdk11", "LibertyServletOnly22Jdk11", "LibertyServletOnly23Jdk11",
+          // Payara: hotspot, minimum JDK per version
+          "Payara52020Jdk8", "Payara52021Jdk8", "Payara6Jdk11",
+          // Tomcat: hotspot, all JDKs (covers JDK version breadth)
+          "Tomcat7Jdk8",
+          "Tomcat8Jdk8", "Tomcat8Jdk11", "Tomcat8Jdk17", "Tomcat8Jdk21", "Tomcat8Jdk25",
+          "Tomcat9Jdk8", "Tomcat9Jdk11", "Tomcat9Jdk17", "Tomcat9Jdk21", "Tomcat9Jdk25",
+          "Tomcat10Jdk11", "Tomcat10Jdk17", "Tomcat10Jdk21", "Tomcat10Jdk25",
+          // TomEE: openj9, all JDKs (covers OpenJ9 breadth)
+          "Tomee70Jdk8Openj9", "Tomee71Jdk8Openj9",
+          "Tomee8Jdk8Openj9", "Tomee8Jdk11Openj9", "Tomee8Jdk17Openj9",
+          "Tomee8Jdk21Openj9", "Tomee8Jdk25Openj9",
+          "Tomee9Jdk11Openj9", "Tomee9Jdk17Openj9", "Tomee9Jdk21Openj9", "Tomee9Jdk25Openj9",
+          // Websphere: already minimal
+          "Websphere8Jdk8Openj9", "Websphere9Jdk8Openj9",
+          // Wildfly: hotspot, minimum JDK per version
+          "Wildfly13Jdk8", "Wildfly17Jdk8", "Wildfly21Jdk8",
+          "Wildfly28Jdk11", "Wildfly29Jdk11", "Wildfly30Jdk11");
+
+  private void skipIfNotReduced() {
+    assumeTrue(
+        REDUCED_TESTS.contains(getClass().getSimpleName()),
+        "Skipped in reduced smoke test mode");
   }
 
   @AfterAll

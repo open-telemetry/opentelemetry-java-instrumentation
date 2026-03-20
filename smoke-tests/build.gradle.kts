@@ -88,6 +88,11 @@ tasks {
     val extensionTestAppTask = project(":smoke-tests:extensions:testapp").tasks.named<Jar>("jar")
     val extensionTestAppJarPath = extensionTestAppTask.flatMap { it.archiveFile }
 
+    val reducedSmokeTests: String? by project
+    if (reducedSmokeTests != null) {
+      systemProperty("reducedSmokeTests", "true")
+    }
+
     dependsOn(shadowTask, extensionTestAppTask, extensionTask)
 
     doFirst {
