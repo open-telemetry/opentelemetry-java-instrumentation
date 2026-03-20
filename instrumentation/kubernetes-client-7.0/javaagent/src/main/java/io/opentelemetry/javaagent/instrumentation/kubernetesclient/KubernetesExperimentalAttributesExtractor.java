@@ -17,9 +17,6 @@ class KubernetesExperimentalAttributesExtractor
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, Request request) {
     KubernetesRequestDigest digest = KubernetesRequestDigest.parse(request);
-    if (digest.isNonResourceRequest()) {
-      return;
-    }
     KubernetesResource resourceMeta = digest.getResourceMeta();
     if (resourceMeta == null) {
       return;
