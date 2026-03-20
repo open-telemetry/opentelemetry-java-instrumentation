@@ -25,6 +25,8 @@ import javax.annotation.Nullable;
  */
 public final class ValueBridging159 {
 
+  // used via reflection by
+  // io.opentelemetry.javaagent.instrumentation.opentelemetryapi.ValueBridging
   public static final Function<Object, Object> INSTANCE = ValueBridging159::toAgentValue;
 
   private static final Logger logger = Logger.getLogger(ValueBridging159.class.getName());

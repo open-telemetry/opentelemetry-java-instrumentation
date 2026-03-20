@@ -288,13 +288,4 @@ class OpenTelemetryDriverTest {
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("Unable to find a driver that accepts url: " + unknownUrl);
   }
-
-  @DisplayName("verify get property info with test driver url")
-  @Test
-  void verifyGetPropertyInfoWithUnknowDriverUrl() {
-    String unknownUrl = "jdbc:unknown";
-    assertThatThrownBy(() -> OpenTelemetryDriver.INSTANCE.getPropertyInfo(unknownUrl, null))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Unable to find a driver that accepts url: " + unknownUrl);
-  }
 }

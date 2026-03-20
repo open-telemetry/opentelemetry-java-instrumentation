@@ -24,8 +24,6 @@ import javax.annotation.Nullable;
  */
 public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest, Void> {
 
-  public static final JdbcAttributesGetter INSTANCE = new JdbcAttributesGetter();
-
   // Databases where double quotes are exclusively identifiers and cannot be string literals.
   private static final Set<String> DOUBLE_QUOTES_FOR_IDENTIFIERS_SYSTEMS =
       new HashSet<>(
