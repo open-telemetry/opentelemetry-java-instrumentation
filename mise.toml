@@ -38,7 +38,7 @@ exit $failed
 description = "Run all lints"
 depends = ["lint:links", "lint:markdown", "lint:java"]
 
-[tasks.fix]
+[tasks."lint:fix"]
 description = "Auto-fix lint issues"
 run = """
 files=$(git diff --name-only --diff-filter=d origin/main...HEAD -- '*.java')
