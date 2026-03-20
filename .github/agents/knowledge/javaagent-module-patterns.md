@@ -36,7 +36,8 @@ public class MyLibrary10InstrumentationModule extends InstrumentationModule {
   directory name excluding version suffix. Names use **kebab-case**. See
   [module-naming.md](module-naming.md) for the full naming convention.
 - `typeInstrumentations()` returns the list of `TypeInstrumentation` implementations — use
-  `Arrays.asList(...)`.
+  `Arrays.asList(...)` for multiple items and `Collections.singletonList(...)` for a single
+  item.
 
 ### `classLoaderMatcher()` — Version-Boundary Detection
 

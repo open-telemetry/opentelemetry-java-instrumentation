@@ -33,6 +33,7 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
   dependsOn(agentShadowJar)
+  usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   systemProperty("io.opentelemetry.smoketest.agent.shadowJar.path", agentShadowJar.get().archiveFile.get().toString())
   systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
 }

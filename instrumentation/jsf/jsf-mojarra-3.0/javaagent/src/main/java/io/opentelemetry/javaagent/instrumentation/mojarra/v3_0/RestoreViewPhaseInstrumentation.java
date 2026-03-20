@@ -28,7 +28,7 @@ public class RestoreViewPhaseInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("execute").and(takesArgument(0, named("jakarta.faces.context.FacesContext"))),
-        RestoreViewPhaseInstrumentation.class.getName() + "$ExecuteAdvice");
+        getClass().getName() + "$ExecuteAdvice");
   }
 
   @SuppressWarnings("unused")

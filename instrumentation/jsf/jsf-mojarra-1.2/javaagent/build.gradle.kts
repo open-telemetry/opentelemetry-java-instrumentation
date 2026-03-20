@@ -14,6 +14,7 @@ muzzle {
     module.set("javax.faces")
     versions.set("[2.0.7,3)")
     extraDependency("javax.el:el-api:2.2")
+    assertInverse.set(true)
   }
   pass {
     group.set("com.sun.faces")
@@ -35,6 +36,7 @@ muzzle {
     versions.set("[1.2,2)")
     extraDependency("javax.faces:jsf-api:1.2")
     extraDependency("javax.el:el-api:1.0")
+    assertInverse.set(true)
   }
   fail {
     group.set("org.glassfish")
@@ -82,9 +84,9 @@ tasks {
   check {
     dependsOn(testing.suites)
   }
-}
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-  systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  withType<Test>().configureEach {
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  }
 }

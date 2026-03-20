@@ -143,7 +143,17 @@ Auto-fix boundaries:
     enum singleton or classical singleton pattern with `new MyImpl()` at each usage site
     and remove the `INSTANCE` field/enum. Do **not** extract a shared instance field;
     inline `new MyImpl()` directly at every call site (the class is tiny, stateless,
-    and only called during initialization)
+    and only called during initialization).
+    **Exception — Kotlin `object` declarations**: do **not** convert Kotlin `object`
+    declarations to `class`. Kotlin `object` is an idiomatic language-level singleton
+    and should be left as-is. This rule targets Java `enum` singletons and static
+    `INSTANCE` fields only.
+    **Exception — hot paths**: do **not** convert singletons that are used in
+    per-request or per-message code paths (e.g., inside `propagator.extract()` or
+    `propagator.inject()` called at request time). Keep the singleton `INSTANCE` field
+    to avoid allocating on every invocation. Only convert singletons used at
+    registration/initialization time (e.g., `Instrumenter` builder chains, `Singletons`
+    setup)
   - `hasAttributesSatisfying(...)` calls in test assertions — replace with
     `hasAttributesSatisfyingExactly(...)` because it is more precise (the non-exact
     variant silently ignores unexpected attributes)

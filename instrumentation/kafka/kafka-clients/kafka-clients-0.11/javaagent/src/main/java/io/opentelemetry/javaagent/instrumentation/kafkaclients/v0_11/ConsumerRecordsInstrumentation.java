@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
 import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.wrappingEnabledSupplier;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.consumerProcessInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -42,33 +41,26 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("records"))
             .and(takesArgument(0, String.class))
             .and(returns(Iterable.class)),
-        ConsumerRecordsInstrumentation.class.getName() + "$IterableAdvice");
+        getClass().getName() + "$IterableAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("records"))
             .and(takesArgument(0, named("org.apache.kafka.common.TopicPartition")))
             .and(returns(List.class)),
-        ConsumerRecordsInstrumentation.class.getName() + "$ListAdvice");
+        getClass().getName() + "$ListAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
-            .and(named("iterator"))
-            .and(takesArguments(0))
-            .and(returns(Iterator.class)),
-        ConsumerRecordsInstrumentation.class.getName() + "$IteratorAdvice");
+        isPublic().and(named("iterator")).and(takesArguments(0)).and(returns(Iterator.class)),
+        getClass().getName() + "$IteratorAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("listIterator"))
             .and(takesArguments(0))
             .and(returns(ListIterator.class)),
-        ConsumerRecordsInstrumentation.class.getName() + "$ListIteratorAdvice");
+        getClass().getName() + "$ListIteratorAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -161,7 +161,7 @@ abstract class KafkaStreamsBaseTest {
     consumer.seekToBeginning(emptyList());
   }
 
-  public static ConsumerRecords<Integer, String> poll(Duration duration) {
+  static ConsumerRecords<Integer, String> poll(Duration duration) {
     return KafkaStreamsReflectionUtil.poll(consumer, duration);
   }
 
