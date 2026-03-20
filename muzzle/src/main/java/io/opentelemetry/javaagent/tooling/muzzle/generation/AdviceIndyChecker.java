@@ -151,7 +151,6 @@ class AdviceIndyChecker {
 
   private static class AdviceAnnotationVisitor extends AnnotationVisitor {
     private final IndyCheckResult result;
-    private boolean hasInlineFalse = false;
 
     private AdviceAnnotationVisitor(IndyCheckResult result) {
       super(AsmApi.VERSION);
@@ -161,18 +160,9 @@ class AdviceIndyChecker {
     @Override
     public void visit(String name, Object value) {
       if ("readOnly".equals(name) && Boolean.FALSE.equals(value)) {
-        result.markIncompatible("advice method parameter with @Argument(readOnly=false)");
-      } else if ("inline".equals(name) && Boolean.FALSE.equals(value)) {
-        hasInlineFalse = true;
+        result.markIncompatible("advice method parameter with @Argument(readOnly=false) or @Return(readOnly=false)");
       }
     }
 
-    @Override
-    public void visitEnd() {
-      if (!hasInlineFalse) {
-        result.markIncompatible(
-            "advice method without @OnMethodEnter(inline=false) or @OnMethodExit(inline=false)");
-      }
-    }
   }
 }
