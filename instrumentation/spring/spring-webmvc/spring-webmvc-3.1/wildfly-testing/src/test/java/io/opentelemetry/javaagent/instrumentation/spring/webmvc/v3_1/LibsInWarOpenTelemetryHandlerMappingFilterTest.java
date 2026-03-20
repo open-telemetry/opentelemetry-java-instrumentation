@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1;
+
 import com.example.hello.HelloController;
 import com.example.hello.TestFilter;
 import java.io.File;
@@ -12,8 +14,8 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.EnterpriseArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 
-// Everything except spring-webmvc is in ear/lib, spring-webmvc is in war/WEB-INF/lib
-class MixedLibsOpenTelemetryHandlerMappingFilterTest
+// spring is inside war/WEB-INF/lib
+class LibsInWarOpenTelemetryHandlerMappingFilterTest
     extends AbstractOpenTelemetryHandlerMappingFilterTest {
   @Deployment
   static Archive<?> createDeployment() {
@@ -24,17 +26,12 @@ class MixedLibsOpenTelemetryHandlerMappingFilterTest
             .addAsWebInfResource("applicationContext.xml")
             .addClass(HelloController.class)
             .addClass(TestFilter.class)
-            .addAsLibraries(
-                new File("build/app-libs")
-                    .listFiles((dir, name) -> name.contains("spring-webmvc")));
+            .addAsLibraries(new File("build/app-libs").listFiles());
 
     EnterpriseArchive ear =
         ShrinkWrap.create(EnterpriseArchive.class)
             .setApplicationXML("application.xml")
-            .addAsModule(war)
-            .addAsLibraries(
-                new File("build/app-libs")
-                    .listFiles((dir, name) -> !name.contains("spring-webmvc")));
+            .addAsModule(war);
 
     return ear;
   }

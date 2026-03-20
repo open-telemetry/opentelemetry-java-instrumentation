@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1;
+
 import com.example.hello.HelloController;
 import com.example.hello.TestFilter;
 import java.io.File;
