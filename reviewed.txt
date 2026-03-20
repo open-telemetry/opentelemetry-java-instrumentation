@@ -244,3 +244,4 @@ jsf-mojarra-3.0:javaagent
 jsf-mojarra-1.2:javaagent
 jsf-myfaces-3.0:javaagent
 jsf-myfaces-1.2:javaagent
+kafka-clients-0.11:bootstrap
