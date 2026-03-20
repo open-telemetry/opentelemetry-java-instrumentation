@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6.KafkaConnectSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -25,6 +26,11 @@ import org.apache.kafka.connect.sink.SinkRecord;
 public class SinkTaskInstrumentation implements TypeInstrumentation {
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("org.apache.kafka.connect.sink.SinkTask");
+  }
+
+  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return hasSuperType(named("org.apache.kafka.connect.sink.SinkTask"));
   }
@@ -33,7 +39,7 @@ public class SinkTaskInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("put").and(takesArgument(0, Collection.class)).and(isPublic()),
-        SinkTaskInstrumentation.class.getName() + "$SinkTaskPutAdvice");
+        getClass().getName() + "$SinkTaskPutAdvice");
   }
 
   @SuppressWarnings("unused")
