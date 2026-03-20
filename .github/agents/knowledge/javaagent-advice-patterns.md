@@ -69,6 +69,43 @@ This prevents instrumentation failures from crashing the application. Without `s
 any exception thrown inside the advice code propagates to the instrumented method and breaks
 the application.
 
+### When to omit `onThrowable` on `@Advice.OnMethodExit`
+
+`onThrowable = Throwable.class` makes the exit advice run even when the instrumented method
+throws. This is correct for **cleanup advice** (e.g., closing a `Scope` or ending a span
+passed via `@Advice.Enter`), but **wrong for return-only advice** that only processes
+`@Advice.Return`.
+
+When the instrumented method throws, `@Advice.Return`-annotated parameters receive their
+type's default value (`null` for objects, `0` for primitives). If the advice body
+dereferences the return value or passes it to a method that does not tolerate `null`,
+it will throw — suppressed by `suppress`, but generating unnecessary noise.
+
+Rule of thumb:
+
+- **Include `onThrowable`** when the exit advice performs cleanup that must happen
+  regardless of whether the method succeeded (e.g., closing `Scope`, ending spans).
+- **Omit `onThrowable`** when the exit advice only processes the return value
+  (`@Advice.Return`) and has nothing to clean up on the exceptional path.
+
+```java
+// ✅ Cleanup advice — needs onThrowable so Scope is always closed
+@Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+public static void onExit(@Advice.Enter @Nullable Scope scope) {
+  if (scope != null) {
+    scope.close();
+  }
+}
+
+// ✅ Return-only advice — omit onThrowable; nothing to clean up on exception
+@Advice.OnMethodExit(suppress = Throwable.class)
+public static CompletableFuture<?> onExit(@Advice.Return CompletableFuture<?> result) {
+  return CompletableFutureWrapper.wrap(result, currentContext());
+}
+```
+
+Keep `suppress = Throwable.class` in both cases — it is always required.
+
 ### Exceptions — when omitting `suppress` is acceptable
 
 - **Internal infrastructure** (`instrumentation/internal/`): Instrumentations for internal
@@ -100,3 +137,4 @@ the instrumentation automatically rather than letting it fail at runtime.
 - **Exception thrown in advice code or a helper called from advice** — javaagent code must never throw; use `suppress = Throwable.class` as the safety net.
 - **`@Advice.OnMethodExit` method named `onEnter`** (or vice versa) — the method name should match the annotation. A mismatch is a copy-paste bug that compiles but confuses readers and may mask intent errors.
 - **`.class.getName()` used in `transform()` to reference advice** — see `javaagent-module-patterns.md` for the correct `getClass().getName()` pattern. Flag both `InnerAdvice.class.getName()` and `OuterInstrumentation.class.getName() + "$InnerAdvice"` — any `.class` literal in a `transform()` method triggers unwanted class loading.
+- **`onThrowable = Throwable.class` on return-only exit advice** — if the exit method only processes `@Advice.Return` and has no `@Advice.Enter` state to clean up, `onThrowable` should be omitted. The return value is `null`/zero on the exceptional path, and dereferencing it causes a suppressed exception for no benefit. Keep `suppress = Throwable.class` but remove `onThrowable`.

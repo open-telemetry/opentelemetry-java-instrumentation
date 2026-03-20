@@ -33,6 +33,8 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:apache-httpasyncclient-4.1:javaagent"))
+  testInstrumentation(project(":instrumentation:elasticsearch:elasticsearch-rest-5.0:javaagent"))
+  testInstrumentation(project(":instrumentation:elasticsearch:elasticsearch-rest-6.4:javaagent"))
 
   testImplementation("com.fasterxml.jackson.core:jackson-databind")
   testImplementation("org.testcontainers:testcontainers-elasticsearch")

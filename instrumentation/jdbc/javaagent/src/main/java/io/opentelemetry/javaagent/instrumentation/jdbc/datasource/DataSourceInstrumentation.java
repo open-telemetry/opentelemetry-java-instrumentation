@@ -36,7 +36,7 @@ public class DataSourceInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("getConnection").and(returns(implementsInterface(named("java.sql.Connection")))),
-        DataSourceInstrumentation.class.getName() + "$GetConnectionAdvice");
+        getClass().getName() + "$GetConnectionAdvice");
   }
 
   @SuppressWarnings("unused")

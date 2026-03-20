@@ -196,6 +196,10 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
     @Override
     public OpenTelemetryAppender build() {
+      if (captureEventName) {
+        LOGGER.warn(
+            "The captureEventName setting is deprecated and will be removed in a future version.");
+      }
       OpenTelemetry openTelemetry = this.openTelemetry;
       return new OpenTelemetryAppender(
           getName(),

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.grpc.v1_6;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -27,23 +26,20 @@ public class GrpcContextInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isStatic())
-            .and(named("storage"))
-            .and(returns(named("io.grpc.Context$Storage"))),
-        GrpcContextInstrumentation.class.getName() + "$ContextBridgeAdvice");
+        isStatic().and(named("storage")).and(returns(named("io.grpc.Context$Storage"))),
+        getClass().getName() + "$ContextBridgeAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ContextBridgeAdvice {
 
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, suppress = Throwable.class)
     public static Context.Storage onEnter() {
       return GrpcSingletons.getStorage();
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static Context.Storage onExit(
         @Advice.Return Context.Storage originalStorage, @Advice.Enter Context.Storage ourStorage) {
       return ourStorage != null ? ourStorage : GrpcSingletons.setStorage(originalStorage);

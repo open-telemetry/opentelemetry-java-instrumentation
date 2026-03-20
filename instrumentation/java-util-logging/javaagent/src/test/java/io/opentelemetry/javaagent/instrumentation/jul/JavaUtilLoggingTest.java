@@ -23,7 +23,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.testing.internal.armeria.common.annotation.Nullable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -55,7 +54,7 @@ class JavaUtilLoggingTest {
 
   @ParameterizedTest
   @MethodSource("provideParameters")
-  public void test(boolean withParam, boolean logException, boolean withParent)
+  void test(boolean withParam, boolean logException, boolean withParent)
       throws InterruptedException {
     test(FINE, Logger::fine, withParam, logException, withParent, null, null, null);
     testing.clearData();
@@ -165,16 +164,14 @@ class JavaUtilLoggingTest {
     void call(Logger logger, String msg);
   }
 
-  @Nullable
-  public static String experimental(String value) {
+  static String experimental(String value) {
     if (isExperimentalAttributesEnabled) {
       return value;
     }
     return null;
   }
 
-  @Nullable
-  public static Long experimental(long value) {
+  static Long experimental(long value) {
     if (isExperimentalAttributesEnabled) {
       return value;
     }

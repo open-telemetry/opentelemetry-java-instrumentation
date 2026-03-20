@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
@@ -28,9 +27,7 @@ public class ResteasyServletContainerDispatcherInstrumentation implements TypeIn
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isMethod().and(named("service")),
-        ResteasyServletContainerDispatcherInstrumentation.class.getName() + "$ServiceAdvice");
+    transformer.applyAdviceToMethod(named("service"), getClass().getName() + "$ServiceAdvice");
   }
 
   @SuppressWarnings("unused")

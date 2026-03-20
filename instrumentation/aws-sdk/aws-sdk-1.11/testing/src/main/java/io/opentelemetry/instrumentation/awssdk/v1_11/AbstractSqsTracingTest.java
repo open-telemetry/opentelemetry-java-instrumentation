@@ -448,10 +448,10 @@ public abstract class AbstractSqsTracingTest {
     sqsClient.createQueue("testSdkSqs2");
     SendMessageRequest send =
         new SendMessageRequest(
-            "http://localhost:$sqsPort/000000000000/testSdkSqs2", "{\"type\": \"hello\"}");
+            "http://localhost:" + sqsPort + "/000000000000/testSdkSqs2", "{\"type\": \"hello\"}");
     sqsClient.sendMessage(send);
     ReceiveMessageRequest receive =
-        new ReceiveMessageRequest("http://localhost:$sqsPort/000000000000/testSdkSqs2");
+        new ReceiveMessageRequest("http://localhost:" + sqsPort + "/000000000000/testSdkSqs2");
     sqsClient.receiveMessage(receive);
     sqsClient.sendMessage(send);
     sqsClient.receiveMessage(receive);

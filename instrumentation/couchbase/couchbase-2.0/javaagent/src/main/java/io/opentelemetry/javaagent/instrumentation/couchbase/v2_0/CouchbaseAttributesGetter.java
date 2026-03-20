@@ -53,6 +53,7 @@ final class CouchbaseAttributesGetter
   }
 
   @Override
+  @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       CouchbaseRequestInfo request, @Nullable Void unused) {
     SocketAddress address = request.getPeerAddress();

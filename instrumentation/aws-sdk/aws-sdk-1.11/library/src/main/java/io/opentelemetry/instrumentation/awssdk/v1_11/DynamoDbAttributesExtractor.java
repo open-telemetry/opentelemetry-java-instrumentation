@@ -44,19 +44,20 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Res
     }
 
     String operation = getOperationName(request.getOriginalRequest());
-    if (operation != null) {
-      if (emitStableDatabaseSemconv()) {
-        attributes.put(DB_OPERATION_NAME, operation);
-      }
-      if (emitOldDatabaseSemconv()) {
-        attributes.put(DB_OPERATION, operation);
-      }
+    if (emitStableDatabaseSemconv()) {
+      attributes.put(DB_OPERATION_NAME, operation);
+    }
+    if (emitOldDatabaseSemconv()) {
+      attributes.put(DB_OPERATION, operation);
     }
 
     String tableName = RequestAccess.getTableName(request.getOriginalRequest());
-    attributes.put(AWS_DYNAMODB_TABLE_NAMES, singletonList(tableName));
+    if (tableName != null) {
+      attributes.put(AWS_DYNAMODB_TABLE_NAMES, singletonList(tableName));
+    }
   }
 
+  @Nullable
   private static String getOperationName(Object request) {
     String name = request.getClass().getSimpleName();
     if (!name.endsWith("Request")) {

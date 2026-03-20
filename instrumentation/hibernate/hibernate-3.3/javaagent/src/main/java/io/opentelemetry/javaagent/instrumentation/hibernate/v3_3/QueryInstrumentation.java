@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.OperationNameUtil.getOperationNameForQuery;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Hibernate3Singletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
@@ -41,8 +40,8 @@ public class QueryInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(namedOneOf("list", "executeUpdate", "uniqueResult", "iterate", "scroll")),
-        QueryInstrumentation.class.getName() + "$QueryMethodAdvice");
+        namedOneOf("list", "executeUpdate", "uniqueResult", "iterate", "scroll"),
+        getClass().getName() + "$QueryMethodAdvice");
   }
 
   @SuppressWarnings("unused")

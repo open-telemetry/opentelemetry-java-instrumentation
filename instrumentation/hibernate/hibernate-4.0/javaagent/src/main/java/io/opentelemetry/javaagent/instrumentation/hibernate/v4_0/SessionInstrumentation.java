@@ -11,7 +11,6 @@ import static io.opentelemetry.javaagent.instrumentation.hibernate.OperationName
 import static io.opentelemetry.javaagent.instrumentation.hibernate.OperationNameUtil.getSessionMethodOperationName;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Hibernate4Singletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.any;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -50,8 +49,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
 
     // Session synchronous methods we want to instrument.
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(takesArgument(0, any()))
+        takesArgument(0, any())
             .and(
                 namedOneOf(
                     "save",
@@ -65,30 +63,28 @@ public class SessionInstrumentation implements TypeInstrumentation {
                     "refresh",
                     "insert",
                     "delete")),
-        SessionInstrumentation.class.getName() + "$SessionMethodAdvice");
+        getClass().getName() + "$SessionMethodAdvice");
     // Handle the non-generic 'get' separately.
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(namedOneOf("get", "find"))
+        namedOneOf("get", "find")
             .and(returns(Object.class))
             .and(takesArgument(0, String.class).or(takesArgument(0, Class.class))),
-        SessionInstrumentation.class.getName() + "$SessionMethodAdvice");
+        getClass().getName() + "$SessionMethodAdvice");
 
     // These methods return some object that we want to instrument, and so the Advice will pin the
     // current SessionInfo to the returned object using a VirtualField.
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(namedOneOf("beginTransaction", "getTransaction"))
+        namedOneOf("beginTransaction", "getTransaction")
             .and(returns(named("org.hibernate.Transaction"))),
-        SessionInstrumentation.class.getName() + "$GetTransactionAdvice");
+        getClass().getName() + "$GetTransactionAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod().and(returns(implementsInterface(named("org.hibernate.Query")))),
-        SessionInstrumentation.class.getName() + "$GetQueryAdvice");
+        returns(implementsInterface(named("org.hibernate.Query"))),
+        getClass().getName() + "$GetQueryAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod().and(returns(implementsInterface(named("org.hibernate.Criteria")))),
-        SessionInstrumentation.class.getName() + "$GetCriteriaAdvice");
+        returns(implementsInterface(named("org.hibernate.Criteria"))),
+        getClass().getName() + "$GetCriteriaAdvice");
   }
 
   @SuppressWarnings("unused")

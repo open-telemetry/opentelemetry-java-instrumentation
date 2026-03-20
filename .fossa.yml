@@ -180,9 +180,6 @@ targets:
       target: ':instrumentation:java-util-logging:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jaxrs-client:jaxrs-client-1.1-testing'
-    - type: gradle
-      path: ./
       target: ':instrumentation:jdbc:bootstrap'
     - type: gradle
       path: ./

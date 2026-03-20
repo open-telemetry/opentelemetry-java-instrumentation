@@ -24,19 +24,23 @@ jobs:
       has_work: ${{ steps.build-matrix.outputs.has_work }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Restore progress cache
-        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
-          path: /tmp/review-progress
-          key: code-review-progress
-          restore-keys: code-review-progress-
+          fetch-depth: 1
+
+      - name: Fetch progress branch
+        run: git fetch origin otelbot/code-review-progress || true
 
       - name: Build review matrix
         id: build-matrix
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python .github/scripts/build-review-matrix.py
+        run: |
+          # Read progress from the dedicated orphan branch (if it exists)
+          progress=$(git show origin/otelbot/code-review-progress:reviewed.txt 2>/dev/null || true)
+          if [[ -n "$progress" ]]; then
+            export REVIEW_PROGRESS="$progress"
+          fi
+          python .github/scripts/build-review-matrix.py
 
   # ---------------------------------------------------------------------------
   # Job 2: Run copilot review for each module in the matrix
@@ -49,6 +53,7 @@ jobs:
       matrix: ${{ fromJSON(needs.dispatch.outputs.matrix) }}
       fail-fast: false
       max-parallel: 2  # keep low to avoid Copilot API rate limits
+    environment: protected
     permissions:
       contents: write  # for git push
     env:
@@ -57,6 +62,9 @@ jobs:
       MODELS: "gpt-5.3-codex claude-sonnet-4.6"
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Fetch progress branch
+        run: git fetch origin otelbot/code-review-progress || true
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -68,7 +76,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
+        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
         with:
           cache-read-only: true
 
@@ -86,7 +94,7 @@ jobs:
         run: |
           for model in $MODELS; do
             echo "::group::Copilot review ($model) for $MODULE_DIR"
-            copilot -p "review all files under $MODULE_DIR. Write the fix review summary to /tmp/summary-${model}.md" \
+            copilot -p "Review all files under $MODULE_DIR. Write ONLY the findings table and totals to /tmp/summary-${model}.md — no headings, no file-reviewed lists, no git diff instructions. If no issues, write 'No issues found.'" \
               --agent code-review-and-fix \
               --model "$model" \
               --yolo \
@@ -128,13 +136,21 @@ jobs:
 
       - name: Prepare PR body
         run: |
-          > /tmp/pr-body.md
-          for model in $MODELS; do
-            f="/tmp/summary-${model}.md"
-            [[ -s "$f" ]] && cat "$f" >> /tmp/pr-body.md && echo >> /tmp/pr-body.md
-          done
+          {
+            echo "Automated code review of \`${MODULE_DIR}\`."
+            echo ""
+            for model in $MODELS; do
+              f="/tmp/summary-${model}.md"
+              if [[ -s "$f" ]]; then
+                echo "### ${model}"
+                echo ""
+                cat "$f"
+                echo ""
+              fi
+            done
+          } > /tmp/pr-body.md
 
-      - uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
+      - uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
         id: otelbot-token
         if: steps.commit.outputs.pushed == 'true'
         with:
@@ -142,7 +158,7 @@ jobs:
           private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
 
       - name: Create PR
-        if: steps.otelbot-token.outcome == 'success'
+        if: steps.commit.outputs.pushed == 'true'
         env:
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
@@ -160,37 +176,33 @@ jobs:
             echo "PR already exists for $branch — skipping creation"
           fi
 
-  # ---------------------------------------------------------------------------
-  # Job 3: Record reviewed modules only when the entire batch succeeded
-  # ---------------------------------------------------------------------------
-  finalize:
-    needs: [dispatch, review]
-    if: needs.review.result == 'success'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Restore progress cache
-        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
-        with:
-          path: /tmp/review-progress
-          key: code-review-progress
-          restore-keys: code-review-progress-
-
-      - name: Mark batch as reviewed
+      - name: Ensure progress branch exists
         run: |
-          mkdir -p /tmp/review-progress
-          touch /tmp/review-progress/reviewed.txt
+          if ! git rev-parse --verify origin/otelbot/code-review-progress >/dev/null 2>&1; then
+            git checkout --orphan otelbot/code-review-progress
+            git reset --hard
+            git commit --allow-empty -m "Initialize progress tracking"
+            git push origin HEAD:otelbot/code-review-progress || true
+          fi
 
-          matrix='${{ needs.dispatch.outputs.matrix }}'
-          for name in $(echo "$matrix" | jq -r '.include[].short_name'); do
-            echo "$name" >> /tmp/review-progress/reviewed.txt
-            echo "Marking as reviewed: $name"
-          done
-
-          sort -u /tmp/review-progress/reviewed.txt -o /tmp/review-progress/reviewed.txt
-          echo "Total reviewed modules: $(wc -l < /tmp/review-progress/reviewed.txt)"
-
-      - name: Save progress cache
-        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+      - name: Check out progress branch
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          path: /tmp/review-progress
-          key: code-review-progress-${{ github.run_id }}
+          ref: otelbot/code-review-progress
+          path: progress
+
+      - name: Mark module as reviewed
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd progress
+
+          git config user.name otelbot
+          git config user.email 197425009+otelbot@users.noreply.github.com
+
+          # Append this module (one per line, matching build-review-matrix.py)
+          echo "$SHORT_NAME" >> reviewed.txt
+
+          git add reviewed.txt
+          git commit -m "Mark $SHORT_NAME as reviewed"
+          git push origin HEAD:otelbot/code-review-progress

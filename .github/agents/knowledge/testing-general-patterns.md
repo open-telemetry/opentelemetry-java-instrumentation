@@ -26,3 +26,25 @@ Inside a `satisfies(AttributeKey, Consumer)` lambda the parameter (e.g., `taskId
 Fluent assertion calls like `taskId.contains(jobName)` or `taskId.startsWith(prefix)` are
 already proper AssertJ assertions — they throw on failure. Do **not** wrap them in
 `assertThat(value.contains(x)).isTrue()`, which degrades the failure message.
+
+## AssertJ Idiomatic Simplifications
+
+Prefer built-in AssertJ collection/list assertions over extracting values manually:
+
+| Anti-pattern | Idiomatic form |
+| --- | --- |
+| `assertThat(list.size()).isEqualTo(N)` | `assertThat(list).hasSize(N)` |
+| `assertThat(list.isEmpty()).isTrue()` | `assertThat(list).isEmpty()` |
+| `assertThat(list.contains(x)).isTrue()` | `assertThat(list).contains(x)` |
+| sequential `assertThat(list.get(0)).isEqualTo(a)` / `assertThat(list.get(1)).isEqualTo(b)` checking every element | `assertThat(list).containsExactly(a, b)` |
+
+The `containsExactly` form verifies both size and element values in order, making a
+separate `hasSize` check redundant.
+
+Similar patterns apply to maps, arrays, and strings:
+
+| Anti-pattern | Idiomatic form |
+| --- | --- |
+| `assertThat(str.length()).isEqualTo(N)` | `assertThat(str).hasSize(N)` |
+| `assertThat(map.size()).isEqualTo(N)` | `assertThat(map).hasSize(N)` |
+| `assertThat(array.length).isEqualTo(N)` | `assertThat(array).hasSize(N)` |

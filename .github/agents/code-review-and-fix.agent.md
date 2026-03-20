@@ -87,6 +87,10 @@ For each file in scope:
    - binary files
    - files under `licenses/`
    - `*.md` except `CHANGELOG.md`
+   - files in **stub/shaded-stub modules** — these are minimal stand-ins for external
+     library classes and must not be modified (their API shape must match the real class).
+     Skip any file whose path contains `compile-stub/`, `shaded-stub-for-instrumenting/`,
+     or `library-instrumentation-shaded/`.
 2. Read file content.
 3. Determine line set:
    - PR mode: changed lines only (plus minimal nearby lines if required by a safe fix)
@@ -102,21 +106,37 @@ Auto-fix boundaries:
 
 - Safe to fix:
   - import cleanup or direct style-guide conformance
-  - obvious assertion API migrations (e.g., AssertJ preference) — but **not** inside
-    `satisfies()` lambdas where the lambda parameter is already an `AbstractAssert` (e.g.,
+  - obvious assertion API migrations (e.g., AssertJ preference) and idiomatic
+    simplifications listed in `testing-general-patterns.md` § AssertJ Idiomatic
+    Simplifications (e.g., `assertThat(list.size()).isEqualTo(N)` →
+    `assertThat(list).hasSize(N)`, sequential `assertThat(list.get(i)).isEqualTo(...)`
+    → `assertThat(list).containsExactly(...)`) — but **not** inside `satisfies()`
+    lambdas where the lambda parameter is already an `AbstractAssert` (e.g.,
     `AbstractStringAssert`). Calls like `taskId.contains(jobName)` on the assert object are
     already valid AssertJ assertions; do not wrap them in `assertThat(...).isTrue()`
   - deterministic semconv constant handling aligned with repository rules
   - missing test-task wiring patterns with clear canonical form
   - missing `testInstrumentation` cross-version references — when a javaagent module belongs
     to a library family with sibling version modules, it must list all siblings via
-    `testInstrumentation`. Check `settings.gradle.kts` for sibling `:javaagent` modules
-    under the same parent. After adding, verify by running the module's tests.
-  - missing version comments on `hasClassesNamed()` landmark classes in
-    `classLoaderMatcher()` — look up the library version that introduced each class (check
-    muzzle `versions.set(...)` ranges, module directory name, existing code comments, and
-    Javadoc/release notes) and add a `// added in X.Y` or `// removed in X.Y` comment above
-    each class name string
+    `testInstrumentation`. A sibling is a module under the same grouping directory whose
+    directory name shares the **same component prefix** and differs **only in the trailing
+    version number** (e.g., `apache-httpclient-2.0` and `apache-httpclient-4.0` are siblings;
+    `akka-actor-2.3` and `akka-actor-fork-join-2.5` are **not** — they instrument different
+    components). Check `settings.gradle.kts` for sibling `:javaagent` modules under the
+    same parent and apply the step-by-step procedure in `gradle-conventions.md`.
+    After adding, verify by running the module's tests.
+  - missing version comments on `hasClassesNamed()` landmark classes in existing
+    `classLoaderMatcher()` overrides (multi-class checks or `.and(not(...))` chains only) —
+    look up the library version that introduced each class (check muzzle `versions.set(...)`
+    ranges, module directory name, existing code comments, and Javadoc/release notes) and
+    add a `// added in X.Y` or `// removed in X.Y` comment above each class name string.
+    Do NOT add a `classLoaderMatcher()` override where one does not already exist —
+    this method is only for version-boundary detection when muzzle is insufficient,
+    not for optimization (use `TypeInstrumentation.classLoaderOptimization()` instead)
+  - redundant `isMethod()` in method matchers inside `transform()` when the code is
+    already being modified — `isMethod()` only serves to exclude constructors, but
+    `named(...)` already excludes them because constructors are named `<init>`
+    (e.g., `isMethod().and(named("execute"))` → `named("execute")`)
   - singleton-to-instance-creation conversion for stateless telemetry interface
     implementations (`TextMapGetter`, `TextMapSetter`, `*AttributesGetter`,
     `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`) — replace
@@ -132,11 +152,21 @@ Auto-fix boundaries:
     Do **not** convert `hasAttributes(Attributes.empty())` — that is acceptable as-is.
   - redundant `if (value != null)` guards around `AttributesBuilder.put()` calls —
     `put` is a no-op for null values, so remove the conditional and pass the value
-    directly (same for span, log, and metrics attribute setters)
+    directly (same for span, log, and metrics attribute setters).
+    **Exception**: when the `AttributeKey` is typed as `Long` and the source value is
+    `Integer`, the generic overload cannot match (`Integer ≠ Long`), so Java resolves
+    to the `int` convenience overload `put(AttributeKey<Long>, int)` via auto-unboxing.
+    If the `Integer` is `null`, auto-unboxing causes a `NullPointerException` before
+    `put()` is reached — the null guard is **required** in this case. Do not remove it.
+    When the value type **matches** the `AttributeKey` type parameter (e.g.,
+    `Boolean` → `AttributeKey<Boolean>`, `Long` → `AttributeKey<Long>`), the generic
+    `@Nullable T` overload is selected directly, null is safe, and the guard is redundant.
   - defensive `if (param == null)` checks on parameters not annotated `@Nullable` —
     these contradict the framework's nullability contract; remove the guard. Conversely,
     if a call site passes `null` or a method returns `null`, add `@Nullable` to the
     parameter or return type instead of adding a null guard in the caller/callee.
+    **Exception — test files**: do not add `@Nullable` in test code.
+    If a PR adds `@Nullable` to test files, flag it for removal.
     **Exception**: when the method overrides an interface from the upstream OpenTelemetry
     SDK (e.g., `TextMapGetter`, `TextMapSetter`), the interface may declare the parameter
     `@Nullable` even though the annotation is not visible in this repository. Consult
@@ -165,7 +195,10 @@ Auto-fix boundaries:
 
 Comment formatting rules:
 
-- Wrap to max 100 characters per line in the summary table.
+- **File column**: use only the simple class name without the `.java` extension
+  and at most one line number (e.g., `FooClient:42`). For multiple locations,
+  list only the first line and note the others in the Note column
+  (e.g., Note: "… also lines 77, 95").
 - Include reason for non-fix and, when possible, a concrete next action.
 
 ### Phase 4: Validate and Report
@@ -174,16 +207,88 @@ Comment formatting rules:
 this repository can take several minutes — never treat slow output as a hang. Always wait
 for completion.**
 
+**Never pipe Gradle output through `tail`, `head`, `grep`, or any other command** (e.g.,
+`./gradlew :foo:check 2>&1 | tail -30`). Piping masks the Gradle exit code because the
+shell reports the exit code of the last pipe segment, not Gradle. A failing build will
+appear to succeed. Always run Gradle commands directly without pipes.
+
 Execute these steps strictly in order — do not reorder:
 
-1. Run targeted verification for changed files when feasible (focused tests or compile checks).
-2. If changes touch Gradle muzzle configuration (for example `muzzle {}`, version ranges,
-   `assertInverse.set(true)`, or module wiring affecting muzzle), run the relevant module `:muzzle`
-   tasks.
+1. **Run the module's check task.** For every module whose source files were modified, run its
+   `:check` task **twice** — once normally and once with `-PtestLatestDeps=true`:
+
+   ```
+   ./gradlew :<module-path>:check
+   ./gradlew :<module-path>:check -PtestLatestDeps=true
+   ```
+
+   The first run exercises the default test suites (`test`, `testExperimental`, and any other
+   custom test tasks wired into `check`). The second run activates `latestDepTest`, which
+   replaces `library` and `testLibrary` dependency versions with `latest.release`.
+   This is mandatory, not optional — fixes that break tests must be caught and corrected
+   before committing. If a test fails:
+
+   1. Diagnose the root cause. Determine whether the failure is caused by one of the
+      review fixes applied in Phase 3.
+   2. If the failure is caused by a review fix and a correct alternative fix is obvious,
+      apply it and re-run. Repeat at most **three times** per failing fix.
+   3. If the failure cannot be resolved after three attempts — or if the only correct
+      resolution is to revert the review fix — **revert that specific change**
+      (`git checkout -- <file>` for the affected lines) and record the item as
+      `Needs Manual Fix` in the summary table with a note explaining the test failure.
+   4. After reverting, re-run the affected `:check` tasks to confirm the revert restored
+      a green build. If tests still fail on code you did not change, that is a
+      pre-existing failure — note it in the summary but do not block the commit.
+   5. Never commit code that fails tests you can reproduce locally.
+
+   **Testing-module dependent validation**: when any modified module is a `testing` module
+   (its Gradle path ends with `:testing`), you must **also** run `:check` (both normal and
+   `-PtestLatestDeps=true`) for every sibling `library` and `javaagent` module under the
+   same instrumentation parent. `testing` modules contain shared abstract test base classes
+   consumed by those siblings — changes to visibility, method signatures, or class structure
+   in the `testing` module can break compilation or tests in dependent modules.
+
+   To find siblings, list the parent directory of the `testing` module and look for
+   `library/`, `javaagent/`, and any version-variant directories that contain `library/`
+   or `javaagent/` submodules. Run `:check` for each.
+
+   Example: if you modify files in
+   `:instrumentation:foo:foo-1.0:testing`, also run `:check` for
+   `:instrumentation:foo:foo-1.0:library`,
+   `:instrumentation:foo:foo-1.0:javaagent`, and any version-variant siblings such as
+   `:instrumentation:foo:foo-2.0:library` if it depends on the `foo-1.0:testing` module.
+2. **Run muzzle validation when muzzle config changed.** If any review fix touched Gradle
+   muzzle configuration (for example `muzzle {}`, version ranges, `assertInverse.set(true)`,
+   or module wiring affecting muzzle), run the relevant module's `:muzzle` task:
+
+   ```
+   ./gradlew :<module-path>:muzzle
+   ```
+
+   This is mandatory, not optional — muzzle failures indicate the change is incorrect.
+   If a muzzle task fails:
+
+   1. Diagnose the root cause. Determine whether the failure is caused by a review fix
+      applied in Phase 3 (e.g., an `assertInverse.set(true)` that was added but the
+      instrumentation actually passes on versions outside the declared range).
+   2. If the failure is caused by a review fix and a correct alternative fix is obvious,
+      apply it and re-run. Repeat at most **three times** per failing fix.
+   3. If the failure cannot be resolved after three attempts — or if the only correct
+      resolution is to revert the review fix — **revert that specific change**
+      (`git checkout -- <file>` for the affected lines) and record the item as
+      `Needs Manual Fix` in the summary table with a note explaining the muzzle failure.
+   4. After reverting, re-run the `:muzzle` task to confirm the revert restored a green
+      build. Never commit code that fails muzzle validation.
 3. **Last, after all validation is done**, run `./gradlew spotlessApply` to fix formatting
    across all modified files.
    `spotlessApply` must be the final build command — never run it before tests or muzzle.
-4. Commit all changes in a single commit. The subject line must always be
+4. **Verify substantive changes remain.** Run `git diff --ignore-all-space --ignore-blank-lines`
+   and confirm non-empty output. If the only remaining diffs are whitespace changes — or if
+   all review fixes were reverted during validation — **stop here**: reset the working tree
+   (`git checkout -- .`), do not commit or push. If any reverted items were recorded as
+   `Needs Manual Fix`, print the summary table with those items. Otherwise report
+   "No issues found." and exit.
+5. Commit all changes in a single commit. The subject line must always be
    `Review fixes for <module>` where `<module>` is the short module name (e.g.,
    `apache-elasticjob-3.0 javaagent`). The body is a bulleted list of changes:
 
@@ -201,33 +306,32 @@ Execute these steps strictly in order — do not reorder:
    ```
 
    Create exactly one commit for all fixes — do not commit incrementally.
-5. Print one summary:
+6. Print one summary:
    - Heading: `PR #<number>: <title>` (PR mode) or `<paths>` (file/directory mode)
    - Table with status (`Fixed` or `Needs Manual Fix`), file, category, and note
-   - Totals for fixed and unresolved
 
 Template:
 
 ```
-## Fix Review Summary for <heading>
-
 | Status | File | Category | Note |
 |--------|------|----------|------|
-| Fixed | src/Foo.java:42 | Style | Added class-level deprecation suppression for stable/old semconv dual mode |
-| Needs Manual Fix | src/Bar.java:77 | API | Requires compatibility decision before rename |
-
-Fixed: X
-Needs Manual Fix: Y
-
-To inspect applied edits: git diff HEAD~1
+| Fixed | Foo:42 | Style | Added class-level deprecation suppression for stable/old semconv dual mode |
+| Needs Manual Fix | Bar:77 | API | Requires compatibility decision before rename |
 ```
 
 If no findings:
-> `✅ No fix-review issues found in <heading>.`
+> `No issues found.`
 
-   If the user asks you to write the summary to a file, write the Fix Review Summary
-   section (from the `##` heading through the `git diff HEAD~1` line) to the requested
-   file path.
+When writing the summary to a file (as opposed to printing to the console), the output
+must be **only** the findings table — nothing else:
+
+- Do **not** include headings (`##`), horizontal rules, or "Fix Review Summary" titles.
+- Do **not** include a "Files reviewed" table, per-file checklist, or notes section
+  when there are zero findings. Write only `No issues found.`
+- Do **not** repeat the module path or scope description — the caller already knows it.
+- Do **not** include a totals/summary line (e.g. "Fixed: X · Needs manual fix: Y").
+- The file must contain **only** the table rows (or `No issues found.`).
+  No preamble, no footer, no commentary.
 
 ## Knowledge Loading
 

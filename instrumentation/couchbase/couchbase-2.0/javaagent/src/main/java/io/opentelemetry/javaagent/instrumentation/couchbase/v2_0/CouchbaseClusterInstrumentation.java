@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -36,14 +35,14 @@ public class CouchbaseClusterInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(returns(named("rx.Observable"))).and(not(named("core"))),
-        CouchbaseClusterInstrumentation.class.getName() + "$CouchbaseClientAdvice");
+        isPublic().and(returns(named("rx.Observable"))).and(not(named("core"))),
+        getClass().getName() + "$CouchbaseClientAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class CouchbaseClientAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static CallDepth trackCallDepth() {
       CallDepth callDepth = CallDepth.forClass(CouchbaseCluster.class);
       callDepth.getAndIncrement();

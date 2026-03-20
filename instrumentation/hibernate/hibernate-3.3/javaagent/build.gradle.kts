@@ -1,5 +1,5 @@
 /*
- * Instrumentation for Hibernate between 3.5 and 4.
+ * Instrumentation for Hibernate between 3.3 and 4.
  * Has the same logic as the Hibernate 4+ instrumentation, but is copied rather than sharing a codebase. This is because
  * the root interface for Session/StatelessSession - SharedSessionContract - isn't present before version 4. So the
  * instrumentation isn't able to reference it.

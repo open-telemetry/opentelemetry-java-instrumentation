@@ -987,6 +987,45 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
+        - name: url.full
+          type: STRING
   - name: apache-httpclient-4.3
     display_name: Apache HttpClient
     description: This instrumentation provides a library integration that enables
@@ -4156,7 +4195,7 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,code
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -8839,13 +8878,73 @@ libraries:
           type: LONG
   liberty:
   - name: liberty-20.0
+    display_name: Liberty
+    description: |
+      This instrumentation enables HTTP server spans and metrics for IBM WebSphere Liberty application server.
+    semantic_conventions:
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
+    library_link: https://openliberty.io/
     source_path: instrumentation/liberty/liberty-20.0
     scope:
       name: io.opentelemetry.liberty-20.0
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.server.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.size` and `http.server.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.servlet.experimental-span-attributes
+      description: Enables capturing the experimental `servlet.timeout` span attribute.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.servlet.capture-request-parameters
+      description: List of request parameter names to capture as span attributes.
+      type: list
+      default: ''
   - name: liberty-dispatcher-20.0
+    display_name: Liberty
+    description: |
+      This instrumentation enables HTTP server spans and metrics for the IBM WebSphere Liberty HTTP dispatcher layer.
+    semantic_conventions:
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
+    library_link: https://openliberty.io/
     source_path: instrumentation/liberty/liberty-dispatcher-20.0
     scope:
       name: io.opentelemetry.liberty-dispatcher-20.0
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.server.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.size` and `http.server.response.size` metrics.
+      type: boolean
+      default: false
   log4j:
   - name: log4j-appender-1.2
     display_name: Log4j
@@ -9136,6 +9235,10 @@ libraries:
       default: ''
   micrometer:
   - name: micrometer-1.5
+    display_name: Micrometer
+    description: |
+      This instrumentation enables a Micrometer MeterRegistry that bridges Micrometer metrics to the OpenTelemetry Metrics SDK. It is disabled by default because it may produce metrics that overlap with metrics already captured by other instrumentations.
+    library_link: https://micrometer.io/
     disabled_by_default: true
     source_path: instrumentation/micrometer/micrometer-1.5
     scope:
@@ -9143,6 +9246,22 @@ libraries:
     has_standalone_library: true
     javaagent_target_versions:
     - io.micrometer:micrometer-core:[1.5.0,)
+    configurations:
+    - name: otel.instrumentation.micrometer.prometheus-mode.enabled
+      description: |
+        Simulates the behavior of Micrometer's PrometheusMeterRegistry. The instruments will be renamed to match Micrometer instrument naming, and the base time unit will be set to seconds.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.micrometer.base-time-unit
+      description: |
+        Sets the base time unit for the OpenTelemetry MeterRegistry. Supported values: ns, us, ms, s, min, h, d.
+      type: string
+      default: s
+    - name: otel.instrumentation.micrometer.histogram-gauges.enabled
+      description: |
+        Enables gauge-based Micrometer histograms for DistributionSummary and Timer instruments.
+      type: boolean
+      default: false
   mongo:
   - name: mongo-3.1
     display_name: MongoDB Driver
@@ -12964,6 +13083,7 @@ libraries:
     source_path: instrumentation/servlet/servlet-2.2
     scope:
       name: io.opentelemetry.servlet-2.2
+      schema_url: https://opentelemetry.io/schemas/1.37.0
     javaagent_target_versions:
     - javax.servlet:servlet-api:[2.2, 3.0)
     configurations:
@@ -13045,6 +13165,7 @@ libraries:
     source_path: instrumentation/servlet/servlet-3.0
     scope:
       name: io.opentelemetry.servlet-3.0
+      schema_url: https://opentelemetry.io/schemas/1.37.0
     has_standalone_library: true
     javaagent_target_versions:
     - javax.servlet:javax.servlet-api:[3.0,)
@@ -13133,6 +13254,7 @@ libraries:
     source_path: instrumentation/servlet/servlet-5.0
     scope:
       name: io.opentelemetry.servlet-5.0
+      schema_url: https://opentelemetry.io/schemas/1.37.0
     has_standalone_library: true
     javaagent_target_versions:
     - jakarta.servlet:jakarta.servlet-api:[5.0.0,)
@@ -14443,19 +14565,106 @@ libraries:
           type: STRING
   undertow:
   - name: undertow-1.4
+    display_name: Undertow
+    description: This instrumentation enables HTTP server spans and HTTP server metrics
+      for Undertow.
+    semantic_conventions:
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
+    library_link: https://undertow.io/
     source_path: instrumentation/undertow-1.4
     scope:
       name: io.opentelemetry.undertow-1.4
+      schema_url: https://opentelemetry.io/schemas/1.37.0
     javaagent_target_versions:
     - io.undertow:undertow-core:[1.4.0.Final,)
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.server.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.body.size` and `http.server.response.body.size` metrics.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
+      spans:
+      - span_kind: SERVER
+        attributes:
+        - name: client.address
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.path
+          type: STRING
+        - name: url.query
+          type: STRING
+        - name: url.scheme
+          type: STRING
+        - name: user_agent.original
+          type: STRING
   vaadin:
   - name: vaadin-14.2
+    display_name: Vaadin
+    description: |
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for Vaadin applications (controller spans are disabled by default).
+    library_link: https://vaadin.com/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/vaadin-14.2
     scope:
       name: io.opentelemetry.vaadin-14.2
     javaagent_target_versions:
     - com.vaadin:flow-server:[2.2.0,3)
     - com.vaadin:flow-server:[3.1.0,25.0.0)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller spans.
+      type: boolean
+      default: false
   vertx:
   - name: vertx-http-client-3.0
     display_name: Vert.x HTTP Client
@@ -15163,8 +15372,11 @@ libraries:
     - io.vertx:vertx-web:[3.0.0,)
   vibur:
   - name: vibur-dbcp-11.0
-    description: Instrumentation for the vibur-dbcp library, which provides connection
-      pool metrics.
+    display_name: Vibur DBCP
+    description: |
+      This instrumentation enables database connection pool metrics for Vibur DBCP data sources.
+    semantic_conventions:
+    - DATABASE_POOL_METRICS
     library_link: https://www.vibur.org/
     source_path: instrumentation/vibur-dbcp-11.0
     scope:
@@ -15345,6 +15557,12 @@ libraries:
           type: LONG
   zio:
   - name: zio-2.0
+    display_name: ZIO
+    description: |
+      This instrumentation provides context propagation for ZIO fibers, it does not emit any telemetry on its own.
+    library_link: https://zio.dev/
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/zio/zio-2.0
     scope:
       name: io.opentelemetry.zio-2.0
@@ -15353,6 +15571,7 @@ libraries:
     - dev.zio:zio_3:[2.0.0,)
     - dev.zio:zio_2.12:[2.0.0,)
   - name: zio-http-3.0
+    display_name: ZIO HTTP
     description: |
       This instrumentation does not emit telemetry on its own. Instead, it extracts the HTTP route and attaches it to HTTP server spans and HTTP server metrics.
     library_link: https://ziohttp.com/

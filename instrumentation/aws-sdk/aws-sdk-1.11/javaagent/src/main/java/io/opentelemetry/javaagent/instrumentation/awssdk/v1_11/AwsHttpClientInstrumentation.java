@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -38,12 +37,11 @@ public class AwsHttpClientInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(not(isAbstract()))
+        not(isAbstract())
             .and(named("doExecute"))
             .and(takesArgument(0, named("com.amazonaws.Request")))
             .and(returns(named("com.amazonaws.Response"))),
-        AwsHttpClientInstrumentation.class.getName() + "$HttpClientAdvice");
+        getClass().getName() + "$HttpClientAdvice");
   }
 
   @SuppressWarnings("unused")

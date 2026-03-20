@@ -29,9 +29,6 @@ public class JettyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RESPO
       Context context,
       Scope scope) {
 
-    if (scope == null) {
-      return;
-    }
     scope.close();
 
     if (throwable == null) {

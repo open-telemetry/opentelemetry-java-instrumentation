@@ -13,8 +13,7 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum HelidonAttributesGetter implements HttpServerAttributesGetter<ServerRequest, ServerResponse> {
-  INSTANCE;
+class HelidonAttributesGetter implements HttpServerAttributesGetter<ServerRequest, ServerResponse> {
 
   @Override
   public String getHttpRequestMethod(ServerRequest req) {
@@ -64,6 +63,7 @@ enum HelidonAttributesGetter implements HttpServerAttributesGetter<ServerRequest
   }
 
   @Override
+  @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       ServerRequest req, @Nullable ServerResponse res) {
     var address = req.remotePeer().address();
@@ -71,6 +71,7 @@ enum HelidonAttributesGetter implements HttpServerAttributesGetter<ServerRequest
   }
 
   @Override
+  @Nullable
   public InetSocketAddress getNetworkLocalInetSocketAddress(
       ServerRequest req, @Nullable ServerResponse res) {
     var address = req.localPeer().address();

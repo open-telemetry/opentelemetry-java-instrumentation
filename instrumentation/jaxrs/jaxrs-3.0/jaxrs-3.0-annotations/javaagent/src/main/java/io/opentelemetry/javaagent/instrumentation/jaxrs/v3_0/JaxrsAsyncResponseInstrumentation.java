@@ -40,13 +40,12 @@ public class JaxrsAsyncResponseInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("resume").and(takesArgument(0, Object.class)).and(isPublic()),
-        JaxrsAsyncResponseInstrumentation.class.getName() + "$AsyncResponseAdvice");
+        getClass().getName() + "$AsyncResponseAdvice");
     transformer.applyAdviceToMethod(
         named("resume").and(takesArgument(0, Throwable.class)).and(isPublic()),
-        JaxrsAsyncResponseInstrumentation.class.getName() + "$AsyncResponseThrowableAdvice");
+        getClass().getName() + "$AsyncResponseThrowableAdvice");
     transformer.applyAdviceToMethod(
-        named("cancel"),
-        JaxrsAsyncResponseInstrumentation.class.getName() + "$AsyncResponseCancelAdvice");
+        named("cancel"), getClass().getName() + "$AsyncResponseCancelAdvice");
   }
 
   @SuppressWarnings("unused")

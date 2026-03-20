@@ -110,6 +110,17 @@ public final class SemconvStability {
     configure(values);
   }
 
+  public static void enableAllStable() {
+    emitOldDatabaseSemconv = false;
+    emitStableDatabaseSemconv = true;
+    emitOldCodeSemconv = false;
+    emitStableCodeSemconv = true;
+    emitOldServicePeerSemconv = false;
+    emitStableServicePeerSemconv = true;
+    emitOldRpcSemconv = false;
+    emitStableRpcSemconv = true;
+  }
+
   private static DeclarativeConfigProperties getGeneralInstrumentationConfig(
       OpenTelemetry openTelemetry) {
     return openTelemetry instanceof ExtendedOpenTelemetry

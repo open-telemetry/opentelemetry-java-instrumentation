@@ -8,16 +8,15 @@ package io.opentelemetry.instrumentation.api.incubator.config.internal;
 import static java.util.Collections.emptySet;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -41,11 +40,7 @@ public final class CommonConfig {
   private final String loggingTraceIdKey;
   private final String loggingSpanIdKey;
   private final String loggingTraceFlagsKey;
-
-  interface ValueProvider<T> {
-    @Nullable
-    T get(ConfigProvider configProvider);
-  }
+  private final boolean v3Preview;
 
   public CommonConfig(OpenTelemetry openTelemetry) {
     DeclarativeConfigProperties generalConfig =
@@ -122,6 +117,10 @@ public final class CommonConfig {
         commonConfig.get("logging").getString("span_id", LoggingContextConstants.SPAN_ID);
     loggingTraceFlagsKey =
         commonConfig.get("logging").getString("trace_flags", LoggingContextConstants.TRACE_FLAGS);
+    v3Preview = commonConfig.getBoolean("v3_preview", false);
+    if (v3Preview) {
+      SemconvStability.enableAllStable();
+    }
   }
 
   public List<String> getClientRequestHeaders() {
@@ -178,5 +177,9 @@ public final class CommonConfig {
 
   public String getTraceFlagsKey() {
     return loggingTraceFlagsKey;
+  }
+
+  public boolean isV3Preview() {
+    return v3Preview;
   }
 }

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
@@ -25,9 +24,7 @@ public class ChannelTransportInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isMethod().and(named("write")),
-        ChannelTransportInstrumentation.class.getName() + "$WriteAdvice");
+    transformer.applyAdviceToMethod(named("write"), getClass().getName() + "$WriteAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -43,7 +40,7 @@ public class ChannelTransportInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-    public static void methodExit(@Advice.Enter Scope scope, @Advice.Thrown Throwable thrown) {
+    public static void methodExit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();
       }

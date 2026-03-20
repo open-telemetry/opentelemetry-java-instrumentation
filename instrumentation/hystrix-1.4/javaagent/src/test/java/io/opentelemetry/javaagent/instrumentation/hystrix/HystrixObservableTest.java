@@ -289,7 +289,11 @@ class HystrixObservableTest {
                     span.hasName("ExampleGroup.TestCommand.execute")
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
-                        .hasException(new IllegalArgumentException()),
+                        .hasException(new IllegalArgumentException())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(HYSTRIX_COMMAND, experimental("TestCommand")),
+                            equalTo(HYSTRIX_GROUP, experimental("ExampleGroup")),
+                            equalTo(HYSTRIX_CIRCUIT_OPEN, experimental(false))),
                 span ->
                     span.hasName("ExampleGroup.TestCommand.fallback")
                         .hasParent(trace.getSpan(1))

@@ -23,7 +23,7 @@ public final class HttpUrlConnectionSingletons {
         JavaagentHttpClientInstrumenters.create(
             "io.opentelemetry.http-url-connection",
             new HttpUrlHttpAttributesGetter(),
-            RequestPropertySetter.INSTANCE,
+            new RequestPropertySetter(),
             builder ->
                 builder
                     .addAttributesExtractor(

@@ -66,7 +66,6 @@ public final class ReflectionHelper {
     }
     List<Class<?>> result = new ArrayList<>(interfaces.length);
     Collection<String> virtualFieldClassNames = new HashSet<>();
-    boolean hasVirtualFieldMarker = false;
     for (Class<?> interfaceClass : interfaces) {
       // filter out virtual field marker and accessor interfaces
       if (interfaceClass == VirtualFieldInstalledMarker.class) {

@@ -26,8 +26,14 @@ public class AwsLambdaInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // aws-lambda-events-2.2 is used when SQSEvent is present
-    return not(hasClassesNamed("com.amazonaws.services.lambda.runtime.events.SQSEvent"));
+    return hasClassesNamed(
+            // aws-lambda-java-core 1.0.0+
+            "com.amazonaws.services.lambda.runtime.RequestHandler")
+        .and(
+            not(
+                hasClassesNamed(
+                    // aws-lambda-events-2.2 is used when SQSEvent is present
+                    "com.amazonaws.services.lambda.runtime.events.SQSEvent")));
   }
 
   @Override

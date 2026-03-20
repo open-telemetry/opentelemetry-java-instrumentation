@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.googlehttpclient.GoogleHttpClientSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -38,12 +37,11 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(named("execute")).and(takesArguments(0)),
+        isPublic().and(named("execute")).and(takesArguments(0)),
         this.getClass().getName() + "$ExecuteAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("executeAsync"))
             .and(takesArguments(1))
             .and(takesArgument(0, Executor.class)),

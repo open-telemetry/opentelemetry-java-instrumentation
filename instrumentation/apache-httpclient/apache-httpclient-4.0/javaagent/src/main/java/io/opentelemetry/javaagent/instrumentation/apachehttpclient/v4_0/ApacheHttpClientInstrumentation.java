@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -51,16 +50,14 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     // span is created
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("execute"))
+        named("execute")
             .and(not(isAbstract()))
             .and(takesArguments(1))
             .and(takesArgument(0, named("org.apache.http.client.methods.HttpUriRequest"))),
         this.getClass().getName() + "$UriRequestAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("execute"))
+        named("execute")
             .and(not(isAbstract()))
             .and(takesArguments(2))
             .and(takesArgument(0, named("org.apache.http.client.methods.HttpUriRequest")))
@@ -68,8 +65,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$UriRequestAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("execute"))
+        named("execute")
             .and(not(isAbstract()))
             .and(takesArguments(2))
             .and(takesArgument(0, named("org.apache.http.client.methods.HttpUriRequest")))
@@ -77,8 +73,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$UriRequestWithHandlerAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("execute"))
+        named("execute")
             .and(not(isAbstract()))
             .and(takesArguments(3))
             .and(takesArgument(0, named("org.apache.http.client.methods.HttpUriRequest")))
@@ -87,8 +82,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$UriRequestWithHandlerAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("execute"))
+        named("execute")
             .and(not(isAbstract()))
             .and(takesArguments(2))
             .and(takesArgument(0, named("org.apache.http.HttpHost")))
@@ -96,8 +90,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$RequestAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("execute"))
+        named("execute")
             .and(not(isAbstract()))
             .and(takesArguments(3))
             .and(takesArgument(0, named("org.apache.http.HttpHost")))
@@ -106,8 +99,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$RequestAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("execute"))
+        named("execute")
             .and(not(isAbstract()))
             .and(takesArguments(3))
             .and(takesArgument(0, named("org.apache.http.HttpHost")))
@@ -116,8 +108,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$RequestWithHandlerAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("execute"))
+        named("execute")
             .and(not(isAbstract()))
             .and(takesArguments(4))
             .and(takesArgument(0, named("org.apache.http.HttpHost")))
@@ -206,8 +197,8 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Return Object result,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Return @Nullable Object result,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter Object[] enterResult) {
 
       AdviceScope adviceScope = (AdviceScope) enterResult[0];
@@ -228,9 +219,9 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Return Object result,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Enter AdviceScope adviceScope) {
+        @Advice.Return @Nullable Object result,
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
 
       if (adviceScope != null) {
         adviceScope.end(result, throwable);
@@ -258,8 +249,8 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Return Object result,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Return @Nullable Object result,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter Object[] enterResult) {
 
       AdviceScope adviceScope = (AdviceScope) enterResult[0];
