@@ -48,3 +48,11 @@ Similar patterns apply to maps, arrays, and strings:
 | `assertThat(str.length()).isEqualTo(N)` | `assertThat(str).hasSize(N)` |
 | `assertThat(map.size()).isEqualTo(N)` | `assertThat(map).hasSize(N)` |
 | `assertThat(array.length).isEqualTo(N)` | `assertThat(array).hasSize(N)` |
+
+## Span Ordering Assertions
+
+Prefer `hasSpansSatisfyingExactly` (order-sensitive) over `hasSpansSatisfyingExactlyInAnyOrder`
+unless the span ordering within a trace is genuinely non-deterministic (e.g., concurrent
+producers/consumers, thread-pool fan-out, or channel interleaving). Sequential operations
+like `repeat {}` loops, single-child traces, and `flux` sequential emission produce spans
+in deterministic order — use `hasSpansSatisfyingExactly` for those.
