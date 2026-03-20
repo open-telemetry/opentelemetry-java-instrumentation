@@ -619,7 +619,7 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
           super.visitMethod(
               Opcodes.ACC_PUBLIC,
               MUZZLE_INDY_INCOMPATIBLE_METHOD_NAME,
-              "()Ljava/lang/Boolean",
+              "()Ljava/lang/Boolean;",
               null,
               null);
       mv.visitCode();
