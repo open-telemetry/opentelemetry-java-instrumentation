@@ -42,7 +42,7 @@ class KtorServerTelemetry private constructor(
         DefaultHttpServerInstrumenterBuilder.create(
           INSTRUMENTATION_NAME,
           openTelemetry,
-          KtorHttpServerAttributesGetter
+          KtorHttpServerAttributesGetter()
         )
     }
 
@@ -118,7 +118,7 @@ class KtorServerTelemetry private constructor(
 
       val instrumenter = InstrumenterUtil.buildUpstreamInstrumenter(
         configuration.builder.instrumenterBuilder(),
-        ApplicationRequestGetter,
+        ApplicationRequestGetter(),
         configuration.spanKindExtractor(SpanKindExtractor.alwaysServer())
       )
 

@@ -9,7 +9,7 @@ import io.ktor.request.*
 import io.opentelemetry.context.propagation.TextMapGetter
 import java.util.Collections
 
-internal object ApplicationRequestGetter : TextMapGetter<ApplicationRequest> {
+internal class ApplicationRequestGetter : TextMapGetter<ApplicationRequest> {
   override fun keys(carrier: ApplicationRequest): Iterable<String> = carrier.headers.names()
 
   override fun get(carrier: ApplicationRequest?, name: String): String? = carrier?.headers?.get(name)

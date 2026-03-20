@@ -10,7 +10,7 @@ import io.ktor.request.*
 import io.ktor.response.*
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter
 
-internal object KtorHttpServerAttributesGetter : HttpServerAttributesGetter<ApplicationRequest, ApplicationResponse> {
+internal class KtorHttpServerAttributesGetter : HttpServerAttributesGetter<ApplicationRequest, ApplicationResponse> {
 
   override fun getHttpRequestMethod(request: ApplicationRequest): String = request.httpMethod.value
 
