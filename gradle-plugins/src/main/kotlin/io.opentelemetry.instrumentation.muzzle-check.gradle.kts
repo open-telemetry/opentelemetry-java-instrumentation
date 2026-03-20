@@ -308,7 +308,17 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
   }
 
   val muzzleTask = tasks.register(taskName) {
-    val configFiles = config.incoming.files
+    // Some old library versions have broken or missing transitive dependencies
+    // on Maven Central (e.g. SNAPSHOTs, Maven 1 POMs, deleted artifacts).
+    // For assertFail tasks, use lenient resolution to skip over these instead
+    // of failing the build. This does not weaken the muzzle check: assertFail
+    // verifies that muzzle *rejects* the version, and having fewer classes on
+    // the classpath cannot cause muzzle to incorrectly accept it.
+    val configFiles = if (!muzzleDirective.assertPass.get()) {
+      config.incoming.artifactView { lenient(true) }.files
+    } else {
+      config.incoming.files
+    }
     val muzzleShadowJarFile = shadowModule.flatMap { it.archiveFile }
     val muzzleToolingShadowJarFile = shadowMuzzleTooling.flatMap { it.archiveFile }
     val muzzleBootstrapShadowJarFile = shadowMuzzleBootstrap.flatMap { it.archiveFile }
