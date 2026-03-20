@@ -249,3 +249,4 @@ jsp-2.3:javaagent
 kafka-clients-0.11:testing
 kafka-clients-0.11:javaagent
 kafka-clients-2.6:library
+kafka-clients-common-0.11:library
