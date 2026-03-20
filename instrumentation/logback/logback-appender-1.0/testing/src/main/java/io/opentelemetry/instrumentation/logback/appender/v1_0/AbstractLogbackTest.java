@@ -63,7 +63,7 @@ public abstract class AbstractLogbackTest {
 
   @ParameterizedTest
   @MethodSource("provideParameters")
-  public void test(boolean logException, boolean withParent) throws InterruptedException {
+  void test(boolean logException, boolean withParent) throws InterruptedException {
     test(abcLogger, Logger::debug, Logger::debug, logException, withParent, null, null, null);
     testing().clearData();
     test(
@@ -264,7 +264,7 @@ public abstract class AbstractLogbackTest {
   }
 
   @Test
-  public void testMarker() {
+  void testMarker() {
 
     String markerName = "aMarker";
     Marker marker = MarkerFactory.getMarker(markerName);
