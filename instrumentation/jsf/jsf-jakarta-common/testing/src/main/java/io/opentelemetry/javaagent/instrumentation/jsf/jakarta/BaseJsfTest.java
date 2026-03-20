@@ -188,7 +188,7 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
                     span.hasName(getContextPath() + "/greeting.xhtml")
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent(),
-                span -> handlerSpan(span, trace, 0, "#{greetingForm.submit()}", null)));
+                span -> assertHandlerSpan(span, trace, 0, "#{greetingForm.submit()}", null)));
   }
 
   @Test
@@ -255,10 +255,11 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
                         .hasStatus(StatusData.error())
                         .hasException(expectedException),
                 span ->
-                    handlerSpan(span, trace, 0, "#{greetingForm.submit()}", expectedException)));
+                    assertHandlerSpan(
+                        span, trace, 0, "#{greetingForm.submit()}", expectedException)));
   }
 
-  void handlerSpan(
+  private void assertHandlerSpan(
       SpanDataAssert span,
       TraceAssert trace,
       int parentIndex,
