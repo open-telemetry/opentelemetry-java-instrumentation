@@ -110,7 +110,7 @@ abstract class AbstractKtorServerMetricsTest : AbstractHttpServerUsingTest<Embed
               point.hasValue(0)
                 .hasAttributesSatisfyingExactly(
                   equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                  equalTo(UrlAttributes.URL_PATH, endpoint.path),
+                  equalTo(UrlAttributes.URL_SCHEME, "http"),
                 )
             })
           }
