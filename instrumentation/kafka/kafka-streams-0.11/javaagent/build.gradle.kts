@@ -7,6 +7,7 @@ muzzle {
     group.set("org.apache.kafka")
     module.set("kafka-streams")
     versions.set("[0.11.0.0,)")
+    assertInverse.set(true)
   }
 }
 
@@ -62,6 +63,7 @@ tasks {
 
   check {
     dependsOn(testReceiveSpansDisabled)
+    dependsOn(testExperimental)
   }
 }
 

@@ -27,8 +27,7 @@ public class StreamTaskInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("process").and(isPublic()),
-        StreamTaskInstrumentation.class.getName() + "$ProcessAdvice");
+        named("process").and(isPublic()), getClass().getName() + "$ProcessAdvice");
   }
 
   // the method decorated by this advice calls PartitionGroup.nextRecord(), which triggers
@@ -36,7 +35,7 @@ public class StreamTaskInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ProcessAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static StateHolder onEnter() {
       StateHolder holder = new StateHolder();
       HOLDER.set(holder);
