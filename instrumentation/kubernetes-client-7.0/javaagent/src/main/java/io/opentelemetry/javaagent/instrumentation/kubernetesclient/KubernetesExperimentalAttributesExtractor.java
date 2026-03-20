@@ -17,9 +17,16 @@ class KubernetesExperimentalAttributesExtractor
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, Request request) {
     KubernetesRequestDigest digest = KubernetesRequestDigest.parse(request);
+    if (digest.isNonResourceRequest()) {
+      return;
+    }
+    KubernetesResource resourceMeta = digest.getResourceMeta();
+    if (resourceMeta == null) {
+      return;
+    }
     attributes
-        .put("kubernetes-client.namespace", digest.getResourceMeta().getNamespace())
-        .put("kubernetes-client.name", digest.getResourceMeta().getName());
+        .put("kubernetes-client.namespace", resourceMeta.getNamespace())
+        .put("kubernetes-client.name", resourceMeta.getName());
   }
 
   @Override
