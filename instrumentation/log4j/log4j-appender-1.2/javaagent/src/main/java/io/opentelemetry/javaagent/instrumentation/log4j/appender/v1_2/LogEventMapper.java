@@ -14,7 +14,6 @@ import static io.opentelemetry.semconv.incubating.OtelIncubatingAttributes.OTEL_
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toMap;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -24,6 +23,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +55,7 @@ public final class LogEventMapper {
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "log4j_appender")
           .getBoolean("experimental_log_attributes/development", false);
 
-  private final Map<String, AttributeKey<String>> captureMdcAttributes;
+  private final List<AttributeKey<String>> captureMdcAttributeKeys;
 
   // cached as an optimization
   private final boolean captureAllMdcAttributes;
@@ -68,11 +68,20 @@ public final class LogEventMapper {
     List<String> captureMdcAttributes =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "log4j_appender")
             .getScalarList("capture_mdc_attributes/development", String.class, emptyList());
-    this.captureMdcAttributes =
-        captureMdcAttributes.stream()
-            .collect(toMap(attr -> attr, LogEventMapper::getMdcAttributeKey));
     this.captureAllMdcAttributes =
         captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
+    if (captureAllMdcAttributes) {
+      this.captureMdcAttributeKeys = emptyList();
+    } else {
+      List<AttributeKey<String>> keys = new ArrayList<>(captureMdcAttributes.size());
+      for (String key : captureMdcAttributes) {
+        if (!OTEL_EVENT_NAME.getKey().equals(key)
+            && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
+          keys.add(getMdcAttributeKey(key));
+        }
+      }
+      this.captureMdcAttributeKeys = keys;
+    }
     if (captureEventName) {
       logger.warning(
           "The otel.instrumentation.log4j-appender.experimental.capture-event-name setting is"
@@ -200,14 +209,10 @@ public final class LogEventMapper {
       return;
     }
 
-    for (Map.Entry<String, AttributeKey<String>> entry : captureMdcAttributes.entrySet()) {
-      String key = entry.getKey();
-      if (!OTEL_EVENT_NAME.getKey().equals(key)
-          && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
-        Object value = context.get(key);
-        if (value != null) {
-          builder.setAttribute(entry.getValue(), value.toString());
-        }
+    for (AttributeKey<String> attributeKey : captureMdcAttributeKeys) {
+      Object value = context.get(attributeKey.getKey());
+      if (value != null) {
+        builder.setAttribute(attributeKey, value.toString());
       }
     }
   }

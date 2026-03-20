@@ -27,7 +27,7 @@ public class ServerTubeAssemblerContextInstrumentation implements TypeInstrument
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("createMonitoringTube").and(takesArgument(0, named("com.sun.xml.ws.api.pipe.Tube"))),
-        ServerTubeAssemblerContextInstrumentation.class.getName() + "$AddTracingAdvice");
+        getClass().getName() + "$AddTracingAdvice");
   }
 
   @SuppressWarnings("unused")

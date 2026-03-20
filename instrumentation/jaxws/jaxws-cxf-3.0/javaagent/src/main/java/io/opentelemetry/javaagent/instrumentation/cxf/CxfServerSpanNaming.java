@@ -27,9 +27,6 @@ public final class CxfServerSpanNaming {
 
   public static void updateServerSpanName(Context context, CxfRequest cxfRequest) {
     String spanName = cxfRequest.spanName();
-    if (spanName == null) {
-      return;
-    }
 
     Span serverSpan = LocalRootSpan.fromContextOrNull(context);
     if (serverSpan == null) {
