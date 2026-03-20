@@ -29,14 +29,14 @@ public class SoapFaultBuilderInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("com.sun.xml.ws.api.SOAPVersion")))
             .and(takesArgument(1, named("com.sun.xml.ws.model.CheckedExceptionImpl")))
             .and(takesArgument(2, named(Throwable.class.getName()))),
-        SoapFaultBuilderInstrumentation.class.getName() + "$CaptureThrowableAdvice");
+        getClass().getName() + "$CaptureThrowableAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class CaptureThrowableAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onEnter(@Advice.Argument(2) Throwable throwable) {
+    public static void onExit(@Advice.Argument(2) Throwable throwable) {
       if (throwable == null) {
         return;
       }

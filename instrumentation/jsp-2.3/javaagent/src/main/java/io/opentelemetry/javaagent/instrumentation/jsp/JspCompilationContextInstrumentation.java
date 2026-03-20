@@ -31,7 +31,7 @@ public class JspCompilationContextInstrumentation implements TypeInstrumentation
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("compile").and(takesArguments(0)).and(isPublic()),
-        JspCompilationContextInstrumentation.class.getName() + "$CompileAdvice");
+        getClass().getName() + "$CompileAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -9,9 +9,10 @@ import static java.util.Objects.requireNonNull;
 
 import jakarta.faces.component.ActionSource2;
 import jakarta.faces.event.ActionEvent;
+import javax.annotation.Nullable;
 
 public class JsfRequest {
-  private final String spanName;
+  @Nullable private final String spanName;
 
   public JsfRequest(ActionEvent event) {
     this.spanName = getSpanName(event);
@@ -25,6 +26,7 @@ public class JsfRequest {
     return spanName != null;
   }
 
+  @Nullable
   private static String getSpanName(ActionEvent event) {
     // https://jakarta.ee/specifications/faces/2.3/apidocs/index.html?javax/faces/component/ActionSource2.html
     // ActionSource2 was added in JSF 1.2 and is implemented by components that have an action
