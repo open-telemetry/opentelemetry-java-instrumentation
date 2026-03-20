@@ -160,9 +160,9 @@ class AdviceIndyChecker {
     @Override
     public void visit(String name, Object value) {
       if ("readOnly".equals(name) && Boolean.FALSE.equals(value)) {
-        result.markIncompatible("advice method parameter with @Argument(readOnly=false) or @Return(readOnly=false)");
+        result.markIncompatible(
+            "advice method parameter with @Argument(readOnly=false) or @Return(readOnly=false)");
       }
     }
-
   }
 }
