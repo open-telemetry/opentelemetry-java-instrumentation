@@ -18,7 +18,7 @@ class LongTaskTimerTest extends AbstractLongTaskTimerTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @AfterEach
-  public void cleanup() {
+  void cleanup() {
     Metrics.globalRegistry.forEachMeter(Metrics.globalRegistry::remove);
   }
 
