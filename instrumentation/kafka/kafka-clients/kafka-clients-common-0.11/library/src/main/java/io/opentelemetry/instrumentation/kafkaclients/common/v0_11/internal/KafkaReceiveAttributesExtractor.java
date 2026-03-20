@@ -11,8 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 
-enum KafkaReceiveAttributesExtractor implements AttributesExtractor<KafkaReceiveRequest, Void> {
-  INSTANCE;
+class KafkaReceiveAttributesExtractor implements AttributesExtractor<KafkaReceiveRequest, Void> {
 
   // copied from MessagingIncubatingAttributes
   private static final AttributeKey<String> MESSAGING_KAFKA_CONSUMER_GROUP =
@@ -22,10 +21,7 @@ enum KafkaReceiveAttributesExtractor implements AttributesExtractor<KafkaReceive
   public void onStart(
       AttributesBuilder attributes, Context parentContext, KafkaReceiveRequest request) {
 
-    String consumerGroup = request.getConsumerGroup();
-    if (consumerGroup != null) {
-      attributes.put(MESSAGING_KAFKA_CONSUMER_GROUP, consumerGroup);
-    }
+    attributes.put(MESSAGING_KAFKA_CONSUMER_GROUP, request.getConsumerGroup());
   }
 
   @Override

@@ -23,18 +23,19 @@ public class KafkaProcessRequest extends AbstractKafkaConsumerRequest {
   }
 
   public static KafkaProcessRequest create(
-      KafkaConsumerContext consumerContext, ConsumerRecord<?, ?> record) {
+      @Nullable KafkaConsumerContext consumerContext, ConsumerRecord<?, ?> record) {
     String consumerGroup = consumerContext != null ? consumerContext.getConsumerGroup() : null;
     String clientId = consumerContext != null ? consumerContext.getClientId() : null;
     return create(record, consumerGroup, clientId);
   }
 
   public static KafkaProcessRequest create(
-      ConsumerRecord<?, ?> record, String consumerGroup, String clientId) {
+      ConsumerRecord<?, ?> record, @Nullable String consumerGroup, @Nullable String clientId) {
     return new KafkaProcessRequest(record, consumerGroup, clientId);
   }
 
-  public KafkaProcessRequest(ConsumerRecord<?, ?> record, String consumerGroup, String clientId) {
+  public KafkaProcessRequest(
+      ConsumerRecord<?, ?> record, @Nullable String consumerGroup, @Nullable String clientId) {
     super(consumerGroup, clientId);
     this.record = record;
   }

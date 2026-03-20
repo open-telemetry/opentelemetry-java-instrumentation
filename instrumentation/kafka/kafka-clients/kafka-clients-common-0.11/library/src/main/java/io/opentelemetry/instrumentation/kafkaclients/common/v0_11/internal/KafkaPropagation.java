@@ -17,8 +17,6 @@ import org.apache.kafka.common.record.RecordBatch;
  * any time.
  */
 public final class KafkaPropagation {
-
-  private static final KafkaHeadersSetter SETTER = KafkaHeadersSetter.INSTANCE;
   private static final boolean hasMaxUsableProduceMagic = hasMaxUsableProduceMagic();
 
   // Do not inject headers for batch versions below 2
@@ -71,7 +69,7 @@ public final class KafkaPropagation {
   private static <K, V> void inject(Context context, ProducerRecord<K, V> record) {
     GlobalOpenTelemetry.getPropagators()
         .getTextMapPropagator()
-        .inject(context, record.headers(), SETTER);
+        .inject(context, record.headers(), new KafkaHeadersSetter());
   }
 
   private KafkaPropagation() {}

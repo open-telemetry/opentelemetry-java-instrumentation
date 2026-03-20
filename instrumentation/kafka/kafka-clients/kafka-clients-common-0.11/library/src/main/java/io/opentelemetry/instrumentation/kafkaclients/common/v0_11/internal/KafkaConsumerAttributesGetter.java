@@ -13,8 +13,8 @@ import java.util.List;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 
-enum KafkaConsumerAttributesGetter implements MessagingAttributesGetter<KafkaProcessRequest, Void> {
-  INSTANCE;
+class KafkaConsumerAttributesGetter
+    implements MessagingAttributesGetter<KafkaProcessRequest, Void> {
 
   @Override
   public String getSystem(KafkaProcessRequest request) {

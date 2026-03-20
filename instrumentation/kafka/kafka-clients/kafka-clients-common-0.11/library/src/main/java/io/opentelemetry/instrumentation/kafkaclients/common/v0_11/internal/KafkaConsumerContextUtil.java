@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -56,7 +57,7 @@ public final class KafkaConsumerContextUtil {
   }
 
   public static KafkaConsumerContext create(
-      Context context, String consumerGroup, String clientId) {
+      Context context, @Nullable String consumerGroup, @Nullable String clientId) {
     return KafkaConsumerContext.create(context, consumerGroup, clientId);
   }
 
@@ -76,7 +77,10 @@ public final class KafkaConsumerContextUtil {
   }
 
   public static void set(
-      ConsumerRecord<?, ?> record, Context context, String consumerGroup, String clientId) {
+      ConsumerRecord<?, ?> record,
+      Context context,
+      @Nullable String consumerGroup,
+      @Nullable String clientId) {
     recordContextField.set(record, context);
     recordConsumerInfoField.set(record, new String[] {consumerGroup, clientId});
   }
@@ -88,7 +92,10 @@ public final class KafkaConsumerContextUtil {
   }
 
   public static void set(
-      ConsumerRecords<?, ?> records, Context context, String consumerGroup, String clientId) {
+      ConsumerRecords<?, ?> records,
+      Context context,
+      @Nullable String consumerGroup,
+      @Nullable String clientId) {
     recordsContextField.set(records, context);
     recordsConsumerInfoField.set(records, new String[] {consumerGroup, clientId});
   }

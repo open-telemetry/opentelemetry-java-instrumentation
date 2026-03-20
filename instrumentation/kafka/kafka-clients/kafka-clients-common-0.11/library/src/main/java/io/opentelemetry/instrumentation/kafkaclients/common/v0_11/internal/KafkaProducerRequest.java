@@ -26,11 +26,12 @@ public final class KafkaProducerRequest {
     return create(record, extractClientId(producer));
   }
 
-  public static KafkaProducerRequest create(ProducerRecord<?, ?> record, String clientId) {
+  public static KafkaProducerRequest create(
+      ProducerRecord<?, ?> record, @Nullable String clientId) {
     return new KafkaProducerRequest(record, clientId);
   }
 
-  private KafkaProducerRequest(ProducerRecord<?, ?> record, String clientId) {
+  private KafkaProducerRequest(ProducerRecord<?, ?> record, @Nullable String clientId) {
     this.record = record;
     this.clientId = clientId;
   }
@@ -39,10 +40,12 @@ public final class KafkaProducerRequest {
     return record;
   }
 
+  @Nullable
   public String getClientId() {
     return clientId;
   }
 
+  @Nullable
   private static String extractClientId(Producer<?, ?> producer) {
     try {
       Map<MetricName, ? extends Metric> metrics = producer.metrics();

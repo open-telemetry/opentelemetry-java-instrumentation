@@ -23,19 +23,19 @@ public class KafkaReceiveRequest extends AbstractKafkaConsumerRequest {
   }
 
   public static KafkaReceiveRequest create(
-      KafkaConsumerContext consumerContext, ConsumerRecords<?, ?> records) {
+      @Nullable KafkaConsumerContext consumerContext, ConsumerRecords<?, ?> records) {
     String consumerGroup = consumerContext != null ? consumerContext.getConsumerGroup() : null;
     String clientId = consumerContext != null ? consumerContext.getClientId() : null;
     return create(records, consumerGroup, clientId);
   }
 
   public static KafkaReceiveRequest create(
-      ConsumerRecords<?, ?> records, String consumerGroup, String clientId) {
+      ConsumerRecords<?, ?> records, @Nullable String consumerGroup, @Nullable String clientId) {
     return new KafkaReceiveRequest(records, consumerGroup, clientId);
   }
 
   private KafkaReceiveRequest(
-      ConsumerRecords<?, ?> records, String consumerGroup, String clientId) {
+      ConsumerRecords<?, ?> records, @Nullable String consumerGroup, @Nullable String clientId) {
     super(consumerGroup, clientId);
     this.records = records;
   }
