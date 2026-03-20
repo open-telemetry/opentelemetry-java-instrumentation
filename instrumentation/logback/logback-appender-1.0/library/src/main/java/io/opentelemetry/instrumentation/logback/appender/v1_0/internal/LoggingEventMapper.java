@@ -79,7 +79,7 @@ public final class LoggingEventMapper {
       AttributeKey.stringKey("otel.event.name");
 
   private final boolean captureExperimentalAttributes;
-  private final List<String> captureMdcAttributes;
+  private final List<AttributeKey<String>> captureMdcAttributeKeys;
   private final boolean captureAllMdcAttributes;
   private final boolean captureCodeAttributes;
   private final boolean captureMarkerAttribute;
@@ -94,7 +94,6 @@ public final class LoggingEventMapper {
   private LoggingEventMapper(Builder builder) {
     this.captureExperimentalAttributes = builder.captureExperimentalAttributes;
     this.captureCodeAttributes = builder.captureCodeAttributes;
-    this.captureMdcAttributes = builder.captureMdcAttributes;
     this.captureMarkerAttribute = builder.captureMarkerAttribute;
     this.captureKeyValuePairAttributes = builder.captureKeyValuePairAttributes;
     this.captureLoggerContext = builder.captureLoggerContext;
@@ -104,6 +103,18 @@ public final class LoggingEventMapper {
     this.captureLogstashStructuredArguments = builder.captureLogstashStructuredArguments;
     this.captureAllMdcAttributes =
         builder.captureMdcAttributes.size() == 1 && builder.captureMdcAttributes.get(0).equals("*");
+    if (captureAllMdcAttributes) {
+      this.captureMdcAttributeKeys = emptyList();
+    } else {
+      List<AttributeKey<String>> keys = new ArrayList<>(builder.captureMdcAttributes.size());
+      for (String key : builder.captureMdcAttributes) {
+        if (!OTEL_EVENT_NAME.getKey().equals(key)
+            && !(builder.captureEventName && EVENT_NAME.getKey().equals(key))) {
+          keys.add(getAttributeKey(key));
+        }
+      }
+      this.captureMdcAttributeKeys = keys;
+    }
     this.captureEventName = builder.captureEventName;
   }
 
@@ -288,14 +299,9 @@ public final class LoggingEventMapper {
       return;
     }
 
-    for (String key : captureMdcAttributes) {
-      if (!OTEL_EVENT_NAME.getKey().equals(key)
-          && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
-        String value = mdcProperties.get(key);
-        if (value != null) {
-          builder.setAttribute(getAttributeKey(key), value);
-        }
-      }
+    for (AttributeKey<String> attributeKey : captureMdcAttributeKeys) {
+      String value = mdcProperties.get(attributeKey.getKey());
+      builder.setAttribute(attributeKey, value);
     }
   }
 
