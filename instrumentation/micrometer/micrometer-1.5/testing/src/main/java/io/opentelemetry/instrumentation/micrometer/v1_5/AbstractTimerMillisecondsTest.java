@@ -81,6 +81,6 @@ public abstract class AbstractTimerMillisecondsTest {
     // then
     testing()
         .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME, "testTimerSeconds", AbstractIterableAssert::isEmpty);
+            INSTRUMENTATION_NAME, "testTimerMilliseconds", AbstractIterableAssert::isEmpty);
   }
 }
