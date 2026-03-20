@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -33,10 +32,8 @@ public class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("dispatch"))
-            .and(takesArgument(0, named("io.lettuce.core.protocol.RedisCommand"))),
-        LettuceAsyncCommandsInstrumentation.class.getName() + "$DispatchAdvice");
+        named("dispatch").and(takesArgument(0, named("io.lettuce.core.protocol.RedisCommand"))),
+        this.getClass().getName() + "$DispatchAdvice");
   }
 
   @SuppressWarnings("unused")
