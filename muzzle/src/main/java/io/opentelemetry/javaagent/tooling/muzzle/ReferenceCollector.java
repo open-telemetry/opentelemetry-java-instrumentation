@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singleton;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.graph.Graph;
 import com.google.common.graph.GraphBuilder;
@@ -20,7 +19,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URLConnection;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -80,7 +78,8 @@ public final class ReferenceCollector {
     }
 
     List<String> spiImplementations = new ArrayList<>();
-    try (InputStream stream = Utils.getResourceStream(resourceLoader, helperResource.getAgentPath())) {
+    try (InputStream stream =
+        Utils.getResourceStream(resourceLoader, helperResource.getAgentPath())) {
       BufferedReader reader = new BufferedReader(new InputStreamReader(stream, UTF_8));
       while (reader.ready()) {
         String line = reader.readLine();
