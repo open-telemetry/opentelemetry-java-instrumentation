@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.mongo.v3_1;
 
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -53,24 +52,24 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
     @Override
     public void transform(TypeTransformer transformer) {
       transformer.applyAdviceToMethod(
-          isMethod().and(isPublic()).and(named("build")).and(takesArguments(0)),
-          MongoClientInstrumentationModule.class.getName() + "$MongoClientAdvice");
+          isPublic().and(named("build")).and(takesArguments(0)),
+          getClass().getName() + "$MongoClientAdvice");
     }
-  }
 
-  @SuppressWarnings("unused")
-  public static class MongoClientAdvice {
+    @SuppressWarnings("unused")
+    static class MongoClientAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void injectTraceListener(
-        @Advice.This MongoClientOptions.Builder builder,
-        @Advice.FieldValue("commandListeners") List<CommandListener> commandListeners) {
-      for (CommandListener commandListener : commandListeners) {
-        if (MongoInstrumentationSingletons.isTracingListener(commandListener)) {
-          return;
+      @Advice.OnMethodEnter(suppress = Throwable.class)
+      public static void injectTraceListener(
+          @Advice.This MongoClientOptions.Builder builder,
+          @Advice.FieldValue("commandListeners") List<CommandListener> commandListeners) {
+        for (CommandListener commandListener : commandListeners) {
+          if (MongoInstrumentationSingletons.isTracingListener(commandListener)) {
+            return;
+          }
         }
+        builder.addCommandListener(MongoInstrumentationSingletons.LISTENER);
       }
-      builder.addCommandListener(MongoInstrumentationSingletons.LISTENER);
     }
   }
 }
