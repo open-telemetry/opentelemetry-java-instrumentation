@@ -245,9 +245,7 @@ public final class LogEventMapper<T> {
           (key, value) -> {
             if (!OTEL_EVENT_NAME.getKey().equals(key)
                 && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
-              if (value != null) {
-                builder.setAttribute(getContextDataAttributeKey(key), value);
-              }
+              builder.setAttribute(getContextDataAttributeKey(key), value);
             }
           });
       return;
