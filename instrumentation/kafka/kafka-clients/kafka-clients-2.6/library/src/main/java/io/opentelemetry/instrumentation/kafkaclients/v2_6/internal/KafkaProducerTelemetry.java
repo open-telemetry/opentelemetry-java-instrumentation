@@ -32,7 +32,7 @@ import org.apache.kafka.common.header.Headers;
 public class KafkaProducerTelemetry {
   private static final Logger logger = Logger.getLogger(KafkaProducerTelemetry.class.getName());
 
-  private static final TextMapSetter<Headers> SETTER = KafkaHeadersSetter.INSTANCE;
+  private static final TextMapSetter<Headers> SETTER = new KafkaHeadersSetter();
 
   private final TextMapPropagator propagator;
   private final Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter;

@@ -15,7 +15,7 @@ import org.apache.kafka.common.header.Headers;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-class KafkaHeadersSetter implements TextMapSetter<Headers> {
+public class KafkaHeadersSetter implements TextMapSetter<Headers> {
 
   @Override
   public void set(@Nullable Headers headers, String key, String value) {

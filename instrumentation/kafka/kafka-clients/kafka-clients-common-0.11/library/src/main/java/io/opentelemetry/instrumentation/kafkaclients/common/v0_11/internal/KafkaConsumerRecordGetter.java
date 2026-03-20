@@ -9,6 +9,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
@@ -43,7 +44,7 @@ class KafkaConsumerRecordGetter implements TextMapGetter<KafkaProcessRequest> {
   @Override
   public Iterator<String> getAll(@Nullable KafkaProcessRequest carrier, String key) {
     if (carrier == null) {
-      return java.util.Collections.<String>emptyList().iterator();
+      return Collections.<String>emptyList().iterator();
     }
     return StreamSupport.stream(carrier.getRecord().headers().headers(key).spliterator(), false)
         .filter(header -> header.value() != null)
