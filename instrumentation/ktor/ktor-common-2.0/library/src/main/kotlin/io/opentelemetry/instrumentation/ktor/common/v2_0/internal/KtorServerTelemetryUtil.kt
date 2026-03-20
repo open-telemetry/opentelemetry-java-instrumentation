@@ -106,7 +106,7 @@ object KtorServerTelemetryUtil {
 
   private fun instrumenter(builder: AbstractKtorServerTelemetryBuilder): Instrumenter<ApplicationRequest, ApplicationResponse> = InstrumenterUtil.buildUpstreamInstrumenter(
     builder.builder.instrumenterBuilder(),
-    ApplicationRequestGetter,
+    ApplicationRequestGetter(),
     builder.spanKindExtractor(SpanKindExtractor.alwaysServer())
   )
 }

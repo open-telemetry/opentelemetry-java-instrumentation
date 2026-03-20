@@ -9,7 +9,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter
 
-internal object KtorHttpClientAttributesGetter : HttpClientAttributesGetter<HttpRequestData, HttpResponse> {
+internal class KtorHttpClientAttributesGetter : HttpClientAttributesGetter<HttpRequestData, HttpResponse> {
 
   override fun getUrlFull(request: HttpRequestData) = request.url.toString()
 

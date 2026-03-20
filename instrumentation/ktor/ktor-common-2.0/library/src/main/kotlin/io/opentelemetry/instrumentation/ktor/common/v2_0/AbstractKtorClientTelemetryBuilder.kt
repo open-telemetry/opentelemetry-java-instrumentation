@@ -37,7 +37,7 @@ abstract class AbstractKtorClientTelemetryBuilder(
     this.builder = DefaultHttpClientInstrumenterBuilder.create(
       instrumentationName,
       openTelemetry,
-      KtorHttpClientAttributesGetter
+      KtorHttpClientAttributesGetter()
     )
   }
 
