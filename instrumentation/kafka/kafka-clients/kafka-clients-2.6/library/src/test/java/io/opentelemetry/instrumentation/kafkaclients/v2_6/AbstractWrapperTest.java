@@ -9,7 +9,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientBaseTest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientPropagationBaseTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.time.Duration;
@@ -18,11 +18,13 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-abstract class AbstractWrapperTest extends KafkaClientBaseTest {
+abstract class AbstractWrapperTest extends KafkaClientPropagationBaseTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
@@ -73,6 +75,11 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
 
     assertTraces(testHeaders);
   }
+
+  @Disabled(
+      "Not applicable: wrapper-based instrumentation propagates via wrapped producer, not raw producer")
+  @Test
+  void testClientHeaderPropagationManualConfig() {}
 
   abstract void configure(KafkaTelemetryBuilder builder);
 

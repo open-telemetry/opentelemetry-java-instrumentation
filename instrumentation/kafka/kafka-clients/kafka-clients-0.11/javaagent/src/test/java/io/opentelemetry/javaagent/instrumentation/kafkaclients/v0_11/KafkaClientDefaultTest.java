@@ -11,7 +11,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientBaseTest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientPropagationBaseTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -166,7 +165,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     awaitUntilConsumerIsReady();
     ConsumerRecords<?, ?> consumerRecords = poll(Duration.ofSeconds(5));
     List<? extends ConsumerRecord<?, ?>> recordsInPartition =
-        consumerRecords.records(KafkaClientBaseTest.TOPIC_PARTITION);
+        consumerRecords.records(TOPIC_PARTITION);
     assertThat(recordsInPartition.size()).isEqualTo(1);
 
     // iterate over records to generate spans
