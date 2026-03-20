@@ -129,8 +129,13 @@ public abstract class InstrumentationModule implements Ordered {
    */
   public boolean isIndyModule() {
     String moduleClassName = getClass().getName();
-    if (moduleClassName.startsWith("io.opentelemetry.javaagent.")) {
-      // agent internal instrumentation modules are all compatible with indy.
+    // TODO: make internal instrumentation modules compatible with indy and remove exclusion for
+    // 'internal' package
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/16821
+    if (moduleClassName.startsWith("io.opentelemetry.javaagent.")
+        && !moduleClassName.startsWith("io.opentelemetry.javaagent.instrumentation.internal.")) {
+
+      // internal instrumentation module should be compatible with indy
       return true;
     }
 
