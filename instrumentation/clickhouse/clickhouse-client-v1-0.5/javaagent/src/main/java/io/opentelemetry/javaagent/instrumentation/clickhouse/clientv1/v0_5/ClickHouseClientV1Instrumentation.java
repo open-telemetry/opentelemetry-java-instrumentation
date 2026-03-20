@@ -20,13 +20,15 @@ import com.clickhouse.client.config.ClickHouseDefaults;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.common.ClickHouseDbRequest;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.common.ClickHouseScope;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ClickHouseClientV1Instrumentation implements TypeInstrumentation {
+public class ClickHouseClientV1Instrumentation
+    implements TypeInstrumentation, ExperimentalInstrumentationModule {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("com.clickhouse.client.ClickHouseClient"));

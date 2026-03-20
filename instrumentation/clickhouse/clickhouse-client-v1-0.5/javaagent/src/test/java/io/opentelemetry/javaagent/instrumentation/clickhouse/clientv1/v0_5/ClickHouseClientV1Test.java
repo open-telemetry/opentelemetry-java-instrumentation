@@ -129,7 +129,7 @@ class ClickHouseClientV1Test {
 
     assertDurationMetric(
         testing,
-        "io.opentelemetry.clickhouse-client-v1-0.3",
+        "io.opentelemetry.clickhouse-client-v1-0.5",
         DB_SYSTEM_NAME,
         DB_QUERY_SUMMARY,
         DB_NAMESPACE,
