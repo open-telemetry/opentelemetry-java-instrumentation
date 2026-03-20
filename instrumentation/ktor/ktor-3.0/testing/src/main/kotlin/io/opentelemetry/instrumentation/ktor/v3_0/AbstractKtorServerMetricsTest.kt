@@ -108,10 +108,10 @@ abstract class AbstractKtorServerMetricsTest : AbstractHttpServerUsingTest<Embed
           .hasLongSumSatisfying { sum ->
             sum.hasPointsSatisfying({ point ->
               point.hasValue(0)
-                .hasAttributesSatisfying {
-                  equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET")
-                  equalTo(UrlAttributes.URL_PATH, endpoint.path)
-                }
+                .hasAttributesSatisfyingExactly(
+                  equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+                  equalTo(UrlAttributes.URL_SCHEME, "http"),
+                )
             })
           }
       })
