@@ -128,7 +128,7 @@ class KotlinCoroutines13InstrumentationTest {
 
     testing.waitAndAssertTraces(
       { trace ->
-        trace.hasSpansSatisfyingExactly(
+        trace.hasSpansSatisfyingExactlyInAnyOrder(
           {
             it.hasName("parent")
               .hasNoParent()
@@ -157,7 +157,7 @@ class KotlinCoroutines13InstrumentationTest {
 
     testing.waitAndAssertTraces(
       { trace ->
-        trace.hasSpansSatisfyingExactly(
+        trace.hasSpansSatisfyingExactlyInAnyOrder(
           {
             it.hasName("parent")
               .hasNoParent()

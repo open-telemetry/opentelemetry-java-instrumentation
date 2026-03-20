@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.flow;
 
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -21,6 +21,6 @@ public class KotlinCoroutinesFlowInstrumentationModule extends InstrumentationMo
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new AbstractFlowInstrumentation());
+    return asList(new AbstractFlowInstrumentation());
   }
 }
