@@ -259,3 +259,4 @@ kotlinx-coroutines-flow-1.3:javaagent
 ktor-1.0:library
 ktor-2.0:javaagent
 ktor-2.0:testing
+ktor-2.0:library
