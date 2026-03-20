@@ -16,3 +16,22 @@ use_file_shell_for_executable_tasks = true
 [tasks."lint:links"]
 description = "Check for broken links in changed files + all local links"
 file = "https://raw.githubusercontent.com/grafana/flint/8a39d96e17327c54974623b252eb5260d67ed68a/tasks/lint/links.sh" # v0.9.1
+
+[tasks."lint:spotless"]
+description = "Check Java formatting with Spotless"
+run = "./gradlew spotlessCheck"
+
+[tasks.lint]
+description = "Run all lints"
+depends = ["lint:links", "lint:markdown", "lint:spotless"]
+
+[tasks.fix]
+description = "Auto-fix lint issues"
+run = ["./gradlew spotlessApply", "mise run lint:markdown -- --fix"]
+
+[tasks.pre-commit]
+description = "Pre-commit hook: lint changed files"
+depends = ["lint"]
+[tasks."setup:pre-commit-hook"]
+description = "Install git pre-commit hook"
+run = "mise generate git-pre-commit --write --task=pre-commit"
