@@ -50,13 +50,11 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 import org.testcontainers.utility.DockerImageName;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-@Testcontainers
 class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
 
   private static final Logger logger =
