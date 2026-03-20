@@ -93,7 +93,6 @@ public class LibertyDispatcherHttpAttributesGetter
     return request.getServerSocketAddress();
   }
 
-  @Nullable
   @Override
   public Integer getNetworkLocalPort(LibertyRequest request, @Nullable LibertyResponse response) {
     return request.getServerSocketPort();
