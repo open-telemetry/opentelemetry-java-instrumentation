@@ -7,7 +7,6 @@ muzzle {
     group.set("com.google.guava")
     module.set("guava")
     versions.set("[10.0,]")
-    skip("32.1.0-android")
     assertInverse.set(true)
   }
 }

@@ -8,7 +8,6 @@ muzzle {
     module.set("quartz")
     versions.set("[2.0.0,)")
     assertInverse.set(true)
-    skip("1.7.0") // missing in maven central
   }
 }
 

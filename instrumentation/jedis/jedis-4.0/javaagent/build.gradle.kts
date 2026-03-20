@@ -7,7 +7,6 @@ muzzle {
     group.set("redis.clients")
     module.set("jedis")
     versions.set("[4.0.0-beta1,)")
-    skip("jedis-3.6.2")
     assertInverse.set(true)
   }
 }
