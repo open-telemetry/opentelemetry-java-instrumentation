@@ -56,9 +56,8 @@ class LogstashMarkerTest {
         logRecord ->
             logRecord
                 .hasBody("log message 1")
-                .hasTotalAttributeCount(3) // 3 markers (event.name handled separately)
                 .hasEventName("MyEventName")
-                .hasAttributesSatisfying(
+                .hasAttributesSatisfyingExactly(
                     equalTo(stringKey("field1"), "value1"),
                     equalTo(longKey("field2"), 2L),
                     equalTo(stringKey("field3"), "value3")));
@@ -95,7 +94,7 @@ class LogstashMarkerTest {
                 .hasBody("log message 1")
                 // 14 fields (including map keys)
                 .hasTotalAttributeCount(14)
-                .hasAttributesSatisfying(
+                .hasAttributesSatisfyingExactly(
                     equalTo(longKey("field1"), 1L),
                     equalTo(doubleKey("field2"), 2.0),
                     equalTo(stringKey("field3"), "text-1"),
