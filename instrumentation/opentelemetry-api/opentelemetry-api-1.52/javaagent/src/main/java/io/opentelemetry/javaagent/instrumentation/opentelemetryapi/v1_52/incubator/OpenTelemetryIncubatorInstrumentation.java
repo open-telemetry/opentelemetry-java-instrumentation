@@ -24,8 +24,7 @@ public class OpenTelemetryIncubatorInstrumentation implements TypeInstrumentatio
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        none(), OpenTelemetryIncubatorInstrumentation.class.getName() + "$InitAdvice");
+    transformer.applyAdviceToMethod(none(), getClass().getName() + "$InitAdvice");
   }
 
   @SuppressWarnings({"ReturnValueIgnored", "unused"})

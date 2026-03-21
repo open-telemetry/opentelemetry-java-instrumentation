@@ -65,10 +65,10 @@ public class ApplicationLogRecordBuilder142 extends ApplicationLogRecordBuilder
         }
         return Value.of(convertedKeyValueList);
       case BYTES:
-        ByteBuffer byteBuffer = (ByteBuffer) value.getValue();
+        ByteBuffer byteBuffer = ((ByteBuffer) value.getValue()).duplicate();
         byte[] bytes = new byte[byteBuffer.remaining()];
         byteBuffer.get(bytes);
-        break;
+        return Value.of(bytes);
     }
 
     throw new IllegalStateException("Unhandled value type: " + value.getType());
