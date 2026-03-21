@@ -46,7 +46,7 @@ tasks {
     dependsOn(testing.suites)
   }
 
-  test {
+  withType<Test>().configureEach {
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
