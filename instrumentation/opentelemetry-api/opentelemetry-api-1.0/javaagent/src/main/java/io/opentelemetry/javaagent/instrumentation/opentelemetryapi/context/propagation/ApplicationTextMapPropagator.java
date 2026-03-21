@@ -11,6 +11,7 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import java.util.Collection;
+import javax.annotation.Nullable;
 
 class ApplicationTextMapPropagator
     implements application.io.opentelemetry.context.propagation.TextMapPropagator {
@@ -65,7 +66,11 @@ class ApplicationTextMapPropagator
     }
 
     @Override
-    public String get(C carrier, String key) {
+    @Nullable
+    public String get(@Nullable C carrier, String key) {
+      if (carrier == null) {
+        return null;
+      }
       return applicationGetter.get(carrier, key);
     }
   }
@@ -81,7 +86,10 @@ class ApplicationTextMapPropagator
     }
 
     @Override
-    public void set(C carrier, String key, String value) {
+    public void set(@Nullable C carrier, String key, String value) {
+      if (carrier == null) {
+        return;
+      }
       applicationSetter.set(carrier, key, value);
     }
   }

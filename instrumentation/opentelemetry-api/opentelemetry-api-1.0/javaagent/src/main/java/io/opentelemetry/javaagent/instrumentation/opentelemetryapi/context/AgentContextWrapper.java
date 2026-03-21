@@ -47,7 +47,7 @@ final class AgentContextWrapper implements application.io.opentelemetry.context.
   final application.io.opentelemetry.context.Context applicationContext;
 
   AgentContextWrapper(Context agentContext) {
-    this(agentContext, agentContext.get(AgentContextStorage.APPLICATION_CONTEXT));
+    this(agentContext, getApplicationContext(agentContext));
   }
 
   AgentContextWrapper(
@@ -68,6 +68,16 @@ final class AgentContextWrapper implements application.io.opentelemetry.context.
 
   public Context getAgentContext() {
     return agentContext;
+  }
+
+  private static application.io.opentelemetry.context.Context getApplicationContext(
+      Context agentContext) {
+    application.io.opentelemetry.context.Context applicationContext =
+        agentContext.get(AgentContextStorage.APPLICATION_CONTEXT);
+    if (applicationContext == null) {
+      return application.io.opentelemetry.context.Context.root();
+    }
+    return applicationContext;
   }
 
   @Override

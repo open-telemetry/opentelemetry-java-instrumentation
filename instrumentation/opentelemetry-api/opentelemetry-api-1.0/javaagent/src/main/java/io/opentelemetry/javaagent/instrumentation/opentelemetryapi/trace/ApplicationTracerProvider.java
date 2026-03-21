@@ -9,6 +9,7 @@ import io.opentelemetry.api.trace.TracerProvider;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import javax.annotation.Nullable;
 
 public class ApplicationTracerProvider
     implements application.io.opentelemetry.api.trace.TracerProvider {
@@ -24,6 +25,7 @@ public class ApplicationTracerProvider
     this.agentTracerProvider = agentTracerProvider;
   }
 
+  @Nullable
   private static MethodHandle getApplicationTracerProvider14() {
     try {
       // this class is defined in opentelemetry-api-1.4

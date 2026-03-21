@@ -15,6 +15,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.function.Function;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * ContextStorage which stores the Context in the user's application inside the Context in the
@@ -49,6 +50,7 @@ public class AgentContextStorage
     root = getWrappedRootContext(applicationRoot);
   }
 
+  @Nullable
   private static MethodHandle getContextStorageRootHandle() {
     try {
       return MethodHandles.lookup()

@@ -209,9 +209,6 @@ class TracerTest {
     testSpan.recordException(throwable);
     testSpan.end();
 
-    StringWriter writer = new StringWriter();
-    throwable.printStackTrace(new PrintWriter(writer));
-
     // Then
     testing.waitAndAssertTraces(
         trace ->

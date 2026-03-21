@@ -70,6 +70,7 @@ public class ApplicationOpenTelemetry implements application.io.opentelemetry.ap
         "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.ApplicationOpenTelemetry110");
   }
 
+  @Nullable
   private static application.io.opentelemetry.api.OpenTelemetry getOpenTelemetry(String className) {
     try {
       Class<?> clazz = Class.forName(className);

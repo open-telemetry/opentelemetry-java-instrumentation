@@ -34,8 +34,7 @@ public class ContextStorageWrappersInstrumentation implements TypeInstrumentatio
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("getWrappers"),
-        ContextStorageWrappersInstrumentation.class.getName() + "$AddWrapperAdvice");
+        named("getWrappers"), getClass().getName() + "$AddWrapperAdvice");
   }
 
   @SuppressWarnings("unused")

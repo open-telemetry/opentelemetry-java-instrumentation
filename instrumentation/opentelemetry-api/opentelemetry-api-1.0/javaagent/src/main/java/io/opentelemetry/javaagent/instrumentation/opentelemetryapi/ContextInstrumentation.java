@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -33,8 +32,7 @@ public class ContextInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isStatic()).and(named("root")),
-        ContextInstrumentation.class.getName() + "$WrapRootAdvice");
+        isStatic().and(named("root")), getClass().getName() + "$WrapRootAdvice");
   }
 
   @SuppressWarnings("unused")
