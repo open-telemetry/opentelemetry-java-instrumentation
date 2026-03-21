@@ -23,8 +23,7 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        none(), OpenTelemetryInstrumentation.class.getName() + "$InitAdvice");
+    transformer.applyAdviceToMethod(none(), getClass().getName() + "$InitAdvice");
   }
 
   @SuppressWarnings({"ReturnValueIgnored", "unused"})
