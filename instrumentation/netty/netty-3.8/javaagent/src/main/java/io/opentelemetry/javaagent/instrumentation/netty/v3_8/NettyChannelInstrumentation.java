@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.VirtualFieldHelper.CONNECTION_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyClientSingletons.connectionInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -45,11 +44,10 @@ public class NettyChannelInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("connect"))
+        named("connect")
             .and(takesArgument(0, SocketAddress.class))
             .and(returns(named("org.jboss.netty.channel.ChannelFuture"))),
-        NettyChannelInstrumentation.class.getName() + "$ChannelConnectAdvice");
+        getClass().getName() + "$ChannelConnectAdvice");
   }
 
   @SuppressWarnings("unused")

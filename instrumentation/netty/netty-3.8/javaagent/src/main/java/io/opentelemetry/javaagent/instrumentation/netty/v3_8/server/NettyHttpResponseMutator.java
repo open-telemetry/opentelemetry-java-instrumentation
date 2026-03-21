@@ -11,8 +11,6 @@ import org.jboss.netty.handler.codec.http.HttpResponse;
 public enum NettyHttpResponseMutator implements HttpServerResponseMutator<HttpResponse> {
   INSTANCE;
 
-  NettyHttpResponseMutator() {}
-
   @Override
   public void appendHeader(HttpResponse response, String name, String value) {
     response.headers().add(name, value);

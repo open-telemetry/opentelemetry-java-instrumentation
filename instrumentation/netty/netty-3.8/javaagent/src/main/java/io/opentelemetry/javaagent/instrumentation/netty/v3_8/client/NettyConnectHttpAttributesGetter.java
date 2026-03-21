@@ -16,9 +16,8 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.jboss.netty.channel.Channel;
 
-enum NettyConnectHttpAttributesGetter
+class NettyConnectHttpAttributesGetter
     implements HttpClientAttributesGetter<NettyConnectionRequest, Channel> {
-  INSTANCE;
 
   @Nullable
   @Override

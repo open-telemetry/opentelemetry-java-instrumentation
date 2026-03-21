@@ -9,11 +9,13 @@ import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.NettyRequest;
 import javax.annotation.Nullable;
 
-enum HttpRequestHeadersSetter implements TextMapSetter<NettyRequest> {
-  INSTANCE;
+class HttpRequestHeadersSetter implements TextMapSetter<NettyRequest> {
 
   @Override
   public void set(@Nullable NettyRequest carrier, String key, String value) {
+    if (carrier == null) {
+      return;
+    }
     carrier.request().headers().set(key, value);
   }
 }

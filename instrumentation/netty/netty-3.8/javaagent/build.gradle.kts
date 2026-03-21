@@ -52,7 +52,7 @@ if (!(findProperty("testLatestDeps") as Boolean)) {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 

@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -36,21 +35,19 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(nameStartsWith("add"))
+        nameStartsWith("add")
             .and(takesArgument(1, named("org.jboss.netty.channel.ChannelHandler"))),
-        NettyChannelPipelineInstrumentation.class.getName() + "$ChannelPipelineAdd2ArgsAdvice");
+        getClass().getName() + "$ChannelPipelineAdd2ArgsAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(nameStartsWith("add"))
+        nameStartsWith("add")
             .and(takesArgument(2, named("org.jboss.netty.channel.ChannelHandler"))),
-        NettyChannelPipelineInstrumentation.class.getName() + "$ChannelPipelineAdd3ArgsAdvice");
+        getClass().getName() + "$ChannelPipelineAdd3ArgsAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ChannelPipelineAdd2ArgsAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static CallDepth checkDepth(
         @Advice.This ChannelPipeline pipeline, @Advice.Argument(1) ChannelHandler handler) {
       // Pipelines are created once as a factory and then copied multiple times using the same add
@@ -81,7 +78,7 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
   @SuppressWarnings("unused")
   public static class ChannelPipelineAdd3ArgsAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static CallDepth checkDepth(
         @Advice.This ChannelPipeline pipeline, @Advice.Argument(2) ChannelHandler handler) {
       // Pipelines are created once as a factory and then copied multiple times using the same add

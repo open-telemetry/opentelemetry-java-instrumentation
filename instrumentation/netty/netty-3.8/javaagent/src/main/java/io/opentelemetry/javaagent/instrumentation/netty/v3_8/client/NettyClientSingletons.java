@@ -30,7 +30,7 @@ public final class NettyClientSingletons {
         JavaagentHttpClientInstrumenters.create(
             INSTRUMENTATION_NAME,
             new NettyHttpClientAttributesGetter(),
-            HttpRequestHeadersSetter.INSTANCE,
+            new HttpRequestHeadersSetter(),
             builder ->
                 builder.addContextCustomizer(
                     (context, requestAndChannel, startAttributes) ->
@@ -40,10 +40,10 @@ public final class NettyClientSingletons {
         Instrumenter.<NettyConnectionRequest, Channel>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, NettyConnectionRequest::spanName)
             .addAttributesExtractor(
-                HttpClientAttributesExtractor.create(NettyConnectHttpAttributesGetter.INSTANCE))
+                HttpClientAttributesExtractor.create(new NettyConnectHttpAttributesGetter()))
             .addAttributesExtractor(
                 HttpClientServicePeerAttributesExtractor.create(
-                    NettyConnectHttpAttributesGetter.INSTANCE, GlobalOpenTelemetry.get()))
+                    new NettyConnectHttpAttributesGetter(), GlobalOpenTelemetry.get()))
             .setSchemaUrl(SchemaUrls.V1_37_0)
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
