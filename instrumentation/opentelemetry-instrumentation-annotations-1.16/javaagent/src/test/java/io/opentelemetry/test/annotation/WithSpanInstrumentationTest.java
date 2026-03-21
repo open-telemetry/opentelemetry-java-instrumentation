@@ -334,7 +334,7 @@ class WithSpanInstrumentationTest {
                     span.hasName("TracedWithSpan.withSpanAttributes")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfying(assertions)));
+                        .hasAttributesSatisfyingExactly(assertions)));
   }
 
   // Needs to be public for ByteBuddy
@@ -380,7 +380,7 @@ class WithSpanInstrumentationTest {
                   span.hasName("GeneratedJava6TestClass.run")
                       .hasKind(SpanKind.INTERNAL)
                       .hasNoParent()
-                      .hasAttributesSatisfying(
+                      .hasAttributesSatisfyingExactly(
                           SemconvCodeStabilityUtil.codeFunctionAssertions(
                               "GeneratedJava6TestClass", "run"));
                 },
