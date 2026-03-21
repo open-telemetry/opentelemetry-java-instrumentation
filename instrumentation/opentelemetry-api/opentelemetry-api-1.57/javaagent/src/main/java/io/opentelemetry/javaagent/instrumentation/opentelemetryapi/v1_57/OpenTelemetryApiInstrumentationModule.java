@@ -16,9 +16,9 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class OpenTelemetryApInstrumentationModule extends InstrumentationModule
+public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
-  public OpenTelemetryApInstrumentationModule() {
+  public OpenTelemetryApiInstrumentationModule() {
     super("opentelemetry-api", "opentelemetry-api-1.57");
   }
 
