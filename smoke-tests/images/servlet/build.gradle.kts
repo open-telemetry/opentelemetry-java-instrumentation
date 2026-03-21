@@ -181,15 +181,16 @@ val targets = mapOf(
 // Tomcat covers all JDKs (hotspot), TomEE covers all JDKs (openj9),
 // other servers test only their minimum supported JDK on hotspot.
 // AppServerTest.skipIfNotReduced() applies the same rules at test time.
-fun reduceTargets(full: Map<String, List<ImageTarget>>): Map<String, List<ImageTarget>> {
-  return full.mapValues { (server, matrices) ->
-    when (server) {
-      "tomcat" -> matrices.map { it.copy(vm = listOf("hotspot")) }
-      "tomee" -> matrices.map { it.copy(vm = listOf("openj9")) }
-      "websphere" -> matrices
-      else -> matrices.map { it.copy(vm = listOf("hotspot"), jdk = listOf(it.jdk.first())) }
-        .distinctBy { it.version to it.jdk to it.vm to it.war }
-    }
+fun reduceTargets(full: Map<String, List<ImageTarget>>): Map<String, List<ImageTarget>> = full.mapValues { (server, matrices) ->
+  when (server) {
+    "tomcat" -> matrices.map { it.copy(vm = listOf("hotspot")) }
+
+    "tomee" -> matrices.map { it.copy(vm = listOf("openj9")) }
+
+    "websphere" -> matrices
+
+    else -> matrices.map { it.copy(vm = listOf("hotspot"), jdk = listOf(it.jdk.first())) }
+      .distinctBy { it.version to it.jdk to it.vm to it.war }
   }
 }
 
