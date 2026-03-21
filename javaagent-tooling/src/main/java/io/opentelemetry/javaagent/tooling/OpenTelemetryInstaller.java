@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.tooling;
 import static java.util.Arrays.asList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedConfigProvider;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
@@ -49,7 +48,6 @@ public final class OpenTelemetryInstaller {
     }
 
     setForceFlush(sdk);
-    SemconvStability.configure(sdk);
     GlobalOpenTelemetry.set(sdk);
 
     return SdkAutoconfigureAccess.create(
