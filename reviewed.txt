@@ -316,3 +316,4 @@ netty-common-4.0:library
 okhttp-2.2:javaagent
 okhttp-3.0:library
 okhttp-3.0:javaagent
+openai-java-1.1:javaagent
