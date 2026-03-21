@@ -3248,7 +3248,7 @@ libraries:
     scope:
       name: io.opentelemetry.clickhouse-client-v1-0.5
     javaagent_target_versions:
-    - com.clickhouse.client:clickhouse-client:[0.5.0,)
+    - com.clickhouse:clickhouse-client:[0.5.0,)
     configurations:
     - name: otel.instrumentation.common.db-statement-sanitizer.enabled
       description: Enables statement sanitization for database queries.
@@ -6527,7 +6527,7 @@ libraries:
     scope:
       name: io.opentelemetry.jaxws-metro-2.2
     javaagent_target_versions:
-    - com.sun.xml.ws:jaxws-rt:[2.2.0.1,)
+    - com.sun.xml.ws:jaxws-rt:[2.2,)
     configurations:
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
       description: Enables the creation of experimental controller spans.
