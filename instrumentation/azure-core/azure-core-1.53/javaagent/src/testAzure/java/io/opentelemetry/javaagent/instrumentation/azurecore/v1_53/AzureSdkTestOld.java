@@ -28,7 +28,7 @@ class AzureSdkTestOld {
 
   @Test
   void testHelperClassesInjected() {
-    com.azure.core.util.tracing.Tracer azTracer = createAzTracer();
+    Tracer azTracer = createAzTracer();
     assertThat(azTracer.isEnabled()).isTrue();
 
     assertThat(azTracer.getClass().getName())
@@ -39,7 +39,7 @@ class AzureSdkTestOld {
 
   @Test
   void testSpan() {
-    com.azure.core.util.tracing.Tracer azTracer = createAzTracer();
+    Tracer azTracer = createAzTracer();
     Context context = azTracer.start("hello", Context.NONE);
     azTracer.end(null, null, context);
 
@@ -53,9 +53,8 @@ class AzureSdkTestOld {
                         .hasAttributes(Attributes.empty())));
   }
 
-  private static com.azure.core.util.tracing.Tracer createAzTracer() {
-    Iterable<com.azure.core.util.tracing.Tracer> tracers =
-        ServiceLoader.load(com.azure.core.util.tracing.Tracer.class);
+  private static Tracer createAzTracer() {
+    Iterable<Tracer> tracers = ServiceLoader.load(Tracer.class);
     Iterator<Tracer> it = tracers.iterator();
     return it.hasNext() ? it.next() : null;
   }
