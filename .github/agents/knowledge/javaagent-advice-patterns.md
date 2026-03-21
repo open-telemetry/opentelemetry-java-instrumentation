@@ -35,6 +35,10 @@ public class MyAdvice {
 Add `@SuppressWarnings("unused")` to advice classes — they are invoked by ByteBuddy, not by
 direct Java calls, so IDEs may flag them as unused.
 
+**Always place `@SuppressWarnings("unused")` at the class level, not on individual methods.**
+Moving it to method level is not an improvement — the entire class is effectively unused from
+the IDE's perspective, and per-method placement is inconsistent with the rest of the codebase.
+
 ## Advice Methods Must Be Static
 
 All `@Advice.OnMethodEnter` and `@Advice.OnMethodExit` methods **must be `static`**. ByteBuddy
@@ -130,7 +134,7 @@ the instrumentation automatically rather than letting it fail at runtime.
 ## What to Flag in Review
 
 - **Advice class is a top-level file** instead of a static nested class inside the `TypeInstrumentation` — move it inside.
-- **Advice class missing `@SuppressWarnings("unused")`** — ByteBuddy invokes it reflectively; IDEs will flag it as dead code without the annotation.
+- **Advice class missing `@SuppressWarnings("unused")`** — ByteBuddy invokes it reflectively; IDEs will flag it as dead code without the annotation. Always place the annotation **at the class level**, never moved down to individual methods.
 - **`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` method is not `static`** — advice methods must be static.
 - **Advice class has instance fields** — advice classes are never instantiated; state must not be stored on them.
 - **`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` missing `suppress = Throwable.class`** when the method has a non-trivial body (library calls, collection iteration, reflection). Exceptions: `instrumentation/internal/` infrastructure code and test sources.
