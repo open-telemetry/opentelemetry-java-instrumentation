@@ -23,8 +23,7 @@ final class ConnectionPoolMetrics {
   private static final Map<UniversalConnectionPool, BatchCallback> dataSourceMetrics =
       new ConcurrentHashMap<>();
 
-  public static void registerMetrics(
-      OpenTelemetry openTelemetry, UniversalConnectionPool connectionPool) {
+  static void registerMetrics(OpenTelemetry openTelemetry, UniversalConnectionPool connectionPool) {
     dataSourceMetrics.computeIfAbsent(
         connectionPool, (unused) -> createMeters(openTelemetry, connectionPool));
   }
@@ -59,7 +58,7 @@ final class ConnectionPoolMetrics {
         pendingRequestsForConnection);
   }
 
-  public static void unregisterMetrics(UniversalConnectionPool connectionPool) {
+  static void unregisterMetrics(UniversalConnectionPool connectionPool) {
     BatchCallback callback = dataSourceMetrics.remove(connectionPool);
     if (callback != null) {
       callback.close();
