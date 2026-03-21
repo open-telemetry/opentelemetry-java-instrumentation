@@ -50,7 +50,7 @@ public final class ServerContexts {
   }
 
   public ServerContext peekLast() {
-    return serverContexts.peekFirst();
+    return serverContexts.peekLast();
   }
 
   public ServerContext pollFirst() {
