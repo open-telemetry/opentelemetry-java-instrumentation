@@ -14,16 +14,17 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 import okhttp3.Request;
 
 public class TracingApiCallback<T> implements ApiCallback<T> {
-  private final ApiCallback<T> delegate;
+  @Nullable private final ApiCallback<T> delegate;
   private final Context parentContext;
   private final Context context;
   private final Request request;
 
   public TracingApiCallback(
-      ApiCallback<T> delegate, Context parentContext, Context context, Request request) {
+      @Nullable ApiCallback<T> delegate, Context parentContext, Context context, Request request) {
     this.delegate = delegate;
     this.parentContext = parentContext;
     this.context = context;
