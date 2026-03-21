@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.instrumentation.methods.MethodSingletons.getBootstrapLoader;
 import static io.opentelemetry.javaagent.instrumentation.methods.MethodSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.any;
+import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.none;
@@ -67,7 +68,9 @@ public class MethodInstrumentation implements TypeInstrumentation {
       SpanKind spanKind = entry.getKey();
       Collection<String> names = entry.getValue();
       transformer.applyAdviceToMethod(
-          namedOneOf(names.toArray(new String[0])),
+          // isMethod() ensures this doesn't match constructors
+          // see https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13949
+          isMethod().and(namedOneOf(names.toArray(new String[0]))),
           mapping ->
               mapping
                   .bind(
