@@ -63,6 +63,7 @@ class TracingCallFactory implements Call.Factory {
     return contextsByRequest.get(request);
   }
 
+  @Nullable
   @NoMuzzle
   private static Context getContextFromRequestTag(Request request) {
     return request.tag(Context.class);
