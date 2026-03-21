@@ -444,7 +444,6 @@ jobs:
           cache-read-only: true
 
       - name: Build
-        if: matrix.os != 'windows-latest'
         env:
           DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
         shell: bash
@@ -453,55 +452,12 @@ jobs:
         # retries on Windows work around transient Docker/HCS failures (connection refused, CreateComputeSystem errors)
         run: .github/scripts/retry.sh ${{ matrix.os == 'windows-latest' && 3 || 1 }} ./gradlew :smoke-tests:test -PsmokeTestSuite=none --no-daemon ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
-      - name: Build
-        if: matrix.os == 'windows-latest'
-        env:
-          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
-        shell: bash
-        # running suite "none" compiles everything needed by smoke tests without executing any tests
-        # --no-daemon is used to free up the memory from the build step before running the test step below
-        # retries work around transient Docker/HCS failures on Windows (connection refused, CreateComputeSystem errors)
-        run: |
-          for attempt in 1 2 3; do
-            echo "Attempt $attempt of 3"
-            if ./gradlew :smoke-tests:test -PsmokeTestSuite=none --no-daemon ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}; then
-              exit 0
-            fi
-            echo "Attempt $attempt failed"
-            if [ $attempt -lt 3 ]; then
-              echo "Retrying in 10 seconds..."
-              sleep 10
-            fi
-          done
-          exit 1
-
       - name: Test
-        if: matrix.os != 'windows-latest'
         env:
           DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
         shell: bash
         # retries on Windows work around transient Docker/HCS failures (connection refused, CreateComputeSystem errors)
         run: .github/scripts/retry.sh ${{ matrix.os == 'windows-latest' && 3 || 1 }} ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }} ${{ inputs.skip-openj9-tests && matrix.smoke-test-suite != 'websphere' && '-PskipOpenJ9SmokeTests=true' || '' }} ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
-
-      - name: Test
-        if: matrix.os == 'windows-latest'
-        env:
-          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
-        shell: bash
-        # retries work around transient Docker/HCS failures on Windows (connection refused, CreateComputeSystem errors)
-        run: |
-          for attempt in 1 2 3; do
-            echo "Attempt $attempt of 3"
-            if ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }} ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}; then
-              exit 0
-            fi
-            echo "Attempt $attempt failed"
-            if [ $attempt -lt 3 ]; then
-              echo "Retrying in 10 seconds..."
-              sleep 10
-            fi
-          done
-          exit 1
 
       - name: Build scan
         if: ${{ !cancelled() && hashFiles('build-scan.txt') != '' }}
