@@ -48,6 +48,9 @@ public class ServerEndpoint {
       new ServerEndpoint("AUTH_ERROR", "basicsecured/endpoint", 401, null);
   public static final ServerEndpoint INDEXED_CHILD =
       new ServerEndpoint("INDEXED_CHILD", "child", 200, "success");
+  public static final ServerEndpoint INDEXED_CHILD_FROM_REQUEST_BODY =
+      new ServerEndpoint(
+          "INDEXED_CHILD_FROM_REQUEST_BODY", "child-from-request-body", 200, "success");
 
   public static final String ID_ATTRIBUTE_NAME = "test.request.id";
   public static final String ID_PARAMETER_NAME = "id";
@@ -132,6 +135,12 @@ public class ServerEndpoint {
       if (value != null) {
         Span.current().setAttribute(ID_ATTRIBUTE_NAME, Long.parseLong(value));
       }
+    }
+  }
+
+  public void collectSpanAttributesFromBody(String body) {
+    if (this == INDEXED_CHILD_FROM_REQUEST_BODY && body != null) {
+      Span.current().setAttribute(ID_ATTRIBUTE_NAME, Long.parseLong(body));
     }
   }
 

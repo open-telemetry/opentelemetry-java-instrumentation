@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.undertow;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD_FROM_REQUEST_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
@@ -111,7 +112,24 @@ class UndertowServerDispatchTest extends AbstractHttpServerTest<Undertow> {
                                           exchange
                                               .getResponseSender()
                                               .send(INDEXED_CHILD.getBody());
-                                        }))))
+                                        })))
+                    .addExactPath(
+                        INDEXED_CHILD_FROM_REQUEST_BODY.rawPath(),
+                        exchange ->
+                            exchange.dispatch(
+                                k -> {
+                                  exchange.startBlocking();
+                                  controller(
+                                      INDEXED_CHILD_FROM_REQUEST_BODY,
+                                      () -> {
+                                        bodyConsumer(
+                                            INDEXED_CHILD_FROM_REQUEST_BODY,
+                                            readRequestBody(exchange.getInputStream()));
+                                        exchange
+                                            .getResponseSender()
+                                            .send(INDEXED_CHILD_FROM_REQUEST_BODY.getBody());
+                                      });
+                                })))
             .build();
     server.start();
     return server;
@@ -129,6 +147,7 @@ class UndertowServerDispatchTest extends AbstractHttpServerTest<Undertow> {
     // throwing exception from dispatched task just makes the request time out
     options.setTestException(false);
     options.setHasResponseCustomizer(endpoint -> true);
+    options.setTestHttpBodyPipelining(true);
 
     options.setHttpAttributes(endpoint -> singleton(NETWORK_PEER_PORT));
   }
