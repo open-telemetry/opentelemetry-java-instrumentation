@@ -200,6 +200,34 @@ Use `@Nullable` annotations accurately throughout the codebase:
   | `TextMapGetter<CarrierT>` | `keys(CarrierT)` | none |
   | `TextMapSetter<CarrierT>` | `set(CarrierT, String, String)` | `carrier` is `@Nullable` |
 
+  **Exception — pure delegation**: when the entire body of the overriding method is a
+  single delegation to another `TextMapGetter` or `TextMapSetter` instance (i.e., the
+  implementation contains no carrier-specific logic and simply calls
+  `delegate.get(carrier, key)`, `delegate.getAll(carrier, key)`, or
+  `delegate.set(carrier, key, value)`), do **not** add a null guard for `carrier`.
+  The delegate is itself a `TextMapGetter`/`TextMapSetter` and must handle `null` carrier
+  per the same contract. Just annotate the parameter with `@Nullable` and pass
+  `carrier` straight through:
+
+  ```java
+  // CORRECT — pure delegation, no null guard needed
+  @Override
+  @Nullable
+  public String get(@Nullable C carrier, String key) {
+    return delegate.get(carrier, key);
+  }
+
+  // WRONG — redundant null guard before delegation
+  @Override
+  @Nullable
+  public String get(@Nullable C carrier, String key) {
+    if (carrier == null) {
+      return null;
+    }
+    return delegate.get(carrier, key);
+  }
+  ```
+
 ## [Semconv] Constants by Module Type
 
 - `library/src/main/`: incubating semconv constants (from
