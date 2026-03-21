@@ -157,6 +157,9 @@ Auto-fix boundaries:
   - `hasAttributesSatisfying(...)` calls in test assertions — replace with
     `hasAttributesSatisfyingExactly(...)` because it is more precise (the non-exact
     variant silently ignores unexpected attributes)
+  - `hasTotalAttributeCount(...)` paired with `hasAttributesSatisfyingExactly(...)` in
+    the same assertion chain — `hasTotalAttributeCount` is redundant because the exact
+    variant already validates the complete attribute set; remove it
   - non-empty `hasAttributes(...)` calls in test assertions — replace with
     `hasAttributesSatisfyingExactly(...)` for consistency with the rest of the codebase.
     Do **not** convert `hasAttributes(Attributes.empty())` — that is acceptable as-is.

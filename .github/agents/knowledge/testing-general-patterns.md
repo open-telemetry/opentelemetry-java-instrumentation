@@ -17,6 +17,9 @@
   because it is more precise — the non-exact variant silently ignores unexpected attributes.
   Prefer `hasAttributesSatisfyingExactly` over non-empty `hasAttributes(...)` for consistency.
   `hasAttributes(Attributes.empty())` is acceptable.
+  `hasTotalAttributeCount(...)` is redundant when paired with
+  `hasAttributesSatisfyingExactly(...)` in the same assertion chain — the exact variant
+  already validates the total attribute count. Remove the `hasTotalAttributeCount` call.
 
 ## `satisfies()` Lambda Parameters
 
