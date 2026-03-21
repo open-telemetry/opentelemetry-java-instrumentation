@@ -35,6 +35,7 @@ Prefer built-in AssertJ collection/list assertions over extracting values manual
 | --- | --- |
 | `assertThat(list.size()).isEqualTo(N)` | `assertThat(list).hasSize(N)` |
 | `assertThat(list.isEmpty()).isTrue()` | `assertThat(list).isEmpty()` |
+| `assertThat(list).hasSize(0)` | `assertThat(list).isEmpty()` |
 | `assertThat(list.contains(x)).isTrue()` | `assertThat(list).contains(x)` |
 | sequential `assertThat(list.get(0)).isEqualTo(a)` / `assertThat(list.get(1)).isEqualTo(b)` checking every element | `assertThat(list).containsExactly(a, b)` |
 
