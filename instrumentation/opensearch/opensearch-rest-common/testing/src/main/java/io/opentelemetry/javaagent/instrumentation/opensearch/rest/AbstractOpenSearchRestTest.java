@@ -68,12 +68,25 @@ public abstract class AbstractOpenSearchRestTest {
     opensearch.start();
     httpHost = URI.create(opensearch.getHttpHostAddress());
 
-    client = buildRestClient();
+    try {
+      client = buildRestClient();
+    } catch (Exception e) {
+      opensearch.stop();
+      throw e;
+    }
   }
 
   @AfterAll
-  void tearDown() {
-    opensearch.stop();
+  void tearDown() throws IOException {
+    try {
+      if (client != null) {
+        client.close();
+      }
+    } finally {
+      if (opensearch != null) {
+        opensearch.stop();
+      }
+    }
   }
 
   @Test
