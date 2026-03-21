@@ -188,6 +188,13 @@ Auto-fix boundaries:
     When the value type **matches** the `AttributeKey` type parameter (e.g.,
     `Boolean` → `AttributeKey<Boolean>`, `Long` → `AttributeKey<Long>`), the generic
     `@Nullable T` overload is selected directly, null is safe, and the guard is redundant.
+  - fields (including `static final` fields) that are assigned from a `@Nullable`-returning
+    method, explicitly set to `null`, or left null-initialized — add `@Nullable` to the field
+    declaration per the style guide. In PR mode, when changed lines reference the field in a
+    null-safe way (e.g., a null guard was added), treat the field declaration as a "minimal
+    nearby edit required for a safe fix" and annotate it even if the declaration itself was
+    not in the diff.
+    **Exception — test files**: do not add `@Nullable` in test code.
   - defensive `if (param == null)` checks on parameters not annotated `@Nullable` —
     these contradict the framework's nullability contract; remove the guard. Conversely,
     if a call site passes `null` or a method returns `null`, add `@Nullable` to the
