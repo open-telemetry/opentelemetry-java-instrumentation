@@ -346,3 +346,4 @@ opentelemetry-api-1.56:javaagent
 opentelemetry-api-1.59:javaagent
 opentelemetry-api-1.57:javaagent
 opentelemetry-extension-annotations-1.0:javaagent
+opentelemetry-extension-kotlin-1.0:javaagent
