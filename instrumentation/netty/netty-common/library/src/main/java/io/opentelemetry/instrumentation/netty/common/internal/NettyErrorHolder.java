@@ -20,7 +20,7 @@ public final class NettyErrorHolder implements ImplicitContextKeyed {
 
   private static final ContextKey<NettyErrorHolder> KEY = named("opentelemetry-netty-error");
 
-  private volatile Throwable error;
+  @Nullable private volatile Throwable error;
 
   private NettyErrorHolder() {}
 
