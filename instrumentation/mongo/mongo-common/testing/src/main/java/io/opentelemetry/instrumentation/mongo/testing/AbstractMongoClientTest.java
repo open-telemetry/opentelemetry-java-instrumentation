@@ -126,7 +126,13 @@ public abstract class AbstractMongoClientTest<T> {
   @Test
   @DisplayName("test port open")
   void testPortOpen() {
-    assertThatNoException().isThrownBy(() -> new Socket(host, port));
+    assertThatNoException()
+        .isThrownBy(
+            () -> {
+              try (Socket ignored = new Socket(host, port)) {
+                // verify port is reachable
+              }
+            });
   }
 
   @Test
