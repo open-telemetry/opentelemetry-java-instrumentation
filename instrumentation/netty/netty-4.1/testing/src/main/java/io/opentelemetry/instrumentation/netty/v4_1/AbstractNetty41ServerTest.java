@@ -82,6 +82,7 @@ public abstract class AbstractNetty41ServerTest extends AbstractHttpServerTest<E
       bootstrap.bind(port).sync();
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
+      throw new IllegalStateException("Interrupted while binding Netty server", e);
     }
 
     return eventLoopGroup;
