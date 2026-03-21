@@ -330,3 +330,4 @@ opensearch-rest-common:testing
 opentelemetry-api-1.0:javaagent
 opentelemetry-api-1.0:testing
 opentelemetry-api-1.15:javaagent
+opentelemetry-api-1.10:javaagent
