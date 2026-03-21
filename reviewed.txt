@@ -343,3 +343,4 @@ opentelemetry-api-1.4:javaagent
 opentelemetry-api-1.52:javaagent
 opentelemetry-api-1.50:javaagent
 opentelemetry-api-1.56:javaagent
+opentelemetry-api-1.59:javaagent
