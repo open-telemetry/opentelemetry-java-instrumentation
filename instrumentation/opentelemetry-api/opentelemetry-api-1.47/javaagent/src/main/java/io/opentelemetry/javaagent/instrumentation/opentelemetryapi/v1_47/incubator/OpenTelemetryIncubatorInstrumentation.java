@@ -30,9 +30,10 @@ public class OpenTelemetryIncubatorInstrumentation implements TypeInstrumentatio
         none(), OpenTelemetryIncubatorInstrumentation.class.getName() + "$InitAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class InitAdvice {
     @Advice.OnMethodEnter
-    @SuppressWarnings({"ReturnValueIgnored", "unused"})
+    @SuppressWarnings("ReturnValueIgnored")
     public static void init() {
       // the sole purpose of this advice is to ensure that ApplicationLoggerFactory147Incubator is
       // recognized as helper class and injected into class loader
