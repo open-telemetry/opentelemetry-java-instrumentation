@@ -447,9 +447,11 @@ jobs:
         if: matrix.os != 'windows-latest'
         env:
           DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
+        shell: bash
         # running suite "none" compiles everything needed by smoke tests without executing any tests
         # --no-daemon is used to free up the memory from the build step before running the test step below
-        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=none --no-daemon ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+        # retries on Windows work around transient Docker/HCS failures (connection refused, CreateComputeSystem errors)
+        run: .github/scripts/retry.sh ${{ matrix.os == 'windows-latest' && 3 || 1 }} ./gradlew :smoke-tests:test -PsmokeTestSuite=none --no-daemon ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Build
         if: matrix.os == 'windows-latest'
@@ -477,12 +479,9 @@ jobs:
         if: matrix.os != 'windows-latest'
         env:
           DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
-        run: >
-          ./gradlew
-          :smoke-tests:test
-          -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
-          ${{ inputs.skip-openj9-tests && matrix.smoke-test-suite != 'websphere' && '-PskipOpenJ9SmokeTests=true' || '' }}
-          ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+        shell: bash
+        # retries on Windows work around transient Docker/HCS failures (connection refused, CreateComputeSystem errors)
+        run: .github/scripts/retry.sh ${{ matrix.os == 'windows-latest' && 3 || 1 }} ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }} ${{ inputs.skip-openj9-tests && matrix.smoke-test-suite != 'websphere' && '-PskipOpenJ9SmokeTests=true' || '' }} ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Test
         if: matrix.os == 'windows-latest'
