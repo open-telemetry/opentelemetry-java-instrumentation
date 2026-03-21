@@ -8,8 +8,7 @@ package io.opentelemetry.instrumentation.nats.v2_17.internal;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import javax.annotation.Nullable;
 
-enum NatsRequestTextMapSetter implements TextMapSetter<NatsRequest> {
-  INSTANCE;
+final class NatsRequestTextMapSetter implements TextMapSetter<NatsRequest> {
 
   @Override
   /* Can not work if getHeaders doesn't return a writable structure. */

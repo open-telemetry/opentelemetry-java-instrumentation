@@ -19,7 +19,7 @@ public final class NatsTelemetry {
 
   /** Returns a new {@link NatsTelemetry} configured with the given {@link OpenTelemetry}. */
   public static NatsTelemetry create(OpenTelemetry openTelemetry) {
-    return new NatsTelemetryBuilder(openTelemetry).build();
+    return builder(openTelemetry).build();
   }
 
   /** Returns a new {@link NatsTelemetryBuilder} configured with the given {@link OpenTelemetry}. */
