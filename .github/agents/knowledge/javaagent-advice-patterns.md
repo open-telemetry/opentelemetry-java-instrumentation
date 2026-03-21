@@ -117,6 +117,57 @@ Keep `suppress = Throwable.class` in both cases — it is always required.
 When reviewing, **do not flag** these patterns. Focus on advice methods with non-trivial
 bodies (library calls, collection iteration, reflection) that are missing `suppress`.
 
+### When omitting `suppress` is also acceptable — provably throw-free bodies
+
+For advice methods whose bodies **provably cannot throw** (returning a literal value, reading
+a constant, or a single field access with no possibility of NPE), `suppress = Throwable.class`
+adds no value and should be omitted rather than added:
+
+```java
+// ✅ Omit suppress — return literal, cannot throw
+@AssignReturned.ToReturned
+@Advice.OnMethodExit
+public static boolean methodExit() {
+  return true;
+}
+
+// ✅ Keep suppress — calls into library code that may throw
+@AssignReturned.ToReturned
+@Advice.OnMethodExit(suppress = Throwable.class)
+public static OpenTelemetry methodExit() {
+  return application.io.opentelemetry.api.GlobalOpenTelemetry.get();
+}
+```
+
+**Do not add `suppress = Throwable.class`** when writing or reviewing such trivially-safe advice
+methods. Equally, **do not flag the absence of `suppress`** on these methods as a review issue.
+
+### Helper-injection-only advice (`none()` selector) — `suppress` is meaningless
+
+Some instrumentations use a "dummy" advice class solely to force helper class injection.
+The `transform()` call uses `none()` as the method matcher, so the advice **never runs**:
+
+```java
+@Override
+public void transform(TypeTransformer transformer) {
+  transformer.applyAdviceToMethod(
+      none(), getClass().getName() + "$InitAdvice");
+}
+
+@SuppressWarnings({"ReturnValueIgnored", "unused"})
+public static class InitAdvice {
+  @Advice.OnMethodEnter   // no suppress needed — this code is never invoked
+  public static void init() {
+    // ensures helper class is recognized and injected into classloader
+    SomeHelperClass.class.getName();
+  }
+}
+```
+
+Because `none()` matches no methods, ByteBuddy never inlines this advice into anything.
+`suppress = Throwable.class` on such a method is entirely meaningless — **do not add it**,
+and **do not flag its absence** during review.
+
 ## Never Throw Exceptions in Javaagent Code
 
 Javaagent instrumentations must never throw exceptions. The goal is to be invisible to the
@@ -133,7 +184,7 @@ the instrumentation automatically rather than letting it fail at runtime.
 - **Advice class missing `@SuppressWarnings("unused")`** — ByteBuddy invokes it reflectively; IDEs will flag it as dead code without the annotation.
 - **`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` method is not `static`** — advice methods must be static.
 - **Advice class has instance fields** — advice classes are never instantiated; state must not be stored on them.
-- **`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` missing `suppress = Throwable.class`** when the method has a non-trivial body (library calls, collection iteration, reflection). Exceptions: `instrumentation/internal/` infrastructure code and test sources.
+- **`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` missing `suppress = Throwable.class`** when the method has a non-trivial body (library calls, collection iteration, reflection). Exceptions: `instrumentation/internal/` infrastructure code, test sources, and methods whose bodies provably cannot throw (e.g., `return true;`, returning a literal or a single constant). Do not add or flag `suppress` on provably throw-free bodies.
 - **Exception thrown in advice code or a helper called from advice** — javaagent code must never throw; use `suppress = Throwable.class` as the safety net.
 - **`@Advice.OnMethodExit` method named `onEnter`** (or vice versa) — the method name should match the annotation. A mismatch is a copy-paste bug that compiles but confuses readers and may mask intent errors.
 - **`.class.getName()` used in `transform()` to reference advice** — see `javaagent-module-patterns.md` for the correct `getClass().getName()` pattern. Flag both `InnerAdvice.class.getName()` and `OuterInstrumentation.class.getName() + "$InnerAdvice"` — any `.class` literal in a `transform()` method triggers unwanted class loading.
