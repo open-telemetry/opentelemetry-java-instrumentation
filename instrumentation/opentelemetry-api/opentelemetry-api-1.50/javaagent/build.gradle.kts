@@ -35,6 +35,10 @@ testing {
 }
 
 tasks {
+  check {
+    dependsOn(testing.suites)
+  }
+
   test {
     jvmArgs("-Dotel.instrumentation.opentelemetry-api-incubator-1.50.enabled=false")
   }
