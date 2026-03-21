@@ -312,3 +312,4 @@ netty-4.1:javaagent
 netty-4.1:testing
 netty-common-4.0:javaagent
 netty-common:library
+netty-common-4.0:library
