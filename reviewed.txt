@@ -297,3 +297,4 @@ mongo-3.1:javaagent
 micrometer-1.5:testing
 mongo-3.1:library
 mongo-3.1:testing
+mongo-3.7:javaagent
