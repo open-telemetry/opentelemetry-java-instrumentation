@@ -16,9 +16,8 @@ import java.net.SocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum NettyConnectHttpAttributesGetter
+final class NettyConnectHttpAttributesGetter
     implements HttpClientAttributesGetter<NettyConnectionRequest, Channel> {
-  INSTANCE;
 
   @Nullable
   @Override
