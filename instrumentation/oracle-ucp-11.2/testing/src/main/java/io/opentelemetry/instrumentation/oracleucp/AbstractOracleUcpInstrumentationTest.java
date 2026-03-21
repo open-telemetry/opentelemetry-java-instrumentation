@@ -72,10 +72,10 @@ public abstract class AbstractOracleUcpInstrumentationTest {
     }
 
     // when
-    Connection connection = connectionPool.getConnection();
-    configure(connectionPool);
-    MILLISECONDS.sleep(100);
-    connection.close();
+    try (Connection connection = connectionPool.getConnection()) {
+      configure(connectionPool);
+      MILLISECONDS.sleep(100);
+    }
 
     // then
     DbConnectionPoolMetricsAssertions.create(
@@ -90,8 +90,8 @@ public abstract class AbstractOracleUcpInstrumentationTest {
 
     // when
     // this one too shouldn't cause any problems when called more than once
-    connectionPool.getConnection().close();
-    connectionPool.getConnection().close();
+    try (Connection connection = connectionPool.getConnection()) {}
+    try (Connection connection = connectionPool.getConnection()) {}
 
     shutdown(connectionPool);
     UniversalConnectionPoolManagerImpl.getUniversalConnectionPoolManager()
