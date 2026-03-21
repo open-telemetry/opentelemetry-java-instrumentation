@@ -56,4 +56,6 @@ jobs:
 
       - name: Build Windows docker images
         if: matrix.os == 'windows-latest'
-        run: ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}
+        shell: bash
+        # retries on Windows work around transient Docker/HCS failures (connection refused, CreateComputeSystem errors)
+        run: .github/scripts/retry.sh 3 ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}
