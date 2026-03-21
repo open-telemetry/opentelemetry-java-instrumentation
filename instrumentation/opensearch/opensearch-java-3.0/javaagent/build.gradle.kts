@@ -54,6 +54,10 @@ tasks {
       includeTestsMatching("OpenSearchDisabledCaptureSearchQueryTest")
     }
     jvmArgs("-Dotel.instrumentation.opensearch.capture-search-query=false")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.opensearch.capture-search-query=false",
+    )
   }
 
   val testStableSemconv by registering(Test::class) {

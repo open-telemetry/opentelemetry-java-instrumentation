@@ -116,7 +116,6 @@ abstract class AbstractOpenSearchQueryTest {
         .setHttpClientConfigCallback(
             httpClientBuilder ->
                 httpClientBuilder
-                    .setDefaultCredentialsProvider(credentialsProvider)
                     .setConnectionManager(connectionManager)
                     .setDefaultCredentialsProvider(credentialsProvider))
         .build();
