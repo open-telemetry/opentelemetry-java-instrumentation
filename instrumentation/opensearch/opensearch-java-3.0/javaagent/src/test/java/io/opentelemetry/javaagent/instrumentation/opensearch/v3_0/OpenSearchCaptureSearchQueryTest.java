@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -17,7 +18,6 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -77,7 +77,7 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
                                         url.asString()
                                             .startsWith(httpHost + "/" + INDEX_NAME + "/_search")),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                                equalTo(PEER_SERVICE, "test-peer-service"))));
+                                equalTo(maybeStablePeerService(), "test-peer-service"))));
   }
 
   @Test
@@ -121,7 +121,7 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
 
     MsearchResponse<TestDocument> msearchResponse =
         openSearchClient.msearch(msearchRequest, TestDocument.class);
-    assertThat(msearchResponse.responses().size()).isGreaterThan(0);
+    assertThat(msearchResponse.responses()).hasSizeGreaterThan(0);
 
     getTesting()
         .waitAndAssertTraces(
@@ -152,7 +152,7 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
                                             .startsWith(
                                                 httpHost + "/" + "_msearch?typed_keys=true")),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                                equalTo(PEER_SERVICE, "test-peer-service"))));
+                                equalTo(maybeStablePeerService(), "test-peer-service"))));
   }
 
   @Test
@@ -189,6 +189,6 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
                                         url.asString()
                                             .startsWith(httpHost + "/" + INDEX_NAME + "/_doc")),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 201L),
-                                equalTo(PEER_SERVICE, "test-peer-service"))));
+                                equalTo(maybeStablePeerService(), "test-peer-service"))));
   }
 }
