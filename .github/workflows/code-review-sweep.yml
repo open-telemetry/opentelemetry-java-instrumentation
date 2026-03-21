@@ -59,7 +59,7 @@ jobs:
     env:
       MODULE_DIR: ${{ matrix.module_dir }}
       SHORT_NAME: ${{ matrix.short_name }}
-      MODELS: "gpt-5.3-codex claude-sonnet-4.6"
+      MODELS: "gpt-5.4 claude-sonnet-4.6"
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
