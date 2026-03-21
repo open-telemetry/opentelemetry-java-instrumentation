@@ -43,7 +43,7 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
             .and(takesArguments(2))
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, byte[].class)),
-        ConnectionPublishInstrumentation.class.getName() + "$PublishBodyAdvice");
+        getClass().getName() + "$PublishBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("publish"))
@@ -51,7 +51,7 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, named("io.nats.client.impl.Headers")))
             .and(takesArgument(2, byte[].class)),
-        ConnectionPublishInstrumentation.class.getName() + "$PublishHeadersBodyAdvice");
+        getClass().getName() + "$PublishHeadersBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("publish"))
@@ -59,7 +59,7 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, String.class))
             .and(takesArgument(2, byte[].class)),
-        ConnectionPublishInstrumentation.class.getName() + "$PublishReplyToBodyAdvice");
+        getClass().getName() + "$PublishReplyToBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("publish"))
@@ -68,13 +68,13 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, String.class))
             .and(takesArgument(2, named("io.nats.client.impl.Headers")))
             .and(takesArgument(3, byte[].class)),
-        ConnectionPublishInstrumentation.class.getName() + "$PublishReplyToHeadersBodyAdvice");
+        getClass().getName() + "$PublishReplyToHeadersBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("publish"))
             .and(takesArguments(1))
             .and(takesArgument(0, named("io.nats.client.Message"))),
-        ConnectionPublishInstrumentation.class.getName() + "$PublishMessageAdvice");
+        getClass().getName() + "$PublishMessageAdvice");
   }
 
   @SuppressWarnings("unused")
