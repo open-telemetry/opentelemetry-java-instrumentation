@@ -127,9 +127,23 @@ Auto-fix boundaries:
     After adding, verify by running the module's tests.
   - missing version comments on `hasClassesNamed()` landmark classes in existing
     `classLoaderMatcher()` overrides (multi-class checks or `.and(not(...))` chains only) —
-    look up the library version that introduced each class (check muzzle `versions.set(...)`
-    ranges, module directory name, existing code comments, and Javadoc/release notes) and
-    add a `// added in X.Y` or `// removed in X.Y` comment above each class name string.
+    determine each class's **role** (floor vs ceiling) and add the matching comment.
+    First check: does a **newer** sibling instrumentation module exist for this library
+    (e.g., `mongo-4.0` next to `mongo-3.7`)? If so, look at what the newer module checks
+    in *its* `classLoaderMatcher()`. Classes that are present in the newer module's check
+    but absent from the current module's check (or vice versa) reveal a version boundary —
+    the class was likely added or removed between versions.
+    Then determine the comment form for each class:
+    - **Floor class** (proves "at least version X"): look up when the class was **introduced**
+      → comment `// added in X.Y`.
+    - **Ceiling class** (proves "not yet version Y"): look up when the class was **removed**
+      → comment `// removed in Y.Z` (meaning: its presence here ensures we don't match
+      version Y.Z+ where a different module takes over).
+    A ceiling class might have been *introduced* much earlier than the module's target version.
+    Do not use `// added in` for a ceiling class — that is misleading. The relevant fact is
+    when it was **removed**.
+    Sources: muzzle `versions.set(...)` ranges, sibling module `classLoaderMatcher()` checks,
+    module directory names, existing code comments, Javadoc/release notes.
     Do NOT add a `classLoaderMatcher()` override where one does not already exist —
     this method is only for version-boundary detection when muzzle is insufficient,
     not for optimization (use `TypeInstrumentation.classLoaderOptimization()` instead)
