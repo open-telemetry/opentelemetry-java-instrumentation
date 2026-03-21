@@ -27,7 +27,7 @@ public class SqlCommandInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(1, Class.class)).and(takesArgument(2, Method.class)),
-        SqlCommandInstrumentation.class.getName() + "$ConstructorAdvice");
+        getClass().getName() + "$ConstructorAdvice");
   }
 
   @SuppressWarnings("unused")
