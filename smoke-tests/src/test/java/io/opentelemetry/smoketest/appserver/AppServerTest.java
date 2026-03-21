@@ -31,7 +31,6 @@ import io.opentelemetry.testing.internal.armeria.common.HttpMethod;
 import io.opentelemetry.testing.internal.armeria.common.RequestHeaders;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import org.junit.jupiter.api.AfterAll;
@@ -66,41 +65,48 @@ public abstract class AppServerTest extends AbstractSmokeTest<AppServerImage> {
     startWithoutCleanup(new AppServerImage(jdk, serverVersion, isWindows));
   }
 
-  // Reduced smoke test subset for PR builds. The full matrix runs on merge to main.
+  // Reduced smoke test rules for PR builds. The full matrix runs on merge to main.
+  // These rules match reduceTargets() in smoke-tests/images/servlet/build.gradle.kts,
+  // which controls which Docker images are built. Both sides apply the same logic:
   // Tomcat covers all JDKs (hotspot), TomEE covers all JDKs (openj9),
-  // other servers test only their minimum supported JDK on hotspot.
-  // Keep in sync with reduceTargets() in smoke-tests/images/servlet/build.gradle.kts.
-  @SuppressWarnings("NonApiType")
-  private static final Set<String> REDUCED_TESTS =
-      Set.of(
-          // Jetty: hotspot, minimum JDK per version
-          "Jetty9Jdk8", "Jetty10Jdk11", "Jetty11Jdk11", "Jetty12Jdk17",
-          "Jetty11JpmsJdk11",
-          // Liberty: hotspot, minimum JDK per version
-          "Liberty20Jdk8", "Liberty21Jdk8", "Liberty22Jdk8", "Liberty23Jdk8",
-          "LibertyServletOnly21Jdk11", "LibertyServletOnly22Jdk11", "LibertyServletOnly23Jdk11",
-          // Payara: hotspot, minimum JDK per version
-          "Payara52020Jdk8", "Payara52021Jdk8", "Payara6Jdk11",
-          // Tomcat: hotspot, all JDKs (covers JDK version breadth)
-          "Tomcat7Jdk8",
-          "Tomcat8Jdk8", "Tomcat8Jdk11", "Tomcat8Jdk17", "Tomcat8Jdk21", "Tomcat8Jdk25",
-          "Tomcat9Jdk8", "Tomcat9Jdk11", "Tomcat9Jdk17", "Tomcat9Jdk21", "Tomcat9Jdk25",
-          "Tomcat10Jdk11", "Tomcat10Jdk17", "Tomcat10Jdk21", "Tomcat10Jdk25",
-          // TomEE: openj9, all JDKs (covers OpenJ9 breadth)
-          "Tomee70Jdk8Openj9", "Tomee71Jdk8Openj9",
-          "Tomee8Jdk8Openj9", "Tomee8Jdk11Openj9", "Tomee8Jdk17Openj9",
-          "Tomee8Jdk21Openj9", "Tomee8Jdk25Openj9",
-          "Tomee9Jdk11Openj9", "Tomee9Jdk17Openj9", "Tomee9Jdk21Openj9", "Tomee9Jdk25Openj9",
-          // Websphere: already minimal
-          "Websphere8Jdk8Openj9", "Websphere9Jdk8Openj9",
-          // Wildfly: hotspot, minimum JDK per version
-          "Wildfly13Jdk8", "Wildfly17Jdk8", "Wildfly21Jdk8",
-          "Wildfly28Jdk11", "Wildfly29Jdk11", "Wildfly30Jdk11");
-
+  // Websphere is already minimal, other servers test only minimum JDK on hotspot.
   private void skipIfNotReduced() {
-    assumeTrue(
-        REDUCED_TESTS.contains(getClass().getSimpleName()),
-        "Skipped in reduced smoke test mode");
+    var appServer = getClass().getAnnotation(AppServer.class);
+    String jdk = appServer.jdk();
+    boolean isOpenj9 = jdk.contains("-openj9");
+
+    if (this instanceof TomcatSmokeTest) {
+      assumeFalse(isOpenj9, "Reduced mode: Tomcat runs hotspot only");
+      return;
+    }
+    if (this instanceof TomeeSmokeTest) {
+      assumeTrue(isOpenj9, "Reduced mode: TomEE runs openj9 only");
+      return;
+    }
+    if (this instanceof WebsphereSmokeTest) {
+      return;
+    }
+    // All other servers: hotspot only, minimum JDK per server version
+    assumeFalse(isOpenj9, "Reduced mode: hotspot only");
+    assumeTrue(isMinimumJdk(appServer), "Reduced mode: only minimum JDK per server version");
+  }
+
+  private boolean isMinimumJdk(AppServer appServer) {
+    int myJdk = parseJdkVersion(appServer.jdk());
+    for (Class<?> sibling : getClass().getEnclosingClass().getDeclaredClasses()) {
+      AppServer other = sibling.getAnnotation(AppServer.class);
+      if (other != null
+          && other.version().equals(appServer.version())
+          && !other.jdk().contains("-openj9")
+          && parseJdkVersion(other.jdk()) < myJdk) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private static int parseJdkVersion(String jdk) {
+    return Integer.parseInt(jdk.split("-")[0]);
   }
 
   @AfterAll
