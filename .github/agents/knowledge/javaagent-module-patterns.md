@@ -262,9 +262,10 @@ sufficient for optimization.
   `extendsClass(...)` and `implementsInterface(...)` are appropriate when the instrumentation
   targets subclasses or implementors of a type.
 - `transform()` wires method matchers to advice classes via `applyAdviceToMethod()`.
-- Do not add `isMethod()` in method matchers inside `transform()`. `isMethod()` only
-  serves to exclude constructors, but `named(...)` already excludes them because
-  constructors are named `<init>`. Remove `isMethod()` when not needed.
+- `isMethod()` in method matchers inside `transform()` is redundant when the matcher
+  already names a specific, non-empty method — e.g. `named("foo")` or `namedOneOf("foo", "bar")`.
+  Keep `isMethod()` when the name could be empty, since `named("")` matches constructors and
+  class initializers.
 - Reference the advice class using `getClass().getName() + "$InnerClassName"` — not
   `InnerClassName.class.getName()`, `OuterClass.class.getName()`, or a string literal.
   Any `.class.getName()` reference — whether to the inner advice class or the outer

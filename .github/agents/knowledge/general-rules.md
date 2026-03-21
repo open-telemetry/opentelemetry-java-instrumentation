@@ -31,6 +31,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Build | `testcontainersBuildService` declaration | Testcontainers dependency without `usesService` | `gradle-conventions.md` |
 | Style | Prefer instance creation over singletons for stateless interface impls (except on hot paths or Kotlin `object` declarations) | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`, enum/static singletons | — |
 | Style | Remove redundant null guards on attribute puts | `AttributesBuilder.put`, `onStart`, `onEnd`, attribute extraction methods | — |
+| General | No redundant `ByteBuffer.duplicate()` on `Value.getValue()` | `Value.getValue()` with `BYTES` type, `ByteBuffer` handling | — |
 | Style | Nullability correctness — no guards for non-nullable params; add `@Nullable` when null is actually passed/returned/stored; respect upstream SDK `@Nullable` contracts for `TextMapGetter`/`TextMapSetter` | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `*Extractor` implementations, null checks, missing `@Nullable`, fields assigned from `@Nullable` sources | — |
 | Architecture | Library vs javaagent boundaries | Always | — |
 | NewModule | New instrumentation module checklist | New modules | _(inline below)_ |
@@ -227,6 +228,32 @@ Use `@Nullable` annotations accurately throughout the codebase:
     return delegate.get(carrier, key);
   }
   ```
+
+## [General] No Redundant `ByteBuffer.duplicate()` on `Value.getValue()`
+
+The upstream `Value<ByteBuffer>` implementation (`ValueBytes` in `opentelemetry-java`)
+returns a **new read-only `ByteBuffer`** on every call to `getValue()`:
+
+```java
+// opentelemetry-java ValueBytes.getValue()
+return ByteBuffer.wrap(raw).asReadOnlyBuffer();
+```
+
+Do not wrap the result in `.duplicate()` — each `getValue()` call already yields a fresh
+buffer with independent position/limit state. A `.duplicate()` adds overhead for no safety
+benefit.
+
+Flag:
+
+```java
+ByteBuffer byteBuffer = ((ByteBuffer) value.getValue()).duplicate();
+```
+
+Preferred:
+
+```java
+ByteBuffer byteBuffer = (ByteBuffer) value.getValue();
+```
 
 ## [Semconv] Constants by Module Type
 

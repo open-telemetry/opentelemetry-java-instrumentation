@@ -8,8 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.extensionannotations;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
 import java.lang.reflect.Method;
 
-enum MethodCodeAttributesGetter implements CodeAttributesGetter<Method> {
-  INSTANCE;
+final class MethodCodeAttributesGetter implements CodeAttributesGetter<Method> {
 
   @Override
   public Class<?> getCodeClass(Method method) {

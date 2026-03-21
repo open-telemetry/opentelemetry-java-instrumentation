@@ -27,10 +27,13 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // skip instrumentation when opentelemetry-api-incubator is present, instrumentation is
     // handled by OpenTelemetryApiIncubatorInstrumentationModule
-    return hasClassesNamed("application.io.opentelemetry.api.metrics.LongGauge")
+    return hasClassesNamed(
+            // added in 1.38
+            "application.io.opentelemetry.api.metrics.LongGauge")
         .and(
             not(
                 hasClassesNamed(
+                    // present when opentelemetry-api-incubator is on the classpath
                     "application.io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder")));
   }
 
