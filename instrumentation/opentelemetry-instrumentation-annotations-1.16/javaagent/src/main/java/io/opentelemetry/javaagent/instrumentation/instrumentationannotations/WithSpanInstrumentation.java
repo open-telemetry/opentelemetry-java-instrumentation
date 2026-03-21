@@ -69,14 +69,13 @@ class WithSpanInstrumentation implements TypeInstrumentation {
         tracedMethods.and(not(annotatedParametersMatcher));
 
     transformer.applyAdviceToMethod(
-        tracedMethodsWithoutParameters.and(isMethod()),
-        WithSpanInstrumentation.class.getName() + "$WithSpanAdvice");
+        tracedMethodsWithoutParameters.and(isMethod()), getClass().getName() + "$WithSpanAdvice");
 
     // Only apply advice for tracing parameters as attributes if any of the parameters are annotated
     // with @SpanAttribute to avoid unnecessarily copying the arguments into an array.
     transformer.applyAdviceToMethod(
         tracedMethodsWithParameters.and(isMethod()),
-        WithSpanInstrumentation.class.getName() + "$WithSpanAttributesAdvice");
+        getClass().getName() + "$WithSpanAttributesAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -187,7 +186,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
     public static Object stopSpan(
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) @Nullable Object returnValue,
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter WithSpanAttributesAdviceScope adviceScope) {
+        @Advice.Enter @Nullable WithSpanAttributesAdviceScope adviceScope) {
       if (adviceScope != null) {
         return adviceScope.end(returnValue, throwable);
       }
