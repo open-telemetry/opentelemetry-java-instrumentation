@@ -275,8 +275,12 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
             "jvm.memory.allocation",
             "jvm.network.io",
             "jvm.thread.count")) {
+      // cpu longlock is missing on jdk 25
+      if (javaVersion >= 25 && "jvm.cpu.longlock".equals(metric)) {
+        continue;
+      }
       // gc duration is sometimes missing on jdk 26
-      if (javaVersion == 26 && "jvm.gc.duration".equals(metric)) {
+      if (javaVersion >= 26 && "jvm.gc.duration".equals(metric)) {
         continue;
       }
       testing.waitAndAssertMetrics(
