@@ -36,19 +36,18 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor().and(takesArguments(0)),
-        BootstrapInstrumentation.class.getName() + "$ConstructorAdvice");
+        isConstructor().and(takesArguments(0)), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
         named("resolver")
             .and(takesArguments(1))
             .and(takesArgument(0, named("io.netty.resolver.AddressResolverGroup"))),
-        BootstrapInstrumentation.class.getName() + "$SetResolverAdvice");
+        getClass().getName() + "$SetResolverAdvice");
     transformer.applyAdviceToMethod(
         named("doConnect")
             .and(takesArguments(3))
             .and(takesArgument(0, SocketAddress.class))
             .and(takesArgument(2, named("io.netty.channel.ChannelPromise"))),
-        BootstrapInstrumentation.class.getName() + "$ConnectAdvice");
+        getClass().getName() + "$ConnectAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -75,7 +74,7 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ConnectAdvice {
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static NettyScope startConnect(@Advice.Argument(0) SocketAddress remoteAddress) {
 
       Context parentContext = Java8BytecodeBridge.currentContext();
