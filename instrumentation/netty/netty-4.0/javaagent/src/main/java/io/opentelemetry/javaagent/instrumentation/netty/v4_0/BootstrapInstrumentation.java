@@ -33,12 +33,12 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
         named("doConnect0")
             .and(takesArgument(2, SocketAddress.class))
             .and(takesArgument(4, named("io.netty.channel.ChannelPromise"))),
-        BootstrapInstrumentation.class.getName() + "$ConnectAdvice");
+        getClass().getName() + "$ConnectAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ConnectAdvice {
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static NettyScope startConnect(@Advice.Argument(2) SocketAddress remoteAddress) {
 
       Context parentContext = Java8BytecodeBridge.currentContext();

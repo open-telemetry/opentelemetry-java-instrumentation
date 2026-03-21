@@ -137,26 +137,29 @@ class Netty40ConnectionSpanTest {
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent().hasException(thrown),
                 span -> {
                   span.hasName("CONNECT").hasKind(INTERNAL).hasParent(trace.getSpan(0));
-                  span.hasAttributesSatisfying(equalTo(NETWORK_TRANSPORT, "tcp"));
-                  satisfies(
-                      NETWORK_TYPE,
-                      val ->
-                          val.satisfiesAnyOf(
-                              v -> assertThat(val).isNull(), v -> assertThat(v).isEqualTo("ipv4")));
-                  span.hasAttributesSatisfying(
-                      equalTo(SERVER_ADDRESS, uri.getHost()), equalTo(SERVER_PORT, uri.getPort()));
-                  satisfies(
-                      NETWORK_PEER_PORT,
-                      val ->
-                          val.satisfiesAnyOf(
-                              v -> assertThat(val).isNull(),
-                              v -> assertThat(v).isEqualTo(uri.getPort())));
-                  satisfies(
-                      NETWORK_PEER_ADDRESS,
-                      val ->
-                          val.satisfiesAnyOf(
-                              v -> assertThat(val).isNull(),
-                              v -> assertThat(v).isEqualTo("127.0.0.1")));
+                  span.hasAttributesSatisfyingExactly(
+                      equalTo(NETWORK_TRANSPORT, "tcp"),
+                      satisfies(
+                          NETWORK_TYPE,
+                          k ->
+                              k.satisfiesAnyOf(
+                                  v -> assertThat(v).isEqualTo("ipv4"),
+                                  v -> assertThat(v).isNull())),
+                      equalTo(SERVER_ADDRESS, uri.getHost()),
+                      equalTo(SERVER_PORT, uri.getPort()),
+                      equalTo(maybeStablePeerService(), "test-peer-service"),
+                      satisfies(
+                          NETWORK_PEER_PORT,
+                          k ->
+                              k.satisfiesAnyOf(
+                                  v -> assertThat(v).isEqualTo(uri.getPort()),
+                                  v -> assertThat(v).isNull())),
+                      satisfies(
+                          NETWORK_PEER_ADDRESS,
+                          k ->
+                              k.satisfiesAnyOf(
+                                  v -> assertThat(v).isEqualTo("127.0.0.1"),
+                                  v -> assertThat(v).isNull())));
                 }));
   }
 
@@ -173,7 +176,7 @@ class Netty40ConnectionSpanTest {
   private static int sendRequest(DefaultFullHttpRequest request, URI uri)
       throws InterruptedException, ExecutionException, TimeoutException {
     Channel channel = bootstrap.connect(uri.getHost(), uri.getPort()).sync().channel();
-    CompletableFuture<Integer> result = new CompletableFuture<Integer>();
+    CompletableFuture<Integer> result = new CompletableFuture<>();
     channel.pipeline().addLast(new ClientHandler(result));
     channel.writeAndFlush(request).get();
     return result.get(20, SECONDS);
