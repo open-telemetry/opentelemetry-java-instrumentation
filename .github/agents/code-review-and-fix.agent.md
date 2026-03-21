@@ -135,8 +135,10 @@ Auto-fix boundaries:
     not for optimization (use `TypeInstrumentation.classLoaderOptimization()` instead)
   - redundant `isMethod()` in method matchers inside `transform()` when the code is
     already being modified — `isMethod()` only serves to exclude constructors, but
-    `named(...)` already excludes them because constructors are named `<init>`
-    (e.g., `isMethod().and(named("execute"))` → `named("execute")`)
+    matchers that already name specific, non-empty methods make `isMethod()` redundant
+    (e.g., `isMethod().and(named("execute"))` → `named("execute")`). Do not remove
+    `isMethod()` when the name could be empty — `named("")` matches constructors and
+    static initializers.
   - singleton-to-instance-creation conversion for stateless telemetry interface
     implementations (`TextMapGetter`, `TextMapSetter`, `*AttributesGetter`,
     `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`) — replace

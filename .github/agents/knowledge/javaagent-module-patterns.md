@@ -229,10 +229,11 @@ sufficient for optimization.
   targets subclasses or implementors of a type.
 - `transform()` wires method matchers to advice classes via `applyAdviceToMethod()`.
 - `isMethod()` in method matchers inside `transform()` is only redundant when the matcher
-  uses explicit method names — e.g. `named("foo")` or `namedOneOf("foo", "bar")` — because
-  constructors are named `<init>` and will never match. Remove `isMethod()` only in that
-  case. Keep `isMethod()` when the matcher could match constructors (e.g. wildcard or
-  pattern-based matchers).
+  already names specific, non-empty methods — e.g. `named("foo")` or
+  `namedOneOf("foo", "bar")`. Remove `isMethod()` only in that case. Keep `isMethod()`
+  when the matcher could otherwise match constructors. Note that `named("")` matches
+  constructors and static initializers, so it is not safe to drop `isMethod()`
+  when an empty string is used.
 - Reference the advice class using `getClass().getName() + "$InnerClassName"` — not
   `InnerClassName.class.getName()`, `OuterClass.class.getName()`, or a string literal.
   Any `.class.getName()` reference — whether to the inner advice class or the outer
