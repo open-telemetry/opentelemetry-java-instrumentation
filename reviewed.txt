@@ -326,3 +326,4 @@ opensearch-rest-1.0:javaagent
 opensearch-java-3.0:javaagent
 opensearch-rest-3.0:javaagent
 opensearch-rest-common:javaagent
+opensearch-rest-common:testing
