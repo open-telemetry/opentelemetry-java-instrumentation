@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.mongoasync.v3_3;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -29,18 +28,13 @@ final class InternalStreamConnectionInstrumentation implements TypeInstrumentati
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("openAsync"))
-            .and(takesArgument(0, named("com.mongodb.async.SingleResultCallback"))),
+        named("openAsync").and(takesArgument(0, named("com.mongodb.async.SingleResultCallback"))),
         this.getClass().getName() + "$SingleResultCallbackArg0Advice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("readAsync"))
-            .and(takesArgument(1, named("com.mongodb.async.SingleResultCallback"))),
+        named("readAsync").and(takesArgument(1, named("com.mongodb.async.SingleResultCallback"))),
         this.getClass().getName() + "$SingleResultCallbackArg1Advice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("sendMessageAsync"))
+        named("sendMessageAsync")
             .and(takesArgument(2, named("com.mongodb.async.SingleResultCallback"))),
         this.getClass().getName() + "$SingleResultCallbackArg2Advice");
   }
