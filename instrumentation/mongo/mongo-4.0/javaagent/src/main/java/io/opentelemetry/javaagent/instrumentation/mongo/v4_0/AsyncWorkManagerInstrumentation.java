@@ -27,8 +27,7 @@ public class AsyncWorkManagerInstrumentation implements TypeInstrumentation {
     // this method sets up a new thread pool and submits a task to it, we need to avoid context
     // propagating there
     transformer.applyAdviceToMethod(
-        named("initUnlessClosed"),
-        AsyncWorkManagerInstrumentation.class.getName() + "$DisablePropagationAdvice");
+        named("initUnlessClosed"), getClass().getName() + "$DisablePropagationAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -43,7 +42,7 @@ public class AsyncWorkManagerInstrumentation implements TypeInstrumentation {
       return null;
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();
