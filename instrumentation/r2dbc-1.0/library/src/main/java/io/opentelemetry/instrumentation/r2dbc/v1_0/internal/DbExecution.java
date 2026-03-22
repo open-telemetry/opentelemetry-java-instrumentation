@@ -59,15 +59,15 @@ public final class DbExecution {
 
   private final String systemName;
   private final String system;
-  private final String user;
-  private final String namespace;
-  private final String serverAddress;
-  private final Integer serverPort;
+  @Nullable private final String user;
+  @Nullable private final String namespace;
+  @Nullable private final String serverAddress;
+  @Nullable private final Integer serverPort;
   private final String connectionString;
   private final String rawQueryText;
   private final boolean parameterizedQuery;
 
-  private Context context;
+  @Nullable private Context context;
 
   public DbExecution(QueryExecutionInfo queryInfo, ConnectionFactoryOptions factoryOptions) {
     Connection originalConnection = queryInfo.getConnectionInfo().getOriginalConnection();
@@ -132,6 +132,7 @@ public final class DbExecution {
     return system;
   }
 
+  @Nullable
   public String getUser() {
     return user;
   }
@@ -153,6 +154,7 @@ public final class DbExecution {
     return parameterizedQuery;
   }
 
+  @Nullable
   public Context getContext() {
     return context;
   }

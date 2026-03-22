@@ -28,7 +28,7 @@ public final class R2dbcSingletons {
                     .getBoolean("enabled", AgentCommonConfig.get().isQuerySanitizationEnabled()))
             .addAttributesExtractor(
                 ServicePeerAttributesExtractor.create(
-                    R2dbcSqlAttributesGetter.INSTANCE, GlobalOpenTelemetry.get()));
+                    new R2dbcSqlAttributesGetter(), GlobalOpenTelemetry.get()));
     Experimental.setEnableSqlCommenter(
         builder,
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "r2dbc")
