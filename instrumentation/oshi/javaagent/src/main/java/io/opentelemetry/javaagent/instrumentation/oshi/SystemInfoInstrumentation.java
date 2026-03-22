@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.oshi;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -26,10 +25,7 @@ public class SystemInfoInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
-            .and(isStatic())
-            .and(namedOneOf("getCurrentPlatformEnum", "getCurrentPlatform")),
+        isPublic().and(isStatic()).and(namedOneOf("getCurrentPlatformEnum", "getCurrentPlatform")),
         this.getClass().getName() + "$GetCurrentPlatformEnumAdvice");
   }
 
