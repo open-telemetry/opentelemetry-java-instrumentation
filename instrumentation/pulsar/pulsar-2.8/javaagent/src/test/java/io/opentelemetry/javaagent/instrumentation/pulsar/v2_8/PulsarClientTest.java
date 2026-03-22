@@ -150,9 +150,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                 point ->
                                     point
                                         .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(MESSAGING_OPERATION_KEY, "receive"),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))),
@@ -167,9 +168,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                               point -> {
                                 point
                                     .hasValue(1)
-                                    .hasAttributesSatisfying(
+                                    .hasAttributesSatisfyingExactly(
                                         equalTo(MESSAGING_SYSTEM, "pulsar"),
                                         equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                        equalTo(MESSAGING_OPERATION_KEY, "receive"),
                                         equalTo(SERVER_PORT, brokerPort),
                                         equalTo(SERVER_ADDRESS, brokerHost));
                               });
@@ -185,9 +187,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                 point ->
                                     point
                                         .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(MESSAGING_OPERATION_KEY, "publish"),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))));
@@ -265,9 +268,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                 point ->
                                     point
                                         .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(MESSAGING_OPERATION_KEY, "receive"),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))),
@@ -282,9 +286,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                               point -> {
                                 point
                                     .hasValue(1)
-                                    .hasAttributesSatisfying(
+                                    .hasAttributesSatisfyingExactly(
                                         equalTo(MESSAGING_SYSTEM, "pulsar"),
                                         equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                        equalTo(MESSAGING_OPERATION_KEY, "receive"),
                                         equalTo(SERVER_PORT, brokerPort),
                                         equalTo(SERVER_ADDRESS, brokerHost));
                               });
@@ -300,9 +305,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                 point ->
                                     point
                                         .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(MESSAGING_OPERATION_KEY, "publish"),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))));
@@ -367,9 +373,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                 point ->
                                     point
                                         .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(MESSAGING_OPERATION_KEY, "receive"),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))),
@@ -384,9 +391,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                               point -> {
                                 point
                                     .hasValue(1)
-                                    .hasAttributesSatisfying(
+                                    .hasAttributesSatisfyingExactly(
                                         equalTo(MESSAGING_SYSTEM, "pulsar"),
                                         equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                        equalTo(MESSAGING_OPERATION_KEY, "receive"),
                                         equalTo(SERVER_PORT, brokerPort),
                                         equalTo(SERVER_ADDRESS, brokerHost));
                               });
@@ -402,9 +410,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                 point ->
                                     point
                                         .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(MESSAGING_OPERATION_KEY, "publish"),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))));

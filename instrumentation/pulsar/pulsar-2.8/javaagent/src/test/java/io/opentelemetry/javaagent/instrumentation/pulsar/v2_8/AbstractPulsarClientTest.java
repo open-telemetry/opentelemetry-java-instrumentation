@@ -23,6 +23,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -70,6 +71,7 @@ abstract class AbstractPulsarClientTest {
   private static final Logger logger = LoggerFactory.getLogger(AbstractPulsarClientTest.class);
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.pulsar-2.8";
+  static final AttributeKey<String> MESSAGING_OPERATION_KEY = stringKey("messaging.operation");
 
   private static final DockerImageName DEFAULT_IMAGE_NAME =
       DockerImageName.parse("apachepulsar/pulsar:2.8.0");
@@ -198,9 +200,10 @@ abstract class AbstractPulsarClientTest {
                                 point ->
                                     point
                                         .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(MESSAGING_OPERATION_KEY, "receive"),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))),
@@ -215,9 +218,10 @@ abstract class AbstractPulsarClientTest {
                                 point ->
                                     point
                                         .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(MESSAGING_OPERATION_KEY, "publish"),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))),
@@ -232,9 +236,10 @@ abstract class AbstractPulsarClientTest {
                                 point ->
                                     point
                                         .hasValue(1)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(MESSAGING_OPERATION_KEY, "receive"),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost)))));
   }
@@ -271,7 +276,7 @@ abstract class AbstractPulsarClientTest {
                           }
                         }));
 
-    assertThat(result.get(1, MINUTES).size()).isEqualTo(1);
+    assertThat(result.get(1, MINUTES)).hasSize(1);
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertTraces(
@@ -316,9 +321,10 @@ abstract class AbstractPulsarClientTest {
                                     point ->
                                         point
                                             .hasSumGreaterThan(0.0)
-                                            .hasAttributesSatisfying(
+                                            .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_SYSTEM, "pulsar"),
                                                 equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                                equalTo(MESSAGING_OPERATION_KEY, "receive"),
                                                 equalTo(SERVER_PORT, brokerPort),
                                                 equalTo(SERVER_ADDRESS, brokerHost))
                                             .hasBucketBoundaries(DURATION_BUCKETS)))));
@@ -338,9 +344,10 @@ abstract class AbstractPulsarClientTest {
                                     point ->
                                         point
                                             .hasSumGreaterThan(0.0)
-                                            .hasAttributesSatisfying(
+                                            .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_SYSTEM, "pulsar"),
                                                 equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                                equalTo(MESSAGING_OPERATION_KEY, "publish"),
                                                 equalTo(SERVER_PORT, brokerPort),
                                                 equalTo(SERVER_ADDRESS, brokerHost))
                                             .hasBucketBoundaries(DURATION_BUCKETS)))));
@@ -360,9 +367,10 @@ abstract class AbstractPulsarClientTest {
                                     point ->
                                         point
                                             .hasValue(1)
-                                            .hasAttributesSatisfying(
+                                            .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_SYSTEM, "pulsar"),
                                                 equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                                equalTo(MESSAGING_OPERATION_KEY, "receive"),
                                                 equalTo(SERVER_PORT, brokerPort),
                                                 equalTo(SERVER_ADDRESS, brokerHost))))));
   }
