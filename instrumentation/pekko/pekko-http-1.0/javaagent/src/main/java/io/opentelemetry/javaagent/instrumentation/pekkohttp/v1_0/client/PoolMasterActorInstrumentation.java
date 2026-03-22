@@ -29,7 +29,7 @@ public class PoolMasterActorInstrumentation implements TypeInstrumentation {
             .or(
                 named(
                     "org$apache$pekko$http$impl$engine$client$PoolMasterActor$$startPoolInterfaceActor")),
-        ClearContextAdvice.class.getName());
+        this.getClass().getName() + "$ClearContextAdvice");
   }
 
   @SuppressWarnings("unused")

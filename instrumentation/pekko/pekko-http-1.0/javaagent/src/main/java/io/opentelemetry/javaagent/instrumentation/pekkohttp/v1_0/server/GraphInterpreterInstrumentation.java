@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
@@ -18,6 +19,11 @@ import org.apache.pekko.stream.impl.fusing.GraphInterpreter;
 
 public class GraphInterpreterInstrumentation implements TypeInstrumentation {
   @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("org.apache.pekko.http.scaladsl.HttpExt");
+  }
+
+  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.pekko.stream.impl.fusing.GraphInterpreter");
   }
@@ -25,7 +31,7 @@ public class GraphInterpreterInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("processPush"), GraphInterpreterInstrumentation.class.getName() + "$PushAdvice");
+        named("processPush"), this.getClass().getName() + "$PushAdvice");
   }
 
   @SuppressWarnings("unused")

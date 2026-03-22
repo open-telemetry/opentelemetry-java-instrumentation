@@ -9,16 +9,17 @@ import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
+import javax.annotation.Nullable;
 import org.apache.pekko.http.javadsl.model.HttpHeader;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 
-enum PekkoHttpServerHeaders implements TextMapGetter<HttpRequest> {
-  INSTANCE;
+class PekkoHttpServerHeaders implements TextMapGetter<HttpRequest> {
 
   @Override
   public Iterable<String> keys(HttpRequest httpRequest) {
@@ -28,13 +29,19 @@ enum PekkoHttpServerHeaders implements TextMapGetter<HttpRequest> {
   }
 
   @Override
-  public String get(HttpRequest carrier, String key) {
+  public String get(@Nullable HttpRequest carrier, String key) {
+    if (carrier == null) {
+      return null;
+    }
     Optional<HttpHeader> header = carrier.getHeader(key);
     return header.map(HttpHeader::value).orElse(null);
   }
 
   @Override
-  public Iterator<String> getAll(HttpRequest carrier, String key) {
+  public Iterator<String> getAll(@Nullable HttpRequest carrier, String key) {
+    if (carrier == null) {
+      return Collections.<String>emptyList().iterator();
+    }
     String headerName = key.toLowerCase(Locale.ROOT);
     List<String> result = new ArrayList<>();
     for (HttpHeader header : carrier.getHeaders()) {
