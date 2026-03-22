@@ -136,12 +136,6 @@ public abstract class AbstractRatpackRoutesTest {
                               equalTo(NETWORK_PEER_ADDRESS, hasHandlerSpan() ? "127.0.0.1" : null),
                               satisfies(
                                   NETWORK_PEER_PORT,
-                                  port ->
-                                      port.satisfiesAnyOf(
-                                          val -> assertThat(val).isInstanceOf(Long.class),
-                                          val -> assertThat(val).isNull())),
-                              satisfies(
-                                  NETWORK_PEER_PORT,
                                   val -> {
                                     if (hasHandlerSpan()) {
                                       val.isInstanceOf(Long.class);
