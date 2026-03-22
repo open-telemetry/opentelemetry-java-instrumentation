@@ -369,3 +369,4 @@ powerjob-4.0:javaagent
 play-ws-common:testing
 pulsar-2.8:javaagent-unit-tests
 quarkus-resteasy-reactive:common-testing
+quarkus-resteasy-reactive:javaagent
