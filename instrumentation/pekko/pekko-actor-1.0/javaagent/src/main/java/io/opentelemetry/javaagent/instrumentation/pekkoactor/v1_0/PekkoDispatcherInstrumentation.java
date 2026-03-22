@@ -9,7 +9,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
@@ -33,7 +32,7 @@ public class PekkoDispatcherInstrumentation implements TypeInstrumentation {
         named("dispatch")
             .and(takesArgument(0, named("org.apache.pekko.actor.ActorCell")))
             .and(takesArgument(1, named("org.apache.pekko.dispatch.Envelope"))),
-        PekkoDispatcherInstrumentation.class.getName() + "$DispatchEnvelopeAdvice");
+        getClass().getName() + "$DispatchEnvelopeAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -43,9 +42,8 @@ public class PekkoDispatcherInstrumentation implements TypeInstrumentation {
     public static PropagatedContext enterDispatch(@Advice.Argument(1) Envelope envelope) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, envelope.message())) {
-        VirtualField<Envelope, PropagatedContext> virtualField =
-            VirtualField.find(Envelope.class, PropagatedContext.class);
-        return ExecutorAdviceHelper.attachContextToTask(context, virtualField, envelope);
+        return ExecutorAdviceHelper.attachContextToTask(
+            context, VirtualFields.ENVELOPE_PROPAGATED_CONTEXT, envelope);
       }
       return null;
     }
@@ -55,9 +53,8 @@ public class PekkoDispatcherInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) Envelope envelope,
         @Advice.Enter PropagatedContext propagatedContext,
         @Advice.Thrown Throwable throwable) {
-      VirtualField<Envelope, PropagatedContext> virtualField =
-          VirtualField.find(Envelope.class, PropagatedContext.class);
-      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable, virtualField, envelope);
+      ExecutorAdviceHelper.cleanUpAfterSubmit(
+          propagatedContext, throwable, VirtualFields.ENVELOPE_PROPAGATED_CONTEXT, envelope);
     }
   }
 }

@@ -9,8 +9,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.bootstrap.executors.TaskAdviceHelper;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -31,11 +29,11 @@ public class PekkoActorCellInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("invoke").and(takesArgument(0, named("org.apache.pekko.dispatch.Envelope"))),
-        PekkoActorCellInstrumentation.class.getName() + "$InvokeAdvice");
+        getClass().getName() + "$InvokeAdvice");
     transformer.applyAdviceToMethod(
         named("systemInvoke")
             .and(takesArgument(0, named("org.apache.pekko.dispatch.sysmsg.SystemMessage"))),
-        PekkoActorCellInstrumentation.class.getName() + "$SystemInvokeAdvice");
+        getClass().getName() + "$SystemInvokeAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -43,9 +41,8 @@ public class PekkoActorCellInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope enter(@Advice.Argument(0) Envelope envelope) {
-      VirtualField<Envelope, PropagatedContext> virtualField =
-          VirtualField.find(Envelope.class, PropagatedContext.class);
-      return TaskAdviceHelper.makePropagatedContextCurrent(virtualField, envelope);
+      return TaskAdviceHelper.makePropagatedContextCurrent(
+          VirtualFields.ENVELOPE_PROPAGATED_CONTEXT, envelope);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -61,9 +58,8 @@ public class PekkoActorCellInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope enter(@Advice.Argument(0) SystemMessage systemMessage) {
-      VirtualField<SystemMessage, PropagatedContext> virtualField =
-          VirtualField.find(SystemMessage.class, PropagatedContext.class);
-      return TaskAdviceHelper.makePropagatedContextCurrent(virtualField, systemMessage);
+      return TaskAdviceHelper.makePropagatedContextCurrent(
+          VirtualFields.SYSTEM_MESSAGE_PROPAGATED_CONTEXT, systemMessage);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
