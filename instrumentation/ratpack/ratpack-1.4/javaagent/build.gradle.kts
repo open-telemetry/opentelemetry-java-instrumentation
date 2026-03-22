@@ -17,6 +17,7 @@ dependencies {
   implementation(project(":instrumentation:netty:netty-4.1:library"))
 
   testImplementation(project(":instrumentation:ratpack:ratpack-1.4:testing"))
+  testInstrumentation(project(":instrumentation:ratpack:ratpack-1.7:javaagent"))
 
   // 1.4.0 has a bug which makes tests flaky
   // (https://github.com/ratpack/ratpack/commit/dde536ac138a76c34df03a0642c88d64edde688e)
