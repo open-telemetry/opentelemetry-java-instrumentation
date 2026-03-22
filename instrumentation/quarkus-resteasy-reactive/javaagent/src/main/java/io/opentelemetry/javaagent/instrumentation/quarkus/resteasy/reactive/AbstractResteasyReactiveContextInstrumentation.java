@@ -9,6 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -23,14 +24,13 @@ public class AbstractResteasyReactiveContextInstrumentation implements TypeInstr
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("run"),
-        AbstractResteasyReactiveContextInstrumentation.class.getName() + "$RunAdvice");
+    transformer.applyAdviceToMethod(named("run"), getClass().getName() + "$RunAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class RunAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static OtelRequestContext onEnter(
         @Advice.This AbstractResteasyReactiveContext<?, ?> requestContext) {
@@ -42,7 +42,7 @@ public class AbstractResteasyReactiveContextInstrumentation implements TypeInstr
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Enter OtelRequestContext context) {
+    public static void onExit(@Advice.Enter @Nullable OtelRequestContext context) {
       if (context != null) {
         context.close();
       }

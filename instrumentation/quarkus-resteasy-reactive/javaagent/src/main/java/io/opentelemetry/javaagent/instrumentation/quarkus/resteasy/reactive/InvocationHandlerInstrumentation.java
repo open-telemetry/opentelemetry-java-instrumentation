@@ -22,8 +22,7 @@ public class InvocationHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("handle"), InvocationHandlerInstrumentation.class.getName() + "$HandleAdvice");
+    transformer.applyAdviceToMethod(named("handle"), getClass().getName() + "$HandleAdvice");
   }
 
   @SuppressWarnings("unused")
