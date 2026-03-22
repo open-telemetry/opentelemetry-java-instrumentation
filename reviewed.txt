@@ -382,3 +382,4 @@ r2dbc-1.0:library-instrumentation-shaded
 r2dbc-1.0:testing
 rabbitmq-2.7:javaagent
 ratpack-1.4:javaagent
+ratpack-1.4:testing
