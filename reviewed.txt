@@ -364,3 +364,4 @@ play-mvc-2.6:javaagent
 play-ws-1.0:javaagent
 play-ws-2.0:javaagent
 play-ws-common:javaagent
+play-ws-2.1:javaagent
