@@ -18,7 +18,7 @@ dependencies {
 
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
 
-  library("com.github.oshi:oshi-core:5.3.1")
+  library("com.github.oshi:oshi-core:5.0.0")
 
   testImplementation(project(":instrumentation:oshi:testing"))
 }
