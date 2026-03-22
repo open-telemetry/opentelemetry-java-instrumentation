@@ -61,7 +61,7 @@ public final class RabbitSingletons {
             GlobalOpenTelemetry.get(), instrumentationName, ChannelAndMethod::getMethod)
         .addAttributesExtractor(
             buildMessagingAttributesExtractor(
-                RabbitChannelAttributesGetter.INSTANCE, publish ? MessageOperation.PUBLISH : null))
+                new RabbitChannelAttributesGetter(), publish ? MessageOperation.PUBLISH : null))
         .addAttributesExtractor(
             NetworkAttributesExtractor.create(new RabbitChannelNetAttributesGetter()))
         .addContextCustomizer(
@@ -74,7 +74,7 @@ public final class RabbitSingletons {
     List<AttributesExtractor<ReceiveRequest, GetResponse>> extractors = new ArrayList<>();
     extractors.add(
         buildMessagingAttributesExtractor(
-            RabbitReceiveAttributesGetter.INSTANCE, MessageOperation.RECEIVE));
+            new RabbitReceiveAttributesGetter(), MessageOperation.RECEIVE));
     extractors.add(NetworkAttributesExtractor.create(new RabbitReceiveNetAttributesGetter()));
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       extractors.add(new RabbitReceiveExperimentalAttributesExtractor());
@@ -87,7 +87,7 @@ public final class RabbitSingletons {
         .addSpanLinksExtractor(
             new PropagatorBasedSpanLinksExtractor<>(
                 GlobalOpenTelemetry.getPropagators().getTextMapPropagator(),
-                ReceiveRequestTextMapGetter.INSTANCE))
+                new ReceiveRequestTextMapGetter()))
         .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
@@ -95,7 +95,7 @@ public final class RabbitSingletons {
     List<AttributesExtractor<DeliveryRequest, Void>> extractors = new ArrayList<>();
     extractors.add(
         buildMessagingAttributesExtractor(
-            RabbitDeliveryAttributesGetter.INSTANCE, MessageOperation.PROCESS));
+            new RabbitDeliveryAttributesGetter(), MessageOperation.PROCESS));
     extractors.add(NetworkAttributesExtractor.create(new RabbitDeliveryNetAttributesGetter()));
     extractors.add(new RabbitDeliveryExtraAttributesExtractor());
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
@@ -105,7 +105,7 @@ public final class RabbitSingletons {
     return Instrumenter.<DeliveryRequest, Void>builder(
             GlobalOpenTelemetry.get(), instrumentationName, DeliveryRequest::spanName)
         .addAttributesExtractors(extractors)
-        .buildConsumerInstrumenter(DeliveryRequestGetter.INSTANCE);
+        .buildConsumerInstrumenter(new DeliveryRequestGetter());
   }
 
   private static <T, V> AttributesExtractor<T, V> buildMessagingAttributesExtractor(
