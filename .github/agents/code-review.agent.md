@@ -145,3 +145,6 @@ Use the **Knowledge File** column in the checklist table.
 
 Load `knowledge/general-rules.md` — it contains the review checklist table and all
 core rules that apply to every review.
+
+When reviewing `VirtualField.find(...)` usage, load `knowledge/javaagent-module-patterns.md`
+§ VirtualField.

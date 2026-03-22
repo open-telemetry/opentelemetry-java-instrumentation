@@ -307,13 +307,62 @@ for associating OpenTelemetry context or state with library objects.
 
 ### Rules
 
-- Call `VirtualField.find(Carrier.class, Value.class)` with class literals.
-- **Inside `@Advice` methods** these calls are **rewritten at bytecode transformation time**
-  by `VirtualFieldFindRewriter` into direct static calls to generated implementations —
-  they are never executed at runtime. It is perfectly fine to call `VirtualField.find()`
-  inside advice methods; do **not** extract them into helper classes or static final fields.
-- **Outside advice** (helper classes, singletons, etc.) the call executes at runtime, so
-  declare the result as a `static final` field to avoid repeated lookups.
-- The first type parameter is the "carrier" class (the library object); the second is the
-  attached value type.
-- Uses weak-key semantics: when the carrier is garbage-collected, the value is released.
+- Call `VirtualField.find(Carrier.class, Value.class)` with **class literals** (not variables).
+- The first type parameter is the carrier class (library object); the second is the value type.
+- Uses weak-key semantics: when the carrier is GC'd, the value is released.
+- **Never call `VirtualField.find()` inside an `@Advice` method.** Declare all lookups as
+  `static final` fields and reference them from advice. Place them in the module's
+  existing helper class (`*Singletons`, `*Helper`, etc.) when one exists, or in a
+  dedicated `VirtualFields` class when no suitable helper exists.
+  **Review/fix agents**: flag and auto-fix any in-advice `VirtualField.find()` call by
+  moving it to a `static final` field in the appropriate helper class.
+
+#### Pattern A: Existing helper class (preferred when one exists)
+
+When the module already has a helper class (e.g., `*Singletons`, `*Helper`,
+`InstrumentationHelper`), add the `VirtualField` fields there instead of creating a
+new class:
+
+```java
+public final class InstrumentationHelper {
+  public static final VirtualField<Runnable, PropagatedContext> PROPAGATED_CONTEXT =
+      VirtualField.find(Runnable.class, PropagatedContext.class);
+
+  // ... other existing fields and methods ...
+
+  private InstrumentationHelper() {}
+}
+
+// In the advice class, use a static import for clean access:
+import static com.example.InstrumentationHelper.PROPAGATED_CONTEXT;
+
+public static class AddListenerAdvice {
+  @Advice.OnMethodEnter(suppress = Throwable.class)
+  public static PropagatedContext addListenerEnter(@Advice.Argument(0) Runnable task) {
+    Context context = Java8BytecodeBridge.currentContext();
+    if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
+      return ExecutorAdviceHelper.attachContextToTask(context, PROPAGATED_CONTEXT, task);
+    }
+    return null;
+  }
+}
+```
+
+#### Pattern B: Dedicated `VirtualFields` class (no existing helper)
+
+```java
+final class VirtualFields {
+  static final VirtualField<Envelope, PropagatedContext> ENVELOPE_PROPAGATED_CONTEXT =
+      VirtualField.find(Envelope.class, PropagatedContext.class);
+  private VirtualFields() {}
+}
+
+public static class DispatchAdvice {
+  @Advice.OnMethodEnter(suppress = Throwable.class)
+  public static PropagatedContext enter(@Advice.Argument(1) Envelope envelope) {
+    Context context = Java8BytecodeBridge.currentContext();
+    return ExecutorAdviceHelper.attachContextToTask(
+        context, VirtualFields.ENVELOPE_PROPAGATED_CONTEXT, envelope);
+  }
+}
+```
