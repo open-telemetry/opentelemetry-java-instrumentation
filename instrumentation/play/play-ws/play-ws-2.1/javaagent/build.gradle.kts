@@ -67,7 +67,7 @@ tasks {
     enabled = testLatestDeps
   }
 
-  test {
+  withType<Test>().configureEach {
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
