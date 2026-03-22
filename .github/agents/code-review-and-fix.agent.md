@@ -203,6 +203,13 @@ Auto-fix boundaries:
     class parameter to match. Conversely, if an implementation is *missing* a null
     check or `@Nullable` annotation for a parameter that is `@Nullable` upstream,
     add both the annotation and the null guard.
+    **Exception — pure delegation**: when the entire body of a `TextMapGetter.get()`,
+    `TextMapGetter.getAll()`, or `TextMapSetter.set()` override is a single call that
+    delegates to another `TextMapGetter` or `TextMapSetter` instance (no carrier-specific
+    logic), do **not** add or keep a null guard for `carrier`. The delegate already
+    handles `null` per the same contract; the guard is redundant. Only add `@Nullable`
+    to the parameter and pass `carrier` through. If a PR adds such a guard on a
+    pure-delegation method, remove it.
   - getter/setter/boolean-getter naming convention violations (`get*`, `set*`, `is*`) and
     other API convention fixes (e.g. missing `@CanIgnoreReturnValue`, wrong method signature)
     in **non-stable modules** (module `gradle.properties` does not contain
