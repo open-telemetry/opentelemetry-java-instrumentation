@@ -375,3 +375,4 @@ pulsar-2.8:javaagent
 quarkus-resteasy-reactive:quarkus3-testing
 quartz-2.0:library
 quartz-2.0:javaagent
+quartz-2.0:testing
