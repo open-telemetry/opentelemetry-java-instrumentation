@@ -41,9 +41,8 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    String className = getClass().getName();
-
-    transformer.applyAdviceToMethod(isConstructor(), className + "$ConsumerConstructorAdvice");
+    transformer.applyAdviceToMethod(
+        isConstructor(), getClass().getName() + "$ConsumerConstructorAdvice");
 
     // internalReceive will apply to Consumer#receive(long,TimeUnit)
     // and called before MessageListener#receive.
@@ -52,20 +51,20 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
             .and(named("internalReceive"))
             .and(takesArguments(2))
             .and(takesArgument(1, named("java.util.concurrent.TimeUnit"))),
-        className + "$ConsumerInternalReceiveAdvice");
+        getClass().getName() + "$ConsumerInternalReceiveAdvice");
     // internalReceive will apply to Consumer#receive()
     transformer.applyAdviceToMethod(
         isProtected().and(named("internalReceive")).and(takesArguments(0)),
-        className + "$ConsumerSyncReceiveAdvice");
+        getClass().getName() + "$ConsumerSyncReceiveAdvice");
     // internalReceiveAsync will apply to Consumer#receiveAsync()
     transformer.applyAdviceToMethod(
         isProtected().and(named("internalReceiveAsync")).and(takesArguments(0)),
-        className + "$ConsumerAsyncReceiveAdvice");
+        getClass().getName() + "$ConsumerAsyncReceiveAdvice");
     // internalBatchReceiveAsync will apply to Consumer#batchReceive() and
     // Consumer#batchReceiveAsync()
     transformer.applyAdviceToMethod(
         isProtected().and(named("internalBatchReceiveAsync")).and(takesArguments(0)),
-        className + "$ConsumerBatchAsyncReceiveAdvice");
+        getClass().getName() + "$ConsumerBatchAsyncReceiveAdvice");
   }
 
   @SuppressWarnings("unused")
