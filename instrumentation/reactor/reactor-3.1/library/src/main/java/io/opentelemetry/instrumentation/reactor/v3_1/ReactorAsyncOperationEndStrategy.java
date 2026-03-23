@@ -111,7 +111,7 @@ public final class ReactorAsyncOperationEndStrategy implements AsyncOperationEnd
 
     @Override
     public void accept(Throwable exception) {
-      end(null, exception);
+      accept(null, exception);
     }
 
     private void accept(Object result, Throwable error) {
