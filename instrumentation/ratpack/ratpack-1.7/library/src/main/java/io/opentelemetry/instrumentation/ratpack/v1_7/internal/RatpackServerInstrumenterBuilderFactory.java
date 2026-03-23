@@ -24,7 +24,7 @@ public final class RatpackServerInstrumenterBuilderFactory {
     return DefaultHttpServerInstrumenterBuilder.create(
         instrumentationName,
         openTelemetry,
-        RatpackHttpAttributesGetter.INSTANCE,
-        RatpackGetter.INSTANCE);
+        new RatpackHttpAttributesGetter(),
+        new RatpackGetter());
   }
 }

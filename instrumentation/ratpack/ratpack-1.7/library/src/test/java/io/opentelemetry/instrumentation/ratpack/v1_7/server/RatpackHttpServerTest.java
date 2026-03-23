@@ -19,7 +19,7 @@ import ratpack.server.RatpackServerSpec;
 class RatpackHttpServerTest extends AbstractRatpackHttpServerTest {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing =
+  static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forLibrary();
 
   @Override
