@@ -9,11 +9,6 @@ muzzle {
     versions.set("[1.7.0,)")
     assertInverse.set(true)
   }
-  fail {
-    group.set("io.ratpack")
-    module.set("ratpack-core")
-    versions.set("[1.0,1.7)")
-  }
 }
 
 dependencies {
