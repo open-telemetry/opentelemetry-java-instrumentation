@@ -390,3 +390,4 @@ reactor-3.1:library
 reactor-3.4:javaagent
 reactor-3.1:testing
 reactor-kafka-1.0:testing
+reactor-kafka-1.0:javaagent
