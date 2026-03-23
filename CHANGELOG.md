@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## Version 2.26.1 (2026-03-23)
+
+### 🛠️ Bug fixes
+
+- Fix RMI context propagation
+  ([#16979](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16979))
+
 ## Version 2.26.0 (2026-03-14)
 
 ### ⚠️ Breaking changes to non-stable APIs
