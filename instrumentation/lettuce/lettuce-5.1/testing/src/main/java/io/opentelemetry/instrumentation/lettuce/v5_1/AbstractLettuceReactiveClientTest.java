@@ -282,7 +282,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
     String res = (String) digestMethod.invoke(reactiveCommands, "test");
 
     assertThat(res).isNotNull();
-    assertThat(testing().spans().size()).isEqualTo(0);
+    assertThat(testing().spans()).isEmpty();
   }
 
   @Test

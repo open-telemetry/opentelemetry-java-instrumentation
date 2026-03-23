@@ -64,6 +64,10 @@ public final class LogEventMapper {
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "log4j_appender")
           .getBoolean("capture_event_name/development", false);
 
+  private final boolean captureCodeAttributes =
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "log4j_appender")
+          .getBoolean("capture_code_attributes/development", false);
+
   private LogEventMapper() {
     List<String> captureMdcAttributes =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "log4j_appender")
@@ -88,10 +92,6 @@ public final class LogEventMapper {
               + " deprecated and will be removed in a future version.");
     }
   }
-
-  boolean captureCodeAttributes =
-      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "log4j_appender")
-          .getBoolean("capture_code_attributes/development", false);
 
   public void capture(
       String fqcn, Category logger, Priority level, Object message, Throwable throwable) {

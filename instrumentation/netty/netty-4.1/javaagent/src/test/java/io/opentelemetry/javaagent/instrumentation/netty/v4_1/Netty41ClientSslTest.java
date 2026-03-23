@@ -108,7 +108,7 @@ class Netty41ClientSslTest {
 
   @Test
   @DisplayName("should fail SSL handshake")
-  public void testFailSslHandshake() throws Exception {
+  void testFailSslHandshake() throws Exception {
     Bootstrap bootstrap = createBootstrap(eventLoopGroup, singletonList("SSLv3"));
     URI uri = server.resolveHttpsAddress("/success");
     DefaultFullHttpRequest request =
@@ -186,7 +186,7 @@ class Netty41ClientSslTest {
 
   @Test
   @DisplayName("should successfully establish SSL handshake")
-  public void testSuccessSslHandshake() throws Exception {
+  void testSuccessSslHandshake() throws Exception {
     Bootstrap bootstrap = createBootstrap(eventLoopGroup, null);
     URI uri = server.resolveHttpsAddress("/success");
     DefaultFullHttpRequest request =

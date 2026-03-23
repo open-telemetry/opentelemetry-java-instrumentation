@@ -31,6 +31,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Build | `testcontainersBuildService` declaration | Testcontainers dependency without `usesService` | `gradle-conventions.md` |
 | Style | Prefer instance creation over singletons for stateless interface impls (except on hot paths or Kotlin `object` declarations) | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`, enum/static singletons | — |
 | Style | Remove redundant null guards on attribute puts | `AttributesBuilder.put`, `onStart`, `onEnd`, attribute extraction methods | — |
+| General | No redundant `ByteBuffer.duplicate()` on `Value.getValue()` | `Value.getValue()` with `BYTES` type, `ByteBuffer` handling | — |
 | Style | Nullability correctness — no guards for non-nullable params; add `@Nullable` when null is actually passed/returned/stored; respect upstream SDK `@Nullable` contracts for `TextMapGetter`/`TextMapSetter` | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `*Extractor` implementations, null checks, missing `@Nullable`, fields assigned from `@Nullable` sources | — |
 | Architecture | Library vs javaagent boundaries | Always | — |
 | NewModule | New instrumentation module checklist | New modules | _(inline below)_ |
@@ -199,6 +200,60 @@ Use `@Nullable` annotations accurately throughout the codebase:
   | `TextMapGetter<CarrierT>` | `getAll(CarrierT, String)` | `carrier` is `@Nullable` |
   | `TextMapGetter<CarrierT>` | `keys(CarrierT)` | none |
   | `TextMapSetter<CarrierT>` | `set(CarrierT, String, String)` | `carrier` is `@Nullable` |
+
+  **Exception — pure delegation**: when the entire body of the overriding method is a
+  single delegation to another `TextMapGetter` or `TextMapSetter` instance (i.e., the
+  implementation contains no carrier-specific logic and simply calls
+  `delegate.get(carrier, key)`, `delegate.getAll(carrier, key)`, or
+  `delegate.set(carrier, key, value)`), do **not** add a null guard for `carrier`.
+  The delegate is itself a `TextMapGetter`/`TextMapSetter` and must handle `null` carrier
+  per the same contract. Just annotate the parameter with `@Nullable` and pass
+  `carrier` straight through:
+
+  ```java
+  // CORRECT — pure delegation, no null guard needed
+  @Override
+  @Nullable
+  public String get(@Nullable C carrier, String key) {
+    return delegate.get(carrier, key);
+  }
+
+  // WRONG — redundant null guard before delegation
+  @Override
+  @Nullable
+  public String get(@Nullable C carrier, String key) {
+    if (carrier == null) {
+      return null;
+    }
+    return delegate.get(carrier, key);
+  }
+  ```
+
+## [General] No Redundant `ByteBuffer.duplicate()` on `Value.getValue()`
+
+The upstream `Value<ByteBuffer>` implementation (`ValueBytes` in `opentelemetry-java`)
+returns a **new read-only `ByteBuffer`** on every call to `getValue()`:
+
+```java
+// opentelemetry-java ValueBytes.getValue()
+return ByteBuffer.wrap(raw).asReadOnlyBuffer();
+```
+
+Do not wrap the result in `.duplicate()` — each `getValue()` call already yields a fresh
+buffer with independent position/limit state. A `.duplicate()` adds overhead for no safety
+benefit.
+
+Flag:
+
+```java
+ByteBuffer byteBuffer = ((ByteBuffer) value.getValue()).duplicate();
+```
+
+Preferred:
+
+```java
+ByteBuffer byteBuffer = (ByteBuffer) value.getValue();
+```
 
 ## [Semconv] Constants by Module Type
 

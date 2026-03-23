@@ -101,7 +101,7 @@ public class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation
         @Advice.This HttpDispatcherLink httpDispatcherLink,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Argument(value = 0) StatusCodes statusCode,
-        @Advice.Argument(value = 2) Exception failure,
+        @Advice.Argument(value = 2) @Nullable Exception failure,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
 
       if (adviceScope != null) {

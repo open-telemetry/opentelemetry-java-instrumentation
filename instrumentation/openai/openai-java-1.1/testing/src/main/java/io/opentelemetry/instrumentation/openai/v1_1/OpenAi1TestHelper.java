@@ -41,7 +41,7 @@ public class OpenAi1TestHelper implements TestHelper {
       @Override
       public MessageToolCallBuilder function(FunctionBuilder functionBuilder) {
         builder.function(((FunctionBuilderImpl) functionBuilder).builder.build());
-        return null;
+        return this;
       }
 
       @Override

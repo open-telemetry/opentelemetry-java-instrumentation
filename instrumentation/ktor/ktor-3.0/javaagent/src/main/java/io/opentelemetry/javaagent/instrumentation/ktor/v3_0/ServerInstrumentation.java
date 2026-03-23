@@ -41,7 +41,7 @@ public class ServerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.This EmbeddedServer<?, ?> server, @Advice.Origin MethodHandles.Lookup lookup)
         throws Throwable {

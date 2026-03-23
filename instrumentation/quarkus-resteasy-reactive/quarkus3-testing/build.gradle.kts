@@ -4,7 +4,6 @@ import io.quarkus.bootstrap.util.BootstrapUtils
 import io.quarkus.gradle.tooling.GradleApplicationModelBuilder
 import io.quarkus.runtime.LaunchMode
 import kotlin.io.path.notExists
-import kotlin.jvm.java
 
 plugins {
   id("otel.javaagent-testing")

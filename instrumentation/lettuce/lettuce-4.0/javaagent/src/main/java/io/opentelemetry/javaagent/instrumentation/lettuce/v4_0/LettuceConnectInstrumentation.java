@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.connectInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.lambdaworks.redis.RedisURI;
@@ -30,8 +29,7 @@ public class LettuceConnectInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("connectStandalone")),
-        LettuceConnectInstrumentation.class.getName() + "$ConnectAdvice");
+        named("connectStandalone"), getClass().getName() + "$ConnectAdvice");
   }
 
   @SuppressWarnings("unused")

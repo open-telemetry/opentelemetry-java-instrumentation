@@ -16,9 +16,9 @@ import javax.annotation.Nullable;
 
 public class LibertyRequest {
   private final HttpRequestMessage httpRequestMessage;
-  private final String serverSocketAddress;
+  @Nullable private final String serverSocketAddress;
   private final int serverSocketPort;
-  private final String clientSocketAddress;
+  @Nullable private final String clientSocketAddress;
   private final int clientSocketPort;
 
   public LibertyRequest(
@@ -56,6 +56,7 @@ public class LibertyRequest {
     return httpRequestMessage.getAllHeaderNames();
   }
 
+  @Nullable
   public String getHeaderValue(String name) {
     HeaderField hf = httpRequestMessage.getHeader(name);
     return hf != null ? hf.asString() : null;
@@ -77,6 +78,7 @@ public class LibertyRequest {
     return httpRequestMessage.getVersion();
   }
 
+  @Nullable
   public String getServerSocketAddress() {
     return serverSocketAddress;
   }
@@ -85,6 +87,7 @@ public class LibertyRequest {
     return serverSocketPort;
   }
 
+  @Nullable
   public String getClientSocketAddress() {
     return clientSocketAddress;
   }

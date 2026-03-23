@@ -17,6 +17,9 @@
   because it is more precise — the non-exact variant silently ignores unexpected attributes.
   Prefer `hasAttributesSatisfyingExactly` over non-empty `hasAttributes(...)` for consistency.
   `hasAttributes(Attributes.empty())` is acceptable.
+  `hasTotalAttributeCount(...)` is redundant when paired with
+  `hasAttributesSatisfyingExactly(...)` in the same assertion chain — the exact variant
+  already validates the total attribute count. Remove the `hasTotalAttributeCount` call.
 
 ## `satisfies()` Lambda Parameters
 
@@ -35,6 +38,7 @@ Prefer built-in AssertJ collection/list assertions over extracting values manual
 | --- | --- |
 | `assertThat(list.size()).isEqualTo(N)` | `assertThat(list).hasSize(N)` |
 | `assertThat(list.isEmpty()).isTrue()` | `assertThat(list).isEmpty()` |
+| `assertThat(list).hasSize(0)` | `assertThat(list).isEmpty()` |
 | `assertThat(list.contains(x)).isTrue()` | `assertThat(list).contains(x)` |
 | sequential `assertThat(list.get(0)).isEqualTo(a)` / `assertThat(list.get(1)).isEqualTo(b)` checking every element | `assertThat(list).containsExactly(a, b)` |
 

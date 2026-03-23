@@ -9,6 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
 import java.time.Instant;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -44,6 +45,7 @@ public final class Timer implements ImplicitContextKeyed {
     return context.with(KEY, this);
   }
 
+  @Nullable
   public static Timer get(Context context) {
     return context.get(KEY);
   }

@@ -37,7 +37,7 @@ public class MessageHandlerInstrumentation implements TypeInstrumentation {
             .and(named("onMessage"))
             .and(takesArguments(1))
             .and(takesArgument(0, named("io.nats.client.Message"))),
-        MessageHandlerInstrumentation.class.getName() + "$OnMessageAdvice");
+        getClass().getName() + "$OnMessageAdvice");
   }
 
   @SuppressWarnings("unused")

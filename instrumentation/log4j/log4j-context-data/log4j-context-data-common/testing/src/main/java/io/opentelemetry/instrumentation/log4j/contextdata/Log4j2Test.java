@@ -48,7 +48,7 @@ public abstract class Log4j2Test {
 
     List<ListAppender.LoggedEvent> events = ListAppender.get().getEvents();
 
-    assertThat(events.size()).isEqualTo(2);
+    assertThat(events).hasSize(2);
 
     assertThat(events.get(0).getMessage()).isEqualTo("log message 1");
     assertThat(events.get(0).getContextData().get(getLoggingKey("trace_id"))).isNull();
@@ -99,7 +99,7 @@ public abstract class Log4j2Test {
 
     List<ListAppender.LoggedEvent> events = ListAppender.get().getEvents();
 
-    assertThat(events.size()).isEqualTo(4);
+    assertThat(events).hasSize(4);
 
     assertThat(events.get(0).getMessage()).isEqualTo("log span parent");
     assertThat(events.get(0).getContextData().get(getLoggingKey("trace_id")))
@@ -152,7 +152,7 @@ public abstract class Log4j2Test {
             });
     List<ListAppender.LoggedEvent> events = ListAppender.get().getEvents();
     ThreadContext.clearAll();
-    assertThat(events.size()).isEqualTo(1);
+    assertThat(events).hasSize(1);
     assertThat(events.get(0).getMessage()).isEqualTo("log span parent");
     assertThat(events.get(0).getContextData().get(getLoggingKey("trace_id")))
         .isEqualTo("test_traceId");

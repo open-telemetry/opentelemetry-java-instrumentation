@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.mongo.v3_1;
 
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -53,7 +52,7 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
     @Override
     public void transform(TypeTransformer transformer) {
       transformer.applyAdviceToMethod(
-          isMethod().and(isPublic()).and(named("build")).and(takesArguments(0)),
+          isPublic().and(named("build")).and(takesArguments(0)),
           MongoClientInstrumentationModule.class.getName() + "$MongoClientAdvice");
     }
   }
