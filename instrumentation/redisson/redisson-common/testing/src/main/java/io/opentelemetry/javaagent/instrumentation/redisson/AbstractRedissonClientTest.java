@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -93,6 +94,13 @@ public abstract class AbstractRedissonClientTest {
   @AfterAll
   static void cleanupAll() {
     redisServer.stop();
+  }
+
+  @AfterEach
+  void cleanup() {
+    if (redisson != null) {
+      redisson.shutdown();
+    }
   }
 
   @BeforeEach

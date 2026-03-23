@@ -38,6 +38,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -72,7 +73,7 @@ public abstract class AbstractRedissonAsyncClientTest {
   private static int port;
 
   private static String address;
-  private static RedissonClient redisson;
+  private RedissonClient redisson;
 
   @BeforeAll
   static void setupAll() throws UnknownHostException {
@@ -84,8 +85,14 @@ public abstract class AbstractRedissonAsyncClientTest {
 
   @AfterAll
   static void cleanupAll() {
-    redisson.shutdown();
     redisServer.stop();
+  }
+
+  @AfterEach
+  void cleanup() {
+    if (redisson != null) {
+      redisson.shutdown();
+    }
   }
 
   @BeforeEach
@@ -183,7 +190,7 @@ public abstract class AbstractRedissonAsyncClientTest {
     // In 3.0.1 getTaskId method doesn't exist in`ScheduledFuture` as it belongs to java.util.*
     // package,
     // but in RScheduledFuture that is an implementation of `ScheduledFuture`
-    assertThat(future instanceof RScheduledFuture).isTrue();
+    assertThat(future).isInstanceOf(RScheduledFuture.class);
     assertThat(((RScheduledFuture) future).getTaskId()).isNotBlank();
   }
 
