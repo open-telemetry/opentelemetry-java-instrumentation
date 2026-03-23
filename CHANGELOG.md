@@ -2,10 +2,11 @@
 
 ## Version 2.26.1 (2026-03-23)
 
-### 🛠️ Bug fixes
+### 🔒 Security fixes
 
-- Fix RMI context propagation
-  ([#16979](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16979))
+- Fix unsafe deserialization in RMI instrumentation that could lead to remote code execution
+  ([CVE-2026-33701](https://github.com/open-telemetry/opentelemetry-java-instrumentation/security/advisories/GHSA-xw7x-h9fj-p2c7),
+   [#16979](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16979))
 
 ## Version 2.26.0 (2026-03-13)
 
