@@ -7,17 +7,16 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v4_3;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_3.Hibernate43Singletons.SESSION_INFO;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_3.Hibernate43Singletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.hibernate.HibernateOperation;
 import io.opentelemetry.javaagent.instrumentation.hibernate.HibernateOperationScope;
-import io.opentelemetry.javaagent.instrumentation.hibernate.SessionInfo;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -53,13 +52,10 @@ public class ProcedureCallInstrumentation implements TypeInstrumentation {
         return null;
       }
 
-      VirtualField<ProcedureCall, SessionInfo> criteriaVirtualField =
-          VirtualField.find(ProcedureCall.class, SessionInfo.class);
-      SessionInfo sessionInfo = criteriaVirtualField.get(call);
-
       Context parentContext = Java8BytecodeBridge.currentContext();
       HibernateOperation hibernateOperation =
-          new HibernateOperation("ProcedureCall." + name, call.getProcedureName(), sessionInfo);
+          new HibernateOperation(
+              "ProcedureCall." + name, call.getProcedureName(), SESSION_INFO.get(call));
 
       return HibernateOperationScope.start(hibernateOperation, parentContext, instrumenter());
     }
