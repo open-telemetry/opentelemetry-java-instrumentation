@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.powerjob.v4_0;
 import static java.util.Arrays.asList;
 
 import java.util.List;
+import javax.annotation.Nullable;
 import tech.powerjob.official.processors.impl.FileCleanupProcessor;
 import tech.powerjob.official.processors.impl.HttpProcessor;
 import tech.powerjob.official.processors.impl.script.PythonProcessor;
@@ -20,12 +21,6 @@ import tech.powerjob.worker.core.processor.sdk.MapProcessor;
 import tech.powerjob.worker.core.processor.sdk.MapReduceProcessor;
 
 public final class PowerJobProcessRequest {
-  private final String methodName;
-  private final Long jobId;
-  private final String jobType;
-  private final Class<?> declaringClass;
-  private final String jobParams;
-  private final String instanceParams;
   private static final List<Class<?>> KNOWN_PROCESSORS =
       asList(
           FileCleanupProcessor.class,
@@ -38,12 +33,19 @@ public final class PowerJobProcessRequest {
           SpringDatasourceSqlProcessor.class,
           DynamicDatasourceSqlProcessor.class);
 
+  private final String methodName;
+  @Nullable private final Long jobId;
+  private final String jobType;
+  private final Class<?> declaringClass;
+  @Nullable private final String jobParams;
+  @Nullable private final String instanceParams;
+
   private PowerJobProcessRequest(
-      Long jobId,
+      @Nullable Long jobId,
       String methodName,
       Class<?> declaringClass,
-      String jobParams,
-      String instanceParams,
+      @Nullable String jobParams,
+      @Nullable String instanceParams,
       String jobType) {
     this.jobId = jobId;
     this.methodName = methodName;
@@ -54,11 +56,11 @@ public final class PowerJobProcessRequest {
   }
 
   public static PowerJobProcessRequest createRequest(
-      Long jobId,
+      @Nullable Long jobId,
       BasicProcessor handler,
       String methodName,
-      String jobParams,
-      String instanceParams) {
+      @Nullable String jobParams,
+      @Nullable String instanceParams) {
     String jobType = "BasicProcessor";
     for (Class<?> processorClass : KNOWN_PROCESSORS) {
       if (processorClass.isInstance(handler)) {
@@ -74,6 +76,7 @@ public final class PowerJobProcessRequest {
     return methodName;
   }
 
+  @Nullable
   public Long getJobId() {
     return jobId;
   }
@@ -82,10 +85,12 @@ public final class PowerJobProcessRequest {
     return declaringClass;
   }
 
+  @Nullable
   public String getJobParams() {
     return jobParams;
   }
 
+  @Nullable
   public String getInstanceParams() {
     return instanceParams;
   }
