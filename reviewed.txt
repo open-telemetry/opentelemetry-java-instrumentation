@@ -384,3 +384,4 @@ rabbitmq-2.7:javaagent
 ratpack-1.4:javaagent
 ratpack-1.4:testing
 ratpack-1.7:library
+ratpack-1.7:javaagent
