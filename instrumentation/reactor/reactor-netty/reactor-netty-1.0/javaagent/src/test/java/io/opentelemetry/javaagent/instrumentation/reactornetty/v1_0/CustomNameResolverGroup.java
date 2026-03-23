@@ -17,9 +17,9 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.List;
 
-public class CustomNameResolverGroup extends AddressResolverGroup<InetSocketAddress> {
+class CustomNameResolverGroup extends AddressResolverGroup<InetSocketAddress> {
 
-  public static final CustomNameResolverGroup INSTANCE = new CustomNameResolverGroup();
+  static final CustomNameResolverGroup INSTANCE = new CustomNameResolverGroup();
 
   private CustomNameResolverGroup() {}
 
