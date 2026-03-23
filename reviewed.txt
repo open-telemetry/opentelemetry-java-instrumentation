@@ -398,3 +398,4 @@ rediscala-1.8:javaagent
 redisson-3.0:javaagent
 redisson-common:javaagent
 redisson-3.17:javaagent
+redisson-common:testing
