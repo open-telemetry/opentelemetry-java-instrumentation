@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v4_3;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_3.Hibernate43Singletons.SESSION_INFO;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_3.Hibernate43Singletons.PROCEDURE_CALL_SESSION_INFO;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_3.Hibernate43Singletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -55,7 +55,9 @@ public class ProcedureCallInstrumentation implements TypeInstrumentation {
       Context parentContext = Java8BytecodeBridge.currentContext();
       HibernateOperation hibernateOperation =
           new HibernateOperation(
-              "ProcedureCall." + name, call.getProcedureName(), SESSION_INFO.get(call));
+              "ProcedureCall." + name,
+              call.getProcedureName(),
+              PROCEDURE_CALL_SESSION_INFO.get(call));
 
       return HibernateOperationScope.start(hibernateOperation, parentContext, instrumenter());
     }
