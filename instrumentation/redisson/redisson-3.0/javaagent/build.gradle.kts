@@ -7,6 +7,7 @@ muzzle {
     group.set("org.redisson")
     module.set("redisson")
     versions.set("[3.0.0,3.17.0)")
+    assertInverse.set(true)
   }
 }
 
