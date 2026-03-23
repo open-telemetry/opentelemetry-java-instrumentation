@@ -393,3 +393,4 @@ reactor-kafka-1.0:testing
 reactor-kafka-1.0:javaagent
 reactor-netty-0.9:javaagent
 reactor-netty-1.0:javaagent
+reactor-netty-1.0:javaagent-unit-tests
