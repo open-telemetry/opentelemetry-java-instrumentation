@@ -7,11 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.pekkoactor.v1_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.pekkoactor.v1_0.VirtualFields.SYSTEM_MESSAGE_PROPAGATED_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
@@ -49,9 +49,8 @@ public class PekkoDefaultSystemMessageQueueInstrumentation implements TypeInstru
     public static PropagatedContext enter(@Advice.Argument(1) SystemMessage systemMessage) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, systemMessage)) {
-        VirtualField<SystemMessage, PropagatedContext> virtualField =
-            VirtualField.find(SystemMessage.class, PropagatedContext.class);
-        return ExecutorAdviceHelper.attachContextToTask(context, virtualField, systemMessage);
+        return ExecutorAdviceHelper.attachContextToTask(
+            context, SYSTEM_MESSAGE_PROPAGATED_CONTEXT, systemMessage);
       }
       return null;
     }
@@ -61,10 +60,8 @@ public class PekkoDefaultSystemMessageQueueInstrumentation implements TypeInstru
         @Advice.Argument(1) SystemMessage systemMessage,
         @Advice.Enter PropagatedContext propagatedContext,
         @Advice.Thrown Throwable throwable) {
-      VirtualField<SystemMessage, PropagatedContext> virtualField =
-          VirtualField.find(SystemMessage.class, PropagatedContext.class);
       ExecutorAdviceHelper.cleanUpAfterSubmit(
-          propagatedContext, throwable, virtualField, systemMessage);
+          propagatedContext, throwable, SYSTEM_MESSAGE_PROPAGATED_CONTEXT, systemMessage);
     }
   }
 }
