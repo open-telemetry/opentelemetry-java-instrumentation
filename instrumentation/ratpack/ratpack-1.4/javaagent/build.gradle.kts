@@ -32,7 +32,9 @@ dependencies {
 }
 
 // Requires old Guava. Can't use enforcedPlatform since predates BOM
-configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.google.guava:guava:19.0")
+if (!(findProperty("testLatestDeps") as Boolean)) {
+  configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.google.guava:guava:19.0")
+}
 
 // to allow all tests to pass we need to choose a specific netty version
 configurations.configureEach {
