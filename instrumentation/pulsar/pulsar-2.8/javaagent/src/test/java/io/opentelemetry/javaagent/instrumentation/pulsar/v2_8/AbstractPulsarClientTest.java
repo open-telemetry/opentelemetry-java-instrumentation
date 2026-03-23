@@ -136,6 +136,7 @@ abstract class AbstractPulsarClientTest {
     pulsar.close();
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testConsumeNonPartitionedTopicUsingBatchReceive() throws Exception {
     String topic = "persistent://public/default/testConsumeNonPartitionedTopicCallBatchReceive";
@@ -242,6 +243,7 @@ abstract class AbstractPulsarClientTest {
                                             equalTo(SERVER_ADDRESS, brokerHost)))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testConsumeNonPartitionedTopicUsingBatchReceiveAsync() throws Exception {
     String topic =

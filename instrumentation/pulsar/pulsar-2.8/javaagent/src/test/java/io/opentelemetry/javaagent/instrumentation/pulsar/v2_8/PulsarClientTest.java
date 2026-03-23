@@ -93,6 +93,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                             processAttributes(topic, msgId.toString(), false))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testConsumeNonPartitionedTopicUsingReceive() throws Exception {
     String topic = "persistent://public/default/testConsumeNonPartitionedTopicCallReceive";
@@ -197,6 +198,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                         .hasBucketBoundaries(DURATION_BUCKETS))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testConsumeNonPartitionedTopicUsingReceiveAsync() throws Exception {
     String topic = "persistent://public/default/testConsumeNonPartitionedTopicCallReceiveAsync";
@@ -315,6 +317,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                         .hasBucketBoundaries(DURATION_BUCKETS))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testConsumeNonPartitionedTopicUsingReceiveWithTimeout() throws Exception {
     String topic =
