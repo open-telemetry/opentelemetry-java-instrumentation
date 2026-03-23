@@ -5,10 +5,12 @@
 
 package io.opentelemetry.instrumentation.reactor;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -28,6 +30,8 @@ import reactor.core.publisher.Mono;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractReactorCoreTest {
+
+  private static final AttributeKey<Long> ITERATION = longKey("iteration");
 
   private final InstrumentationExtension testing;
 
@@ -453,15 +457,15 @@ public abstract class AbstractReactorCoreTest {
                   span ->
                       span.hasName("outer")
                           .hasNoParent()
-                          .hasAttributes(attributeEntry("iteration", iteration)),
+                          .hasAttributesSatisfyingExactly(equalTo(ITERATION, iteration)),
                   span ->
                       span.hasName("middle")
                           .hasParent(trace.getSpan(0))
-                          .hasAttributes(attributeEntry("iteration", iteration)),
+                          .hasAttributesSatisfyingExactly(equalTo(ITERATION, iteration)),
                   span ->
                       span.hasName("inner")
                           .hasParent(trace.getSpan(1))
-                          .hasAttributes(attributeEntry("iteration", iteration))));
+                          .hasAttributesSatisfyingExactly(equalTo(ITERATION, iteration))));
     }
     testing.waitAndAssertTraces(assertions);
   }
@@ -521,31 +525,31 @@ public abstract class AbstractReactorCoreTest {
                   span ->
                       span.hasName("outer")
                           .hasNoParent()
-                          .hasAttributes(attributeEntry("iteration", iteration)),
+                          .hasAttributesSatisfyingExactly(equalTo(ITERATION, iteration)),
                   span ->
                       span.hasName("middle a")
                           .hasParent(trace.getSpan(0))
-                          .hasAttributes(attributeEntry("iteration", iteration)),
+                          .hasAttributesSatisfyingExactly(equalTo(ITERATION, iteration)),
                   span ->
                       span.hasName("inner ac")
                           .hasParent(trace.getSpan(1))
-                          .hasAttributes(attributeEntry("iteration", iteration)),
+                          .hasAttributesSatisfyingExactly(equalTo(ITERATION, iteration)),
                   span ->
                       span.hasName("inner ad")
                           .hasParent(trace.getSpan(1))
-                          .hasAttributes(attributeEntry("iteration", iteration)),
+                          .hasAttributesSatisfyingExactly(equalTo(ITERATION, iteration)),
                   span ->
                       span.hasName("middle b")
                           .hasParent(trace.getSpan(0))
-                          .hasAttributes(attributeEntry("iteration", iteration)),
+                          .hasAttributesSatisfyingExactly(equalTo(ITERATION, iteration)),
                   span ->
                       span.hasName("inner bc")
                           .hasParent(trace.getSpan(4))
-                          .hasAttributes(attributeEntry("iteration", iteration)),
+                          .hasAttributesSatisfyingExactly(equalTo(ITERATION, iteration)),
                   span ->
                       span.hasName("inner bd")
                           .hasParent(trace.getSpan(4))
-                          .hasAttributes(attributeEntry("iteration", iteration))));
+                          .hasAttributesSatisfyingExactly(equalTo(ITERATION, iteration))));
     }
     testing.waitAndAssertTraces(assertions);
   }
