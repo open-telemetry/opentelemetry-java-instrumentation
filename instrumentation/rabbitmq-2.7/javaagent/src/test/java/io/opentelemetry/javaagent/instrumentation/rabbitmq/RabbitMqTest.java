@@ -51,6 +51,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.AbstractLongAssert;
@@ -77,13 +78,13 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   Channel channel;
 
   @BeforeEach
-  public void setup() throws IOException, TimeoutException {
+  void setup() throws IOException, TimeoutException {
     conn = connectionFactory.newConnection();
     channel = conn.createChannel();
   }
 
   @AfterEach
-  public void cleanup() throws IOException, TimeoutException {
+  void cleanup() throws IOException, TimeoutException {
     try {
       if (null != channel) {
         channel.close();
@@ -284,10 +285,11 @@ class RabbitMqTest extends AbstractRabbitMqTest {
 
     testing.waitAndAssertTraces(traceAssertions);
 
-    assertThat(deliveries.size()).isEqualTo(messageCount);
-    for (int i = 1; i <= messageCount; i++) {
-      assertThat(deliveries.get(i - 1)).isEqualTo("msg " + i);
-    }
+    assertThat(deliveries)
+        .containsExactly(
+            IntStream.rangeClosed(1, messageCount)
+                .mapToObj(i -> "msg " + i)
+                .toArray(String[]::new));
   }
 
   @Test
@@ -352,7 +354,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
       callback.accept(channel);
     } catch (RuntimeException re) {
       thrown = re.getCause();
-      assertThat(thrown.getClass().getName().contains(accessor.getString(1))).isTrue();
+      assertThat(thrown.getClass().getName()).contains(accessor.getString(1));
     }
 
     Throwable finalThrown = thrown;

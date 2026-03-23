@@ -76,14 +76,13 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
             .and(canThrow(IOException.class).or(canThrow(InterruptedException.class))),
         RabbitChannelInstrumentation.class.getName() + "$ChannelMethodAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(named("basicPublish")).and(takesArguments(6)),
+        named("basicPublish").and(takesArguments(6)),
         RabbitChannelInstrumentation.class.getName() + "$ChannelPublishAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(named("basicGet")).and(takesArgument(0, String.class)),
+        named("basicGet").and(takesArgument(0, String.class)),
         RabbitChannelInstrumentation.class.getName() + "$ChannelGetAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("basicConsume"))
+        named("basicConsume")
             .and(takesArgument(0, String.class))
             .and(takesArgument(6, named("com.rabbitmq.client.Consumer"))),
         RabbitChannelInstrumentation.class.getName() + "$ChannelConsumeAdvice");
