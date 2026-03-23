@@ -26,6 +26,9 @@ dependencies {
   if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_11)) {
     testImplementation("com.sun.activation:jakarta.activation:1.2.2")
   }
+
+  latestDepTestLibrary("io.ratpack:ratpack-core:1.6.+") // see ratpack-1.7 module
+  latestDepTestLibrary("io.ratpack:ratpack-core:1.6.+") // see ratpack-1.7 module
 }
 
 // Requires old Guava. Can't use enforcedPlatform since predates BOM
