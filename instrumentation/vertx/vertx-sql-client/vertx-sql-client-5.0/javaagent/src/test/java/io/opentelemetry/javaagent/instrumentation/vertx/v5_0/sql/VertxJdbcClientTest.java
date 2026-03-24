@@ -25,6 +25,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.vertx.core.Vertx;
 import io.vertx.jdbcclient.JDBCConnectOptions;
 import io.vertx.jdbcclient.JDBCPool;
+import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -44,7 +45,7 @@ class VertxJdbcClientTest {
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private static Vertx vertx;
-  private static io.vertx.sqlclient.Pool pool;
+  private static Pool pool;
 
   @BeforeAll
   static void setUp() throws Exception {
