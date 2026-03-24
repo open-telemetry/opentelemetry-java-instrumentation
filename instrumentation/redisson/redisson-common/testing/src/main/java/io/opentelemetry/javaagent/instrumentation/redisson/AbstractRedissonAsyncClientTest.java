@@ -88,13 +88,6 @@ public abstract class AbstractRedissonAsyncClientTest {
     redisServer.stop();
   }
 
-  @AfterEach
-  void cleanup() {
-    if (redisson != null) {
-      redisson.shutdown();
-    }
-  }
-
   @BeforeEach
   void setup() throws InvocationTargetException, IllegalAccessException {
     String newAddress = address;
@@ -117,6 +110,13 @@ public abstract class AbstractRedissonAsyncClientTest {
     }
     redisson = Redisson.create(config);
     testing.clearData();
+  }
+
+  @AfterEach
+  void cleanup() {
+    if (redisson != null) {
+      redisson.shutdown();
+    }
   }
 
   @Test
