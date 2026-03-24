@@ -60,16 +60,16 @@ import org.junit.jupiter.api.TestInstance;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class AbstractRocketMqClientTest {
+abstract class AbstractRocketMqClientTest {
 
   // Inner topic of the container.
-  private static final String normalTopic = "normal-topic-0";
-  private static final String fifoTopic = "fifo-topic-0";
-  private static final String delayTopic = "delay-topic-0";
-  private static final String tag = "tagA";
-  private static final String consumerGroup = "group-0";
+  private static final String NORMAL_TOPIC = "normal-topic-0";
+  private static final String FIFO_TOPIC = "fifo-topic-0";
+  private static final String DELAY_TOPIC = "delay-topic-0";
+  private static final String TAG = "tagA";
+  private static final String CONSUMER_GROUP = "group-0";
 
-  private static final RocketMqProxyContainer container = new RocketMqProxyContainer();
+  private static final RocketMqProxyContainer CONTAINER = new RocketMqProxyContainer();
 
   private final ClientServiceProvider provider = ClientServiceProvider.loadService();
   private PushConsumer consumer;
@@ -79,22 +79,22 @@ public abstract class AbstractRocketMqClientTest {
 
   @BeforeAll
   void setUp() throws ClientException {
-    container.start();
+    CONTAINER.start();
     ClientConfiguration clientConfiguration =
         ClientConfiguration.newBuilder()
-            .setEndpoints(container.endpoints)
+            .setEndpoints(CONTAINER.endpoints)
             .setRequestTimeout(Duration.ofSeconds(10))
             .build();
-    FilterExpression filterExpression = new FilterExpression(tag, FilterExpressionType.TAG);
+    FilterExpression filterExpression = new FilterExpression(TAG, FilterExpressionType.TAG);
     Map<String, FilterExpression> subscriptionExpressions = new HashMap<>();
-    subscriptionExpressions.put(normalTopic, filterExpression);
-    subscriptionExpressions.put(fifoTopic, filterExpression);
-    subscriptionExpressions.put(delayTopic, filterExpression);
+    subscriptionExpressions.put(NORMAL_TOPIC, filterExpression);
+    subscriptionExpressions.put(FIFO_TOPIC, filterExpression);
+    subscriptionExpressions.put(DELAY_TOPIC, filterExpression);
     consumer =
         provider
             .newPushConsumerBuilder()
             .setClientConfiguration(clientConfiguration)
-            .setConsumerGroup(consumerGroup)
+            .setConsumerGroup(CONSUMER_GROUP)
             .setSubscriptionExpressions(subscriptionExpressions)
             .setMessageListener(
                 messageView -> {
@@ -106,7 +106,7 @@ public abstract class AbstractRocketMqClientTest {
         provider
             .newProducerBuilder()
             .setClientConfiguration(clientConfiguration)
-            .setTopics(normalTopic)
+            .setTopics(NORMAL_TOPIC)
             .build();
   }
 
@@ -119,7 +119,7 @@ public abstract class AbstractRocketMqClientTest {
       // Not calling consumer.close(); because it takes a lot of time to complete
       ((ClientImpl) consumer).stopAsync();
     }
-    container.close();
+    CONTAINER.close();
   }
 
   @Test
@@ -129,8 +129,8 @@ public abstract class AbstractRocketMqClientTest {
     Message message =
         provider
             .newMessageBuilder()
-            .setTopic(normalTopic)
-            .setTag(tag)
+            .setTopic(NORMAL_TOPIC)
+            .setTag(TAG)
             .setKeys(keys)
             .setBody(body)
             .build();
@@ -147,20 +147,20 @@ public abstract class AbstractRocketMqClientTest {
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                   span ->
-                      assertProducerSpan(span, normalTopic, tag, keys, body, sendReceipt)
+                      assertProducerSpan(span, NORMAL_TOPIC, TAG, keys, body, sendReceipt)
                           .hasParent(trace.getSpan(0)));
               sendSpanData.set(trace.getSpan(1));
             },
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> assertReceiveSpan(span, normalTopic, consumerGroup),
+                    span -> assertReceiveSpan(span, NORMAL_TOPIC, CONSUMER_GROUP),
                     span ->
                         assertProcessSpan(
                                 span,
                                 sendSpanData.get(),
-                                normalTopic,
-                                consumerGroup,
-                                tag,
+                                NORMAL_TOPIC,
+                                CONSUMER_GROUP,
+                                TAG,
                                 keys,
                                 body,
                                 sendReceipt)
@@ -173,14 +173,14 @@ public abstract class AbstractRocketMqClientTest {
   }
 
   @Test
-  public void testSendAsyncMessage() throws Exception {
+  void testSendAsyncMessage() throws Exception {
     String[] keys = new String[] {"yourMessageKey-0", "yourMessageKey-1"};
     byte[] body = "foobar".getBytes(UTF_8);
     Message message =
         provider
             .newMessageBuilder()
-            .setTopic(normalTopic)
-            .setTag(tag)
+            .setTopic(NORMAL_TOPIC)
+            .setTag(TAG)
             .setKeys(keys)
             .setBody(body)
             .build();
@@ -205,21 +205,21 @@ public abstract class AbstractRocketMqClientTest {
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent"),
                   span ->
-                      assertProducerSpan(span, normalTopic, tag, keys, body, sendReceipt)
+                      assertProducerSpan(span, NORMAL_TOPIC, TAG, keys, body, sendReceipt)
                           .hasParent(trace.getSpan(0)),
                   span -> span.hasName("child"));
               sendSpanData.set(trace.getSpan(1));
             },
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> assertReceiveSpan(span, normalTopic, consumerGroup),
+                    span -> assertReceiveSpan(span, NORMAL_TOPIC, CONSUMER_GROUP),
                     span ->
                         assertProcessSpan(
                                 span,
                                 sendSpanData.get(),
-                                normalTopic,
-                                consumerGroup,
-                                tag,
+                                NORMAL_TOPIC,
+                                CONSUMER_GROUP,
+                                TAG,
                                 keys,
                                 body,
                                 sendReceipt)
@@ -232,15 +232,15 @@ public abstract class AbstractRocketMqClientTest {
   }
 
   @Test
-  public void testSendAndConsumeFifoMessage() throws Throwable {
+  void testSendAndConsumeFifoMessage() throws Throwable {
     String[] keys = new String[] {"yourMessageKey-0", "yourMessageKey-1"};
     byte[] body = "foobar".getBytes(UTF_8);
     String messageGroup = "yourMessageGroup";
     Message message =
         provider
             .newMessageBuilder()
-            .setTopic(fifoTopic)
-            .setTag(tag)
+            .setTopic(FIFO_TOPIC)
+            .setTag(TAG)
             .setKeys(keys)
             .setMessageGroup(messageGroup)
             .setBody(body)
@@ -259,20 +259,20 @@ public abstract class AbstractRocketMqClientTest {
                   span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                   span ->
                       assertProducerSpanWithFifoMessage(
-                              span, fifoTopic, tag, keys, messageGroup, body, sendReceipt)
+                              span, FIFO_TOPIC, TAG, keys, messageGroup, body, sendReceipt)
                           .hasParent(trace.getSpan(0)));
               sendSpanData.set(trace.getSpan(1));
             },
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> assertReceiveSpan(span, fifoTopic, consumerGroup),
+                    span -> assertReceiveSpan(span, FIFO_TOPIC, CONSUMER_GROUP),
                     span ->
                         assertProcessSpanWithFifoMessage(
                                 span,
                                 sendSpanData.get(),
-                                fifoTopic,
-                                consumerGroup,
-                                tag,
+                                FIFO_TOPIC,
+                                CONSUMER_GROUP,
+                                TAG,
                                 keys,
                                 messageGroup,
                                 body,
@@ -286,15 +286,15 @@ public abstract class AbstractRocketMqClientTest {
   }
 
   @Test
-  public void testSendAndConsumeDelayMessage() throws Throwable {
+  void testSendAndConsumeDelayMessage() throws Throwable {
     String[] keys = new String[] {"yourMessageKey-0", "yourMessageKey-1"};
     byte[] body = "foobar".getBytes(UTF_8);
     long deliveryTimestamp = System.currentTimeMillis();
     Message message =
         provider
             .newMessageBuilder()
-            .setTopic(delayTopic)
-            .setTag(tag)
+            .setTopic(DELAY_TOPIC)
+            .setTag(TAG)
             .setKeys(keys)
             .setDeliveryTimestamp(deliveryTimestamp)
             .setBody(body)
@@ -313,20 +313,20 @@ public abstract class AbstractRocketMqClientTest {
                   span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                   span ->
                       assertProducerSpanWithDelayMessage(
-                              span, delayTopic, tag, keys, deliveryTimestamp, body, sendReceipt)
+                              span, DELAY_TOPIC, TAG, keys, deliveryTimestamp, body, sendReceipt)
                           .hasParent(trace.getSpan(0)));
               sendSpanData.set(trace.getSpan(1));
             },
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> assertReceiveSpan(span, delayTopic, consumerGroup),
+                    span -> assertReceiveSpan(span, DELAY_TOPIC, CONSUMER_GROUP),
                     span ->
                         assertProcessSpanWithDelayMessage(
                                 span,
                                 sendSpanData.get(),
-                                delayTopic,
-                                consumerGroup,
-                                tag,
+                                DELAY_TOPIC,
+                                CONSUMER_GROUP,
+                                TAG,
                                 keys,
                                 deliveryTimestamp,
                                 body,
@@ -340,14 +340,14 @@ public abstract class AbstractRocketMqClientTest {
   }
 
   @Test
-  public void testCapturedMessageHeaders() throws Throwable {
+  void testCapturedMessageHeaders() throws Throwable {
     String[] keys = new String[] {"yourMessageKey-0", "yourMessageKey-1"};
     byte[] body = "foobar".getBytes(UTF_8);
     Message message =
         provider
             .newMessageBuilder()
-            .setTopic(normalTopic)
-            .setTag(tag)
+            .setTopic(NORMAL_TOPIC)
+            .setTag(TAG)
             .setKeys(keys)
             .setBody(body)
             .addProperty("Test-Message-Header", "test")
@@ -367,8 +367,8 @@ public abstract class AbstractRocketMqClientTest {
                   span ->
                       assertProducerSpan(
                               span,
-                              normalTopic,
-                              tag,
+                              NORMAL_TOPIC,
+                              TAG,
                               keys,
                               body,
                               sendReceipt,
@@ -380,14 +380,14 @@ public abstract class AbstractRocketMqClientTest {
             },
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> assertReceiveSpan(span, normalTopic, consumerGroup),
+                    span -> assertReceiveSpan(span, NORMAL_TOPIC, CONSUMER_GROUP),
                     span ->
                         assertProcessSpan(
                                 span,
                                 sendSpanData.get(),
-                                normalTopic,
-                                consumerGroup,
-                                tag,
+                                NORMAL_TOPIC,
+                                CONSUMER_GROUP,
+                                TAG,
                                 keys,
                                 body,
                                 sendReceipt,
