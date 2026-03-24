@@ -14,10 +14,16 @@ muzzle {
 dependencies {
   library("org.apache.rocketmq:rocketmq-client-java:5.0.0")
 
+  testInstrumentation(project(":instrumentation:rocketmq:rocketmq-client-4.8:javaagent"))
   testImplementation(project(":instrumentation:rocketmq:rocketmq-client-5.0:testing"))
 }
 
 tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
+
   val testReceiveSpanDisabled by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -47,7 +53,6 @@ tasks {
     }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
   check {
