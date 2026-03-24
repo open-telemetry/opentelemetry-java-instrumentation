@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opententelemetry.instrumentation.restlet.v1_1.spring;
+package io.opentelemetry.instrumentation.restlet.v1_1.spring;
 
 class SpringBeanRouterTest extends AbstractSpringServerLibraryTest {
 

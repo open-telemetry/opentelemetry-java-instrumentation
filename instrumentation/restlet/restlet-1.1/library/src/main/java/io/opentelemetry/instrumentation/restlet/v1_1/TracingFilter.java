@@ -20,7 +20,7 @@ final class TracingFilter extends Filter {
   private final Instrumenter<Request, Response> instrumenter;
   private final String path;
 
-  public TracingFilter(Instrumenter<Request, Response> instrumenter, String path) {
+  TracingFilter(Instrumenter<Request, Response> instrumenter, String path) {
     this.instrumenter = instrumenter;
     this.path = path;
   }
@@ -45,20 +45,27 @@ final class TracingFilter extends Filter {
       super.doHandle(request, response);
     } catch (Throwable t) {
       statusThrowable = t;
+      rethrow(t);
+    } finally {
+      if (scope != null) {
+        scope.close();
+        if (response.getStatus() != null && response.getStatus().isError()) {
+          statusThrowable = response.getStatus().getThrowable();
+        }
+        instrumenter.end(context, request, response, statusThrowable);
+      }
     }
-
-    if (scope == null) {
-      return CONTINUE;
-    }
-
-    scope.close();
-
-    if (response.getStatus() != null && response.getStatus().isError()) {
-      statusThrowable = response.getStatus().getThrowable();
-    }
-
-    instrumenter.end(context, request, response, statusThrowable);
 
     return CONTINUE;
+  }
+
+  private static void rethrow(Throwable throwable) {
+    if (throwable instanceof Error) {
+      throw (Error) throwable;
+    }
+    if (throwable instanceof RuntimeException) {
+      throw (RuntimeException) throwable;
+    }
+    throw new IllegalStateException(throwable);
   }
 }
