@@ -408,3 +408,4 @@ restlet-2.0:library
 restlet-2.0:testing
 rmi:bootstrap
 rmi:javaagent
+rocketmq-client-4.8:javaagent
