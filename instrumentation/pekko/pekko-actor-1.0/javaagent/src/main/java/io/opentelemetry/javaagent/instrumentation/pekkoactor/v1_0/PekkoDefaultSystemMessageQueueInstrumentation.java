@@ -39,7 +39,7 @@ public class PekkoDefaultSystemMessageQueueInstrumentation implements TypeInstru
         named("systemEnqueue")
             .and(takesArgument(0, named("org.apache.pekko.actor.ActorRef")))
             .and(takesArgument(1, named("org.apache.pekko.dispatch.sysmsg.SystemMessage"))),
-        PekkoDefaultSystemMessageQueueInstrumentation.class.getName() + "$DispatchSystemAdvice");
+        getClass().getName() + "$DispatchSystemAdvice");
   }
 
   @SuppressWarnings("unused")

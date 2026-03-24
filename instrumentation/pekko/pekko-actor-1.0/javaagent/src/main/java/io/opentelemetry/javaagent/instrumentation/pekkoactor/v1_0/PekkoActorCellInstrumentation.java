@@ -31,11 +31,11 @@ public class PekkoActorCellInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("invoke").and(takesArgument(0, named("org.apache.pekko.dispatch.Envelope"))),
-        PekkoActorCellInstrumentation.class.getName() + "$InvokeAdvice");
+        getClass().getName() + "$InvokeAdvice");
     transformer.applyAdviceToMethod(
         named("systemInvoke")
             .and(takesArgument(0, named("org.apache.pekko.dispatch.sysmsg.SystemMessage"))),
-        PekkoActorCellInstrumentation.class.getName() + "$SystemInvokeAdvice");
+        getClass().getName() + "$SystemInvokeAdvice");
   }
 
   @SuppressWarnings("unused")

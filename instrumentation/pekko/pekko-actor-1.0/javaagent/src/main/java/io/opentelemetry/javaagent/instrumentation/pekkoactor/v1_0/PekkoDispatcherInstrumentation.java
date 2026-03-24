@@ -33,7 +33,7 @@ public class PekkoDispatcherInstrumentation implements TypeInstrumentation {
         named("dispatch")
             .and(takesArgument(0, named("org.apache.pekko.actor.ActorCell")))
             .and(takesArgument(1, named("org.apache.pekko.dispatch.Envelope"))),
-        PekkoDispatcherInstrumentation.class.getName() + "$DispatchEnvelopeAdvice");
+        getClass().getName() + "$DispatchEnvelopeAdvice");
   }
 
   @SuppressWarnings("unused")
