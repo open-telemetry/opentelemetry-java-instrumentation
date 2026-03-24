@@ -412,3 +412,4 @@ rocketmq-client-4.8:javaagent
 rocketmq-client-4.8:library
 rocketmq-client-4.8:testing
 rocketmq-client-5.0:javaagent
+rocketmq-client-5.0:testing
