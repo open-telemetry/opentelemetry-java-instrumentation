@@ -40,6 +40,7 @@ import io.quarkus.bootstrap.model.gradle.ModelParameter;
 import io.quarkus.bootstrap.model.gradle.impl.ModelParameterImpl;
 import io.quarkus.runtime.LaunchMode;
 
+// Based on https://github.com/quarkusio/quarkus/blob/2.16.7.Final/devtools/gradle/gradle-model/src/main/java/io/quarkus/gradle/tooling/ToolingUtils.java
 public class ToolingUtils {
 
   private static final String DEPLOYMENT_CONFIGURATION_SUFFIX = "Deployment";
@@ -62,14 +63,7 @@ public class ToolingUtils {
 
   public static IncludedBuild includedBuild(final Project project,
       final ProjectComponentIdentifier projectComponentIdentifier) {
-    /*
-    final String name = projectComponentIdentifier.getBuild().getName();
-    for (IncludedBuild ib : project.getRootProject().getGradle().getIncludedBuilds()) {
-      if (ib.getName().equals(name)) {
-        return ib;
-      }
-    }
-     */
+    // Upstream uses getBuild().getName(); getBuildPath() is needed for our composite build
     final String buildPath = projectComponentIdentifier.getBuild().getBuildPath();
     for (IncludedBuild ib : project.getRootProject().getGradle().getIncludedBuilds()) {
       if (((IncludedBuildInternal) ib).getTarget().getBuildIdentifier().getBuildPath().equals(buildPath)) {

@@ -89,6 +89,7 @@ import io.quarkus.paths.PathList;
 import io.quarkus.runtime.LaunchMode;
 import io.quarkus.runtime.util.HashUtil;
 
+// Based on https://github.com/quarkusio/quarkus/blob/2.16.7.Final/devtools/gradle/gradle-model/src/main/java/io/quarkus/gradle/tooling/GradleApplicationModelBuilder.java
 public class GradleApplicationModelBuilder implements ParameterizedToolingModelBuilder<ModelParameter> {
 
   private static final String MAIN_RESOURCES_OUTPUT = "build/resources/main";
@@ -256,7 +257,8 @@ public class GradleApplicationModelBuilder implements ParameterizedToolingModelB
     final Set<ResolvedArtifact> resolvedArtifacts = configuration.getResolvedArtifacts();
     // if the number of artifacts is less than the number of files then probably
     // the project includes direct file dependencies
-    // final Set<File> artifactFiles = resolvedArtifacts.size() < configuration.getFiles().size()
+    // Upstream uses configuration.getFiles(); replaced with dependencies.getFiles().getFiles()
+    // since ResolvedConfiguration.getFiles() was removed in Gradle 9
     final Set<File> artifactFiles = resolvedArtifacts.size() < dependencies.getFiles().getFiles().size()
         ? new HashSet<>(resolvedArtifacts.size())
         : null;
@@ -271,7 +273,7 @@ public class GradleApplicationModelBuilder implements ParameterizedToolingModelB
 
     if (artifactFiles != null) {
       // detect FS paths that aren't provided by the resolved artifacts
-      // for (File f : configuration.getFiles()) {
+      // Upstream uses configuration.getFiles(); replaced for the same Gradle 9 reason
       for (File f : dependencies.getFiles().getFiles()) {
         if (artifactFiles.contains(f) || !f.exists()) {
           continue;
@@ -526,35 +528,8 @@ public class GradleApplicationModelBuilder implements ParameterizedToolingModelB
       });
     });
 
-    // This "try/catch" is needed because of the way the "quarkus-cli" Gradle tests work. Without it, the tests fail.
-    /*
-    try {
-      Class.forName("org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile");
-      project.getTasks().withType(KotlinJvmCompile.class, t -> {
-        if (!t.getEnabled()) {
-          return;
-        }
-        final FileTree source = t.getSources().getAsFileTree();
-        if (source.isEmpty()) {
-          return;
-        }
-        final File destDir = t.getDestinationDirectory().getAsFile().get();
-        if (!allClassesDirs.contains(destDir)) {
-          return;
-        }
-        source.visit(a -> {
-          // we are looking for the root dirs containing sources
-          if (a.getRelativePath().getSegments().length == 1) {
-            final File srcDir = a.getFile().getParentFile();
-            sourceDirs
-                .add(new DefaultSourceDir(srcDir.toPath(), destDir.toPath(), Map.of("compiler", t.getName())));
-          }
-        });
-      });
-    } catch (ClassNotFoundException e) {
-      // ignore
-    }
-     */
+    // Upstream calls maybeConfigureKotlinJvmCompile() here; removed to avoid adding a
+    // compile-time dependency on kotlin-gradle-plugin-api
 
     final LinkedHashMap<File, Path> resourceDirs = new LinkedHashMap<>(1);
     final File resourcesOutputDir = sourceSet.getOutput().getResourcesDir();

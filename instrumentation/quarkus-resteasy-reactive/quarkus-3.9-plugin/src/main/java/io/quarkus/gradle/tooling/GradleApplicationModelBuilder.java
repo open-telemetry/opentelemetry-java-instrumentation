@@ -26,9 +26,12 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -87,7 +90,9 @@ import io.quarkus.paths.PathCollection;
 import io.quarkus.paths.PathList;
 import io.quarkus.runtime.LaunchMode;
 
-public class GradleApplicationModelBuilder implements ParameterizedToolingModelBuilder<ModelParameter> {
+// Based on https://github.com/quarkusio/quarkus/blob/3.9.5/devtools/gradle/gradle-model/src/main/java/io/quarkus/gradle/tooling/GradleApplicationModelBuilder.java
+public class GradleApplicationModelBuilder
+    implements ParameterizedToolingModelBuilder<ModelParameter> {
 
   private static final String MAIN_RESOURCES_OUTPUT = "build/resources/main";
   private static final String CLASSES_OUTPUT = "build/classes";
@@ -119,106 +124,144 @@ public class GradleApplicationModelBuilder implements ParameterizedToolingModelB
   public Object buildAll(String modelName, ModelParameter parameter, Project project) {
     final LaunchMode mode = LaunchMode.valueOf(parameter.getMode());
 
-    final ApplicationDeploymentClasspathBuilder classpathBuilder = new ApplicationDeploymentClasspathBuilder(project,
-        mode);
+    final ApplicationDeploymentClasspathBuilder classpathBuilder =
+        new ApplicationDeploymentClasspathBuilder(project, mode);
     final Configuration classpathConfig = classpathBuilder.getRuntimeConfiguration();
     final Configuration deploymentConfig = classpathBuilder.getDeploymentConfiguration();
     final PlatformImports platformImports = classpathBuilder.getPlatformImports();
 
-    boolean workspaceDiscovery = LaunchMode.DEVELOPMENT.equals(mode) || LaunchMode.TEST.equals(mode)
-        || Boolean.parseBoolean(System.getProperty(BootstrapConstants.QUARKUS_BOOTSTRAP_WORKSPACE_DISCOVERY));
+    boolean workspaceDiscovery =
+        LaunchMode.DEVELOPMENT.equals(mode)
+            || LaunchMode.TEST.equals(mode)
+            || Boolean.parseBoolean(
+                System.getProperty(BootstrapConstants.QUARKUS_BOOTSTRAP_WORKSPACE_DISCOVERY));
     if (!workspaceDiscovery) {
-      Object property = project.getProperties().get(BootstrapConstants.QUARKUS_BOOTSTRAP_WORKSPACE_DISCOVERY);
-      if (property != null) {
-        workspaceDiscovery = Boolean.parseBoolean(property.toString());
+      Object o =
+          project
+              .getProperties()
+              .get(BootstrapConstants.QUARKUS_BOOTSTRAP_WORKSPACE_DISCOVERY);
+      if (o != null) {
+        workspaceDiscovery = Boolean.parseBoolean(o.toString());
       }
     }
 
     final ResolvedDependency appArtifact = getProjectArtifact(project, workspaceDiscovery);
-    final ApplicationModelBuilder modelBuilder = new ApplicationModelBuilder()
-        .setAppArtifact(appArtifact)
-        .addReloadableWorkspaceModule(appArtifact.getKey())
-        .setPlatformImports(platformImports);
+    final ApplicationModelBuilder modelBuilder =
+        new ApplicationModelBuilder()
+            .setAppArtifact(appArtifact)
+            .addReloadableWorkspaceModule(appArtifact.getKey())
+            .setPlatformImports(platformImports);
 
-    collectDependencies(classpathConfig.getResolvedConfiguration(), workspaceDiscovery,
-        project, modelBuilder, appArtifact.getWorkspaceModule().mutable());
+    collectDependencies(
+        classpathConfig,
+        workspaceDiscovery,
+        project,
+        modelBuilder,
+        appArtifact.getWorkspaceModule().mutable());
     collectExtensionDependencies(project, deploymentConfig, modelBuilder);
     addCompileOnly(project, classpathBuilder, modelBuilder);
 
     return modelBuilder.build();
   }
 
-  private static void addCompileOnly(Project project, ApplicationDeploymentClasspathBuilder classpathBuilder,
+  private static void addCompileOnly(
+      Project project,
+      ApplicationDeploymentClasspathBuilder classpathBuilder,
       ApplicationModelBuilder modelBuilder) {
-    Configuration compileOnlyConfig = classpathBuilder.getCompileOnly();
-    final List<org.gradle.api.artifacts.ResolvedDependency> queue = new ArrayList<>(
-        compileOnlyConfig.getResolvedConfiguration().getFirstLevelModuleDependencies());
-    for (int index = 0; index < queue.size(); index++) {
-      org.gradle.api.artifacts.ResolvedDependency resolvedDependency = queue.get(index);
+    var compileOnlyConfig = classpathBuilder.getCompileOnly();
+    final List<org.gradle.api.artifacts.ResolvedDependency> queue =
+        new ArrayList<>(
+            compileOnlyConfig.getResolvedConfiguration().getFirstLevelModuleDependencies());
+    for (int i = 0; i < queue.size(); ++i) {
+      var d = queue.get(i);
       boolean skip = true;
-      for (ResolvedArtifact artifact : resolvedDependency.getModuleArtifacts()) {
-        if (!isDependency(artifact)) {
+      for (var a : d.getModuleArtifacts()) {
+        if (!isDependency(a)) {
           continue;
         }
-        var moduleId = artifact.getModuleVersion().getId();
-        var key = ArtifactKey.of(moduleId.getGroup(), moduleId.getName(), artifact.getClassifier(), artifact.getType());
-        var appDependency = modelBuilder.getDependency(key);
-        if (appDependency == null) {
-          addArtifactDependency(project, modelBuilder, artifact);
-          appDependency = modelBuilder.getDependency(key);
-          appDependency.clearFlag(DependencyFlags.DEPLOYMENT_CP);
+        var moduleId = a.getModuleVersion().getId();
+        var key =
+            ArtifactKey.of(
+                moduleId.getGroup(), moduleId.getName(), a.getClassifier(), a.getType());
+        var appDep = modelBuilder.getDependency(key);
+        if (appDep == null) {
+          addArtifactDependency(project, modelBuilder, a);
+          appDep = modelBuilder.getDependency(key);
+          appDep.clearFlag(DependencyFlags.DEPLOYMENT_CP);
         }
-        if (!appDependency.isFlagSet(DependencyFlags.COMPILE_ONLY)) {
+        if (!appDep.isFlagSet(DependencyFlags.COMPILE_ONLY)) {
           skip = false;
-          appDependency.setFlags(DependencyFlags.COMPILE_ONLY);
+          appDep.setFlags(DependencyFlags.COMPILE_ONLY);
         }
       }
       if (!skip) {
-        queue.addAll(resolvedDependency.getChildren());
+        queue.addAll(d.getChildren());
       }
     }
   }
 
-  public static ResolvedDependency getProjectArtifact(Project project, boolean workspaceDiscovery) {
-    final ResolvedDependencyBuilder appArtifact = ResolvedDependencyBuilder.newInstance()
-        .setGroupId(project.getGroup().toString())
-        .setArtifactId(project.getName())
-        .setVersion(project.getVersion().toString());
+  public static ResolvedDependency getProjectArtifact(
+      Project project, boolean workspaceDiscovery) {
+    final ResolvedDependencyBuilder appArtifact =
+        ResolvedDependencyBuilder.newInstance()
+            .setGroupId(project.getGroup().toString())
+            .setArtifactId(project.getName())
+            .setVersion(project.getVersion().toString());
 
-    final SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
-    final WorkspaceModule.Mutable mainModule = WorkspaceModule.builder()
-        .setModuleId(new GAV(appArtifact.getGroupId(), appArtifact.getArtifactId(), appArtifact.getVersion()))
-        .setModuleDir(project.getProjectDir().toPath())
-        .setBuildDir(project.getBuildDir().toPath())
-        .setBuildFile(project.getBuildFile().toPath());
+    final SourceSetContainer sourceSets =
+        project.getExtensions().getByType(SourceSetContainer.class);
+    final WorkspaceModule.Mutable mainModule =
+        WorkspaceModule.builder()
+            .setModuleId(
+                new GAV(
+                    appArtifact.getGroupId(),
+                    appArtifact.getArtifactId(),
+                    appArtifact.getVersion()))
+            .setModuleDir(project.getProjectDir().toPath())
+            .setBuildDir(project.getBuildDir().toPath())
+            .setBuildFile(project.getBuildFile().toPath());
 
-    initProjectModule(project, mainModule, sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME), ArtifactSources.MAIN);
+    initProjectModule(
+        project,
+        mainModule,
+        sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME),
+        ArtifactSources.MAIN);
     if (workspaceDiscovery) {
       final TaskCollection<Test> testTasks = project.getTasks().withType(Test.class);
       if (!testTasks.isEmpty()) {
         final Map<File, SourceSet> sourceSetsByClassesDir = new HashMap<>();
-        sourceSets.forEach(sourceSet -> {
-          sourceSet.getOutput().getClassesDirs().forEach(classesDir -> {
-            if (classesDir.exists()) {
-              sourceSetsByClassesDir.put(classesDir, sourceSet);
-            }
-          });
-        });
-        testTasks.forEach(testTask -> {
-          if (testTask.getEnabled()) {
-            testTask.getTestClassesDirs().forEach(classesDir -> {
-              if (classesDir.exists()) {
-                final SourceSet sourceSet = sourceSetsByClassesDir.remove(classesDir);
-                if (sourceSet != null) {
-                  initProjectModule(project, mainModule, sourceSet,
-                      sourceSet.getName().equals(SourceSet.TEST_SOURCE_SET_NAME)
-                          ? ArtifactSources.TEST
-                          : sourceSet.getName());
-                }
+        sourceSets.forEach(
+            s -> {
+              s.getOutput()
+                  .getClassesDirs()
+                  .forEach(
+                      d -> {
+                        if (d.exists()) {
+                          sourceSetsByClassesDir.put(d, s);
+                        }
+                      });
+            });
+        testTasks.forEach(
+            t -> {
+              if (t.getEnabled()) {
+                t.getTestClassesDirs()
+                    .forEach(
+                        d -> {
+                          if (d.exists()) {
+                            final SourceSet sourceSet = sourceSetsByClassesDir.remove(d);
+                            if (sourceSet != null) {
+                              initProjectModule(
+                                  project,
+                                  mainModule,
+                                  sourceSet,
+                                  sourceSet.getName().equals(SourceSet.TEST_SOURCE_SET_NAME)
+                                      ? ArtifactSources.TEST
+                                      : sourceSet.getName());
+                            }
+                          }
+                        });
               }
             });
-          }
-        });
       }
     }
 
@@ -229,9 +272,10 @@ public class GradleApplicationModelBuilder implements ParameterizedToolingModelB
     return appArtifact.setWorkspaceModule(mainModule).setResolvedPaths(paths.build()).build();
   }
 
-  private static void collectDestinationDirs(Collection<SourceDir> sources, final PathList.Builder paths) {
-    for (SourceDir source : sources) {
-      final Path path = source.getOutputDir();
+  private static void collectDestinationDirs(
+      Collection<SourceDir> sources, final PathList.Builder paths) {
+    for (SourceDir src : sources) {
+      final Path path = src.getOutputDir();
       if (paths.contains(path) || !Files.exists(path)) {
         continue;
       }
@@ -239,161 +283,304 @@ public class GradleApplicationModelBuilder implements ParameterizedToolingModelB
     }
   }
 
-  private void collectExtensionDependencies(Project project, Configuration deploymentConfiguration,
+  private void collectExtensionDependencies(
+      Project project,
+      Configuration deploymentConfiguration,
       ApplicationModelBuilder modelBuilder) {
-    final ResolvedConfiguration resolvedConfiguration = deploymentConfiguration.getResolvedConfiguration();
-    for (ResolvedArtifact artifact : resolvedConfiguration.getResolvedArtifacts()) {
-      addArtifactDependency(project, modelBuilder, artifact);
+    final ResolvedConfiguration rc = deploymentConfiguration.getResolvedConfiguration();
+    for (ResolvedArtifact a : rc.getResolvedArtifacts()) {
+      addArtifactDependency(project, modelBuilder, a);
     }
   }
 
-  private static void addArtifactDependency(Project project, ApplicationModelBuilder modelBuilder, ResolvedArtifact artifact) {
-    if (artifact.getId().getComponentIdentifier() instanceof ProjectComponentIdentifier projectComponentIdentifier) {
-      var includedBuild = ToolingUtils.includedBuild(project, projectComponentIdentifier.getBuild().getBuildPath());
-      final Project projectDependency;
+  private static void addArtifactDependency(
+      Project project, ApplicationModelBuilder modelBuilder, ResolvedArtifact a) {
+    if (a.getId().getComponentIdentifier() instanceof ProjectComponentIdentifier) {
+      ProjectComponentIdentifier projectComponentIdentifier =
+          (ProjectComponentIdentifier) a.getId().getComponentIdentifier();
+      // Upstream uses getBuild().getName(); getBuildPath() is needed for our composite build
+      var includedBuild =
+          ToolingUtils.includedBuild(
+              project, projectComponentIdentifier.getBuild().getBuildPath());
+      final Project projectDep;
       if (includedBuild != null) {
-        projectDependency = ToolingUtils.includedBuildProject((IncludedBuildInternal) includedBuild,
-            projectComponentIdentifier.getProjectPath());
+        projectDep =
+            ToolingUtils.includedBuildProject(
+                (IncludedBuildInternal) includedBuild,
+                projectComponentIdentifier.getProjectPath());
       } else {
-        projectDependency = project.getRootProject().findProject(projectComponentIdentifier.getProjectPath());
+        projectDep =
+            project
+                .getRootProject()
+                .findProject(projectComponentIdentifier.getProjectPath());
       }
-      Objects.requireNonNull(projectDependency,
+      Objects.requireNonNull(
+          projectDep,
           () -> "project " + projectComponentIdentifier.getProjectPath() + " should exist");
-      SourceSetContainer sourceSets = projectDependency.getExtensions().getByType(SourceSetContainer.class);
+      SourceSetContainer sourceSets =
+          projectDep.getExtensions().getByType(SourceSetContainer.class);
 
       SourceSet mainSourceSet = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME);
-      ResolvedDependencyBuilder dependency = modelBuilder.getDependency(
-          toAppDependenciesKey(artifact.getModuleVersion().getId().getGroup(), artifact.getName(), artifact.getClassifier()));
-      if (dependency == null) {
-        dependency = toDependency(artifact, mainSourceSet);
-        modelBuilder.addDependency(dependency);
+      ResolvedDependencyBuilder dep =
+          modelBuilder.getDependency(
+              toAppDependenciesKey(
+                  a.getModuleVersion().getId().getGroup(), a.getName(), a.getClassifier()));
+      if (dep == null) {
+        dep = toDependency(a, mainSourceSet);
+        modelBuilder.addDependency(dep);
       }
-      dependency.setDeploymentCp();
-      dependency.clearFlag(DependencyFlags.RELOADABLE);
-    } else if (isDependency(artifact)) {
-      ResolvedDependencyBuilder dependency = modelBuilder.getDependency(
-          toAppDependenciesKey(artifact.getModuleVersion().getId().getGroup(), artifact.getName(), artifact.getClassifier()));
-      if (dependency == null) {
-        dependency = toDependency(artifact);
-        modelBuilder.addDependency(dependency);
+      dep.setDeploymentCp();
+      dep.clearFlag(DependencyFlags.RELOADABLE);
+    } else if (isDependency(a)) {
+      ResolvedDependencyBuilder dep =
+          modelBuilder.getDependency(
+              toAppDependenciesKey(
+                  a.getModuleVersion().getId().getGroup(), a.getName(), a.getClassifier()));
+      if (dep == null) {
+        dep = toDependency(a);
+        modelBuilder.addDependency(dep);
       }
-      dependency.setDeploymentCp();
-      dependency.clearFlag(DependencyFlags.RELOADABLE);
+      dep.setDeploymentCp();
+      dep.clearFlag(DependencyFlags.RELOADABLE);
     }
   }
 
-  private void collectDependencies(ResolvedConfiguration configuration,
-      boolean workspaceDiscovery, Project project, ApplicationModelBuilder modelBuilder,
-      WorkspaceModule.Mutable workspaceModule) {
+  private void collectDependencies(
+      Configuration classpathConfig,
+      boolean workspaceDiscovery,
+      Project project,
+      ApplicationModelBuilder modelBuilder,
+      WorkspaceModule.Mutable wsModule) {
 
-    final Set<File> artifactFiles = null;
+    final ResolvedConfiguration configuration = classpathConfig.getResolvedConfiguration();
+    final Set<ResolvedArtifact> resolvedArtifacts = configuration.getResolvedArtifacts();
+    // if the number of artifacts is less than the number of files then probably
+    // the project includes direct file dependencies
+    final Set<File> artifactFiles =
+        resolvedArtifacts.size() < classpathConfig.getFiles().size()
+            ? new HashSet<>(resolvedArtifacts.size())
+            : null;
 
-    configuration.getFirstLevelModuleDependencies().forEach(dependency ->
-        collectDependencies(dependency, workspaceDiscovery, project, artifactFiles, new HashSet<>(),
-            modelBuilder, workspaceModule,
-            (byte) (COLLECT_TOP_EXTENSION_RUNTIME_NODES | COLLECT_DIRECT_DEPS | COLLECT_RELOADABLE_MODULES)));
+    configuration
+        .getFirstLevelModuleDependencies()
+        .forEach(
+            d -> {
+              collectDependencies(
+                  d,
+                  workspaceDiscovery,
+                  project,
+                  artifactFiles,
+                  new HashSet<>(),
+                  modelBuilder,
+                  wsModule,
+                  (byte)
+                      (COLLECT_TOP_EXTENSION_RUNTIME_NODES
+                          | COLLECT_DIRECT_DEPS
+                          | COLLECT_RELOADABLE_MODULES));
+            });
+
+    if (artifactFiles != null) {
+      // detect FS paths that aren't provided by the resolved artifacts
+      for (File f : classpathConfig.getFiles()) {
+        if (artifactFiles.contains(f) || !f.exists()) {
+          continue;
+        }
+        // here we are trying to represent a direct FS path dependency
+        // as an artifact dependency
+        // SHA1 hash is used to avoid long file names in the lib dir
+        final String parentPath = f.getParent();
+        final String group = sha1(parentPath == null ? f.getName() : parentPath);
+        String name = f.getName();
+        String type = ArtifactCoords.TYPE_JAR;
+        if (!f.isDirectory()) {
+          final int dot = f.getName().lastIndexOf('.');
+          if (dot > 0) {
+            name = f.getName().substring(0, dot);
+            type = f.getName().substring(dot + 1);
+          }
+        }
+        // hash could be a better way to represent the version
+        final String version = String.valueOf(f.lastModified());
+        final ResolvedDependencyBuilder artifactBuilder =
+            ResolvedDependencyBuilder.newInstance()
+                .setGroupId(group)
+                .setArtifactId(name)
+                .setType(type)
+                .setVersion(version)
+                .setResolvedPath(f.toPath())
+                .setDirect(true)
+                .setRuntimeCp()
+                .setDeploymentCp();
+        processQuarkusDependency(artifactBuilder, modelBuilder);
+        modelBuilder.addDependency(artifactBuilder);
+      }
+    }
   }
 
-  private void collectDependencies(org.gradle.api.artifacts.ResolvedDependency resolvedDependency,
-      boolean workspaceDiscovery, Project project, Set<File> artifactFiles, Set<ArtifactKey> processedModules,
-      ApplicationModelBuilder modelBuilder, WorkspaceModule.Mutable parentModule, byte flags) {
+  private void collectDependencies(
+      org.gradle.api.artifacts.ResolvedDependency resolvedDep,
+      boolean workspaceDiscovery,
+      Project project,
+      Set<File> artifactFiles,
+      Set<ArtifactKey> processedModules,
+      ApplicationModelBuilder modelBuilder,
+      WorkspaceModule.Mutable parentModule,
+      byte flags) {
     WorkspaceModule.Mutable projectModule = null;
-    for (ResolvedArtifact artifact : resolvedDependency.getModuleArtifacts()) {
-      final ArtifactKey artifactKey = toAppDependenciesKey(artifact.getModuleVersion().getId().getGroup(), artifact.getName(),
-          artifact.getClassifier());
-      if (!isDependency(artifact)) {
+    for (ResolvedArtifact a : resolvedDep.getModuleArtifacts()) {
+      final ArtifactKey artifactKey =
+          toAppDependenciesKey(
+              a.getModuleVersion().getId().getGroup(), a.getName(), a.getClassifier());
+      if (!isDependency(a)) {
         continue;
       }
-      var dependencyBuilder = modelBuilder.getDependency(artifactKey);
-      if (dependencyBuilder != null) {
+      var depBuilder = modelBuilder.getDependency(artifactKey);
+      if (depBuilder != null) {
         if (isFlagOn(flags, COLLECT_DIRECT_DEPS)) {
-          dependencyBuilder.setDirect(true);
+          depBuilder.setDirect(true);
         }
         continue;
       }
-      final ArtifactCoords dependencyCoords = toArtifactCoords(artifact);
-      dependencyBuilder = ResolvedDependencyBuilder.newInstance()
-          .setCoords(dependencyCoords)
-          .setRuntimeCp()
-          .setDeploymentCp();
+      final ArtifactCoords depCoords = toArtifactCoords(a);
+      depBuilder =
+          ResolvedDependencyBuilder.newInstance()
+              .setCoords(depCoords)
+              .setRuntimeCp()
+              .setDeploymentCp();
       if (isFlagOn(flags, COLLECT_DIRECT_DEPS)) {
-        dependencyBuilder.setDirect(true);
+        depBuilder.setDirect(true);
         flags = clearFlag(flags, COLLECT_DIRECT_DEPS);
       }
       if (parentModule != null) {
-        parentModule.addDependency(new ArtifactDependency(dependencyCoords));
+        parentModule.addDependency(new ArtifactDependency(depCoords));
       }
 
       PathCollection paths = null;
-      if (workspaceDiscovery && artifact.getId().getComponentIdentifier() instanceof ProjectComponentIdentifier projectComponentIdentifier) {
-        Project projectDependency = project.getRootProject().findProject(projectComponentIdentifier.getProjectPath());
-        SourceSetContainer sourceSets = projectDependency == null ? null
-            : projectDependency.getExtensions().findByType(SourceSetContainer.class);
+      if (workspaceDiscovery
+          && a.getId().getComponentIdentifier() instanceof ProjectComponentIdentifier) {
 
-        final String classifier = artifact.getClassifier();
+        Project projectDep =
+            project
+                .getRootProject()
+                .findProject(
+                    ((ProjectComponentIdentifier) a.getId().getComponentIdentifier())
+                        .getProjectPath());
+        SourceSetContainer sourceSets =
+            projectDep == null
+                ? null
+                : projectDep.getExtensions().findByType(SourceSetContainer.class);
+
+        final String classifier = a.getClassifier();
         if (classifier == null || classifier.isEmpty()) {
-          final IncludedBuild includedBuild = ToolingUtils.includedBuild(project.getRootProject(),
-              projectComponentIdentifier.getBuild().getBuildPath());
+          // Upstream uses getBuild().getName(); getBuildPath() is needed for our composite
+          // build
+          final IncludedBuild includedBuild =
+              ToolingUtils.includedBuild(
+                  project.getRootProject(),
+                  ((ProjectComponentIdentifier) a.getId().getComponentIdentifier())
+                      .getBuild()
+                      .getBuildPath());
           if (includedBuild != null) {
             final PathList.Builder pathBuilder = PathList.builder();
 
             if (includedBuild instanceof IncludedBuildInternal) {
-              projectDependency = ToolingUtils.includedBuildProject((IncludedBuildInternal) includedBuild,
-                  projectComponentIdentifier.getProjectPath());
+              projectDep =
+                  ToolingUtils.includedBuildProject(
+                      (IncludedBuildInternal) includedBuild,
+                      ((ProjectComponentIdentifier) a.getId().getComponentIdentifier())
+                          .getProjectPath());
             }
-            if (projectDependency != null) {
-              projectModule = initProjectModuleAndBuildPaths(projectDependency, artifact, modelBuilder, dependencyBuilder,
-                  pathBuilder, SourceSet.MAIN_SOURCE_SET_NAME, false);
-              addSubstitutedProject(pathBuilder, projectDependency.getProjectDir());
+            if (projectDep != null) {
+              projectModule =
+                  initProjectModuleAndBuildPaths(
+                      projectDep,
+                      a,
+                      modelBuilder,
+                      depBuilder,
+                      pathBuilder,
+                      SourceSet.MAIN_SOURCE_SET_NAME,
+                      false);
+              addSubstitutedProject(pathBuilder, projectDep.getProjectDir());
             } else {
               addSubstitutedProject(pathBuilder, includedBuild.getProjectDir());
             }
             paths = pathBuilder.build();
           } else if (sourceSets != null) {
             final PathList.Builder pathBuilder = PathList.builder();
-            projectModule = initProjectModuleAndBuildPaths(projectDependency, artifact, modelBuilder, dependencyBuilder,
-                pathBuilder, SourceSet.MAIN_SOURCE_SET_NAME, false);
+            projectModule =
+                initProjectModuleAndBuildPaths(
+                    projectDep,
+                    a,
+                    modelBuilder,
+                    depBuilder,
+                    pathBuilder,
+                    SourceSet.MAIN_SOURCE_SET_NAME,
+                    false);
             paths = pathBuilder.build();
           }
         } else if (sourceSets != null) {
           if (SourceSet.TEST_SOURCE_SET_NAME.equals(classifier)) {
             final PathList.Builder pathBuilder = PathList.builder();
-            projectModule = initProjectModuleAndBuildPaths(projectDependency, artifact, modelBuilder, dependencyBuilder,
-                pathBuilder, SourceSet.TEST_SOURCE_SET_NAME, true);
+            projectModule =
+                initProjectModuleAndBuildPaths(
+                    projectDep,
+                    a,
+                    modelBuilder,
+                    depBuilder,
+                    pathBuilder,
+                    SourceSet.TEST_SOURCE_SET_NAME,
+                    true);
             paths = pathBuilder.build();
           } else if ("test-fixtures".equals(classifier)) {
             final PathList.Builder pathBuilder = PathList.builder();
-            projectModule = initProjectModuleAndBuildPaths(projectDependency, artifact, modelBuilder, dependencyBuilder,
-                pathBuilder, "testFixtures", true);
+            projectModule =
+                initProjectModuleAndBuildPaths(
+                    projectDep,
+                    a,
+                    modelBuilder,
+                    depBuilder,
+                    pathBuilder,
+                    "testFixtures",
+                    true);
             paths = pathBuilder.build();
           }
         }
       }
 
-      dependencyBuilder.setResolvedPaths(paths == null ? PathList.of(artifact.getFile().toPath()) : paths)
+      depBuilder
+          .setResolvedPaths(paths == null ? PathList.of(a.getFile().toPath()) : paths)
           .setWorkspaceModule(projectModule);
-      if (processQuarkusDependency(dependencyBuilder, modelBuilder)) {
+      if (processQuarkusDependency(depBuilder, modelBuilder)) {
         if (isFlagOn(flags, COLLECT_TOP_EXTENSION_RUNTIME_NODES)) {
-          dependencyBuilder.setFlags(DependencyFlags.TOP_LEVEL_RUNTIME_EXTENSION_ARTIFACT);
+          depBuilder.setFlags(DependencyFlags.TOP_LEVEL_RUNTIME_EXTENSION_ARTIFACT);
           flags = clearFlag(flags, COLLECT_TOP_EXTENSION_RUNTIME_NODES);
         }
         flags = clearFlag(flags, COLLECT_RELOADABLE_MODULES);
       }
       if (!isFlagOn(flags, COLLECT_RELOADABLE_MODULES)) {
-        dependencyBuilder.clearFlag(DependencyFlags.RELOADABLE);
+        depBuilder.clearFlag(DependencyFlags.RELOADABLE);
       }
-      modelBuilder.addDependency(dependencyBuilder);
+      modelBuilder.addDependency(depBuilder);
 
       if (artifactFiles != null) {
-        artifactFiles.add(artifact.getFile());
+        artifactFiles.add(a.getFile());
       }
     }
 
-    processedModules.add(ArtifactKey.ga(resolvedDependency.getModuleGroup(), resolvedDependency.getModuleName()));
-    for (org.gradle.api.artifacts.ResolvedDependency child : resolvedDependency.getChildren()) {
-      if (!processedModules.contains(new GACT(child.getModuleGroup(), child.getModuleName()))) {
-        collectDependencies(child, workspaceDiscovery, project, artifactFiles, processedModules,
-            modelBuilder, projectModule, flags);
+    processedModules.add(
+        ArtifactKey.ga(resolvedDep.getModuleGroup(), resolvedDep.getModuleName()));
+    for (org.gradle.api.artifacts.ResolvedDependency child : resolvedDep.getChildren()) {
+      if (!processedModules.contains(
+          new GACT(child.getModuleGroup(), child.getModuleName()))) {
+        collectDependencies(
+            child,
+            workspaceDiscovery,
+            project,
+            artifactFiles,
+            processedModules,
+            modelBuilder,
+            projectModule,
+            flags);
       }
     }
   }
@@ -402,145 +589,219 @@ public class GradleApplicationModelBuilder implements ParameterizedToolingModelB
     return resolvedClassifier == null ? ArtifactCoords.DEFAULT_CLASSIFIER : resolvedClassifier;
   }
 
-  private WorkspaceModule.Mutable initProjectModuleAndBuildPaths(final Project project,
-      ResolvedArtifact resolvedArtifact, ApplicationModelBuilder appModel, final ResolvedDependencyBuilder appDependency,
-      PathList.Builder buildPaths, String sourceName, boolean test) {
+  private WorkspaceModule.Mutable initProjectModuleAndBuildPaths(
+      final Project project,
+      ResolvedArtifact resolvedArtifact,
+      ApplicationModelBuilder appModel,
+      final ResolvedDependencyBuilder appDep,
+      PathList.Builder buildPaths,
+      String sourceName,
+      boolean test) {
 
-    appDependency.setWorkspaceModule().setReloadable();
+    appDep.setWorkspaceModule().setReloadable();
 
-    final WorkspaceModule.Mutable projectModule = appModel.getOrCreateProjectModule(
-            new GAV(resolvedArtifact.getModuleVersion().getId().getGroup(), resolvedArtifact.getName(),
-                resolvedArtifact.getModuleVersion().getId().getVersion()),
-            project.getProjectDir(),
-            project.getBuildDir())
-        .setBuildFile(project.getBuildFile().toPath());
+    final WorkspaceModule.Mutable projectModule =
+        appModel
+            .getOrCreateProjectModule(
+                new GAV(
+                    resolvedArtifact.getModuleVersion().getId().getGroup(),
+                    resolvedArtifact.getName(),
+                    resolvedArtifact.getModuleVersion().getId().getVersion()),
+                project.getProjectDir(),
+                project.getBuildDir())
+            .setBuildFile(project.getBuildFile().toPath());
 
     final String classifier = toNonNullClassifier(resolvedArtifact.getClassifier());
-    SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
+    SourceSetContainer sourceSets =
+        project.getExtensions().getByType(SourceSetContainer.class);
     initProjectModule(project, projectModule, sourceSets.findByName(sourceName), classifier);
 
-    collectDestinationDirs(projectModule.getSources(classifier).getSourceDirs(), buildPaths);
-    collectDestinationDirs(projectModule.getSources(classifier).getResourceDirs(), buildPaths);
+    collectDestinationDirs(
+        projectModule.getSources(classifier).getSourceDirs(), buildPaths);
+    collectDestinationDirs(
+        projectModule.getSources(classifier).getResourceDirs(), buildPaths);
 
     appModel.addReloadableWorkspaceModule(
-        ArtifactKey.of(resolvedArtifact.getModuleVersion().getId().getGroup(), resolvedArtifact.getName(), classifier,
+        ArtifactKey.of(
+            resolvedArtifact.getModuleVersion().getId().getGroup(),
+            resolvedArtifact.getName(),
+            classifier,
             ArtifactCoords.TYPE_JAR));
     return projectModule;
   }
 
-  private boolean processQuarkusDependency(ResolvedDependencyBuilder artifactBuilder, ApplicationModelBuilder modelBuilder) {
+  private boolean processQuarkusDependency(
+      ResolvedDependencyBuilder artifactBuilder, ApplicationModelBuilder modelBuilder) {
     for (Path artifactPath : artifactBuilder.getResolvedPaths()) {
-      if (!Files.exists(artifactPath) || !artifactBuilder.getType().equals(ArtifactCoords.TYPE_JAR)) {
+      if (!Files.exists(artifactPath)
+          || !artifactBuilder.getType().equals(ArtifactCoords.TYPE_JAR)) {
         break;
       }
       if (Files.isDirectory(artifactPath)) {
-        return processQuarkusDir(artifactBuilder, artifactPath.resolve(BootstrapConstants.META_INF), modelBuilder);
+        return processQuarkusDir(
+            artifactBuilder,
+            artifactPath.resolve(BootstrapConstants.META_INF),
+            modelBuilder);
       } else {
         try (FileSystem artifactFs = ZipUtils.newFileSystem(artifactPath)) {
-          return processQuarkusDir(artifactBuilder, artifactFs.getPath(BootstrapConstants.META_INF), modelBuilder);
-        } catch (IOException exception) {
-          throw new RuntimeException("Failed to process " + artifactPath, exception);
+          return processQuarkusDir(
+              artifactBuilder,
+              artifactFs.getPath(BootstrapConstants.META_INF),
+              modelBuilder);
+        } catch (IOException e) {
+          throw new RuntimeException("Failed to process " + artifactPath, e);
         }
       }
     }
     return false;
   }
 
-  private static boolean processQuarkusDir(ResolvedDependencyBuilder artifactBuilder, Path quarkusDir,
+  private static boolean processQuarkusDir(
+      ResolvedDependencyBuilder artifactBuilder,
+      Path quarkusDir,
       ApplicationModelBuilder modelBuilder) {
     if (!Files.exists(quarkusDir)) {
       return false;
     }
-    final Path quarkusDescriptor = quarkusDir.resolve(BootstrapConstants.DESCRIPTOR_FILE_NAME);
-    if (!Files.exists(quarkusDescriptor)) {
+    final Path quarkusDescr = quarkusDir.resolve(BootstrapConstants.DESCRIPTOR_FILE_NAME);
+    if (!Files.exists(quarkusDescr)) {
       return false;
     }
-    final Properties extensionProperties = readDescriptor(quarkusDescriptor);
-    if (extensionProperties == null) {
+    final Properties extProps = readDescriptor(quarkusDescr);
+    if (extProps == null) {
       return false;
     }
     artifactBuilder.setRuntimeExtensionArtifact();
     final String extensionCoords = artifactBuilder.toGACTVString();
-    modelBuilder.handleExtensionProperties(extensionProperties, extensionCoords);
+    modelBuilder.handleExtensionProperties(extProps, extensionCoords);
 
-    final String providesCapabilities = extensionProperties.getProperty(BootstrapConstants.PROP_PROVIDES_CAPABILITIES);
+    final String providesCapabilities =
+        extProps.getProperty(BootstrapConstants.PROP_PROVIDES_CAPABILITIES);
     if (providesCapabilities != null) {
-      modelBuilder.addExtensionCapabilities(CapabilityContract.of(extensionCoords, providesCapabilities, null));
+      modelBuilder.addExtensionCapabilities(
+          CapabilityContract.of(extensionCoords, providesCapabilities, null));
     }
     return true;
   }
 
   private static Properties readDescriptor(final Path path) {
+    final Properties rtProps;
     if (!Files.exists(path)) {
+      // not a platform artifact
       return null;
     }
-    Properties properties = new Properties();
+    rtProps = new Properties();
     try (BufferedReader reader = Files.newBufferedReader(path)) {
-      properties.load(reader);
-    } catch (IOException exception) {
-      throw new UncheckedIOException("Failed to load extension description " + path, exception);
+      rtProps.load(reader);
+    } catch (IOException e) {
+      throw new UncheckedIOException("Failed to load extension description " + path, e);
     }
-    return properties;
+    return rtProps;
   }
 
-  private static void initProjectModule(Project project, WorkspaceModule.Mutable module, SourceSet sourceSet,
+  private static void initProjectModule(
+      Project project,
+      WorkspaceModule.Mutable module,
+      SourceSet sourceSet,
       String classifier) {
+
     if (sourceSet == null) {
       return;
     }
 
     final FileCollection allClassesDirs = sourceSet.getOutput().getClassesDirs();
+    // some plugins do not add source directories to source sets and they may be missing from
+    // sourceSet.getAllJava()
+    // see https://github.com/quarkusio/quarkus/issues/20755
+
     final List<SourceDir> sourceDirs = new ArrayList<>(1);
-    project.getTasks().withType(AbstractCompile.class,
-        task -> configureCompileTask(task.getSource(), task.getDestinationDirectory(), allClassesDirs, sourceDirs, task));
+    project
+        .getTasks()
+        .withType(
+            AbstractCompile.class,
+            t ->
+                configureCompileTask(
+                    t.getSource(),
+                    t.getDestinationDirectory(),
+                    allClassesDirs,
+                    sourceDirs,
+                    t));
+
+    // Upstream calls maybeConfigureKotlinJvmCompile() here; removed to avoid adding a
+    // compile-time dependency on kotlin-gradle-plugin-api
 
     final LinkedHashMap<File, Path> resourceDirs = new LinkedHashMap<>(1);
     final File resourcesOutputDir = sourceSet.getOutput().getResourcesDir();
-    project.getTasks().withType(ProcessResources.class, task -> {
-      if (!task.getEnabled()) {
-        return;
-      }
-      final FileCollection source = task.getSource();
-      if (source.isEmpty()) {
-        return;
-      }
-      if (!task.getDestinationDir().equals(resourcesOutputDir)) {
-        return;
-      }
-      final Path destinationDir = task.getDestinationDir().toPath();
-      source.getAsFileTree().visit(visitDetails -> {
-        if (visitDetails.getRelativePath().getSegments().length == 1) {
-          final File sourceDir = visitDetails.getFile().getParentFile();
-          resourceDirs.put(sourceDir, destinationDir);
-        }
-      });
-    });
+    project
+        .getTasks()
+        .withType(
+            ProcessResources.class,
+            t -> {
+              if (!t.getEnabled()) {
+                return;
+              }
+              final FileCollection source = t.getSource();
+              if (source.isEmpty()) {
+                return;
+              }
+              if (!t.getDestinationDir().equals(resourcesOutputDir)) {
+                return;
+              }
+              final Path destDir = t.getDestinationDir().toPath();
+              source
+                  .getAsFileTree()
+                  .visit(
+                      a -> {
+                        // we are looking for the root dirs containing sources
+                        if (a.getRelativePath().getSegments().length == 1) {
+                          final File srcDir = a.getFile().getParentFile();
+                          resourceDirs.put(srcDir, destDir);
+                        }
+                      });
+            });
+    // there could be a task generating resources
     if (resourcesOutputDir.exists() && resourceDirs.isEmpty()) {
-      sourceSet.getResources().getSrcDirs().forEach(srcDir -> resourceDirs.put(srcDir, resourcesOutputDir.toPath()));
+      sourceSet
+          .getResources()
+          .getSrcDirs()
+          .forEach(srcDir -> resourceDirs.put(srcDir, resourcesOutputDir.toPath()));
     }
     final List<SourceDir> resources = new ArrayList<>(resourceDirs.size());
-    for (Map.Entry<File, Path> entry : resourceDirs.entrySet()) {
-      resources.add(new DefaultSourceDir(entry.getKey().toPath(), entry.getValue(), null));
+    for (Map.Entry<File, Path> e : resourceDirs.entrySet()) {
+      resources.add(new DefaultSourceDir(e.getKey().toPath(), e.getValue(), null));
     }
     module.addArtifactSources(new DefaultArtifactSources(classifier, sourceDirs, resources));
   }
 
-  private static void configureCompileTask(FileTree sources, DirectoryProperty destinationDirectory,
-      FileCollection allClassesDirs, List<SourceDir> sourceDirs, Task task) {
-    if (!task.getEnabled() || sources.isEmpty()) {
+  private static void configureCompileTask(
+      FileTree sources,
+      DirectoryProperty destinationDirectory,
+      FileCollection allClassesDirs,
+      List<SourceDir> sourceDirs,
+      Task task) {
+    if (!task.getEnabled()) {
       return;
     }
-    final File destinationDir = destinationDirectory.getAsFile().get();
-    if (!allClassesDirs.contains(destinationDir)) {
+    if (sources.isEmpty()) {
       return;
     }
-    sources.visit(visitDetails -> {
-      if (visitDetails.getRelativePath().getSegments().length == 1) {
-        final File sourceDir = visitDetails.getFile().getParentFile();
-        sourceDirs.add(new DefaultSourceDir(sourceDir.toPath(), destinationDir.toPath(), null,
-            Map.of("compiler", task.getName())));
-      }
-    });
+    final File destDir = destinationDirectory.getAsFile().get();
+    if (!allClassesDirs.contains(destDir)) {
+      return;
+    }
+    sources.visit(
+        a -> {
+          // we are looking for the root dirs containing sources
+          if (a.getRelativePath().getSegments().length == 1) {
+            final File srcDir = a.getFile().getParentFile();
+            sourceDirs.add(
+                new DefaultSourceDir(
+                    srcDir.toPath(),
+                    destDir.toPath(),
+                    null,
+                    Map.of("compiler", task.getName())));
+          }
+        });
   }
 
   private void addSubstitutedProject(PathList.Builder paths, File projectFile) {
@@ -554,7 +815,8 @@ public class GradleApplicationModelBuilder implements ParameterizedToolingModelB
       for (File languageDirectory : languageDirectories) {
         if (languageDirectory.isDirectory()) {
           for (File sourceSet : languageDirectory.listFiles()) {
-            if (sourceSet.isDirectory() && sourceSet.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
+            if (sourceSet.isDirectory()
+                && sourceSet.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
               paths.add(sourceSet.toPath());
             }
           }
@@ -574,52 +836,82 @@ public class GradleApplicationModelBuilder implements ParameterizedToolingModelB
     return flags;
   }
 
-  private static boolean isDependency(ResolvedArtifact artifact) {
-    return ArtifactCoords.TYPE_JAR.equalsIgnoreCase(artifact.getExtension()) || "exe".equalsIgnoreCase(artifact.getExtension())
-        || artifact.getFile().isDirectory();
+  private static boolean isDependency(ResolvedArtifact a) {
+    return ArtifactCoords.TYPE_JAR.equalsIgnoreCase(a.getExtension())
+        || "exe".equalsIgnoreCase(a.getExtension())
+        || a.getFile().isDirectory();
   }
 
-  static ResolvedDependencyBuilder toDependency(ResolvedArtifact artifact, int... flags) {
-    return toDependency(artifact, PathList.of(artifact.getFile().toPath()), null, flags);
+  /**
+   * Creates an instance of Dependency and associates it with the ResolvedArtifact's path
+   */
+  static ResolvedDependencyBuilder toDependency(ResolvedArtifact a, int... flags) {
+    return toDependency(a, PathList.of(a.getFile().toPath()), null, flags);
   }
 
-  static ResolvedDependencyBuilder toDependency(ResolvedArtifact artifact, SourceSet sourceSet) {
+  static ResolvedDependencyBuilder toDependency(ResolvedArtifact a, SourceSet s) {
     PathList.Builder resolvedPathBuilder = PathList.builder();
 
-    for (File classesDir : sourceSet.getOutput().getClassesDirs()) {
+    for (File classesDir : s.getOutput().getClassesDirs()) {
       if (classesDir.exists()) {
         resolvedPathBuilder.add(classesDir.toPath());
       }
     }
-    File resourceDir = sourceSet.getOutput().getResourcesDir();
+    File resourceDir = s.getOutput().getResourcesDir();
     if (resourceDir != null && resourceDir.exists()) {
       resolvedPathBuilder.add(resourceDir.toPath());
     }
 
     return ResolvedDependencyBuilder.newInstance()
         .setResolvedPaths(resolvedPathBuilder.build())
-        .setCoords(toArtifactCoords(artifact));
+        .setCoords(toArtifactCoords(a));
   }
 
-  static ResolvedDependencyBuilder toDependency(ResolvedArtifact artifact, PathCollection paths, DefaultWorkspaceModule module,
+  static ResolvedDependencyBuilder toDependency(
+      ResolvedArtifact a,
+      PathCollection paths,
+      DefaultWorkspaceModule module,
       int... flags) {
     int allFlags = 0;
-    for (int flag : flags) {
-      allFlags |= flag;
+    for (int f : flags) {
+      allFlags |= f;
     }
     return ResolvedDependencyBuilder.newInstance()
-        .setCoords(toArtifactCoords(artifact))
+        .setCoords(toArtifactCoords(a))
         .setResolvedPaths(paths)
         .setWorkspaceModule(module)
         .setFlags(allFlags);
   }
 
-  private static ArtifactCoords toArtifactCoords(ResolvedArtifact artifact) {
-    final String[] split = artifact.getModuleVersion().toString().split(":");
-    return new GACTV(split[0], split[1], artifact.getClassifier(), artifact.getType(), split.length > 2 ? split[2] : null);
+  private static ArtifactCoords toArtifactCoords(ResolvedArtifact a) {
+    final String[] split = a.getModuleVersion().toString().split(":");
+    return new GACTV(
+        split[0],
+        split[1],
+        a.getClassifier(),
+        a.getType(),
+        split.length > 2 ? split[2] : null);
   }
 
-  private static ArtifactKey toAppDependenciesKey(String groupId, String artifactId, String classifier) {
+  private static ArtifactKey toAppDependenciesKey(
+      String groupId, String artifactId, String classifier) {
     return new GACT(groupId, artifactId, classifier, ArtifactCoords.TYPE_JAR);
+  }
+
+  // Upstream uses io.quarkus.runtime.util.HashUtil; inlined here since HashUtil is not on the
+  // plugin classpath
+  private static String sha1(String value) {
+    try {
+      byte[] digest =
+          MessageDigest.getInstance("SHA-1")
+              .digest(value.getBytes(StandardCharsets.UTF_8));
+      StringBuilder sb = new StringBuilder(40);
+      for (byte b : digest) {
+        sb.append(Integer.toHexString((b & 0xFF) | 0x100).substring(1, 3));
+      }
+      return sb.toString();
+    } catch (NoSuchAlgorithmException e) {
+      throw new IllegalArgumentException(e);
+    }
   }
 }

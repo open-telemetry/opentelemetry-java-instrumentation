@@ -65,6 +65,7 @@ import io.quarkus.maven.dependency.ArtifactKey;
 import io.quarkus.maven.dependency.GACT;
 import io.quarkus.maven.dependency.GACTV;
 
+// Based on https://github.com/quarkusio/quarkus/blob/3.9.5/devtools/gradle/gradle-model/src/main/java/io/quarkus/gradle/tooling/dependency/DependencyUtils.java
 public class DependencyUtils {
 
   private static final String COPY_CONFIGURATION_NAME = "quarkusDependency";
@@ -117,7 +118,7 @@ public class DependencyUtils {
       projectDependency = getProjectExtensionDependencyOrNull(
           project,
           componentId.getProjectPath(),
-          // upstream uses getBuild().getName(), but getBuildPath() is needed for OTel's
+          // upstream uses getBuild().getName(), but getBuildPath() is needed for our
           // composite build structure where included build names may be colon-prefixed
           componentId.getBuild().getBuildPath());
 
@@ -392,7 +393,7 @@ public class DependencyUtils {
           ped.getDeploymentModule().getName(),
           ped.getDeploymentModule().getVersion().toString());
     // upstream has an additional branch here for ProjectInternal, which is removed to avoid
-    // depending on Gradle-internal APIs that are not needed in OTel's build
+    // depending on Gradle-internal APIs that are not needed in our build
     } else {
       return handler.create(handler.project(Collections.singletonMap("path", ped.getDeploymentModule().getPath())));
     }

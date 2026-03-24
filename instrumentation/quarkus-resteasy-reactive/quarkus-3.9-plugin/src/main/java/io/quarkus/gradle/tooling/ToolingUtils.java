@@ -45,6 +45,7 @@ import io.quarkus.bootstrap.model.gradle.impl.ModelParameterImpl;
 import io.quarkus.maven.dependency.ArtifactCoords;
 import io.quarkus.runtime.LaunchMode;
 
+// Based on https://github.com/quarkusio/quarkus/blob/3.9.5/devtools/gradle/gradle-model/src/main/java/io/quarkus/gradle/tooling/ToolingUtils.java
 public class ToolingUtils {
 
   private static final String DEPLOYMENT_CONFIGURATION_SUFFIX = "Deployment";
@@ -73,7 +74,7 @@ public class ToolingUtils {
           continue;
         }
 
-        // extra colon-prefixed check needed for OTel's composite build where getBuildPath() is used
+        // extra colon-prefixed check needed for our composite build where getBuildPath() is used
         if (ib.getName().equals(buildName) || (":" + ib.getName()).equals(buildName)) {
           return ib;
         }

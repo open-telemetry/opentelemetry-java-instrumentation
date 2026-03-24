@@ -56,6 +56,7 @@ import io.quarkus.maven.dependency.ArtifactCoords;
 import io.quarkus.maven.dependency.ArtifactKey;
 import io.quarkus.maven.dependency.GACTV;
 
+// Based on https://github.com/quarkusio/quarkus/blob/2.16.7.Final/devtools/gradle/gradle-model/src/main/java/io/quarkus/gradle/tooling/dependency/DependencyUtils.java
 public class DependencyUtils {
 
   private static final String COPY_CONFIGURATION_NAME = "quarkusDependency";
@@ -110,17 +111,8 @@ public class DependencyUtils {
           : projectDep.getExtensions().findByType(SourceSetContainer.class);
       final String classifier = artifact.getClassifier();
       boolean isIncludedBuild = false;
-      /*
-      if ((!componentIdentifier.getBuild().isCurrentBuild() || sourceSets == null)
-          && (classifier == null || classifier.isEmpty())) {
-        var includedBuild = ToolingUtils.includedBuild(project, componentIdentifier);
-        if (includedBuild instanceof IncludedBuildInternal) {
-          projectDep = ToolingUtils.includedBuildProject((IncludedBuildInternal) includedBuild, componentIdentifier);
-          sourceSets = projectDep == null ? null : projectDep.getExtensions().findByType(SourceSetContainer.class);
-          isIncludedBuild = true;
-        }
-      }
-       */
+      // Upstream uses componentIdentifier.getBuild().isCurrentBuild() and ToolingUtils to resolve
+      // included build projects here; removed since it is not needed in our build
       if (sourceSets != null) {
         SourceSet mainSourceSet = sourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME);
         if (mainSourceSet == null) {

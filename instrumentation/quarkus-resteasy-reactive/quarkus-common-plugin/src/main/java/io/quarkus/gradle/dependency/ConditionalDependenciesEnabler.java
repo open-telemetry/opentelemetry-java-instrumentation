@@ -43,6 +43,7 @@ import io.quarkus.maven.dependency.ArtifactKey;
 import io.quarkus.maven.dependency.GACT;
 import io.quarkus.runtime.LaunchMode;
 
+// Based on https://github.com/quarkusio/quarkus/blob/2.16.7.Final/devtools/gradle/gradle-model/src/main/java/io/quarkus/gradle/dependency/ConditionalDependenciesEnabler.java
 public class ConditionalDependenciesEnabler {
 
   /**
@@ -191,11 +192,8 @@ public class ConditionalDependenciesEnabler {
   }
 
   private Configuration createConditionalDependenciesConfiguration(Project project, Dependency conditionalDep) {
-    /*
-    Configuration conditionalDepConfiguration = project.getConfigurations()
-        .detachedConfiguration()
-        .extendsFrom(enforcedPlatforms);
-     */
+    // Upstream uses .extendsFrom(enforcedPlatforms) but that does not work in our composite
+    // build, so we manually copy exclude rules and dependencies instead
     Configuration conditionalDepConfiguration = project.getConfigurations().detachedConfiguration();
     enforcedPlatforms.getExcludeRules().forEach(rule -> {
       conditionalDepConfiguration.exclude(Map.of(
