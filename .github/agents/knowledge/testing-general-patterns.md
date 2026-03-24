@@ -20,6 +20,10 @@
   `hasTotalAttributeCount(...)` is redundant when paired with
   `hasAttributesSatisfyingExactly(...)` in the same assertion chain — the exact variant
   already validates the total attribute count. Remove the `hasTotalAttributeCount` call.
+- For non-semconv attribute keys in `equalTo(...)`, use inline `AttributeKey` factory
+  methods — `longKey("name")`, `stringKey("name")`, etc. — directly in the assertion.
+  Do **not** extract them into class-level `private static final AttributeKey<T>` constants.
+  Constants are reserved for semconv keys imported from the semconv library.
 
 ## `satisfies()` Lambda Parameters
 
