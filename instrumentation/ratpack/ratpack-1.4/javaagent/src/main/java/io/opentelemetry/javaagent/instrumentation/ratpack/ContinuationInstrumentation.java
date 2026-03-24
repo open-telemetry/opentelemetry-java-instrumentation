@@ -37,7 +37,7 @@ public class ContinuationInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("resume").and(takesArgument(0, named("ratpack.func.Block"))),
-        ContinuationInstrumentation.class.getName() + "$ResumeAdvice");
+        getClass().getName() + "$ResumeAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -16,6 +16,8 @@ dependencies {
   library("log4j:log4j:1.2.4")
 
   compileOnly(project(":javaagent-bootstrap"))
+
+  testInstrumentation(project(":instrumentation:log4j:log4j-appender-2.17:javaagent"))
 }
 
 configurations {

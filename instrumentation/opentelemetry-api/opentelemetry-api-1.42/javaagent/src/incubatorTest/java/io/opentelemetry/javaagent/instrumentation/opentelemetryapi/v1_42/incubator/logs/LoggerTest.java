@@ -113,8 +113,7 @@ class LoggerTest {
 
   @ParameterizedTest
   @MethodSource("bodyValues")
-  void logBodyValue() {
-    Value<?> value = Value.of(42);
+  void logBodyValue(Value<?> value) {
     logger.logRecordBuilder().setBody(value).emit();
 
     await()

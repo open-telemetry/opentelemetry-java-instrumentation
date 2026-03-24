@@ -4,7 +4,7 @@ plugins {
 
 muzzle {
   pass {
-    group.set("com.clickhouse.client")
+    group.set("com.clickhouse")
     module.set("clickhouse-client")
     versions.set("[0.5.0,)")
     assertInverse.set(true)

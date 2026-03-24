@@ -42,11 +42,7 @@ final class OpenTelemetryDispatcher implements InvocationHandler {
       return subscribe(method, args);
     }
 
-    try {
-      return method.invoke(delegate, args);
-    } catch (InvocationTargetException e) {
-      throw e.getCause();
-    }
+    return invokeMethod(method, delegate, args);
   }
 
   private static Object invokeMethod(Method method, Object target, Object[] args) throws Throwable {

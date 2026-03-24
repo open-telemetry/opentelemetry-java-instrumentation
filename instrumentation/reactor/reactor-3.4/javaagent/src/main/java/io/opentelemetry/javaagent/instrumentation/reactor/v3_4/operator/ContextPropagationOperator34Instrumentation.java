@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor.v3_4.operator;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -33,14 +32,13 @@ public class ContextPropagationOperator34Instrumentation implements TypeInstrume
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(isStatic())
             .and(named("getOpenTelemetryContextFromContextView"))
             .and(takesArgument(0, named("reactor.util.context.ContextView")))
             .and(takesArgument(1, named("application.io.opentelemetry.context.Context")))
             .and(returns(named("application.io.opentelemetry.context.Context"))),
-        ContextPropagationOperator34Instrumentation.class.getName() + "$GetContextViewAdvice");
+        getClass().getName() + "$GetContextViewAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -60,9 +58,8 @@ public class ContextPropagationOperator34Instrumentation implements TypeInstrume
           ContextPropagationOperator.getOpenTelemetryContextFromContextView(reactorContext, null);
       if (agentContext == null) {
         return defaultContext;
-      } else {
-        return AgentContextStorage.toApplicationContext(agentContext);
       }
+      return AgentContextStorage.toApplicationContext(agentContext);
     }
   }
 }

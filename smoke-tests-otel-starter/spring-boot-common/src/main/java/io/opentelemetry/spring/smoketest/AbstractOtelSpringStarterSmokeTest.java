@@ -33,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelSpringProperties;
@@ -45,6 +46,7 @@ import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.assertj.core.api.MapAssert;
 import org.junit.jupiter.api.MethodOrderer;
@@ -233,7 +235,11 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
     assertThat(exportedLogRecords).as("No log record exported.").isNotEmpty();
     if (!nativeImage) {
       // log records differ in native image mode due to different startup timing
-      LogRecordData firstLog = exportedLogRecords.get(0);
+      Optional<LogRecordData> firstInfo =
+          exportedLogRecords.stream().filter(log -> log.getSeverity() == Severity.INFO).findFirst();
+      assertThat(firstInfo.isPresent()).as("No INFO log record exported.").isTrue();
+
+      LogRecordData firstLog = firstInfo.get();
       assertThat(firstLog.getBodyValue().asString())
           .as("Should instrument logs")
           .startsWith("Starting ")
@@ -267,6 +273,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
             "jvm.buffer.count",
             "jvm.class.count",
             "jvm.cpu.context_switch",
+            "jvm.cpu.longlock",
             "jvm.system.cpu.utilization",
             "jvm.gc.duration",
             "jvm.memory.init",
@@ -274,8 +281,12 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
             "jvm.memory.allocation",
             "jvm.network.io",
             "jvm.thread.count")) {
+      // cpu longlock is missing on jdk 25
+      if (javaVersion >= 25 && "jvm.cpu.longlock".equals(metric)) {
+        continue;
+      }
       // gc duration is sometimes missing on jdk 26
-      if (javaVersion == 26 && "jvm.gc.duration".equals(metric)) {
+      if (javaVersion >= 26 && "jvm.gc.duration".equals(metric)) {
         continue;
       }
       testing.waitAndAssertMetrics(

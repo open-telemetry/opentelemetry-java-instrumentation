@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.rmi.client;
 
 import static io.opentelemetry.javaagent.instrumentation.rmi.client.RmiClientSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -30,8 +29,7 @@ public class UnicastRefInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("invoke"))
+        named("invoke")
             .and(takesArgument(0, named("java.rmi.Remote")))
             .and(takesArgument(1, Method.class)),
         this.getClass().getName() + "$InvokeAdvice");

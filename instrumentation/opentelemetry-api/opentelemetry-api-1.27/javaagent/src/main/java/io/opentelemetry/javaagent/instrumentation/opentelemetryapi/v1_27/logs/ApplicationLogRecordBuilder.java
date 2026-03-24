@@ -39,6 +39,7 @@ public class ApplicationLogRecordBuilder
   }
 
   @Override
+  @CanIgnoreReturnValue
   public application.io.opentelemetry.api.logs.LogRecordBuilder setObservedTimestamp(
       long l, TimeUnit timeUnit) {
     agentLogRecordBuilder.setObservedTimestamp(l, timeUnit);
@@ -46,6 +47,7 @@ public class ApplicationLogRecordBuilder
   }
 
   @Override
+  @CanIgnoreReturnValue
   public application.io.opentelemetry.api.logs.LogRecordBuilder setObservedTimestamp(
       Instant instant) {
     agentLogRecordBuilder.setObservedTimestamp(instant);

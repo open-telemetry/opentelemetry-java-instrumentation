@@ -255,7 +255,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
     String res = reactiveCommands.digest(null);
 
     assertThat(res).isNotNull();
-    assertThat(testing.spans().size()).isEqualTo(0);
+    assertThat(testing.spans()).isEmpty();
   }
 
   @Test

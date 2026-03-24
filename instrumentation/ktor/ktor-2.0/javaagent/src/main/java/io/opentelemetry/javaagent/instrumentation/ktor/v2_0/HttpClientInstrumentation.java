@@ -43,7 +43,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(1) HttpClientConfig<HttpClientEngineConfig> httpClientConfig) {
       httpClientConfig.install(KtorClientTelemetry.Companion, new SetupFunction());

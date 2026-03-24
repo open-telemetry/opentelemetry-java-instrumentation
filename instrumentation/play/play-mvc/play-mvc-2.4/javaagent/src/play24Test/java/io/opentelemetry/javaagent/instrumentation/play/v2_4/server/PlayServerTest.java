@@ -27,6 +27,7 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.HashSet;
 import java.util.Set;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import play.mvc.Http.Context.Implicit;
 import play.mvc.Results;
 import play.routing.RoutingDsl;
 import play.server.Server;
@@ -54,7 +55,7 @@ class PlayServerTest extends AbstractHttpServerTest<Server> {
                         INDEXED_CHILD,
                         () -> {
                           INDEXED_CHILD.collectSpanAttributes(
-                              it -> play.mvc.Http.Context.Implicit.request().getQueryString(it));
+                              it -> Implicit.request().getQueryString(it));
                           return Results.status(INDEXED_CHILD.getStatus(), INDEXED_CHILD.getBody());
                         }))
             .GET(QUERY_PARAM.getPath())
@@ -77,8 +78,7 @@ class PlayServerTest extends AbstractHttpServerTest<Server> {
                           Tuple2<String, String> header =
                               new Tuple2<>(
                                   "X-Test-Response",
-                                  play.mvc.Http.Context.Implicit.request()
-                                      .getHeader("X-Test-Request"));
+                                  Implicit.request().getHeader("X-Test-Request"));
                           return new Results.Status(
                               javaResult
                                   .toScala()

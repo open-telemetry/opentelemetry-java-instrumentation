@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.rediscala;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.rediscala.RediscalaSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -50,8 +49,7 @@ public class RequestInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("send"))
             .and(takesArgument(0, named("redis.RedisCommand")))
             .and(returns(named("scala.concurrent.Future"))),
@@ -119,7 +117,7 @@ public class RequestInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) RedisCommand<?, ?> cmd,
         @Advice.Enter @Nullable AdviceScope adviceScope,
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Return Future<Object> responseFuture) {
+        @Advice.Return @Nullable Future<Object> responseFuture) {
       if (adviceScope != null) {
         adviceScope.end(action, cmd, responseFuture, throwable);
       }
