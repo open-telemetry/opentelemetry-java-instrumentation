@@ -399,3 +399,4 @@ redisson-3.0:javaagent
 redisson-common:javaagent
 redisson-3.17:javaagent
 redisson-common:testing
+restlet-1.1:javaagent
