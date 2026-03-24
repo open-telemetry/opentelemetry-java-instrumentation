@@ -404,3 +404,4 @@ resources:library
 restlet-1.1:testing
 restlet-1.1:library
 restlet-2.0:javaagent
+restlet-2.0:library
