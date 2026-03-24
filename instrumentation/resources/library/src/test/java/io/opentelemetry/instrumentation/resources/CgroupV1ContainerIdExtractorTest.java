@@ -64,7 +64,7 @@ class CgroupV1ContainerIdExtractorTest {
 
     CgroupV1ContainerIdExtractor extractor = new CgroupV1ContainerIdExtractor(filesystem);
     Optional<String> result = extractor.extractContainerId();
-    assertThat(result.orElse("fail")).isEqualTo(expectedContainerId);
+    assertThat(result).contains(expectedContainerId);
   }
 
   // See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/7437
