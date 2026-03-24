@@ -53,13 +53,14 @@ final class RestletHeadersGetter implements TextMapGetter<Request> {
   }
 
   @Override
-  public String get(Request carrier, String key) {
+  @Nullable
+  public String get(@Nullable Request carrier, String key) {
     Series<?> headers = getHeaders(carrier);
     return headers == null ? null : headers.getFirstValue(key, /* ignoreCase= */ true);
   }
 
   @Override
-  public Iterator<String> getAll(Request carrier, String key) {
+  public Iterator<String> getAll(@Nullable Request carrier, String key) {
     Series<?> headers = getHeaders(carrier);
     return headers == null
         ? emptyIterator()
@@ -67,7 +68,7 @@ final class RestletHeadersGetter implements TextMapGetter<Request> {
   }
 
   @Nullable
-  static Series<?> getHeaders(Message carrier) {
+  static Series<?> getHeaders(@Nullable Message carrier) {
     if (GET_ATTRIBUTES == null) {
       return null;
     }

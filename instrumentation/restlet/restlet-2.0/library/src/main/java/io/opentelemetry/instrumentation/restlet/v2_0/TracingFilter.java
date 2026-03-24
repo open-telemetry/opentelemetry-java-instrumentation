@@ -21,7 +21,7 @@ final class TracingFilter extends Filter {
   private final Instrumenter<Request, Response> instrumenter;
   private final String path;
 
-  public TracingFilter(Instrumenter<Request, Response> instrumenter, String path) {
+  TracingFilter(Instrumenter<Request, Response> instrumenter, String path) {
     this.instrumenter = instrumenter;
     this.path = path;
   }
