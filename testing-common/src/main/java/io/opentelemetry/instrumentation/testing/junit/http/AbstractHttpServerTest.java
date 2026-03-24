@@ -179,9 +179,6 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     byte[] bytes = new byte[1024];
     int read;
     while ((read = inputStream.read(bytes)) >= 0) {
-      if (read == 0) {
-        continue;
-      }
       buffer.write(bytes, 0, read);
     }
     return buffer.toString("UTF-8");
@@ -644,6 +641,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertThat(statusLine).startsWith("HTTP/1.1 200");
 
     int contentLength = -1;
+    boolean chunked = false;
     String line = readAsciiLine(inputStream);
     while (!line.isEmpty()) {
       int separator = line.indexOf(':');
@@ -652,7 +650,15 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
       if (headerName.equalsIgnoreCase(HttpHeaderNames.CONTENT_LENGTH.toString())) {
         contentLength = Integer.parseInt(headerValue);
       }
+      if (headerName.equalsIgnoreCase("transfer-encoding")
+          && headerValue.equalsIgnoreCase("chunked")) {
+        chunked = true;
+      }
       line = readAsciiLine(inputStream);
+    }
+
+    if (chunked) {
+      return readChunkedBody(inputStream);
     }
 
     if (contentLength < 0) {
@@ -662,6 +668,25 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     byte[] body = new byte[contentLength];
     readFully(inputStream, body);
     return new String(body, US_ASCII);
+  }
+
+  private static String readChunkedBody(InputStream inputStream) throws IOException {
+    ByteArrayOutputStream body = new ByteArrayOutputStream();
+    while (true) {
+      String chunkSizeLine = readAsciiLine(inputStream);
+      int chunkSize = Integer.parseInt(chunkSizeLine.trim(), 16);
+      if (chunkSize == 0) {
+        // read trailing \r\n after the last chunk
+        readAsciiLine(inputStream);
+        break;
+      }
+      byte[] chunk = new byte[chunkSize];
+      readFully(inputStream, chunk);
+      body.write(chunk);
+      // read \r\n after chunk data
+      readAsciiLine(inputStream);
+    }
+    return body.toString("UTF-8");
   }
 
   private static String readAsciiLine(InputStream inputStream) throws IOException {
@@ -861,8 +886,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(longKey(ServerEndpoint.ID_ATTRIBUTE_NAME), requestId)));
-            spanAssertions.add(
-                span -> assertIndexedBodyServerSpan(span).hasParent(rootSpan));
+            spanAssertions.add(span -> assertIndexedBodyServerSpan(span).hasParent(rootSpan));
 
             if (options.hasHandlerSpan.test(endpoint)) {
               spanAssertions.add(
@@ -873,8 +897,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             int controllerIndex = spanAssertions.size();
             spanAssertions.add(
                 span ->
-                    assertIndexedBodyControllerSpan(span)
-                        .hasParent(trace.getSpan(parentIndex)));
+                    assertIndexedBodyControllerSpan(span).hasParent(trace.getSpan(parentIndex)));
             spanAssertions.add(
                 span ->
                     assertIndexedBodyConsumerSpan(span, requestId)

@@ -48,6 +48,10 @@ class TestServlet extends HttpServlet {
             if (serverEndpoint == ServerEndpoint.INDEXED_CHILD) {
               ServerEndpoint.INDEXED_CHILD.collectSpanAttributes(req::getParameter);
             }
+            if (serverEndpoint == ServerEndpoint.INDEXED_CHILD_FROM_REQUEST_BODY) {
+              AbstractHttpServerTest.bodyConsumer(
+                  serverEndpoint, AbstractHttpServerTest.readRequestBody(req.getInputStream()));
+            }
             resp.getWriter().print(serverEndpoint.getBody());
             if (serverEndpoint == ServerEndpoint.REDIRECT) {
               resp.sendRedirect(serverEndpoint.getBody());
