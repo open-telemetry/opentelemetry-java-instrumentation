@@ -27,45 +27,27 @@ final class TracingFilter extends Filter {
 
   @Override
   public int doHandle(Request request, Response response) {
-
     Context parentContext = Context.current();
-    Context context = parentContext;
-
-    Scope scope = null;
-
-    if (instrumenter.shouldStart(parentContext, request)) {
-      context = instrumenter.start(parentContext, request);
-      scope = context.makeCurrent();
+    if (!instrumenter.shouldStart(parentContext, request)) {
+      super.doHandle(request, response);
+      return CONTINUE;
     }
 
-    HttpServerRoute.update(context, CONTROLLER, path);
-
-    Throwable statusThrowable = null;
-    try {
+    Throwable error = null;
+    Context context = instrumenter.start(parentContext, request);
+    try (Scope ignored = context.makeCurrent()) {
+      HttpServerRoute.update(context, CONTROLLER, path);
       super.doHandle(request, response);
     } catch (Throwable t) {
-      statusThrowable = t;
-      rethrow(t);
+      error = t;
+      throw t;
     } finally {
-      if (scope != null) {
-        scope.close();
-        if (response.getStatus() != null && response.getStatus().isError()) {
-          statusThrowable = response.getStatus().getThrowable();
-        }
-        instrumenter.end(context, request, response, statusThrowable);
+      if (response.getStatus() != null && response.getStatus().isError()) {
+        error = response.getStatus().getThrowable();
       }
+      instrumenter.end(context, request, response, error);
     }
 
     return CONTINUE;
-  }
-
-  private static void rethrow(Throwable throwable) {
-    if (throwable instanceof Error) {
-      throw (Error) throwable;
-    }
-    if (throwable instanceof RuntimeException) {
-      throw (RuntimeException) throwable;
-    }
-    throw new IllegalStateException(throwable);
   }
 }
