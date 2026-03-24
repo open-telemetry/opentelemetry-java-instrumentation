@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.core.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.core.v2_0.VirtualFields.PROPAGATED_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -14,12 +13,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
-import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
+import io.opentelemetry.javaagent.bootstrap.executors.ContextPropagatingRunnable;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -45,22 +43,10 @@ public class SimpleAsyncTaskExecutorInstrumentation implements TypeInstrumentati
   public static class ExecuteAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    @Nullable
-    public static PropagatedContext enterJobSubmit(@Advice.Argument(0) Runnable task) {
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
+    public static Runnable enterJobSubmit(@Advice.Argument(0) Runnable task) {
       Context context = Java8BytecodeBridge.currentContext();
-      if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
-        return ExecutorAdviceHelper.attachContextToTask(context, PROPAGATED_CONTEXT, task);
-      }
-      return null;
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exitJobSubmit(
-        @Advice.Argument(0) Runnable task,
-        @Advice.Enter PropagatedContext propagatedContext,
-        @Advice.Thrown Throwable throwable) {
-      ExecutorAdviceHelper.cleanUpAfterSubmit(
-          propagatedContext, throwable, PROPAGATED_CONTEXT, task);
+      return ContextPropagatingRunnable.propagateContext(task, context);
     }
   }
 }
