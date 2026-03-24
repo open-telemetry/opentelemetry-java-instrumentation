@@ -258,7 +258,7 @@ ByteBuffer byteBuffer = (ByteBuffer) value.getValue();
 
 ## [Style] No Unnecessary Explicit Type Parameters on Method Calls
 
-Since Java 8, the compiler infers generic type arguments in virtually all contexts.
+Since Java 5, the compiler infers generic type arguments in virtually all contexts.
 Explicit type witnesses on method calls (e.g., `Collections.<String>emptyList()`) are
 almost never needed and add visual noise.
 
