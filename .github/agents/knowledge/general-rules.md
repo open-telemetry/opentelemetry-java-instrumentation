@@ -30,6 +30,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Build | Gradle conventions, muzzle, test tasks, plugins | `build.gradle.kts`, `settings.gradle.kts` | `gradle-conventions.md` |
 | Build | `testcontainersBuildService` declaration | Testcontainers dependency without `usesService` | `gradle-conventions.md` |
 | Style | Prefer instance creation over singletons for stateless interface impls (except on hot paths or Kotlin `object` declarations) | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`, enum/static singletons | — |
+| Style | No unnecessary explicit type witnesses on generic method calls (`Collections.<String>emptyList()`) | Java generic method calls with explicit type parameters | — |
 | Style | Remove redundant null guards on attribute puts | `AttributesBuilder.put`, `onStart`, `onEnd`, attribute extraction methods | — |
 | General | No redundant `ByteBuffer.duplicate()` on `Value.getValue()` | `Value.getValue()` with `BYTES` type, `ByteBuffer` handling | — |
 | Style | Nullability correctness — no guards for non-nullable params; add `@Nullable` when null is actually passed/returned/stored; respect upstream SDK `@Nullable` contracts for `TextMapGetter`/`TextMapSetter` | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `*Extractor` implementations, null checks, missing `@Nullable`, fields assigned from `@Nullable` sources | — |
@@ -254,6 +255,32 @@ Preferred:
 ```java
 ByteBuffer byteBuffer = (ByteBuffer) value.getValue();
 ```
+
+## [Style] No Unnecessary Explicit Type Parameters on Method Calls
+
+Since Java 5, the compiler infers generic type arguments in virtually all contexts.
+Explicit type witnesses on method calls (e.g., `Collections.<String>emptyList()`) are
+almost never needed and add visual noise.
+
+Flag any explicit type witness that is not required for compilation:
+
+```java
+// BAD — type witness is unnecessary
+return Collections.<String>emptyList().iterator();
+Iterator<String> it = Collections.<String>emptyList().iterator();
+```
+
+Preferred:
+
+```java
+// GOOD — compiler infers the type argument
+return Collections.emptyList().iterator();
+Iterator<String> it = Collections.emptyList().iterator();
+```
+
+**Exception**: an explicit type witness is acceptable only when the compiler cannot infer
+the type without it (e.g., the call is used as a method argument where the target type is
+ambiguous and the cast would otherwise be required). Do not flag those cases.
 
 ## [Semconv] Constants by Module Type
 
