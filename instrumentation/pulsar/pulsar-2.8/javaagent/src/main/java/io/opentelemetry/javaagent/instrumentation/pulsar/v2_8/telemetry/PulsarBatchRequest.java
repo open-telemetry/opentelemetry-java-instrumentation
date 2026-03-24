@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.UrlParser.parseUrl;
 
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.UrlParser.UrlData;
+import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.Messages;
 import org.apache.pulsar.common.naming.TopicName;
@@ -15,12 +16,12 @@ import org.apache.pulsar.common.naming.TopicName;
 public final class PulsarBatchRequest extends BasePulsarRequest {
   private final Messages<?> messages;
 
-  private PulsarBatchRequest(Messages<?> messages, String destination, UrlData urlData) {
+  private PulsarBatchRequest(Messages<?> messages, String destination, @Nullable UrlData urlData) {
     super(destination, urlData);
     this.messages = messages;
   }
 
-  public static PulsarBatchRequest create(Messages<?> messages, String url) {
+  public static PulsarBatchRequest create(Messages<?> messages, @Nullable String url) {
     return new PulsarBatchRequest(messages, getTopicName(messages), parseUrl(url));
   }
 

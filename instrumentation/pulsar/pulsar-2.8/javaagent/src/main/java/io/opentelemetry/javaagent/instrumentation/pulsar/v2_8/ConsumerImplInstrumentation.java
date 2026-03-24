@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.P
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.wrap;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.wrapBatch;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -42,35 +41,30 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    String className = ConsumerImplInstrumentation.class.getName();
-
-    transformer.applyAdviceToMethod(isConstructor(), className + "$ConsumerConstructorAdvice");
+    transformer.applyAdviceToMethod(
+        isConstructor(), getClass().getName() + "$ConsumerConstructorAdvice");
 
     // internalReceive will apply to Consumer#receive(long,TimeUnit)
     // and called before MessageListener#receive.
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isProtected())
+        isProtected()
             .and(named("internalReceive"))
             .and(takesArguments(2))
             .and(takesArgument(1, named("java.util.concurrent.TimeUnit"))),
-        className + "$ConsumerInternalReceiveAdvice");
+        getClass().getName() + "$ConsumerInternalReceiveAdvice");
     // internalReceive will apply to Consumer#receive()
     transformer.applyAdviceToMethod(
-        isMethod().and(isProtected()).and(named("internalReceive")).and(takesArguments(0)),
-        className + "$ConsumerSyncReceiveAdvice");
+        isProtected().and(named("internalReceive")).and(takesArguments(0)),
+        getClass().getName() + "$ConsumerSyncReceiveAdvice");
     // internalReceiveAsync will apply to Consumer#receiveAsync()
     transformer.applyAdviceToMethod(
-        isMethod().and(isProtected()).and(named("internalReceiveAsync")).and(takesArguments(0)),
-        className + "$ConsumerAsyncReceiveAdvice");
+        isProtected().and(named("internalReceiveAsync")).and(takesArguments(0)),
+        getClass().getName() + "$ConsumerAsyncReceiveAdvice");
     // internalBatchReceiveAsync will apply to Consumer#batchReceive() and
     // Consumer#batchReceiveAsync()
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isProtected())
-            .and(named("internalBatchReceiveAsync"))
-            .and(takesArguments(0)),
-        className + "$ConsumerBatchAsyncReceiveAdvice");
+        isProtected().and(named("internalBatchReceiveAsync")).and(takesArguments(0)),
+        getClass().getName() + "$ConsumerBatchAsyncReceiveAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -113,7 +107,7 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConsumerSyncReceiveAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Timer before() {
       return Timer.start();
     }
@@ -133,7 +127,7 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConsumerAsyncReceiveAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Timer before() {
       return Timer.start();
     }
@@ -151,7 +145,7 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConsumerBatchAsyncReceiveAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Timer before() {
       return Timer.start();
     }

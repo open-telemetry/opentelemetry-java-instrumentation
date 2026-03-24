@@ -72,10 +72,10 @@ public abstract class AbstractOracleUcpInstrumentationTest {
     }
 
     // when
-    Connection connection = connectionPool.getConnection();
-    configure(connectionPool);
-    MILLISECONDS.sleep(100);
-    connection.close();
+    try (Connection connection = connectionPool.getConnection()) {
+      configure(connectionPool);
+      MILLISECONDS.sleep(100);
+    }
 
     // then
     DbConnectionPoolMetricsAssertions.create(
@@ -89,9 +89,13 @@ public abstract class AbstractOracleUcpInstrumentationTest {
         .assertConnectionPoolEmitsMetrics();
 
     // when
-    // this one too shouldn't cause any problems when called more than once
-    connectionPool.getConnection().close();
-    connectionPool.getConnection().close();
+    // verify that borrowing connections after instrumentation doesn't throw
+    try (Connection connection = connectionPool.getConnection()) {
+      // doesn't throw
+    }
+    try (Connection connection = connectionPool.getConnection()) {
+      // doesn't throw
+    }
 
     shutdown(connectionPool);
     UniversalConnectionPoolManagerImpl.getUniversalConnectionPoolManager()

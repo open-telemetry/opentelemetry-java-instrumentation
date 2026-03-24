@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor.v3_1.operator;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -32,26 +31,23 @@ public class ContextPropagationOperatorInstrumentation implements TypeInstrument
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(isStatic())
             .and(named("storeOpenTelemetryContext"))
             .and(takesArgument(0, named("reactor.util.context.Context")))
             .and(takesArgument(1, named("application.io.opentelemetry.context.Context")))
             .and(returns(named("reactor.util.context.Context"))),
-        ContextPropagationOperatorInstrumentation.class.getName() + "$StoreAdvice");
+        getClass().getName() + "$StoreAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(isStatic())
             .and(named("getOpenTelemetryContext"))
             .and(takesArgument(0, named("reactor.util.context.Context")))
             .and(takesArgument(1, named("application.io.opentelemetry.context.Context")))
             .and(returns(named("application.io.opentelemetry.context.Context"))),
-        ContextPropagationOperatorInstrumentation.class.getName() + "$GetAdvice");
+        getClass().getName() + "$GetAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(isStatic())
             .and(named("runWithContext"))
             .and(
@@ -59,7 +55,7 @@ public class ContextPropagationOperatorInstrumentation implements TypeInstrument
                     0, namedOneOf("reactor.core.publisher.Mono", "reactor.core.publisher.Flux")))
             .and(takesArgument(1, named("application.io.opentelemetry.context.Context")))
             .and(returns(namedOneOf("reactor.core.publisher.Mono", "reactor.core.publisher.Flux"))),
-        ContextPropagationOperatorInstrumentation.class.getName() + "$RunWithAdvice");
+        getClass().getName() + "$RunWithAdvice");
   }
 
   @SuppressWarnings("unused")

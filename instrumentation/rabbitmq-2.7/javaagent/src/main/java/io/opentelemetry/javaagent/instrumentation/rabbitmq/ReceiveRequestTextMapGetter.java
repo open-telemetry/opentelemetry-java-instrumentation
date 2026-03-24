@@ -13,8 +13,7 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-enum ReceiveRequestTextMapGetter implements TextMapGetter<ReceiveRequest> {
-  INSTANCE;
+final class ReceiveRequestTextMapGetter implements TextMapGetter<ReceiveRequest> {
 
   @Override
   public Iterable<String> keys(ReceiveRequest carrier) {

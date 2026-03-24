@@ -5,14 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
-public class RabbitChannelAndMethodHolder {
-  private ChannelAndMethod channelAndMethod;
+import javax.annotation.Nullable;
 
+public class RabbitChannelAndMethodHolder {
+  @Nullable private ChannelAndMethod channelAndMethod;
+
+  @Nullable
   public ChannelAndMethod getChannelAndMethod() {
     return channelAndMethod;
   }
 
-  public void setChannelAndMethod(ChannelAndMethod channelAndMethod) {
+  public void setChannelAndMethod(@Nullable ChannelAndMethod channelAndMethod) {
     this.channelAndMethod = channelAndMethod;
   }
 }

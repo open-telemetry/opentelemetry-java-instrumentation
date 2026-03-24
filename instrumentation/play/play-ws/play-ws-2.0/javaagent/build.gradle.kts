@@ -25,6 +25,7 @@ muzzle {
     group.set("com.typesafe.play")
     module.set("play-ahc-ws-standalone_2.13")
     versions.set("[2.0.6,2.1.0)")
+    assertInverse.set(true)
   }
 }
 
