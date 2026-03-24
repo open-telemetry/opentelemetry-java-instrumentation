@@ -31,6 +31,7 @@ dependencies {
   compileOnly(project(":instrumentation-annotations-support"))
   compileOnly(project(":opentelemetry-api-shaded-for-instrumenting", configuration = "shadow"))
 
+  testInstrumentation(project(":instrumentation:reactor:reactor-3.4:javaagent"))
   testInstrumentation(project(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent"))
 
   testLibrary("io.projectreactor:reactor-core:3.1.0.RELEASE")

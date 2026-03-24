@@ -9,7 +9,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @SuppressWarnings("deprecation") // testing instrumentation of deprecated class
-public class ExtensionAnnotationsTracedWithSpan implements TracedWithSpan {
+class ExtensionAnnotationsTracedWithSpan implements TracedWithSpan {
 
   @Override
   @io.opentelemetry.extension.annotations.WithSpan("TracedWithSpan.mono")

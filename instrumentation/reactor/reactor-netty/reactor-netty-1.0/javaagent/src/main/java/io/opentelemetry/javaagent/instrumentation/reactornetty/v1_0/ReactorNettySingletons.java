@@ -43,7 +43,7 @@ public final class ReactorNettySingletons {
         JavaagentHttpClientInstrumenters.create(
             INSTRUMENTATION_NAME,
             new ReactorNettyHttpClientAttributesGetter(),
-            HttpClientRequestHeadersSetter.INSTANCE);
+            new HttpClientRequestHeadersSetter());
 
     DefaultHttpClientInstrumenterBuilder<NettyCommonRequest, HttpResponse> builder =
         NettyClientInstrumenterBuilderFactory.create(
