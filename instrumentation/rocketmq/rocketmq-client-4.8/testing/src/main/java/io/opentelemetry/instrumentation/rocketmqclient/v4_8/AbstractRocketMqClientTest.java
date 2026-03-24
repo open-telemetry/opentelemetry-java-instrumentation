@@ -296,7 +296,7 @@ abstract class AbstractRocketMqClientTest {
       tracingMessageListener.waitForMessages();
       if (tracingMessageListener.getLastBatchSize() == 2) {
         break;
-      } else if (i < maxAttempts) {
+      } else if (i + 1 < maxAttempts) {
         // if messages weren't received as a batch we get 1 trace instead of 2
         testing().waitForTraces(1);
         Thread.sleep(2_000);
@@ -304,6 +304,9 @@ abstract class AbstractRocketMqClientTest {
         logger.error("Messages weren't received as batch, retrying");
       }
     }
+    assertThat(tracingMessageListener.getLastBatchSize())
+        .describedAs("Messages should be received as a batch before asserting the traces")
+        .isEqualTo(2);
 
     AtomicReference<SpanContext> producerSpanContext = new AtomicReference<>();
     testing()

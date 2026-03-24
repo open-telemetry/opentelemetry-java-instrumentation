@@ -11,6 +11,7 @@ import static org.awaitility.Awaitility.await;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
@@ -18,9 +19,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.common.BrokerConfig;
 import org.apache.rocketmq.common.namesrv.NamesrvConfig;
@@ -28,12 +31,11 @@ import org.apache.rocketmq.namesrv.NamesrvController;
 import org.apache.rocketmq.remoting.netty.NettyClientConfig;
 import org.apache.rocketmq.remoting.netty.NettyServerConfig;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
-import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class IntegrationTestBase {
-  public static final Logger logger = LoggerFactory.getLogger(IntegrationTestBase.class);
+  private static final Logger logger = LoggerFactory.getLogger(IntegrationTestBase.class);
 
   static final String BROKER_NAME_PREFIX = "TestBrokerName_";
   static final AtomicInteger BROKER_INDEX = new AtomicInteger(0);
@@ -44,24 +46,43 @@ public final class IntegrationTestBase {
   static final int INDEX_NUM = 1000;
 
   private static String createTempDir() {
-    String path = null;
     try {
       File file = Files.createTempDirectory("opentelemetry-rocketmq-client-temp").toFile();
       TMPE_FILES.add(file);
-      path = file.getCanonicalPath();
+      return file.getCanonicalPath();
     } catch (IOException e) {
-      logger.warn("Error creating temporary directory.", e);
+      throw new IllegalStateException("Error creating temporary directory", e);
     }
-    return path;
   }
 
   public static void deleteTempDir() {
+    for (BrokerController brokerController : BROKER_CONTROLLERS) {
+      brokerController.shutdown();
+    }
+    BROKER_CONTROLLERS.clear();
+
+    for (NamesrvController namesrvController : NAMESRV_CONTROLLERS) {
+      namesrvController.shutdown();
+    }
+    NAMESRV_CONTROLLERS.clear();
+
     for (File file : TMPE_FILES) {
-      boolean deleted = file.delete();
-      if (!deleted) {
-        file.deleteOnExit();
+      try (Stream<Path> paths = Files.walk(file.toPath())) {
+        paths
+            .sorted(Comparator.reverseOrder())
+            .forEach(
+                path -> {
+                  try {
+                    Files.deleteIfExists(path);
+                  } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                  }
+                });
+      } catch (IOException | UncheckedIOException e) {
+        throw new IllegalStateException("Could not delete temporary directory " + file, e);
       }
     }
+    TMPE_FILES.clear();
   }
 
   public static NamesrvController createAndStartNamesrv() {
@@ -81,11 +102,13 @@ public final class IntegrationTestBase {
     NamesrvController namesrvController =
         new NamesrvController(namesrvConfig, nameServerNettyServerConfig);
     try {
-      Assert.assertTrue(namesrvController.initialize());
+      if (!namesrvController.initialize()) {
+        throw new IllegalStateException("Name Server initialization failed");
+      }
       logger.info("Name Server Start:{}", nameServerNettyServerConfig.getListenPort());
       namesrvController.start();
     } catch (Exception e) {
-      logger.info("Name Server start failed", e);
+      throw new IllegalStateException("Name Server start failed", e);
     }
     NAMESRV_CONTROLLERS.add(namesrvController);
     return namesrvController;
@@ -118,15 +141,16 @@ public final class IntegrationTestBase {
     BrokerController brokerController =
         new BrokerController(brokerConfig, nettyServerConfig, nettyClientConfig, storeConfig);
     try {
-      Assert.assertTrue(brokerController.initialize());
+      if (!brokerController.initialize()) {
+        throw new IllegalStateException("Broker initialization failed");
+      }
       logger.info(
           "Broker Start name:{} addr:{}",
           brokerConfig.getBrokerName(),
           brokerController.getBrokerAddr());
       brokerController.start();
-    } catch (Throwable t) {
-      logger.error("Broker start failed", t);
-      throw new IllegalStateException("Broker start failed", t);
+    } catch (Exception e) {
+      throw new IllegalStateException("Broker start failed", e);
     }
     BROKER_CONTROLLERS.add(brokerController);
     return brokerController;

@@ -65,7 +65,6 @@ public final class BaseConf {
   }
 
   public static void deleteTempDir() {
-    namesrvController.shutdown();
     IntegrationTestBase.deleteTempDir();
   }
 }

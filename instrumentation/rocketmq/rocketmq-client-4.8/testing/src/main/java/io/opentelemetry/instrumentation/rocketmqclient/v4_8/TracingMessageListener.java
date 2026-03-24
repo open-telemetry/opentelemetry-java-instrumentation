@@ -36,7 +36,9 @@ class TracingMessageListener implements MessageListenerOrderly {
   }
 
   void waitForMessages() throws InterruptedException {
-    messageReceived.await(30, SECONDS);
+    if (!messageReceived.await(30, SECONDS)) {
+      throw new IllegalStateException("Timed out waiting for RocketMQ messages");
+    }
   }
 
   int getLastBatchSize() {
