@@ -94,7 +94,11 @@ public class ContextPayload {
     }
 
     @Override
-    public String get(ContextPayload carrier, String key) {
+    @Nullable
+    public String get(@Nullable ContextPayload carrier, String key) {
+      if (carrier == null) {
+        return null;
+      }
       return carrier.context.get(key);
     }
   }
@@ -103,7 +107,10 @@ public class ContextPayload {
     INSTANCE;
 
     @Override
-    public void set(ContextPayload carrier, String key, String value) {
+    public void set(@Nullable ContextPayload carrier, String key, String value) {
+      if (carrier == null) {
+        return;
+      }
       carrier.context.put(key, value);
     }
   }
