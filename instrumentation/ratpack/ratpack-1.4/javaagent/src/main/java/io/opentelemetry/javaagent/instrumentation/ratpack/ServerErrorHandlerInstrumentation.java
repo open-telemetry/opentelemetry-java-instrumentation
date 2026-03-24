@@ -38,7 +38,7 @@ public class ServerErrorHandlerInstrumentation implements TypeInstrumentation {
         named("error")
             .and(takesArgument(0, named("ratpack.handling.Context")))
             .and(takesArgument(1, Throwable.class)),
-        ServerErrorHandlerInstrumentation.class.getName() + "$ErrorAdvice");
+        getClass().getName() + "$ErrorAdvice");
   }
 
   @SuppressWarnings("unused")

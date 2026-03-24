@@ -14,6 +14,7 @@ public class VirtualFields {
 
   public static final VirtualField<Envelope, PropagatedContext> ENVELOPE_PROPAGATED_CONTEXT =
       VirtualField.find(Envelope.class, PropagatedContext.class);
+
   public static final VirtualField<SystemMessage, PropagatedContext>
       SYSTEM_MESSAGE_PROPAGATED_CONTEXT =
           VirtualField.find(SystemMessage.class, PropagatedContext.class);

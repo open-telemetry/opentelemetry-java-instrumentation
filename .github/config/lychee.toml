@@ -23,5 +23,6 @@ exclude = [
   # flaky links
   '^http://www.slf4j.org.*',
   '^https://logback.qos.ch/.*',
-  '^https://vaadin.com/$'
+  '^https://vaadin.com/$',
+  '^https://camel.apache.org/$'
 ]

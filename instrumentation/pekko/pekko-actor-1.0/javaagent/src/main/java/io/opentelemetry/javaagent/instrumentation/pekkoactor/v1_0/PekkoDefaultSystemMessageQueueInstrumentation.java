@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.pekkoactor.v1_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.pekkoactor.v1_0.VirtualFields.SYSTEM_MESSAGE_PROPAGATED_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -49,7 +50,7 @@ public class PekkoDefaultSystemMessageQueueInstrumentation implements TypeInstru
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, systemMessage)) {
         return ExecutorAdviceHelper.attachContextToTask(
-            context, VirtualFields.SYSTEM_MESSAGE_PROPAGATED_CONTEXT, systemMessage);
+            context, SYSTEM_MESSAGE_PROPAGATED_CONTEXT, systemMessage);
       }
       return null;
     }
@@ -60,10 +61,7 @@ public class PekkoDefaultSystemMessageQueueInstrumentation implements TypeInstru
         @Advice.Enter PropagatedContext propagatedContext,
         @Advice.Thrown Throwable throwable) {
       ExecutorAdviceHelper.cleanUpAfterSubmit(
-          propagatedContext,
-          throwable,
-          VirtualFields.SYSTEM_MESSAGE_PROPAGATED_CONTEXT,
-          systemMessage);
+          propagatedContext, throwable, SYSTEM_MESSAGE_PROPAGATED_CONTEXT, systemMessage);
     }
   }
 }

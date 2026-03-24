@@ -26,8 +26,7 @@ public class HandlerPublisherInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("subscribe"),
-        HandlerPublisherInstrumentation.class.getName() + "$WrapSubscriberAdvice");
+        named("subscribe"), getClass().getName() + "$WrapSubscriberAdvice");
   }
 
   @SuppressWarnings("unused")

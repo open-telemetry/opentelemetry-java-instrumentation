@@ -29,7 +29,7 @@ public final class R2dbcSqlCommenterUtil {
           @Override
           public String onCreateStatement(String query, StatementInfo info) {
             Connection connection =
-                unwapConnection(info.getConnectionInfo().getOriginalConnection());
+                unwrapConnection(info.getConnectionInfo().getOriginalConnection());
             String modifiedQuery = sqlCommenter.processQuery(connection, query, false);
             if (!modifiedQuery.equals(query)) {
               // We store mapping from the modified query to original query on the connection
@@ -43,7 +43,7 @@ public final class R2dbcSqlCommenterUtil {
   }
 
   @SuppressWarnings("unchecked") // casting to unwrap connection
-  private static Connection unwapConnection(Connection connection) {
+  private static Connection unwrapConnection(Connection connection) {
     if (connection instanceof Wrapped) {
       Wrapped<Connection> wrapped = (Wrapped<Connection>) connection;
       return wrapped.unwrap();

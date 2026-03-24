@@ -38,6 +38,7 @@ dependencies {
   // TODO: Something about library configuration doesn't work well with scala compilation here.
   compileOnly("com.typesafe.play:play_$scalaVersion:$playVersion")
 
+  testInstrumentation(project(":instrumentation:play:play-mvc:play-mvc-2.4:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:akka:akka-actor-2.3:javaagent"))

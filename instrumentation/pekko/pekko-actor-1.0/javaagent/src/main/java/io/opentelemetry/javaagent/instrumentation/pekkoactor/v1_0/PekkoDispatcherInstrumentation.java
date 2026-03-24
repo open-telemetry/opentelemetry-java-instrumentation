@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkoactor.v1_0;
 
+import static io.opentelemetry.javaagent.instrumentation.pekkoactor.v1_0.VirtualFields.ENVELOPE_PROPAGATED_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -43,7 +44,7 @@ public class PekkoDispatcherInstrumentation implements TypeInstrumentation {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, envelope.message())) {
         return ExecutorAdviceHelper.attachContextToTask(
-            context, VirtualFields.ENVELOPE_PROPAGATED_CONTEXT, envelope);
+            context, ENVELOPE_PROPAGATED_CONTEXT, envelope);
       }
       return null;
     }
@@ -54,7 +55,7 @@ public class PekkoDispatcherInstrumentation implements TypeInstrumentation {
         @Advice.Enter PropagatedContext propagatedContext,
         @Advice.Thrown Throwable throwable) {
       ExecutorAdviceHelper.cleanUpAfterSubmit(
-          propagatedContext, throwable, VirtualFields.ENVELOPE_PROPAGATED_CONTEXT, envelope);
+          propagatedContext, throwable, ENVELOPE_PROPAGATED_CONTEXT, envelope);
     }
   }
 }

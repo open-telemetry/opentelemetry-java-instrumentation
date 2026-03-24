@@ -146,15 +146,18 @@ class SqlCommenterTest {
                 span ->
                     span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
 
-    assertThat(queries).hasSize(1);
     if (sqlCommenterEnabled) {
-      assertThat(queries.get(0))
-          .contains("SELECT 3")
-          .contains("traceparent")
-          .contains(spanContext.getTraceId())
-          .contains(spanContext.getSpanId());
+      assertThat(queries)
+          .singleElement()
+          .satisfies(
+              query ->
+                  assertThat(query)
+                      .contains("SELECT 3")
+                      .contains("traceparent")
+                      .contains(spanContext.getTraceId())
+                      .contains(spanContext.getSpanId()));
     } else {
-      assertThat(queries.get(0)).isEqualTo("SELECT 3");
+      assertThat(queries).containsExactly("SELECT 3");
     }
   }
 }

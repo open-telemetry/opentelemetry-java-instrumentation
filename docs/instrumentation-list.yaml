@@ -10279,6 +10279,45 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
+        - name: url.full
+          type: STRING
   - name: okhttp-3.0
     display_name: OkHttp
     description: This instrumentation enables HTTP client spans and HTTP client metrics
@@ -10366,6 +10405,51 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+        - name: url.full
+          type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.request.resend_count
+          type: LONG
+        - name: http.response.status_code
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
         - name: url.full
           type: STRING
   openai:
@@ -10494,7 +10578,7 @@ libraries:
           type: STRING
         - name: db.system
           type: STRING
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -10692,7 +10776,7 @@ libraries:
       name: io.opentelemetry.oshi
     has_standalone_library: true
     javaagent_target_versions:
-    - com.github.oshi:oshi-core:[5.3.1,)
+    - com.github.oshi:oshi-core:[5.0.0,)
     configurations:
     - name: otel.instrumentation.oshi.experimental-metrics.enabled
       description: Enable the experimental `runtime.java.memory` and `runtime.java.cpu_time`
