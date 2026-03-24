@@ -410,3 +410,4 @@ rmi:bootstrap
 rmi:javaagent
 rocketmq-client-4.8:javaagent
 rocketmq-client-4.8:library
+rocketmq-client-4.8:testing
