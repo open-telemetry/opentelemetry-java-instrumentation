@@ -35,10 +35,10 @@ public class DefaultExecStarterInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         namedOneOf("onComplete", "onError", "onStart")
             .and(takesArgument(0, named("ratpack.func.Action"))),
-        DefaultExecStarterInstrumentation.class.getName() + "$WrapActionAdvice");
+        getClass().getName() + "$WrapActionAdvice");
     transformer.applyAdviceToMethod(
         named("start").and(takesArgument(0, named("ratpack.func.Action"))),
-        DefaultExecStarterInstrumentation.class.getName() + "$StartAdvice");
+        getClass().getName() + "$StartAdvice");
   }
 
   @SuppressWarnings("unused")

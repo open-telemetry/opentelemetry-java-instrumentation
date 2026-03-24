@@ -24,6 +24,7 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
   }
 
   @Override
+  @Nullable
   public String getDbQueryText(RedissonRequest request) {
     return request.getQueryText();
   }
@@ -35,6 +36,7 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
   }
 
   @Override
+  @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       RedissonRequest request, @Nullable Void unused) {
     return request.getAddress();

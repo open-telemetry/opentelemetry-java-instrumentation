@@ -179,7 +179,6 @@ testing {
       implementation("org.junit.jupiter:junit-jupiter-api")
       implementation("org.junit.jupiter:junit-jupiter-params")
       runtimeOnly("org.junit.jupiter:junit-jupiter-engine")
-      runtimeOnly("org.junit.vintage:junit-vintage-engine")
       implementation("org.junit-pioneer:junit-pioneer")
 
       implementation("org.assertj:assertj-core")

@@ -36,7 +36,7 @@ public class ContinuationStreamInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         namedOneOf("complete", "event").and(takesArgument(0, named("ratpack.func.Block"))),
-        ContinuationStreamInstrumentation.class.getName() + "$WrapBlockAdvice");
+        getClass().getName() + "$WrapBlockAdvice");
   }
 
   @SuppressWarnings("unused")

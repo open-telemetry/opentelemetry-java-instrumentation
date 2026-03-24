@@ -20,8 +20,6 @@ public final class TracingHandler implements Handler {
 
   private static final String INITIAL_SPAN_NAME = "ratpack.handler";
 
-  public static final Handler INSTANCE = new TracingHandler();
-
   @Override
   public void handle(Context ctx) {
     ServerContext serverContext =
