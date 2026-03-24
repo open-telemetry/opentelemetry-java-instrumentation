@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.cxf;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.cxf.message.ExchangeImpl;
 import org.apache.cxf.message.Message;
 import org.apache.cxf.message.MessageImpl;
@@ -13,15 +15,15 @@ import org.junit.jupiter.api.Test;
 class TracingStartInInterceptorTest {
 
   @Test
-  void shouldNotThrowExceptionIfSpanNameIsNull() {
-    // given Exchange without BindingOperationInfo.class -> spanName eq null
+  void shouldUseFallbackSpanNameWhenBindingOperationInfoIsNull() {
+    // given Exchange without BindingOperationInfo.class
     Message message = new MessageImpl();
     message.setExchange(new ExchangeImpl());
 
-    // when interceptor handling message
-    TracingStartInInterceptor tracingStartInInterceptor = new TracingStartInInterceptor();
-    tracingStartInInterceptor.handleMessage(message);
+    // when creating a CxfRequest
+    CxfRequest request = new CxfRequest(message);
 
-    // then no NPE
+    // then span name falls back to "jaxws" instead of throwing NPE
+    assertThat(request.spanName()).isEqualTo("jaxws");
   }
 }
