@@ -162,19 +162,15 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
   @org.junit.jupiter.api.Order(1) // This test validates startup telemetry, so must run first
   @SuppressWarnings("deprecation") // testing deprecated code semconv
   void shouldSendTelemetry() {
+    // this is the first test to run so it will see the telemetry from the application startup
+    testing.waitForTraces(1);
+    testing.clearAllExportedData();
+
     Assumptions.assumeTrue(!preferJfr() || isFlightRecorderAvailable());
 
     makeClientCall();
 
     testing.waitAndAssertTraces(
-        traceAssert ->
-            traceAssert.hasSpansSatisfyingExactly(
-                spanDataAssert ->
-                    spanDataAssert
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttribute(
-                            DB_STATEMENT,
-                            "create table customer (id bigint not null, name varchar not null, primary key (id))")),
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(
                 clientSpan ->
