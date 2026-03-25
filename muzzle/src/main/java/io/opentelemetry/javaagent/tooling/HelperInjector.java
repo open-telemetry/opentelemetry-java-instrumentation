@@ -22,6 +22,7 @@ import io.opentelemetry.javaagent.bootstrap.advice.AdviceForwardLookupSupplier;
 import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldLookupSupplier;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import io.opentelemetry.javaagent.instrumentation.executors.ExecutorLookupSupplier;
+import io.opentelemetry.javaagent.instrumentation.httpurlconnection.HttpUrlConnectionLookupSupplier;
 import io.opentelemetry.javaagent.instrumentation.internal.lambda.LambdaLookupSupplier;
 import io.opentelemetry.javaagent.instrumentation.internal.reflection.ReflectionLookupSupplier;
 import io.opentelemetry.javaagent.instrumentation.jul.JulLookupSupplier;
@@ -339,10 +340,15 @@ public class HelperInjector implements Transformer {
   private static final boolean canUseUnsafe =
       Double.parseDouble(System.getProperty("java.specification.version")) < 23;
   private static final Map<String, MethodHandles.Lookup> packageLookups = new HashMap<>();
+  // we disable the fallback to verify that we have added lookups for all instrumentations that need
+  // to define classes in the boot loader
+  private static final boolean denyUnsafe =
+      Boolean.getBoolean("otel.javaagent.testing.deny-unsafe");
 
   static {
     // add lookups for instrumentations that define classes in boot loader
     addPackageLookup(new ExecutorLookupSupplier());
+    addPackageLookup(new HttpUrlConnectionLookupSupplier());
     addPackageLookup(new JulLookupSupplier());
     addPackageLookup(new LambdaLookupSupplier());
     addPackageLookup(new ReflectionLookupSupplier());
@@ -415,7 +421,7 @@ public class HelperInjector implements Transformer {
     // a reference count -- but for now, starting simple.
 
     // Failures to create a tempDir are propagated as IOException and handled by transform
-    if (!classnameToBytes.isEmpty() && instrumentation != null) {
+    if (!denyUnsafe && !classnameToBytes.isEmpty() && instrumentation != null) {
       File tempDir = createTempDir();
       try {
         ClassInjector.UsingInstrumentation.of(
