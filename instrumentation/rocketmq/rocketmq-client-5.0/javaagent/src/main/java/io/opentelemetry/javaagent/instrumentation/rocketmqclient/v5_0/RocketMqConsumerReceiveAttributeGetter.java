@@ -11,9 +11,8 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.apis.message.MessageView;
 
-enum RocketMqConsumerReceiveAttributeGetter
+class RocketMqConsumerReceiveAttributeGetter
     implements MessagingAttributesGetter<ReceiveMessageRequest, List<MessageView>> {
-  INSTANCE;
 
   @Nullable
   @Override
