@@ -26,6 +26,7 @@ import io.opentelemetry.javaagent.instrumentation.httpurlconnection.HttpUrlConne
 import io.opentelemetry.javaagent.instrumentation.internal.lambda.LambdaLookupSupplier;
 import io.opentelemetry.javaagent.instrumentation.internal.reflection.ReflectionLookupSupplier;
 import io.opentelemetry.javaagent.instrumentation.jul.JulLookupSupplier;
+import io.opentelemetry.javaagent.instrumentation.methods.MethodLookupSupplier;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResource;
 import java.io.File;
 import java.io.IOException;
@@ -351,6 +352,7 @@ public class HelperInjector implements Transformer {
     addPackageLookup(new HttpUrlConnectionLookupSupplier());
     addPackageLookup(new JulLookupSupplier());
     addPackageLookup(new LambdaLookupSupplier());
+    addPackageLookup(new MethodLookupSupplier());
     addPackageLookup(new ReflectionLookupSupplier());
     // because all generated virtual field classes are in the same package we can use lookup to
     // define them
