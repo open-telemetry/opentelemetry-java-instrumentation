@@ -49,7 +49,7 @@ public class ScalaForkJoinTaskInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("exec").and(takesArguments(0)).and(not(isAbstract())),
-        ScalaForkJoinTaskInstrumentation.class.getName() + "$ForkJoinTaskAdvice");
+        getClass().getName() + "$ForkJoinTaskAdvice");
   }
 
   @SuppressWarnings("unused")
