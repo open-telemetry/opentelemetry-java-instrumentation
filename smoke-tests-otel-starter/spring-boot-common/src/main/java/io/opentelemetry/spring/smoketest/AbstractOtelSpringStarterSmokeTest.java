@@ -49,7 +49,6 @@ import java.util.List;
 import java.util.Optional;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.assertj.core.api.MapAssert;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -162,15 +161,17 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
   @org.junit.jupiter.api.Order(1) // This test validates startup telemetry, so must run first
   @SuppressWarnings("deprecation") // testing deprecated code semconv
   void shouldSendTelemetry() {
-    // this is the first test to run so it will see the telemetry from the application startup
-    testing.waitForTraces(1);
-    testing.clearAllExportedData();
-
-    Assumptions.assumeTrue(!preferJfr() || isFlightRecorderAvailable());
-
     makeClientCall();
 
     testing.waitAndAssertTraces(
+        traceAssert ->
+            traceAssert.hasSpansSatisfyingExactly(
+                spanDataAssert ->
+                    spanDataAssert
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttribute(
+                            DB_STATEMENT,
+                            "create table customer (id bigint not null, name varchar not null, primary key (id))")),
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(
                 clientSpan ->
@@ -225,14 +226,17 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
       // GraalVM native image does not support buffer pools - have to investigate why
       runtimeMetrics.add("jvm.buffer.memory.used");
     }
-    runtimeMetrics.forEach(
-        metricName ->
-            testing.waitAndAssertMetrics(
-                "io.opentelemetry.runtime-telemetry",
-                metricName,
-                AbstractIterableAssert::isNotEmpty));
 
-    assertAdditionalMetrics();
+    if (!preferJfr() || isFlightRecorderAvailable()) {
+      runtimeMetrics.forEach(
+          metricName ->
+              testing.waitAndAssertMetrics(
+                  "io.opentelemetry.runtime-telemetry",
+                  metricName,
+                  AbstractIterableAssert::isNotEmpty));
+
+      assertAdditionalMetrics();
+    }
 
     // Log
     List<LogRecordData> exportedLogRecords = testing.getExportedLogRecords();
