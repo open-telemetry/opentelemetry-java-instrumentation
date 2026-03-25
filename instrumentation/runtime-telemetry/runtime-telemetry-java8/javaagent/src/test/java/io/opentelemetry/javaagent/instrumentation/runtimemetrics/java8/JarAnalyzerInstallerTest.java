@@ -12,7 +12,6 @@ import static java.util.stream.Collectors.toList;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.sdk.logs.data.internal.ExtendedLogRecordData;
 import java.util.List;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
@@ -26,7 +25,7 @@ class JarAnalyzerInstallerTest {
 
   @Test
   @SuppressWarnings("ReturnValueIgnored")
-  void jarAnalyzerEnabled() throws InterruptedException {
+  void jarAnalyzerEnabled() {
     // We clear exported data before running tests. Here we load a class from testcontainers with
     // the assumption that no testcontainers classes have been loaded yet, and we'll have at least
     // the testcontainers jar show up in jar analyzer events.
@@ -37,10 +36,7 @@ class JarAnalyzerInstallerTest {
             .until(
                 () ->
                     testing.logRecords().stream()
-                        .filter(
-                            record ->
-                                "package.info"
-                                    .equals(((ExtendedLogRecordData) record).getEventName()))
+                        .filter(record -> "package.info".equals(record.getEventName()))
                         .collect(toList()),
                 (eventList) -> !eventList.isEmpty());
 
