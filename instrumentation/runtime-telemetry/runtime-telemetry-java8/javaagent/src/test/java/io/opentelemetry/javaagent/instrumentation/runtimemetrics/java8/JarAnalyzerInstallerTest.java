@@ -36,10 +36,7 @@ class JarAnalyzerInstallerTest {
             .until(
                 () ->
                     testing.logRecords().stream()
-                        .filter(
-                            record ->
-                                "package.info"
-                                    .equals(record.getEventName()))
+                        .filter(record -> "package.info".equals(record.getEventName()))
                         .collect(toList()),
                 (eventList) -> !eventList.isEmpty());
 
