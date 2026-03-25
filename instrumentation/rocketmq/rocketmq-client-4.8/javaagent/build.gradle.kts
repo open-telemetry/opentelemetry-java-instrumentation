@@ -16,6 +16,7 @@ dependencies {
 
   implementation(project(":instrumentation:rocketmq:rocketmq-client-4.8:library"))
 
+  testInstrumentation(project(":instrumentation:rocketmq:rocketmq-client-5.0:javaagent"))
   testImplementation(project(":instrumentation:rocketmq:rocketmq-client-4.8:testing"))
 
   testLibrary("org.apache.rocketmq:rocketmq-test:4.8.0")
