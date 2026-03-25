@@ -14,9 +14,9 @@ import reactor.core.publisher.FluxOperator;
 import reactor.core.publisher.Operators;
 import reactor.util.context.Context;
 
-final class TracingDisablingKafkaFlux<T> extends FluxOperator<T, T> {
+public final class TracingDisablingKafkaFlux<T> extends FluxOperator<T, T> {
 
-  TracingDisablingKafkaFlux(Flux<? extends T> source) {
+  public TracingDisablingKafkaFlux(Flux<? extends T> source) {
     super(source);
   }
 

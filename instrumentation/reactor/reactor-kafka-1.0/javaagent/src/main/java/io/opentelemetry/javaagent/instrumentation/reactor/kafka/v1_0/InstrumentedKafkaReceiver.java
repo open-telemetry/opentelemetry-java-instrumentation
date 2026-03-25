@@ -14,11 +14,11 @@ import reactor.kafka.receiver.KafkaReceiver;
 import reactor.kafka.receiver.ReceiverRecord;
 import reactor.kafka.sender.TransactionManager;
 
-final class InstrumentedKafkaReceiver<K, V> implements KafkaReceiver<K, V> {
+public final class InstrumentedKafkaReceiver<K, V> implements KafkaReceiver<K, V> {
 
   private final KafkaReceiver<K, V> actual;
 
-  InstrumentedKafkaReceiver(KafkaReceiver<K, V> actual) {
+  public InstrumentedKafkaReceiver(KafkaReceiver<K, V> actual) {
     this.actual = actual;
   }
 
