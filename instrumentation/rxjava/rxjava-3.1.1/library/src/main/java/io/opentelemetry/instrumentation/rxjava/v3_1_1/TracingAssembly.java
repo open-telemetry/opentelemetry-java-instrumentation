@@ -281,8 +281,10 @@ public final class TracingAssembly {
                     }));
   }
 
+  @GuardedBy("TracingAssembly.class")
   private static RxJava3AsyncOperationEndStrategy asyncOperationEndStrategy;
 
+  @GuardedBy("TracingAssembly.class")
   private static void enableWithSpanStrategy(boolean captureExperimentalSpanAttributes) {
     asyncOperationEndStrategy =
         RxJava3AsyncOperationEndStrategy.builder()
@@ -336,6 +338,7 @@ public final class TracingAssembly {
     oldOnMaybeSubscribe = null;
   }
 
+  @GuardedBy("TracingAssembly.class")
   private static void disableWithSpanStrategy() {
     if (asyncOperationEndStrategy != null) {
       AsyncOperationEndStrategies.instance().unregisterStrategy(asyncOperationEndStrategy);
