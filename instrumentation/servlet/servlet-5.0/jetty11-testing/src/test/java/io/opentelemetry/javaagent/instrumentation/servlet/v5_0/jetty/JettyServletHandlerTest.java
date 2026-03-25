@@ -42,6 +42,7 @@ class JettyServletHandlerTest extends AbstractServlet5Test<Server, ServletHandle
           attributes.remove(HTTP_ROUTE);
           return attributes;
         });
+    options.setTestRequestBodyCapture(true);
   }
 
   @Override

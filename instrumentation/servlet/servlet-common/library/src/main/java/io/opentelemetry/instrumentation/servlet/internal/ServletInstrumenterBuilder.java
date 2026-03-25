@@ -36,6 +36,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
           ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
       builder;
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
+  private boolean captureRequestBody;
 
   private ServletInstrumenterBuilder(
       String instrumentationName,
@@ -102,6 +103,13 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
     return this;
   }
 
+  @CanIgnoreReturnValue
+  public ServletInstrumenterBuilder<REQUEST, RESPONSE> setCaptureRequestBody(
+      boolean captureRequestBody) {
+    this.captureRequestBody = captureRequestBody;
+    return this;
+  }
+
   public Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> build(
       SpanNameExtractor<ServletRequestContext<REQUEST>> spanNameExtractor) {
 
@@ -115,6 +123,10 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
                     new ServletRequestParametersExtractor<>(accessor, captureRequestParameters);
             builder.addAttributesExtractor(requestParametersExtractor);
           }
+          if (captureRequestBody) {
+            builder.addAttributesExtractor(new ServletRequestBodyExtractor<>(accessor));
+          }
+
           for (ContextCustomizer<? super ServletRequestContext<REQUEST>> contextCustomizer :
               contextCustomizers) {
             builder.addContextCustomizer(contextCustomizer);
