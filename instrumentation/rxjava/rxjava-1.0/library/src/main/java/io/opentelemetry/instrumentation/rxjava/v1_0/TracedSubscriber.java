@@ -13,16 +13,17 @@ import rx.Subscriber;
 
 final class TracedSubscriber<T, REQUEST> extends Subscriber<T> {
 
-  private final Subscriber<T> delegate;
+  private final Subscriber<? super T> delegate;
   private final Instrumenter<REQUEST, ?> instrumenter;
   private final AtomicReference<Context> contextRef;
   private final REQUEST request;
 
   TracedSubscriber(
-      Subscriber<T> delegate,
+      Subscriber<? super T> delegate,
       Instrumenter<REQUEST, ?> instrumenter,
       Context context,
       REQUEST request) {
+    super(delegate);
     this.delegate = delegate;
     this.instrumenter = instrumenter;
     this.contextRef = new AtomicReference<>(context);
