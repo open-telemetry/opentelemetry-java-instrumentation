@@ -34,7 +34,7 @@ final class ConsumeServiceInstrumentation implements TypeInstrumentation {
                     .and(
                         takesArgument(
                             1, named("org.apache.rocketmq.client.apis.consumer.MessageListener")))),
-        ConsumeServiceInstrumentation.class.getName() + "$ConstructorAdvice");
+        getClass().getName() + "$ConstructorAdvice");
   }
 
   @SuppressWarnings("unused")
