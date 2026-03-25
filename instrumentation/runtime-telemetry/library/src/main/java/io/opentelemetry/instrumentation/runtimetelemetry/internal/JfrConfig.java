@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.metrics.Meter;
 import javax.annotation.Nullable;
 
@@ -21,26 +22,32 @@ public class JfrConfig {
     return new JfrConfig();
   }
 
+  @CanIgnoreReturnValue
   public JfrConfig enableAllFeatures() {
     return this;
   }
 
+  @CanIgnoreReturnValue
   public JfrConfig disableAllFeatures() {
     return this;
   }
 
+  @CanIgnoreReturnValue
   public JfrConfig enableExperimentalFeatures() {
     return this;
   }
 
+  @CanIgnoreReturnValue
   public JfrConfig enableFeature(String featureName) {
     return this;
   }
 
+  @CanIgnoreReturnValue
   public JfrConfig disableFeature(String featureName) {
     return this;
   }
 
+  @CanIgnoreReturnValue
   public JfrConfig setUseLegacyJfrCpuCountMetric(boolean useLegacy) {
     return this;
   }
