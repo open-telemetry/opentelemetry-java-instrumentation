@@ -435,3 +435,4 @@ servlet-2.2:javaagent
 servlet-3.0:javaagent-testing
 servlet-3.0:javaagent
 servlet-3.0:javaagent-unit-tests
+servlet-3.0:library
