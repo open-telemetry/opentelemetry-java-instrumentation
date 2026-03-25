@@ -45,6 +45,10 @@ public class JfrConfig {
     return this;
   }
 
+  public boolean isJfrAvailable() {
+    return false;
+  }
+
   @Nullable
   public AutoCloseable buildJfrTelemetry(boolean preferJfrMetrics, Meter meter) {
     return null;
