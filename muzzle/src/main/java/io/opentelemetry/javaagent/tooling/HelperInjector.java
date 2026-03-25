@@ -27,6 +27,10 @@ import io.opentelemetry.javaagent.instrumentation.internal.lambda.LambdaLookupSu
 import io.opentelemetry.javaagent.instrumentation.internal.reflection.ReflectionLookupSupplier;
 import io.opentelemetry.javaagent.instrumentation.jul.JulLookupSupplier;
 import io.opentelemetry.javaagent.instrumentation.methods.MethodLookupSupplier;
+import io.opentelemetry.javaagent.instrumentation.rmi.client.RmiClientLookupSupplier;
+import io.opentelemetry.javaagent.instrumentation.rmi.context.RmiContextLookupSupplier;
+import io.opentelemetry.javaagent.instrumentation.rmi.context.server.RmiContextServerLookupSupplier;
+import io.opentelemetry.javaagent.instrumentation.rmi.server.RmiServerLookupSupplier;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResource;
 import java.io.File;
 import java.io.IOException;
@@ -354,6 +358,10 @@ public class HelperInjector implements Transformer {
     addPackageLookup(new LambdaLookupSupplier());
     addPackageLookup(new MethodLookupSupplier());
     addPackageLookup(new ReflectionLookupSupplier());
+    addPackageLookup(new RmiClientLookupSupplier());
+    addPackageLookup(new RmiContextLookupSupplier());
+    addPackageLookup(new RmiContextServerLookupSupplier());
+    addPackageLookup(new RmiServerLookupSupplier());
     // because all generated virtual field classes are in the same package we can use lookup to
     // define them
     addPackageLookup(new VirtualFieldLookupSupplier());
