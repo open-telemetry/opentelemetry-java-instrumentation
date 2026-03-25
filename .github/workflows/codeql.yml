@@ -62,7 +62,20 @@ jobs:
         with:
           cache-read-only: ${{ github.event_name == 'pull_request' }}
 
+      # Pull requests use buildless extraction to try the faster incremental path.
+      # Push and scheduled scans keep the full build for higher-fidelity coverage.
+      - name: Initialize CodeQL for Java pull requests
+        if: matrix.language == 'java' && github.event_name == 'pull_request'
+        uses: github/codeql-action/init@38697555549f1db7851b81482ff19f1fa5c4fedc # v4.34.1
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+          # using "linked" helps to keep up with the linked Kotlin support
+          # see https://github.com/github/codeql-action/issues/1555#issuecomment-1452228433
+          tools: linked
+
       - name: Initialize CodeQL
+        if: matrix.language != 'java' || github.event_name != 'pull_request'
         uses: github/codeql-action/init@38697555549f1db7851b81482ff19f1fa5c4fedc # v4.34.1
         with:
           languages: ${{ matrix.language }}
@@ -71,7 +84,7 @@ jobs:
           tools: linked
 
       - name: Assemble
-        if: matrix.language == 'java'
+        if: matrix.language == 'java' && github.event_name != 'pull_request'
         # --no-build-cache is required for codeql to analyze all modules
         # --no-daemon is required for codeql to observe the compilation
         # (see https://docs.github.com/en/code-security/codeql-cli/getting-started-with-the-codeql-cli/preparing-your-code-for-codeql-analysis#specifying-build-commands)
