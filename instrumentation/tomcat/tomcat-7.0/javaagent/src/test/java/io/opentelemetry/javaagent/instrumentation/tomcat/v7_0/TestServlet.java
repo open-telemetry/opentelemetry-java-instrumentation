@@ -31,6 +31,7 @@ class TestServlet extends HttpServlet {
       AbstractHttpServerTest.controller(
           serverEndpoint,
           () -> {
+            String responseBody = serverEndpoint.getBody();
             if (serverEndpoint == ServerEndpoint.EXCEPTION) {
               throw new IllegalStateException(serverEndpoint.getBody());
             }
@@ -49,10 +50,10 @@ class TestServlet extends HttpServlet {
               ServerEndpoint.INDEXED_CHILD.collectSpanAttributes(req::getParameter);
             }
             if (serverEndpoint == ServerEndpoint.INDEXED_CHILD_FROM_REQUEST_BODY) {
-              String responseBody = AbstractHttpServerTest.readRequestBody(req.getInputStream());
+              responseBody = AbstractHttpServerTest.readRequestBody(req.getInputStream());
               AbstractHttpServerTest.bodyConsumer(serverEndpoint, responseBody);
             }
-            resp.getWriter().print(serverEndpoint.getBody());
+            resp.getWriter().print(responseBody);
             if (serverEndpoint == ServerEndpoint.REDIRECT) {
               resp.sendRedirect(serverEndpoint.getBody());
             } else if (serverEndpoint == ServerEndpoint.ERROR) {
