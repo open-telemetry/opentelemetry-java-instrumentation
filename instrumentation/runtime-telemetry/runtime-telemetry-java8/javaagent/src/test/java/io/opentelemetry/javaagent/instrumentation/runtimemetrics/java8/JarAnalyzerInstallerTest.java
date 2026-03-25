@@ -13,10 +13,10 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import java.util.List;
+import org.apache.commons.io.IOUtils;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.testcontainers.containers.GenericContainer;
 
 class JarAnalyzerInstallerTest {
 
@@ -26,10 +26,10 @@ class JarAnalyzerInstallerTest {
   @Test
   @SuppressWarnings("ReturnValueIgnored")
   void jarAnalyzerEnabled() {
-    // We clear exported data before running tests. Here we load a class from testcontainers with
-    // the assumption that no testcontainers classes have been loaded yet, and we'll have at least
-    // the testcontainers jar show up in jar analyzer events.
-    GenericContainer.class.getName();
+    // We clear exported data before running tests. Here we load a class from commons-io with the
+    // assumption that no commons-io classes have been loaded yet, and we'll have at least the
+    // commons-io jar show up in jar analyzer events.
+    IOUtils.class.getName();
 
     List<LogRecordData> events =
         Awaitility.await()
