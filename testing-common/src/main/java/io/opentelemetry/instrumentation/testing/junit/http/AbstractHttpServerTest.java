@@ -110,6 +110,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.awaitility.Awaitility;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -588,9 +589,9 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
       }
     }
 
-    assertThat(responses)
-        .allSatisfy(
-            response -> assertThat(response).isEqualTo(INDEXED_CHILD_FROM_REQUEST_BODY.getBody()));
+    for (int i = 0; i < count; i++) {
+      assertThat(responses.get(i)).isEqualTo(Integer.toString(i));
+    }
     assertHighConcurrencyWithRequestBody(count);
   }
 
@@ -1202,7 +1203,14 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
   @CanIgnoreReturnValue
   protected SpanDataAssert assertIndexedBodyControllerSpan(SpanDataAssert span) {
-    span.hasName("controller").hasKind(SpanKind.INTERNAL);
+    span.hasName("controller")
+      .hasKind(SpanKind.INTERNAL)
+      // The request id belongs on the nested body-consumer span only, not on the controller.
+      .satisfies(
+        spanData ->
+          Assertions.assertThat(
+              spanData.getAttributes().get(longKey(ServerEndpoint.ID_ATTRIBUTE_NAME)))
+            .isNull());
     return span;
   }
 

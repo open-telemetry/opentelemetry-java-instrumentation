@@ -75,12 +75,13 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
                             controller(
                                 INDEXED_CHILD_FROM_REQUEST_BODY,
                                 () -> {
-                                  bodyConsumer(INDEXED_CHILD_FROM_REQUEST_BODY, body.toString());
+                                  String requestBody = body.toString();
+                                  bodyConsumer(INDEXED_CHILD_FROM_REQUEST_BODY, requestBody);
                                   end(
                                       ctx.response()
                                           .setStatusCode(
                                               INDEXED_CHILD_FROM_REQUEST_BODY.getStatus()),
-                                      INDEXED_CHILD_FROM_REQUEST_BODY.getBody());
+                                      requestBody);
                                   return null;
                                 })));
     router

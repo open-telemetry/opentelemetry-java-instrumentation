@@ -135,11 +135,9 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
                                   controller(
                                       INDEXED_CHILD_FROM_REQUEST_BODY,
                                       () -> {
-                                        bodyConsumer(
-                                            INDEXED_CHILD_FROM_REQUEST_BODY,
-                                            readRequestBody(k.getInputStream()));
-                                        k.getResponseSender()
-                                            .send(INDEXED_CHILD_FROM_REQUEST_BODY.getBody());
+                                        String requestBody = readRequestBody(k.getInputStream());
+                                        bodyConsumer(INDEXED_CHILD_FROM_REQUEST_BODY, requestBody);
+                                        k.getResponseSender().send(requestBody);
                                       });
                                 }))
                     .addExactPath(

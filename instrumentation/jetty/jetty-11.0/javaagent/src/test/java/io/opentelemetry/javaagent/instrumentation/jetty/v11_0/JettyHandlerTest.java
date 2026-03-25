@@ -136,9 +136,10 @@ class JettyHandlerTest extends AbstractHttpServerTest<Server> {
       response.setStatus(endpoint.getStatus());
       response.getWriter().print(endpoint.getBody());
     } else if (INDEXED_CHILD_FROM_REQUEST_BODY.equals(endpoint)) {
-      bodyConsumer(endpoint, readRequestBody(request.getInputStream()));
+      String requestBody = readRequestBody(request.getInputStream());
+      bodyConsumer(endpoint, requestBody);
       response.setStatus(endpoint.getStatus());
-      response.getWriter().print(endpoint.getBody());
+      response.getWriter().print(requestBody);
     } else {
       response.setStatus(NOT_FOUND.getStatus());
       response.getWriter().print(NOT_FOUND.getBody());

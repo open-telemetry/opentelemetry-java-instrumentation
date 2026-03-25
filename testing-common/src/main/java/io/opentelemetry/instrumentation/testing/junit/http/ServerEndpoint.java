@@ -48,9 +48,9 @@ public class ServerEndpoint {
       new ServerEndpoint("AUTH_ERROR", "basicsecured/endpoint", 401, null);
   public static final ServerEndpoint INDEXED_CHILD =
       new ServerEndpoint("INDEXED_CHILD", "child", 200, "success");
+  // Handlers echo the request body to correlate pipelined responses.
   public static final ServerEndpoint INDEXED_CHILD_FROM_REQUEST_BODY =
-      new ServerEndpoint(
-          "INDEXED_CHILD_FROM_REQUEST_BODY", "child-from-request-body", 200, "success");
+      new ServerEndpoint("INDEXED_CHILD_FROM_REQUEST_BODY", "child-from-request-body", 200, null);
 
   public static final String ID_ATTRIBUTE_NAME = "test.request.id";
   public static final String ID_PARAMETER_NAME = "id";

@@ -122,12 +122,12 @@ class UndertowServerDispatchTest extends AbstractHttpServerTest<Undertow> {
                                   controller(
                                       INDEXED_CHILD_FROM_REQUEST_BODY,
                                       () -> {
-                                        bodyConsumer(
-                                            INDEXED_CHILD_FROM_REQUEST_BODY,
-                                            readRequestBody(exchange.getInputStream()));
+                                        String requestBody =
+                                            readRequestBody(exchange.getInputStream());
+                                        bodyConsumer(INDEXED_CHILD_FROM_REQUEST_BODY, requestBody);
                                         exchange
                                             .getResponseSender()
-                                            .send(INDEXED_CHILD_FROM_REQUEST_BODY.getBody());
+                                            .send(requestBody);
                                       });
                                 })))
             .build();

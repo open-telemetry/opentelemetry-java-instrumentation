@@ -142,13 +142,12 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
                     .runWithSpan(
                         "controller",
                         () -> {
-                          bodyConsumer(
-                              INDEXED_CHILD_FROM_REQUEST_BODY,
-                              readRequestBody(ctx.getRequestBody()));
+                          String requestBody = readRequestBody(ctx.getRequestBody());
+                          bodyConsumer(INDEXED_CHILD_FROM_REQUEST_BODY, requestBody);
                           sendResponse(
                               ctx,
                               INDEXED_CHILD_FROM_REQUEST_BODY.getStatus(),
-                              INDEXED_CHILD_FROM_REQUEST_BODY.getBody());
+                              requestBody);
                         }));
     contexts.add(context);
     context =

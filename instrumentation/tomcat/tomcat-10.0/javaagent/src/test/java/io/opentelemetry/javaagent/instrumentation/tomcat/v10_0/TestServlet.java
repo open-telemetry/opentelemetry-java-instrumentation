@@ -49,8 +49,8 @@ class TestServlet extends HttpServlet {
               ServerEndpoint.INDEXED_CHILD.collectSpanAttributes(req::getParameter);
             }
             if (serverEndpoint == ServerEndpoint.INDEXED_CHILD_FROM_REQUEST_BODY) {
-              AbstractHttpServerTest.bodyConsumer(
-                  serverEndpoint, AbstractHttpServerTest.readRequestBody(req.getInputStream()));
+              String responseBody = AbstractHttpServerTest.readRequestBody(req.getInputStream());
+              AbstractHttpServerTest.bodyConsumer(serverEndpoint, responseBody);
             }
             resp.getWriter().print(serverEndpoint.getBody());
             if (serverEndpoint == ServerEndpoint.REDIRECT) {

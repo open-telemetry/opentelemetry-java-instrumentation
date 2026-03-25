@@ -120,9 +120,10 @@ class Jetty12HandlerTest extends AbstractHttpServerTest<Server> {
       response.setStatus(endpoint.getStatus());
       response.write(true, UTF_8.encode(endpoint.getBody()), Callback.NOOP);
     } else if (INDEXED_CHILD_FROM_REQUEST_BODY.equals(endpoint)) {
-      bodyConsumer(endpoint, Content.Source.asString(request));
+      String requestBody = Content.Source.asString(request);
+      bodyConsumer(endpoint, requestBody);
       response.setStatus(endpoint.getStatus());
-      response.write(true, UTF_8.encode(endpoint.getBody()), Callback.NOOP);
+      response.write(true, UTF_8.encode(requestBody), Callback.NOOP);
     } else {
       response.setStatus(NOT_FOUND.getStatus());
       response.write(true, UTF_8.encode(NOT_FOUND.getBody()), Callback.NOOP);

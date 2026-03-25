@@ -127,8 +127,8 @@ public abstract class AbstractNetty41ServerTest extends AbstractHttpServerTest<E
             new DefaultFullHttpResponse(
                 HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()), content);
       } else if (INDEXED_CHILD_FROM_REQUEST_BODY.equals(endpoint)) {
-        content = Unpooled.copiedBuffer(endpoint.getBody(), CharsetUtil.UTF_8);
         String body = ((FullHttpRequest) request).content().toString(CharsetUtil.UTF_8);
+        content = Unpooled.copiedBuffer(body, CharsetUtil.UTF_8);
         bodyConsumer(endpoint, body);
         response =
             new DefaultFullHttpResponse(
