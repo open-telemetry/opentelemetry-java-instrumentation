@@ -12,7 +12,7 @@ import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.FixedHostPortGenericContainer;
 import org.testcontainers.containers.GenericContainer;
 
-public class RocketMqProxyContainer {
+class RocketMqProxyContainer {
   // TODO(aaron-ai): replace it by the official image.
   private static final String IMAGE_NAME = "aaronai/rocketmq-proxy-it:v1.0.2";
 
