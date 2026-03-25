@@ -42,6 +42,7 @@ import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -110,7 +111,6 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.awaitility.Awaitility;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -1204,13 +1204,12 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   @CanIgnoreReturnValue
   protected SpanDataAssert assertIndexedBodyControllerSpan(SpanDataAssert span) {
     span.hasName("controller")
-      .hasKind(SpanKind.INTERNAL)
-      // The request id belongs on the nested body-consumer span only, not on the controller.
-      .satisfies(
-        spanData ->
-          Assertions.assertThat(
-              spanData.getAttributes().get(longKey(ServerEndpoint.ID_ATTRIBUTE_NAME)))
-            .isNull());
+        .hasKind(SpanKind.INTERNAL)
+        // The request id belongs on the nested body-consumer span only, not on the controller.
+        .satisfies(
+            spanData ->
+                assertThat(spanData.getAttributes().get(longKey(ServerEndpoint.ID_ATTRIBUTE_NAME)))
+                    .isNull());
     return span;
   }
 
