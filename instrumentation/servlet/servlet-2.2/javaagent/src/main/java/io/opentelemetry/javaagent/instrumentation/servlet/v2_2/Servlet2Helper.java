@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
 import io.opentelemetry.javaagent.instrumentation.servlet.BaseServletHelper;
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -28,7 +29,7 @@ public class Servlet2Helper extends BaseServletHelper<HttpServletRequest, HttpSe
       ServletRequestContext<HttpServletRequest> requestContext,
       HttpServletResponse response,
       int statusCode,
-      Throwable throwable) {
+      @Nullable Throwable throwable) {
 
     ServletResponseContext<HttpServletResponse> responseContext =
         new ServletResponseContext<>(response);
