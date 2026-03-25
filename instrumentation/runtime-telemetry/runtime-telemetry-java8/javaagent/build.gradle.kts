@@ -12,5 +12,6 @@ dependencies {
 tasks {
   test {
     jvmArgs("-Dotel.instrumentation.runtime-telemetry.package-emitter.enabled=true")
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 }

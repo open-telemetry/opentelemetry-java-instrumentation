@@ -45,7 +45,7 @@ class JarAnalyzerInstallerTest {
                 (eventList) -> !eventList.isEmpty());
 
     assertThat(events)
-        .hasSizeGreaterThan(0)
+        .isNotEmpty()
         .allSatisfy(
             logRecord ->
                 assertThat(logRecord.getAttributes())
