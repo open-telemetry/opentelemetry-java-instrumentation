@@ -126,11 +126,10 @@ class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
                                                 content);
                                       } else if (endpoint.equals(INDEXED_CHILD_FROM_REQUEST_BODY)) {
                                         String body =
-                                          ((FullHttpRequest) request)
-                                            .content()
-                                            .toString(CharsetUtil.UTF_8);
-                                        content =
-                                          Unpooled.copiedBuffer(body, CharsetUtil.UTF_8);
+                                            ((FullHttpRequest) request)
+                                                .content()
+                                                .toString(CharsetUtil.UTF_8);
+                                        content = Unpooled.copiedBuffer(body, CharsetUtil.UTF_8);
                                         bodyConsumer(endpoint, body);
                                         response =
                                             new DefaultFullHttpResponse(

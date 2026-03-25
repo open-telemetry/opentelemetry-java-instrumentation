@@ -125,9 +125,7 @@ class UndertowServerDispatchTest extends AbstractHttpServerTest<Undertow> {
                                         String requestBody =
                                             readRequestBody(exchange.getInputStream());
                                         bodyConsumer(INDEXED_CHILD_FROM_REQUEST_BODY, requestBody);
-                                        exchange
-                                            .getResponseSender()
-                                            .send(requestBody);
+                                        exchange.getResponseSender().send(requestBody);
                                       });
                                 })))
             .build();

@@ -145,9 +145,7 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
                           String requestBody = readRequestBody(ctx.getRequestBody());
                           bodyConsumer(INDEXED_CHILD_FROM_REQUEST_BODY, requestBody);
                           sendResponse(
-                              ctx,
-                              INDEXED_CHILD_FROM_REQUEST_BODY.getStatus(),
-                              requestBody);
+                              ctx, INDEXED_CHILD_FROM_REQUEST_BODY.getStatus(), requestBody);
                         }));
     contexts.add(context);
     context =
