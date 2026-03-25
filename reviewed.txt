@@ -441,3 +441,4 @@ servlet-5.0:javaagent-unit-tests
 servlet-5.0:javaagent
 servlet-5.0:jetty11-testing
 servlet-5.0:jetty12-testing
+servlet-5.0:library
