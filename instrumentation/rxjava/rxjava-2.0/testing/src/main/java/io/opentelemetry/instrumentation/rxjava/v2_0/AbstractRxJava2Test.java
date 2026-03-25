@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.rxjava.v2_0;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -834,7 +834,7 @@ public abstract class AbstractRxJava2Test {
                       .toList()
                       .blockingGet();
                 });
-    assertThat(result.size()).isEqualTo(4);
+    assertThat(result).hasSize(4);
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -873,15 +873,18 @@ public abstract class AbstractRxJava2Test {
                   span ->
                       span.hasName("outer")
                           .hasNoParent()
-                          .hasAttributes(attributeEntry("iteration", iteration)),
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(longKey("iteration"), (long) iteration)),
                   span ->
                       span.hasName("middle")
                           .hasParent(trace.getSpan(0))
-                          .hasAttributes(attributeEntry("iteration", iteration)),
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(longKey("iteration"), (long) iteration)),
                   span ->
                       span.hasName("inner")
                           .hasParent(trace.getSpan(1))
-                          .hasAttributes(attributeEntry("iteration", iteration)));
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(longKey("iteration"), (long) iteration)));
     }
     testing()
         .waitAndAssertSortedTraces(
