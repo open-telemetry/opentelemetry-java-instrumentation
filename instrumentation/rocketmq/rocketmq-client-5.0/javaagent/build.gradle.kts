@@ -14,7 +14,8 @@ muzzle {
 dependencies {
   library("org.apache.rocketmq:rocketmq-client-java:5.0.0")
 
-  testImplementation(project(":instrumentation:rocketmq:rocketmq-client-5.0:testing"))
+  // earlier versions have bugs that may make tests flaky.
+  testLibrary("org.apache.rocketmq:rocketmq-client-java:5.0.2")
 }
 
 tasks {
