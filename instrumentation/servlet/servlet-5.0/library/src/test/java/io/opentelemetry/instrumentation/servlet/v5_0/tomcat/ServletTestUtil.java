@@ -25,7 +25,7 @@ class ServletTestUtil {
             .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
             .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER));
     Experimental.setCapturedRequestParameters(builder, singletonList("test-parameter"));
-    Experimental.addTraceIdRequestAttribute(builder, true);
+    Experimental.setAddTraceIdRequestAttribute(builder, true);
     return builder.build().createFilter();
   }
 
