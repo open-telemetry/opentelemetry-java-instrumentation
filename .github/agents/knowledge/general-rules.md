@@ -174,6 +174,9 @@ Use `@Nullable` annotations accurately throughout the codebase:
   explicitly, or left uninitialized). If the field is always non-null after the
   constructor completes, do not annotate it.
 - **Parameters**: annotate `@Nullable` if and only if `null` is actually passed by callers.
+  When justifying `@Nullable` on a parameter, cite the concrete caller behavior or
+  upstream contract that allows `null`; do **not** justify it merely because the method
+  guards against null.
 - **Return types**: annotate `@Nullable` if and only if the method actually returns `null`.
   Even when an interface or superclass declares a return type as `@Nullable`, do **not** add
   `@Nullable` to the overriding method if the implementation never returns `null`. The
