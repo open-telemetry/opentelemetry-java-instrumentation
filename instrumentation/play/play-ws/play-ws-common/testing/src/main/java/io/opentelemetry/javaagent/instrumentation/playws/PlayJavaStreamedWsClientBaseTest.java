@@ -62,7 +62,8 @@ public class PlayJavaStreamedWsClientBaseTest extends PlayWsClientBaseTest<Stand
         .whenComplete(
             (response, throwable) -> {
               if (throwable != null) {
-                requestResult.complete(throwable.getCause());
+                requestResult.complete(
+                    throwable.getCause() != null ? throwable.getCause() : throwable);
               } else {
                 requestResult.complete(response.getStatus());
               }
