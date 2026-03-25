@@ -190,11 +190,11 @@ fun reduceTargets(full: Map<String, List<ImageTarget>>): Map<String, List<ImageT
     "websphere" -> matrices
 
     else -> matrices.map { it.copy(vm = listOf("hotspot"), jdk = listOf(it.jdk.first())) }
-      .distinctBy { it.version to it.jdk to it.vm to it.war }
+      .distinctBy { listOf(it.version, it.jdk, it.vm, it.war) }
   }
 }
 
-val reducedSmokeTests: Boolean = findProperty("reducedSmokeTests") != null
+val reducedSmokeTests = findProperty("reducedSmokeTests") == "true"
 val activeTargets = if (reducedSmokeTests) reduceTargets(targets) else targets
 
 tasks {
