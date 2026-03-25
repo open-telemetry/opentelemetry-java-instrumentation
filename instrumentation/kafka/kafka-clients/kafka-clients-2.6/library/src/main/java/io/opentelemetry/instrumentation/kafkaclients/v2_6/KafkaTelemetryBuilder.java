@@ -18,6 +18,8 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import javax.annotation.Nullable;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 public final class KafkaTelemetryBuilder {
@@ -34,6 +36,7 @@ public final class KafkaTelemetryBuilder {
   private boolean captureExperimentalSpanAttributes = false;
   private boolean propagationEnabled = true;
   private boolean messagingReceiveInstrumentationEnabled = false;
+  @Nullable private Map<String, Object> producerConfigs;
 
   KafkaTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = requireNonNull(openTelemetry);
@@ -119,18 +122,25 @@ public final class KafkaTelemetryBuilder {
     return setMessagingReceiveTelemetryEnabled(messagingReceiveInstrumentationEnabled);
   }
 
+  /** Sets Kafka consumer configurations. */
+  @CanIgnoreReturnValue
+  public KafkaTelemetryBuilder setProducerConfigs(Map<String, Object> producerConfigs) {
+    this.producerConfigs = producerConfigs;
+    return this;
+  }
+
   public KafkaTelemetry build() {
     KafkaInstrumenterFactory instrumenterFactory =
         new KafkaInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME)
             .setCapturedHeaders(capturedHeaders)
             .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
             .setMessagingReceiveTelemetryEnabled(messagingReceiveInstrumentationEnabled);
-
     return new KafkaTelemetry(
         openTelemetry,
         instrumenterFactory.createProducerInstrumenter(producerAttributesExtractors),
         instrumenterFactory.createConsumerReceiveInstrumenter(consumerReceiveAttributesExtractors),
         instrumenterFactory.createConsumerProcessInstrumenter(consumerProcessAttributesExtractors),
-        propagationEnabled);
+        propagationEnabled,
+        producerConfigs);
   }
 }

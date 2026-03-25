@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import static java.util.Collections.emptyMap;
+import static java.util.stream.Collectors.joining;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.invoke.MethodHandle;
@@ -13,6 +14,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -107,6 +109,17 @@ public final class KafkaUtil {
       // ExceptionHandlingTest uses a Consumer that throws exception on every method call
       return null;
     }
+  }
+
+  @Nullable
+  public static String extractBootstrapServers(@Nullable Object serversConfig) {
+    if (serversConfig == null) {
+      return null;
+    }
+    if (serversConfig instanceof List) {
+      return ((List<?>) serversConfig).stream().map(Object::toString).collect(joining(","));
+    }
+    return serversConfig.toString();
   }
 
   private KafkaUtil() {}

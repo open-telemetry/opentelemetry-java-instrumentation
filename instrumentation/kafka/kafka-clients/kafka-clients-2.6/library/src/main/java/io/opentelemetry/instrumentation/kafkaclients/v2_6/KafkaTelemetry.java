@@ -63,13 +63,15 @@ public final class KafkaTelemetry {
       Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter,
       Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter,
       Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter,
-      boolean producerPropagationEnabled) {
+      boolean producerPropagationEnabled,
+      Map<String, Object> producerConfigs) {
     this.openTelemetry = openTelemetry;
     this.producerTelemetry =
         new KafkaProducerTelemetry(
             openTelemetry.getPropagators().getTextMapPropagator(),
             producerInstrumenter,
-            producerPropagationEnabled);
+            producerPropagationEnabled,
+            producerConfigs);
     this.consumerTelemetry =
         new KafkaConsumerTelemetry(consumerReceiveInstrumenter, consumerProcessInstrumenter);
   }

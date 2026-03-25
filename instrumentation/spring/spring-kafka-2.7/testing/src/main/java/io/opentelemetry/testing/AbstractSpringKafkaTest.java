@@ -5,11 +5,13 @@
 
 package io.opentelemetry.testing;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -40,6 +42,10 @@ public abstract class AbstractSpringKafkaTest {
 
   protected static final AttributeKey<String> MESSAGING_CLIENT_ID =
       AttributeKey.stringKey("messaging.client_id");
+  protected static final AttributeKey<String> MESSAGING_KAFKA_BOOTSTRAP_SERVERS =
+      AttributeKey.stringKey("messaging.kafka.bootstrap.servers");
+  protected static final AttributeAssertion MESSAGING_KAFKA_BOOTSTRAP_SERVERS_ASSERTION =
+      satisfies(MESSAGING_KAFKA_BOOTSTRAP_SERVERS, stringAssert -> stringAssert.matches("^localhost:\\d+(,localhost:\\d+)*$"));
   static KafkaContainer kafka;
 
   ConfigurableApplicationContext applicationContext;

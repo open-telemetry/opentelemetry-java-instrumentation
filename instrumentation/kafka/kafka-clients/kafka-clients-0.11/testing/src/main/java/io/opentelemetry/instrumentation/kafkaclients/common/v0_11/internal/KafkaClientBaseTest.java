@@ -73,6 +73,8 @@ public abstract class KafkaClientBaseTest {
   protected static final String SHARED_TOPIC = "shared.topic";
   protected static final AttributeKey<String> MESSAGING_CLIENT_ID =
       AttributeKey.stringKey("messaging.client_id");
+  protected static final AttributeKey<String> MESSAGING_KAFKA_BOOTSTRAP_SERVERS =
+      AttributeKey.stringKey("messaging.kafka.bootstrap.servers");
 
   private KafkaContainer kafka;
   protected Producer<Integer, String> producer;
@@ -181,7 +183,10 @@ public abstract class KafkaClientBaseTest {
                 equalTo(MESSAGING_OPERATION, "publish"),
                 satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
-                satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
+                satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
+                satisfies(
+                    MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+                    stringAssert -> stringAssert.matches("^localhost:\\d+(,localhost:\\d+)*$"))));
     if (messageKey != null) {
       assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
     }
