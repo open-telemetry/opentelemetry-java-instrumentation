@@ -426,3 +426,4 @@ rxjava-2.0:javaagent
 rxjava-2.0:testing
 rxjava-3.0:javaagent
 rxjava-3.0:library
+rxjava-3.1.1:javaagent
