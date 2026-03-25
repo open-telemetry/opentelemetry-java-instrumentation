@@ -44,8 +44,12 @@ class SpringKafkaNoReceiveTelemetryTest extends AbstractSpringKafkaNoReceiveTele
   public static class KafkaInstrumentationConfig {
 
     @Bean
-    public DefaultKafkaProducerFactoryCustomizer producerInstrumentation(KafkaProperties properties) {
-      KafkaTelemetry kafkaTelemetry = KafkaTelemetry.builder(testing.getOpenTelemetry()).setProducerConfigs(properties.buildProducerProperties()).build();
+    public DefaultKafkaProducerFactoryCustomizer producerInstrumentation(
+        KafkaProperties properties) {
+      KafkaTelemetry kafkaTelemetry =
+          KafkaTelemetry.builder(testing.getOpenTelemetry())
+              .setProducerConfigs(properties.buildProducerProperties())
+              .build();
       return producerFactory -> producerFactory.addPostProcessor(kafkaTelemetry::wrap);
     }
 

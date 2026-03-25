@@ -45,7 +45,9 @@ public abstract class AbstractSpringKafkaTest {
   protected static final AttributeKey<String> MESSAGING_KAFKA_BOOTSTRAP_SERVERS =
       AttributeKey.stringKey("messaging.kafka.bootstrap.servers");
   protected static final AttributeAssertion MESSAGING_KAFKA_BOOTSTRAP_SERVERS_ASSERTION =
-      satisfies(MESSAGING_KAFKA_BOOTSTRAP_SERVERS, stringAssert -> stringAssert.matches("^localhost:\\d+(,localhost:\\d+)*$"));
+      satisfies(
+          MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+          stringAssert -> stringAssert.matches("^localhost:\\d+(,localhost:\\d+)*$"));
   static KafkaContainer kafka;
 
   ConfigurableApplicationContext applicationContext;
