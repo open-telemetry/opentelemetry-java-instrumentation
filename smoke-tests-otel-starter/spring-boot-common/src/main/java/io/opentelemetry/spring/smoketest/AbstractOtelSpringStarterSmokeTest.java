@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Optional;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.assertj.core.api.MapAssert;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -161,6 +162,8 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
   @org.junit.jupiter.api.Order(1) // This test validates startup telemetry, so must run first
   @SuppressWarnings("deprecation") // testing deprecated code semconv
   void shouldSendTelemetry() {
+    Assumptions.assumeTrue(!preferJfr() || isFlightRecorderAvailable());
+
     makeClientCall();
 
     testing.waitAndAssertTraces(
@@ -280,7 +283,6 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
             "jvm.cpu.context_switch",
             "jvm.cpu.longlock",
             "jvm.system.cpu.utilization",
-            "jvm.gc.duration",
             "jvm.memory.init",
             "jvm.memory.used",
             "jvm.memory.allocation",
@@ -288,10 +290,6 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
             "jvm.thread.count")) {
       // cpu longlock is missing on jdk 25
       if (javaVersion >= 25 && "jvm.cpu.longlock".equals(metric)) {
-        continue;
-      }
-      // gc duration is sometimes missing on jdk 26
-      if (javaVersion >= 26 && "jvm.gc.duration".equals(metric)) {
         continue;
       }
       testing.waitAndAssertMetrics(
