@@ -5,4 +5,4 @@
 
 package io.opentelemetry.instrumentation.testapp;
 
-public class DummyApplication {}
+public final class DummyApplication {}
