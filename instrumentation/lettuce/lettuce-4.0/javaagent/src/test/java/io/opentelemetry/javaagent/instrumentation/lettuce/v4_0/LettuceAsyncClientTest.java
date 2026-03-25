@@ -70,7 +70,7 @@ class LettuceAsyncClientTest {
   private static final Logger logger = LoggerFactory.getLogger(LettuceAsyncClientTest.class);
 
   @RegisterExtension
-  protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 

@@ -13,8 +13,8 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-enum RabbitDeliveryAttributesGetter implements MessagingAttributesGetter<DeliveryRequest, Void> {
-  INSTANCE;
+final class RabbitDeliveryAttributesGetter
+    implements MessagingAttributesGetter<DeliveryRequest, Void> {
 
   @Override
   public String getSystem(DeliveryRequest request) {

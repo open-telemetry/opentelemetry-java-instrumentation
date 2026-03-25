@@ -351,7 +351,7 @@ final class ChatCompletionEventsHelper {
     }
   }
 
-  static class V3FunctionAccess implements FunctionAccess {
+  private static class V3FunctionAccess implements FunctionAccess {
     @Nullable private static final MethodHandle functionToolCallHandle;
     @Nullable private static final MethodHandle idHandle;
     @Nullable private static final MethodHandle functionHandle;

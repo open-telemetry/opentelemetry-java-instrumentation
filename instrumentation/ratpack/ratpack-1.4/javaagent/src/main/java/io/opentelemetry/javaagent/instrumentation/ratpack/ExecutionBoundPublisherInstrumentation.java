@@ -32,7 +32,7 @@ public class ExecutionBoundPublisherInstrumentation implements TypeInstrumentati
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("subscribe").and(takesArgument(0, named("org.reactivestreams.Subscriber"))),
-        this.getClass().getName() + "$SubscribeAdvice");
+        getClass().getName() + "$SubscribeAdvice");
   }
 
   @SuppressWarnings("unused")

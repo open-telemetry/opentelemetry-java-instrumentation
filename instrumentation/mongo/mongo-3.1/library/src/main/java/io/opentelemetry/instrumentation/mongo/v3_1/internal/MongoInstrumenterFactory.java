@@ -21,9 +21,6 @@ public final class MongoInstrumenterFactory {
 
   public static final int DEFAULT_MAX_NORMALIZED_QUERY_LENGTH = 32 * 1024;
 
-  private static final MongoAttributesExtractor attributesExtractor =
-      new MongoAttributesExtractor();
-
   public static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
       OpenTelemetry openTelemetry, String instrumentationName, boolean querySanitizationEnabled) {
     return createInstrumenter(
@@ -39,6 +36,7 @@ public final class MongoInstrumenterFactory {
       boolean querySanitizationEnabled,
       int maxNormalizedQueryLength) {
 
+    MongoAttributesExtractor attributesExtractor = new MongoAttributesExtractor();
     MongoDbAttributesGetter dbAttributesGetter =
         new MongoDbAttributesGetter(querySanitizationEnabled, maxNormalizedQueryLength);
     SpanNameExtractor<CommandStartedEvent> spanNameExtractor =

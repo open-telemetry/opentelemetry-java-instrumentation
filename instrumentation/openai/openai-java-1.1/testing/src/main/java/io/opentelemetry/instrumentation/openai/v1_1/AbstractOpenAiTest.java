@@ -37,7 +37,7 @@ abstract class AbstractOpenAiTest {
 
   @RegisterExtension static final RecordingExtension recording = new RecordingExtension(API_URL);
 
-  protected static TestHelper testHelper =
+  protected static final TestHelper testHelper =
       Boolean.getBoolean("testLatestDeps") ? new OpenAi3TestHelper() : new OpenAi1TestHelper();
 
   protected abstract InstrumentationExtension getTesting();

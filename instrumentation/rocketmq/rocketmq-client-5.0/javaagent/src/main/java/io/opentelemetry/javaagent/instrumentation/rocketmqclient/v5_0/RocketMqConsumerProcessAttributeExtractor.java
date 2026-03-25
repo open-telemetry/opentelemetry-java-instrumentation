@@ -19,9 +19,8 @@ import javax.annotation.Nullable;
 import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
 import org.apache.rocketmq.client.apis.message.MessageView;
 
-enum RocketMqConsumerProcessAttributeExtractor
+class RocketMqConsumerProcessAttributeExtractor
     implements AttributesExtractor<MessageView, ConsumeResult> {
-  INSTANCE;
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Override

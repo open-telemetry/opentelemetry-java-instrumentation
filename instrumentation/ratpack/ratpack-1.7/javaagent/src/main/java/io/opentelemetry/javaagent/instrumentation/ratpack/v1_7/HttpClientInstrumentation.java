@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.ratpack.v1_7;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -27,11 +26,8 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isStatic())
-            .and(named("of"))
-            .and(takesArgument(0, named("ratpack.func.Action"))),
-        HttpClientInstrumentation.class.getName() + "$OfAdvice");
+        isStatic().and(named("of")).and(takesArgument(0, named("ratpack.func.Action"))),
+        getClass().getName() + "$OfAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -54,6 +54,10 @@ tasks {
       includeTestsMatching("OpenSearchDisabledCaptureSearchQueryTest")
     }
     jvmArgs("-Dotel.instrumentation.opensearch.capture-search-query=false")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.opensearch.capture-search-query=false",
+    )
   }
 
   val testStableSemconv by registering(Test::class) {
@@ -63,8 +67,8 @@ tasks {
     filter {
       excludeTestsMatching("OpenSearchDisabledCaptureSearchQueryTest")
     }
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
   }
 
   check {

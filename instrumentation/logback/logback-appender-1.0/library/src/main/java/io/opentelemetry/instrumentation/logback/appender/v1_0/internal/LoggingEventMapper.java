@@ -184,9 +184,7 @@ public final class LoggingEventMapper {
         int lineNumber = firstStackElement.getLineNumber();
 
         if (emitOldCodeSemconv()) {
-          if (fileName != null) {
-            builder.setAttribute(CODE_FILEPATH, fileName);
-          }
+          builder.setAttribute(CODE_FILEPATH, fileName);
           builder.setAttribute(CODE_NAMESPACE, firstStackElement.getClassName());
           builder.setAttribute(CODE_FUNCTION, firstStackElement.getMethodName());
           if (lineNumber > 0) {
@@ -194,9 +192,7 @@ public final class LoggingEventMapper {
           }
         }
         if (emitStableCodeSemconv()) {
-          if (fileName != null) {
-            builder.setAttribute(CODE_FILE_PATH, fileName);
-          }
+          builder.setAttribute(CODE_FILE_PATH, fileName);
           builder.setAttribute(
               CODE_FUNCTION_NAME,
               firstStackElement.getClassName() + "." + firstStackElement.getMethodName());

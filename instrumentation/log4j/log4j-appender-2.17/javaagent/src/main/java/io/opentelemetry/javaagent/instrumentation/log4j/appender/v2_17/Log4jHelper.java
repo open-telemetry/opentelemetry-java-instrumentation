@@ -59,7 +59,7 @@ public final class Log4jHelper {
 
     mapper =
         new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE,
+            new ContextDataAccessorImpl(),
             captureExperimentalAttributes,
             captureCodeAttributes,
             captureMapMessageAttributes,
@@ -71,7 +71,7 @@ public final class Log4jHelper {
   public static void capture(
       Logger logger,
       String loggerClassName,
-      StackTraceElement location,
+      @Nullable StackTraceElement location,
       Level level,
       Marker marker,
       Message message,
@@ -152,8 +152,7 @@ public final class Log4jHelper {
     }
   }
 
-  private enum ContextDataAccessorImpl implements ContextDataAccessor<Map<String, String>> {
-    INSTANCE;
+  private static class ContextDataAccessorImpl implements ContextDataAccessor<Map<String, String>> {
 
     @Override
     @Nullable

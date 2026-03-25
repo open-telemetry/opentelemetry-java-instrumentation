@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.netty.common.v4_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -37,31 +36,27 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("addListener"))
+        named("addListener")
             .and(takesArgument(0, named("io.netty.util.concurrent.GenericFutureListener"))),
-        NettyFutureInstrumentation.class.getName() + "$AddListenerAdvice");
+        getClass().getName() + "$AddListenerAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("addListeners"))
+        named("addListeners")
             .and(takesArgument(0, named("io.netty.util.concurrent.GenericFutureListener[]"))),
-        NettyFutureInstrumentation.class.getName() + "$AddListenersAdvice");
+        getClass().getName() + "$AddListenersAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("removeListener"))
+        named("removeListener")
             .and(takesArgument(0, named("io.netty.util.concurrent.GenericFutureListener"))),
-        NettyFutureInstrumentation.class.getName() + "$RemoveListenerAdvice");
+        getClass().getName() + "$RemoveListenerAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("removeListeners"))
+        named("removeListeners")
             .and(takesArgument(0, named("io.netty.util.concurrent.GenericFutureListener[]"))),
-        NettyFutureInstrumentation.class.getName() + "$RemoveListenersAdvice");
+        getClass().getName() + "$RemoveListenersAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class AddListenerAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static GenericFutureListener<? extends Future<?>> wrapListener(
         @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>> listenerArg) {
@@ -81,7 +76,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
     // here the AsScalar allows to assign the value of the returned array to the argument value,
     // otherwise it's considered to be an Object[] that contains the arguments/return value/thrown
     // exception assignments that bytebuddy has to do after the advice is invoked.
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     @Advice.AssignReturned.AsScalar
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static GenericFutureListener<?>[] wrapListener(
@@ -105,7 +100,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RemoveListenerAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static GenericFutureListener<? extends Future<?>> wrapListener(
         @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>> listener) {
@@ -119,7 +114,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
     // here the AsScalar allows to assign the value of the returned array to the argument value,
     // otherwise it's considered to be an Object[] that contains the arguments/return value/thrown
     // exception assignments that bytebuddy has to do after the advice is invoked.
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     @Advice.AssignReturned.AsScalar
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static GenericFutureListener<?>[] wrapListener(

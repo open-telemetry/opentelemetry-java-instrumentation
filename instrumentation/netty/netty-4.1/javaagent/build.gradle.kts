@@ -43,6 +43,11 @@ dependencies {
 }
 
 tasks {
+  withType<Test>().configureEach {
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+
   val testConnectionSpan by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -56,9 +61,6 @@ tasks {
   }
 
   test {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-
     filter {
       excludeTestsMatching("Netty41ConnectionSpanTest")
       excludeTestsMatching("Netty41ClientSslTest")

@@ -30,7 +30,9 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Build | Gradle conventions, muzzle, test tasks, plugins | `build.gradle.kts`, `settings.gradle.kts` | `gradle-conventions.md` |
 | Build | `testcontainersBuildService` declaration | Testcontainers dependency without `usesService` | `gradle-conventions.md` |
 | Style | Prefer instance creation over singletons for stateless interface impls (except on hot paths or Kotlin `object` declarations) | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`, enum/static singletons | — |
+| Style | No unnecessary explicit type witnesses on generic method calls (`Collections.<String>emptyList()`) | Java generic method calls with explicit type parameters | — |
 | Style | Remove redundant null guards on attribute puts | `AttributesBuilder.put`, `onStart`, `onEnd`, attribute extraction methods | — |
+| General | No redundant `ByteBuffer.duplicate()` on `Value.getValue()` | `Value.getValue()` with `BYTES` type, `ByteBuffer` handling | — |
 | Style | Nullability correctness — no guards for non-nullable params; add `@Nullable` when null is actually passed/returned/stored; respect upstream SDK `@Nullable` contracts for `TextMapGetter`/`TextMapSetter` | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `*Extractor` implementations, null checks, missing `@Nullable`, fields assigned from `@Nullable` sources | — |
 | Architecture | Library vs javaagent boundaries | Always | — |
 | NewModule | New instrumentation module checklist | New modules | _(inline below)_ |
@@ -199,6 +201,86 @@ Use `@Nullable` annotations accurately throughout the codebase:
   | `TextMapGetter<CarrierT>` | `getAll(CarrierT, String)` | `carrier` is `@Nullable` |
   | `TextMapGetter<CarrierT>` | `keys(CarrierT)` | none |
   | `TextMapSetter<CarrierT>` | `set(CarrierT, String, String)` | `carrier` is `@Nullable` |
+
+  **Exception — pure delegation**: when the entire body of the overriding method is a
+  single delegation to another `TextMapGetter` or `TextMapSetter` instance (i.e., the
+  implementation contains no carrier-specific logic and simply calls
+  `delegate.get(carrier, key)`, `delegate.getAll(carrier, key)`, or
+  `delegate.set(carrier, key, value)`), do **not** add a null guard for `carrier`.
+  The delegate is itself a `TextMapGetter`/`TextMapSetter` and must handle `null` carrier
+  per the same contract. Just annotate the parameter with `@Nullable` and pass
+  `carrier` straight through:
+
+  ```java
+  // CORRECT — pure delegation, no null guard needed
+  @Override
+  @Nullable
+  public String get(@Nullable C carrier, String key) {
+    return delegate.get(carrier, key);
+  }
+
+  // WRONG — redundant null guard before delegation
+  @Override
+  @Nullable
+  public String get(@Nullable C carrier, String key) {
+    if (carrier == null) {
+      return null;
+    }
+    return delegate.get(carrier, key);
+  }
+  ```
+
+## [General] No Redundant `ByteBuffer.duplicate()` on `Value.getValue()`
+
+The upstream `Value<ByteBuffer>` implementation (`ValueBytes` in `opentelemetry-java`)
+returns a **new read-only `ByteBuffer`** on every call to `getValue()`:
+
+```java
+// opentelemetry-java ValueBytes.getValue()
+return ByteBuffer.wrap(raw).asReadOnlyBuffer();
+```
+
+Do not wrap the result in `.duplicate()` — each `getValue()` call already yields a fresh
+buffer with independent position/limit state. A `.duplicate()` adds overhead for no safety
+benefit.
+
+Flag:
+
+```java
+ByteBuffer byteBuffer = ((ByteBuffer) value.getValue()).duplicate();
+```
+
+Preferred:
+
+```java
+ByteBuffer byteBuffer = (ByteBuffer) value.getValue();
+```
+
+## [Style] No Unnecessary Explicit Type Parameters on Method Calls
+
+Since Java 5, the compiler infers generic type arguments in virtually all contexts.
+Explicit type witnesses on method calls (e.g., `Collections.<String>emptyList()`) are
+almost never needed and add visual noise.
+
+Flag any explicit type witness that is not required for compilation:
+
+```java
+// BAD — type witness is unnecessary
+return Collections.<String>emptyList().iterator();
+Iterator<String> it = Collections.<String>emptyList().iterator();
+```
+
+Preferred:
+
+```java
+// GOOD — compiler infers the type argument
+return Collections.emptyList().iterator();
+Iterator<String> it = Collections.emptyList().iterator();
+```
+
+**Exception**: an explicit type witness is acceptable only when the compiler cannot infer
+the type without it (e.g., the call is used as a method argument where the target type is
+ambiguous and the cast would otherwise be required). Do not flag those cases.
 
 ## [Semconv] Constants by Module Type
 

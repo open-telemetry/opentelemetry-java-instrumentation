@@ -29,14 +29,14 @@ public class KotlinCoroutinesInstrumentation implements TypeInstrumentation {
         named("newCoroutineContext")
             .and(takesArgument(0, named("kotlinx.coroutines.CoroutineScope")))
             .and(takesArgument(1, named("kotlin.coroutines.CoroutineContext"))),
-        this.getClass().getName() + "$ContextAdvice");
+        getClass().getName() + "$ContextAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ContextAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(1))
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static CoroutineContext enter(@Advice.Argument(1) CoroutineContext coroutineContext) {
       return coroutineContext == null
           ? null

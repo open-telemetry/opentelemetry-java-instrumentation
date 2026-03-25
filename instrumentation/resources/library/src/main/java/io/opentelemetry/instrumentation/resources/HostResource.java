@@ -41,9 +41,7 @@ public final class HostResource {
     } catch (SecurityException t) {
       // Ignore
     }
-    if (hostArch != null) {
-      attributes.put(HOST_ARCH, hostArch);
-    }
+    attributes.put(HOST_ARCH, hostArch);
 
     return Resource.create(attributes.build(), SchemaUrls.V1_24_0);
   }

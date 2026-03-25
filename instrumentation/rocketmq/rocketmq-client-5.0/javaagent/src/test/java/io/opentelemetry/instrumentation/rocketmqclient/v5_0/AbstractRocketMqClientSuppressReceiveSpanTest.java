@@ -39,26 +39,26 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
-  private static final RocketMqProxyContainer container = new RocketMqProxyContainer();
+abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
+  private static final RocketMqProxyContainer CONTAINER = new RocketMqProxyContainer();
 
   protected abstract InstrumentationExtension testing();
 
   @BeforeAll
   static void setUp() {
-    container.start();
+    CONTAINER.start();
   }
 
   @AfterAll
   static void tearDown() {
-    container.close();
+    CONTAINER.close();
   }
 
   @Test
   void testSendAndConsumeMessage() throws Throwable {
     ClientConfiguration clientConfiguration =
         ClientConfiguration.newBuilder()
-            .setEndpoints(container.endpoints)
+            .setEndpoints(CONTAINER.endpoints)
             .setRequestTimeout(Duration.ofSeconds(10))
             .build();
     // Inner topic of the container.

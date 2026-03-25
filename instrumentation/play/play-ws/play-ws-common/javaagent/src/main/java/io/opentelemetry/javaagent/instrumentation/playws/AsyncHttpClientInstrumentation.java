@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.playws;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -44,8 +43,7 @@ public class AsyncHttpClientInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("execute"))
+        named("execute")
             .and(takesArguments(2))
             .and(takesArgument(0, named("play.shaded.ahc.org.asynchttpclient.Request")))
             .and(takesArgument(1, named("play.shaded.ahc.org.asynchttpclient.AsyncHandler"))),

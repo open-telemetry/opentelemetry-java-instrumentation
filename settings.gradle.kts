@@ -2,7 +2,7 @@ pluginManagement {
   plugins {
     id("com.github.jk1.dependency-license-report") version "3.1.1"
     id("com.google.cloud.tools.jib") version "3.5.3"
-    id("com.gradle.plugin-publish") version "2.1.0"
+    id("com.gradle.plugin-publish") version "2.1.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
     id("org.jetbrains.kotlin.jvm") version "2.3.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
@@ -580,7 +580,6 @@ include(":instrumentation:rocketmq:rocketmq-client-4.8:javaagent")
 include(":instrumentation:rocketmq:rocketmq-client-4.8:library")
 include(":instrumentation:rocketmq:rocketmq-client-4.8:testing")
 include(":instrumentation:rocketmq:rocketmq-client-5.0:javaagent")
-include(":instrumentation:rocketmq:rocketmq-client-5.0:testing")
 include(":instrumentation:runtime-telemetry:javaagent")
 include(":instrumentation:runtime-telemetry:library")
 include(":instrumentation:runtime-telemetry:testing")

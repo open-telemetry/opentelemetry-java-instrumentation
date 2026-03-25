@@ -128,7 +128,7 @@ public abstract class AbstractReactorKafkaTest {
     props.put("value.deserializer", StringDeserializer.class);
 
     try {
-      // SenderOptions changed from a class to an interface in 1.3.3, using reflection to avoid
+      // ReceiverOptions changed from a class to an interface in 1.3.3, using reflection to avoid
       // linkage error
       ReceiverOptions<String, String> receiverOptions =
           (ReceiverOptions<String, String>)

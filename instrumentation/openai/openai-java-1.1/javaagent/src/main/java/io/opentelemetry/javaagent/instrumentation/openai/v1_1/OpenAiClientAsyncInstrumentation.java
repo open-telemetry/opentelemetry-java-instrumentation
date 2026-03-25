@@ -26,7 +26,7 @@ public class OpenAiClientAsyncInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("build").and(returns(named("com.openai.client.OpenAIClientAsync"))),
-        OpenAiClientAsyncInstrumentation.class.getName() + "$BuildAdvice");
+        getClass().getName() + "$BuildAdvice");
   }
 
   @SuppressWarnings("unused")

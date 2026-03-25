@@ -127,16 +127,30 @@ Auto-fix boundaries:
     After adding, verify by running the module's tests.
   - missing version comments on `hasClassesNamed()` landmark classes in existing
     `classLoaderMatcher()` overrides (multi-class checks or `.and(not(...))` chains only) —
-    look up the library version that introduced each class (check muzzle `versions.set(...)`
-    ranges, module directory name, existing code comments, and Javadoc/release notes) and
-    add a `// added in X.Y` or `// removed in X.Y` comment above each class name string.
+    determine each class's **role** (floor vs ceiling) and add the matching comment.
+    First check: does a **newer** sibling instrumentation module exist for this library
+    (e.g., `mongo-4.0` next to `mongo-3.7`)? If so, look at what the newer module checks
+    in *its* `classLoaderMatcher()`. Classes that are present in the newer module's check
+    but absent from the current module's check (or vice versa) reveal a version boundary —
+    the class was likely added or removed between versions.
+    Then determine the comment form for each class:
+    - **Floor class** (proves "at least version X"): look up when the class was **introduced**
+      → comment `// added in X.Y`.
+    - **Ceiling class** (proves "not yet version Y"): look up when the class was **removed**
+      → comment `// removed in Y.Z` (meaning: its presence here ensures we don't match
+      version Y.Z+ where a different module takes over).
+    A ceiling class might have been *introduced* much earlier than the module's target version.
+    Do not use `// added in` for a ceiling class — that is misleading. The relevant fact is
+    when it was **removed**.
+    Sources: muzzle `versions.set(...)` ranges, sibling module `classLoaderMatcher()` checks,
+    module directory names, existing code comments, Javadoc/release notes.
     Do NOT add a `classLoaderMatcher()` override where one does not already exist —
     this method is only for version-boundary detection when muzzle is insufficient,
     not for optimization (use `TypeInstrumentation.classLoaderOptimization()` instead)
-  - redundant `isMethod()` in method matchers inside `transform()` when the code is
-    already being modified — `isMethod()` only serves to exclude constructors, but
-    `named(...)` already excludes them because constructors are named `<init>`
-    (e.g., `isMethod().and(named("execute"))` → `named("execute")`)
+  - redundant `isMethod()` in method matchers inside `transform()` when the matcher already
+    names a specific, non-empty method (e.g., `isMethod().and(named("execute"))` →
+    `named("execute")`). Do not remove `isMethod()` when the name could be empty —
+    `named("")` matches constructors and static initializers.
   - singleton-to-instance-creation conversion for stateless telemetry interface
     implementations (`TextMapGetter`, `TextMapSetter`, `*AttributesGetter`,
     `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`) — replace
@@ -157,9 +171,16 @@ Auto-fix boundaries:
   - `hasAttributesSatisfying(...)` calls in test assertions — replace with
     `hasAttributesSatisfyingExactly(...)` because it is more precise (the non-exact
     variant silently ignores unexpected attributes)
+  - `hasTotalAttributeCount(...)` paired with `hasAttributesSatisfyingExactly(...)` in
+    the same assertion chain — `hasTotalAttributeCount` is redundant because the exact
+    variant already validates the complete attribute set; remove it
   - non-empty `hasAttributes(...)` calls in test assertions — replace with
     `hasAttributesSatisfyingExactly(...)` for consistency with the rest of the codebase.
     Do **not** convert `hasAttributes(Attributes.empty())` — that is acceptable as-is.
+    For non-semconv attribute keys, use inline `AttributeKey` factory methods directly
+    in the assertion — `equalTo(longKey("name"), value)`, `equalTo(stringKey("name"), value)`,
+    etc. Do **not** extract them into class-level `private static final` constants;
+    constants are reserved for semconv keys from the semconv library.
   - redundant `if (value != null)` guards around `AttributesBuilder.put()` calls —
     `put` is a no-op for null values, so remove the conditional and pass the value
     directly (same for span, log, and metrics attribute setters).
@@ -186,6 +207,13 @@ Auto-fix boundaries:
     class parameter to match. Conversely, if an implementation is *missing* a null
     check or `@Nullable` annotation for a parameter that is `@Nullable` upstream,
     add both the annotation and the null guard.
+    **Exception — pure delegation**: when the entire body of a `TextMapGetter.get()`,
+    `TextMapGetter.getAll()`, or `TextMapSetter.set()` override is a single call that
+    delegates to another `TextMapGetter` or `TextMapSetter` instance (no carrier-specific
+    logic), do **not** add or keep a null guard for `carrier`. The delegate already
+    handles `null` per the same contract; the guard is redundant. Only add `@Nullable`
+    to the parameter and pass `carrier` through. If a PR adds such a guard on a
+    pure-delegation method, remove it.
   - getter/setter/boolean-getter naming convention violations (`get*`, `set*`, `is*`) and
     other API convention fixes (e.g. missing `@CanIgnoreReturnValue`, wrong method signature)
     in **non-stable modules** (module `gradle.properties` does not contain
