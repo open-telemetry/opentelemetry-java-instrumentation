@@ -98,7 +98,7 @@ class RuntimeMetricsBuilderTest {
   }
 
   // Java17 legacy defaults: all non-overlapping features
-  // plus CPU_COUNT_METRICS (which is emitted as cpu.count.limit)
+  // plus CPU_COUNT_METRICS (which is emitted as jvm.cpu.limit)
   private static boolean isDefaultEnabled(
       io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature feature) {
     return !feature.overlapsWithJmx()
