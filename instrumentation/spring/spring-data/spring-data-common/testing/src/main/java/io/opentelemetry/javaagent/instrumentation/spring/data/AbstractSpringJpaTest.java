@@ -71,7 +71,7 @@ public abstract class AbstractSpringJpaTest<
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("toString test").hasTotalAttributeCount(0)));
+                span -> span.hasName("toString test").hasAttributesSatisfyingExactly()));
   }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
@@ -173,7 +173,7 @@ public abstract class AbstractSpringJpaTest<
     ENTITY customer = newCustomer("Bob", "Anonymous");
 
     assertThat(id(customer)).isNull();
-    assertThat(repo.findAll().iterator().hasNext()).isFalse();
+    assertThat(repo.findAll()).isEmpty();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -381,7 +381,7 @@ public abstract class AbstractSpringJpaTest<
     String repoClassName = repositoryClass().getName();
     List<ENTITY> customers = findSpecialCustomers(repo);
 
-    assertThat(customers.isEmpty()).isTrue();
+    assertThat(customers).isEmpty();
 
     testing.waitAndAssertTraces(
         trace ->
