@@ -5,20 +5,25 @@
 
 package io.opentelemetry.instrumentation.servlet.internal;
 
+import static java.util.Objects.requireNonNull;
+
+import javax.annotation.Nullable;
+
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
 public class ServletResponseContext<T> {
-  private final T response;
+  @Nullable private final T response;
   // used for servlet 2.2 where request status can't be extracted from HttpServletResponse
-  private Integer status;
-  private Long timeout;
+  @Nullable private Integer status;
+  @Nullable private Long timeout;
 
-  public ServletResponseContext(T response) {
+  public ServletResponseContext(@Nullable T response) {
     this.response = response;
   }
 
+  @Nullable
   public T response() {
     return response;
   }
@@ -28,7 +33,7 @@ public class ServletResponseContext<T> {
   }
 
   public int getStatus() {
-    return status;
+    return requireNonNull(status);
   }
 
   public boolean hasStatus() {
@@ -40,7 +45,7 @@ public class ServletResponseContext<T> {
   }
 
   public long getTimeout() {
-    return timeout;
+    return requireNonNull(timeout);
   }
 
   public boolean hasTimeout() {
