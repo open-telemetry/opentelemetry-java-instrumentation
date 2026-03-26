@@ -194,8 +194,11 @@ Auto-fix boundaries:
     `@Nullable T` overload is selected directly, null is safe, and the guard is redundant.
   - defensive `if (param == null)` checks on parameters not annotated `@Nullable` —
     these contradict the framework's nullability contract; remove the guard. Conversely,
-    if a call site passes `null` or a method returns `null`, add `@Nullable` to the
-    parameter or return type instead of adding a null guard in the caller/callee.
+    add `@Nullable` to a parameter only when `null` is actually passed by callers or an
+    upstream contract allows it, and add `@Nullable` to a return type only when the
+    method actually returns `null`, instead of adding a null guard in the caller/callee.
+    When justifying `@Nullable` on a parameter, cite the concrete null-passing caller or
+    upstream contract. Do not justify it merely because the method guards against null.
     **Exception — test files**: do not add `@Nullable` in test code.
     If a PR adds `@Nullable` to test files, flag it for removal.
     **Exception**: when the method overrides an interface from the upstream OpenTelemetry

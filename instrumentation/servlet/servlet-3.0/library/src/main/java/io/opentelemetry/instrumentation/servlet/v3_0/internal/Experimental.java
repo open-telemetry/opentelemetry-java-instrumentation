@@ -52,11 +52,23 @@ public final class Experimental {
    *     attributes
    * @see javax.servlet.ServletRequest#setAttribute(String, Object)
    */
-  public static void addTraceIdRequestAttribute(
+  public static void setAddTraceIdRequestAttribute(
       ServletTelemetryBuilder builder, boolean addTraceIdRequestAttribute) {
     if (setAddTraceIdRequestAttribute != null) {
       setAddTraceIdRequestAttribute.accept(builder, addTraceIdRequestAttribute);
     }
+  }
+
+  /**
+   * Sets whether to add {@code trace_id} and {@code span_id} as a request attribute.
+   *
+   * @deprecated Use {@link #setAddTraceIdRequestAttribute(ServletTelemetryBuilder, boolean)}
+   *     instead.
+   */
+  @Deprecated
+  public static void addTraceIdRequestAttribute(
+      ServletTelemetryBuilder builder, boolean addTraceIdRequestAttribute) {
+    setAddTraceIdRequestAttribute(builder, addTraceIdRequestAttribute);
   }
 
   /**

@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opententelemetry.instrumentation.restlet.v1_1.spring;
+package io.opentelemetry.instrumentation.restlet.v1_1.spring;
 
 import static java.util.Collections.singletonList;
 
 import com.noelios.restlet.StatusFilter;
 import io.opentelemetry.instrumentation.restlet.v1_1.RestletTelemetry;
-import io.opentelemetry.instrumentation.restlet.v1_1.spring.AbstractSpringServerTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;

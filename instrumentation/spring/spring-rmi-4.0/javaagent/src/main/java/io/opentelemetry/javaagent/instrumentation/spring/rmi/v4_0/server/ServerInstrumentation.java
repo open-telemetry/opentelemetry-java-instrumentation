@@ -68,6 +68,10 @@ public class ServerInstrumentation implements TypeInstrumentation {
         }
 
         Context parentContext = THREAD_LOCAL_CONTEXT.getAndResetContext();
+        if (parentContext == null) {
+          return new AdviceScope(callDepth, null, null, null);
+        }
+
         Class<?> serverClass = rmiExporter.getService().getClass();
         String methodName = remoteInvocation.getMethodName();
         ClassAndMethod request = ClassAndMethod.create(serverClass, methodName);

@@ -926,7 +926,7 @@ class RxJava2AsyncOperationEndStrategyTest {
     }
 
     class CustomPublisher implements Publisher<String>, Subscription {
-      Subscriber<? super String> subscriber;
+      private Subscriber<? super String> subscriber;
 
       @Override
       public void subscribe(Subscriber<? super String> subscriber) {
@@ -934,12 +934,12 @@ class RxJava2AsyncOperationEndStrategyTest {
         subscriber.onSubscribe(this);
       }
 
-      public void onComplete() {
-        this.subscriber.onComplete();
+      void onComplete() {
+        subscriber.onComplete();
       }
 
-      public void onError(Throwable exception) {
-        this.subscriber.onError(exception);
+      void onError(Throwable exception) {
+        subscriber.onError(exception);
       }
 
       @Override
