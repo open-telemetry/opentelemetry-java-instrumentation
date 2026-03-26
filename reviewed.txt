@@ -454,3 +454,4 @@ spring-boot-actuator-autoconfigure-2.0:javaagent
 spring:spring-boot-autoconfigure
 spring-boot-autoconfigure:testing
 spring-boot-resources:javaagent
+spring-boot-resources:javaagent-unit-tests
