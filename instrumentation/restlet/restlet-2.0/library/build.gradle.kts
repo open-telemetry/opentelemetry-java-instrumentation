@@ -29,5 +29,5 @@ if (findProperty("testLatestDeps") as Boolean) {
 }
 
 tasks.withType<Test>().configureEach {
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  systemProperty("collectMetadata", findProperty("collectMetadata"))
 }

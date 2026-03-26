@@ -30,7 +30,7 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
   val testPropagationDisabled by registering(Test::class) {

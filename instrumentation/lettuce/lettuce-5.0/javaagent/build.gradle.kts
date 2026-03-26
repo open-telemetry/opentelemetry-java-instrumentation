@@ -31,7 +31,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true")
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
   val testExperimental by registering(Test::class) {

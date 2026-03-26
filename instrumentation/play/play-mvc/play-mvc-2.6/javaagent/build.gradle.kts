@@ -82,6 +82,6 @@ configurations.configureEach {
   exclude("org.eclipse.jetty.websocket", "websocket-client")
 }
 tasks.withType<Test>().configureEach {
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  systemProperty("collectMetadata", findProperty("collectMetadata"))
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

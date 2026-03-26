@@ -41,7 +41,7 @@ tasks {
     // from the okhttp instrumentation we need OkHttp3IgnoredTypesConfigurer to fix context leaks
     jvmArgs("-Dotel.instrumentation.okhttp.enabled=false")
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
   if (!(findProperty("testLatestDeps") as Boolean)) {

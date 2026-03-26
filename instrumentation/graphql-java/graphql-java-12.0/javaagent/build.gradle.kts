@@ -28,5 +28,5 @@ dependencies {
 tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.graphql.add-operation-name-to-span-name.enabled=true")
 
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  systemProperty("collectMetadata", findProperty("collectMetadata"))
 }
