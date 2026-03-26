@@ -13,6 +13,7 @@ import java.io.IOException;
 import javax.servlet.ServletOutputStream;
 import net.bytebuddy.asm.Advice;
 
+@SuppressWarnings("unused")
 public class Servlet3OutputStreamWriteBytesAdvice {
 
   @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class, suppress = Throwable.class)

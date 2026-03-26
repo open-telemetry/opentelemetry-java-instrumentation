@@ -15,7 +15,7 @@ class RxJava3Test extends AbstractRxJava3Test {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  static TracingAssembly tracingAssembly = TracingAssembly.create();
+  static final TracingAssembly tracingAssembly = TracingAssembly.create();
 
   @Override
   protected InstrumentationExtension testing() {
@@ -23,7 +23,7 @@ class RxJava3Test extends AbstractRxJava3Test {
   }
 
   @BeforeAll
-  public void setup() {
+  void setup() {
     tracingAssembly.enable();
   }
 }

@@ -17,6 +17,7 @@ import io.opentelemetry.javaagent.instrumentation.servlet.AgentServletInstrument
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.ResponseInstrumenterFactory;
 import io.opentelemetry.javaagent.instrumentation.servlet.snippet.OutputStreamSnippetInjectionHelper;
+import javax.annotation.Nullable;
 import javax.servlet.Filter;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
@@ -53,6 +54,7 @@ public final class Servlet3Singletons {
     return RESPONSE_INSTRUMENTER;
   }
 
+  @Nullable
   public static MappingResolver getMappingResolver(Object servletOrFilter) {
     MappingResolver.Factory factory = getMappingResolverFactory(servletOrFilter);
     if (factory != null) {
@@ -65,6 +67,7 @@ public final class Servlet3Singletons {
     return SNIPPET_INJECTION_HELPER;
   }
 
+  @Nullable
   private static MappingResolver.Factory getMappingResolverFactory(Object servletOrFilter) {
     boolean servlet = servletOrFilter instanceof Servlet;
     if (servlet) {
