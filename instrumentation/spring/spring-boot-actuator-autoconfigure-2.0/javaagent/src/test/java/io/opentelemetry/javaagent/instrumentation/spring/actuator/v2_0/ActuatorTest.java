@@ -53,7 +53,7 @@ class ActuatorTest {
                                         point ->
                                             point
                                                 .hasValue(1)
-                                                .hasAttributesSatisfying(
+                                                .hasAttributesSatisfyingExactly(
                                                     equalTo(stringKey("tag"), "value"))))));
 
     MeterRegistry meterRegistry = context.getBean(MeterRegistry.class);
