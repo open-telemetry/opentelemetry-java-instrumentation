@@ -39,14 +39,17 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelSpringProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.SpringConfigProperties;
+import io.opentelemetry.instrumentation.test.utils.GcUtils;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeoutException;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.assertj.core.api.MapAssert;
 import org.junit.jupiter.api.MethodOrderer;
@@ -160,7 +163,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
   @Test
   @org.junit.jupiter.api.Order(1) // This test validates startup telemetry, so must run first
   @SuppressWarnings("deprecation") // testing deprecated code semconv
-  void shouldSendTelemetry() {
+  void shouldSendTelemetry() throws InterruptedException, TimeoutException {
     makeClientCall();
 
     testing.waitAndAssertTraces(
@@ -265,10 +268,13 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
     }
   }
 
-  protected void assertAdditionalMetrics() {
+  protected void assertAdditionalMetrics() throws InterruptedException, TimeoutException {
     if (!isFlightRecorderAvailable()) {
       return;
     }
+
+    // force gc so we'd get the jvm.gc.duration metric
+    GcUtils.awaitGc(Duration.ofSeconds(10));
 
     double javaVersion = Double.parseDouble(System.getProperty("java.specification.version"));
     // JFR based metrics
@@ -288,10 +294,6 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
             "jvm.thread.count")) {
       // cpu longlock is missing on jdk 25
       if (javaVersion >= 25 && "jvm.cpu.longlock".equals(metric)) {
-        continue;
-      }
-      // gc duration is sometimes missing on jdk 26
-      if (javaVersion >= 26 && "jvm.gc.duration".equals(metric)) {
         continue;
       }
       testing.waitAndAssertMetrics(
