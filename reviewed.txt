@@ -451,3 +451,4 @@ spark-2.3:javaagent
 servlet-common:library
 spring-batch-3.0:javaagent
 spring-boot-actuator-autoconfigure-2.0:javaagent
+spring:spring-boot-autoconfigure
