@@ -11,6 +11,10 @@ on:
       failure-details:
         type: string
         required: false
+      title:
+        type: string
+        required: false
+        description: "Custom title for the issue (defaults to 'Workflow failed: $GITHUB_WORKFLOW')"
 
 permissions:
   contents: read
@@ -28,8 +32,17 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Use custom title if provided, otherwise use default
+          if [[ -n "${{ inputs.title }}" ]]; then
+            issue_title_base="${{ inputs.title }}"
+            issue_title="${{ inputs.title }} (#$GITHUB_RUN_NUMBER)"
+          else
+            issue_title_base="Workflow failed: $GITHUB_WORKFLOW"
+            issue_title="Workflow failed: $GITHUB_WORKFLOW (#$GITHUB_RUN_NUMBER)"
+          fi
+
           # TODO (trask) search doesn't support exact phrases, so it's possible that this could grab the wrong issue
-          number=$(gh issue list --search "in:title Workflow failed: $GITHUB_WORKFLOW" --limit 1 --json number -q .[].number)
+          number=$(gh issue list --search "in:title $issue_title_base" --limit 1 --json number -q .[].number)
 
           echo $number
           echo ${{ inputs.success }}
@@ -48,5 +61,5 @@ jobs:
               gh issue comment $number --body "$issue_body"
             fi
           elif [[ "${{ inputs.success }}" == "false" ]]; then
-            gh issue create --title "Workflow failed: $GITHUB_WORKFLOW (#$GITHUB_RUN_NUMBER)" --body "$issue_body"
+            gh issue create --title "$issue_title" --body "$issue_body"
           fi

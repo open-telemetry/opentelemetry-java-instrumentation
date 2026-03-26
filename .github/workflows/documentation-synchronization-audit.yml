@@ -53,3 +53,4 @@ jobs:
     with:
       success: ${{ needs.crawl.result == 'success' }}
       failure-details: ${{ needs.crawl.outputs.audit-output }}
+      title: "Documentation sync needed: opentelemetry.io site out of sync"
