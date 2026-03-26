@@ -13,17 +13,17 @@ import org.springframework.context.annotation.Bean;
 @SpringBootApplication(
     excludeName =
         "org.springframework.boot.actuate.autoconfigure.metrics.export.prometheus.PrometheusSimpleclientMetricsExportAutoConfiguration")
-public class SpringApp {
+class SpringApp {
 
   @Bean
-  public TestBean testBean(MeterRegistry meterRegistry) {
+  TestBean testBean(MeterRegistry meterRegistry) {
     return new TestBean(meterRegistry);
   }
 
-  public static class TestBean {
+  static class TestBean {
     private final Counter counter;
 
-    public TestBean(MeterRegistry registry) {
+    TestBean(MeterRegistry registry) {
       this.counter =
           Counter.builder("test-counter")
               .baseUnit("thingies")
@@ -31,7 +31,7 @@ public class SpringApp {
               .register(registry);
     }
 
-    public void inc() {
+    void inc() {
       counter.increment();
     }
   }
