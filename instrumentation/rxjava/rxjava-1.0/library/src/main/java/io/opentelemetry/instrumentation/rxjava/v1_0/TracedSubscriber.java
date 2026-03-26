@@ -23,7 +23,7 @@ final class TracedSubscriber<T, REQUEST> extends Subscriber<T> {
       Instrumenter<REQUEST, ?> instrumenter,
       Context context,
       REQUEST request) {
-    super(delegate);
+    super(delegate, false);
     this.delegate = delegate;
     this.instrumenter = instrumenter;
     this.contextRef = new AtomicReference<>(context);
