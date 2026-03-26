@@ -4610,7 +4610,7 @@ libraries:
         aren't added as span attributes.
       type: boolean
       default: true
-    - name: otel.instrumentation.graphql.add-operation-name-to-span-name.enabled
+    - name: otel.instrumentation.graphql.operation-name-in-span-name.enabled
       description: |
         Whether GraphQL operation name is added to the span name. WARNING: The GraphQL operation name is provided by the client and can have high cardinality. Use only when the server is not exposed to malicious clients.
       type: boolean
@@ -4644,7 +4644,7 @@ libraries:
         aren't added as span attributes.
       type: boolean
       default: true
-    - name: otel.instrumentation.graphql.add-operation-name-to-span-name.enabled
+    - name: otel.instrumentation.graphql.operation-name-in-span-name.enabled
       description: |
         Whether GraphQL operation name is added to the span name. WARNING: The GraphQL operation name is provided by the client and can have high cardinality. Use only when the server is not exposed to malicious clients.
       type: boolean

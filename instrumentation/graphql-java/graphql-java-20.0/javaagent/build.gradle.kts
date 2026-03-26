@@ -25,8 +25,8 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    jvmArgs("-Dotel.instrumentation.graphql.add-operation-name-to-span-name.enabled=true")
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    jvmArgs("-Dotel.instrumentation.graphql.operation-name-in-span-name.enabled=true")
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
   val testDataFetcher by registering(Test::class) {
