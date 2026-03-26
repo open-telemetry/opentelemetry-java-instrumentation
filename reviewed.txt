@@ -449,3 +449,4 @@ servlet-common:bootstrap
 servlet-common:javaagent
 spark-2.3:javaagent
 servlet-common:library
+spring-batch-3.0:javaagent
