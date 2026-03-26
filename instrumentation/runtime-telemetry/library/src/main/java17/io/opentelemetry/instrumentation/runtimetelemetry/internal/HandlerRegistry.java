@@ -38,7 +38,7 @@ final class HandlerRegistry {
   static List<RecordedEventHandler> getHandlers(
       Meter meter, Predicate<JfrFeature> featurePredicate, boolean useLegacyCpuCountMetric) {
 
-    List<RecordedEventHandler> handlers = new ArrayList<RecordedEventHandler>();
+    List<RecordedEventHandler> handlers = new ArrayList<>();
     for (GarbageCollectorMXBean bean : ManagementFactory.getGarbageCollectorMXBeans()) {
       String name = bean.getName();
       switch (name) {
