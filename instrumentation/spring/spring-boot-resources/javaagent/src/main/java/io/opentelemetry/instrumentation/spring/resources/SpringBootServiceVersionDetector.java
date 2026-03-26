@@ -32,7 +32,7 @@ public class SpringBootServiceVersionDetector implements ResourceProvider {
   private final SystemHelper system;
 
   public SpringBootServiceVersionDetector() {
-    this.system = new SystemHelper();
+    this(new SystemHelper());
   }
 
   // Exists for testing
@@ -62,7 +62,7 @@ public class SpringBootServiceVersionDetector implements ResourceProvider {
   private Optional<String> getServiceVersionFromBuildInfo() {
     try (InputStream in = system.openClasspathResource("META-INF", "build-info.properties")) {
       return in != null ? getServiceVersionPropertyFromStream(in) : Optional.empty();
-    } catch (Exception e) {
+    } catch (IOException e) {
       return Optional.empty();
     }
   }

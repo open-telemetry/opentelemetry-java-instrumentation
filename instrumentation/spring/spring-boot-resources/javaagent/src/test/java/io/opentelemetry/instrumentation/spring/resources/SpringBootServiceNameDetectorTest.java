@@ -30,12 +30,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class SpringBootServiceNameDetectorTest {
 
-  static final String APPLICATION_PROPS = "application.properties";
-  static final String APPLICATION_YML = "application.yml";
+  private static final String APPLICATION_PROPS = "application.properties";
+  private static final String APPLICATION_YML = "application.yml";
 
-  static final String BOOTSTRAP_PROPS = "bootstrap.properties";
+  private static final String BOOTSTRAP_PROPS = "bootstrap.properties";
 
-  static final String BOOTSTRAP_YML = "bootstrap.yml";
+  private static final String BOOTSTRAP_YML = "bootstrap.yml";
 
   @Mock ConfigProperties config;
   @Mock SystemHelper system;

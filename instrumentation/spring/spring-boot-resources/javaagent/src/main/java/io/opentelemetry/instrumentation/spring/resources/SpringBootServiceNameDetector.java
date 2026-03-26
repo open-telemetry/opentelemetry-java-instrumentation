@@ -258,7 +258,7 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
     try {
       String[] args = system.attemptGetCommandLineArgsViaReflection();
       return parseNameFromProcessArgs(args);
-    } catch (Exception e) {
+    } catch (ReflectiveOperationException e) {
       return null;
     }
   }
@@ -276,7 +276,10 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
   }
 
   @Nullable
-  private static String parseNameFromProcessArgs(String[] args) {
+  private static String parseNameFromProcessArgs(@Nullable String[] args) {
+    if (args == null) {
+      return null;
+    }
     return Stream.of(args)
         .filter(arg -> arg.startsWith(COMMANDLINE_ARG_PREFIX))
         .map(arg -> arg.substring(COMMANDLINE_ARG_PREFIX.length()))
