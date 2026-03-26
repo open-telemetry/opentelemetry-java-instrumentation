@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.sql;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
@@ -14,7 +15,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 
 public final class VertxSqlInstrumenterFactory {
 
@@ -30,7 +30,8 @@ public final class VertxSqlInstrumenterFactory {
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(attributesGetter)
                     .setQuerySanitizationEnabled(
-                        AgentCommonConfig.get().isQuerySanitizationEnabled())
+                        DbConfig.isQuerySanitizationEnabled(
+                            GlobalOpenTelemetry.get(), "vertx_sql_client"))
                     .build())
             .addAttributesExtractor(
                 ServicePeerAttributesExtractor.create(attributesGetter, GlobalOpenTelemetry.get()))
