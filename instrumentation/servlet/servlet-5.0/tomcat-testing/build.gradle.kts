@@ -3,6 +3,8 @@ plugins {
 }
 
 dependencies {
+  // Servlet instrumentation is tested in Tomcat without Tomcat instrumentation.
+  // In Jetty, it is tested with the Jetty app server instrumentation.
   testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
   testImplementation(project(":instrumentation:servlet:servlet-5.0:testing"))
 
