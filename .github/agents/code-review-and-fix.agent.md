@@ -176,11 +176,13 @@ Auto-fix boundaries:
     variant already validates the complete attribute set; remove it
   - non-empty `hasAttributes(...)` calls in test assertions — replace with
     `hasAttributesSatisfyingExactly(...)` for consistency with the rest of the codebase.
-    Do **not** convert `hasAttributes(Attributes.empty())` — that is acceptable as-is.
     For non-semconv attribute keys, use inline `AttributeKey` factory methods directly
     in the assertion — `equalTo(longKey("name"), value)`, `equalTo(stringKey("name"), value)`,
     etc. Do **not** extract them into class-level `private static final` constants;
     constants are reserved for semconv keys from the semconv library.
+  - zero-attribute test assertions — standardize on `hasTotalAttributeCount(0)`;
+    replace `hasAttributesSatisfyingExactly()` and `hasAttributes(Attributes.empty())`
+    with this form
   - redundant `if (value != null)` guards around `AttributesBuilder.put()` calls —
     `put` is a no-op for null values, so remove the conditional and pass the value
     directly (same for span, log, and metrics attribute setters).
