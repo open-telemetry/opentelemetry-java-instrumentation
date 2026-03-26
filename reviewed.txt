@@ -455,3 +455,4 @@ spring:spring-boot-autoconfigure
 spring-boot-autoconfigure:testing
 spring-boot-resources:javaagent
 spring-boot-resources:javaagent-unit-tests
+spring-cloud-aws-3.0:javaagent
