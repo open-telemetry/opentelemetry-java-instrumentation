@@ -462,3 +462,4 @@ spring-cloud-gateway-common:javaagent
 spring-cloud-gateway-common:testing
 spring-cloud-gateway-webflux-4.3:testing
 spring-cloud-gateway-webmvc-4.3:javaagent
+spring-data-1.8:javaagent
