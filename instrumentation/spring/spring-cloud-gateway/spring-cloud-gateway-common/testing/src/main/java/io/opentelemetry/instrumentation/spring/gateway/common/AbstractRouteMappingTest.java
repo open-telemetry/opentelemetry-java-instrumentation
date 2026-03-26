@@ -66,7 +66,7 @@ public abstract class AbstractRouteMappingTest {
                 span ->
                     span.hasName(getSpanName())
                         .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfying(getExpectedAttributes()),
+                        .hasAttributesSatisfyingExactly(getExpectedAttributes()),
                 span -> span.hasName(getInternalSpanName()).hasKind(SpanKind.INTERNAL)));
   }
 
@@ -82,7 +82,7 @@ public abstract class AbstractRouteMappingTest {
                 span ->
                     span.hasName(getRandomUuidSpanName())
                         .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfying(getRandomUuidExpectedAttributes()),
+                        .hasAttributesSatisfyingExactly(getRandomUuidExpectedAttributes()),
                 span -> span.hasName(getInternalSpanName()).hasKind(SpanKind.INTERNAL)));
   }
 
@@ -99,7 +99,7 @@ public abstract class AbstractRouteMappingTest {
                 span ->
                     span.hasName(getFakeUuidSpanName(routeId))
                         .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfying(getFakeUuidExpectedAttributes(routeId)),
+                        .hasAttributesSatisfyingExactly(getFakeUuidExpectedAttributes(routeId)),
                 span -> span.hasName(getInternalSpanName()).hasKind(SpanKind.INTERNAL)));
   }
 
