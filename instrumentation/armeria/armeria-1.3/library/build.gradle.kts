@@ -14,7 +14,7 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") == "true")
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
   }
 
   val testStableSemconv by registering(Test::class) {

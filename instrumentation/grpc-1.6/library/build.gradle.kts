@@ -18,7 +18,7 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") == "true")
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
     // latest dep test occasionally fails because network type is ipv6 instead of the expected ipv4
     // and peer address is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
     jvmArgs("-Djava.net.preferIPv4Stack=true")

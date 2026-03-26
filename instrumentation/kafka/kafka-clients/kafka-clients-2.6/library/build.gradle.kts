@@ -19,7 +19,7 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") == "true")
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
     systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 }

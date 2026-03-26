@@ -64,7 +64,7 @@ tasks {
     jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") == "true")
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
     systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 

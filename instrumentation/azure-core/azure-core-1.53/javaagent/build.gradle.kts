@@ -36,7 +36,7 @@ val latestDepTest = findProperty("testLatestDeps") == "true"
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") == "true")
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
   }
 }
 

@@ -224,7 +224,7 @@ tasks {
     // TODO run tests both with and without experimental span attributes
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
     systemProperty("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", "true")
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") == "true")
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
     systemProperty("collectMetadata", collectMetadata)
   }
 

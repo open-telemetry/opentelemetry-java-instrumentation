@@ -52,7 +52,7 @@ configurations.configureEach {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") == "true")
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
     systemProperty("ratpack14Test", true) // used in AbstractRatpackHttpClientTest
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
     systemProperty("collectMetadata", findProperty("collectMetadata"))

@@ -153,7 +153,7 @@ tasks {
   withType<Test>().configureEach {
     // TODO run tests both with and without experimental span attributes
     jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") == "true")
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
     systemProperty("collectMetadata", collectMetadata)
   }
 

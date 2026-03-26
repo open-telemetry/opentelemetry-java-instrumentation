@@ -66,7 +66,7 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") == "true")
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
 
     systemProperty("collectMetadata", findProperty("collectMetadata"))
   }

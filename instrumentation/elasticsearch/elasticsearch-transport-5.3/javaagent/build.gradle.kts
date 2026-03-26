@@ -68,7 +68,7 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") == "true")
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
 
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
