@@ -61,7 +61,7 @@ afterEvaluate {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
   val testStableSemconv by registering(Test::class) {

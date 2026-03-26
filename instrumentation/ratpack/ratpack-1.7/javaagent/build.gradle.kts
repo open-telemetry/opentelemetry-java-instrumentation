@@ -25,7 +25,7 @@ tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
   val testStableSemconv by registering(Test::class) {

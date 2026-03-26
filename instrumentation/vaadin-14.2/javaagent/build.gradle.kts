@@ -84,7 +84,7 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
     // Enable legacy OpenSSL provider for Node.js 17+ compatibility with webpack 4
     environment("NODE_OPTIONS", "--openssl-legacy-provider")
   }

@@ -77,7 +77,7 @@ tasks {
 
     systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled")
     systemProperty("testLatestDeps", latestDepTest)
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
   val testStableSemconv by registering(Test::class) {
