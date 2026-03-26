@@ -458,3 +458,4 @@ spring-boot-resources:javaagent-unit-tests
 spring-cloud-aws-3.0:javaagent
 spring-cloud-gateway-2.0:javaagent
 spring-cloud-gateway-2.2:testing
+spring-cloud-gateway-common:javaagent
