@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.core.v2_0;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
@@ -13,18 +12,12 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
-import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
 public class SpringCoreInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public SpringCoreInstrumentationModule() {
     super("spring-core", "spring-core-2.0");
-  }
-
-  @Override
-  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("org.springframework.core.task.SimpleAsyncTaskExecutor");
   }
 
   @Override
