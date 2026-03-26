@@ -29,7 +29,7 @@ public final class R2dbcSingletons {
             .addAttributesExtractor(
                 ServicePeerAttributesExtractor.create(
                     new R2dbcSqlAttributesGetter(), GlobalOpenTelemetry.get()));
-    Experimental.setEnableSqlCommenter(
+    Experimental.setSqlCommenterEnabled(
         builder,
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "r2dbc")
             .get("sqlcommenter/development")
