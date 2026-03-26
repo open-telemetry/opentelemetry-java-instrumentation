@@ -16,6 +16,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | General | Logic, correctness, reliability, safety, copy/paste mistakes, incorrect comments | Always | — |
 | Style | Style guide | Always | — |
 | Naming | Getter naming (`get` / `is`) | Always | — |
+| Naming | Boolean/collection option naming (`set*Enabled`, `setCapture*`, `setEmitExperimental*`) | `Experimental` or `TelemetryBuilder` setter changes | `library-patterns.md` |
 | Naming | Module/package naming | New or renamed modules/packages | `module-naming.md` |
 | Javaagent | Advice patterns | `@Advice` classes | `javaagent-advice-patterns.md` |
 | Javaagent | Module structure patterns | `InstrumentationModule`, `TypeInstrumentation`, `Singletons` | `javaagent-module-patterns.md` |
