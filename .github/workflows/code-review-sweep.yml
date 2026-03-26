@@ -18,6 +18,8 @@ jobs:
   # Job 1: Determine which modules to review
   # ---------------------------------------------------------------------------
   dispatch:
+    # Only run on official repo, not forks
+    if: github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.build-matrix.outputs.matrix }}
