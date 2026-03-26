@@ -16,7 +16,7 @@ dependencies {
   latestDepTestLibrary("io.vertx:vertx-codegen:4.+") // documented limitation
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 
 testing {
   suites {
@@ -34,7 +34,7 @@ testing {
           testTask.configure {
             usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
-            systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+            systemProperty("testLatestDeps", findProperty("testLatestDeps") == "true")
 
             jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
             jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")

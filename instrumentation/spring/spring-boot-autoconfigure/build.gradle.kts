@@ -158,7 +158,7 @@ dependencies {
   )
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 
 // spring 6 (spring boot 3) requires java 17
 if (latestDepTest) {

@@ -90,7 +90,7 @@ tasks {
   }
 
   check {
-    if (findProperty("testLatestDeps") as Boolean) {
+    if (findProperty("testLatestDeps") == "true") {
       dependsOn(testing.suites.named("vaadin14LatestTest"), testing.suites.named("vaadinLatestTest"))
     } else {
       dependsOn(testing.suites.named("vaadin142Test"), testing.suites.named("vaadin16Test"))

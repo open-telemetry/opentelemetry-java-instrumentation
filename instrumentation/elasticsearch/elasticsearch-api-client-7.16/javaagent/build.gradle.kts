@@ -45,7 +45,7 @@ dependencies {
   latestDepTestLibrary("co.elastic.clients:elasticsearch-java:7.17.19") // native on-by-default instrumentation after this version
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 testing {
   suites {
     val version8Test by registering(JvmTestSuite::class) {

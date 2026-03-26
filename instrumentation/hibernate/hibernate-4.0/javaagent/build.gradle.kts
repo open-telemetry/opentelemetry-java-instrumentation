@@ -37,7 +37,7 @@ dependencies {
   testImplementation("org.javassist:javassist:3.28.0-GA")
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 testing {
   suites {
     val version5Test by registering(JvmTestSuite::class) {

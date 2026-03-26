@@ -53,7 +53,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
 
     systemProperty("collectMetadata", findProperty("collectMetadata"))
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") == "true")
   }
 
   val testExperimental by registering(Test::class) {

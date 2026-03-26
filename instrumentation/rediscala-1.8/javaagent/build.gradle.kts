@@ -62,7 +62,7 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") == "true")
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
     systemProperty("collectMetadata", findProperty("collectMetadata"))
@@ -87,7 +87,7 @@ tasks {
   }
 }
 
-if (findProperty("testLatestDeps") as Boolean) {
+if (findProperty("testLatestDeps") == "true") {
   configurations {
     // rediscala artifact name is different for regular and latest tests
     testImplementation {

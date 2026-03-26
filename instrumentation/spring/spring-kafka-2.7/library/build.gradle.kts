@@ -30,10 +30,10 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
   usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  systemProperty("testLatestDeps", findProperty("testLatestDeps") == "true")
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 
 // spring 6 (which spring-kafka 3.+ uses) requires java 17
 if (latestDepTest) {

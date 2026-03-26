@@ -17,7 +17,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:vertx:vertx-kafka-client-3.6:javaagent"))
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 
 testing {
   suites {
@@ -35,7 +35,7 @@ testing {
           testTask.configure {
             usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
-            systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+            systemProperty("testLatestDeps", findProperty("testLatestDeps") == "true")
 
             jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
             jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")

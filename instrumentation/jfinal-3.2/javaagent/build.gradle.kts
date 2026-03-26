@@ -11,7 +11,7 @@ muzzle {
   }
 }
 
-if (!(findProperty("testLatestDeps") as Boolean)) {
+if (!(findProperty("testLatestDeps") == "true")) {
   otelJava {
     // jfinal 3.2 doesn't work with Java 9+
     maxJavaVersionForTests.set(JavaVersion.VERSION_1_8)

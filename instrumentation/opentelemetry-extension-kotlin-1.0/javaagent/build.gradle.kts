@@ -28,7 +28,7 @@ dependencies {
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0")
 }
 
-if (!(findProperty("testLatestDeps") as Boolean)) {
+if (!(findProperty("testLatestDeps") == "true")) {
   // run tests against an early version of opentelemetry-extension-kotlin, latest dep tests will use
   // the current version
   configurations.configureEach {

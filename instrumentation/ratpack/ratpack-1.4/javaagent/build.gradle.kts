@@ -32,7 +32,7 @@ dependencies {
 }
 
 // Requires old Guava. Can't use enforcedPlatform since predates BOM
-if (!(findProperty("testLatestDeps") as Boolean)) {
+if (!(findProperty("testLatestDeps") == "true")) {
   configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.google.guava:guava:19.0")
 }
 
@@ -52,7 +52,7 @@ configurations.configureEach {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") == "true")
     systemProperty("ratpack14Test", true) // used in AbstractRatpackHttpClientTest
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
     systemProperty("collectMetadata", findProperty("collectMetadata"))

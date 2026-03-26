@@ -22,7 +22,7 @@ dependencies {
 }
 
 // spring 6 requires java 17
-if (findProperty("testLatestDeps") as Boolean) {
+if (findProperty("testLatestDeps") == "true") {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_17)
   }

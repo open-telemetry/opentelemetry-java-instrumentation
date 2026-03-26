@@ -29,7 +29,7 @@ tasks.named<Checkstyle>("checkstyleTest") {
   exclude("**/example/**")
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 protobuf {
   protoc {
     val protocVersion = if (latestDepTest) "3.25.5" else "3.19.2"

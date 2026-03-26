@@ -23,7 +23,7 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") == "true")
     // TODO run tests both with and without genai message capture
 
     systemProperty("otel.instrumentation.genai.capture-message-content", "true")

@@ -44,7 +44,7 @@ tasks {
     systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
-  if (!(findProperty("testLatestDeps") as Boolean)) {
+  if (!(findProperty("testLatestDeps") == "true")) {
     check {
       dependsOn(testing.suites)
     }

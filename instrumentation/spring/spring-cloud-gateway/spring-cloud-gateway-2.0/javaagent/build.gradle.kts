@@ -48,7 +48,7 @@ tasks.withType<Test>().configureEach {
 
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
-  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  systemProperty("testLatestDeps", findProperty("testLatestDeps") == "true")
 }
 
 configurations.testRuntimeClasspath {
