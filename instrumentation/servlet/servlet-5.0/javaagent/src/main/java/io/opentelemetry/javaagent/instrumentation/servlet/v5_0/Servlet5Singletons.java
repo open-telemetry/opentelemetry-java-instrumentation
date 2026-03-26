@@ -21,6 +21,7 @@ import jakarta.servlet.Filter;
 import jakarta.servlet.Servlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import javax.annotation.Nullable;
 
 public final class Servlet5Singletons {
 
@@ -57,6 +58,7 @@ public final class Servlet5Singletons {
     return SNIPPET_INJECTION_HELPER;
   }
 
+  @Nullable
   public static MappingResolver getMappingResolver(Object servletOrFilter) {
     MappingResolver.Factory factory = getMappingResolverFactory(servletOrFilter);
     if (factory != null) {
@@ -65,6 +67,7 @@ public final class Servlet5Singletons {
     return null;
   }
 
+  @Nullable
   private static MappingResolver.Factory getMappingResolverFactory(Object servletOrFilter) {
     boolean servlet = servletOrFilter instanceof Servlet;
     if (servlet) {
