@@ -468,3 +468,4 @@ spring-data-3.0:kotlin-testing
 spring-data-3.0:testing
 spring-integration-4.1:javaagent
 spring-data-common:testing
+spring-integration-4.1:library
