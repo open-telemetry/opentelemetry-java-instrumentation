@@ -42,7 +42,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
           .getScalarList("capture_request_parameters/development", String.class, emptyList());
   private static final boolean TRACE_ID_REQUEST_ATTRIBUTE_ENABLED =
-    readTraceIdRequestAttributeEnabled();
+      readTraceIdRequestAttributeEnabled();
 
   protected final Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
       instrumenter;
