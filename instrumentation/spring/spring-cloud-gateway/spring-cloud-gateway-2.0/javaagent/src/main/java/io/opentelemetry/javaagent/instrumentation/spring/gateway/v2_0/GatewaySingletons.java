@@ -10,9 +10,12 @@ import org.springframework.web.server.ServerWebExchange;
 
 public final class GatewaySingletons {
 
+  private static final HttpServerRouteGetter<ServerWebExchange> HTTP_ROUTE_GETTER =
+      (context, exchange) -> ServerWebExchangeHelper.extractServerRoute(exchange);
+
   private GatewaySingletons() {}
 
   public static HttpServerRouteGetter<ServerWebExchange> httpRouteGetter() {
-    return (context, exchange) -> ServerWebExchangeHelper.extractServerRoute(exchange);
+    return HTTP_ROUTE_GETTER;
   }
 }
