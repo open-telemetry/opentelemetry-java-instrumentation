@@ -21,7 +21,4 @@ dependencies {
   bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
   compileOnly("javax.servlet:javax.servlet-api:3.0.1")
-
-  testInstrumentation(project(":instrumentation:servlet:servlet-2.2:javaagent"))
-  testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
 }
