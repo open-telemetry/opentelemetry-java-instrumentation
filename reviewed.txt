@@ -484,3 +484,4 @@ spring-scheduling-3.1:bootstrap
 spring-scheduling-3.1:javaagent
 spring-security-config-6.0:javaagent
 spring-security-config-6.0:library
+spring-web-3.1:javaagent
