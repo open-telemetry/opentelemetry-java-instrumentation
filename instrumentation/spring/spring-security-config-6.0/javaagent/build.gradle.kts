@@ -8,6 +8,7 @@ muzzle {
     group.set("org.springframework.security")
     module.set("spring-security-config")
     versions.set("[6.0.0,]")
+    assertInverse.set(true)
 
     extraDependency("jakarta.servlet:jakarta.servlet-api:6.0.0")
     extraDependency("org.springframework.security:spring-security-web:6.0.0")
