@@ -26,6 +26,7 @@ dependencies {
 
   testImplementation(project(":instrumentation:spring:spring-jms:spring-jms-2.0:testing"))
   testInstrumentation(project(":instrumentation:jms:jms-1.1:javaagent"))
+  testInstrumentation(project(":instrumentation:spring:spring-jms:spring-jms-6.0:javaagent"))
 
   testImplementation("org.springframework.boot:spring-boot-starter-activemq:2.5.3")
   testImplementation("org.springframework.boot:spring-boot-starter-test:2.5.3") {
@@ -61,7 +62,6 @@ configurations {
 
 tasks {
   withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
   // this does not apply to testReceiveSpansDisabled
