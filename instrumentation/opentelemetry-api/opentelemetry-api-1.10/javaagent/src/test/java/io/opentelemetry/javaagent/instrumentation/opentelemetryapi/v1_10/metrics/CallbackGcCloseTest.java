@@ -8,8 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metric
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.test.utils.GcUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import java.lang.ref.WeakReference;
@@ -64,11 +66,7 @@ class CallbackGcCloseTest {
     // 1. Build a child-first URLClassLoader that loads its own copy of the OTel API.
     //    The agent will instrument GlobalOpenTelemetry in this CL and inject all bridge helpers
     //    (including CallbackAnchor with its own static callbacks list).
-    URL apiJar =
-        io.opentelemetry.api.GlobalOpenTelemetry.class
-            .getProtectionDomain()
-            .getCodeSource()
-            .getLocation();
+    URL apiJar = GlobalOpenTelemetry.class.getProtectionDomain().getCodeSource().getLocation();
     URL testClasses = GaugeRegistrar.class.getProtectionDomain().getCodeSource().getLocation();
 
     URLClassLoader childCl =
@@ -120,7 +118,7 @@ class CallbackGcCloseTest {
    */
   @Test
   void instrumentContinuesWhileCallbackAnchored() {
-    Consumer<io.opentelemetry.api.metrics.ObservableLongMeasurement> callback =
+    Consumer<ObservableLongMeasurement> callback =
         result -> result.record(99, Attributes.of(stringKey("key"), "value"));
 
     meter.gaugeBuilder("test.gc.alive").ofLongs().buildWithCallback(callback);

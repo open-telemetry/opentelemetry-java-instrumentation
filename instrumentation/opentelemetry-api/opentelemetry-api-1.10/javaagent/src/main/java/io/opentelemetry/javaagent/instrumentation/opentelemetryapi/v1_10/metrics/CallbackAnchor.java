@@ -39,11 +39,13 @@ public final class CallbackAnchor {
 
   // Anchors callbacks to this class's lifecycle. Since this class is injected as a helper into each
   // application class loader, callbacks are naturally tied to their class loader's lifecycle.
-  private static final Set<Object> callbacks = ConcurrentHashMap.newKeySet();
+  // Use identity semantics so unusual equals/hashCode implementations don't collapse distinct
+  // callbacks into the same entry.
+  private static final Set<IdentityKey> callbacks = ConcurrentHashMap.newKeySet();
 
   public static <T, R extends AutoCloseable> R anchor(
       Function<Consumer<T>, R> buildFn, Consumer<T> callback) {
-    callbacks.add(callback);
+    callbacks.add(new IdentityKey(callback));
     WeakRefConsumer<T> weak = new WeakRefConsumer<>(new WeakReference<>(callback));
     R instrument = buildFn.apply(weak);
     weak.closeWhenCollected(instrument);
@@ -52,7 +54,7 @@ public final class CallbackAnchor {
 
   public static <R extends AutoCloseable> R anchorBatch(
       Function<Runnable, R> buildFn, Runnable callback) {
-    callbacks.add(callback);
+    callbacks.add(new IdentityKey(callback));
     WeakRefRunnable weak = new WeakRefRunnable(new WeakReference<>(callback));
     R instrument = buildFn.apply(weak);
     weak.closeWhenCollected(instrument);
@@ -60,7 +62,26 @@ public final class CallbackAnchor {
   }
 
   public static void remove(Object callback) {
-    callbacks.remove(callback);
+    callbacks.remove(new IdentityKey(callback));
+  }
+
+  private static final class IdentityKey {
+
+    private final Object callback;
+
+    private IdentityKey(Object callback) {
+      this.callback = callback;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+      return other instanceof IdentityKey && callback == ((IdentityKey) other).callback;
+    }
+
+    @Override
+    public int hashCode() {
+      return System.identityHashCode(callback);
+    }
   }
 
   private CallbackAnchor() {}
