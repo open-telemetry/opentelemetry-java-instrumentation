@@ -10,11 +10,13 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ApplicationLoggingInstrumentationModule extends InstrumentationModule {
+public class ApplicationLoggingInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public ApplicationLoggingInstrumentationModule() {
     super("internal-application-logger");
@@ -32,5 +34,10 @@ public class ApplicationLoggingInstrumentationModule extends InstrumentationModu
         new LoggerFactoryInstrumentation(),
         new SpringApplicationInstrumentation(),
         new LoggingApplicationListenerInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }
