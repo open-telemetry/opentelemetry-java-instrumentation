@@ -70,7 +70,6 @@ class AwsSqsTest {
     }
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void sqsListener() throws InterruptedException, ExecutionException, TimeoutException {
     String messageContent = "hello";

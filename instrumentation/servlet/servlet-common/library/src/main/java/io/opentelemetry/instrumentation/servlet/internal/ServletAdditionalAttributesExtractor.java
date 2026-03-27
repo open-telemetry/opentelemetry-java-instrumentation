@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.servlet.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
-import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ID;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -23,6 +22,8 @@ public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<
         ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> {
 
+  // copied from EnduserIncubatingAttributes
+  private static final AttributeKey<String> ENDUSER_ID = AttributeKey.stringKey("enduser.id");
   private static final AttributeKey<Long> SERVLET_TIMEOUT = longKey("servlet.timeout");
 
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
@@ -54,10 +55,7 @@ public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
     if (captureEnduserId) {
       Principal principal = accessor.getRequestUserPrincipal(requestContext.request());
       if (principal != null) {
-        String name = principal.getName();
-        if (name != null) {
-          attributes.put(ENDUSER_ID, name);
-        }
+        attributes.put(ENDUSER_ID, principal.getName());
       }
     }
     if (!captureExperimentalAttributes) {

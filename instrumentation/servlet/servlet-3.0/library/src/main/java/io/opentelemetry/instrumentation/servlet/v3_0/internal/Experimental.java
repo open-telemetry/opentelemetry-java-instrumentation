@@ -48,27 +48,27 @@ public final class Experimental {
    * Sets whether to add {@code trace_id} and {@code span_id} as a request attribute.
    *
    * @param builder the telemetry builder
-   * @param addTraceIdRequestAttribute {@code true} to add trace ID and span ID as request
+   * @param traceIdRequestAttributeEnabled {@code true} to add trace ID and span ID as request
    *     attributes
    * @see javax.servlet.ServletRequest#setAttribute(String, Object)
    */
-  public static void setAddTraceIdRequestAttribute(
-      ServletTelemetryBuilder builder, boolean addTraceIdRequestAttribute) {
+  public static void setTraceIdRequestAttributeEnabled(
+      ServletTelemetryBuilder builder, boolean traceIdRequestAttributeEnabled) {
     if (setAddTraceIdRequestAttribute != null) {
-      setAddTraceIdRequestAttribute.accept(builder, addTraceIdRequestAttribute);
+      setAddTraceIdRequestAttribute.accept(builder, traceIdRequestAttributeEnabled);
     }
   }
 
   /**
    * Sets whether to add {@code trace_id} and {@code span_id} as a request attribute.
    *
-   * @deprecated Use {@link #setAddTraceIdRequestAttribute(ServletTelemetryBuilder, boolean)}
+   * @deprecated Use {@link #setTraceIdRequestAttributeEnabled(ServletTelemetryBuilder, boolean)}
    *     instead.
    */
   @Deprecated
   public static void addTraceIdRequestAttribute(
       ServletTelemetryBuilder builder, boolean addTraceIdRequestAttribute) {
-    setAddTraceIdRequestAttribute(builder, addTraceIdRequestAttribute);
+    setTraceIdRequestAttributeEnabled(builder, addTraceIdRequestAttribute);
   }
 
   /**
@@ -91,14 +91,26 @@ public final class Experimental {
    * servlet.request.parameter.<name>}.
    *
    * @param builder the telemetry builder
-   * @param capturedRequestParameters request parameter names to capture
+   * @param captureRequestParameters request parameter names to capture
    * @see javax.servlet.ServletRequest#getParameterValues(String)
    */
+  public static void setCaptureRequestParameters(
+      ServletTelemetryBuilder builder, Collection<String> captureRequestParameters) {
+    if (setCapturedRequestParameters != null) {
+      setCapturedRequestParameters.accept(builder, captureRequestParameters);
+    }
+  }
+
+  /**
+   * Sets the request parameters to be captured as span attributes.
+   *
+   * @deprecated Use {@link #setCaptureRequestParameters(ServletTelemetryBuilder, Collection)}
+   *     instead.
+   */
+  @Deprecated
   public static void setCapturedRequestParameters(
       ServletTelemetryBuilder builder, Collection<String> capturedRequestParameters) {
-    if (setCapturedRequestParameters != null) {
-      setCapturedRequestParameters.accept(builder, capturedRequestParameters);
-    }
+    setCaptureRequestParameters(builder, capturedRequestParameters);
   }
 
   public static void internalSetEmitExperimentalTelemetry(

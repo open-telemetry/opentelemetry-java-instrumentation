@@ -4610,7 +4610,7 @@ libraries:
         aren't added as span attributes.
       type: boolean
       default: true
-    - name: otel.instrumentation.graphql.add-operation-name-to-span-name.enabled
+    - name: otel.instrumentation.graphql.operation-name-in-span-name.enabled
       description: |
         Whether GraphQL operation name is added to the span name. WARNING: The GraphQL operation name is provided by the client and can have high cardinality. Use only when the server is not exposed to malicious clients.
       type: boolean
@@ -4644,7 +4644,7 @@ libraries:
         aren't added as span attributes.
       type: boolean
       default: true
-    - name: otel.instrumentation.graphql.add-operation-name-to-span-name.enabled
+    - name: otel.instrumentation.graphql.operation-name-in-span-name.enabled
       description: |
         Whether GraphQL operation name is added to the span name. WARNING: The GraphQL operation name is provided by the client and can have high cardinality. Use only when the server is not exposed to malicious clients.
       type: boolean
@@ -13262,12 +13262,12 @@ libraries:
       description: Enables capturing the experimental `servlet.timeout` span attribute.
       type: boolean
       default: false
-    - name: otel.instrumentation.servlet.capture-request-parameters
+    - name: otel.instrumentation.servlet.experimental.capture-request-parameters
       description: List of request parameter names to capture as span attributes.
       type: list
       default: ''
-    - name: otel.instrumentation.servlet.add-trace-id-request-attribute
-      description: Adds the trace ID and span ID as a request attributes for downstream
+    - name: otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
+      description: Enables adding the trace ID and span ID as request attributes for downstream
         servlet access.
       type: boolean
       default: true
@@ -13345,12 +13345,12 @@ libraries:
       description: Enables capturing the experimental `servlet.timeout` span attribute.
       type: boolean
       default: false
-    - name: otel.instrumentation.servlet.capture-request-parameters
+    - name: otel.instrumentation.servlet.experimental.capture-request-parameters
       description: List of request parameter names to capture as span attributes.
       type: list
       default: ''
-    - name: otel.instrumentation.servlet.add-trace-id-request-attribute
-      description: Adds the trace ID and span ID as a request attributes for downstream
+    - name: otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
+      description: Enables adding the trace ID and span ID as request attributes for downstream
         servlet access.
       type: boolean
       default: true
@@ -13434,12 +13434,12 @@ libraries:
       description: Enables capturing the experimental `servlet.timeout` span attribute.
       type: boolean
       default: false
-    - name: otel.instrumentation.servlet.capture-request-parameters
+    - name: otel.instrumentation.servlet.experimental.capture-request-parameters
       description: List of request parameter names to capture as span attributes.
       type: list
       default: ''
-    - name: otel.instrumentation.servlet.add-trace-id-request-attribute
-      description: Adds the trace ID and span ID as a request attributes for downstream
+    - name: otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
+      description: Enables adding the trace ID and span ID as request attributes for downstream
         servlet access.
       type: boolean
       default: true

@@ -46,7 +46,7 @@ public class SpringJmsMessageListenerInstrumentation implements TypeInstrumentat
             .and(isPublic())
             .and(takesArguments(2))
             .and(takesArgument(0, named("jakarta.jms.Message"))),
-        SpringJmsMessageListenerInstrumentation.class.getName() + "$MessageListenerAdvice");
+        getClass().getName() + "$MessageListenerAdvice");
   }
 
   @SuppressWarnings("unused")

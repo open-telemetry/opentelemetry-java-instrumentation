@@ -14,7 +14,7 @@ class ComplexPropagationTest extends AbstractComplexPropagationTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  public ComplexPropagationTest() {
+  ComplexPropagationTest() {
     super(testing, GlobalInterceptorSpringConfig.class);
   }
 }

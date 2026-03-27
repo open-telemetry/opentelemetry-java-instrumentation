@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.core.v2_0;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -31,8 +30,7 @@ public class SimpleAsyncTaskExecutorInstrumentation implements TypeInstrumentati
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isProtected())
+        isProtected()
             .and(named("doExecute"))
             .and(takesArguments(1))
             .and(takesArgument(0, Runnable.class)),

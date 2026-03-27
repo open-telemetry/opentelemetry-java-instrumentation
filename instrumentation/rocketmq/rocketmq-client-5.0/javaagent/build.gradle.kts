@@ -22,7 +22,7 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
@@ -35,20 +35,6 @@ tasks {
     include("**/RocketMqClientSuppressReceiveSpanTest.*")
   }
 
-  val testExperimental by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      excludeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
-    }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-
-    jvmArgs("-Dotel.instrumentation.rocketmq-client.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.rocketmq-client.experimental-span-attributes=true")
-  }
-
   test {
     filter {
       excludeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
@@ -58,10 +44,10 @@ tasks {
   }
 
   check {
-    dependsOn(testReceiveSpanDisabled, testExperimental)
+    dependsOn(testReceiveSpanDisabled)
   }
 
-  if (findProperty("denyUnsafe") as Boolean) {
+  if (findProperty("denyUnsafe") == "true") {
     withType<Test>().configureEach {
       enabled = false
     }

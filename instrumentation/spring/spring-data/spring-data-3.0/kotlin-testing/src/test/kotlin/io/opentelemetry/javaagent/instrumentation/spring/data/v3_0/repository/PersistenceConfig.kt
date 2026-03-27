@@ -23,7 +23,7 @@ import java.nio.charset.StandardCharsets
 class PersistenceConfig {
 
   @Bean
-  fun connectionFactory(): ConnectionFactory? = ConnectionFactories.find(
+  fun connectionFactory(): ConnectionFactory = ConnectionFactories.find(
     ConnectionFactoryOptions.builder()
       .option(ConnectionFactoryOptions.DRIVER, "h2")
       .option(ConnectionFactoryOptions.PROTOCOL, "mem")

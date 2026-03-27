@@ -14,7 +14,7 @@ muzzle {
 }
 
 tasks.withType<Test>().configureEach {
-  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  systemProperty("testLatestDeps", findProperty("testLatestDeps"))
   // TODO run tests both with and without experimental span attributes
   jvmArgs("-Dotel.instrumentation.reactor.experimental-span-attributes=true")
 }
@@ -42,7 +42,7 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
 }
 
-val testLatestDeps = findProperty("testLatestDeps") as Boolean
+val testLatestDeps = findProperty("testLatestDeps") == "true"
 
 testing {
   suites {

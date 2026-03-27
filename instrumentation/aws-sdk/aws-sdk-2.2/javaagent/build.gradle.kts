@@ -130,7 +130,7 @@ dependencies {
   testLibrary("software.amazon.awssdk:sqs:2.2.0")
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
 
 testing {
@@ -224,7 +224,7 @@ tasks {
     // TODO run tests both with and without experimental span attributes
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
     systemProperty("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", "true")
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
     systemProperty("collectMetadata", collectMetadata)
   }
 
@@ -238,7 +238,7 @@ tasks {
     }
   }
 
-  if (findProperty("denyUnsafe") as Boolean) {
+  if (findProperty("denyUnsafe") == "true") {
     // Aws2SqsTracingTest uses org.elasticmq:elasticmq-rest-sqs_2.13 that uses unsafe. Future
     // versions are likely to fix this.
     withType<Test>().configureEach {

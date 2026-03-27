@@ -25,7 +25,7 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    jvmArgs("-Dotel.instrumentation.graphql.add-operation-name-to-span-name.enabled=true")
+    jvmArgs("-Dotel.instrumentation.graphql.operation-name-in-span-name.enabled=true")
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
@@ -42,7 +42,7 @@ tasks {
   }
 }
 
-if (findProperty("testLatestDeps") as Boolean) {
+if (findProperty("testLatestDeps") == "true") {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }

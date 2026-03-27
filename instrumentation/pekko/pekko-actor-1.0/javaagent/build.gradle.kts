@@ -34,7 +34,7 @@ dependencies {
   testImplementation(project(":instrumentation:executors:testing"))
 }
 
-if (findProperty("testLatestDeps") as Boolean) {
+if (findProperty("testLatestDeps") == "true") {
   configurations {
     // pekko artifact name is different for regular and latest tests
     testImplementation {
@@ -43,7 +43,7 @@ if (findProperty("testLatestDeps") as Boolean) {
   }
 }
 
-if (findProperty("denyUnsafe") as Boolean) {
+if (findProperty("denyUnsafe") == "true") {
   tasks.withType<Test>().configureEach {
     enabled = false
   }

@@ -13,7 +13,7 @@ muzzle {
   }
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 
 dependencies {
   library("org.springframework.boot:spring-boot-actuator-autoconfigure:2.0.0.RELEASE")
