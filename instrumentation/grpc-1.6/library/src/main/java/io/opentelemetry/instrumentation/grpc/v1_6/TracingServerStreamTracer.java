@@ -89,7 +89,7 @@ final class TracingServerStreamTracer extends ServerStreamTracer {
     Context extracted =
         propagators
             .getTextMapPropagator()
-            .extract(parentContext, request, GrpcRequestGetter.INSTANCE);
+        .extract(parentContext, request, new GrpcRequestGetter());
     if (instrumenter.shouldStart(extracted, request)) {
       InstrumenterUtil.startAndEnd(
           instrumenter, extracted, request, status, status.getCause(), startTime, Instant.now());
