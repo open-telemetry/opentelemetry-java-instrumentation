@@ -176,11 +176,13 @@ Auto-fix boundaries:
     variant already validates the complete attribute set; remove it
   - non-empty `hasAttributes(...)` calls in test assertions — replace with
     `hasAttributesSatisfyingExactly(...)` for consistency with the rest of the codebase.
-    Do **not** convert `hasAttributes(Attributes.empty())` — that is acceptable as-is.
     For non-semconv attribute keys, use inline `AttributeKey` factory methods directly
     in the assertion — `equalTo(longKey("name"), value)`, `equalTo(stringKey("name"), value)`,
     etc. Do **not** extract them into class-level `private static final` constants;
     constants are reserved for semconv keys from the semconv library.
+  - zero-attribute test assertions — standardize on `hasTotalAttributeCount(0)`;
+    replace `hasAttributesSatisfyingExactly()` and `hasAttributes(Attributes.empty())`
+    with this form
   - redundant `if (value != null)` guards around `AttributesBuilder.put()` calls —
     `put` is a no-op for null values, so remove the conditional and pass the value
     directly (same for span, log, and metrics attribute setters).
@@ -194,8 +196,11 @@ Auto-fix boundaries:
     `@Nullable T` overload is selected directly, null is safe, and the guard is redundant.
   - defensive `if (param == null)` checks on parameters not annotated `@Nullable` —
     these contradict the framework's nullability contract; remove the guard. Conversely,
-    if a call site passes `null` or a method returns `null`, add `@Nullable` to the
-    parameter or return type instead of adding a null guard in the caller/callee.
+    add `@Nullable` to a parameter only when `null` is actually passed by callers or an
+    upstream contract allows it, and add `@Nullable` to a return type only when the
+    method actually returns `null`, instead of adding a null guard in the caller/callee.
+    When justifying `@Nullable` on a parameter, cite the concrete null-passing caller or
+    upstream contract. Do not justify it merely because the method guards against null.
     **Exception — test files**: do not add `@Nullable` in test code.
     If a PR adds `@Nullable` to test files, flag it for removal.
     **Exception**: when the method overrides an interface from the upstream OpenTelemetry
@@ -230,6 +235,9 @@ Auto-fix boundaries:
 - Never change:
   - literal type suffixes (e.g., `200` → `200L` or vice-versa) — Java widens
     automatically; both forms compile identically and the change is noise
+  - non-capturing lambdas or method references as unnecessary allocations; do not flag or
+    fix these, because on modern JDKs these are typically cached at the call site rather
+    than allocated on every invocation
 
 Comment formatting rules:
 

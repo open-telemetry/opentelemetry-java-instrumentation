@@ -6,12 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
 import java.util.function.Function;
+import javax.annotation.Nullable;
 import org.hibernate.impl.AbstractSessionImpl;
 
 public final class EntityNameUtil {
 
   private EntityNameUtil() {}
 
+  @Nullable
   private static String bestGuessEntityName(Object session, Object entity) {
     if (entity == null) {
       return null;

@@ -14,10 +14,10 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlPa
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.springframework.lang.Nullable;
 
 public class RestTemplateInstrumentation implements TypeInstrumentation {
 

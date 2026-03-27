@@ -15,9 +15,8 @@ import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.Message;
 
-enum RocketMqProducerAttributeGetter
+final class RocketMqProducerAttributeGetter
     implements MessagingAttributesGetter<SendMessageContext, Void> {
-  INSTANCE;
 
   @Override
   public String getSystem(SendMessageContext request) {

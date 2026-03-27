@@ -28,7 +28,6 @@ plugins {
  */
 
 val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
-extra["testLatestDeps"] = testLatestDeps
 
 @CacheableRule
 abstract class TestLatestDepsRule : ComponentMetadataRule {

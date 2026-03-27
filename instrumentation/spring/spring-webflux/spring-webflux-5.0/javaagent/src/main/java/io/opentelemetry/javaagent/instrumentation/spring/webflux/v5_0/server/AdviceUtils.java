@@ -41,7 +41,7 @@ public final class AdviceUtils {
     }
   }
 
-  public static <T> Mono<T> wrapMono(Mono<T> mono, Context context) {
+  public static <T> Mono<T> wrapMono(Mono<T> mono, @Nullable Context context) {
     if (context == null) {
       return mono;
     }

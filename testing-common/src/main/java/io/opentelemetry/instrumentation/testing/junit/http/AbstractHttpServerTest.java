@@ -13,6 +13,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD_FROM_REQUEST_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
@@ -38,8 +39,10 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
 import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
 import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
+import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -88,9 +91,19 @@ import io.opentelemetry.testing.internal.io.netty.handler.codec.http.DefaultHttp
 import io.opentelemetry.testing.internal.io.netty.handler.codec.http.HttpClientCodec;
 import io.opentelemetry.testing.internal.io.netty.handler.codec.http.HttpObject;
 import io.opentelemetry.testing.internal.io.netty.handler.codec.http.HttpVersion;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
@@ -150,6 +163,26 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
           closure.run();
           return null;
         });
+  }
+
+  public static void bodyConsumer(ServerEndpoint endpoint, String body) {
+    assert Span.current().getSpanContext().isValid() : "Body consumer should have a parent span.";
+    GlobalTraceUtil.runWithSpan(
+        "body-consumer",
+        () -> {
+          endpoint.collectSpanAttributesFromBody(body);
+          return null;
+        });
+  }
+
+  public static String readRequestBody(InputStream inputStream) throws IOException {
+    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+    byte[] bytes = new byte[1024];
+    int read;
+    while ((read = inputStream.read(bytes)) >= 0) {
+      buffer.write(bytes, 0, read);
+    }
+    return buffer.toString("UTF-8");
   }
 
   protected AggregatedHttpRequest request(ServerEndpoint uri, String method) {
@@ -525,6 +558,169 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @Test
+  void httpBodyPipelining() throws Exception {
+    assumeTrue(options.testHttpBodyPipelining);
+    assumeFalse(options.useHttp2);
+
+    int count = 10;
+    List<String> responses = new ArrayList<>();
+    TextMapPropagator propagator = GlobalOpenTelemetry.getPropagators().getTextMapPropagator();
+
+    try (Socket socket = new Socket()) {
+      socket.connect(new InetSocketAddress(address.getHost(), port));
+      socket.setSoTimeout((int) SECONDS.toMillis(30));
+
+      OutputStream outputStream = socket.getOutputStream();
+      BufferedInputStream inputStream = new BufferedInputStream(socket.getInputStream());
+
+      for (int i = 0; i < count; i++) {
+        int index = i;
+        testing.runWithSpan(
+            "client " + index,
+            () -> {
+              Span.current().setAttribute(ServerEndpoint.ID_ATTRIBUTE_NAME, index);
+              writeChunkedRequest(outputStream, propagator, index, index == count - 1);
+            });
+      }
+      outputStream.flush();
+
+      for (int i = 0; i < count; i++) {
+        responses.add(readChunkedPipelineResponse(inputStream));
+      }
+    }
+
+    for (int i = 0; i < count; i++) {
+      assertThat(responses.get(i)).isEqualTo(Integer.toString(i));
+    }
+    assertHighConcurrencyWithRequestBody(count);
+  }
+
+  private void writeChunkedRequest(
+      OutputStream outputStream,
+      TextMapPropagator propagator,
+      int requestId,
+      boolean closeConnection)
+      throws IOException {
+    Map<String, String> headers = new HashMap<>();
+    propagator.inject(Context.current(), headers, Map::put);
+
+    StringBuilder requestBuilder = new StringBuilder();
+    requestBuilder
+        .append("POST ")
+        .append(INDEXED_CHILD_FROM_REQUEST_BODY.resolvePath(address).getPath())
+        .append(" HTTP/1.1\r\n")
+        .append("Host: ")
+        .append(address.getHost())
+        .append(":")
+        .append(port)
+        .append("\r\n")
+        .append("User-Agent: ")
+        .append(TEST_USER_AGENT)
+        .append("\r\n")
+        .append("X-Forwarded-For: ")
+        .append(TEST_CLIENT_IP)
+        .append("\r\n")
+        .append("Transfer-Encoding: chunked\r\n")
+        .append("Connection: ")
+        .append(closeConnection ? "close" : "keep-alive")
+        .append("\r\n");
+    for (Map.Entry<String, String> entry : headers.entrySet()) {
+      requestBuilder.append(entry.getKey()).append(": ").append(entry.getValue()).append("\r\n");
+    }
+    String body = Integer.toString(requestId);
+    requestBuilder
+        .append("\r\n")
+        .append(Integer.toHexString(body.length()))
+        .append("\r\n")
+        .append(body)
+        .append("\r\n0\r\n\r\n");
+    outputStream.write(requestBuilder.toString().getBytes(US_ASCII));
+  }
+
+  private static String readChunkedPipelineResponse(InputStream inputStream) throws IOException {
+    String statusLine = readAsciiLine(inputStream);
+    assertThat(statusLine).startsWith("HTTP/1.1 200");
+
+    int contentLength = -1;
+    boolean chunked = false;
+    String line = readAsciiLine(inputStream);
+    while (!line.isEmpty()) {
+      int separator = line.indexOf(':');
+      String headerName = line.substring(0, separator).trim();
+      String headerValue = line.substring(separator + 1).trim();
+      if (headerName.equalsIgnoreCase(HttpHeaderNames.CONTENT_LENGTH.toString())) {
+        contentLength = Integer.parseInt(headerValue);
+      }
+      if (headerName.equalsIgnoreCase("transfer-encoding")
+          && headerValue.equalsIgnoreCase("chunked")) {
+        chunked = true;
+      }
+      line = readAsciiLine(inputStream);
+    }
+
+    if (chunked) {
+      return readChunkedBody(inputStream);
+    }
+
+    if (contentLength < 0) {
+      throw new AssertionError("Missing content-length header");
+    }
+
+    byte[] body = new byte[contentLength];
+    readFully(inputStream, body);
+    return new String(body, US_ASCII);
+  }
+
+  private static String readChunkedBody(InputStream inputStream) throws IOException {
+    ByteArrayOutputStream body = new ByteArrayOutputStream();
+    while (true) {
+      String chunkSizeLine = readAsciiLine(inputStream);
+      int chunkSize = Integer.parseInt(chunkSizeLine.trim(), 16);
+      if (chunkSize == 0) {
+        // read trailing \r\n after the last chunk
+        readAsciiLine(inputStream);
+        break;
+      }
+      byte[] chunk = new byte[chunkSize];
+      readFully(inputStream, chunk);
+      body.write(chunk);
+      // read \r\n after chunk data
+      readAsciiLine(inputStream);
+    }
+    return body.toString("UTF-8");
+  }
+
+  private static String readAsciiLine(InputStream inputStream) throws IOException {
+    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+    while (true) {
+      int nextByte = inputStream.read();
+      if (nextByte < 0) {
+        throw new EOFException("Unexpected end of stream");
+      }
+      if (nextByte == '\n') {
+        byte[] bytes = buffer.toByteArray();
+        int length = bytes.length;
+        if (length > 0 && bytes[length - 1] == '\r') {
+          length--;
+        }
+        return new String(bytes, 0, length, US_ASCII);
+      }
+      buffer.write(nextByte);
+    }
+  }
+
+  private static void readFully(InputStream inputStream, byte[] bytes) throws IOException {
+    int offset = 0;
+    while (offset < bytes.length) {
+      int read = inputStream.read(bytes, offset, bytes.length - offset);
+      if (read < 0) {
+        throw new EOFException("Unexpected end of response body");
+      }
+      offset += read;
+    }
+  }
+
+  @Test
   void requestWithNonStandardHttpMethod() throws InterruptedException {
     assumeTrue(options.testNonStandardHttpMethod);
     // test uses http 1.1
@@ -667,6 +863,46 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                 span ->
                     assertIndexedControllerSpan(span, requestId)
                         .hasParent(trace.getSpan(parentIndex)));
+
+            trace.hasSpansSatisfyingExactly(spanAssertions);
+          });
+    }
+    testing.waitAndAssertTraces(assertions);
+  }
+
+  protected void assertHighConcurrencyWithRequestBody(int count) {
+    ServerEndpoint endpoint = INDEXED_CHILD_FROM_REQUEST_BODY;
+    List<Consumer<TraceAssert>> assertions = new ArrayList<>();
+    for (int i = 0; i < count; i++) {
+      assertions.add(
+          trace -> {
+            SpanData rootSpan = trace.getSpan(0);
+            int requestId = Integer.parseInt(rootSpan.getName().substring("client ".length()));
+
+            List<Consumer<SpanDataAssert>> spanAssertions = new ArrayList<>();
+            spanAssertions.add(
+                span ->
+                    span.hasName(rootSpan.getName())
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(longKey(ServerEndpoint.ID_ATTRIBUTE_NAME), requestId)));
+            spanAssertions.add(span -> assertIndexedBodyServerSpan(span).hasParent(rootSpan));
+
+            if (options.hasHandlerSpan.test(endpoint)) {
+              spanAssertions.add(
+                  span -> assertHandlerSpan(span, "POST", endpoint).hasParent(trace.getSpan(1)));
+            }
+
+            int parentIndex = spanAssertions.size() - 1;
+            int controllerIndex = spanAssertions.size();
+            spanAssertions.add(
+                span ->
+                    assertIndexedBodyControllerSpan(span).hasParent(trace.getSpan(parentIndex)));
+            spanAssertions.add(
+                span ->
+                    assertIndexedBodyConsumerSpan(span, requestId)
+                        .hasParent(trace.getSpan(controllerIndex)));
 
             trace.hasSpansSatisfyingExactly(spanAssertions);
           });
@@ -951,6 +1187,35 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   @CanIgnoreReturnValue
   protected SpanDataAssert assertIndexedControllerSpan(SpanDataAssert span, int requestId) {
     span.hasName("controller")
+        .hasKind(SpanKind.INTERNAL)
+        .hasAttributesSatisfyingExactly(
+            equalTo(longKey(ServerEndpoint.ID_ATTRIBUTE_NAME), requestId));
+    return span;
+  }
+
+  @CanIgnoreReturnValue
+  protected SpanDataAssert assertIndexedBodyServerSpan(SpanDataAssert span) {
+    ServerEndpoint endpoint = INDEXED_CHILD_FROM_REQUEST_BODY;
+    String method = "POST";
+    return assertServerSpan(span, method, endpoint, endpoint.status)
+        .hasAttributesSatisfying(equalTo(URL_PATH, endpoint.resolvePath(address).getPath()));
+  }
+
+  @CanIgnoreReturnValue
+  protected SpanDataAssert assertIndexedBodyControllerSpan(SpanDataAssert span) {
+    span.hasName("controller")
+        .hasKind(SpanKind.INTERNAL)
+        // The request id belongs on the nested body-consumer span only, not on the controller.
+        .satisfies(
+            spanData ->
+                assertThat(spanData.getAttributes().get(longKey(ServerEndpoint.ID_ATTRIBUTE_NAME)))
+                    .isNull());
+    return span;
+  }
+
+  @CanIgnoreReturnValue
+  protected SpanDataAssert assertIndexedBodyConsumerSpan(SpanDataAssert span, int requestId) {
+    span.hasName("body-consumer")
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
             equalTo(longKey(ServerEndpoint.ID_ATTRIBUTE_NAME), requestId));

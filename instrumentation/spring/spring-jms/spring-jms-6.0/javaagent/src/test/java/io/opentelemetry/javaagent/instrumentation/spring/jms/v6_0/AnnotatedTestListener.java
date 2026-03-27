@@ -13,17 +13,17 @@ import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
 
 @Component
-public class AnnotatedTestListener {
+class AnnotatedTestListener {
 
   private final CompletableFuture<String> receivedMessage;
 
   @Autowired
-  public AnnotatedTestListener(CompletableFuture<String> receivedMessage) {
+  AnnotatedTestListener(CompletableFuture<String> receivedMessage) {
     this.receivedMessage = receivedMessage;
   }
 
   @JmsListener(destination = "spring-jms-listener")
-  public void receiveMessage(String message) {
+  void receiveMessage(String message) {
     runWithSpan("consumer", () -> receivedMessage.complete(message));
   }
 }

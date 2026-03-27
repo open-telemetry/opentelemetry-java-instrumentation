@@ -25,7 +25,7 @@ testing {
       dependencies {
         implementation(project())
         implementation(project(":instrumentation:jetty-httpclient::jetty-httpclient-9.2:testing"))
-        val jettyVersion = if (findProperty("testLatestDeps") as Boolean) "9.4.43.v20210629" else "9.4.24.v20191120"
+        val jettyVersion = if (findProperty("testLatestDeps") == "true") "9.4.43.v20210629" else "9.4.24.v20191120"
         implementation("org.eclipse.jetty:jetty-client:$jettyVersion")
       }
     }

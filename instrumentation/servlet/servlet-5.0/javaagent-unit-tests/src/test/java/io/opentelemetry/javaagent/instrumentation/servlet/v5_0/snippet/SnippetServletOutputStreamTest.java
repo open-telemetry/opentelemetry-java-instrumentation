@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet;
 
 import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet.TestUtil.readFileAsBytes;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -19,6 +19,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 
@@ -37,7 +38,7 @@ class SnippetServletOutputStreamTest {
         new OutputStreamSnippetInjectionHelper(stringSupplier);
     boolean injected = helper.handleWrite(obj, out, html, 0, html.length);
     assertThat(obj.getHeadTagBytesSeen()).isEqualTo(-1);
-    assertThat(injected).isEqualTo(true);
+    assertThat(injected).isTrue();
 
     byte[] expectedHtml = readFileAsBytes("afterSnippetInjection.html");
     assertThat(out.getBytes()).isEqualTo(expectedHtml);
@@ -140,9 +141,45 @@ class SnippetServletOutputStreamTest {
         new OutputStreamSnippetInjectionHelper(stringSupplier);
     boolean injected = helper.handleWrite(obj, out, html, 0, html.length);
     assertThat(obj.getHeadTagBytesSeen()).isEqualTo(-1);
-    assertThat(injected).isEqualTo(true);
+    assertThat(injected).isTrue();
 
     byte[] expectedHtml = readFileAsBytes("afterSnippetInjectionWithOtherHeadStyle.html");
+    assertThat(out.getBytes()).isEqualTo(expectedHtml);
+  }
+
+  @Test
+  void testInjectionWhenWritingSliceFromLargerBuffer() throws IOException {
+    String snippet = "\n  <script type=\"text/javascript\"> Test </script>";
+    byte[] html = readFileAsBytes("beforeSnippetInjection.html");
+
+    InjectionState obj = createInjectionStateForTesting(snippet, UTF_8);
+    InMemoryServletOutputStream out = new InMemoryServletOutputStream();
+
+    Supplier<String> stringSupplier = () -> snippet;
+    OutputStreamSnippetInjectionHelper helper =
+        new OutputStreamSnippetInjectionHelper(stringSupplier);
+
+    // Simulate repeated write(byte[], off, len) calls that reuse a larger backing buffer.
+    int offset = 16;
+    int chunkSize = 8;
+    byte[] writeBuffer = new byte[offset + chunkSize];
+    Arrays.fill(writeBuffer, (byte) 'x');
+
+    boolean injected = false;
+    for (int sourceOffset = 0; sourceOffset < html.length; sourceOffset += chunkSize) {
+      int chunkLength = Math.min(chunkSize, html.length - sourceOffset);
+      System.arraycopy(html, sourceOffset, writeBuffer, offset, chunkLength);
+      boolean handled = helper.handleWrite(obj, out, writeBuffer, offset, chunkLength);
+      injected |= handled;
+      if (!handled) {
+        out.write(writeBuffer, offset, chunkLength);
+      }
+    }
+
+    assertThat(obj.getHeadTagBytesSeen()).isEqualTo(-1);
+    assertThat(injected).isTrue();
+
+    byte[] expectedHtml = readFileAsBytes("afterSnippetInjection.html");
     assertThat(out.getBytes()).isEqualTo(expectedHtml);
   }
 

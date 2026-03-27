@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.web.v6_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_SINGLETON;
@@ -44,14 +43,13 @@ public class WebApplicationContextInstrumentation implements TypeInstrumentation
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("postProcessBeanFactory"))
+        named("postProcessBeanFactory")
             .and(
                 takesArgument(
                     0,
                     named(
                         "org.springframework.beans.factory.config.ConfigurableListableBeanFactory"))),
-        WebApplicationContextInstrumentation.class.getName() + "$FilterInjectingAdvice");
+        getClass().getName() + "$FilterInjectingAdvice");
   }
 
   @SuppressWarnings("unused")

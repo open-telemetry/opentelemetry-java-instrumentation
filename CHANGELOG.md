@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### 🚫 Deprecations
+
+- Deprecated GraphQL builder methods `setSanitizeQuery()` and `setAddOperationNameToSpanName()`,
+  and deprecated config key `otel.instrumentation.graphql.add-operation-name-to-span-name.enabled`
+  in favor of `setQuerySanitizationEnabled()`, `setOperationNameInSpanNameEnabled()`, and
+  `otel.instrumentation.graphql.operation-name-in-span-name.enabled`
+
 ## Version 2.26.1 (2026-03-23)
 
 ### 🔒 Security fixes

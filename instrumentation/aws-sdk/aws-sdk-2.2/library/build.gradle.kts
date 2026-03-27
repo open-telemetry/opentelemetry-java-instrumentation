@@ -32,7 +32,7 @@ dependencies {
   testLibrary("software.amazon.awssdk:sfn:2.2.0")
 }
 
-val testLatestDeps = findProperty("testLatestDeps") as Boolean
+val testLatestDeps = findProperty("testLatestDeps") == "true"
 
 testing {
   suites {
@@ -74,7 +74,7 @@ tasks {
     // NB: If you'd like to change these, there is some cleanup work to be done, as most tests ignore this and
     // set the value directly (the "library" does not normally query it, only library-autoconfigure)
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", true)
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
   }
 
   val testStableSemconv by registering(Test::class) {

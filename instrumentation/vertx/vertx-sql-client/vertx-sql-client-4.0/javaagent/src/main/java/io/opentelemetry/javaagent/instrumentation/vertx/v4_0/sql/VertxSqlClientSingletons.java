@@ -13,6 +13,7 @@ import io.vertx.core.Future;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.impl.SqlClientBase;
+import javax.annotation.Nullable;
 
 public final class VertxSqlClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-sql-client-4.0";
@@ -25,6 +26,26 @@ public final class VertxSqlClientSingletons {
 
   private static final VirtualField<SqlClientBase<?>, SqlConnectOptions> connectOptionsField =
       VirtualField.find(SqlClientBase.class, SqlConnectOptions.class);
+
+  private static final VirtualField<SqlConnectOptions, String> connectOptionsDbSystem =
+      VirtualField.find(SqlConnectOptions.class, String.class);
+
+  public static void storeConnectOptionsDbSystem(
+      SqlConnectOptions connectOptions, String dbSystem) {
+    if (connectOptions != null) {
+      connectOptionsDbSystem.set(connectOptions, dbSystem);
+    }
+  }
+
+  @Nullable
+  public static String getConnectOptionsDbSystem(SqlConnectOptions connectOptions) {
+    if (connectOptions != null) {
+      return connectOptionsDbSystem.get(connectOptions);
+    }
+    // null when db system was not captured at pool creation time; callers should fall back
+    // to getDbSystemNameFromClassName() on the connect options instance
+    return null;
+  }
 
   public static SqlConnectOptions getSqlConnectOptions(SqlClientBase<?> sqlClientBase) {
     return connectOptionsField.get(sqlClientBase);

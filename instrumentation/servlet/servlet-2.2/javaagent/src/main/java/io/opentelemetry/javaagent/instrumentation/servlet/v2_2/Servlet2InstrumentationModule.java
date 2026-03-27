@@ -30,7 +30,12 @@ public class Servlet2InstrumentationModule extends InstrumentationModule
   // this is required to make sure servlet 2 instrumentation won't apply to servlet 3
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return not(hasClassesNamed("javax.servlet.AsyncEvent", "javax.servlet.AsyncListener"));
+    return not(
+        hasClassesNamed(
+            // added in 3.0
+            "javax.servlet.AsyncEvent",
+            // added in 3.0
+            "javax.servlet.AsyncListener"));
   }
 
   @Override

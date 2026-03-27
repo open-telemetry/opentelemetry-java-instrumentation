@@ -19,6 +19,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil;
 import io.vertx.core.internal.PromiseInternal;
+import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.impl.QueryExecutorUtil;
 import io.vertx.sqlclient.internal.PreparedStatement;
 import javax.annotation.Nullable;
@@ -101,9 +102,16 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
           return new AdviceScope(callDepth);
         }
 
+        SqlConnectOptions connectOptions = QueryExecutorUtil.getConnectOptions(queryExecutor);
+        // connectOptions is null when the pool was created via JDBCPool which bypasses the
+        // Pool.pool() factory, in that case we skip vertx-sql-client span creation and let JDBC
+        // instrumentation handle it
+        if (connectOptions == null) {
+          return new AdviceScope(callDepth);
+        }
+        String dbSystem = VertxSqlClientSingletons.getConnectOptionsDbSystem(connectOptions);
         VertxSqlClientRequest otelRequest =
-            new VertxSqlClientRequest(
-                sql, QueryExecutorUtil.getConnectOptions(queryExecutor), preparedStatement);
+            new VertxSqlClientRequest(sql, connectOptions, preparedStatement, dbSystem);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, otelRequest)) {
           return new AdviceScope(callDepth);

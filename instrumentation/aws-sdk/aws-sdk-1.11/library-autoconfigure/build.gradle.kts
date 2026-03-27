@@ -51,7 +51,7 @@ tasks {
   }
 }
 
-if (!(findProperty("testLatestDeps") as Boolean)) {
+if (!(findProperty("testLatestDeps") == "true")) {
   configurations.testRuntimeClasspath {
     resolutionStrategy {
       eachDependency {

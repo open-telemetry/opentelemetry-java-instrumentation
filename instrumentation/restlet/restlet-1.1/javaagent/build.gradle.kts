@@ -40,8 +40,10 @@ dependencies {
   library("com.noelios.restlet:com.noelios.restlet:1.1.5")
 
   testImplementation(project(":instrumentation:restlet:restlet-1.1:testing"))
+
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
+  testInstrumentation(project(":instrumentation:restlet:restlet-2.0:javaagent"))
 
   latestDepTestLibrary("org.restlet:org.restlet:1.+") // see restlet-2.0 module
 }

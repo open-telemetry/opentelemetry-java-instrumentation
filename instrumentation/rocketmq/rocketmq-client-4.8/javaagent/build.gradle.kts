@@ -16,6 +16,7 @@ dependencies {
 
   implementation(project(":instrumentation:rocketmq:rocketmq-client-4.8:library"))
 
+  testInstrumentation(project(":instrumentation:rocketmq:rocketmq-client-5.0:javaagent"))
   testImplementation(project(":instrumentation:rocketmq:rocketmq-client-4.8:testing"))
 
   testLibrary("org.apache.rocketmq:rocketmq-test:4.8.0")
@@ -23,9 +24,9 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
 
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
 
     // required on jdk17
     jvmArgs("--add-opens=java.base/sun.nio.ch=ALL-UNNAMED")

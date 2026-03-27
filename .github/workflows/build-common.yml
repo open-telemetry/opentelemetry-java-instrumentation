@@ -42,7 +42,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
         with:
-          cache-read-only: ${{ inputs.cache-read-only }}
+          cache-read-only: true
 
       - name: Spotless
         env:
@@ -66,7 +66,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
         with:
-          cache-read-only: ${{ inputs.cache-read-only }}
+          cache-read-only: true
 
       - name: Generate license report
         env:
@@ -107,7 +107,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
         with:
-          cache-read-only: ${{ inputs.cache-read-only }}
+          cache-read-only: true
 
       - name: Generate FOSSA configuration
         run: ./gradlew generateFossaConfiguration
@@ -246,9 +246,9 @@ jobs:
           - 11
           - 17
           - 21
-          - 25 # renovate(java-version)
+          - 25
           - 25-deny-unsafe
-          - 26-ea
+          - 26 # renovate(java-version)
         vm:
           - hotspot
           - openj9
@@ -263,8 +263,6 @@ jobs:
         exclude:
           - vm: ${{ inputs.skip-openj9-tests && 'openj9' || '' }}
           - test-java-version: 25-deny-unsafe
-            vm: openj9
-          - test-java-version: 26-ea
             vm: openj9
       fail-fast: false
     steps:
@@ -303,8 +301,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
         with:
-          # only push cache for one matrix option since github action cache space is limited
-          cache-read-only: ${{ inputs.cache-read-only || matrix.test-java-version != 11 || matrix.vm != 'hotspot' }}
+          cache-read-only: true
 
       - name: List tests
         env:
@@ -444,8 +441,7 @@ jobs:
       - name: Set up Gradle cache
         uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
         with:
-          # only push cache for one matrix option per OS since github action cache space is limited
-          cache-read-only: ${{ inputs.cache-read-only || matrix.smoke-test-suite != 'tomcat' }}
+          cache-read-only: true
 
       - name: Build
         env:
@@ -523,7 +519,7 @@ jobs:
       - name: Set up Gradle cache
         uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
         with:
-          cache-read-only: ${{ inputs.cache-read-only }}
+          cache-read-only: true
 
       - name: Local publish of artifacts
         run: ./gradlew publishToMavenLocal

@@ -32,7 +32,7 @@ val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
     // The agent context debug mechanism isn't compatible with the bridge approach which may add a
     // gRPC context to the root.
     jvmArgs("-Dotel.javaagent.experimental.thread-propagation-debugger.enabled=false")
@@ -99,7 +99,7 @@ tasks {
   }
 }
 
-if (!(findProperty("testLatestDeps") as Boolean)) {
+if (!(findProperty("testLatestDeps") == "true")) {
   configurations.testRuntimeClasspath {
     resolutionStrategy {
       eachDependency {
@@ -111,7 +111,7 @@ if (!(findProperty("testLatestDeps") as Boolean)) {
     }
   }
 
-  if (findProperty("denyUnsafe") as Boolean) {
+  if (findProperty("denyUnsafe") == "true") {
     tasks.withType<Test>().configureEach {
       enabled = false
     }

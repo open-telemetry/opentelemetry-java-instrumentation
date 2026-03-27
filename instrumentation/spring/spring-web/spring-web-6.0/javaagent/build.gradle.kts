@@ -18,6 +18,7 @@ dependencies {
   library("org.springframework:spring-web:6.0.0")
 
   testInstrumentation(project(":instrumentation:http-url-connection:javaagent"))
+  testInstrumentation(project(":instrumentation:spring:spring-web:spring-web-3.1:javaagent"))
 }
 
 // spring 6 requires java 17

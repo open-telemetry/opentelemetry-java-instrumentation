@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -27,8 +26,7 @@ public class RocketMqConsumerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("start")).and(takesArguments(0)),
-        RocketMqConsumerInstrumentation.class.getName() + "$StartAdvice");
+        named("start").and(takesArguments(0)), getClass().getName() + "$StartAdvice");
   }
 
   @SuppressWarnings("unused")

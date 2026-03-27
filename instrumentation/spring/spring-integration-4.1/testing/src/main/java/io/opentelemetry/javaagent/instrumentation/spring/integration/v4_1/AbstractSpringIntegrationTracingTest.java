@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,14 +42,14 @@ abstract class AbstractSpringIntegrationTracingTest {
 
   ConfigurableApplicationContext applicationContext;
 
-  public AbstractSpringIntegrationTracingTest(
+  AbstractSpringIntegrationTracingTest(
       InstrumentationExtension testing, Class<?> additionalContextClass) {
     this.testing = testing;
     this.additionalContextClass = additionalContextClass;
   }
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     List<Class<?>> contextClasses = new ArrayList<>();
     contextClasses.add(MessageChannelsConfig.class);
     if (additionalContextClass != null) {
@@ -62,7 +63,7 @@ abstract class AbstractSpringIntegrationTracingTest {
   }
 
   @AfterEach
-  public void tearDown() {
+  void tearDown() {
     if (applicationContext != null) {
       applicationContext.close();
     }
@@ -75,7 +76,7 @@ abstract class AbstractSpringIntegrationTracingTest {
         "executorChannel,executorChannel process"
       },
       delimiter = ',')
-  public void shouldPropagateContext(String channelName, String interceptorSpanName) {
+  void shouldPropagateContext(String channelName, String interceptorSpanName) {
     SubscribableChannel channel =
         applicationContext.getBean(channelName, SubscribableChannel.class);
 
@@ -225,10 +226,15 @@ abstract class AbstractSpringIntegrationTracingTest {
       return problematicSharedChannel;
     }
 
+    @Bean(destroyMethod = "shutdownNow")
+    public ExecutorService executorChannelExecutor() {
+      return Executors.newSingleThreadExecutor();
+    }
+
     @Bean
     public SubscribableChannel executorChannel(GlobalChannelInterceptorWrapper otelInterceptor) {
       ExecutorSubscribableChannel channel =
-          new ExecutorSubscribableChannel(Executors.newSingleThreadExecutor());
+          new ExecutorSubscribableChannel(executorChannelExecutor());
       if (!Boolean.getBoolean("testLatestDeps")) {
         // spring does not inject the interceptor in 4.1 because ExecutorSubscribableChannel isn't
         // ChannelInterceptorAware
