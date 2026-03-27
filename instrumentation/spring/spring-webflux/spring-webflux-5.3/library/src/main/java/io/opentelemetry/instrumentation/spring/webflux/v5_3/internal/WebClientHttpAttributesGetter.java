@@ -17,10 +17,8 @@ import org.springframework.web.reactive.function.client.ClientResponse;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public enum WebClientHttpAttributesGetter
+public final class WebClientHttpAttributesGetter
     implements HttpClientAttributesGetter<ClientRequest, ClientResponse> {
-  INSTANCE;
-
   @Override
   public String getUrlFull(ClientRequest request) {
     return request.url().toString();

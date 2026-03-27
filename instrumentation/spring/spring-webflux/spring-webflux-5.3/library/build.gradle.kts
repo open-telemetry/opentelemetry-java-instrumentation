@@ -19,7 +19,7 @@ dependencies {
 
 val latestDepTest = findProperty("testLatestDeps") == "true"
 
-// spring 6 (which spring-kafka 3.+ uses) requires java 17
+// spring 6 based latest dependencies require java 17
 if (latestDepTest) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_17)
@@ -36,7 +36,7 @@ if (!latestDepTest) {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 

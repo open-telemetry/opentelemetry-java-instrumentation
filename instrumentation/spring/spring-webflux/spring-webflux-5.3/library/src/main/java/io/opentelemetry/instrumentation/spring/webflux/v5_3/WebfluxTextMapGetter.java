@@ -13,9 +13,7 @@ import java.util.Iterator;
 import javax.annotation.Nullable;
 import org.springframework.web.server.ServerWebExchange;
 
-enum WebfluxTextMapGetter implements TextMapGetter<ServerWebExchange> {
-  INSTANCE;
-
+final class WebfluxTextMapGetter implements TextMapGetter<ServerWebExchange> {
   @Override
   public Iterable<String> keys(ServerWebExchange exchange) {
     return HeaderUtil.getKeys(exchange.getRequest().getHeaders());
