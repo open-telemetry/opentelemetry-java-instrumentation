@@ -521,3 +521,4 @@ twilio-6.6:javaagent
 undertow-1.4:javaagent
 vaadin-14.2:javaagent
 vaadin-14.2:testing
+vertx-http-client-4.0:javaagent
