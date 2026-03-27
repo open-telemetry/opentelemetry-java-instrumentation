@@ -17,7 +17,7 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 /**
- * A {@link WebFilter} that captures {@code endpoint.*} semantic attributes from the {@link
+ * A {@link WebFilter} that captures {@code enduser.*} semantic attributes from the {@link
  * org.springframework.security.core.Authentication} in the current {@link
  * org.springframework.security.core.context.SecurityContext} retrieved from {@link
  * ReactiveSecurityContextHolder}.
@@ -27,7 +27,7 @@ import reactor.core.publisher.Mono;
  * org.springframework.security.core.context.SecurityContext} in the {@link
  * org.springframework.security.core.context.ReactiveSecurityContextHolder}.
  */
-public class EnduserAttributesCapturingWebFilter implements WebFilter {
+public final class EnduserAttributesCapturingWebFilter implements WebFilter {
 
   private final EnduserAttributesCapturer capturer;
 
