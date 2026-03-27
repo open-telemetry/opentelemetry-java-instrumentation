@@ -517,3 +517,4 @@ quarkus-resteasy-reactive:quarkus-common-testing
 tomcat-common:javaagent
 tomcat-jdbc:javaagent
 undertow-1.4:bootstrap
+twilio-6.6:javaagent
