@@ -12,8 +12,7 @@ import org.springframework.kafka.listener.ListenerExecutionFailedException;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public enum SpringKafkaErrorCauseExtractor implements ErrorCauseExtractor {
-  INSTANCE;
+public final class SpringKafkaErrorCauseExtractor implements ErrorCauseExtractor {
 
   @Override
   public Throwable extract(Throwable error) {

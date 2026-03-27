@@ -65,7 +65,7 @@ public final class SpringKafkaTelemetryBuilder {
             .setCapturedHeaders(capturedHeaders)
             .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
             .setMessagingReceiveTelemetryEnabled(messagingReceiveInstrumentationEnabled)
-            .setErrorCauseExtractor(SpringKafkaErrorCauseExtractor.INSTANCE);
+            .setErrorCauseExtractor(new SpringKafkaErrorCauseExtractor());
 
     return new SpringKafkaTelemetry(
         factory.createConsumerProcessInstrumenter(), factory.createBatchProcessInstrumenter());
