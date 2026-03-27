@@ -31,12 +31,12 @@ class SnippetServletOutputStreamTest {
     InjectionState obj = createInjectionStateForTesting(snippet, UTF_8);
     InMemoryServletOutputStream out = new InMemoryServletOutputStream();
 
-    Supplier<String> stringSupplier = snippet::toString;
+    Supplier<String> stringSupplier = () -> snippet;
     OutputStreamSnippetInjectionHelper helper =
         new OutputStreamSnippetInjectionHelper(stringSupplier);
     boolean injected = helper.handleWrite(obj, out, html, 0, html.length);
     assertThat(obj.getHeadTagBytesSeen()).isEqualTo(-1);
-    assertThat(injected).isEqualTo(true);
+    assertThat(injected).isTrue();
 
     byte[] expectedHtml = readFileAsBytes("afterSnippetInjection.html");
     assertThat(out.getBytes()).isEqualTo(expectedHtml);
@@ -50,7 +50,7 @@ class SnippetServletOutputStreamTest {
     InjectionState obj = createInjectionStateForTesting(snippet, UTF_8);
     InMemoryServletOutputStream out = new InMemoryServletOutputStream();
 
-    Supplier<String> stringSupplier = snippet::toString;
+    Supplier<String> stringSupplier = () -> snippet;
     OutputStreamSnippetInjectionHelper helper =
         new OutputStreamSnippetInjectionHelper(stringSupplier);
     boolean injected = helper.handleWrite(obj, out, html, 0, html.length);
@@ -68,7 +68,7 @@ class SnippetServletOutputStreamTest {
 
     InjectionState obj = createInjectionStateForTesting(snippet, UTF_8);
     InMemoryServletOutputStream out = new InMemoryServletOutputStream();
-    Supplier<String> stringSupplier = snippet::toString;
+    Supplier<String> stringSupplier = () -> snippet;
     OutputStreamSnippetInjectionHelper helper =
         new OutputStreamSnippetInjectionHelper(stringSupplier);
     boolean injected = helper.handleWrite(obj, out, html, 0, html.length);
@@ -87,7 +87,7 @@ class SnippetServletOutputStreamTest {
     InjectionState obj = createInjectionStateForTesting(snippet, UTF_8);
     InMemoryServletOutputStream out = new InMemoryServletOutputStream();
 
-    Supplier<String> stringSupplier = snippet::toString;
+    Supplier<String> stringSupplier = () -> snippet;
     OutputStreamSnippetInjectionHelper helper =
         new OutputStreamSnippetInjectionHelper(stringSupplier);
     boolean injected =
@@ -133,12 +133,12 @@ class SnippetServletOutputStreamTest {
     InjectionState obj = createInjectionStateForTesting(snippet, UTF_8);
     InMemoryServletOutputStream out = new InMemoryServletOutputStream();
 
-    Supplier<String> stringSupplier = snippet::toString;
+    Supplier<String> stringSupplier = () -> snippet;
     OutputStreamSnippetInjectionHelper helper =
         new OutputStreamSnippetInjectionHelper(stringSupplier);
     boolean injected = helper.handleWrite(obj, out, html, 0, html.length);
     assertThat(obj.getHeadTagBytesSeen()).isEqualTo(-1);
-    assertThat(injected).isEqualTo(true);
+    assertThat(injected).isTrue();
 
     byte[] expectedHtml = readFileAsBytes("afterSnippetInjectionWithOtherHeadStyle.html");
     assertThat(out.getBytes()).isEqualTo(expectedHtml);

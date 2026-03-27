@@ -62,6 +62,7 @@ public final class HttpServerTestOptions {
   boolean testCaptureHttpHeaders = true;
   boolean testCaptureRequestParameters = false;
   boolean testHttpPipelining = true;
+  boolean testHttpBodyPipelining = false;
   boolean testNonStandardHttpMethod = true;
   boolean verifyServerSpanEndTime = true;
   boolean useHttp2 = false;
@@ -204,6 +205,12 @@ public final class HttpServerTestOptions {
   @CanIgnoreReturnValue
   public HttpServerTestOptions setTestHttpPipelining(boolean testHttpPipelining) {
     this.testHttpPipelining = testHttpPipelining;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setTestHttpBodyPipelining(boolean testHttpBodyPipelining) {
+    this.testHttpBodyPipelining = testHttpBodyPipelining;
     return this;
   }
 

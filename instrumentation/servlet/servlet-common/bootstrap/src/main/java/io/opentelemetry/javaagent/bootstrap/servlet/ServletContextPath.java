@@ -35,7 +35,7 @@ public final class ServletContextPath {
     }
     String contextPath = contextPathExtractor.apply(request);
     if (contextPath == null) {
-      // context path isn't know yet
+      // context path isn't known yet
       return context;
     }
     if (contextPath.isEmpty() || contextPath.equals("/")) {

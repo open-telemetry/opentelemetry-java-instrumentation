@@ -49,7 +49,7 @@ abstract class WithSpanAspect {
     instrumenter =
         Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, JoinPointRequest::spanName)
             .addAttributesExtractor(
-                CodeAttributesExtractor.create(JointPointCodeAttributesExtractor.INSTANCE))
+                CodeAttributesExtractor.create(new JoinPointCodeAttributesExtractor()))
             .addAttributesExtractor(
                 MethodSpanAttributesExtractor.create(
                     JoinPointRequest::method,

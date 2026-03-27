@@ -48,7 +48,7 @@ tasks {
   }
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 if (!latestDepTest) {
   // https://bugs.openjdk.org/browse/JDK-8320431
   otelJava {

@@ -12,15 +12,11 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.hibernate.SessionInfo;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.hibernate.Session;
-import org.hibernate.StatelessSession;
 
 public class SessionFactoryInstrumentation implements TypeInstrumentation {
 
@@ -51,16 +47,7 @@ public class SessionFactoryInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void openSession(@Advice.Return Object session) {
-
-      if (session instanceof Session) {
-        VirtualField<Session, SessionInfo> virtualField =
-            VirtualField.find(Session.class, SessionInfo.class);
-        virtualField.set((Session) session, new SessionInfo());
-      } else if (session instanceof StatelessSession) {
-        VirtualField<StatelessSession, SessionInfo> virtualField =
-            VirtualField.find(StatelessSession.class, SessionInfo.class);
-        virtualField.set((StatelessSession) session, new SessionInfo());
-      }
+      SessionUtil.setSessionInfo(session);
     }
   }
 }

@@ -48,6 +48,7 @@ public class GarbageCollector {
   public static final List<Double> GC_DURATION_BUCKETS =
       unmodifiableList(asList(0.01, 0.1, 1., 10.));
 
+  // copied from JvmIncubatingAttributes
   private static final AttributeKey<String> JVM_GC_CAUSE = AttributeKey.stringKey("jvm.gc.cause");
 
   private static final NotificationFilter GC_FILTER =

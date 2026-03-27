@@ -11,6 +11,7 @@ import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.EN
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
@@ -32,14 +33,16 @@ import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import java.security.Principal;
 import java.util.List;
 import java.util.function.Function;
+import java.util.logging.Logger;
 
 public abstract class BaseServletHelper<REQUEST, RESPONSE> {
+  private static final Logger logger = Logger.getLogger(BaseServletHelper.class.getName());
+
   private static final List<String> CAPTURE_REQUEST_PARAMETERS =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
           .getScalarList("capture_request_parameters/development", String.class, emptyList());
-  private static final boolean ADD_TRACE_ID_REQUEST_ATTRIBUTE =
-      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
-          .getBoolean("add_trace_id_request_attribute/development", true);
+  private static final boolean TRACE_ID_REQUEST_ATTRIBUTE_ENABLED =
+      readTraceIdRequestAttributeEnabled();
 
   protected final Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
       instrumenter;
@@ -61,6 +64,27 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
             : null;
   }
 
+  private static boolean readTraceIdRequestAttributeEnabled() {
+    DeclarativeConfigProperties config =
+        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet");
+    Boolean deprecatedTraceIdRequestAttributeEnabled =
+        config.getBoolean("add_trace_id_request_attribute/development");
+    if (deprecatedTraceIdRequestAttributeEnabled != null) {
+      logger.warning(
+          "The otel.instrumentation.servlet.experimental.add-trace-id-request-attribute"
+              + " setting is deprecated and will be removed in a future version."
+              + " Use otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled"
+              + " instead.");
+    }
+    return config
+        .get("trace_id_request_attribute/development")
+        .getBoolean(
+            "enabled",
+            deprecatedTraceIdRequestAttributeEnabled != null
+                ? deprecatedTraceIdRequestAttributeEnabled
+                : true);
+  }
+
   public boolean shouldStart(Context parentContext, ServletRequestContext<REQUEST> requestContext) {
     return instrumenter.shouldStart(parentContext, requestContext);
   }
@@ -80,7 +104,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   }
 
   private void addRequestAttributes(REQUEST request, Context context) {
-    if (!ADD_TRACE_ID_REQUEST_ATTRIBUTE) {
+    if (!TRACE_ID_REQUEST_ATTRIBUTE_ENABLED) {
       return;
     }
 

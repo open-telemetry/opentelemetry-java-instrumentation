@@ -149,7 +149,10 @@ class TomcatServlet5WebXmlFilterTest {
         (HttpURLConnection)
             URI.create("http://localhost:" + port + "/app/users/123").toURL().openConnection();
     int responseCode = connection.getResponseCode();
-    String body = readFully(connection.getInputStream());
+    String body;
+    try (InputStream inputStream = connection.getInputStream()) {
+      body = readFully(inputStream);
+    }
     connection.disconnect();
 
     assertThat(responseCode).isEqualTo(200);

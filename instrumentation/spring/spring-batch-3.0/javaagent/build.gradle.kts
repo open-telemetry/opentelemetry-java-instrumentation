@@ -54,7 +54,6 @@ tasks {
       excludeTestsMatching("*CustomSpanEventTest")
     }
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
     systemProperty("metadataConfig", "otel.instrumentation.spring-batch.experimental-span-attributes=true")
   }
 
@@ -63,7 +62,8 @@ tasks {
   }
 
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
     jvmArgs("-Dotel.instrumentation.spring-batch.enabled=true")
     // TODO run tests both with and without experimental span attributes
     jvmArgs("-Dotel.instrumentation.spring-batch.experimental-span-attributes=true")

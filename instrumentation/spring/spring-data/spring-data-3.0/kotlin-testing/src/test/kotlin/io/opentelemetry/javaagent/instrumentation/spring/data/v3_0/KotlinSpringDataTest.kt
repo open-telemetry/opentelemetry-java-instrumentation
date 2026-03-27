@@ -27,24 +27,24 @@ class KotlinSpringDataTest {
     val testing = AgentInstrumentationExtension.create()
   }
 
-  private var applicationContext: ConfigurableApplicationContext? = null
-  private var customerRepository: CustomerRepository? = null
+  private lateinit var applicationContext: ConfigurableApplicationContext
+  private lateinit var customerRepository: CustomerRepository
 
   @BeforeAll
   fun setUp() {
     applicationContext = AnnotationConfigApplicationContext(PersistenceConfig::class.java)
-    customerRepository = applicationContext!!.getBean(CustomerRepository::class.java)
+    customerRepository = applicationContext.getBean(CustomerRepository::class.java)
   }
 
   @AfterAll
   fun cleanUp() {
-    applicationContext!!.close()
+    applicationContext.close()
   }
 
   @Test
   fun `trace findById`() {
     runBlocking {
-      val customer = customerRepository?.findById(1)
+      val customer = customerRepository.findById(1)
       Assertions.assertThat(customer?.name).isEqualTo("Name")
     }
 

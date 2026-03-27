@@ -9,6 +9,9 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.OperationNameUtil.getEntityName;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.OperationNameUtil.getSessionMethodOperationName;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Hibernate6Singletons.COMMON_QUERY_CONTRACT_SESSION_INFO;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Hibernate6Singletons.SHARED_SESSION_CONTRACT_SESSION_INFO;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Hibernate6Singletons.TRANSACTION_SESSION_INFO;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Hibernate6Singletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -17,7 +20,6 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -100,9 +102,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
         return null;
       }
 
-      VirtualField<SharedSessionContract, SessionInfo> virtualField =
-          VirtualField.find(SharedSessionContract.class, SessionInfo.class);
-      SessionInfo sessionInfo = virtualField.get(session);
+      SessionInfo sessionInfo = SHARED_SESSION_CONTRACT_SESSION_INFO.get(session);
 
       Context parentContext = Java8BytecodeBridge.currentContext();
       String entityName =
@@ -132,12 +132,8 @@ public class SessionInstrumentation implements TypeInstrumentation {
       }
       CommonQueryContract query = (CommonQueryContract) queryObject;
 
-      VirtualField<SharedSessionContract, SessionInfo> sessionVirtualField =
-          VirtualField.find(SharedSessionContract.class, SessionInfo.class);
-      VirtualField<CommonQueryContract, SessionInfo> queryVirtualField =
-          VirtualField.find(CommonQueryContract.class, SessionInfo.class);
-
-      queryVirtualField.set(query, sessionVirtualField.get(session));
+      COMMON_QUERY_CONTRACT_SESSION_INFO.set(
+          query, SHARED_SESSION_CONTRACT_SESSION_INFO.get(session));
     }
   }
 
@@ -148,12 +144,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
     public static void getTransaction(
         @Advice.This SharedSessionContract session, @Advice.Return Transaction transaction) {
 
-      VirtualField<SharedSessionContract, SessionInfo> sessionVirtualField =
-          VirtualField.find(SharedSessionContract.class, SessionInfo.class);
-      VirtualField<Transaction, SessionInfo> transactionVirtualField =
-          VirtualField.find(Transaction.class, SessionInfo.class);
-
-      transactionVirtualField.set(transaction, sessionVirtualField.get(session));
+      TRANSACTION_SESSION_INFO.set(transaction, SHARED_SESSION_CONTRACT_SESSION_INFO.get(session));
     }
   }
 }

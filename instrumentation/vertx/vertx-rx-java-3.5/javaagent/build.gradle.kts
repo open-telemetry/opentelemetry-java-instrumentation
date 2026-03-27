@@ -27,7 +27,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:vertx:vertx-web-3.0:javaagent"))
 }
 
-val testLatestDeps = findProperty("testLatestDeps") as Boolean
+val testLatestDeps = findProperty("testLatestDeps") == "true"
 
 testing {
   suites {

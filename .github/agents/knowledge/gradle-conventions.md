@@ -174,7 +174,7 @@ should apply to all tasks. If so, move them to `withType<Test>().configureEach`.
 ```kotlin
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
     // ... other properties common to all test tasks
   }
 

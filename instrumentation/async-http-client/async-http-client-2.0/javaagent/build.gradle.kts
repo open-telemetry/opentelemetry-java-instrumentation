@@ -20,7 +20,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:async-http-client:async-http-client-1.9:javaagent"))
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 val testJavaVersion =
   gradle.startParameter.projectProperties["testJavaVersion"]?.let(JavaVersion::toVersion)
     ?: JavaVersion.current()
@@ -43,7 +43,7 @@ tasks {
       enabled = false
     }
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
   val testStableSemconv by registering(Test::class) {

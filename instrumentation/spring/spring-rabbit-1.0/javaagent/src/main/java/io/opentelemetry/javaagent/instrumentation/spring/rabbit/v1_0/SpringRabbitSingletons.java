@@ -20,7 +20,7 @@ public final class SpringRabbitSingletons {
   private static final Instrumenter<Message, Void> INSTRUMENTER;
 
   static {
-    SpringRabbitMessageAttributesGetter getter = SpringRabbitMessageAttributesGetter.INSTANCE;
+    SpringRabbitMessageAttributesGetter getter = new SpringRabbitMessageAttributesGetter();
     MessageOperation operation = MessageOperation.PROCESS;
 
     INSTRUMENTER =
@@ -32,7 +32,7 @@ public final class SpringRabbitSingletons {
                 MessagingAttributesExtractor.builder(getter, operation)
                     .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
                     .build())
-            .buildConsumerInstrumenter(MessageHeaderGetter.INSTANCE);
+            .buildConsumerInstrumenter(new MessageHeaderGetter());
   }
 
   public static Instrumenter<Message, Void> instrumenter() {

@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD_FROM_REQUEST_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
@@ -135,6 +136,20 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
     contexts.add(context);
     context =
         server.createContext(
+            INDEXED_CHILD_FROM_REQUEST_BODY.getPath(),
+            ctx ->
+                testing()
+                    .runWithSpan(
+                        "controller",
+                        () -> {
+                          String requestBody = readRequestBody(ctx.getRequestBody());
+                          bodyConsumer(INDEXED_CHILD_FROM_REQUEST_BODY, requestBody);
+                          sendResponse(
+                              ctx, INDEXED_CHILD_FROM_REQUEST_BODY.getStatus(), requestBody);
+                        }));
+    contexts.add(context);
+    context =
+        server.createContext(
             "/captureHeaders",
             ctx ->
                 testing()
@@ -182,6 +197,8 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
     // filter isn't called for non-standard method
     options.disableTestNonStandardHttpMethod();
     options.setTestHttpPipelining(
+        Double.parseDouble(System.getProperty("java.specification.version")) >= 21);
+    options.setTestHttpBodyPipelining(
         Double.parseDouble(System.getProperty("java.specification.version")) >= 21);
     options.setExpectedHttpRoute(
         (endpoint, method) -> {

@@ -56,7 +56,7 @@ public abstract class AbstractTomcatServlet5Test extends AbstractServlet5Test<To
           ERROR.getStatus(),
           ERROR.getBody(),
           false);
-  private TestAccessLogValve accessLogValue;
+  private TestAccessLogValve accessLogValve;
 
   @TempDir private static File tempDir;
 
@@ -110,8 +110,8 @@ public abstract class AbstractTomcatServlet5Test extends AbstractServlet5Test<To
 
     ((StandardHost) tomcatServer.getHost())
         .setErrorReportValveClass(ErrorHandlerValve.class.getName());
-    accessLogValue = new TestAccessLogValve();
-    tomcatServer.getHost().getPipeline().addValve(accessLogValue);
+    accessLogValve = new TestAccessLogValve();
+    tomcatServer.getHost().getPipeline().addValve(accessLogValve);
 
     tomcatServer.start();
 
@@ -122,7 +122,7 @@ public abstract class AbstractTomcatServlet5Test extends AbstractServlet5Test<To
 
   @BeforeEach
   void setUp() {
-    accessLogValue.getLoggedIds().clear();
+    accessLogValve.getLoggedIds().clear();
     testing().clearAllExportedData();
   }
 
@@ -153,12 +153,12 @@ public abstract class AbstractTomcatServlet5Test extends AbstractServlet5Test<To
               assertThat(response.contentUtf8()).isEqualTo(ACCESS_LOG_SUCCESS.getBody());
             });
 
-    accessLogValue.waitForLoggedIds(count);
-    assertThat(accessLogValue.getLoggedIds().size()).isEqualTo(count);
+    accessLogValve.waitForLoggedIds(count);
+    assertThat(accessLogValve.getLoggedIds()).hasSize(count);
     List<String> loggedTraces =
-        accessLogValue.getLoggedIds().stream().map(Map.Entry::getKey).collect(toList());
+        accessLogValve.getLoggedIds().stream().map(Map.Entry::getKey).collect(toList());
     List<String> loggedSpans =
-        accessLogValue.getLoggedIds().stream().map(Map.Entry::getValue).collect(toList());
+        accessLogValve.getLoggedIds().stream().map(Map.Entry::getValue).collect(toList());
 
     testing()
         .waitAndAssertTraces(
@@ -201,7 +201,7 @@ public abstract class AbstractTomcatServlet5Test extends AbstractServlet5Test<To
                   .hasParent(trace.getSpan(1)));
     }
 
-    accessLogValue.waitForLoggedIds(1);
+    accessLogValve.waitForLoggedIds(1);
     testing()
         .waitAndAssertTraces(
             trace -> {
@@ -210,7 +210,7 @@ public abstract class AbstractTomcatServlet5Test extends AbstractServlet5Test<To
                       .map(e -> (Consumer<SpanDataAssert>) span -> e.accept(span, trace))
                       .collect(toList()));
               SpanData span = trace.getSpan(0);
-              Map.Entry<String, String> entry = accessLogValue.getLoggedIds().get(0);
+              Map.Entry<String, String> entry = accessLogValve.getLoggedIds().get(0);
               assertThat(entry.getKey()).isEqualTo(span.getTraceId());
               assertThat(entry.getValue()).isEqualTo(span.getSpanId());
             });

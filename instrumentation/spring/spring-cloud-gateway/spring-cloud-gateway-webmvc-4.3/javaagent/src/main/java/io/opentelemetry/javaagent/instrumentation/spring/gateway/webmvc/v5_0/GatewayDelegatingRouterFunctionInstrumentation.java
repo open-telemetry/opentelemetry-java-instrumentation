@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.gateway.webmvc.v5_0;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -30,8 +29,7 @@ public class GatewayDelegatingRouterFunctionInstrumentation implements TypeInstr
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("route"))
             .and(takesArgument(0, named("org.springframework.web.servlet.function.ServerRequest")))
             .and(takesArguments(1)),

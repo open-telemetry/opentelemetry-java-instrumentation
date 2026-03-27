@@ -55,7 +55,7 @@ public class TaskSchedulerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Runnable onSchedule(@Advice.Argument(0) Runnable originalRunnable) {
       Runnable runnable = originalRunnable;
-      if (SpringSchedulingTaskTracing.wrappingEnabled()) {
+      if (SpringSchedulingTaskTracing.isWrappingEnabled()) {
         runnable = SpringSchedulingRunnableWrapper.wrapIfNeeded(runnable);
       }
       return runnable;

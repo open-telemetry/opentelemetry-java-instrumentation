@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet;
 
 import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet.TestUtil.readFileAsBytes;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -37,7 +37,7 @@ class SnippetServletOutputStreamTest {
         new OutputStreamSnippetInjectionHelper(stringSupplier);
     boolean injected = helper.handleWrite(obj, out, html, 0, html.length);
     assertThat(obj.getHeadTagBytesSeen()).isEqualTo(-1);
-    assertThat(injected).isEqualTo(true);
+    assertThat(injected).isTrue();
 
     byte[] expectedHtml = readFileAsBytes("afterSnippetInjection.html");
     assertThat(out.getBytes()).isEqualTo(expectedHtml);
@@ -140,7 +140,7 @@ class SnippetServletOutputStreamTest {
         new OutputStreamSnippetInjectionHelper(stringSupplier);
     boolean injected = helper.handleWrite(obj, out, html, 0, html.length);
     assertThat(obj.getHeadTagBytesSeen()).isEqualTo(-1);
-    assertThat(injected).isEqualTo(true);
+    assertThat(injected).isTrue();
 
     byte[] expectedHtml = readFileAsBytes("afterSnippetInjectionWithOtherHeadStyle.html");
     assertThat(out.getBytes()).isEqualTo(expectedHtml);

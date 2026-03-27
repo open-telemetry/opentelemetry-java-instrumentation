@@ -8,6 +8,7 @@ muzzle {
     group.set("org.springframework")
     module.set("spring-core")
     versions.set("[2.0,]")
+    assertInverse.set(true)
   }
 }
 
@@ -22,7 +23,7 @@ dependencies {
 }
 
 // spring 6 requires java 17
-if (findProperty("testLatestDeps") as Boolean) {
+if (findProperty("testLatestDeps") == "true") {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_17)
   }
