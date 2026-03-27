@@ -73,7 +73,7 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-    public static void onEnter(
+    public static void onExit(
         @Advice.Argument(1) Object data,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
