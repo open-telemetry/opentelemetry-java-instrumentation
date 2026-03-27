@@ -502,3 +502,4 @@ spring-webmvc-common:javaagent
 spring-ws-2.0:javaagent
 spring-ws-2.0:testing
 spring-webmvc-common:testing
+starters:spring-boot-starter
