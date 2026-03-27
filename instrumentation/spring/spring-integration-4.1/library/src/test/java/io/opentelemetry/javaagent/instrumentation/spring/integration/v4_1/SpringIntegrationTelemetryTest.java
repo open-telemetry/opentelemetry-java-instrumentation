@@ -13,7 +13,7 @@ class SpringIntegrationTelemetryTest extends AbstractSpringIntegrationTracingTes
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  public SpringIntegrationTelemetryTest() {
+  SpringIntegrationTelemetryTest() {
     super(testing, GlobalInterceptorSpringConfig.class);
   }
 }
