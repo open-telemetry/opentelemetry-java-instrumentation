@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.oshi;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -29,22 +30,8 @@ class SystemMetricsTest extends AbstractSystemMetricsTest {
   }
 
   @AfterAll
-  static void tearDown() throws Exception {
-    Exception failure = null;
-    for (AutoCloseable observable : observables) {
-      try {
-        observable.close();
-      } catch (Exception e) {
-        if (failure == null) {
-          failure = e;
-        } else {
-          failure.addSuppressed(e);
-        }
-      }
-    }
-    if (failure != null) {
-      throw failure;
-    }
+  static void tearDown() {
+    assertAll(observables.stream().map(observable -> observable::close));
   }
 
   @Override
