@@ -16,9 +16,8 @@ import javax.annotation.Nullable;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpResponse;
 
-enum SpringWebHttpAttributesGetter
+class SpringWebHttpAttributesGetter
     implements HttpClientAttributesGetter<HttpRequest, ClientHttpResponse> {
-  INSTANCE;
 
   @Nullable private static final MethodHandle GET_STATUS_CODE;
   @Nullable private static final MethodHandle STATUS_CODE_VALUE;
