@@ -83,7 +83,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
             "enabled",
             deprecatedTraceIdRequestAttributeEnabled != null
                 ? deprecatedTraceIdRequestAttributeEnabled
-                : true);
+                : !AgentCommonConfig.get().isV3Preview());
   }
 
   public boolean shouldStart(Context parentContext, ServletRequestContext<REQUEST> requestContext) {
