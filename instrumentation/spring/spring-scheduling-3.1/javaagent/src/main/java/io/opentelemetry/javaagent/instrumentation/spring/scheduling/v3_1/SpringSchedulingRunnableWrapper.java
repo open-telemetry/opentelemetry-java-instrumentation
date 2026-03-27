@@ -20,10 +20,6 @@ public class SpringSchedulingRunnableWrapper implements Runnable {
 
   @Override
   public void run() {
-    if (runnable == null) {
-      return;
-    }
-
     Context parentContext = currentContext();
     if (!instrumenter().shouldStart(parentContext, runnable)) {
       runnable.run();
@@ -43,8 +39,6 @@ public class SpringSchedulingRunnableWrapper implements Runnable {
   }
 
   public static Runnable wrapIfNeeded(Runnable task) {
-    // We wrap only lambdas' anonymous classes and if given object has not already been wrapped.
-    // Anonymous classes have '/' in class name which is not allowed in 'normal' classes.
     if (task instanceof SpringSchedulingRunnableWrapper) {
       return task;
     }
