@@ -33,11 +33,8 @@ import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import java.security.Principal;
 import java.util.List;
 import java.util.function.Function;
-<<<<<<< otelbot/code-review-servlet-common-javaagent
-import javax.annotation.Nullable;
-=======
 import java.util.logging.Logger;
->>>>>>> main
+import javax.annotation.Nullable;
 
 public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   private static final Logger logger = Logger.getLogger(BaseServletHelper.class.getName());
