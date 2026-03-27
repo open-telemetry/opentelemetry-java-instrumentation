@@ -500,3 +500,4 @@ spring-webmvc-6.0:javaagent
 spring-webmvc-6.0:library
 spring-webmvc-common:javaagent
 spring-ws-2.0:javaagent
+spring-ws-2.0:testing
