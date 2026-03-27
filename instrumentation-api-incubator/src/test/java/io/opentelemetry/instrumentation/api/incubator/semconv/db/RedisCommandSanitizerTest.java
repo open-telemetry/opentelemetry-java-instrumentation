@@ -234,10 +234,7 @@ class RedisCommandSanitizerTest {
       args.add("key" + i);
       args.add("value" + i);
     }
-    String result =
-        RedisCommandSanitizer.create(true)
-            .sanitize(
-                "HMSET", args);
+    String result = RedisCommandSanitizer.create(true).sanitize("HMSET", args);
 
     assertThat(result.length()).isEqualTo(RedisCommandSanitizer.LIMIT);
     assertThat(result).startsWith("HMSET hash key0 ? key1 ?");
