@@ -522,3 +522,4 @@ undertow-1.4:javaagent
 vaadin-14.2:javaagent
 vaadin-14.2:testing
 vertx-http-client-4.0:javaagent
+vertx-http-client-3.0:javaagent
