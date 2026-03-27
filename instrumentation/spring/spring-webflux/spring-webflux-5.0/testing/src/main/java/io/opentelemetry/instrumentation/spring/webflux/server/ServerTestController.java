@@ -53,6 +53,11 @@ public abstract class ServerTestController {
         });
   }
 
+  @GetMapping("/never")
+  public Mono<String> never() {
+    return Mono.never();
+  }
+
   @GetMapping("/query")
   public Mono<String> query_param(ServerHttpRequest request, ServerHttpResponse response) {
     ServerEndpoint endpoint = ServerEndpoint.QUERY_PARAM;

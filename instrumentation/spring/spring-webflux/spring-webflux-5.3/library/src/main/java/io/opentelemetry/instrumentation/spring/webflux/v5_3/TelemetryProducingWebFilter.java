@@ -10,6 +10,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 import org.reactivestreams.Subscription;
 import org.springframework.core.Ordered;
@@ -78,6 +79,7 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
     private final CoreSubscriber<? super Void> actual;
     private final Instrumenter<ServerWebExchange, ServerWebExchange> instrumenter;
     private final Context currentOtelContext;
+    private final AtomicBoolean ended = new AtomicBoolean(false);
     private final ServerWebExchange exchange;
 
     TelemetryWrappedSubscriber(
@@ -98,11 +100,27 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
 
     @Override
     public void onSubscribe(Subscription s) {
-      actual.onSubscribe(s);
+      actual.onSubscribe(
+          new Subscription() {
+            @Override
+            public void request(long n) {
+              s.request(n);
+            }
+
+            @Override
+            public void cancel() {
+              if (ended.compareAndSet(false, true)) {
+                end(currentOtelContext, null);
+              }
+              s.cancel();
+            }
+          });
     }
 
     @Override
-    public void onNext(Void unused) {}
+    public void onNext(Void unused) {
+      actual.onNext(null);
+    }
 
     @Override
     public void onError(Throwable t) {
@@ -117,6 +135,12 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
     }
 
     private void onTerminal(Context currentContext, @Nullable Throwable t) {
+
+      if (!ended.compareAndSet(false, true)) {
+        // onTerminal can be called multiple times in case of cancellation and error/completion
+        // happening concurrently
+        return;
+      }
       ServerHttpResponse response = exchange.getResponse();
       if (response.isCommitted()) {
         end(currentContext, t);
