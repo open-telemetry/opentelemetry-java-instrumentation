@@ -9,6 +9,7 @@ muzzle {
     // Tomcat 10 is about servlet 5.0
     // 7.0.4 added Request.isAsync, which is needed
     versions.set("[7.0.4, 10)")
+    assertInverse.set(true)
   }
 }
 
