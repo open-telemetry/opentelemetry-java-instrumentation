@@ -48,7 +48,7 @@ public abstract class Log4j2Test {
 
     List<ListAppender.LoggedEvent> events = ListAppender.get().getEvents();
 
-    assertThat(events.size()).isEqualTo(2);
+    assertThat(events).hasSize(2);
 
     assertThat(events.get(0).getMessage()).isEqualTo("log message 1");
     assertThat(events.get(0).getContextData().get(getLoggingKey("trace_id"))).isNull();
@@ -99,14 +99,15 @@ public abstract class Log4j2Test {
 
     List<ListAppender.LoggedEvent> events = ListAppender.get().getEvents();
 
-    assertThat(events.size()).isEqualTo(4);
+    assertThat(events).hasSize(4);
 
     assertThat(events.get(0).getMessage()).isEqualTo("log span parent");
     assertThat(events.get(0).getContextData().get(getLoggingKey("trace_id")))
         .isEqualTo(spanParent.get().getSpanContext().getTraceId());
     assertThat(events.get(0).getContextData().get(getLoggingKey("span_id")))
         .isEqualTo(spanParent.get().getSpanContext().getSpanId());
-    assertThat(events.get(0).getContextData().get(getLoggingKey("trace_flags"))).isEqualTo("01");
+    assertThat(events.get(0).getContextData().get(getLoggingKey("trace_flags")))
+        .isEqualTo(spanParent.get().getSpanContext().getTraceFlags().asHex());
     assertThat(events.get(0).getContextData().get("baggage.baggage_key"))
         .isEqualTo((expectBaggage() ? "baggage_value" : null));
 
@@ -115,7 +116,8 @@ public abstract class Log4j2Test {
         .isEqualTo(spanChild.get().getSpanContext().getTraceId());
     assertThat(events.get(1).getContextData().get(getLoggingKey("span_id")))
         .isEqualTo(spanChild.get().getSpanContext().getSpanId());
-    assertThat(events.get(1).getContextData().get(getLoggingKey("trace_flags"))).isEqualTo("01");
+    assertThat(events.get(1).getContextData().get(getLoggingKey("trace_flags")))
+        .isEqualTo(spanChild.get().getSpanContext().getTraceFlags().asHex());
     assertThat(events.get(1).getContextData().get("baggage.baggage_key"))
         .isEqualTo((expectBaggage() ? "baggage_value" : null));
 
@@ -130,7 +132,8 @@ public abstract class Log4j2Test {
         .isEqualTo(span2.getSpanContext().getTraceId());
     assertThat(events.get(3).getContextData().get(getLoggingKey("span_id")))
         .isEqualTo(span2.getSpanContext().getSpanId());
-    assertThat(events.get(3).getContextData().get(getLoggingKey("trace_flags"))).isEqualTo("01");
+    assertThat(events.get(3).getContextData().get(getLoggingKey("trace_flags")))
+        .isEqualTo(span2.getSpanContext().getTraceFlags().asHex());
     assertThat(events.get(3).getContextData().get("baggage.baggage_key")).isNull();
   }
 
@@ -149,7 +152,7 @@ public abstract class Log4j2Test {
             });
     List<ListAppender.LoggedEvent> events = ListAppender.get().getEvents();
     ThreadContext.clearAll();
-    assertThat(events.size()).isEqualTo(1);
+    assertThat(events).hasSize(1);
     assertThat(events.get(0).getMessage()).isEqualTo("log span parent");
     assertThat(events.get(0).getContextData().get(getLoggingKey("trace_id")))
         .isEqualTo("test_traceId");

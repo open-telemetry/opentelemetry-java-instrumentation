@@ -19,7 +19,7 @@ muzzle {
 
 dependencies {
   implementation(project(":instrumentation:servlet:servlet-common:javaagent"))
-  implementation(project(":instrumentation:servlet:servlet-javax-common:library"))
+  implementation(project(":instrumentation:servlet:servlet-common-javax:library"))
   bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
   compileOnly("javax.servlet:servlet-api:2.2")
@@ -34,5 +34,5 @@ dependencies {
 }
 
 tasks.test {
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  systemProperty("collectMetadata", findProperty("collectMetadata"))
 }

@@ -16,10 +16,7 @@ class HibernateExperimentalAttributesExtractor
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, HibernateOperation hibernateOperation) {
-    String sessionId = hibernateOperation.getSessionId();
-    if (sessionId != null) {
-      attributes.put("hibernate.session_id", sessionId);
-    }
+    attributes.put("hibernate.session_id", hibernateOperation.getSessionId());
   }
 
   @Override

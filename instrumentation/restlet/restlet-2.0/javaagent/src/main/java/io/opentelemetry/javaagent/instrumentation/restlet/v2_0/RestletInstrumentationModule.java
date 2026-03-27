@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.restlet.v2_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
@@ -12,6 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
 public class RestletInstrumentationModule extends InstrumentationModule
@@ -19,6 +21,12 @@ public class RestletInstrumentationModule extends InstrumentationModule
 
   public RestletInstrumentationModule() {
     super("restlet", "restlet-2.0");
+  }
+
+  @Override
+  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 2.0
+    return hasClassesNamed("org.restlet.Request");
   }
 
   @Override

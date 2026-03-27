@@ -26,7 +26,7 @@ public class OpenAiClientInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("build").and(returns(named("com.openai.client.OpenAIClient"))),
-        OpenAiClientInstrumentation.class.getName() + "$BuildAdvice");
+        getClass().getName() + "$BuildAdvice");
   }
 
   @SuppressWarnings("unused")

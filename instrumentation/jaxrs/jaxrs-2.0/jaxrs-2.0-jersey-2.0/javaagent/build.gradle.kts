@@ -46,7 +46,7 @@ dependencies {
   latestDepTestLibrary("org.glassfish.jersey.inject:jersey-hk2:2.+") // see jaxrs-3.0-jersey-3.0 module
 }
 
-if (!(findProperty("testLatestDeps") as Boolean)) {
+if (!(findProperty("testLatestDeps") == "true")) {
   // early jersey versions require old guava
   configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.google.guava:guava:14.0.1")
 
@@ -66,10 +66,9 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
   val testExperimental by registering(Test::class) {

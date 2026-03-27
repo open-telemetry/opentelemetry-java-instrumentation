@@ -44,6 +44,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class KubernetesClientVer20Test {
 
   private static final String TEST_USER_AGENT = "test-user-agent";
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
+      Boolean.getBoolean("otel.instrumentation.kubernetes-client.experimental-span-attributes");
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -54,10 +56,7 @@ class KubernetesClientVer20Test {
 
   @Nullable
   private static String experimental(String value) {
-    if (Boolean.getBoolean("otel.instrumentation.kubernetes-client.experimental-span-attributes")) {
-      return value;
-    }
-    return null;
+    return EXPERIMENTAL_ATTRIBUTES ? value : null;
   }
 
   @BeforeEach

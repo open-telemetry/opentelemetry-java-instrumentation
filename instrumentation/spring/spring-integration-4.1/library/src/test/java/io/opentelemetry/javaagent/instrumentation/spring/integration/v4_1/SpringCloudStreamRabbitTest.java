@@ -13,7 +13,7 @@ class SpringCloudStreamRabbitTest extends AbstractSpringCloudStreamRabbitTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  public SpringCloudStreamRabbitTest() {
+  SpringCloudStreamRabbitTest() {
     super(testing, GlobalInterceptorSpringConfig.class);
   }
 }

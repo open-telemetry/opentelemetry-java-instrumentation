@@ -42,7 +42,7 @@ public class DriverInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, Properties.class))
             .and(returns(named("java.sql.Connection"))),
-        DriverInstrumentation.class.getName() + "$DriverAdvice");
+        getClass().getName() + "$DriverAdvice");
   }
 
   @SuppressWarnings("unused")

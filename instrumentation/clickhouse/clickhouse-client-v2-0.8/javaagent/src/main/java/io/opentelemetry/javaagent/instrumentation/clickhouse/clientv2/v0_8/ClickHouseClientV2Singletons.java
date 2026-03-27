@@ -18,6 +18,8 @@ public final class ClickHouseClientV2Singletons {
 
   private static final String INSTRUMENTER_NAME = "io.opentelemetry.clickhouse-client-v2-0.8";
   private static final Instrumenter<ClickHouseDbRequest, Void> INSTRUMENTER;
+  private static final VirtualField<Client, AddressAndPort> ADDRESS_AND_PORT =
+      VirtualField.find(Client.class, AddressAndPort.class);
 
   static {
     INSTRUMENTER =
@@ -34,9 +36,6 @@ public final class ClickHouseClientV2Singletons {
   public static Instrumenter<ClickHouseDbRequest, Void> instrumenter() {
     return INSTRUMENTER;
   }
-
-  private static final VirtualField<Client, AddressAndPort> ADDRESS_AND_PORT =
-      VirtualField.find(Client.class, AddressAndPort.class);
 
   public static AddressAndPort getAddressAndPort(Client client) {
     return ADDRESS_AND_PORT.get(client);

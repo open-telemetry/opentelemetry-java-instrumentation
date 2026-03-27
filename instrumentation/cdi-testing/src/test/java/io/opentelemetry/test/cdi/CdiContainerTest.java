@@ -20,7 +20,7 @@ class CdiContainerTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
-  public void cdiContainerStartsWithAgent() {
+  void cdiContainerStartsWithAgent() {
     Weld builder =
         new Weld()
             .disableDiscovery()
@@ -29,8 +29,6 @@ class CdiContainerTest {
     WeldContainer container = builder.initialize();
 
     assertThat(container.isRunning()).isTrue();
-    if (container != null) {
-      container.shutdown();
-    }
+    container.shutdown();
   }
 }

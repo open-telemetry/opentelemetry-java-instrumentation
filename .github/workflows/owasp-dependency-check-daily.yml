@@ -1,6 +1,6 @@
 # the benefit of this over renovate is that this also analyzes transitive dependencies
 # while renovate (at least currently) only analyzes top-level dependencies
-name: OWASP dependency check (daily)
+name: OSS Index dependency audit (daily)
 
 on:
   schedule:
@@ -12,6 +12,7 @@ permissions:
 
 jobs:
   analyze:
+    environment: protected
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -25,21 +26,21 @@ jobs:
           distribution: temurin
           java-version-file: .java-version
 
-      - name: Increase gradle daemon heap size
-        run: |
-          sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
-
       - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
 
-      - run: ./gradlew :javaagent:dependencyCheckAnalyze
+      - run: ./gradlew :javaagent:ossIndexAudit
+        id: audit
+        continue-on-error: true
         env:
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+          SONATYPE_OSS_INDEX_USER: ${{ secrets.SONATYPE_OSS_INDEX_USER }}
+          SONATYPE_OSS_INDEX_PASSWORD: ${{ secrets.SONATYPE_OSS_INDEX_PASSWORD }}
 
-      - name: Upload report
-        if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          path: javaagent/build/reports
+      - name: Print vulnerability report
+        if: steps.audit.outcome == 'failure'
+        run: |
+          echo "=== OSS Index Vulnerability Report ==="
+          cat oss-index-cyclonedx-bom.json
+          exit 1
 
   workflow-notification:
     permissions:

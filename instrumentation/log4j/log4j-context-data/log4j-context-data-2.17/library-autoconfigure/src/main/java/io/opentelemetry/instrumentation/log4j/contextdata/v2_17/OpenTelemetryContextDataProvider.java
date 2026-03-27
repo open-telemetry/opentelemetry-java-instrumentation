@@ -28,15 +28,6 @@ import org.apache.logging.log4j.core.util.ContextDataProvider;
  */
 public class OpenTelemetryContextDataProvider implements ContextDataProvider {
 
-  @SuppressWarnings("deprecation") // using deprecated config property
-  private static final boolean BAGGAGE_ENABLED =
-      DeclarativeConfigUtil.getInstrumentationConfig(
-              GlobalOpenTelemetry.get(), "log4j_context_data")
-          .getBoolean(
-              "add_baggage",
-              ConfigPropertiesUtil.getBoolean(
-                  "otel.instrumentation.log4j-context-data.add-baggage", false));
-
   private static final boolean configuredResourceAttributeAccessible =
       isConfiguredResourceAttributeAccessible();
   private static final Map<String, String> staticContextData = getStaticContextData();
@@ -79,7 +70,7 @@ public class OpenTelemetryContextDataProvider implements ContextDataProvider {
       return staticContextData;
     }
 
-    ContextDataKeys contextDataKeys = ContextDataKeys.create(GlobalOpenTelemetry.get());
+    ContextDataKeys contextDataKeys = Configuration.contextDataKeys;
     if (ThreadContext.containsKey(contextDataKeys.getTraceIdKey())) {
       // Assume already instrumented event if traceId is present.
       return staticContextData;
@@ -91,7 +82,7 @@ public class OpenTelemetryContextDataProvider implements ContextDataProvider {
     contextData.put(contextDataKeys.getSpanIdKey(), spanContext.getSpanId());
     contextData.put(contextDataKeys.getTraceFlags(), spanContext.getTraceFlags().asHex());
 
-    if (BAGGAGE_ENABLED) {
+    if (Configuration.baggageEnabled) {
       Baggage baggage = Baggage.fromContext(context);
       for (Map.Entry<String, BaggageEntry> entry : baggage.asMap().entrySet()) {
         // prefix all baggage values to avoid clashes with existing context
@@ -100,5 +91,19 @@ public class OpenTelemetryContextDataProvider implements ContextDataProvider {
     }
 
     return contextData;
+  }
+
+  private static class Configuration {
+    @SuppressWarnings("deprecation") // using deprecated config property
+    static final boolean baggageEnabled =
+        DeclarativeConfigUtil.getInstrumentationConfig(
+                GlobalOpenTelemetry.getOrNoop(), "log4j_context_data")
+            .getBoolean(
+                "add_baggage",
+                ConfigPropertiesUtil.getBoolean(
+                    "otel.instrumentation.log4j-context-data.add-baggage", false));
+
+    static final ContextDataKeys contextDataKeys =
+        ContextDataKeys.create(GlobalOpenTelemetry.getOrNoop());
   }
 }

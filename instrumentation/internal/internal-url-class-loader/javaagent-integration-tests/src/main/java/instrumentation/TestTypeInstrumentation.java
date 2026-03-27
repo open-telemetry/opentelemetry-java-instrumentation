@@ -29,7 +29,7 @@ public class TestTypeInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("getHostName"), TestTypeInstrumentation.class.getName() + "$GetHostNameAdvice");
+        named("getHostName"), getClass().getName() + "$GetHostNameAdvice");
   }
 
   @SuppressWarnings("unused")

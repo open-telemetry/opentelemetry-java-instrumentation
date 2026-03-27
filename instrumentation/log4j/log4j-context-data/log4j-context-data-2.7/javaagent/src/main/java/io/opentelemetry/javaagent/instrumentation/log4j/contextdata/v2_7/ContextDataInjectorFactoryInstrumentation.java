@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.log4j.contextdata.v2_7;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -28,8 +27,7 @@ public class ContextDataInjectorFactoryInstrumentation implements TypeInstrument
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(isStatic())
             .and(named("createInjector"))
             .and(returns(named("org.apache.logging.log4j.core.ContextDataInjector"))),

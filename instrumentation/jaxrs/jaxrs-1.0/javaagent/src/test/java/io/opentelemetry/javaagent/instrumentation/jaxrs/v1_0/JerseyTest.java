@@ -34,8 +34,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 class JerseyTest extends AbstractHttpServerUsingTest<Server> {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   @BeforeAll
   protected void setUp() {

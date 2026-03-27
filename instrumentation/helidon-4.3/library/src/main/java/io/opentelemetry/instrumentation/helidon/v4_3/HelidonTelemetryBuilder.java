@@ -37,8 +37,8 @@ public final class HelidonTelemetryBuilder {
         DefaultHttpServerInstrumenterBuilder.create(
             INSTRUMENTATION_NAME,
             openTelemetry,
-            HelidonAttributesGetter.INSTANCE,
-            HelidonRequestGetter.INSTANCE);
+            new HelidonAttributesGetter(),
+            new HelidonRequestGetter());
   }
 
   /** Customizes the {@link SpanStatusExtractor} by transforming the default instance. */

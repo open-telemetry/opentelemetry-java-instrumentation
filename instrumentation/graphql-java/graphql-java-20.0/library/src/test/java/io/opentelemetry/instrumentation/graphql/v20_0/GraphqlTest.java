@@ -17,7 +17,7 @@ import graphql.ExecutionResult;
 import graphql.GraphQL;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.graphql.AbstractGraphqlTest;
+import io.opentelemetry.instrumentation.graphql.common.v12_0.AbstractGraphqlTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -46,7 +46,7 @@ class GraphqlTest extends AbstractGraphqlTest {
     GraphQLTelemetry telemetry =
         GraphQLTelemetry.builder(testing.getOpenTelemetry())
             .setDataFetcherInstrumentationEnabled(true)
-            .setAddOperationNameToSpanName(true)
+            .setOperationNameInSpanNameEnabled(true)
             .build();
     builder.instrumentation(telemetry.createInstrumentation());
   }
@@ -62,7 +62,7 @@ class GraphqlTest extends AbstractGraphqlTest {
     GraphQLTelemetry telemetry =
         GraphQLTelemetry.builder(testing.getOpenTelemetry())
             .setDataFetcherInstrumentationEnabled(true)
-            .setAddOperationNameToSpanName(true)
+            .setOperationNameInSpanNameEnabled(true)
             .build();
 
     GraphQL graphql =
@@ -126,7 +126,7 @@ class GraphqlTest extends AbstractGraphqlTest {
         GraphQLTelemetry.builder(testing.getOpenTelemetry())
             .setDataFetcherInstrumentationEnabled(true)
             .setTrivialDataFetcherInstrumentationEnabled(true)
-            .setAddOperationNameToSpanName(true)
+            .setOperationNameInSpanNameEnabled(true)
             .build();
 
     GraphQL graphql =
@@ -204,7 +204,7 @@ class GraphqlTest extends AbstractGraphqlTest {
         GraphQLTelemetry.builder(testing.getOpenTelemetry())
             .setDataFetcherInstrumentationEnabled(false)
             .setTrivialDataFetcherInstrumentationEnabled(true)
-            .setAddOperationNameToSpanName(true)
+            .setOperationNameInSpanNameEnabled(true)
             .build();
 
     GraphQL graphql =
@@ -254,7 +254,7 @@ class GraphqlTest extends AbstractGraphqlTest {
     GraphQLTelemetry telemetry =
         GraphQLTelemetry.builder(testing.getOpenTelemetry())
             .setDataFetcherInstrumentationEnabled(true)
-            .setAddOperationNameToSpanName(true)
+            .setOperationNameInSpanNameEnabled(true)
             .build();
 
     GraphQL graphql =
@@ -326,7 +326,7 @@ class GraphqlTest extends AbstractGraphqlTest {
     GraphQLTelemetry telemetry =
         GraphQLTelemetry.builder(testing.getOpenTelemetry())
             .setDataFetcherInstrumentationEnabled(true)
-            .setAddOperationNameToSpanName(true)
+            .setOperationNameInSpanNameEnabled(true)
             .build();
 
     GraphQL graphql =

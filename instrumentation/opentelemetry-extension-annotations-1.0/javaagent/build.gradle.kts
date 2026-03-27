@@ -44,7 +44,7 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs(
-      "-Dotel.experimental.config.file=$projectDir/src/test/resources/declarative-config.yaml"
+      "-Dotel.config.file=$projectDir/src/test/resources/declarative-config.yaml"
     )
   }
 

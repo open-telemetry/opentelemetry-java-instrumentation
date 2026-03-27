@@ -6,14 +6,14 @@
 package io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
+import javax.annotation.Nullable;
 import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.http.HttpField;
 
-enum HttpHeaderSetter implements TextMapSetter<Request> {
-  INSTANCE;
+class HttpHeaderSetter implements TextMapSetter<Request> {
 
   @Override
-  public void set(Request request, String key, String value) {
+  public void set(@Nullable Request request, String key, String value) {
     if (request != null) {
       request.headers(
           httpFields -> {

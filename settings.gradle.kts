@@ -1,13 +1,13 @@
 pluginManagement {
   plugins {
-    id("com.github.jk1.dependency-license-report") version "3.0.1"
+    id("com.github.jk1.dependency-license-report") version "3.1.1"
     id("com.google.cloud.tools.jib") version "3.5.3"
-    id("com.gradle.plugin-publish") version "2.0.0"
+    id("com.gradle.plugin-publish") version "2.1.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("org.jetbrains.kotlin.jvm") version "2.2.21"
+    id("org.jetbrains.kotlin.jvm") version "2.3.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.9.0"
-    id("org.graalvm.buildtools.native") version "0.11.4"
+    id("org.graalvm.buildtools.native") version "1.0.0"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.9.6"
   }
@@ -22,7 +22,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:pushLinuxImages -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:pushWindowsImages -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "10.0.0" apply false
-  id("com.gradle.develocity") version "4.3.2"
+  id("com.gradle.develocity") version "4.4.0"
 }
 
 dependencyResolutionManagement {
@@ -280,8 +280,8 @@ include(":instrumentation:graphql-java:graphql-java-12.0:javaagent")
 include(":instrumentation:graphql-java:graphql-java-12.0:library")
 include(":instrumentation:graphql-java:graphql-java-20.0:javaagent")
 include(":instrumentation:graphql-java:graphql-java-20.0:library")
-include(":instrumentation:graphql-java:graphql-java-common:library")
-include(":instrumentation:graphql-java:graphql-java-common:testing")
+include(":instrumentation:graphql-java:graphql-java-common-12.0:library")
+include(":instrumentation:graphql-java:graphql-java-common-12.0:testing")
 include(":instrumentation:grizzly-2.3:javaagent")
 include(":instrumentation:grpc-1.6:javaagent")
 include(":instrumentation:grpc-1.6:library")
@@ -430,7 +430,6 @@ include(":instrumentation:ktor:ktor-common-2.0:library")
 include(":instrumentation:ktor:ktor-3.0:javaagent")
 include(":instrumentation:ktor:ktor-3.0:library")
 include(":instrumentation:ktor:ktor-3.0:testing")
-include(":instrumentation:ktor:ktor-common:library")
 include(":instrumentation:kubernetes-client-7.0:javaagent")
 include(":instrumentation:kubernetes-client-7.0:javaagent-unit-tests")
 include(":instrumentation:lettuce:lettuce-4.0:javaagent")
@@ -581,10 +580,11 @@ include(":instrumentation:rocketmq:rocketmq-client-4.8:javaagent")
 include(":instrumentation:rocketmq:rocketmq-client-4.8:library")
 include(":instrumentation:rocketmq:rocketmq-client-4.8:testing")
 include(":instrumentation:rocketmq:rocketmq-client-5.0:javaagent")
-include(":instrumentation:rocketmq:rocketmq-client-5.0:testing")
+include(":instrumentation:runtime-telemetry:javaagent")
+include(":instrumentation:runtime-telemetry:library")
+include(":instrumentation:runtime-telemetry:testing")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java8:javaagent")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java8:library")
-include(":instrumentation:runtime-telemetry:runtime-telemetry-java8:testing")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java17:javaagent")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java17:library")
 include(":instrumentation:rxjava:rxjava-1.0:library")
@@ -614,7 +614,7 @@ include(":instrumentation:servlet:servlet-5.0:tomcat-testing")
 include(":instrumentation:servlet:servlet-common:bootstrap")
 include(":instrumentation:servlet:servlet-common:javaagent")
 include(":instrumentation:servlet:servlet-common:library")
-include(":instrumentation:servlet:servlet-javax-common:library")
+include(":instrumentation:servlet:servlet-common-javax:library")
 include(":instrumentation:spark-2.3:javaagent")
 include(":instrumentation:spring:spring-batch-3.0:javaagent")
 include(":instrumentation:spring:spring-boot-actuator-autoconfigure-2.0:javaagent")

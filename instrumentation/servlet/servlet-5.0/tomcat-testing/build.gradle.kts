@@ -3,14 +3,16 @@ plugins {
 }
 
 dependencies {
-  testInstrumentation(project(":instrumentation:jetty:jetty-11.0:javaagent"))
+  // Servlet instrumentation is tested in Tomcat without Tomcat instrumentation.
+  // In Jetty, it is tested with the Jetty app server instrumentation.
+  testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
   testImplementation(project(":instrumentation:servlet:servlet-5.0:testing"))
 
   testLibrary("org.apache.tomcat.embed:tomcat-embed-core:10.0.0")
   testLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:10.0.0")
 }
 
-val testLatestDeps = findProperty("testLatestDeps") as Boolean
+val testLatestDeps = findProperty("testLatestDeps") == "true"
 
 if (testLatestDeps) {
   otelJava {

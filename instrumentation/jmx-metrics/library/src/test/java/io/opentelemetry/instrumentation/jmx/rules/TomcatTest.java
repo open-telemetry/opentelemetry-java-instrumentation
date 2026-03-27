@@ -119,6 +119,7 @@ class TomcatTest extends TargetSystemTest {
                     .hasDescription("Maximum possible number of active sessions.")
                     .hasUnit("{session}")
                     .isUpDownCounter()
+                    .hasDataPointsWithIntValues(value -> value.isGreaterThanOrEqualTo(0))
                     .hasDataPointsWithOneAttribute(attributeWithAnyValue("tomcat.context")))
         .add(
             "tomcat.thread.count",
@@ -135,6 +136,7 @@ class TomcatTest extends TargetSystemTest {
                     .hasDescription("Maximum possible number of threads in the thread pool.")
                     .hasUnit("{thread}")
                     .isUpDownCounter()
+                    .hasDataPointsWithIntValues(value -> value.isGreaterThanOrEqualTo(0))
                     .hasDataPointsWithOneAttribute(threadPoolNameAttribute))
         .add(
             "tomcat.thread.busy.count",

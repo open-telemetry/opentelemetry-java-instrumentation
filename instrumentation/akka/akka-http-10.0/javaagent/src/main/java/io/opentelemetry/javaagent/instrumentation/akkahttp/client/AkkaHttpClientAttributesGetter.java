@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp.client;
 
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
+import akka.http.scaladsl.model.Uri;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpUtil;
 import java.util.List;
@@ -61,8 +63,10 @@ class AkkaHttpClientAttributesGetter
     return httpRequest.uri().authority().host().address();
   }
 
+  @Nullable
   @Override
   public Integer getServerPort(HttpRequest httpRequest) {
-    return httpRequest.uri().authority().port();
+    Uri uri = httpRequest.uri();
+    return HttpConstants.portOrDefaultFromScheme(uri.authority().port(), uri.scheme());
   }
 }

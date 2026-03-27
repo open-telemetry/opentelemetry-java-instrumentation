@@ -37,7 +37,6 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingDeque;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -57,7 +56,6 @@ class TargetSystemTest {
   private static final Logger targetSystemLogger = LoggerFactory.getLogger("targetSystem");
 
   private static final String AGENT_PATH = "/opentelemetry-instrumentation-javaagent.jar";
-  protected static final String APP_PATH = "/testapp.war";
 
   private static final Network network = Network.newNetwork();
 
@@ -107,7 +105,7 @@ class TargetSystemTest {
     targetDependencies = emptyList();
   }
 
-  private static void stop(@Nullable GenericContainer<?> container) {
+  private static void stop(GenericContainer<?> container) {
     if (container != null && container.isRunning()) {
       container.stop();
     }

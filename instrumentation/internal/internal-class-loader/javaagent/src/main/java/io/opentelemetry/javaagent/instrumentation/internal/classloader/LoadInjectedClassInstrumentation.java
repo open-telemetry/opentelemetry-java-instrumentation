@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.instrumentation.internal.classloader.AdviceUtil.applyInlineAdvice;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
@@ -39,8 +38,7 @@ public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     ElementMatcher.Junction<MethodDescription> methodMatcher =
-        isMethod()
-            .and(named("loadClass"))
+        named("loadClass")
             .and(
                 takesArguments(1)
                     .and(takesArgument(0, String.class))

@@ -15,7 +15,7 @@ dependencies {
   library("org.jboss.logmanager:jboss-logmanager:1.1.0.GA")
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 
 if (latestDepTest) {
   otelJava {

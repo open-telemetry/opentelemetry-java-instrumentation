@@ -388,7 +388,8 @@ class YamlHelperTest {
               metrics:
               - name: db.client.operation.duration
                 description: Duration of database client operations.
-                type: HISTOGRAM
+                instrument: histogram
+                data_type: HISTOGRAM
                 unit: s
                 attributes:
                 - name: db.namespace
@@ -401,6 +402,73 @@ class YamlHelperTest {
                   type: STRING
                 - name: server.port
                   type: LONG
+        """;
+
+    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+  }
+
+  @Test
+  void testMetricsWithDifferentInstrumentTypes() throws Exception {
+    List<InstrumentationModule> modules = new ArrayList<>();
+
+    List<EmittedMetrics.Metric> metrics =
+        List.of(
+            new EmittedMetrics.Metric("test.histogram", "desc", "HISTOGRAM", "s", emptyList()),
+            new EmittedMetrics.Metric("test.counter", "desc", "LONG_SUM", true, "1", emptyList()),
+            new EmittedMetrics.Metric(
+                "test.updowncounter", "desc", "LONG_SUM", false, "1", emptyList()),
+            new EmittedMetrics.Metric("test.gauge", "desc", "DOUBLE_GAUGE", "{test}", emptyList()));
+
+    modules.add(
+        new InstrumentationModule.Builder()
+            .srcPath("instrumentation/test/test-1.0")
+            .instrumentationName("test-1.0")
+            .namespace("test")
+            .group("test")
+            .metrics(Map.of("default", metrics))
+            .build());
+
+    StringWriter stringWriter = new StringWriter();
+    BufferedWriter writer = new BufferedWriter(stringWriter);
+
+    YamlHelper.generateInstrumentationYaml(modules, writer);
+    writer.flush();
+
+    String expectedYaml =
+        """
+        libraries:
+          test:
+          - name: test-1.0
+            source_path: instrumentation/test/test-1.0
+            scope:
+              name: io.opentelemetry.test-1.0
+            telemetry:
+            - when: default
+              metrics:
+              - name: test.counter
+                description: desc
+                instrument: counter
+                data_type: LONG_SUM
+                unit: '1'
+                attributes: []
+              - name: test.gauge
+                description: desc
+                instrument: gauge
+                data_type: DOUBLE_GAUGE
+                unit: '{test}'
+                attributes: []
+              - name: test.histogram
+                description: desc
+                instrument: histogram
+                data_type: HISTOGRAM
+                unit: s
+                attributes: []
+              - name: test.updowncounter
+                description: desc
+                instrument: updowncounter
+                data_type: LONG_SUM
+                unit: '1'
+                attributes: []
         """;
 
     assertThat(expectedYaml).isEqualTo(stringWriter.toString());

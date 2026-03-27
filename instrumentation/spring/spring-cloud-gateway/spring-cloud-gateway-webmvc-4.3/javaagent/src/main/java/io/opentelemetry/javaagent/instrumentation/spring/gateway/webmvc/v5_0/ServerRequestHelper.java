@@ -56,9 +56,7 @@ public final class ServerRequestHelper {
     }
 
     String convergedRouteId = GatewayRouteHelper.convergeRouteId(routeId);
-    if (convergedRouteId != null) {
-      serverSpan.setAttribute(ROUTE_ID_ATTRIBUTE, convergedRouteId);
-    }
+    serverSpan.setAttribute(ROUTE_ID_ATTRIBUTE, convergedRouteId);
 
     request
         .attribute(MvcUtils.GATEWAY_REQUEST_URL_ATTR)

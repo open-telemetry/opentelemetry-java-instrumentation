@@ -11,7 +11,6 @@ import static io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.JaxrsAnnotat
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.JaxrsAnnotationsSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -51,8 +50,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(not(isStatic()))
+        not(isStatic())
             .and(
                 hasSuperMethod(
                     isAnnotatedWith(
@@ -65,7 +63,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
                             "jakarta.ws.rs.PATCH",
                             "jakarta.ws.rs.POST",
                             "jakarta.ws.rs.PUT")))),
-        JaxrsAnnotationsInstrumentation.class.getName() + "$JaxRsAnnotationsAdvice");
+        getClass().getName() + "$JaxRsAnnotationsAdvice");
   }
 
   @SuppressWarnings("unused")

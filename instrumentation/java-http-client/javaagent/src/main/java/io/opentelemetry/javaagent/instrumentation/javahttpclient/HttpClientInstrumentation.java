@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentCo
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.javahttpclient.JavaHttpClientSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -52,19 +51,17 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("send"))
+        named("send")
             .and(isPublic())
             .and(takesArguments(2))
             .and(takesArgument(0, named("java.net.http.HttpRequest"))),
-        HttpClientInstrumentation.class.getName() + "$SendAdvice");
+        getClass().getName() + "$SendAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("sendAsync"))
+        named("sendAsync")
             .and(isPublic())
             .and(takesArgument(0, named("java.net.http.HttpRequest"))),
-        HttpClientInstrumentation.class.getName() + "$SendAsyncAdvice");
+        getClass().getName() + "$SendAsyncAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -127,7 +124,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
       private final CallDepth callDepth;
       private final HttpRequest request;
 
-      public AsyncAdviceScope(
+      private AsyncAdviceScope(
           Context parentContext,
           Context context,
           Scope scope,

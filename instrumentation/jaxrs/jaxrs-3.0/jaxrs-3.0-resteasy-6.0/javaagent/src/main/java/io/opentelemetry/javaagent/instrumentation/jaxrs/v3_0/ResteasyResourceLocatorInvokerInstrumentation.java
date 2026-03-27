@@ -34,8 +34,7 @@ public class ResteasyResourceLocatorInvokerInstrumentation implements TypeInstru
             .and(takesArgument(0, named("org.jboss.resteasy.spi.HttpRequest")))
             .and(takesArgument(1, named("org.jboss.resteasy.spi.HttpResponse")))
             .and(takesArgument(2, Object.class)),
-        ResteasyResourceLocatorInvokerInstrumentation.class.getName()
-            + "$InvokeOnTargetObjectAdvice");
+        getClass().getName() + "$InvokeOnTargetObjectAdvice");
   }
 
   @SuppressWarnings("unused")

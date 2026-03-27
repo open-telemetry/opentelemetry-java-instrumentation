@@ -25,10 +25,6 @@ public final class CxfHelper {
 
     CxfRequest request = new CxfRequest(message);
 
-    if (!request.shouldCreateSpan()) {
-      return;
-    }
-
     CxfServerSpanNaming.updateServerSpanName(parentContext, request);
 
     if (!instrumenter().shouldStart(parentContext, request)) {

@@ -68,7 +68,9 @@ public class MethodInstrumentation implements TypeInstrumentation {
       SpanKind spanKind = entry.getKey();
       Collection<String> names = entry.getValue();
       transformer.applyAdviceToMethod(
-          namedOneOf(names.toArray(new String[0])).and(isMethod()),
+          // isMethod() ensures this doesn't match constructors
+          // see https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13949
+          isMethod().and(namedOneOf(names.toArray(new String[0]))),
           mapping ->
               mapping
                   .bind(
@@ -79,7 +81,7 @@ public class MethodInstrumentation implements TypeInstrumentation {
                   .bind(
                       MethodSpanKind.class,
                       new EnumerationDescription.ForLoadedEnumeration(spanKind)),
-          MethodInstrumentation.class.getName() + "$MethodAdvice");
+          getClass().getName() + "$MethodAdvice");
     }
   }
 

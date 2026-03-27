@@ -34,14 +34,14 @@ public class KotlinCoroutineDispatcherInstrumentation implements TypeInstrumenta
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("dispatch").and(takesArgument(1, Runnable.class)),
-        this.getClass().getName() + "$StopContextPropagationAdvice");
+        getClass().getName() + "$StopContextPropagationAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class StopContextPropagationAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(1))
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Runnable enter(@Advice.Argument(1) Runnable runnable) {
       return runnable == null ? null : RunnableWrapper.stopPropagation(runnable);
     }

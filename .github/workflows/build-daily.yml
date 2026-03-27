@@ -32,6 +32,7 @@ jobs:
     uses: ./.github/workflows/reusable-markdown-lint-check.yml
 
   publish-snapshots:
+    environment: protected
     needs:
       - common
     runs-on: ubuntu-latest

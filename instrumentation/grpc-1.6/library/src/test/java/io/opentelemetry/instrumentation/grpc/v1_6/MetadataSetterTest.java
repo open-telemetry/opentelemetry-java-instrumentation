@@ -56,6 +56,9 @@ class MetadataSetterTest {
               @Nullable
               @Override
               public String get(@Nullable Metadata metadata, String key) {
+                if (metadata == null) {
+                  return null;
+                }
                 return metadata.get(Metadata.Key.of(key, Metadata.ASCII_STRING_MARSHALLER));
               }
             });

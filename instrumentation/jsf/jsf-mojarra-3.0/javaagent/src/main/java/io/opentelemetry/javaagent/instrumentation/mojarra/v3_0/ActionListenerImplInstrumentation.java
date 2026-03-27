@@ -29,8 +29,7 @@ public class ActionListenerImplInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("processAction"),
-        ActionListenerImplInstrumentation.class.getName() + "$ProcessActionAdvice");
+        named("processAction"), getClass().getName() + "$ProcessActionAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -72,7 +71,8 @@ public class ActionListenerImplInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown Throwable throwable, @Advice.Enter @Nullable AdviceScope adviceScope) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
         adviceScope.end(throwable);
       }

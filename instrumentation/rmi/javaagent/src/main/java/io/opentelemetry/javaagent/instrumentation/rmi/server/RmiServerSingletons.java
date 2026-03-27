@@ -17,7 +17,7 @@ public final class RmiServerSingletons {
   private static final Instrumenter<ClassAndMethod, Void> INSTRUMENTER;
 
   static {
-    RmiServerAttributesGetter rpcAttributesGetter = RmiServerAttributesGetter.INSTANCE;
+    RmiServerAttributesGetter rpcAttributesGetter = new RmiServerAttributesGetter();
 
     INSTRUMENTER =
         Instrumenter.<ClassAndMethod, Void>builder(

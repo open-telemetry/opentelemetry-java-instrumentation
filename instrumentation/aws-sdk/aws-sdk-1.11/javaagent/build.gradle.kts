@@ -31,6 +31,7 @@ muzzle {
     group.set("com.amazonaws")
     module.set("aws-java-sdk-sqs")
     versions.set("[1.10.33,)")
+    assertInverse.set(true)
   }
 }
 
@@ -54,6 +55,7 @@ dependencies {
 
   // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
+  testInstrumentation(project(":instrumentation:aws-sdk:aws-sdk-2.2:javaagent"))
 
   // needed for kinesis:
   testImplementation("com.fasterxml.jackson.dataformat:jackson-dataformat-cbor")
@@ -99,7 +101,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
 
-        if (findProperty("testLatestDeps") as Boolean) {
+        if (findProperty("testLatestDeps") == "true") {
           // last version that does not use json protocol
           implementation("com.amazonaws:aws-java-sdk-sqs:1.12.583")
         } else {
@@ -120,7 +122,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
 
-        if (findProperty("testLatestDeps") as Boolean) {
+        if (findProperty("testLatestDeps") == "true") {
           // last version that does not use json protocol
           implementation("com.amazonaws:aws-java-sdk-sqs:1.12.583")
         } else {
@@ -134,7 +136,7 @@ testing {
 val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
 
 tasks {
-  if (!(findProperty("testLatestDeps") as Boolean)) {
+  if (!(findProperty("testLatestDeps") == "true")) {
     check {
       dependsOn(testing.suites)
     }
@@ -146,13 +148,13 @@ tasks {
 
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", collectMetadata)
   }
 
   withType<Test>().configureEach {
     // TODO run tests both with and without experimental span attributes
     jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+    systemProperty("collectMetadata", collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {
@@ -160,7 +162,6 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("collectMetadata", collectMetadata)
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
@@ -168,7 +169,7 @@ tasks {
     dependsOn(testStableSemconv)
   }
 
-  if (findProperty("denyUnsafe") as Boolean) {
+  if (findProperty("denyUnsafe") == "true") {
     // org.elasticmq:elasticmq-rest-sqs_2.13 uses unsafe. Future versions are likely to fix this.
     withType<Test>().configureEach {
       enabled = false
@@ -176,7 +177,7 @@ tasks {
   }
 }
 
-if (!(findProperty("testLatestDeps") as Boolean)) {
+if (!(findProperty("testLatestDeps") == "true")) {
   configurations.testRuntimeClasspath {
     resolutionStrategy {
       eachDependency {

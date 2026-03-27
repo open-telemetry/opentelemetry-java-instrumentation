@@ -62,9 +62,7 @@ final class ApiGatewayProxyAttributesExtractor
 
     Map<String, String> headers = lowercaseMap(request.getHeaders());
     String userAgent = headers.get("user-agent");
-    if (userAgent != null) {
-      attributes.put(USER_AGENT_ORIGINAL, userAgent);
-    }
+    attributes.put(USER_AGENT_ORIGINAL, userAgent);
 
     attributes.put(URL_FULL, getHttpUrl(request, headers));
   }

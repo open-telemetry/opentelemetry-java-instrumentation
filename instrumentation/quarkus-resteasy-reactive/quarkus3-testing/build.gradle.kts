@@ -4,7 +4,6 @@ import io.quarkus.bootstrap.util.BootstrapUtils
 import io.quarkus.gradle.tooling.GradleApplicationModelBuilder
 import io.quarkus.runtime.LaunchMode
 import kotlin.io.path.notExists
-import kotlin.jvm.java
 
 plugins {
   id("otel.javaagent-testing")
@@ -18,7 +17,7 @@ otelJava {
 
 // io.quarkus.platform:quarkus-bom is missing for 3.0.0.Final
 var quarkusVersion = "3.0.1.Final"
-if (findProperty("testLatestDeps") as Boolean) {
+if (findProperty("testLatestDeps") == "true") {
   quarkusVersion = "3.5.+"
 }
 
@@ -83,7 +82,7 @@ tasks {
     systemProperty("quarkus-internal-test.serialized-app-model.path", testModelPath.get().asFile.toString())
   }
 
-  if (findProperty("denyUnsafe") as Boolean) {
+  if (findProperty("denyUnsafe") == "true") {
     withType<Test>().configureEach {
       enabled = false
     }

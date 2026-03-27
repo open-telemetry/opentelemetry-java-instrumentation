@@ -12,14 +12,14 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
 import javax.annotation.Nullable;
 
-public class ServletAsyncContext implements ImplicitContextKeyed {
+public final class ServletAsyncContext implements ImplicitContextKeyed {
   private static final ContextKey<ServletAsyncContext> CONTEXT_KEY =
       named("opentelemetry-servlet-async-context");
 
   private boolean isAsyncListenerAttached;
-  private Throwable throwable;
-  private Object response;
-  private Context context;
+  @Nullable private Throwable throwable;
+  @Nullable private Object response;
+  @Nullable private Context context;
 
   public static Context init(Context context) {
     if (context.get(CONTEXT_KEY) != null) {
@@ -45,6 +45,7 @@ public class ServletAsyncContext implements ImplicitContextKeyed {
     }
   }
 
+  @Nullable
   public static Throwable getAsyncException(Context context, @Nullable Throwable error) {
     Throwable result = null;
     ServletAsyncContext servletAsyncContext = get(context);
@@ -64,6 +65,7 @@ public class ServletAsyncContext implements ImplicitContextKeyed {
     }
   }
 
+  @Nullable
   public static Object getAsyncListenerResponse(@Nullable Context context) {
     ServletAsyncContext servletAsyncContext = get(context);
     return servletAsyncContext != null ? servletAsyncContext.response : null;
@@ -77,6 +79,7 @@ public class ServletAsyncContext implements ImplicitContextKeyed {
     }
   }
 
+  @Nullable
   public static Context getAsyncListenerContext(Context context) {
     ServletAsyncContext servletAsyncContext = get(context);
     if (servletAsyncContext != null) {

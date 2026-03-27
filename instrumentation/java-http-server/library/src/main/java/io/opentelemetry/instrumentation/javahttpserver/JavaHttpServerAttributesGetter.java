@@ -15,9 +15,8 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum JavaHttpServerAttributesGetter
+final class JavaHttpServerAttributesGetter
     implements HttpServerAttributesGetter<HttpExchange, HttpExchange> {
-  INSTANCE;
 
   @Override
   public String getHttpRequestMethod(HttpExchange exchange) {

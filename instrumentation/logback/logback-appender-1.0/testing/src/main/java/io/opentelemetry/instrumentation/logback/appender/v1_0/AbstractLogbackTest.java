@@ -63,7 +63,7 @@ public abstract class AbstractLogbackTest {
 
   @ParameterizedTest
   @MethodSource("provideParameters")
-  public void test(boolean logException, boolean withParent) throws InterruptedException {
+  void test(boolean logException, boolean withParent) throws InterruptedException {
     test(abcLogger, Logger::debug, Logger::debug, logException, withParent, null, null, null);
     testing().clearData();
     test(
@@ -192,7 +192,6 @@ public abstract class AbstractLogbackTest {
   void testMdc() {
     MDC.put("key1", "val1");
     MDC.put("key2", "val2");
-    MDC.put("event.name", "MyEventName");
     try {
       abcLogger.info("xyz: {}", 123);
     } finally {
@@ -208,8 +207,45 @@ public abstract class AbstractLogbackTest {
     assertions.addAll(codeFunctionAssertions(AbstractLogbackTest.class, "testMdc"));
     assertions.add(equalTo(stringKey("key1"), "val1"));
     assertions.add(equalTo(stringKey("key2"), "val2"));
-    if (!expectEventName()) {
-      assertions.add(equalTo(stringKey("event.name"), "MyEventName"));
+
+    testing()
+        .waitAndAssertLogRecords(
+            logRecord ->
+                logRecord
+                    .hasBody("xyz: 123")
+                    .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+                    .hasSeverity(Severity.INFO)
+                    .hasSeverityText("INFO")
+                    .hasAttributesSatisfyingExactly(assertions));
+  }
+
+  private static Stream<Arguments> eventNameProperties() {
+    return Stream.of(Arguments.of("event.name"), Arguments.of("otel.event.name"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("eventNameProperties")
+  void testEventNameMdc(String eventNameProperty) {
+    boolean expectEventName = "otel.event.name".equals(eventNameProperty) || expectEventName();
+
+    MDC.put("key1", "val1");
+    MDC.put(eventNameProperty, "MyEventName");
+    try {
+      abcLogger.info("xyz: {}", 123);
+    } finally {
+      MDC.clear();
+    }
+
+    List<AttributeAssertion> assertions = new ArrayList<>();
+    if (expectThreadAttributes()) {
+      assertions.addAll(threadAssertions());
+    }
+    assertions.addAll(
+        codeFileAndLineAssertions(AbstractLogbackTest.class.getSimpleName() + ".java"));
+    assertions.addAll(codeFunctionAssertions(AbstractLogbackTest.class, "testEventNameMdc"));
+    assertions.add(equalTo(stringKey("key1"), "val1"));
+    if (!expectEventName) {
+      assertions.add(equalTo(stringKey(eventNameProperty), "MyEventName"));
     }
 
     testing()
@@ -221,14 +257,14 @@ public abstract class AbstractLogbackTest {
                   .hasSeverity(Severity.INFO)
                   .hasSeverityText("INFO")
                   .hasAttributesSatisfyingExactly(assertions);
-              if (expectEventName()) {
+              if (expectEventName) {
                 logRecord.hasEventName("MyEventName");
               }
             });
   }
 
   @Test
-  public void testMarker() {
+  void testMarker() {
 
     String markerName = "aMarker";
     Marker marker = MarkerFactory.getMarker(markerName);

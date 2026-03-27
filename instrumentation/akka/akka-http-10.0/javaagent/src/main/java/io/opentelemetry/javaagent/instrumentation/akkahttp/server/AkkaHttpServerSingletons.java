@@ -20,7 +20,7 @@ public final class AkkaHttpServerSingletons {
         JavaagentHttpServerInstrumenters.create(
             AkkaHttpUtil.instrumentationName(),
             new AkkaHttpServerAttributesGetter(),
-            AkkaHttpServerHeaders.INSTANCE);
+            new AkkaHttpServerHeaders());
   }
 
   public static Instrumenter<HttpRequest, HttpResponse> instrumenter() {

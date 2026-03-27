@@ -41,7 +41,7 @@ public class HttpJspPageInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
             .and(takesArgument(1, named("javax.servlet.http.HttpServletResponse")))
             .and(isPublic()),
-        HttpJspPageInstrumentation.class.getName() + "$HttpJspPageAdvice");
+        getClass().getName() + "$HttpJspPageAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -33,7 +33,7 @@ public class JerseyResourceMethodDispatcherInstrumentation implements TypeInstru
                     namedOneOf(
                         "javax.ws.rs.core.Request",
                         "org.glassfish.jersey.server.ContainerRequest"))),
-        JerseyResourceMethodDispatcherInstrumentation.class.getName() + "$DispatchAdvice");
+        getClass().getName() + "$DispatchAdvice");
   }
 
   @SuppressWarnings("unused")

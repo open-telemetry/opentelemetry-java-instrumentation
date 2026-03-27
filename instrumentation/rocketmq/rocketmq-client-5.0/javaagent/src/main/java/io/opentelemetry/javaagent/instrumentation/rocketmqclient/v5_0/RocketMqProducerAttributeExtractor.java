@@ -20,9 +20,8 @@ import javax.annotation.Nullable;
 import org.apache.rocketmq.client.java.impl.producer.SendReceiptImpl;
 import org.apache.rocketmq.client.java.message.PublishingMessageImpl;
 
-enum RocketMqProducerAttributeExtractor
+class RocketMqProducerAttributeExtractor
     implements AttributesExtractor<PublishingMessageImpl, SendReceiptImpl> {
-  INSTANCE;
 
   @Override
   public void onStart(

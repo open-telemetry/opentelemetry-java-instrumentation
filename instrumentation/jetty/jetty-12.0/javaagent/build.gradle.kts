@@ -7,6 +7,7 @@ muzzle {
     group.set("org.eclipse.jetty")
     module.set("jetty-server")
     versions.set("[12,)")
+    assertInverse.set(true)
   }
 }
 
@@ -27,5 +28,5 @@ otelJava {
 }
 
 tasks.test {
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  systemProperty("collectMetadata", findProperty("collectMetadata"))
 }

@@ -30,7 +30,7 @@ public class ContextHandlerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("createOperations").and(takesArgument(0, named("io.netty.channel.Channel"))),
-        ContextHandlerInstrumentation.class.getName() + "$CreateOperationsAdvice");
+        getClass().getName() + "$CreateOperationsAdvice");
   }
 
   @SuppressWarnings("unused")

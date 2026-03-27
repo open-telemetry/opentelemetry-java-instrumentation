@@ -154,7 +154,7 @@ public abstract class AbstractTomcatServlet3Test extends AbstractServlet3Test<To
             });
 
     accessLogValue.waitForLoggedIds(count);
-    assertThat(accessLogValue.getLoggedIds().size()).isEqualTo(count);
+    assertThat(accessLogValue.getLoggedIds()).hasSize(count);
     List<String> loggedTraces =
         accessLogValue.getLoggedIds().stream().map(Map.Entry::getKey).collect(toList());
     List<String> loggedSpans =

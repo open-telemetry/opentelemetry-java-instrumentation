@@ -68,7 +68,7 @@ class Log4j1Test {
   }
 
   @Test
-  public void testCodeAttributes() {
+  void testCodeAttributes() {
     logger.info("this is test message");
     List<AttributeAssertion> assertions =
         SemconvCodeStabilityUtil.codeFileAndLineAssertions("Log4j1Test.java");
@@ -89,7 +89,7 @@ class Log4j1Test {
 
   @ParameterizedTest
   @MethodSource("provideParameters")
-  public void test(boolean logException, boolean withParent) throws InterruptedException {
+  void test(boolean logException, boolean withParent) throws InterruptedException {
     test(Logger::debug, Logger::debug, logException, withParent, null, null, null);
     testing.clearData();
     test(Logger::info, Logger::info, logException, withParent, "abc", Severity.INFO, "INFO");
@@ -169,17 +169,22 @@ class Log4j1Test {
     }
   }
 
-  @Test
-  void testMdc() {
+  private static Stream<Arguments> eventNameProperties() {
+    return Stream.of(Arguments.of("event.name"), Arguments.of("otel.event.name"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("eventNameProperties")
+  void testMdc(String eventNameProperty) {
     MDC.put("key1", "val1");
     MDC.put("key2", "val2");
-    MDC.put("event.name", "MyEventName");
+    MDC.put(eventNameProperty, "MyEventName");
     try {
       logger.info("xyz");
     } finally {
       MDC.remove("key1");
       MDC.remove("key2");
-      MDC.remove("event.name");
+      MDC.remove(eventNameProperty);
     }
 
     List<AttributeAssertion> assertions =

@@ -131,7 +131,7 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
     ConsumerRecords<?, ?> consumerRecords = poll(Duration.ofSeconds(5));
     List<? extends ConsumerRecord<?, ?>> recordsInPartition =
         consumerRecords.records(KafkaClientBaseTest.topicPartition);
-    assertThat(recordsInPartition.size()).isEqualTo(1);
+    assertThat(recordsInPartition).hasSize(1);
 
     // iterate over records to generate spans
     for (ConsumerRecord<?, ?> record : recordsInPartition) {

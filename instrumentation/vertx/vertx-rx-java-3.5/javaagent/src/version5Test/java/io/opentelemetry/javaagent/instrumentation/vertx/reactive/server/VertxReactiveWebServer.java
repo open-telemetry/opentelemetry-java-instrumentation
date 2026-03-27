@@ -27,6 +27,7 @@ import io.vertx.reactivex.core.http.HttpServerResponse;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.jdbcclient.JDBCPool;
+import io.vertx.reactivex.sqlclient.Pool;
 import io.vertx.reactivex.sqlclient.SqlConnection;
 import io.vertx.sqlclient.PoolOptions;
 import java.util.concurrent.CompletableFuture;
@@ -45,7 +46,7 @@ public class VertxReactiveWebServer extends AbstractVerticle {
   public static final String TEST_REQUEST_ID_ATTRIBUTE = "test.request.id";
 
   private static final String CONFIG_HTTP_SERVER_PORT = "http.server.port";
-  private static io.vertx.reactivex.sqlclient.Pool client;
+  private static Pool client;
 
   public static Vertx start(int port)
       throws ExecutionException, InterruptedException, TimeoutException {

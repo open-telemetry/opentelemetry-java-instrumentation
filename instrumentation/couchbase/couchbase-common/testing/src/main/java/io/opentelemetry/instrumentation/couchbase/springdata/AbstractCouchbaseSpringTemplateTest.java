@@ -51,7 +51,7 @@ public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchb
   private static CouchbaseTemplate memcacheTemplate;
 
   @BeforeAll
-  void setUp() {
+  void setUpTemplates() {
     CouchbaseEnvironment couchbaseEnvironment = envBuilder(bucketCouchbase).build();
     CouchbaseEnvironment memcacheEnvironment = envBuilder(bucketMemcache).build();
 

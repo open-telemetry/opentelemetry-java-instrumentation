@@ -12,7 +12,7 @@ dependencies {
   testImplementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
 }
 
-val testLatestDeps = findProperty("testLatestDeps") as Boolean
+val testLatestDeps = findProperty("testLatestDeps") == "true"
 
 testing {
   suites {

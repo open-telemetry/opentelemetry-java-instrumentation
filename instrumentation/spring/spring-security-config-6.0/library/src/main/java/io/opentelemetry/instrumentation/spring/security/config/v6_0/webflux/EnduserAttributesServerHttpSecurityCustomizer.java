@@ -18,7 +18,7 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
  * org.springframework.security.core.context.SecurityContext} in the {@link
  * org.springframework.security.core.context.ReactiveSecurityContextHolder}.
  */
-public class EnduserAttributesServerHttpSecurityCustomizer
+public final class EnduserAttributesServerHttpSecurityCustomizer
     implements Customizer<ServerHttpSecurity> {
 
   private final EnduserAttributesCapturer capturer;

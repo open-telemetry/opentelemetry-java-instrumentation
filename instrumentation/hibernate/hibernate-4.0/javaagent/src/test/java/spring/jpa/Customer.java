@@ -7,7 +7,6 @@ package spring.jpa;
 
 import java.util.Locale;
 import java.util.Objects;
-import javax.annotation.Nullable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -61,7 +60,7 @@ public class Customer {
   }
 
   @Override
-  public boolean equals(@Nullable Object obj) {
+  public boolean equals(Object obj) {
     if (obj == this) {
       return true;
     }

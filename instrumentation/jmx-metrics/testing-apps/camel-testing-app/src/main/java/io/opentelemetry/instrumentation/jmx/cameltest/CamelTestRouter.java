@@ -10,6 +10,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.apache.camel.builder.RouteBuilder;
 
 public class CamelTestRouter extends RouteBuilder {
+  private static final long DEFAULT_EXCHANGE_DELAY_MS = 50;
+  private static final long MAXIMUM_EXCHANGE_DELAY_DELTA = 20;
 
   private static final Map<Long, String> BIRD_SPECIES =
       Map.of(
@@ -28,7 +30,9 @@ public class CamelTestRouter extends RouteBuilder {
         .process(
             exchange -> {
               try {
-                Thread.sleep(10 + ThreadLocalRandom.current().nextLong(100));
+                Thread.sleep(
+                    DEFAULT_EXCHANGE_DELAY_MS
+                        + ThreadLocalRandom.current().nextLong(MAXIMUM_EXCHANGE_DELAY_DELTA));
               } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new IllegalStateException(e);

@@ -6,7 +6,7 @@
 
 set -euo pipefail
 
-source "$(dirname "$0")/instrumentations.sh"
+source "$(dirname "$0")/../.github/scripts/instrumentations.sh"
 
 readonly TELEMETRY_DIR_NAME=".telemetry"
 

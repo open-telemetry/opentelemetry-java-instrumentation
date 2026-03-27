@@ -19,10 +19,13 @@ import io.opentelemetry.api.logs.LogRecordBuilder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import javax.annotation.Nullable;
+import java.util.stream.Stream;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class LogEventMapperTest {
 
@@ -92,6 +95,37 @@ class LogEventMapperTest {
     // then
     verify(builder).setAttribute(stringKey("key1"), "value1");
     verify(builder).setAttribute(stringKey("key2"), "value2");
+    verifyNoMoreInteractions(builder);
+  }
+
+  private static Stream<Arguments> eventNameProperties() {
+    return Stream.of(Arguments.of("event.name", true), Arguments.of("otel.event.name", false));
+  }
+
+  @ParameterizedTest
+  @MethodSource("eventNameProperties")
+  void testCaptureEventNameFromContextData(String eventNameProperty, boolean captureEventName) {
+    // given
+    LogEventMapper<Map<String, String>> mapper =
+        new LogEventMapper<>(
+            ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
+            false,
+            false,
+            singletonList("key1"),
+            captureEventName);
+    Map<String, String> contextData = new HashMap<>();
+    contextData.put("key1", "value1");
+    contextData.put(eventNameProperty, "MyEventName");
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    // when
+    mapper.captureContextDataAttributes(builder, contextData);
+
+    // then
+    verify(builder).setAttribute(stringKey("key1"), "value1");
+    verify(builder).setEventName("MyEventName");
     verifyNoMoreInteractions(builder);
   }
 
@@ -194,7 +228,6 @@ class LogEventMapperTest {
     INSTANCE;
 
     @Override
-    @Nullable
     public String getValue(Map<String, String> contextData, String key) {
       return contextData.get(key);
     }

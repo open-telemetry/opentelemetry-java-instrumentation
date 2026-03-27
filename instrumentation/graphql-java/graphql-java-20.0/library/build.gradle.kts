@@ -4,12 +4,12 @@ plugins {
 
 dependencies {
   library("com.graphql-java:graphql-java:20.0")
-  implementation(project(":instrumentation:graphql-java:graphql-java-common:library"))
+  implementation(project(":instrumentation:graphql-java:graphql-java-common-12.0:library"))
 
-  testImplementation(project(":instrumentation:graphql-java:graphql-java-common:testing"))
+  testImplementation(project(":instrumentation:graphql-java:graphql-java-common-12.0:testing"))
 }
 
-if (findProperty("testLatestDeps") as Boolean) {
+if (findProperty("testLatestDeps") == "true") {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }

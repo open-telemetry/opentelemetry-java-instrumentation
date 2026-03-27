@@ -23,7 +23,6 @@ public class AkkaForkJoinPoolInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    // This might need to be an extendsClass matcher...
     return named("akka.dispatch.forkjoin.ForkJoinPool");
   }
 
@@ -32,15 +31,15 @@ public class AkkaForkJoinPoolInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("execute")
             .and(takesArgument(0, named(AkkaForkJoinTaskInstrumentation.TASK_CLASS_NAME))),
-        AkkaForkJoinPoolInstrumentation.class.getName() + "$SetAkkaForkJoinStateAdvice");
+        getClass().getName() + "$SetAkkaForkJoinStateAdvice");
     transformer.applyAdviceToMethod(
         named("submit")
             .and(takesArgument(0, named(AkkaForkJoinTaskInstrumentation.TASK_CLASS_NAME))),
-        AkkaForkJoinPoolInstrumentation.class.getName() + "$SetAkkaForkJoinStateAdvice");
+        getClass().getName() + "$SetAkkaForkJoinStateAdvice");
     transformer.applyAdviceToMethod(
         named("invoke")
             .and(takesArgument(0, named(AkkaForkJoinTaskInstrumentation.TASK_CLASS_NAME))),
-        AkkaForkJoinPoolInstrumentation.class.getName() + "$SetAkkaForkJoinStateAdvice");
+        getClass().getName() + "$SetAkkaForkJoinStateAdvice");
   }
 
   @SuppressWarnings("unused")

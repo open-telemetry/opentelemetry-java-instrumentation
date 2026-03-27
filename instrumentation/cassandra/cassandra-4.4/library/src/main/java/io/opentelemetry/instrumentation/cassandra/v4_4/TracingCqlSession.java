@@ -178,6 +178,7 @@ final class TracingCqlSession {
     return query == null ? "" : query;
   }
 
+  @Nullable
   private static ExecutionInfo getExecutionInfo(
       @Nullable AsyncResultSet asyncResultSet, @Nullable Throwable throwable) {
     if (asyncResultSet != null) {
@@ -187,6 +188,7 @@ final class TracingCqlSession {
     }
   }
 
+  @Nullable
   private static ExecutionInfo getExecutionInfo(@Nullable Throwable throwable) {
     if (throwable instanceof DriverException) {
       return ((DriverException) throwable).getExecutionInfo();

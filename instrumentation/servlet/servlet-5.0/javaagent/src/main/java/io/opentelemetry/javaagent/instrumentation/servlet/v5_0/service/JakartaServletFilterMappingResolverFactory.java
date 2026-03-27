@@ -5,12 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.service;
 
-import io.opentelemetry.instrumentation.servlet.internal.ServletFilterMappingResolverFactory;
+import io.opentelemetry.javaagent.instrumentation.servlet.ServletFilterMappingResolverFactory;
 import jakarta.servlet.FilterConfig;
 import jakarta.servlet.FilterRegistration;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletRegistration;
 import java.util.Collection;
+import javax.annotation.Nullable;
 
 public class JakartaServletFilterMappingResolverFactory
     extends ServletFilterMappingResolverFactory<FilterRegistration> {
@@ -21,6 +22,7 @@ public class JakartaServletFilterMappingResolverFactory
   }
 
   @Override
+  @Nullable
   protected FilterRegistration getFilterRegistration() {
     String filterName = filterConfig.getFilterName();
     ServletContext servletContext = filterConfig.getServletContext();
@@ -41,6 +43,7 @@ public class JakartaServletFilterMappingResolverFactory
   }
 
   @Override
+  @Nullable
   @SuppressWarnings("ReturnsNullCollection")
   protected Collection<String> getServletMappings(String servletName) {
     ServletRegistration servletRegistration =

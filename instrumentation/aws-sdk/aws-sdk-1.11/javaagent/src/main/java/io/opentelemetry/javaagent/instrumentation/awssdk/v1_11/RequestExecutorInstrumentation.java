@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -34,11 +33,8 @@ public class RequestExecutorInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(not(isAbstract()))
-            .and(named("doExecute"))
-            .and(returns(named("com.amazonaws.Response"))),
-        RequestExecutorInstrumentation.class.getName() + "$RequestExecutorAdvice");
+        not(isAbstract()).and(named("doExecute")).and(returns(named("com.amazonaws.Response"))),
+        getClass().getName() + "$RequestExecutorAdvice");
   }
 
   @SuppressWarnings("unused")

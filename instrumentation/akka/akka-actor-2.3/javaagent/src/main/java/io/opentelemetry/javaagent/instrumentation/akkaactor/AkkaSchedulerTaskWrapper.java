@@ -6,20 +6,18 @@
 package io.opentelemetry.javaagent.instrumentation.akkaactor;
 
 import io.opentelemetry.context.Context;
+import javax.annotation.Nullable;
 
 public final class AkkaSchedulerTaskWrapper {
-  private static final Class<?> RUN_ON_CLOSE_TASK_CLASS = getRunOnCloseTaskClass();
+  @Nullable private static final Class<?> RUN_ON_CLOSE_TASK_CLASS = getRunOnCloseTaskClass();
 
+  @Nullable
   private static Class<?> getRunOnCloseTaskClass() {
     try {
       return Class.forName("akka.actor.Scheduler$TaskRunOnClose");
     } catch (ClassNotFoundException e) {
       return null;
     }
-  }
-
-  private static boolean isRunOnCloseTask(Runnable runnable) {
-    return RUN_ON_CLOSE_TASK_CLASS != null && RUN_ON_CLOSE_TASK_CLASS.isInstance(runnable);
   }
 
   public static Runnable wrap(Runnable runnable) {
@@ -31,6 +29,10 @@ public final class AkkaSchedulerTaskWrapper {
 
     Context context = Context.current();
     return context.wrap(runnable);
+  }
+
+  private static boolean isRunOnCloseTask(Runnable runnable) {
+    return RUN_ON_CLOSE_TASK_CLASS != null && RUN_ON_CLOSE_TASK_CLASS.isInstance(runnable);
   }
 
   private AkkaSchedulerTaskWrapper() {}

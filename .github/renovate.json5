@@ -8,8 +8,22 @@
     'instrumentation/**',
   ],
   packageRules: [
+
+    // ── Scheduling & grouping ──────────────────────────────────────────
+
     {
-      // this is to reduce the number of renovate PRs
+      // group all patch updates into a single weekly PR
+      groupName: 'all patch versions',
+      matchUpdateTypes: [
+        'patch',
+      ],
+      schedule: [
+        'before 8am on Tuesday',
+      ],
+    },
+    {
+      // group GitHub Actions, dockerfile, and custom.regex updates into a single weekly PR
+      // (must be after patch rule so that it wins for GH Action patches)
       matchManagers: [
         'github-actions',
         'dockerfile',
@@ -20,6 +34,9 @@
       ],
       groupName: 'weekly update',
     },
+
+    // ── Version constraints ────────────────────────────────────────────
+
     {
       matchPackageNames: [
         'io.opentelemetry.contrib:opentelemetry-azure-resources',
@@ -46,6 +63,77 @@
       ],
       allowedVersions: '!/\\-SNAPSHOT$/',
     },
+    {
+      // prevent 3.0.1u2 -> 3.0.1
+      matchPackageNames: [
+        'com.google.code.findbugs:annotations',
+      ],
+      allowedVersions: '!/3\\.0\\.1$/',
+    },
+    {
+      // system-stubs-jupiter 2.1+ requires Java 11+
+      matchPackageNames: [
+        'uk.org.webcompere:system-stubs-jupiter',
+      ],
+      allowedVersions: '/^2\\.0\\./',
+    },
+    {
+      // intentionally using Logback 1.2 (for Spring Boot 2) in these smoke tests
+      matchFileNames: [
+        'smoke-tests/images/spring-boot/build.gradle.kts',
+        'smoke-tests-otel-starter/spring-boot-2/build.gradle.kts',
+        'smoke-tests-otel-starter/spring-boot-reactive-2/build.gradle.kts',
+      ],
+      matchPackageNames: [
+        'ch.qos.logback:**',
+      ],
+      allowedVersions: '/^1\\.2\\./',
+    },
+    {
+      // intentionally aligning netty 4.0 versions in this convention
+      matchFileNames: [
+        'conventions/src/main/kotlin/otel.java-conventions.gradle.kts',
+      ],
+      matchPackageNames: [
+        'io.netty:netty-bom',
+      ],
+      matchCurrentVersion: '/^4\\.0\\./',
+      allowedVersions: '/^4\\.0\\./',
+    },
+    {
+      // intentionally aligning netty 4.1 versions in this convention
+      matchFileNames: [
+        'conventions/src/main/kotlin/otel.java-conventions.gradle.kts',
+      ],
+      matchPackageNames: [
+        'io.netty:netty-bom',
+      ],
+      matchCurrentVersion: '/^4\\.1\\./',
+      allowedVersions: '/^4\\.1\\./',
+    },
+    {
+      // intentionally using scala 2.11 in otel.scala-conventions.gradle.kts
+      matchFileNames: [
+        'conventions/src/main/kotlin/otel.scala-conventions.gradle.kts',
+      ],
+      matchPackageNames: [
+        'org.scala-lang:scala-library',
+      ],
+      allowedVersions: '/^2\\.11\\./',
+    },
+    {
+      // intentionally using logback 1.3 in dependency management (for Java 8 support)
+      matchFileNames: [
+        'dependencyManagement/build.gradle.kts',
+      ],
+      matchPackageNames: [
+        'ch.qos.logback:**',
+      ],
+      allowedVersions: '/^1\\.3\\./',
+    },
+
+    // ── Package family groups ──────────────────────────────────────────
+
     {
       groupName: 'quarkus packages',
       matchPackageNames: [
@@ -96,13 +184,9 @@
         'com.fasterxml.jackson.core:**',
       ],
     },
-    {
-      // prevent 3.0.1u2 -> 3.0.1
-      matchPackageNames: [
-        'com.google.code.findbugs:annotations',
-      ],
-      allowedVersions: '!/3\\.0\\.1$/',
-    },
+
+    // ── Disabled updates (Java version compatibility) ──────────────────
+
     {
       // OpenTelemetry SDK updates are handled by auto-update-otel-sdk.yml
       enabled: false,
@@ -142,13 +226,6 @@
       ],
     },
     {
-      // system-stubs-jupiter 2.1+ requires Java 11+
-      matchPackageNames: [
-        'uk.org.webcompere:system-stubs-jupiter',
-      ],
-      allowedVersions: '/^2\\.0\\./',
-    },
-    {
       // wiremock 3+ requires Java 11+
       matchUpdateTypes: [
         'major',
@@ -177,16 +254,6 @@
       matchPackageNames: [
         'org.apache.groovy:**'
       ],
-    },
-    {
-      // vaadin 14 tests require node 16
-      matchPackageNames: [
-        'actions/node-versions',
-      ],
-      matchUpdateTypes: [
-        'major',
-      ],
-      enabled: false,
     },
     {
       // intentionally using Spring Boot 2 to make sure the earliest version is supported
@@ -222,18 +289,6 @@
       enabled: false,
     },
     {
-      // intentionally using Logback 1.2 (for Spring Boot 2) in these smoke tests
-      matchFileNames: [
-        'smoke-tests/images/spring-boot/build.gradle.kts',
-        'smoke-tests-otel-starter/spring-boot-2/build.gradle.kts',
-        'smoke-tests-otel-starter/spring-boot-reactive-2/build.gradle.kts',
-      ],
-      matchPackageNames: [
-        'ch.qos.logback:**',
-      ],
-      allowedVersions: '/^1\\.2\\./',
-    },
-    {
       // intentionally using slf4j 1 in this smoke tests
       matchFileNames: [
         'smoke-tests/images/spring-boot/build.gradle.kts',
@@ -260,38 +315,6 @@
         'com.google.inject:**',
         'com.google.inject.extensions:**',
       ],
-    },
-    {
-      // intentionally aligning netty 4.0 versions in this convention
-      matchFileNames: [
-        'conventions/src/main/kotlin/otel.java-conventions.gradle.kts',
-      ],
-      matchPackageNames: [
-        'io.netty:netty-bom',
-      ],
-      matchCurrentVersion: '/^4\\.0\\./',
-      allowedVersions: '/^4\\.0\\./',
-    },
-    {
-      // intentionally aligning netty 4.1 versions in this convention
-      matchFileNames: [
-        'conventions/src/main/kotlin/otel.java-conventions.gradle.kts',
-      ],
-      matchPackageNames: [
-        'io.netty:netty-bom',
-      ],
-      matchCurrentVersion: '/^4\\.1\\./',
-      allowedVersions: '/^4\\.1\\./',
-    },
-    {
-      // intentionally using scala 2.11 in otel.scala-conventions.gradle.kts
-      matchFileNames: [
-        'conventions/src/main/kotlin/otel.scala-conventions.gradle.kts',
-      ],
-      matchPackageNames: [
-        'org.scala-lang:scala-library',
-      ],
-      allowedVersions: '/^2\\.11\\./',
     },
     {
       // intentionally testing against specific major Java versions
@@ -328,16 +351,6 @@
       enabled: false,
     },
     {
-      // intentionally using logback 1.3 in dependency management (for Java 8 support)
-      matchFileNames: [
-        'dependencyManagement/build.gradle.kts',
-      ],
-      matchPackageNames: [
-        'ch.qos.logback:**',
-      ],
-      allowedVersions: '/^1\\.3\\./',
-    },
-    {
       // pinned version to Jetty 8 (Servlet 3.0) for compatibility
       matchFileNames: [
         'examples/distro/instrumentation/servlet-3/build.gradle',
@@ -365,7 +378,7 @@
     },
     {
       customType: 'regex',
-      datasourceTemplate: 'java-version',
+      datasourceTemplate: 'docker',
       managerFilePatterns: [
         '.github/workflows/**',
         '**/*.gradle.kts',
@@ -374,8 +387,8 @@
         '(?<currentValue>\\d+) # renovate\\(java-version\\)',
         '"(?<currentValue>\\d+)" // renovate\\(java-version\\)',
       ],
-      depNameTemplate: 'java',
-      extractVersionTemplate: '^(?<version>\\d+)',
+      // using zulu because new releases get published quickly
+      depNameTemplate: 'azul/zulu-openjdk',
     },
     {
       customType: 'regex',

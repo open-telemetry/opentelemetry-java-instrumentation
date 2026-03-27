@@ -7,21 +7,16 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.hibernate.SessionInfo;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.hibernate.Session;
-import org.hibernate.StatelessSession;
 
 public class SessionFactoryInstrumentation implements TypeInstrumentation {
 
@@ -38,14 +33,13 @@ public class SessionFactoryInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(namedOneOf("openSession", "openStatelessSession"))
+        namedOneOf("openSession", "openStatelessSession")
             .and(takesArguments(0))
             .and(
                 returns(
                     namedOneOf("org.hibernate.Session", "org.hibernate.StatelessSession")
                         .or(implementsInterface(named("org.hibernate.Session"))))),
-        SessionFactoryInstrumentation.class.getName() + "$SessionFactoryAdvice");
+        getClass().getName() + "$SessionFactoryAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -53,16 +47,7 @@ public class SessionFactoryInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void openSession(@Advice.Return Object session) {
-
-      if (session instanceof Session) {
-        VirtualField<Session, SessionInfo> virtualField =
-            VirtualField.find(Session.class, SessionInfo.class);
-        virtualField.set((Session) session, new SessionInfo());
-      } else if (session instanceof StatelessSession) {
-        VirtualField<StatelessSession, SessionInfo> virtualField =
-            VirtualField.find(StatelessSession.class, SessionInfo.class);
-        virtualField.set((StatelessSession) session, new SessionInfo());
-      }
+      SessionUtil.setSessionInfo(session);
     }
   }
 }

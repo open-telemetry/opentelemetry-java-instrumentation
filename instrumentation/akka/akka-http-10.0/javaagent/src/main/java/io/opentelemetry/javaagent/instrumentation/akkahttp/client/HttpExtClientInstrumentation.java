@@ -54,6 +54,7 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
         this.scope = scope;
       }
 
+      @Nullable
       public static AdviceScope start(HttpRequest request) {
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {

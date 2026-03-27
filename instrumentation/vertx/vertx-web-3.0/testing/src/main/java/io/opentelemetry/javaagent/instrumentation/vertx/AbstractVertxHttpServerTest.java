@@ -33,6 +33,7 @@ abstract class AbstractVertxHttpServerTest extends AbstractHttpServerTest<Vertx>
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
     options.setTestPathParam(true);
+    options.setTestHttpBodyPipelining(true);
     // server spans are ended inside of the controller spans
     options.setVerifyServerSpanEndTime(false);
     options.setContextPath("/vertx-app");

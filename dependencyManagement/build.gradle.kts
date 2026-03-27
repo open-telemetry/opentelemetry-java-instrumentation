@@ -5,7 +5,7 @@ plugins {
 data class DependencySet(val group: String, val version: String, val modules: List<String>)
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.59.0"
+val otelSdkVersion = "1.60.1"
 val otelContribVersion = "1.54.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
@@ -27,12 +27,12 @@ val DEPENDENCY_BOMS = listOf(
   // for some reason boms show up as runtime dependencies in license and vulnerability scans
   // even if they are only used by test dependencies, so not using junit bom since it is LGPL
 
-  "com.fasterxml.jackson:jackson-bom:2.21.1",
+  "com.fasterxml.jackson:jackson-bom:2.21.2",
   "com.google.guava:guava-bom:33.5.0-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
-  "org.testcontainers:testcontainers-bom:2.0.3"
+  "org.testcontainers:testcontainers-bom:2.0.4"
 )
 
 val autoServiceVersion = "1.1.1"
@@ -94,7 +94,7 @@ val DEPENDENCIES = listOf(
   "commons-fileupload:commons-fileupload:1.6.0",
   "commons-io:commons-io:2.21.0",
   "commons-lang:commons-lang:2.6",
-  "commons-logging:commons-logging:1.3.5",
+  "commons-logging:commons-logging:1.3.6",
   "commons-validator:commons-validator:1.10.1",
   "io.netty:netty:3.10.6.Final",
   "io.opentelemetry.contrib:opentelemetry-azure-resources:${otelContribVersion}",
@@ -104,7 +104,7 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.contrib:opentelemetry-cloudfoundry-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-baggage-processor:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-samplers:${otelContribVersion}",
-  "io.opentelemetry.proto:opentelemetry-proto:1.9.0-alpha",
+  "io.opentelemetry.proto:opentelemetry-proto:1.10.0-alpha",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
   "org.assertj:assertj-core:3.27.7",
   "org.awaitility:awaitility:4.3.0",

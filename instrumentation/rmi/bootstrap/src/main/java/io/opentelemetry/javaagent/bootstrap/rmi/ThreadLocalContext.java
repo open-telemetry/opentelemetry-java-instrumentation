@@ -6,24 +6,28 @@
 package io.opentelemetry.javaagent.bootstrap.rmi;
 
 import io.opentelemetry.context.Context;
+import javax.annotation.Nullable;
 
-public class ThreadLocalContext {
+public final class ThreadLocalContext {
   public static final ThreadLocalContext THREAD_LOCAL_CONTEXT = new ThreadLocalContext();
   private final ThreadLocal<Context> local;
 
-  public ThreadLocalContext() {
+  private ThreadLocalContext() {
     local = new ThreadLocal<>();
   }
 
-  public void set(Context context) {
-    local.set(context);
+  public void set(@Nullable Context context) {
+    if (context == null) {
+      local.remove();
+    } else {
+      local.set(context);
+    }
   }
 
+  @Nullable
   public Context getAndResetContext() {
     Context context = local.get();
-    if (context != null) {
-      local.remove();
-    }
+    local.remove();
     return context;
   }
 }

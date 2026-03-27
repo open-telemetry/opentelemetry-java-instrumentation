@@ -18,7 +18,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Map;
@@ -54,7 +53,7 @@ class JaxRsClientV1Test extends AbstractHttpClientTest<WebResource.Builder> {
     options.setHttpAttributes(
         serverEndpoint -> {
           Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
           attributes.remove(NETWORK_PROTOCOL_VERSION);
           return attributes;
         });

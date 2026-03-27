@@ -18,13 +18,18 @@ dependencies {
 
   implementation(project(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-common:javaagent"))
 
+  testInstrumentation(project(":instrumentation:jdbc:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-5.0:javaagent"))
 
   testLibrary("io.vertx:vertx-pg-client:$version")
+  testImplementation("io.vertx:vertx-jdbc-client:$version")
+  testImplementation("io.agroal:agroal-pool:1.9")
+  testImplementation("org.hsqldb:hsqldb:2.3.4")
 
   latestDepTestLibrary("io.vertx:vertx-sql-client:4.+") // see vertx-sql-client-5.0 module
   latestDepTestLibrary("io.vertx:vertx-pg-client:4.+") // see vertx-sql-client-5.0 module
+  latestDepTestLibrary("io.vertx:vertx-jdbc-client:4.+") // see vertx-sql-client-5.0 module
   latestDepTestLibrary("io.vertx:vertx-codegen:4.+") // see vertx-sql-client-5.0 module
 }
 
@@ -48,7 +53,7 @@ tasks {
   }
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 if (!latestDepTest) {
   // https://bugs.openjdk.org/browse/JDK-8320431
   otelJava {

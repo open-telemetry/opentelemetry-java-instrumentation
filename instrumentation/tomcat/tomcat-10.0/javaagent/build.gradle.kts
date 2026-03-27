@@ -29,12 +29,13 @@ tasks {
   withType<Test>().configureEach {
     jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 }
 
 // Tomcat 10 uses deprecation annotation methods `forRemoval()` and `since()`
 // in jakarta.servlet.http.HttpServlet that don't work with Java 8
-if (findProperty("testLatestDeps") as Boolean) {
+if (findProperty("testLatestDeps") == "true") {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }

@@ -19,7 +19,7 @@ final class AkkaAsyncChild extends ForkJoinTask<Object> implements TestTask {
   private final boolean doTraceableWork;
   private final CountDownLatch latch = new CountDownLatch(1);
 
-  public AkkaAsyncChild(boolean doTraceableWork, boolean blockThread) {
+  AkkaAsyncChild(boolean doTraceableWork, boolean blockThread) {
     this.doTraceableWork = doTraceableWork;
     this.blockThread = new AtomicBoolean(blockThread);
   }

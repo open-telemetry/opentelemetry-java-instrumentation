@@ -7,11 +7,7 @@ muzzle {
     group.set("io.ratpack")
     module.set("ratpack-core")
     versions.set("[1.7.0,)")
-  }
-  fail {
-    group.set("io.ratpack")
-    module.set("ratpack-core")
-    versions.set("[1.0,1.7)")
+    assertInverse.set(true)
   }
 }
 
@@ -27,9 +23,9 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
   val testStableSemconv by registering(Test::class) {
@@ -43,7 +39,7 @@ tasks {
     dependsOn(testStableSemconv)
   }
 
-  if (findProperty("denyUnsafe") as Boolean) {
+  if (findProperty("denyUnsafe") == "true") {
     withType<Test>().configureEach {
       enabled = false
     }

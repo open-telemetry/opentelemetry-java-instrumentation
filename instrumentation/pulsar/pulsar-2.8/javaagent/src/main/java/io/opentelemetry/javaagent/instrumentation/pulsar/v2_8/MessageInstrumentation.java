@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -26,8 +25,8 @@ public class MessageInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(named("recycle")).and(takesArguments(0)),
-        MessageInstrumentation.class.getName() + "$MessageRecycleAdvice");
+        isPublic().and(named("recycle")).and(takesArguments(0)),
+        getClass().getName() + "$MessageRecycleAdvice");
   }
 
   @SuppressWarnings("unused")

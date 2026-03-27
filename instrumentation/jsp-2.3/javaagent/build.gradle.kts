@@ -59,7 +59,7 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
     jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
   test {
@@ -72,5 +72,9 @@ tasks {
 
     jvmArgs("-Dotel.instrumentation.jsp.experimental-span-attributes=true")
     systemProperty("metadataConfig", "otel.instrumentation.common.experimental.view-telemetry.enabled=true,otel.instrumentation.jsp.experimental-span-attributes=true")
+  }
+
+  check {
+    dependsOn(testExperimental)
   }
 }

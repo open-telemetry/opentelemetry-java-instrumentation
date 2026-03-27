@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
 import static io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolSpecificEvent.SWITCHING_PROTOCOLS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -18,7 +19,6 @@ import com.twitter.finagle.http.Response;
 import com.twitter.finagle.http2.param.PriorKnowledge;
 import com.twitter.util.Await;
 import com.twitter.util.Duration;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolSpecificEvent;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.EventDataAssert;
@@ -48,12 +48,9 @@ class ServerH2Test extends AbstractServerTest {
   private static void assertSwitchingProtocolsEvent(EventDataAssert eventDataAssert) {
     eventDataAssert
         .hasName(SWITCHING_PROTOCOLS.eventName())
-        .hasAttributes(
-            Attributes.of(
-                ProtocolSpecificEvent.SWITCHING_PROTOCOLS_FROM_KEY,
-                "HTTP/1.1",
-                ProtocolSpecificEvent.SWITCHING_PROTOCOLS_TO_KEY,
-                singletonList("h2c")));
+        .hasAttributesSatisfyingExactly(
+            equalTo(ProtocolSpecificEvent.SWITCHING_PROTOCOLS_FROM_KEY, "HTTP/1.1"),
+            equalTo(ProtocolSpecificEvent.SWITCHING_PROTOCOLS_TO_KEY, singletonList("h2c")));
   }
 
   @Test

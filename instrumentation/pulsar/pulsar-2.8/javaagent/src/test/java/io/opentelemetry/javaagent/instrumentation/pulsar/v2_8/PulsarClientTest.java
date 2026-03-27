@@ -12,6 +12,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -92,6 +93,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                             processAttributes(topic, msgId.toString(), false))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testConsumeNonPartitionedTopicUsingReceive() throws Exception {
     String topic = "persistent://public/default/testConsumeNonPartitionedTopicCallReceive";
@@ -137,9 +139,8 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                             receiveAttributes(topic, msgId.toString(), false))));
 
     assertThat(testing.metrics())
+        .filteredOn(metric -> !metric.getName().startsWith("otel.sdk."))
         .satisfiesExactlyInAnyOrder(
-            metric -> assertThat(metric).hasName("otel.sdk.span.started"),
-            metric -> assertThat(metric).hasName("otel.sdk.span.live"),
             metric ->
                 assertThat(metric)
                     .hasName("messaging.receive.duration")
@@ -151,9 +152,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                 point ->
                                     point
                                         .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(MESSAGING_OPERATION, "receive"),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))),
@@ -168,9 +170,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                               point -> {
                                 point
                                     .hasValue(1)
-                                    .hasAttributesSatisfying(
+                                    .hasAttributesSatisfyingExactly(
                                         equalTo(MESSAGING_SYSTEM, "pulsar"),
                                         equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                        equalTo(MESSAGING_OPERATION, "receive"),
                                         equalTo(SERVER_PORT, brokerPort),
                                         equalTo(SERVER_ADDRESS, brokerHost));
                               });
@@ -186,14 +189,16 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                 point ->
                                     point
                                         .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(MESSAGING_OPERATION, "publish"),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testConsumeNonPartitionedTopicUsingReceiveAsync() throws Exception {
     String topic = "persistent://public/default/testConsumeNonPartitionedTopicCallReceiveAsync";
@@ -253,9 +258,8 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                         .hasParent(trace.getSpan(0))));
 
     assertThat(testing.metrics())
+        .filteredOn(metric -> !metric.getName().startsWith("otel.sdk."))
         .satisfiesExactlyInAnyOrder(
-            metric -> assertThat(metric).hasName("otel.sdk.span.started"),
-            metric -> assertThat(metric).hasName("otel.sdk.span.live"),
             metric ->
                 assertThat(metric)
                     .hasName("messaging.receive.duration")
@@ -267,9 +271,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                 point ->
                                     point
                                         .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(MESSAGING_OPERATION, "receive"),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))),
@@ -284,9 +289,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                               point -> {
                                 point
                                     .hasValue(1)
-                                    .hasAttributesSatisfying(
+                                    .hasAttributesSatisfyingExactly(
                                         equalTo(MESSAGING_SYSTEM, "pulsar"),
                                         equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                        equalTo(MESSAGING_OPERATION, "receive"),
                                         equalTo(SERVER_PORT, brokerPort),
                                         equalTo(SERVER_ADDRESS, brokerHost));
                               });
@@ -302,14 +308,16 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                 point ->
                                     point
                                         .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(MESSAGING_OPERATION, "publish"),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testConsumeNonPartitionedTopicUsingReceiveWithTimeout() throws Exception {
     String topic =
@@ -356,9 +364,8 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                             receiveAttributes(topic, msgId.toString(), false))));
 
     assertThat(testing.metrics())
+        .filteredOn(metric -> !metric.getName().startsWith("otel.sdk."))
         .satisfiesExactlyInAnyOrder(
-            metric -> assertThat(metric).hasName("otel.sdk.span.started"),
-            metric -> assertThat(metric).hasName("otel.sdk.span.live"),
             metric ->
                 assertThat(metric)
                     .hasName("messaging.receive.duration")
@@ -370,9 +377,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                 point ->
                                     point
                                         .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(MESSAGING_OPERATION, "receive"),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))),
@@ -387,9 +395,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                               point -> {
                                 point
                                     .hasValue(1)
-                                    .hasAttributesSatisfying(
+                                    .hasAttributesSatisfyingExactly(
                                         equalTo(MESSAGING_SYSTEM, "pulsar"),
                                         equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                        equalTo(MESSAGING_OPERATION, "receive"),
                                         equalTo(SERVER_PORT, brokerPort),
                                         equalTo(SERVER_ADDRESS, brokerHost));
                               });
@@ -405,9 +414,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                 point ->
                                     point
                                         .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(MESSAGING_OPERATION, "publish"),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))));
