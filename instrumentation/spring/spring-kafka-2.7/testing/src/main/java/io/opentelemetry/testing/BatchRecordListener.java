@@ -45,7 +45,9 @@ public class BatchRecordListener {
   }
 
   public static void waitForMessages() throws InterruptedException {
-    messageReceived.await(30, SECONDS);
+    if (!messageReceived.await(30, SECONDS)) {
+      throw new AssertionError("Timed out waiting for batch messages");
+    }
   }
 
   public static int getLastBatchSize() {
