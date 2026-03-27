@@ -26,21 +26,21 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 @ExtendWith(ArquillianExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @RunAsClient
-public abstract class AbstractOpenTelemetryHandlerMappingFilterTest {
+abstract class AbstractOpenTelemetryHandlerMappingFilterTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  public final WebClient client = WebClient.of();
+  final WebClient client = WebClient.of();
 
-  @ArquillianResource public URI url;
+  @ArquillianResource URI url;
 
   private String getAddress(String service) {
     return url.resolve(service).toString();
   }
 
   @Test
-  public void testSuccess() {
+  void testSuccess() {
     AggregatedHttpResponse response = client.get(getAddress("hello/world")).aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(200);
@@ -56,8 +56,9 @@ public abstract class AbstractOpenTelemetryHandlerMappingFilterTest {
                         .hasParent(trace.getSpan(0))));
   }
 
-  public void testException() {
-    AggregatedHttpResponse response = client.get(getAddress("hello/world")).aggregate().join();
+  @Test
+  void testException() {
+    AggregatedHttpResponse response = client.get(getAddress("hello/exception")).aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(500);
 
