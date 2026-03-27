@@ -39,6 +39,7 @@ public class SpringSchedulingRunnableWrapper implements Runnable {
     instrumenter().end(context, runnable, null, null);
   }
 
+  @Nullable
   public static Runnable wrapIfNeeded(@Nullable Runnable task) {
     if (task == null || task instanceof SpringSchedulingRunnableWrapper) {
       return task;
