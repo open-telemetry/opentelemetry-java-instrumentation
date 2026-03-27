@@ -8,6 +8,7 @@ muzzle {
     group.set("org.springframework")
     module.set("spring-core")
     versions.set("[2.0,]")
+    assertInverse.set(true)
   }
 }
 
