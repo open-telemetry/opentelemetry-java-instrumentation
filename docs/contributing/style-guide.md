@@ -84,7 +84,7 @@ Public non-internal non-test classes should be declared `final` where possible.
 instrumentation code is not public API.
 "Test" here includes `src/test/` directories and any module whose directory name starts or ends
 with `testing` or `tests` (e.g., `testing/`, `testing-common/`, `testing-apps/`,
-`quarkus2-testing/`, `smoke-tests/`).
+`quarkus-2.0-testing/`, `smoke-tests/`).
 
 Methods should only be declared `final` if they are in public non-internal non-test non-final classes.
 
