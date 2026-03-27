@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.client;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.SpringRmiSingletons.clientInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -34,9 +33,7 @@ public class ClientInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("invoke"))
-            .and(takesArgument(0, named("org.aopalliance.intercept.MethodInvocation"))),
+        named("invoke").and(takesArgument(0, named("org.aopalliance.intercept.MethodInvocation"))),
         this.getClass().getName() + "$InvokeMethodAdvice");
   }
 
