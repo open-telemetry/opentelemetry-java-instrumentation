@@ -34,10 +34,6 @@ enum VertxSqlClientAttributesGetter
     return request.getDbSystemName();
   }
 
-  // REVIEW [Semconv]: Intentionally returning null preserves backward compatibility (db.system
-  // was never emitted for vertx-sql-client), but this means users on old semconv will *still*
-  // not see db.system on these spans even after upgrading. Consider whether that's the desired
-  // long-term behavior or whether emitting it in old-semconv mode as well would be more useful.
   @Deprecated // to be removed in 3.0
   @Override
   @Nullable
@@ -46,18 +42,18 @@ enum VertxSqlClientAttributesGetter
     return null;
   }
 
-  // REVIEW [Logic]: Good improvement — resolves the TODO from the previous version. The dialect
-  // mapping is correct for all listed databases.
   @Override
   public SqlDialect getSqlDialect(VertxSqlClientRequest request) {
     switch (request.getDbSystemName()) {
       case MYSQL:
         // MySQL treats double-quoted fragments as string literals by default
         return DOUBLE_QUOTES_ARE_STRING_LITERALS;
+      case MICROSOFT_SQL_SERVER:
+        // SQL Server can treat double quotes as string literals when QUOTED_IDENTIFIER is OFF.
+        return DOUBLE_QUOTES_ARE_STRING_LITERALS;
       case POSTGRESQL:
       case ORACLE_DB:
       case IBM_DB2:
-      case MICROSOFT_SQL_SERVER:
         // These databases treat double-quoted fragments as identifiers
         return DOUBLE_QUOTES_ARE_IDENTIFIERS;
       default:
