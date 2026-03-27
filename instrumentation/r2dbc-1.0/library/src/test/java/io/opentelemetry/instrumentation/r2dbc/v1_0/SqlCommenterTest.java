@@ -101,7 +101,7 @@ class SqlCommenterTest {
     List<String> queries = new ArrayList<>();
 
     R2dbcTelemetryBuilder builder = R2dbcTelemetry.builder(testing.getOpenTelemetry());
-    Experimental.setEnableSqlCommenter(builder, sqlCommenterEnabled);
+    Experimental.setSqlCommenterEnabled(builder, sqlCommenterEnabled);
     ConnectionFactory connectionFactory =
         builder
             .build()
