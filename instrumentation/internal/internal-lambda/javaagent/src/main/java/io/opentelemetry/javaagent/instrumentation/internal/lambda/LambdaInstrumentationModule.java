@@ -27,6 +27,13 @@ public class LambdaInstrumentationModule extends InstrumentationModule
   }
 
   @Override
+  public boolean isIndyReady() {
+    // This module uses inlined advices to prevent recursion issues with invokedynamic, which is
+    // forced by using 'applyInlineAdvice' in 'transform' method of instrumentations.
+    return true;
+  }
+
+  @Override
   public List<String> injectedClassNames() {
     return singletonList(
         "io.opentelemetry.javaagent.instrumentation.internal.lambda.LambdaTransformerHelper");
