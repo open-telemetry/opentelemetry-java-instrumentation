@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.tapestry;
 
 import static io.opentelemetry.javaagent.instrumentation.tapestry.TapestrySingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -31,8 +30,7 @@ public class ComponentPageElementImplInstrumentation implements TypeInstrumentat
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("processEventTriggering"))
+        named("processEventTriggering")
             .and(takesArguments(3))
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, named("org.apache.tapestry5.EventContext")))
