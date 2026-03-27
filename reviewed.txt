@@ -473,3 +473,4 @@ spring-integration-4.1:testing
 spring-jms-2.0:testing
 spring-jms-2.0:javaagent
 spring-jms-6.0:javaagent
+spring-kafka-2.7:javaagent
