@@ -11,7 +11,7 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-public class Webflux7Util {
+final class Webflux7Util {
   static final boolean isWebflux7 = detectWebflux7();
 
   private static boolean detectWebflux7() {
