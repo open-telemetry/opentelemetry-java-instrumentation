@@ -60,10 +60,19 @@ public final class ArmeriaClientTelemetryBuilder {
    * @param requestHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
+  public ArmeriaClientTelemetryBuilder setCaptureRequestHeaders(Collection<String> requestHeaders) {
+    builder.setCaptureRequestHeaders(requestHeaders);
+    return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setCaptureRequestHeaders(Collection)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
   public ArmeriaClientTelemetryBuilder setCapturedRequestHeaders(
       Collection<String> requestHeaders) {
-    builder.setCapturedRequestHeaders(requestHeaders);
-    return this;
+    return setCaptureRequestHeaders(requestHeaders);
   }
 
   /**
@@ -72,10 +81,20 @@ public final class ArmeriaClientTelemetryBuilder {
    * @param responseHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
+  public ArmeriaClientTelemetryBuilder setCaptureResponseHeaders(
+      Collection<String> responseHeaders) {
+    builder.setCaptureResponseHeaders(responseHeaders);
+    return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setCaptureResponseHeaders(Collection)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
   public ArmeriaClientTelemetryBuilder setCapturedResponseHeaders(
       Collection<String> responseHeaders) {
-    builder.setCapturedResponseHeaders(responseHeaders);
-    return this;
+    return setCaptureResponseHeaders(responseHeaders);
   }
 
   /**

@@ -22,8 +22,8 @@ class ServletTestUtil {
   public static Filter newFilter(OpenTelemetry openTelemetry) {
     ServletTelemetryBuilder builder =
         ServletTelemetry.builder(openTelemetry)
-            .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
-            .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER));
+            .setCaptureRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
+            .setCaptureResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER));
     Experimental.setCaptureRequestParameters(builder, singletonList("test-parameter"));
     Experimental.setTraceIdRequestAttributeEnabled(builder, true);
     return builder.build().createFilter();

@@ -66,10 +66,20 @@ public final class JavaHttpServerTelemetryBuilder {
    * @param requestHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
+  public JavaHttpServerTelemetryBuilder setCaptureRequestHeaders(
+      Collection<String> requestHeaders) {
+    builder.setCaptureRequestHeaders(requestHeaders);
+    return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setCaptureRequestHeaders(Collection)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
   public JavaHttpServerTelemetryBuilder setCapturedRequestHeaders(
       Collection<String> requestHeaders) {
-    builder.setCapturedRequestHeaders(requestHeaders);
-    return this;
+    return setCaptureRequestHeaders(requestHeaders);
   }
 
   /**
@@ -78,10 +88,20 @@ public final class JavaHttpServerTelemetryBuilder {
    * @param responseHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
+  public JavaHttpServerTelemetryBuilder setCaptureResponseHeaders(
+      Collection<String> responseHeaders) {
+    builder.setCaptureResponseHeaders(responseHeaders);
+    return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setCaptureResponseHeaders(Collection)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
   public JavaHttpServerTelemetryBuilder setCapturedResponseHeaders(
       Collection<String> responseHeaders) {
-    builder.setCapturedResponseHeaders(responseHeaders);
-    return this;
+    return setCaptureResponseHeaders(responseHeaders);
   }
 
   /**

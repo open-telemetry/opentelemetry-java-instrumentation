@@ -53,10 +53,20 @@ public final class NettyServerTelemetryBuilder {
    * @param capturedRequestHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
+  public NettyServerTelemetryBuilder setCaptureRequestHeaders(
+      Collection<String> capturedRequestHeaders) {
+    builder.setCaptureRequestHeaders(capturedRequestHeaders);
+    return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setCaptureRequestHeaders(Collection)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
   public NettyServerTelemetryBuilder setCapturedRequestHeaders(
       Collection<String> capturedRequestHeaders) {
-    builder.setCapturedRequestHeaders(capturedRequestHeaders);
-    return this;
+    return setCaptureRequestHeaders(capturedRequestHeaders);
   }
 
   /**
@@ -65,10 +75,20 @@ public final class NettyServerTelemetryBuilder {
    * @param capturedResponseHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
+  public NettyServerTelemetryBuilder setCaptureResponseHeaders(
+      Collection<String> capturedResponseHeaders) {
+    builder.setCaptureResponseHeaders(capturedResponseHeaders);
+    return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setCaptureResponseHeaders(Collection)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
   public NettyServerTelemetryBuilder setCapturedResponseHeaders(
       Collection<String> capturedResponseHeaders) {
-    builder.setCapturedResponseHeaders(capturedResponseHeaders);
-    return this;
+    return setCaptureResponseHeaders(capturedResponseHeaders);
   }
 
   /**

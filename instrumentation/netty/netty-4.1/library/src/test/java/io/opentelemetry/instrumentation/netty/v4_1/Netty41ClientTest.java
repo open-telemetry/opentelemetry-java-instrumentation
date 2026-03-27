@@ -26,9 +26,9 @@ class Netty41ClientTest extends AbstractNetty41ClientTest {
           channelPipeline ->
               channelPipeline.addLast(
                   NettyClientTelemetry.builder(testing.getOpenTelemetry())
-                      .setCapturedRequestHeaders(
+                      .setCaptureRequestHeaders(
                           singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
-                      .setCapturedResponseHeaders(
+                      .setCaptureResponseHeaders(
                           singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
                       .build()
                       .createCombinedHandler()));

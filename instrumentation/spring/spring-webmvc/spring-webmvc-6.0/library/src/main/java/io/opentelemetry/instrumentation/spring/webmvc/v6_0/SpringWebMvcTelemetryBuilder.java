@@ -57,9 +57,18 @@ public final class SpringWebMvcTelemetryBuilder {
    * @param requestHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
-  public SpringWebMvcTelemetryBuilder setCapturedRequestHeaders(Collection<String> requestHeaders) {
-    builder.setCapturedRequestHeaders(requestHeaders);
+  public SpringWebMvcTelemetryBuilder setCaptureRequestHeaders(Collection<String> requestHeaders) {
+    builder.setCaptureRequestHeaders(requestHeaders);
     return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setCaptureRequestHeaders(Collection)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public SpringWebMvcTelemetryBuilder setCapturedRequestHeaders(Collection<String> requestHeaders) {
+    return setCaptureRequestHeaders(requestHeaders);
   }
 
   /**
@@ -68,10 +77,20 @@ public final class SpringWebMvcTelemetryBuilder {
    * @param responseHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
+  public SpringWebMvcTelemetryBuilder setCaptureResponseHeaders(
+      Collection<String> responseHeaders) {
+    builder.setCaptureResponseHeaders(responseHeaders);
+    return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setCaptureResponseHeaders(Collection)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder setCapturedResponseHeaders(
       Collection<String> responseHeaders) {
-    builder.setCapturedResponseHeaders(responseHeaders);
-    return this;
+    return setCaptureResponseHeaders(responseHeaders);
   }
 
   /** Customizes the {@link SpanNameExtractor} by transforming the default instance. */
