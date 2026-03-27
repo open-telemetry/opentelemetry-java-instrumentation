@@ -13,9 +13,8 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Message;
 
-enum SpringPulsarMessageAttributesGetter implements MessagingAttributesGetter<Message<?>, Void> {
-  INSTANCE;
-
+final class SpringPulsarMessageAttributesGetter
+    implements MessagingAttributesGetter<Message<?>, Void> {
   @Override
   public String getSystem(Message<?> message) {
     return "pulsar";

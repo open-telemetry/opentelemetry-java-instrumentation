@@ -24,7 +24,6 @@ public class SpringPulsarInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // added in 1.0.0
     return hasClassesNamed(
         "org.springframework.pulsar.annotation.PulsarListenerConsumerBuilderCustomizer");
   }
