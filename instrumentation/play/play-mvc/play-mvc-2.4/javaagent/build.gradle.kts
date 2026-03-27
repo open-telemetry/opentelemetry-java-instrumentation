@@ -85,7 +85,7 @@ configurations.configureEach {
 
 // async-http-client 2.0 does not work with Netty versions newer than this due to referencing an
 // internal file.
-if (!(findProperty("testLatestDeps") as Boolean)) {
+if (!(findProperty("testLatestDeps") == "true")) {
   configurations.configureEach {
     resolutionStrategy {
       eachDependency {

@@ -17,7 +17,7 @@ otelJava {
 
 // io.quarkus.platform:quarkus-bom is missing for 3.0.0.Final
 var quarkusVersion = "3.0.1.Final"
-if (findProperty("testLatestDeps") as Boolean) {
+if (findProperty("testLatestDeps") == "true") {
   quarkusVersion = "3.5.+"
 }
 

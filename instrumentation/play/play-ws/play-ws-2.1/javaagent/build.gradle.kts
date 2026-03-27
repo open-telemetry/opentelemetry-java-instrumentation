@@ -43,7 +43,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:akka:akka-actor-2.3:javaagent"))
 }
 
-val testLatestDeps = findProperty("testLatestDeps") as Boolean
+val testLatestDeps = findProperty("testLatestDeps") == "true"
 
 testing {
   suites {

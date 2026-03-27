@@ -67,7 +67,7 @@ configurations {
 }
 
 tasks {
-  if (findProperty("testLatestDeps") as Boolean) {
+  if (findProperty("testLatestDeps") == "true") {
     // Separate task
     named("test") {
       enabled = false
@@ -99,7 +99,7 @@ tasks {
   }
 }
 
-if (findProperty("testLatestDeps") as Boolean) {
+if (findProperty("testLatestDeps") == "true") {
   configurations.named("latestDepTestRuntimeClasspath") {
     resolutionStrategy {
       eachDependency {

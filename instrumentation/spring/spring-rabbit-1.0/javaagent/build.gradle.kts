@@ -13,7 +13,7 @@ muzzle {
   }
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 
 dependencies {
   library("org.springframework.amqp:spring-rabbit:1.0.0.RELEASE")

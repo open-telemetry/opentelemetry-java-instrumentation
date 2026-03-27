@@ -32,7 +32,7 @@ dependencies {
   latestDepTestLibrary("com.xuxueli:xxl-job-core:3.2.+") // documented limitation
 }
 
-val testLatestDeps = findProperty("testLatestDeps") as Boolean
+val testLatestDeps = findProperty("testLatestDeps") == "true"
 
 testing {
   suites {

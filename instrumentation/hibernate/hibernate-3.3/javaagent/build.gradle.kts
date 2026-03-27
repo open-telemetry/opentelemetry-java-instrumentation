@@ -40,7 +40,7 @@ dependencies {
   latestDepTestLibrary("org.hibernate:hibernate-core:3.+") // see hibernate-4.0 module
 }
 
-if (findProperty("testLatestDeps") as Boolean) {
+if (findProperty("testLatestDeps") == "true") {
   configurations {
     // Needed for test, but for latestDepTest this would otherwise bundle a second incompatible version of hibernate-core.
     testImplementation {

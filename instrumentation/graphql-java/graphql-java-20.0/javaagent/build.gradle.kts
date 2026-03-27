@@ -42,7 +42,7 @@ tasks {
   }
 }
 
-if (findProperty("testLatestDeps") as Boolean) {
+if (findProperty("testLatestDeps") == "true") {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }

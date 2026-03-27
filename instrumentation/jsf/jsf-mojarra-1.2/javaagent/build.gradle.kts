@@ -57,7 +57,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:jsf:jsf-mojarra-3.0:javaagent"))
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 testing {
   suites {
     val mojarra12Test by registering(JvmTestSuite::class) {

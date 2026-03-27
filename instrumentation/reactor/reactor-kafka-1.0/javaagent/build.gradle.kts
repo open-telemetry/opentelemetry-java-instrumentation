@@ -35,7 +35,7 @@ dependencies {
   testLibrary("io.projectreactor.kafka:reactor-kafka:1.0.0.RELEASE")
 }
 
-val testLatestDeps = findProperty("testLatestDeps") as Boolean
+val testLatestDeps = findProperty("testLatestDeps") == "true"
 
 testing {
   suites {
