@@ -505,3 +505,4 @@ spring-webmvc-common:testing
 starters:spring-boot-starter
 starters:zipkin-spring-boot-starter
 struts-2.3:javaagent
+struts-7.0:javaagent
