@@ -25,7 +25,7 @@ final class SpringWebfluxSingleConnection implements SingleConnection {
   private final int port;
   private final WebClient webClient;
 
-  public SpringWebfluxSingleConnection(
+  SpringWebfluxSingleConnection(
       String host, int port, UnaryOperator<WebClient.Builder> instrumentationFunction) {
     this.host = host;
     this.port = port;
@@ -65,7 +65,7 @@ final class SpringWebfluxSingleConnection implements SingleConnection {
             return Mono.just(Webflux7Util.getStatusCode(response));
           });
     } else {
-      ClientResponse response = request.exchange().block();
+      ClientResponse response = requireNonNull(request.exchange().block());
       // read response body, this seems to be needed to ensure that the connection can be reused
       response.bodyToMono(String.class).block();
 

@@ -199,7 +199,7 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
                     span.hasName("GET")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(URL_FULL, uri.toString()),
                             equalTo(SERVER_ADDRESS, "localhost"),
