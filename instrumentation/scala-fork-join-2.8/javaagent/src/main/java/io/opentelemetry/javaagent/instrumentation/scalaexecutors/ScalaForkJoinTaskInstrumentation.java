@@ -79,11 +79,12 @@ public class ScalaForkJoinTaskInstrumentation implements TypeInstrumentation {
             TaskAdviceHelper.makePropagatedContextCurrent(
                 CALLABLE_PROPAGATED_CONTEXT, (Callable<?>) thiz);
       }
-      if (null == scope) {
-        scope = newScope;
-      } else if (newScope != null) {
-        scope.close();
-        scope = newScope;
+      if (newScope != null) {
+        if (scope != null) {
+          newScope.close();
+        } else {
+          scope = newScope;
+        }
       }
       return scope;
     }
