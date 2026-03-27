@@ -10,10 +10,12 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class UrlClassLoaderInstrumentationModule extends InstrumentationModule {
+public class UrlClassLoaderInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public UrlClassLoaderInstrumentationModule() {
     super("internal-url-class-loader");
   }
@@ -27,5 +29,10 @@ public class UrlClassLoaderInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new UrlClassLoaderInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }
