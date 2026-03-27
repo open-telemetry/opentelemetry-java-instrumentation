@@ -26,7 +26,7 @@ public final class UndertowSingletons {
         JavaagentHttpServerInstrumenters.create(
             INSTRUMENTATION_NAME,
             new UndertowHttpAttributesGetter(),
-            UndertowExchangeGetter.INSTANCE,
+            new UndertowExchangeGetter(),
             builder ->
                 builder.addContextCustomizer(
                     (context, request, attributes) -> {
