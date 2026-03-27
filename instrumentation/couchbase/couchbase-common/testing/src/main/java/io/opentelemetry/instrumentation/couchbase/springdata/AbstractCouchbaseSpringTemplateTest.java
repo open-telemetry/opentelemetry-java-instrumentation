@@ -83,10 +83,10 @@ public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchb
         });
   }
 
-    @AfterAll
-    void cleanUp() {
-        assertAll(cleanup.stream().map(closeable -> closeable::close));
-    }
+  @AfterAll
+  void cleanUp() {
+    assertAll(cleanup.stream().map(closeable -> closeable::close));
+  }
 
   private static Stream<Arguments> templates() {
     return Stream.of(
