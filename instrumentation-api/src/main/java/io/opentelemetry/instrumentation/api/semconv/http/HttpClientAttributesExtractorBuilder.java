@@ -72,22 +72,6 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * Configures the HTTP request headers that will be captured as span attributes as described in <a
-   * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#http-client">HTTP
-   * semantic conventions</a>.
-   *
-   * <p>The HTTP request header values will be captured under the {@code http.request.header.<key>}
-   * attribute key. The {@code <key>} part in the attribute key is the lowercase header name.
-   *
-   * @param requestHeaders A list of HTTP header names.
-   */
-  @CanIgnoreReturnValue
-  public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCaptureRequestHeaders(
-      List<String> requestHeaders) {
-    return setCaptureRequestHeaders((Collection<String>) requestHeaders);
-  }
-
-  /**
    * @deprecated Use {@link #setCaptureRequestHeaders(Collection)} instead.
    */
   @Deprecated
@@ -98,13 +82,13 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * @deprecated Use {@link #setCaptureRequestHeaders(List)} instead.
+   * @deprecated Use {@link #setCaptureRequestHeaders(Collection)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
   public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedRequestHeaders(
       List<String> requestHeaders) {
-    return setCaptureRequestHeaders(requestHeaders);
+    return setCaptureRequestHeaders((Collection<String>) requestHeaders);
   }
 
   /**
@@ -127,24 +111,6 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * Configures the HTTP response headers that will be captured as span attributes as described in
-   * <a
-   * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#common-attributes">HTTP
-   * semantic conventions</a>.
-   *
-   * <p>The HTTP response header values will be captured under the {@code
-   * http.response.header.<key>} attribute key. The {@code <key>} part in the attribute key is the
-   * lowercase header name.
-   *
-   * @param responseHeaders A list of HTTP header names.
-   */
-  @CanIgnoreReturnValue
-  public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCaptureResponseHeaders(
-      List<String> responseHeaders) {
-    return setCaptureResponseHeaders((Collection<String>) responseHeaders);
-  }
-
-  /**
    * @deprecated Use {@link #setCaptureResponseHeaders(Collection)} instead.
    */
   @Deprecated
@@ -155,13 +121,13 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * @deprecated Use {@link #setCaptureResponseHeaders(List)} instead.
+   * @deprecated Use {@link #setCaptureResponseHeaders(Collection)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
   public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedResponseHeaders(
       List<String> responseHeaders) {
-    return setCaptureResponseHeaders(responseHeaders);
+    return setCaptureResponseHeaders((Collection<String>) responseHeaders);
   }
 
   /**
