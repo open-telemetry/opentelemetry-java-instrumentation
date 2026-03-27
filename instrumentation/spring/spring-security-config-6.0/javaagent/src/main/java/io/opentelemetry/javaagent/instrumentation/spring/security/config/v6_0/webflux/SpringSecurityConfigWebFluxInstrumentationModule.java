@@ -27,7 +27,7 @@ public class SpringSecurityConfigWebFluxInstrumentationModule extends Instrument
         "spring-security-config-webflux-6.0");
   }
 
-    @Override
+  @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // Ensure this module is only applied to Spring Security >= 6.0. This instrumentation might
     // work with older versions of Spring Security, but since it is bundled together with the
