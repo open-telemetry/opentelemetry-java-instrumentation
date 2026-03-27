@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.server;
 import static io.opentelemetry.javaagent.bootstrap.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.SpringRmiSingletons.serverInstrumenter;
 import static java.util.Objects.requireNonNull;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -35,8 +34,7 @@ public class ServerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("invoke"))
+        named("invoke")
             .and(takesArgument(0, named("org.springframework.remoting.support.RemoteInvocation"))),
         this.getClass().getName() + "$InvokeMethodAdvice");
   }
@@ -103,8 +101,11 @@ public class ServerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
-      adviceScope.exit(throwable);
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.exit(throwable);
+      }
     }
   }
 }

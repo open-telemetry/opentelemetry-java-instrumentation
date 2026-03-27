@@ -161,7 +161,7 @@ class SpringRmiTest {
                   span.hasName("springrmi.app.SpringRmiGreeter/hello")
                       .hasKind(SpanKind.CLIENT)
                       .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfying(
+                      .hasAttributesSatisfyingExactly(
                           equalTo(RPC_SYSTEM, "spring_rmi"),
                           equalTo(RPC_SERVICE, "springrmi.app.SpringRmiGreeter"),
                           equalTo(RPC_METHOD, "hello")));
@@ -171,7 +171,7 @@ class SpringRmiTest {
                     span.hasName(testSource.remoteClassName + "/hello")
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, testSource.serverSystem),
                             equalTo(RPC_SERVICE, testSource.remoteClassName),
                             equalTo(RPC_METHOD, "hello")));
@@ -200,7 +200,7 @@ class SpringRmiTest {
                           event ->
                               event
                                   .hasName("exception")
-                                  .hasAttributesSatisfying(
+                                  .hasAttributesSatisfyingExactly(
                                       equalTo(EXCEPTION_TYPE, error.getClass().getCanonicalName()),
                                       equalTo(EXCEPTION_MESSAGE, error.getMessage()),
                                       satisfies(
@@ -216,13 +216,13 @@ class SpringRmiTest {
                           event ->
                               event
                                   .hasName("exception")
-                                  .hasAttributesSatisfying(
+                                  .hasAttributesSatisfyingExactly(
                                       equalTo(EXCEPTION_TYPE, error.getClass().getCanonicalName()),
                                       equalTo(EXCEPTION_MESSAGE, error.getMessage()),
                                       satisfies(
                                           EXCEPTION_STACKTRACE,
                                           val -> val.isInstanceOf(String.class))))
-                      .hasAttributesSatisfying(
+                      .hasAttributesSatisfyingExactly(
                           equalTo(RPC_SYSTEM, "spring_rmi"),
                           equalTo(RPC_SERVICE, "springrmi.app.SpringRmiGreeter"),
                           equalTo(RPC_METHOD, "exceptional")));
@@ -237,14 +237,14 @@ class SpringRmiTest {
                             event ->
                                 event
                                     .hasName("exception")
-                                    .hasAttributesSatisfying(
+                                    .hasAttributesSatisfyingExactly(
                                         equalTo(
                                             EXCEPTION_TYPE, error.getClass().getCanonicalName()),
                                         equalTo(EXCEPTION_MESSAGE, error.getMessage()),
                                         satisfies(
                                             EXCEPTION_STACKTRACE,
                                             val -> val.isInstanceOf(String.class))))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, testSource.serverSystem),
                             equalTo(RPC_SERVICE, testSource.remoteClassName),
                             equalTo(RPC_METHOD, "exceptional")));
