@@ -481,3 +481,4 @@ spring-pulsar-1.0:testing
 spring-rabbit-1.0:javaagent
 spring-rmi-4.0:javaagent
 spring-scheduling-3.1:bootstrap
+spring-scheduling-3.1:javaagent
