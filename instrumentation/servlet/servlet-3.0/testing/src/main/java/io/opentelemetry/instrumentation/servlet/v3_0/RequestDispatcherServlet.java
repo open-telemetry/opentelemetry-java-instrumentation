@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.servlet.v3_0;
 
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -48,11 +50,29 @@ public class RequestDispatcherServlet {
     }
   }
 
+  // Explicit allowlist of endpoints that may be used as dispatch targets.
+  // Iterating this list and returning the path from the list element (not from user
+  // input) ensures the forwarded path is never tainted by the incoming request.
+  private static final List<ServerEndpoint> DISPATCH_TARGETS =
+      Arrays.asList(
+          ServerEndpoint.SUCCESS,
+          ServerEndpoint.REDIRECT,
+          ServerEndpoint.ERROR,
+          ServerEndpoint.EXCEPTION,
+          ServerEndpoint.QUERY_PARAM,
+          ServerEndpoint.AUTH_REQUIRED,
+          ServerEndpoint.CAPTURE_HEADERS,
+          ServerEndpoint.CAPTURE_PARAMETERS,
+          ServerEndpoint.INDEXED_CHILD,
+          AbstractServlet3Test.HTML_PRINT_WRITER,
+          AbstractServlet3Test.HTML_SERVLET_OUTPUT_STREAM);
+
   private static String getTargetSafely(HttpServletRequest req) {
     String target = req.getServletPath().replace("/dispatch", "");
-    ServerEndpoint endpoint = ServerEndpoint.forPath(target);
-    if (endpoint != null) {
-      return endpoint.getPath();
+    for (ServerEndpoint endpoint : DISPATCH_TARGETS) {
+      if (endpoint.getPath().equals(target)) {
+        return endpoint.getPath();
+      }
     }
     throw new IllegalStateException("Unexpected endpoint: " + target);
   }
