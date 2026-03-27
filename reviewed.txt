@@ -511,3 +511,4 @@ tapestry-5.4:javaagent
 tomcat-10.0:javaagent
 tomcat-7.0:javaagent
 quarkus-resteasy-reactive:quarkus-2.0-testing
+quarkus-resteasy-reactive:quarkus-3.9-testing
