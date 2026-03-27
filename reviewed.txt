@@ -514,3 +514,4 @@ quarkus-resteasy-reactive:quarkus-2.0-testing
 quarkus-resteasy-reactive:quarkus-3.9-testing
 quarkus-resteasy-reactive:quarkus-3.0-testing
 quarkus-resteasy-reactive:quarkus-common-testing
+tomcat-common:javaagent
