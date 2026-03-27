@@ -7,8 +7,11 @@ package io.opentelemetry.instrumentation.quarkus.resteasy.reactive.v3_9;
 
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 
 @Path("/hello")
+@Produces(MediaType.TEXT_PLAIN)
 public class GreetingResource {
 
   @GET
