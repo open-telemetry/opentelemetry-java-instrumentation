@@ -14,8 +14,14 @@ import org.springframework.web.servlet.mvc.Controller;
 
 public class HandlerCodeAttributesGetter implements CodeAttributesGetter<Object> {
 
-  @Nullable private static final Class<?> JAVAX_SERVLET = loadOrNull("javax.servlet.Servlet");
-  @Nullable private static final Class<?> JAKARTA_SERVLET = loadOrNull("jakarta.servlet.Servlet");
+  private static final ClassValue<Boolean> servletHandler =
+      new ClassValue<Boolean>() {
+        @Override
+        protected Boolean computeValue(Class<?> type) {
+          return hasTypeNamed(type, "javax.servlet.Servlet")
+              || hasTypeNamed(type, "jakarta.servlet.Servlet");
+        }
+      };
 
   @Nullable
   @Override
@@ -52,16 +58,21 @@ public class HandlerCodeAttributesGetter implements CodeAttributesGetter<Object>
   }
 
   private static boolean isServlet(Object handler) {
-    return (JAVAX_SERVLET != null && JAVAX_SERVLET.isInstance(handler))
-        || (JAKARTA_SERVLET != null && JAKARTA_SERVLET.isInstance(handler));
+    return servletHandler.get(handler.getClass());
   }
 
-  @Nullable
-  private static Class<?> loadOrNull(String className) {
-    try {
-      return Class.forName(className);
-    } catch (ClassNotFoundException e) {
-      return null;
+  private static boolean hasTypeNamed(@Nullable Class<?> type, String className) {
+    while (type != null) {
+      if (type.getName().equals(className)) {
+        return true;
+      }
+      for (Class<?> interfaceType : type.getInterfaces()) {
+        if (hasTypeNamed(interfaceType, className)) {
+          return true;
+        }
+      }
+      type = type.getSuperclass();
     }
+    return false;
   }
 }
