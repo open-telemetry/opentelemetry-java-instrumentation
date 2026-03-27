@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.COUCHBASE;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Named.named;
 
 import com.couchbase.client.java.Bucket;
@@ -83,10 +84,8 @@ public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchb
   }
 
   @AfterAll
-  void cleanUp() throws Exception {
-    for (AutoCloseable closeable : cleanup) {
-      closeable.close();
-    }
+  void cleanUp() {
+    assertAll(cleanup.stream().map(closeable -> closeable::close));
   }
 
   private static Stream<Arguments> templates() {
