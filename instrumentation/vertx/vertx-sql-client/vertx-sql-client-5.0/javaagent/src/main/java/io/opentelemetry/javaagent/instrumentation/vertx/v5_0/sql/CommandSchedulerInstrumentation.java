@@ -53,7 +53,7 @@ public class CommandSchedulerInstrumentation implements TypeInstrumentation {
         named("schedule")
             .and(takesArgument(0, named("io.vertx.sqlclient.internal.command.CommandBase")))
             .and(takesArgument(1, named("io.vertx.core.Completable"))),
-        CommandSchedulerInstrumentation.class.getName() + "$ScheduleAdvice");
+       getClass().getName() + "$ScheduleAdvice");
   }
 
   @SuppressWarnings("unused")
