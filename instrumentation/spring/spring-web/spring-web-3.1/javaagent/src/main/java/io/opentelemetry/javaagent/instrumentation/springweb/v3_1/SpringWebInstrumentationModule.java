@@ -26,9 +26,9 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // class added in 3.1
+    // added in 3.1
     return hasClassesNamed("org.springframework.web.method.HandlerMethod")
-        // class added in 6.0
+        // added in 6.0
         .and(not(hasClassesNamed("org.springframework.web.ErrorResponse")));
   }
 
