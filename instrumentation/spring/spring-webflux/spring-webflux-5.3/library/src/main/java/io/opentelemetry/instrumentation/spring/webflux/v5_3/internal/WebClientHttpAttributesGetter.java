@@ -19,6 +19,9 @@ import org.springframework.web.reactive.function.client.ClientResponse;
  */
 public final class WebClientHttpAttributesGetter
     implements HttpClientAttributesGetter<ClientRequest, ClientResponse> {
+
+  public static final WebClientHttpAttributesGetter INSTANCE = new WebClientHttpAttributesGetter();
+
   @Override
   public String getUrlFull(ClientRequest request) {
     return request.url().toString();
