@@ -72,16 +72,6 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * @deprecated Use {@link #setCaptureRequestHeaders(Collection)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedRequestHeaders(
-      Collection<String> requestHeaders) {
-    return setCaptureRequestHeaders(requestHeaders);
-  }
-
-  /**
    * Configures the HTTP request headers that will be captured as span attributes as described in <a
    * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#http-client">HTTP
    * semantic conventions</a>.
@@ -95,6 +85,16 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCaptureRequestHeaders(
       List<String> requestHeaders) {
     return setCaptureRequestHeaders((Collection<String>) requestHeaders);
+  }
+
+  /**
+   * @deprecated Use {@link #setCaptureRequestHeaders(Collection)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedRequestHeaders(
+      Collection<String> requestHeaders) {
+    return setCaptureRequestHeaders(requestHeaders);
   }
 
   /**
@@ -127,16 +127,6 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * @deprecated Use {@link #setCaptureResponseHeaders(Collection)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedResponseHeaders(
-      Collection<String> responseHeaders) {
-    return setCaptureResponseHeaders(responseHeaders);
-  }
-
-  /**
    * Configures the HTTP response headers that will be captured as span attributes as described in
    * <a
    * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#common-attributes">HTTP
@@ -152,6 +142,16 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCaptureResponseHeaders(
       List<String> responseHeaders) {
     return setCaptureResponseHeaders((Collection<String>) responseHeaders);
+  }
+
+  /**
+   * @deprecated Use {@link #setCaptureResponseHeaders(Collection)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedResponseHeaders(
+      Collection<String> responseHeaders) {
+    return setCaptureResponseHeaders(responseHeaders);
   }
 
   /**
