@@ -92,7 +92,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   }
 
-  if (findProperty("denyUnsafe") as Boolean) {
+  if (findProperty("denyUnsafe") == "true") {
     withType<Test>().configureEach {
       enabled = false
     }
