@@ -36,7 +36,7 @@ public class HttpClientConnectionInstrumentation implements TypeInstrumentation 
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("createStream").and(takesArgument(1, named("io.vertx.core.Handler"))),
-        HttpClientConnectionInstrumentation.class.getName() + "$CreateStreamAdvice");
+        getClass().getName() + "$CreateStreamAdvice");
   }
 
   @SuppressWarnings("unused")
