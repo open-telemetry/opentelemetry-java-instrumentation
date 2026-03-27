@@ -25,6 +25,10 @@ public class RequestDispatcherServlet {
     protected void service(HttpServletRequest req, HttpServletResponse resp)
         throws ServletException, IOException {
       String target = req.getServletPath().replace("/dispatch", "");
+      ServerEndpoint endpoint = ServerEndpoint.forPath(target);
+      if (endpoint == null) {
+        throw new IllegalStateException("Unexpected endpoint: " + target);
+      }
       ServletContext context = getServletContext();
       RequestDispatcher dispatcher = context.getRequestDispatcher(target);
       dispatcher.forward(req, resp);
@@ -41,10 +45,14 @@ public class RequestDispatcherServlet {
       String target = req.getServletPath().replace("/dispatch", "");
       ServletContext context = getServletContext();
       RequestDispatcher dispatcher = context.getRequestDispatcher(target);
+      ServerEndpoint endpoint = ServerEndpoint.forPath(target);
+      if (endpoint == null) {
+        throw new IllegalStateException("Unexpected endpoint: " + target);
+      }
       // For the HTML test cases, set the content type before include() because the response is
       // already committed for header updates inside the included resource.
-      if (ServerEndpoint.forPath(target) == ServerEndpoint.forPath("/htmlPrintWriter")
-          || ServerEndpoint.forPath(target) == ServerEndpoint.forPath("/htmlServletOutputStream")) {
+      if (endpoint == AbstractServlet5Test.HTML_PRINT_WRITER
+          || endpoint == AbstractServlet5Test.HTML_SERVLET_OUTPUT_STREAM) {
         resp.setContentType("text/html");
       }
       dispatcher.include(req, resp);
