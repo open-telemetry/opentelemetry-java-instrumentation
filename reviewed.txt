@@ -470,3 +470,4 @@ spring-integration-4.1:javaagent
 spring-data-common:testing
 spring-integration-4.1:library
 spring-integration-4.1:testing
+spring-jms-2.0:testing
