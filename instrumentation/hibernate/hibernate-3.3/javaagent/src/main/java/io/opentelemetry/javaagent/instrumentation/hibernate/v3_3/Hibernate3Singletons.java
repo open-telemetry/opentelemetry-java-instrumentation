@@ -21,10 +21,8 @@ public class Hibernate3Singletons {
 
   public static final VirtualField<Criteria, SessionInfo> CRITERIA_SESSION_INFO =
       VirtualField.find(Criteria.class, SessionInfo.class);
-
   public static final VirtualField<Query, SessionInfo> QUERY_SESSION_INFO =
       VirtualField.find(Query.class, SessionInfo.class);
-
   public static final VirtualField<Transaction, SessionInfo> TRANSACTION_SESSION_INFO =
       VirtualField.find(Transaction.class, SessionInfo.class);
 

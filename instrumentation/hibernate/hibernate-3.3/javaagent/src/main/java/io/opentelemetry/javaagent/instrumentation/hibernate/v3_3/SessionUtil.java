@@ -15,11 +15,8 @@ public final class SessionUtil {
 
   private static final VirtualField<Session, SessionInfo> SESSION_SESSION_INFO =
       VirtualField.find(Session.class, SessionInfo.class);
-
   private static final VirtualField<StatelessSession, SessionInfo> STATELESS_SESSION_SESSION_INFO =
       VirtualField.find(StatelessSession.class, SessionInfo.class);
-
-  private SessionUtil() {}
 
   /**
    * Gets the SessionInfo associated with the given session
@@ -50,4 +47,6 @@ public final class SessionUtil {
       STATELESS_SESSION_SESSION_INFO.set((StatelessSession) session, new SessionInfo());
     }
   }
+
+  private SessionUtil() {}
 }
