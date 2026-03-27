@@ -20,12 +20,4 @@ public final class SpringSchedulingTaskTracing {
   public static boolean isWrappingEnabled() {
     return wrappingEnabled.get();
   }
-
-  /**
-   * @deprecated Use {@link #isWrappingEnabled()} instead. Will be removed in a future release.
-   */
-  @Deprecated
-  public static boolean wrappingEnabled() {
-    return isWrappingEnabled();
-  }
 }
