@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.javaagent.bootstrap.spring.SpringSchedulingTaskTracing;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
@@ -53,7 +54,8 @@ public class TaskSchedulerInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Runnable onSchedule(@Advice.Argument(0) Runnable originalRunnable) {
+    @Nullable
+    public static Runnable onSchedule(@Advice.Argument(0) @Nullable Runnable originalRunnable) {
       Runnable runnable = originalRunnable;
       if (SpringSchedulingTaskTracing.isWrappingEnabled()) {
         runnable = SpringSchedulingRunnableWrapper.wrapIfNeeded(runnable);
