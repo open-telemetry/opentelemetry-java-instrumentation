@@ -87,9 +87,7 @@ final class TracingServerStreamTracer extends ServerStreamTracer {
     }
     // Extract trace context from incoming headers (e.g. W3C traceparent)
     Context extracted =
-        propagators
-            .getTextMapPropagator()
-        .extract(parentContext, request, new GrpcRequestGetter());
+        propagators.getTextMapPropagator().extract(parentContext, request, new GrpcRequestGetter());
     if (instrumenter.shouldStart(extracted, request)) {
       InstrumenterUtil.startAndEnd(
           instrumenter, extracted, request, status, status.getCause(), startTime, Instant.now());
