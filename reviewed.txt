@@ -480,3 +480,4 @@ spring-kafka-2.7:testing
 spring-pulsar-1.0:testing
 spring-rabbit-1.0:javaagent
 spring-rmi-4.0:javaagent
+spring-scheduling-3.1:bootstrap
