@@ -206,7 +206,8 @@ class ArmeriaGrpcTest {
                         .hasNoParent()
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(RPC_SYSTEM), "grpc"),
+                            equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null),
+                            equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "grpc" : null),
                             equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "example.Greeter" : null),
                             equalTo(
                                 RPC_METHOD,
