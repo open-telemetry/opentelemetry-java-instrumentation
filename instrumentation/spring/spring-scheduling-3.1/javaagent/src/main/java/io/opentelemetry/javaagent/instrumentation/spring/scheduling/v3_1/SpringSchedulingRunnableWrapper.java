@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import javax.annotation.Nullable;
 
 public class SpringSchedulingRunnableWrapper implements Runnable {
   private final Runnable runnable;
@@ -38,8 +39,8 @@ public class SpringSchedulingRunnableWrapper implements Runnable {
     instrumenter().end(context, runnable, null, null);
   }
 
-  public static Runnable wrapIfNeeded(Runnable task) {
-    if (task instanceof SpringSchedulingRunnableWrapper) {
+  public static Runnable wrapIfNeeded(@Nullable Runnable task) {
+    if (task == null || task instanceof SpringSchedulingRunnableWrapper) {
       return task;
     }
     return new SpringSchedulingRunnableWrapper(task);
