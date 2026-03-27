@@ -7,6 +7,7 @@ muzzle {
     group.set("org.apache.tomcat.embed")
     module.set("tomcat-embed-core")
     versions.set("[10,)")
+    assertInverse.set(true)
   }
 }
 
