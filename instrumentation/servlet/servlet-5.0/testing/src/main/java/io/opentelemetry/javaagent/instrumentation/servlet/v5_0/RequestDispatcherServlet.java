@@ -27,7 +27,7 @@ public class RequestDispatcherServlet {
       String target = req.getServletPath().replace("/dispatch", "");
       ServerEndpoint endpoint = ServerEndpoint.forPath(target);
       if (endpoint == null) {
-        throw new IllegalStateException("missing endpoint " + target);
+        throw new IllegalStateException("Unexpected endpoint: " + target);
       }
       ServletContext context = getServletContext();
       RequestDispatcher dispatcher = context.getRequestDispatcher(target);
@@ -47,7 +47,7 @@ public class RequestDispatcherServlet {
       RequestDispatcher dispatcher = context.getRequestDispatcher(target);
       ServerEndpoint endpoint = ServerEndpoint.forPath(target);
       if (endpoint == null) {
-        throw new IllegalStateException("missing endpoint " + target);
+        throw new IllegalStateException("Unexpected endpoint: " + target);
       }
       // For the HTML test cases, set the content type before include() because the response is
       // already committed for header updates inside the included resource.
