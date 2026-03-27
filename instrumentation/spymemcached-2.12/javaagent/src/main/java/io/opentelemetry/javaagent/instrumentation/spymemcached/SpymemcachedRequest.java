@@ -25,16 +25,16 @@ public abstract class SpymemcachedRequest {
 
   @Nullable private MemcachedNode handlingNode;
   @Nullable private InetSocketAddress handlingNodeAddress;
-  private boolean multipleHandlingNodes;
+  private boolean hasMultipleHandlingNodes;
 
   public void setHandlingNode(@Nullable MemcachedNode node) {
-    if (node == null || multipleHandlingNodes) {
+    if (node == null || hasMultipleHandlingNodes) {
       return;
     }
     if (handlingNode != null && node != handlingNode) {
       // bulk operations may have multiple nodes, so if we see a different node than the one we
       // already have, we will not set any node for this request
-      multipleHandlingNodes = true;
+      hasMultipleHandlingNodes = true;
       handlingNode = null;
       handlingNodeAddress = null;
       return;
