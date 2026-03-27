@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteS
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1.SpringWebMvcSingletons.handlerInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -44,12 +43,11 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(nameStartsWith("handle"))
             .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
             .and(takesArguments(3)),
-        HandlerAdapterInstrumentation.class.getName() + "$ControllerAdvice");
+        getClass().getName() + "$ControllerAdvice");
   }
 
   @SuppressWarnings("unused")

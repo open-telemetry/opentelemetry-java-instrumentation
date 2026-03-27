@@ -178,7 +178,8 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
     try {
       return (boolean) usesPathPatternsMh.invoke(handlerMapping);
     } catch (Throwable throwable) {
-      throw new IllegalStateException(throwable);
+      logger.log(FINE, "Failed calling usesPathPatterns", throwable);
+      return false;
     }
   }
 
