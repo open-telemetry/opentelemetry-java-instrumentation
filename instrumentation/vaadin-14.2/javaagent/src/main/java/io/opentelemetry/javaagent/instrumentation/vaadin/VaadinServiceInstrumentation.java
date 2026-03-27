@@ -33,7 +33,7 @@ public class VaadinServiceInstrumentation implements TypeInstrumentation {
         named("handleRequest")
             .and(takesArgument(0, named("com.vaadin.flow.server.VaadinRequest")))
             .and(takesArgument(1, named("com.vaadin.flow.server.VaadinResponse"))),
-        VaadinServiceInstrumentation.class.getName() + "$HandleRequestAdvice");
+        getClass().getName() + "$HandleRequestAdvice");
   }
 
   @SuppressWarnings("unused")
