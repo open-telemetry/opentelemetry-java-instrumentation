@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.reflection;
 
+import static io.opentelemetry.javaagent.tooling.instrumentation.AdviceUtil.applyInlineAdvice;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -29,7 +30,11 @@ public class ReflectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
+    // Inline instrumentation to prevent recursion issues with invokedynamic:
+    // Reflection.filterFields/filterMethods may be called during class loading
+    // in the indy bootstrap path
+    applyInlineAdvice(
+        transformer,
         named("filterFields")
             .and(takesArguments(2))
             .and(takesArgument(0, Class.class))
@@ -38,7 +43,8 @@ public class ReflectionInstrumentation implements TypeInstrumentation {
             .and(isStatic()),
         getClass().getName() + "$FilterFieldsAdvice");
 
-    transformer.applyAdviceToMethod(
+    applyInlineAdvice(
+        transformer,
         named("filterMethods")
             .and(takesArguments(2))
             .and(takesArgument(0, Class.class))

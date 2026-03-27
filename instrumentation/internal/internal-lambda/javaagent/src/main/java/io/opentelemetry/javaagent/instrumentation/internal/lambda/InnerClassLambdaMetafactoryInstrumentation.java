@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.lambda;
 
+import static io.opentelemetry.javaagent.tooling.instrumentation.AdviceUtil.applyInlineAdvice;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -67,7 +68,11 @@ public class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumen
                   }
                 }));
 
-    transformer.applyAdviceToMethod(
+    // Inline instrumentation to prevent recursion issues with invokedynamic:
+    // spinInnerClass is called during lambda creation, and the indy bootstrap itself
+    // may create lambdas (e.g. for AccessController.doPrivileged with SecurityManager)
+    applyInlineAdvice(
+        transformer,
         named("spinInnerClass"),
         getClass().getName() + (hasInterfaceClassField() ? "$LambdaJdk17Advice" : "$LambdaAdvice"));
   }
