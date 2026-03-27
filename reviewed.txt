@@ -496,3 +496,4 @@ spring-webflux-5.3:testing-webflux7
 spring-webmvc-3.1:wildfly-testing
 spring-webmvc-3.1:javaagent
 spring-webmvc-5.3:library
+spring-webmvc-6.0:javaagent
