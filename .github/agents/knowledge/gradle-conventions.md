@@ -51,6 +51,18 @@ Verify `build.gradle.kts` applies the correct plugin for the module type:
 | `library/` | `otel.library-instrumentation` |
 | `testing/` | `otel.java-conventions` |
 
+## Boolean Project Properties
+
+For simple boolean Gradle project properties in `build.gradle.kts`, prefer the repository's most
+common pattern:
+
+```kotlin
+val myFlag = findProperty("myFlag") == "true"
+if (myFlag) {
+  // ...
+}
+```
+
 ## `testInstrumentation` Dependencies
 
 The `testInstrumentation` configuration declares which other javaagent instrumentation modules
