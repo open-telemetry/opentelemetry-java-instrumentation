@@ -52,7 +52,7 @@ public class JmsDestinationAccessorInstrumentation implements TypeInstrumentatio
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Enter Scope scope) {
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope == null) {
         return;
       }
