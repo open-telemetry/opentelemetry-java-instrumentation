@@ -26,9 +26,9 @@ final class ViburDbcpDataSourceInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("start").and(takesArguments(0)), this.getClass().getName() + "$StartAdvice");
+        named("start").and(takesArguments(0)), getClass().getName() + "$StartAdvice");
     transformer.applyAdviceToMethod(
-        named("close").and(takesArguments(0)), this.getClass().getName() + "$CloseAdvice");
+        named("close").and(takesArguments(0)), getClass().getName() + "$CloseAdvice");
   }
 
   @SuppressWarnings("unused")
