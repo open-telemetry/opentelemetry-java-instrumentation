@@ -527,3 +527,4 @@ vertx-http-client-common:javaagent
 vertx-http-client-5.0:javaagent
 vertx-kafka-client-3.6:javaagent
 vertx-kafka-client-3.6:testing
+vertx-kafka-client-3.6:vertx-kafka-client-3.6-testing
