@@ -40,7 +40,6 @@ tasks {
       excludeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
     }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   }
 
   check {

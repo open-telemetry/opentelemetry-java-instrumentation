@@ -29,7 +29,6 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
     systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 }

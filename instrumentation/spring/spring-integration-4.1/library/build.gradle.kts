@@ -37,7 +37,3 @@ configurations.testRuntimeClasspath {
     force("org.slf4j:slf4j-api:1.7.36")
   }
 }
-
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-}
