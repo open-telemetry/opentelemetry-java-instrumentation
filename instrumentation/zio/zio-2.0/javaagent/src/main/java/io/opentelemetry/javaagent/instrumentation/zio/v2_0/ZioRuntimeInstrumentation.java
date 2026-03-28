@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.zio.v2_0;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -25,7 +24,7 @@ public class ZioRuntimeInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("defaultSupervisor")),
+        named("defaultSupervisor"),
         getClass().getName() + "$DefaultSupervisorAdvice");
   }
 
