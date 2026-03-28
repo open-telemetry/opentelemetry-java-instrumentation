@@ -41,7 +41,7 @@ public class DriverInstrumentation implements TypeInstrumentation {
             .and(not(isStatic()))
             .and(takesArguments(6))
             .and(returns(named("io.vertx.sqlclient.Pool"))),
-        DriverInstrumentation.class.getName() + "$NewPoolAdvice");
+        getClass().getName() + "$NewPoolAdvice");
   }
 
   @SuppressWarnings("unused")

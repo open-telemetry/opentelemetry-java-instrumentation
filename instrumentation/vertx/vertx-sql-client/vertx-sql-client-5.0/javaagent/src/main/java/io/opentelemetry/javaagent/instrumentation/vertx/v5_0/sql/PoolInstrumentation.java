@@ -55,11 +55,11 @@ public class PoolInstrumentation implements TypeInstrumentation {
             .and(takesArguments(3))
             .and(takesArgument(1, named("io.vertx.sqlclient.SqlConnectOptions")))
             .and(returns(named("io.vertx.sqlclient.Pool"))),
-        PoolInstrumentation.class.getName() + "$PoolAdvice");
+        getClass().getName() + "$PoolAdvice");
 
     transformer.applyAdviceToMethod(
         named("getConnection").and(takesNoArguments()).and(returns(named("io.vertx.core.Future"))),
-        PoolInstrumentation.class.getName() + "$GetConnectionAdvice");
+        getClass().getName() + "$GetConnectionAdvice");
   }
 
   @SuppressWarnings("unused")
