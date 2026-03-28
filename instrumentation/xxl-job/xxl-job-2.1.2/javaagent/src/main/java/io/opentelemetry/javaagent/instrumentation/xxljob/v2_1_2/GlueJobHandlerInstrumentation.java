@@ -30,8 +30,7 @@ public class GlueJobHandlerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("execute").and(isPublic()),
-        GlueJobHandlerInstrumentation.class.getName() + "$ScheduleAdvice");
+        named("execute").and(isPublic()), getClass().getName() + "$ScheduleAdvice");
   }
 
   @SuppressWarnings("unused")
