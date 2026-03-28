@@ -22,9 +22,8 @@ import java.util.Collection;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
-enum VertxSqlClientAttributesGetter
+class VertxSqlClientAttributesGetter
     implements SqlClientAttributesGetter<VertxSqlClientRequest, Void> {
-  INSTANCE;
 
   private static final Function<Throwable, String> responseStatusExtractor =
       createResponseStatusExtractor();
