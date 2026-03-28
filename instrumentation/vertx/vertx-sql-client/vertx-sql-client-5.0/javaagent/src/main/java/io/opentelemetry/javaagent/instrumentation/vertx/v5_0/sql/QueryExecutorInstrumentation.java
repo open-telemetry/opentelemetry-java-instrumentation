@@ -36,11 +36,10 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isConstructor(), QueryExecutorInstrumentation.class.getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("executeSimpleQuery", "executeExtendedQuery", "executeBatchQuery"),
-        QueryExecutorInstrumentation.class.getName() + "$QueryAdvice");
+        getClass().getName() + "$QueryAdvice");
   }
 
   @SuppressWarnings("unused")
