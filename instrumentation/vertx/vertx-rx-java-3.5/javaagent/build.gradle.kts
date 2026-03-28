@@ -7,6 +7,7 @@ muzzle {
     group.set("io.vertx")
     module.set("vertx-rx-java2")
     versions.set("[3.5.0,)")
+    assertInverse.set(true)
   }
 }
 
