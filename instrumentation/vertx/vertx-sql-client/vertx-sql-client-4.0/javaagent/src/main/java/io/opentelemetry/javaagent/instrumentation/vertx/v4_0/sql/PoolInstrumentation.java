@@ -58,11 +58,11 @@ public class PoolInstrumentation implements TypeInstrumentation {
             .and(takesArguments(3))
             .and(takesArgument(1, hasSuperType(named("io.vertx.sqlclient.SqlConnectOptions"))))
             .and(returns(hasSuperType(named("io.vertx.sqlclient.Pool")))),
-        PoolInstrumentation.class.getName() + "$PoolAdvice");
+        getClass().getName() + "$PoolAdvice");
 
     transformer.applyAdviceToMethod(
         named("getConnection").and(takesNoArguments()).and(returns(named("io.vertx.core.Future"))),
-        PoolInstrumentation.class.getName() + "$GetConnectionAdvice");
+        getClass().getName() + "$GetConnectionAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -79,7 +79,7 @@ public class PoolInstrumentation implements TypeInstrumentation {
       return callDepth;
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Return Pool pool,
         @Advice.Argument(1) SqlConnectOptions sqlConnectOptions,
@@ -88,11 +88,13 @@ public class PoolInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      setPoolConnectOptions(pool, sqlConnectOptions);
-      // Detect db system from pool implementation class (e.g. PgPool -> postgresql).
-      // This handles cases where connect options is a generic SqlConnectOptions
-      // but the pool is database-specific (e.g. Hibernate Reactive).
-      storeConnectOptionsDbSystem(sqlConnectOptions, getDbSystemNameFromClassName(pool));
+      if (pool != null) {
+        setPoolConnectOptions(pool, sqlConnectOptions);
+        // Detect db system from pool implementation class (e.g. PgPool -> postgresql).
+        // This handles cases where connect options is a generic SqlConnectOptions
+        // but the pool is database-specific (e.g. Hibernate Reactive).
+        storeConnectOptionsDbSystem(sqlConnectOptions, getDbSystemNameFromClassName(pool));
+      }
       setSqlConnectOptions(null);
     }
   }
