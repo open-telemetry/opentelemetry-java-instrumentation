@@ -18,14 +18,19 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService;
+import io.opentelemetry.instrumentation.apachedubbo.v2_7.impl.FailingHelloServiceImpl;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.impl.HelloServiceImpl;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.lang.reflect.Field;
@@ -155,6 +160,9 @@ public abstract class AbstractDubboTest {
                                         ? "org.apache.dubbo.rpc.service.GenericService/$invoke"
                                         : "$invoke"),
                                 equalTo(
+                                    RPC_RESPONSE_STATUS_CODE,
+                                    emitStableRpcSemconv() ? "OK" : null),
+                                equalTo(
                                     maybeStablePeerService(),
                                     hasServicePeerName() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
@@ -184,6 +192,9 @@ public abstract class AbstractDubboTest {
                                     emitStableRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"
                                         : "hello"),
+                                equalTo(
+                                    RPC_RESPONSE_STATUS_CODE,
+                                    emitStableRpcSemconv() ? "OK" : null),
                                 satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
                                 satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)))));
 
@@ -253,7 +264,9 @@ public abstract class AbstractDubboTest {
                                                   equalTo(RPC_SYSTEM_NAME, "dubbo"),
                                                   equalTo(
                                                       RPC_METHOD,
-                                                      "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"))))));
+                                                      "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"),
+                                                  equalTo(
+                                                      RPC_RESPONSE_STATUS_CODE, "OK"))))));
 
       testing()
           .waitAndAssertMetrics(
@@ -273,6 +286,8 @@ public abstract class AbstractDubboTest {
                                                   equalTo(
                                                       RPC_METHOD,
                                                       "org.apache.dubbo.rpc.service.GenericService/$invoke"),
+                                                  equalTo(
+                                                      RPC_RESPONSE_STATUS_CODE, "OK"),
                                                   equalTo(SERVER_ADDRESS, "localhost"),
                                                   satisfies(
                                                       SERVER_PORT,
@@ -341,6 +356,9 @@ public abstract class AbstractDubboTest {
                                         ? "org.apache.dubbo.rpc.service.GenericService/$invokeAsync"
                                         : "$invokeAsync"),
                                 equalTo(
+                                    RPC_RESPONSE_STATUS_CODE,
+                                    emitStableRpcSemconv() ? "OK" : null),
+                                equalTo(
                                     maybeStablePeerService(),
                                     hasServicePeerName() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
@@ -370,6 +388,9 @@ public abstract class AbstractDubboTest {
                                     emitStableRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"
                                         : "hello"),
+                                equalTo(
+                                    RPC_RESPONSE_STATUS_CODE,
+                                    emitStableRpcSemconv() ? "OK" : null),
                                 satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
                                 satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)),
                                 // this attribute is not filled reliably, it is either null or
@@ -451,7 +472,9 @@ public abstract class AbstractDubboTest {
                                                   equalTo(RPC_SYSTEM_NAME, "dubbo"),
                                                   equalTo(
                                                       RPC_METHOD,
-                                                      "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"))))));
+                                                      "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"),
+                                                  equalTo(
+                                                      RPC_RESPONSE_STATUS_CODE, "OK"))))));
 
       testing()
           .waitAndAssertMetrics(
@@ -471,10 +494,159 @@ public abstract class AbstractDubboTest {
                                                   equalTo(
                                                       RPC_METHOD,
                                                       "org.apache.dubbo.rpc.service.GenericService/$invokeAsync"),
+                                                  equalTo(
+                                                      RPC_RESPONSE_STATUS_CODE, "OK"),
                                                   equalTo(SERVER_ADDRESS, "localhost"),
                                                   satisfies(
                                                       SERVER_PORT,
                                                       k -> k.isInstanceOf(Long.class)))))));
+    }
+  }
+
+  ServiceConfig<FailingHelloServiceImpl> configureErrorServer() {
+    RegistryConfig registerConfig = new RegistryConfig();
+    registerConfig.setAddress("N/A");
+    ServiceConfig<FailingHelloServiceImpl> service = new ServiceConfig<>();
+    service.setInterface(HelloService.class);
+    service.setRef(new FailingHelloServiceImpl());
+    service.setRegistry(registerConfig);
+    return service;
+  }
+
+  @Test
+  void testApacheDubboError() throws ReflectiveOperationException {
+    int port = PortUtils.findOpenPort();
+    protocolConfig.setPort(port);
+
+    DubboBootstrap bootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(bootstrap::destroy);
+    bootstrap
+        .application(new ApplicationConfig("dubbo-test-error-provider"))
+        .service(configureErrorServer())
+        .protocol(protocolConfig)
+        .start();
+
+    DubboBootstrap consumerBootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(consumerBootstrap::destroy);
+    ReferenceConfig<HelloService> referenceConfig = configureClient(port);
+    ProtocolConfig consumerProtocolConfig = new ProtocolConfig();
+    consumerProtocolConfig.setRegister(false);
+    consumerBootstrap
+        .application(new ApplicationConfig("dubbo-demo-api-error-consumer"))
+        .reference(referenceConfig)
+        .protocol(consumerProtocolConfig)
+        .start();
+
+    ReferenceConfig<GenericService> reference = convertReference(referenceConfig);
+    GenericService genericService = reference.get();
+
+    assertThat(
+            catchThrowable(
+                () ->
+                    runWithSpan(
+                        "parent",
+                        () ->
+                            genericService.$invoke(
+                                "hello",
+                                new String[] {String.class.getName()},
+                                new Object[] {"error"}))))
+        .isNotNull();
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName("org.apache.dubbo.rpc.service.GenericService/$invoke")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasStatus(StatusData.error())
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "dubbo" : null),
+                                equalTo(
+                                    RPC_SERVICE,
+                                    emitOldRpcSemconv()
+                                        ? "org.apache.dubbo.rpc.service.GenericService"
+                                        : null),
+                                equalTo(
+                                    RPC_METHOD,
+                                    emitStableRpcSemconv()
+                                        ? "org.apache.dubbo.rpc.service.GenericService/$invoke"
+                                        : "$invoke"),
+                                satisfies(
+                                    RPC_RESPONSE_STATUS_CODE,
+                                    val -> {
+                                      if (emitStableRpcSemconv()) {
+                                        // javaagent captures "OK" via DefaultFuture;
+                                        // library mode has no status code for Dubbo2 errors
+                                        val.satisfiesAnyOf(
+                                            v -> assertThat(v).isEqualTo("OK"),
+                                            v -> assertThat(v).isNull());
+                                      } else {
+                                        val.isNull();
+                                      }
+                                    }),
+                                satisfies(
+                                    ERROR_TYPE,
+                                    val -> {
+                                      if (emitStableRpcSemconv()) {
+                                        val.isNotNull();
+                                      } else {
+                                        val.isNull();
+                                      }
+                                    }),
+                                equalTo(
+                                    maybeStablePeerService(),
+                                    hasServicePeerName() ? "test-peer-service" : null),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)),
+                                satisfies(
+                                    NETWORK_PEER_ADDRESS,
+                                    k -> assertLatestDeps(k, a -> a.isInstanceOf(String.class))),
+                                satisfies(
+                                    NETWORK_PEER_PORT,
+                                    k -> assertLatestDeps(k, a -> a.isInstanceOf(Long.class))),
+                                satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType)),
+                    span ->
+                        span.hasName(
+                                "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")
+                            .hasKind(SpanKind.SERVER)
+                            .hasParent(trace.getSpan(1))
+                            .hasStatus(StatusData.error())
+                            .hasAttributesSatisfying(
+                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "dubbo" : null),
+                                equalTo(
+                                    RPC_SERVICE,
+                                    emitOldRpcSemconv()
+                                        ? "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"
+                                        : null),
+                                equalTo(
+                                    RPC_METHOD,
+                                    emitStableRpcSemconv()
+                                        ? "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"
+                                        : "hello"),
+                                satisfies(
+                                    ERROR_TYPE,
+                                    val -> {
+                                      if (emitStableRpcSemconv()) {
+                                        val.isNotNull();
+                                      } else {
+                                        val.isNull();
+                                      }
+                                    }),
+                                satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
+                                satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)))));
+  }
+
+  private static Throwable catchThrowable(Runnable runnable) {
+    try {
+      runnable.run();
+      return null;
+    } catch (Throwable t) {
+      return t;
     }
   }
 
