@@ -45,7 +45,9 @@ class Vertx5HttpServerTest extends AbstractVertxHttpServerTest {
         .onComplete(
             res -> {
               if (!res.succeeded()) {
-                throw new IllegalStateException("Cannot deploy server Verticle", res.cause());
+                future.completeExceptionally(
+                    new IllegalStateException("Cannot deploy server Verticle", res.cause()));
+                return;
               }
               future.complete(null);
             });
