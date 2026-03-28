@@ -187,10 +187,13 @@ public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
   which is irrelevant and misleading; the purpose is the upper bound.
   To identify ceiling classes, check if a newer sibling module's `classLoaderMatcher()`
   checks a different variant or replacement class.
-- **Do NOT add version comments on trivial single-class checks.** A single-class
-  `hasClassesNamed(...)` check whose landmark corresponds to the module's base
-  version does not need a comment — the version is obvious from the module name. Do not
-  suggest adding one.
+- **Single-class lower-bound comments are required.** When a single-class
+  `hasClassesNamed(...)` check exists solely to establish the module's lower bound, add an
+  inline `// added in X.Y` comment. The comment explains why the matcher exists and which
+  version boundary it enforces. First validate that `X.Y` is factually correct from
+  repository or upstream evidence; do not infer it from the module name alone. Flag a
+  missing comment in this case, and do not flag an existing one for removal unless the
+  comment is demonstrably wrong.
 - Prefer **one landmark class** per version boundary — choose the most stable/specific class.
 - Pair with **muzzle config** (`assertInverse.set(true)`) for full coverage.
 - Use `hasClassesNamed(...)` (from `AgentElementMatchers`) — not raw ByteBuddy matchers.
