@@ -547,3 +547,4 @@ wicket-8.0:wicket8-testing
 xxl-job-1.9.2:javaagent
 xxl-job-2.3.0:javaagent
 xxl-job-2.1.2:javaagent
+xxl-job-common:javaagent
