@@ -43,10 +43,10 @@ public class AsyncResultSingleInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(0, named("io.vertx.core.Handler"))),
-        this.getClass().getName() + "$ConstructorWithHandlerAdvice");
+        getClass().getName() + "$ConstructorWithHandlerAdvice");
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(0, Consumer.class)),
-        this.getClass().getName() + "$ConstructorWithConsumerAdvice");
+        getClass().getName() + "$ConstructorWithConsumerAdvice");
   }
 
   @SuppressWarnings("unused")
