@@ -254,9 +254,7 @@ sufficient for optimization.
 
 ### Rules
 
-- Do not flag or change the visibility or `final` modifier on `TypeInstrumentation`,
-  `InstrumentationModule`, or advice classes. Both `public class` and package-private `class`
-  (with or without `final`) are acceptable — this is not a style issue in javaagent code.
+- Do not flag or change the visibility or `final` modifier on advice classes.
 - `typeMatcher()` should match only the types the instrumentation genuinely needs. Prefer
   `named("fully.qualified.ClassName")` or `namedOneOf(...)` for single classes.
   `extendsClass(...)` and `implementsInterface(...)` are appropriate when the instrumentation
