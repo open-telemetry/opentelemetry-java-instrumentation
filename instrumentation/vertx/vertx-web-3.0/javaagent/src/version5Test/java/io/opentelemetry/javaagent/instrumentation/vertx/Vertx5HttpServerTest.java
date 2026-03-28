@@ -24,8 +24,7 @@ class Vertx5HttpServerTest extends AbstractVertxHttpServerTest {
   }
 
   @Override
-  protected Vertx setupServer()
-      throws ExecutionException, InterruptedException, TimeoutException, NoSuchMethodException {
+  protected Vertx setupServer() throws ExecutionException, InterruptedException, TimeoutException {
     Vertx server =
         Vertx.vertx(
             new VertxOptions()
