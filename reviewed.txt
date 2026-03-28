@@ -543,3 +543,4 @@ vibur-dbcp-11.0:library
 wicket-8.0:common-testing
 wicket-8.0:javaagent
 wicket-8.0:wicket10-testing
+wicket-8.0:wicket8-testing
