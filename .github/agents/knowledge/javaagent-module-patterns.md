@@ -270,12 +270,14 @@ sufficient for optimization.
   Keep `isMethod()` when the name could be empty, since `named("")` matches constructors and
   class initializers.
 - Reference the advice class using `getClass().getName() + "$InnerClassName"` — not
-  `InnerClassName.class.getName()`, `OuterClass.class.getName()`, or a string literal.
+  `this.getClass().getName() + "$InnerClassName"`, `InnerClassName.class.getName()`,
+  `OuterClass.class.getName()`, or a string literal.
   Any `.class.getName()` reference — whether to the inner advice class or the outer
   instrumentation class — causes class loading in the agent's class loader, where library
   types used by the advice are unavailable (causing `NoClassDefFoundError`).
   `getClass().getName()` avoids this because it is a virtual call on the already-loaded
-  `this` instance, not a class literal.
+  instance, not a class literal. Omit the redundant `this.` qualifier and use the shorter
+  repository convention.
 
 ## Singletons Pattern
 
