@@ -11666,6 +11666,7 @@ libraries:
     scope:
       name: io.opentelemetry.quarkus-resteasy-reactive
     javaagent_target_versions:
+    - io.quarkus:quarkus-rest:[3.9.0,)
     - io.quarkus:quarkus-resteasy-reactive:(,3.9.0)
   quartz:
   - name: quartz-2.0
@@ -13267,8 +13268,8 @@ libraries:
       type: list
       default: ''
     - name: otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
-      description: Enables adding the trace ID and span ID as request attributes for downstream
-        servlet access.
+      description: Enables adding the trace ID and span ID as request attributes for
+        downstream servlet access.
       type: boolean
       default: true
     telemetry:
@@ -13350,8 +13351,8 @@ libraries:
       type: list
       default: ''
     - name: otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
-      description: Enables adding the trace ID and span ID as request attributes for downstream
-        servlet access.
+      description: Enables adding the trace ID and span ID as request attributes for
+        downstream servlet access.
       type: boolean
       default: true
     telemetry:
@@ -13439,8 +13440,8 @@ libraries:
       type: list
       default: ''
     - name: otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
-      description: Enables adding the trace ID and span ID as request attributes for downstream
-        servlet access.
+      description: Enables adding the trace ID and span ID as request attributes for
+        downstream servlet access.
       type: boolean
       default: true
     telemetry:
@@ -15625,6 +15626,8 @@ libraries:
           type: STRING
         - name: db.query.summary
           type: STRING
+        - name: db.system.name
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -15637,6 +15640,8 @@ libraries:
         - name: db.query.summary
           type: STRING
         - name: db.query.text
+          type: STRING
+        - name: db.system.name
           type: STRING
         - name: error.type
           type: STRING
@@ -15698,6 +15703,8 @@ libraries:
           type: STRING
         - name: db.query.summary
           type: STRING
+        - name: db.system.name
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -15710,6 +15717,8 @@ libraries:
         - name: db.query.summary
           type: STRING
         - name: db.query.text
+          type: STRING
+        - name: db.system.name
           type: STRING
         - name: error.type
           type: STRING
