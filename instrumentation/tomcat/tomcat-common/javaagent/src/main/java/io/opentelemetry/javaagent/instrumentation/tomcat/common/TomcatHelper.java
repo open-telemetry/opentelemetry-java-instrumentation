@@ -10,6 +10,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
+import javax.annotation.Nullable;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 import org.apache.tomcat.util.buf.MessageBytes;
@@ -39,10 +40,11 @@ public class TomcatHelper<REQUEST, RESPONSE> {
   }
 
   public void end(
-      Request request, Response response, Throwable throwable, Context context, Scope scope) {
-    if (scope == null) {
-      return;
-    }
+      Request request,
+      Response response,
+      @Nullable Throwable throwable,
+      Context context,
+      Scope scope) {
     scope.close();
 
     throwable = AppServerBridge.getException(context, throwable);
