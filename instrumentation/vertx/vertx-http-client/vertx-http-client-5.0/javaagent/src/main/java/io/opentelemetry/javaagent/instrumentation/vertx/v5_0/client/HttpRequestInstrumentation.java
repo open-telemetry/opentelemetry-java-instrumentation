@@ -211,11 +211,11 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Handler<Throwable> wrapExceptionHandler(
         @Advice.This HttpClientRequest request,
-        @Advice.Argument(0) @Nullable Handler<Throwable> originalHandler) {
-      if (originalHandler == null) {
+        @Advice.Argument(0) @Nullable Handler<Throwable> handler) {
+      if (handler == null) {
         return null;
       }
-      return ExceptionHandlerWrapper.wrap(instrumenter(), request, CONTEXTS, originalHandler);
+      return ExceptionHandlerWrapper.wrap(instrumenter(), request, CONTEXTS, handler);
     }
   }
 }
