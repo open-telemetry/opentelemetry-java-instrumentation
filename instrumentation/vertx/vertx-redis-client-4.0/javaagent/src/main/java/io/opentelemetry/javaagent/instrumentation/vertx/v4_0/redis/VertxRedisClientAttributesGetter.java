@@ -13,11 +13,10 @@ import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 
-public enum VertxRedisClientAttributesGetter
+final class VertxRedisClientAttributesGetter
     implements DbClientAttributesGetter<VertxRedisClientRequest, Void> {
-  INSTANCE;
 
-  private static final RedisCommandSanitizer sanitizer =
+  private static final RedisCommandSanitizer SANITIZER =
       RedisCommandSanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
   @Override
@@ -36,7 +35,8 @@ public enum VertxRedisClientAttributesGetter
   @Nullable
   public String getDbNamespace(VertxRedisClientRequest request) {
     if (emitStableDatabaseSemconv()) {
-      return String.valueOf(request.getDatabaseIndex());
+      Long databaseIndex = request.getDatabaseIndex();
+      return databaseIndex == null ? null : String.valueOf(databaseIndex);
     }
     return null;
   }
@@ -50,7 +50,7 @@ public enum VertxRedisClientAttributesGetter
 
   @Override
   public String getDbQueryText(VertxRedisClientRequest request) {
-    return sanitizer.sanitize(request.getCommand(), request.getArgs());
+    return SANITIZER.sanitize(request.getCommand(), request.getArgs());
   }
 
   @Nullable
