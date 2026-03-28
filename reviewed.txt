@@ -531,3 +531,4 @@ vertx-kafka-client-3.6:vertx-kafka-client-3.6-testing
 vertx-kafka-client-3.6:vertx-kafka-client-4-testing
 vertx-kafka-client-3.6:vertx-kafka-client-5-testing
 vertx-redis-client-4.0:javaagent
+vertx-rx-java-3.5:javaagent
