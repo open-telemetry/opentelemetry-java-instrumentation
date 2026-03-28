@@ -50,7 +50,7 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
         isMethod().and(isPublic()).and(returns(named("net.spy.memcached.internal.BulkFuture"))),
         this.getClass().getName() + "$AsyncBulkAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(namedOneOf("incr", "decr")),
+        isPublic().and(namedOneOf("incr", "decr")),
         this.getClass().getName() + "$SyncOperationAdvice");
   }
 
