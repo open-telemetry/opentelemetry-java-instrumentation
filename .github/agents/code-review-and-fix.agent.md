@@ -126,7 +126,7 @@ Auto-fix boundaries:
     same parent and apply the step-by-step procedure in `gradle-conventions.md`.
     After adding, verify by running the module's tests.
   - missing version comments on `hasClassesNamed()` landmark classes in existing
-    `classLoaderMatcher()` overrides (multi-class checks or `.and(not(...))` chains only) —
+    `classLoaderMatcher()` overrides, including single-class lower-bound checks —
     determine each class's **role** (floor vs ceiling) and add the matching comment.
     First check: does a **newer** sibling instrumentation module exist for this library
     (e.g., `mongo-4.0` next to `mongo-3.7`)? If so, look at what the newer module checks
@@ -142,6 +142,8 @@ Auto-fix boundaries:
     A ceiling class might have been *introduced* much earlier than the module's target version.
     Do not use `// added in` for a ceiling class — that is misleading. The relevant fact is
     when it was **removed**.
+    Validate the version in the comment before adding or requesting it. Do not guess the
+    version from the module name alone; confirm it with repository or upstream evidence.
     Sources: muzzle `versions.set(...)` ranges, sibling module `classLoaderMatcher()` checks,
     module directory names, existing code comments, Javadoc/release notes.
     Do NOT add a `classLoaderMatcher()` override where one does not already exist —
