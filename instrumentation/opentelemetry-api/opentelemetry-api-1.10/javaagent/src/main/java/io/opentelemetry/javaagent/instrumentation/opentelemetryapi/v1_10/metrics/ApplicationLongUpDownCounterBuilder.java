@@ -53,7 +53,7 @@ public class ApplicationLongUpDownCounterBuilder
             applicationCallback.accept(new ApplicationObservableLongMeasurement(agentMeasurement));
     return new ApplicationObservableLongUpDownCounter(
         CallbackAnchor.anchor(agentBuilder::buildWithCallback, callback),
-        () -> CallbackAnchor.remove(callback));
+        CallbackAnchor.releaseOnClose(callback));
   }
 
   // added in 1.15.0

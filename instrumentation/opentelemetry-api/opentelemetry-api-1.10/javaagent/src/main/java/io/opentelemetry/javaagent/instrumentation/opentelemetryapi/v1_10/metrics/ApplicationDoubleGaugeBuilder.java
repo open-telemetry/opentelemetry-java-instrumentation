@@ -49,7 +49,7 @@ public class ApplicationDoubleGaugeBuilder
                 new ApplicationObservableDoubleMeasurement(agentMeasurement));
     return new ApplicationObservableDoubleGauge(
         CallbackAnchor.anchor(agentBuilder::buildWithCallback, callback),
-        () -> CallbackAnchor.remove(callback));
+        CallbackAnchor.releaseOnClose(callback));
   }
 
   // added in 1.15.0

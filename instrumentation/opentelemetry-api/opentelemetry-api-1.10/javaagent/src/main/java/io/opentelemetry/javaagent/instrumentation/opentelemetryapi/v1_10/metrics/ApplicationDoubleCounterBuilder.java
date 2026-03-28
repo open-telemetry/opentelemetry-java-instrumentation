@@ -49,7 +49,7 @@ public class ApplicationDoubleCounterBuilder
                 new ApplicationObservableDoubleMeasurement(agentMeasurement));
     return new ApplicationObservableDoubleCounter(
         CallbackAnchor.anchor(agentBuilder::buildWithCallback, callback),
-        () -> CallbackAnchor.remove(callback));
+        CallbackAnchor.releaseOnClose(callback));
   }
 
   // added in 1.15.0

@@ -8,8 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metric
 import io.opentelemetry.javaagent.bootstrap.WeakRefConsumer;
 import io.opentelemetry.javaagent.bootstrap.WeakRefRunnable;
 import java.lang.ref.WeakReference;
-import java.util.Set;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -40,12 +41,13 @@ public final class CallbackAnchor {
   // Anchors callbacks to this class's lifecycle. Since this class is injected as a helper into each
   // application class loader, callbacks are naturally tied to their class loader's lifecycle.
   // Use identity semantics so unusual equals/hashCode implementations don't collapse distinct
-  // callbacks into the same entry.
-  private static final Set<IdentityKey> callbacks = ConcurrentHashMap.newKeySet();
+  // callbacks into the same entry, and ref counts so the same callback can back multiple
+  // instruments without closing one instrument dropping the shared anchor too early.
+  private static final Map<IdentityKey, Integer> callbacks = new ConcurrentHashMap<>();
 
   public static <T, R extends AutoCloseable> R anchor(
       Function<Consumer<T>, R> buildFn, Consumer<T> callback) {
-    callbacks.add(new IdentityKey(callback));
+    callbacks.merge(new IdentityKey(callback), 1, Integer::sum);
     WeakRefConsumer<T> weak = new WeakRefConsumer<>(new WeakReference<>(callback));
     R instrument = buildFn.apply(weak);
     weak.closeWhenCollected(instrument);
@@ -54,15 +56,29 @@ public final class CallbackAnchor {
 
   public static <R extends AutoCloseable> R anchorBatch(
       Function<Runnable, R> buildFn, Runnable callback) {
-    callbacks.add(new IdentityKey(callback));
+    callbacks.merge(new IdentityKey(callback), 1, Integer::sum);
     WeakRefRunnable weak = new WeakRefRunnable(new WeakReference<>(callback));
     R instrument = buildFn.apply(weak);
     weak.closeWhenCollected(instrument);
     return instrument;
   }
 
-  public static void remove(Object callback) {
-    callbacks.remove(new IdentityKey(callback));
+  // Some instrument wrappers may end up calling close() more than once. Guard the deferred
+  // release so each wrapper decrements the callback ref count at most once.
+  public static Runnable releaseOnClose(Object callback) {
+    AtomicBoolean released = new AtomicBoolean();
+    return () -> {
+      if (released.compareAndSet(false, true)) {
+        release(callback);
+      }
+    };
+  }
+
+  private static void release(Object callback) {
+    // Returning null from computeIfPresent removes the mapping
+    // once the ref count reaches zero.
+    callbacks.computeIfPresent(
+        new IdentityKey(callback), (key, count) -> count == 1 ? null : count - 1);
   }
 
   private static final class IdentityKey {

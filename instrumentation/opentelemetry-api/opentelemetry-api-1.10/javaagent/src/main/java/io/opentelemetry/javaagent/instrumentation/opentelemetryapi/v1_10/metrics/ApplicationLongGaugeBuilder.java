@@ -43,7 +43,7 @@ public class ApplicationLongGaugeBuilder
             applicationCallback.accept(new ApplicationObservableLongMeasurement(agentMeasurement));
     return new ApplicationObservableLongGauge(
         CallbackAnchor.anchor(agentBuilder::buildWithCallback, callback),
-        () -> CallbackAnchor.remove(callback));
+        CallbackAnchor.releaseOnClose(callback));
   }
 
   // added in 1.15.0
