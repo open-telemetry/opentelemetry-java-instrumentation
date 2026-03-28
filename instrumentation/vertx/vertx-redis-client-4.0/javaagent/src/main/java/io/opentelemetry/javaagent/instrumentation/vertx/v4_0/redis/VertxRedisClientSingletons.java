@@ -38,16 +38,15 @@ public final class VertxRedisClientSingletons {
     // the span name
     SpanNameExtractor<VertxRedisClientRequest> spanNameExtractor =
         VertxRedisClientRequest::getCommand;
+    VertxRedisClientAttributesGetter getter = new VertxRedisClientAttributesGetter();
 
     InstrumenterBuilder<VertxRedisClientRequest, Void> builder =
         Instrumenter.<VertxRedisClientRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
-            .addAttributesExtractor(
-                DbClientAttributesExtractor.create(new VertxRedisClientAttributesGetter()))
+            .addAttributesExtractor(DbClientAttributesExtractor.create(getter))
             .addAttributesExtractor(new VertxRedisClientAttributesExtractor())
             .addAttributesExtractor(
-                ServicePeerAttributesExtractor.create(
-                    new VertxRedisClientAttributesGetter(), GlobalOpenTelemetry.get()))
+                ServicePeerAttributesExtractor.create(getter, GlobalOpenTelemetry.get()))
             .addOperationMetrics(DbClientMetrics.get());
 
     INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
