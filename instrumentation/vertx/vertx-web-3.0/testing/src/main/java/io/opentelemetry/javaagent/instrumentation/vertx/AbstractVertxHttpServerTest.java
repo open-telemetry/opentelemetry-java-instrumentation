@@ -50,8 +50,7 @@ abstract class AbstractVertxHttpServerTest extends AbstractHttpServerTest<Vertx>
   }
 
   @Override
-  protected Vertx setupServer()
-      throws ExecutionException, InterruptedException, TimeoutException, NoSuchMethodException {
+  protected Vertx setupServer() throws ExecutionException, InterruptedException, TimeoutException {
     Vertx server =
         Vertx.vertx(
             new VertxOptions()
@@ -63,12 +62,16 @@ abstract class AbstractVertxHttpServerTest extends AbstractHttpServerTest<Vertx>
     server.deployVerticle(
         verticle().getName(),
         new DeploymentOptions()
+            // casting port to Object because the put override that takes Integer is removed in
+            // later versions of vertx-core
             .setConfig(
                 new JsonObject().put(AbstractVertxWebServer.CONFIG_HTTP_SERVER_PORT, (Object) port))
             .setInstances(3),
         res -> {
           if (!res.succeeded()) {
-            throw new IllegalStateException("Cannot deploy server Verticle", res.cause());
+            future.completeExceptionally(
+                new IllegalStateException("Cannot deploy server Verticle", res.cause()));
+            return;
           }
           future.complete(null);
         });
