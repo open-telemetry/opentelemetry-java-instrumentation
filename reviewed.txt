@@ -534,3 +534,4 @@ vertx-redis-client-4.0:javaagent
 vertx-rx-java-3.5:javaagent
 vertx-sql-client-4.0:javaagent
 vertx-sql-client-5.0:javaagent
+vertx-web-3.0:javaagent
