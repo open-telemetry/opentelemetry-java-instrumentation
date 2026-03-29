@@ -29,10 +29,8 @@ class LoggingEventToReplay implements ILoggingEvent {
     // The values are copied because the current values are not more available when the log is
     // replayed
     this.timeStamp = loggingEvent.getTimeStamp();
-    this.threadName =
-        captureExperimentalAttributes ? loggingEvent.getThreadName() : null;
-    this.callerData =
-        captureCodeAttributes ? loggingEvent.getCallerData() : null;
+    this.threadName = captureExperimentalAttributes ? loggingEvent.getThreadName() : null;
+    this.callerData = captureCodeAttributes ? loggingEvent.getCallerData() : null;
   }
 
   @Override
