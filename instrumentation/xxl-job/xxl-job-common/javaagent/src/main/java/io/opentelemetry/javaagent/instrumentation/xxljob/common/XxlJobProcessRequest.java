@@ -12,23 +12,15 @@ import javax.annotation.Nullable;
 
 public final class XxlJobProcessRequest {
 
-  @Nullable private String methodName;
-  private int jobId;
-  @Nullable private Class<?> declaringClass;
+  @Nullable private final String methodName;
+  private final int jobId;
+  @Nullable private final Class<?> declaringClass;
   private boolean failed;
   private final GlueTypeEnum glueType;
 
-  private XxlJobProcessRequest(GlueTypeEnum glueType) {
-    this.glueType = glueType;
-  }
-
   public static XxlJobProcessRequest createRequestForMethod(
       GlueTypeEnum glueType, Class<?> declaringClass, @Nullable String methodName) {
-    XxlJobProcessRequest request = new XxlJobProcessRequest(glueType);
-    request.declaringClass = declaringClass;
-    request.methodName = methodName;
-
-    return request;
+    return new XxlJobProcessRequest(glueType, declaringClass, methodName, 0);
   }
 
   public static XxlJobProcessRequest createGlueJobRequest(IJobHandler handler) {
@@ -36,10 +28,7 @@ public final class XxlJobProcessRequest {
   }
 
   public static XxlJobProcessRequest createScriptJobRequest(GlueTypeEnum glueType, int jobId) {
-    XxlJobProcessRequest request = new XxlJobProcessRequest(glueType);
-    request.jobId = jobId;
-
-    return request;
+    return new XxlJobProcessRequest(glueType, null, null, jobId);
   }
 
   public static XxlJobProcessRequest createSimpleJobRequest(IJobHandler handler) {
@@ -50,6 +39,17 @@ public final class XxlJobProcessRequest {
       Object target, @Nullable Method method) {
     return createRequestForMethod(
         GlueTypeEnum.BEAN, target.getClass(), method != null ? method.getName() : null);
+  }
+
+  private XxlJobProcessRequest(
+      GlueTypeEnum glueType,
+      @Nullable Class<?> declaringClass,
+      @Nullable String methodName,
+      int jobId) {
+    this.glueType = glueType;
+    this.declaringClass = declaringClass;
+    this.methodName = methodName;
+    this.jobId = jobId;
   }
 
   public void setFailed() {
