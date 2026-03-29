@@ -182,8 +182,8 @@ public abstract class AbstractLog4j2Test {
 
     List<AttributeAssertion> assertions = addCodeLocationAttributes("testStringMapMessage");
     assertions.addAll(threadAttributesAssertions());
-    assertions.add(equalTo(stringKey("log4j.map_message.key1"), "val1"));
-    assertions.add(equalTo(stringKey("log4j.map_message.key2"), "val2"));
+    assertions.add(equalTo(stringKey("key1"), "val1"));
+    assertions.add(equalTo(stringKey("key2"), "val2"));
 
     testing()
         .waitAndAssertLogRecords(
@@ -206,7 +206,7 @@ public abstract class AbstractLog4j2Test {
     List<AttributeAssertion> assertions =
         addCodeLocationAttributes("testStringMapMessageWithSpecialAttribute");
     assertions.addAll(threadAttributesAssertions());
-    assertions.add(equalTo(stringKey("log4j.map_message.key1"), "val1"));
+    assertions.add(equalTo(stringKey("key1"), "val1"));
 
     testing()
         .waitAndAssertLogRecords(
@@ -228,8 +228,8 @@ public abstract class AbstractLog4j2Test {
 
     List<AttributeAssertion> assertions = addCodeLocationAttributes("testStructuredDataMapMessage");
     assertions.addAll(threadAttributesAssertions());
-    assertions.add(equalTo(stringKey("log4j.map_message.key1"), "val1"));
-    assertions.add(equalTo(stringKey("log4j.map_message.key2"), "val2"));
+    assertions.add(equalTo(stringKey("key1"), "val1"));
+    assertions.add(equalTo(stringKey("key2"), "val2"));
 
     testing()
         .waitAndAssertLogRecords(
@@ -253,14 +253,11 @@ public abstract class AbstractLog4j2Test {
       ThreadContext.clearMap();
     }
 
-    // currently, context data uses "key1" while MapMessage uses "log4j.map_message.key1"
-    // once the "log4j.map_message" prefix is removed, both will share the same key "key1"
-    // and the MapMessage value should win (context data is captured first, MapMessage second)
     List<AttributeAssertion> assertions =
         addCodeLocationAttributes("testStringMapMessageWinsOverContextData");
     assertions.addAll(threadAttributesAssertions());
     assertions.add(equalTo(stringKey("key1"), "context-value"));
-    assertions.add(equalTo(stringKey("log4j.map_message.key1"), "message-value"));
+    assertions.add(equalTo(stringKey("key1"), "message-value"));
 
     testing()
         .waitAndAssertLogRecords(
@@ -298,7 +295,7 @@ public abstract class AbstractLog4j2Test {
     List<AttributeAssertion> assertions =
         addCodeLocationAttributes("testOtelEventNameInMapMessage");
     assertions.addAll(threadAttributesAssertions());
-    assertions.add(equalTo(stringKey("log4j.map_message.key1"), "val1"));
+    assertions.add(equalTo(stringKey("key1"), "val1"));
 
     testing()
         .waitAndAssertLogRecords(
