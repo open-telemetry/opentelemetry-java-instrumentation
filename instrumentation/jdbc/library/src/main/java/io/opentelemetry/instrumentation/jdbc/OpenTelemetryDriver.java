@@ -151,7 +151,7 @@ public final class OpenTelemetryDriver implements Driver {
    *
    * @param driver {@link Driver} that should be registered
    */
-  public static void addDriverCandidate(Driver driver) {
+  public static void addDriverCandidate(@Nullable Driver driver) {
     if (driver != null) {
       DRIVER_CANDIDATES.add(driver);
     }

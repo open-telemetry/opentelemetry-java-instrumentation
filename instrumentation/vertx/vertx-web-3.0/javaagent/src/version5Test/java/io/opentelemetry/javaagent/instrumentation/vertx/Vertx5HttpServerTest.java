@@ -24,8 +24,7 @@ class Vertx5HttpServerTest extends AbstractVertxHttpServerTest {
   }
 
   @Override
-  protected Vertx setupServer()
-      throws ExecutionException, InterruptedException, TimeoutException, NoSuchMethodException {
+  protected Vertx setupServer() throws ExecutionException, InterruptedException, TimeoutException {
     Vertx server =
         Vertx.vertx(
             new VertxOptions()
@@ -45,7 +44,9 @@ class Vertx5HttpServerTest extends AbstractVertxHttpServerTest {
         .onComplete(
             res -> {
               if (!res.succeeded()) {
-                throw new IllegalStateException("Cannot deploy server Verticle", res.cause());
+                future.completeExceptionally(
+                    new IllegalStateException("Cannot deploy server Verticle", res.cause()));
+                return;
               }
               future.complete(null);
             });

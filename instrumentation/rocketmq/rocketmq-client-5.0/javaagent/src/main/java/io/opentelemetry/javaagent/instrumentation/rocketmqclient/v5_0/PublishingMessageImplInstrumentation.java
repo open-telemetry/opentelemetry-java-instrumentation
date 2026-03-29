@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -45,10 +44,9 @@ final class PublishingMessageImplInstrumentation implements TypeInstrumentation 
                 takesArgument(
                     1, named("org.apache.rocketmq.client.java.impl.producer.PublishingSettings")))
             .and(takesArgument(2, boolean.class)),
-        PublishingMessageImplInstrumentation.class.getName() + "$ConstructorAdvice");
+        getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(named("getProperties")).and(isPublic()),
-        PublishingMessageImplInstrumentation.class.getName() + "$GetPropertiesAdvice");
+        named("getProperties").and(isPublic()), getClass().getName() + "$GetPropertiesAdvice");
   }
 
   @SuppressWarnings("unused")

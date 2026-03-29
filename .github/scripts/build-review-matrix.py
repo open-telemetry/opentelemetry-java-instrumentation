@@ -43,7 +43,7 @@ def load_reviewed() -> set[str]:
     progress = os.environ.get("REVIEW_PROGRESS", "")
     if not progress:
         return set()
-    return set(progress.split(","))
+    return set(progress.splitlines())
 
 
 def count_open_prs() -> int:

@@ -29,9 +29,11 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Config | Config property stability/renames/removals | `otel.instrumentation.*` property changes, `DeclarativeConfigUtil` or `ConfigProperties` usage | `config-property-stability.md` |
 | Build | Gradle conventions, muzzle, test tasks, plugins | `build.gradle.kts`, `settings.gradle.kts` | `gradle-conventions.md` |
 | Build | `testcontainersBuildService` declaration | Testcontainers dependency without `usesService` | `gradle-conventions.md` |
-| Style | Prefer instance creation over singletons for stateless interface impls | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`, enum/static singletons | — |
+| Style | Prefer instance creation over singletons for stateless interface impls (except on hot paths or Kotlin `object` declarations) | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`, enum/static singletons | — |
+| Style | No unnecessary explicit type witnesses on generic method calls (`Collections.<String>emptyList()`) | Java generic method calls with explicit type parameters | — |
 | Style | Remove redundant null guards on attribute puts | `AttributesBuilder.put`, `onStart`, `onEnd`, attribute extraction methods | — |
-| Style | Nullability correctness — no guards for non-nullable params; add `@Nullable` when null is actually passed/returned; respect upstream SDK `@Nullable` contracts for `TextMapGetter`/`TextMapSetter` | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `*Extractor` implementations, null checks, missing `@Nullable` | — |
+| General | No redundant `ByteBuffer.duplicate()` on `Value.getValue()` | `Value.getValue()` with `BYTES` type, `ByteBuffer` handling | — |
+| Style | Nullability correctness — no guards for non-nullable params; add `@Nullable` when null is actually passed/returned/stored; respect upstream SDK `@Nullable` contracts for `TextMapGetter`/`TextMapSetter` | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `*Extractor` implementations, null checks, missing `@Nullable`, fields assigned from `@Nullable` sources | — |
 | Architecture | Library vs javaagent boundaries | Always | — |
 | NewModule | New instrumentation module checklist | New modules | _(inline below)_ |
 
@@ -88,11 +90,41 @@ right-hand side to `new MyGetter()`.
 Convert the class declaration from `enum` / singleton-holder to a plain `class`.
 If the implementation is a private nested class, omit the `final` keyword.
 
+**Exception — Kotlin `object` declarations**: Kotlin `object` is an idiomatic
+language-level singleton. Do not convert `object` declarations to `class`. This
+rule targets Java `enum` singletons and static `INSTANCE` fields only.
+
+**Exception — hot paths**: when the getter/setter is used in a per-request or
+per-message code path (e.g., inside `propagator.extract()` or `propagator.inject()`
+called at request time), keep the singleton instance (`INSTANCE` field) to avoid
+allocating on every invocation. The instance-creation style is intended for
+registration-time call sites such as `Instrumenter` builder chains and `Singletons`
+initialization — not for code that runs on every request.
+
 ## [Style] No Redundant Null Guards on Attribute Puts
 
 All `put` / `setAttribute` methods on `AttributesBuilder`, `Span`, `SpanBuilder`, and
 `LogRecordBuilder` are no-ops when the value is `null` (upstream SDK guarantee).
 Do not wrap these calls in `if (value != null)` guards — pass the value directly.
+
+**Exception — `AttributeKey<Long>` with `Integer` value**: the only primitive-typed
+overload on these interfaces is a convenience method that accepts `int`:
+
+- `AttributesBuilder.put(AttributeKey<Long> key, int value)`
+- `Span.setAttribute(AttributeKey<Long> key, int value)`
+
+When the `AttributeKey` is typed as `Long` and the source value is `Integer`, Java
+cannot bind `Integer` to `T = Long` in the generic overload (type mismatch), so it
+resolves to the `int` convenience overload via auto-unboxing (`Integer` → `int`). If
+the `Integer` is `null`, this auto-unboxing causes a `NullPointerException` **before**
+`put()` / `setAttribute()` is reached. In this case the null guard is **required** — do
+not remove it.
+
+When the value type **matches** the `AttributeKey` type parameter (e.g.,
+`Boolean` → `AttributeKey<Boolean>`, `Long` → `AttributeKey<Long>`,
+`Double` → `AttributeKey<Double>`), the generic `@Nullable T` overload is selected
+directly — no auto-unboxing occurs and `null` is safe. Do **not** add a null guard in
+this case.
 
 Flag patterns like:
 
@@ -109,16 +141,52 @@ Preferred:
 attributes.put(SOME_KEY, getSomething());
 ```
 
+Also flag (the guard is unnecessary — types match, generic overload handles null):
+
+```java
+Boolean enabled = metadata.getEnabled();       // may return null
+if (enabled != null) {
+  span.setAttribute(META_ENABLED, enabled);    // AttributeKey<Boolean> + Boolean → generic overload
+}
+```
+
+Preferred:
+
+```java
+span.setAttribute(META_ENABLED, metadata.getEnabled()); // null is a no-op
+```
+
+Do **not** flag (the guard is required — type mismatch forces `int` overload):
+
+```java
+Integer statusCode = response.getStatusCode(); // may return null
+if (statusCode != null) {
+  attributes.put(HTTP_RESPONSE_STATUS_CODE, statusCode); // AttributeKey<Long> + Integer → put(int)
+}
+```
+
 ## [Style] Nullability Correctness
 
 Use `@Nullable` annotations accurately throughout the codebase:
 
+- **Fields**: annotate `@Nullable` if and only if the field can hold `null` at any point
+  after construction (e.g., it is assigned from a `@Nullable` method, set to `null`
+  explicitly, or left uninitialized). If the field is always non-null after the
+  constructor completes, do not annotate it.
 - **Parameters**: annotate `@Nullable` if and only if `null` is actually passed by callers.
+  When justifying `@Nullable` on a parameter, cite the concrete caller behavior or
+  upstream contract that allows `null`; do **not** justify it merely because the method
+  guards against null.
 - **Return types**: annotate `@Nullable` if and only if the method actually returns `null`.
   Even when an interface or superclass declares a return type as `@Nullable`, do **not** add
   `@Nullable` to the overriding method if the implementation never returns `null`. The
   interface annotation permits null, but an implementation that always returns a non-null
   value is more precise without it.
+  When justifying `@Nullable` on a return type, cite the concrete reason the implementation
+  can return null (e.g., it delegates to a `@Nullable`-returning method without adding a
+  non-null guarantee), not merely that an interface or upstream contract permits null.
+- **Test files**: do **not** add `@Nullable` in test code.
+  If a PR adds `@Nullable` to test files, flag it for removal.
 - **External interface contracts**: interfaces from the OpenTelemetry SDK
   (`io.opentelemetry.context.propagation`) declare `@Nullable` on certain parameters.
   These annotations are not visible in this repository because the interfaces live in the
@@ -136,6 +204,86 @@ Use `@Nullable` annotations accurately throughout the codebase:
   | `TextMapGetter<CarrierT>` | `getAll(CarrierT, String)` | `carrier` is `@Nullable` |
   | `TextMapGetter<CarrierT>` | `keys(CarrierT)` | none |
   | `TextMapSetter<CarrierT>` | `set(CarrierT, String, String)` | `carrier` is `@Nullable` |
+
+  **Exception — pure delegation**: when the entire body of the overriding method is a
+  single delegation to another `TextMapGetter` or `TextMapSetter` instance (i.e., the
+  implementation contains no carrier-specific logic and simply calls
+  `delegate.get(carrier, key)`, `delegate.getAll(carrier, key)`, or
+  `delegate.set(carrier, key, value)`), do **not** add a null guard for `carrier`.
+  The delegate is itself a `TextMapGetter`/`TextMapSetter` and must handle `null` carrier
+  per the same contract. Just annotate the parameter with `@Nullable` and pass
+  `carrier` straight through:
+
+  ```java
+  // CORRECT — pure delegation, no null guard needed
+  @Override
+  @Nullable
+  public String get(@Nullable C carrier, String key) {
+    return delegate.get(carrier, key);
+  }
+
+  // WRONG — redundant null guard before delegation
+  @Override
+  @Nullable
+  public String get(@Nullable C carrier, String key) {
+    if (carrier == null) {
+      return null;
+    }
+    return delegate.get(carrier, key);
+  }
+  ```
+
+## [General] No Redundant `ByteBuffer.duplicate()` on `Value.getValue()`
+
+The upstream `Value<ByteBuffer>` implementation (`ValueBytes` in `opentelemetry-java`)
+returns a **new read-only `ByteBuffer`** on every call to `getValue()`:
+
+```java
+// opentelemetry-java ValueBytes.getValue()
+return ByteBuffer.wrap(raw).asReadOnlyBuffer();
+```
+
+Do not wrap the result in `.duplicate()` — each `getValue()` call already yields a fresh
+buffer with independent position/limit state. A `.duplicate()` adds overhead for no safety
+benefit.
+
+Flag:
+
+```java
+ByteBuffer byteBuffer = ((ByteBuffer) value.getValue()).duplicate();
+```
+
+Preferred:
+
+```java
+ByteBuffer byteBuffer = (ByteBuffer) value.getValue();
+```
+
+## [Style] No Unnecessary Explicit Type Parameters on Method Calls
+
+Since Java 5, the compiler infers generic type arguments in virtually all contexts.
+Explicit type witnesses on method calls (e.g., `Collections.<String>emptyList()`) are
+almost never needed and add visual noise.
+
+Flag any explicit type witness that is not required for compilation:
+
+```java
+// BAD — type witness is unnecessary
+return Collections.<String>emptyList().iterator();
+Iterator<String> it = Collections.<String>emptyList().iterator();
+```
+
+Preferred:
+
+```java
+// GOOD — compiler infers the type argument
+return Collections.emptyList().iterator();
+Iterator<String> it = Collections.emptyList().iterator();
+```
+
+**Exception**: an explicit type witness is acceptable only when the compiler cannot infer
+the type without it (e.g., the call is used as a method argument where the target type is
+ambiguous and the cast would otherwise be required). Do not flag those cases.
 
 ## [Semconv] Constants by Module Type
 

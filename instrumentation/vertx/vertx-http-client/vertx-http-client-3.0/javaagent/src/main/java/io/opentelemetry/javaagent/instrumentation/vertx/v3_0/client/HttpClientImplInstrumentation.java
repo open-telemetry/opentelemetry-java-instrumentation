@@ -26,8 +26,7 @@ public class HttpClientImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isConstructor(), HttpClientImplInstrumentation.class.getName() + "$AttachStateAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$AttachStateAdvice");
   }
 
   @SuppressWarnings("unused")

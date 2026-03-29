@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0;
 
 import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0.JettyHttpClientSingletons.JETTY_CLIENT_CONTEXT_KEY;
 import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0.JettyHttpClientSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameContains;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -33,14 +32,12 @@ public class JettyHttpClient12Instrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("send"))
+        named("send")
             .and(takesArgument(0, named("org.eclipse.jetty.client.Response$CompleteListener"))),
-        JettyHttpClient12Instrumentation.class.getName() + "$JettyHttpClient12SendAdvice");
+        getClass().getName() + "$JettyHttpClient12SendAdvice");
     // For request listeners
     transformer.applyAdviceToMethod(
-        isMethod().and(nameContains("notify")),
-        JettyHttpClient12Instrumentation.class.getName() + "$JettyHttpClient12NotifyAdvice");
+        nameContains("notify"), getClass().getName() + "$JettyHttpClient12NotifyAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -104,7 +101,7 @@ public class JettyHttpClient12Instrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-    public static void onExitNotify(@Advice.Enter Scope scope) {
+    public static void onExitNotify(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

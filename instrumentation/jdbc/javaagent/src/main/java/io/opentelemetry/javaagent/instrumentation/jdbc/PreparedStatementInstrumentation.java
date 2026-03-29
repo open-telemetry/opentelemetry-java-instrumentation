@@ -53,10 +53,10 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
             .and(not(namedOneOf("executeBatch", "executeLargeBatch")))
             .and(takesArguments(0))
             .and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$PreparedStatementAdvice");
+        getClass().getName() + "$PreparedStatementAdvice");
     transformer.applyAdviceToMethod(
         named("addBatch").and(takesNoArguments()).and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$AddBatchAdvice");
+        getClass().getName() + "$AddBatchAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf(
                 "setBoolean",
@@ -78,24 +78,24 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, int.class))
             .and(takesArguments(2))
             .and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetParameter2Advice");
+        getClass().getName() + "$SetParameter2Advice");
     transformer.applyAdviceToMethod(
         namedOneOf("setDate", "setTime", "setTimestamp")
             .and(takesArgument(0, int.class))
             .and(takesArgument(2, Calendar.class))
             .and(takesArguments(3))
             .and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetTimeParameter3Advice");
+        getClass().getName() + "$SetTimeParameter3Advice");
     transformer.applyAdviceToMethod(
         namedOneOf("setObject")
             .and(takesArgument(0, int.class))
             .and(takesArgument(2, int.class))
             .and(takesArguments(3))
             .and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetParameter3Advice");
+        getClass().getName() + "$SetParameter3Advice");
     transformer.applyAdviceToMethod(
         named("clearParameters").and(takesNoArguments()).and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$ClearParametersAdvice");
+        getClass().getName() + "$ClearParametersAdvice");
   }
 
   @SuppressWarnings("unused")

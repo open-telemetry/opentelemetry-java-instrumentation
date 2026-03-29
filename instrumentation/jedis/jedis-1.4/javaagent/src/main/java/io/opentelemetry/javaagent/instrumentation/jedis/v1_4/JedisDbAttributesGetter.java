@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
+import javax.annotation.Nullable;
 
 final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
 
@@ -21,6 +22,7 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
   }
 
   @Override
+  @Nullable
   public String getDbNamespace(JedisRequest request) {
     return null;
   }

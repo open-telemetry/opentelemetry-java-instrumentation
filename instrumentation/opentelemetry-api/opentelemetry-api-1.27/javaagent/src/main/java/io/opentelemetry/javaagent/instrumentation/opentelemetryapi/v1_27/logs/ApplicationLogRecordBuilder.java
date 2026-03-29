@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.LogRecordBuilder;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.ValueBridging;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 import java.time.Instant;
@@ -38,6 +39,7 @@ public class ApplicationLogRecordBuilder
   }
 
   @Override
+  @CanIgnoreReturnValue
   public application.io.opentelemetry.api.logs.LogRecordBuilder setObservedTimestamp(
       long l, TimeUnit timeUnit) {
     agentLogRecordBuilder.setObservedTimestamp(l, timeUnit);
@@ -45,6 +47,7 @@ public class ApplicationLogRecordBuilder
   }
 
   @Override
+  @CanIgnoreReturnValue
   public application.io.opentelemetry.api.logs.LogRecordBuilder setObservedTimestamp(
       Instant instant) {
     agentLogRecordBuilder.setObservedTimestamp(instant);
@@ -83,12 +86,19 @@ public class ApplicationLogRecordBuilder
 
   @Override
   @CanIgnoreReturnValue
+  // unchecked: toAgent returns raw AttributeKey, VALUE bridging requires casting to Object key
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public <T> application.io.opentelemetry.api.logs.LogRecordBuilder setAttribute(
-      application.io.opentelemetry.api.common.AttributeKey<T> attributeKey, T t) {
+      application.io.opentelemetry.api.common.AttributeKey<T> attributeKey, T value) {
     @SuppressWarnings("unchecked") // toAgent uses raw AttributeKey
     AttributeKey<T> agentKey = Bridging.toAgent(attributeKey);
     if (agentKey != null) {
-      agentLogRecordBuilder.setAttribute(agentKey, t);
+      // For VALUE type attributes, need to bridge the Value object as well
+      if (attributeKey.getType().name().equals("VALUE")) {
+        agentLogRecordBuilder.setAttribute((AttributeKey) agentKey, ValueBridging.toAgent(value));
+      } else {
+        agentLogRecordBuilder.setAttribute(agentKey, value);
+      }
     }
     return this;
   }

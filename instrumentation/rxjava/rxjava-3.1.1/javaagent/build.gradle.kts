@@ -20,6 +20,7 @@ dependencies {
   testImplementation(project(":instrumentation:rxjava:rxjava-common-3.0:testing"))
 
   testInstrumentation(project(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent"))
+  testInstrumentation(project(":instrumentation:rxjava:rxjava-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:rxjava:rxjava-3.0:javaagent"))
 }
 

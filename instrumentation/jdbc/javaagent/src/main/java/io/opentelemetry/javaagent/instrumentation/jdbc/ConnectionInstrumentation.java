@@ -55,10 +55,10 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, String.class))
             // Also include CallableStatement, which is a subtype of PreparedStatement
             .and(returns(implementsInterface(named("java.sql.PreparedStatement")))),
-        ConnectionInstrumentation.class.getName() + "$PrepareAdvice");
+        getClass().getName() + "$PrepareAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("commit", "rollback").and(takesNoArguments()).and(isPublic()),
-        ConnectionInstrumentation.class.getName() + "$TransactionAdvice");
+        getClass().getName() + "$TransactionAdvice");
   }
 
   @SuppressWarnings("unused")

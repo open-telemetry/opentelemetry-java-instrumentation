@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -27,8 +26,7 @@ public class JedisInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(not(isStatic()))
             .and(
                 not(
@@ -42,7 +40,6 @@ public class JedisInstrumentation implements TypeInstrumentation {
                         "getClient",
                         "disconnect",
                         "getConnection",
-                        "isConnected",
                         "isBroken",
                         "toString"))),
         this.getClass().getName() + "$JedisMethodAdvice");

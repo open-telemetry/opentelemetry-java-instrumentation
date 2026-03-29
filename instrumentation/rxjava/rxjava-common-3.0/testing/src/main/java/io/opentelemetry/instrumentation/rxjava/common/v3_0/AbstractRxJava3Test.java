@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.rxjava.common.v3_0;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -253,7 +253,6 @@ public abstract class AbstractRxJava3Test {
                   .subscribe(
                       data -> {
                         endObservableTraceId.set(Span.current().getSpanContext().getTraceId());
-                        latch.countDown();
                         latch.countDown();
                       });
           assertThat(unused).isNotNull();
@@ -835,7 +834,7 @@ public abstract class AbstractRxJava3Test {
                       .toList()
                       .blockingGet();
                 });
-    assertThat(result.size()).isEqualTo(4);
+    assertThat(result).hasSize(4);
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -874,15 +873,18 @@ public abstract class AbstractRxJava3Test {
                   span ->
                       span.hasName("outer")
                           .hasNoParent()
-                          .hasAttributes(attributeEntry("iteration", iteration)),
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(longKey("iteration"), (long) iteration)),
                   span ->
                       span.hasName("middle")
                           .hasParent(trace.getSpan(0))
-                          .hasAttributes(attributeEntry("iteration", iteration)),
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(longKey("iteration"), (long) iteration)),
                   span ->
                       span.hasName("inner")
                           .hasParent(trace.getSpan(1))
-                          .hasAttributes(attributeEntry("iteration", iteration)));
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(longKey("iteration"), (long) iteration)));
     }
     testing()
         .waitAndAssertSortedTraces(

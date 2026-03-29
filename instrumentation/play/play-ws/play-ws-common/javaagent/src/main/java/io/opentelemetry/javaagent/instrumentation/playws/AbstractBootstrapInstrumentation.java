@@ -25,8 +25,7 @@ public class AbstractBootstrapInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("initAndRegister"),
-        AbstractBootstrapInstrumentation.class.getName() + "$DisablePropagationAdvice");
+        named("initAndRegister"), getClass().getName() + "$DisablePropagationAdvice");
   }
 
   @SuppressWarnings("unused")

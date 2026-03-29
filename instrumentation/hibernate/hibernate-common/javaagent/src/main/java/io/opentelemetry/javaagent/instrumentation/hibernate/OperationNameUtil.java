@@ -60,6 +60,7 @@ public final class OperationNameUtil {
     return "Session." + methodName;
   }
 
+  @Nullable
   public static String getEntityName(
       String descriptor, Object arg0, Object arg1, Function<Object, String> nameFromEntity) {
     String entityName = null;

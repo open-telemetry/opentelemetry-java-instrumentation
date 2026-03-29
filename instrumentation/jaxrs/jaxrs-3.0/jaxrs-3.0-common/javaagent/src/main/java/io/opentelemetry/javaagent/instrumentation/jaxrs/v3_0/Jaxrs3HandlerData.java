@@ -14,6 +14,7 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 
 public class Jaxrs3HandlerData extends HandlerData {
 
@@ -53,6 +54,7 @@ public class Jaxrs3HandlerData extends HandlerData {
   }
 
   @Override
+  @Nullable
   protected Supplier<String> getPathAnnotation(AnnotatedElement annotatedElement) {
     Path path = annotatedElement.getAnnotation(Path.class);
     return path != null ? path::value : null;

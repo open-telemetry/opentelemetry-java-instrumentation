@@ -8,9 +8,16 @@ package io.opentelemetry.javaagent.instrumentation.guava.v10_0;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.guava.v10_0.GuavaAsyncOperationEndStrategy;
+import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 
 public final class InstrumentationHelper {
+  private static final GuavaAsyncOperationEndStrategy asyncOperationEndStrategy;
+
+  public static final VirtualField<Runnable, PropagatedContext> PROPAGATED_CONTEXT =
+      VirtualField.find(Runnable.class, PropagatedContext.class);
+
   static {
     asyncOperationEndStrategy =
         GuavaAsyncOperationEndStrategy.builder()
@@ -21,8 +28,6 @@ public final class InstrumentationHelper {
 
     registerAsyncSpanEndStrategy();
   }
-
-  private static final GuavaAsyncOperationEndStrategy asyncOperationEndStrategy;
 
   private static void registerAsyncSpanEndStrategy() {
     AsyncOperationEndStrategies.instance().registerStrategy(asyncOperationEndStrategy);

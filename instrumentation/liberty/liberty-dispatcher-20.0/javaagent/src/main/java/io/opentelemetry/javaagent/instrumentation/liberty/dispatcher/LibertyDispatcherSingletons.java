@@ -18,7 +18,7 @@ public final class LibertyDispatcherSingletons {
         JavaagentHttpServerInstrumenters.create(
             INSTRUMENTATION_NAME,
             new LibertyDispatcherHttpAttributesGetter(),
-            LibertyDispatcherRequestGetter.INSTANCE);
+            new LibertyDispatcherRequestGetter());
   }
 
   public static Instrumenter<LibertyRequest, LibertyResponse> instrumenter() {

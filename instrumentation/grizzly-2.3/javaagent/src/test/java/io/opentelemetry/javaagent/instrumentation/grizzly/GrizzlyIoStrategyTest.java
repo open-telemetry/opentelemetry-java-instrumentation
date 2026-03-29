@@ -11,7 +11,7 @@ import org.glassfish.grizzly.http.server.NetworkListener;
 abstract class GrizzlyIoStrategyTest extends GrizzlyTest {
 
   @Override
-  public void configureListener(NetworkListener listener) {
+  protected void configureListener(NetworkListener listener) {
     // Default in NIOTransportBuilder is WorkerThreadIOStrategy, so don't need to retest that.
     listener.getTransport().setIOStrategy(strategy());
   }

@@ -66,24 +66,22 @@ public final class Play26Singletons {
   }
 
   private static String getRoute(Request<?> request) {
-    if (request != null) {
-      // more about routes here:
-      // https://github.com/playframework/playframework/blob/master/documentation/manual/releases/release26/migration26/Migration26.md
-      Option<HandlerDef> defOption = null;
-      if (typedKeyGetUnderlying != null) { // Should always be non-null but just to make sure
-        try {
-          @SuppressWarnings("unchecked") // casting reflection result
-          play.api.libs.typedmap.TypedKey<HandlerDef> handlerDef =
-              (play.api.libs.typedmap.TypedKey<HandlerDef>)
-                  typedKeyGetUnderlying.invoke(Router.Attrs.HANDLER_DEF);
-          defOption = request.attrs().get(handlerDef);
-        } catch (IllegalAccessException | InvocationTargetException ignored) {
-          // Ignore
-        }
+    // more about routes here:
+    // https://github.com/playframework/playframework/blob/master/documentation/manual/releases/release26/migration26/Migration26.md
+    Option<HandlerDef> defOption = null;
+    if (typedKeyGetUnderlying != null) { // Should always be non-null but just to make sure
+      try {
+        @SuppressWarnings("unchecked") // casting reflection result
+        play.api.libs.typedmap.TypedKey<HandlerDef> handlerDef =
+            (play.api.libs.typedmap.TypedKey<HandlerDef>)
+                typedKeyGetUnderlying.invoke(Router.Attrs.HANDLER_DEF);
+        defOption = request.attrs().get(handlerDef);
+      } catch (IllegalAccessException | InvocationTargetException ignored) {
+        // Ignore
       }
-      if (defOption != null && !defOption.isEmpty()) {
-        return defOption.get().path();
-      }
+    }
+    if (defOption != null && !defOption.isEmpty()) {
+      return defOption.get().path();
     }
     return null;
   }

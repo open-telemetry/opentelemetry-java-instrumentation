@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
 import static io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientRequestTracingHandler.HTTP_CLIENT_REQUEST;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -35,17 +34,14 @@ public class AbstractChannelHandlerContextInstrumentation implements TypeInstrum
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("invokeExceptionCaught"))
-            .and(takesArgument(0, named(Throwable.class.getName()))),
-        AbstractChannelHandlerContextInstrumentation.class.getName()
-            + "$InvokeExceptionCaughtAdvice");
+        named("invokeExceptionCaught").and(takesArgument(0, named(Throwable.class.getName()))),
+        getClass().getName() + "$InvokeExceptionCaughtAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class InvokeExceptionCaughtAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This ChannelHandlerContext ctx, @Advice.Argument(0) Throwable throwable) {
 

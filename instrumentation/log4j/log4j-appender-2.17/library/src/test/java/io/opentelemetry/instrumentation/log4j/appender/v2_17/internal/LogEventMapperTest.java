@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
 import org.junit.jupiter.api.Test;
@@ -229,7 +228,6 @@ class LogEventMapperTest {
     INSTANCE;
 
     @Override
-    @Nullable
     public String getValue(Map<String, String> contextData, String key) {
       return contextData.get(key);
     }

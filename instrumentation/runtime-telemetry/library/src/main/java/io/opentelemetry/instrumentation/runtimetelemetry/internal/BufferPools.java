@@ -26,6 +26,7 @@ import java.util.function.Function;
  */
 public final class BufferPools {
 
+  // copied from JvmIncubatingAttributes
   private static final AttributeKey<String> JVM_BUFFER_POOL_NAME =
       stringKey("jvm.buffer.pool.name");
 

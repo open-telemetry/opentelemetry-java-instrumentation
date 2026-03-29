@@ -26,9 +26,7 @@ public class CouchbaseEnvironmentInstrumentation implements TypeInstrumentation 
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isConstructor(),
-        CouchbaseEnvironmentInstrumentation.class.getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
   }
 
   @SuppressWarnings("unused")

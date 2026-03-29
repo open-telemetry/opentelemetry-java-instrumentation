@@ -43,19 +43,18 @@ public class StatementInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         nameStartsWith("execute").and(takesArgument(0, String.class)).and(isPublic()),
-        StatementInstrumentation.class.getName() + "$StatementAdvice");
+        getClass().getName() + "$StatementAdvice");
     transformer.applyAdviceToMethod(
         named("addBatch").and(takesArgument(0, String.class)).and(isPublic()),
-        StatementInstrumentation.class.getName() + "$AddBatchAdvice");
+        getClass().getName() + "$AddBatchAdvice");
     transformer.applyAdviceToMethod(
-        named("clearBatch").and(isPublic()),
-        StatementInstrumentation.class.getName() + "$ClearBatchAdvice");
+        named("clearBatch").and(isPublic()), getClass().getName() + "$ClearBatchAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("executeBatch", "executeLargeBatch").and(takesNoArguments()).and(isPublic()),
-        StatementInstrumentation.class.getName() + "$ExecuteBatchAdvice");
+        getClass().getName() + "$ExecuteBatchAdvice");
     transformer.applyAdviceToMethod(
         named("close").and(isPublic()).and(takesNoArguments()),
-        StatementInstrumentation.class.getName() + "$CloseAdvice");
+        getClass().getName() + "$CloseAdvice");
   }
 
   @SuppressWarnings("unused")

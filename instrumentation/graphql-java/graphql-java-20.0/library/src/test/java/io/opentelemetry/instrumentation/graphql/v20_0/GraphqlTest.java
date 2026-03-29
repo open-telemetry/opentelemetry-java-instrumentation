@@ -46,7 +46,7 @@ class GraphqlTest extends AbstractGraphqlTest {
     GraphQLTelemetry telemetry =
         GraphQLTelemetry.builder(testing.getOpenTelemetry())
             .setDataFetcherInstrumentationEnabled(true)
-            .setAddOperationNameToSpanName(true)
+            .setOperationNameInSpanNameEnabled(true)
             .build();
     builder.instrumentation(telemetry.createInstrumentation());
   }
@@ -62,7 +62,7 @@ class GraphqlTest extends AbstractGraphqlTest {
     GraphQLTelemetry telemetry =
         GraphQLTelemetry.builder(testing.getOpenTelemetry())
             .setDataFetcherInstrumentationEnabled(true)
-            .setAddOperationNameToSpanName(true)
+            .setOperationNameInSpanNameEnabled(true)
             .build();
 
     GraphQL graphql =
@@ -126,7 +126,7 @@ class GraphqlTest extends AbstractGraphqlTest {
         GraphQLTelemetry.builder(testing.getOpenTelemetry())
             .setDataFetcherInstrumentationEnabled(true)
             .setTrivialDataFetcherInstrumentationEnabled(true)
-            .setAddOperationNameToSpanName(true)
+            .setOperationNameInSpanNameEnabled(true)
             .build();
 
     GraphQL graphql =
@@ -204,7 +204,7 @@ class GraphqlTest extends AbstractGraphqlTest {
         GraphQLTelemetry.builder(testing.getOpenTelemetry())
             .setDataFetcherInstrumentationEnabled(false)
             .setTrivialDataFetcherInstrumentationEnabled(true)
-            .setAddOperationNameToSpanName(true)
+            .setOperationNameInSpanNameEnabled(true)
             .build();
 
     GraphQL graphql =
@@ -254,7 +254,7 @@ class GraphqlTest extends AbstractGraphqlTest {
     GraphQLTelemetry telemetry =
         GraphQLTelemetry.builder(testing.getOpenTelemetry())
             .setDataFetcherInstrumentationEnabled(true)
-            .setAddOperationNameToSpanName(true)
+            .setOperationNameInSpanNameEnabled(true)
             .build();
 
     GraphQL graphql =
@@ -326,7 +326,7 @@ class GraphqlTest extends AbstractGraphqlTest {
     GraphQLTelemetry telemetry =
         GraphQLTelemetry.builder(testing.getOpenTelemetry())
             .setDataFetcherInstrumentationEnabled(true)
-            .setAddOperationNameToSpanName(true)
+            .setOperationNameInSpanNameEnabled(true)
             .build();
 
     GraphQL graphql =

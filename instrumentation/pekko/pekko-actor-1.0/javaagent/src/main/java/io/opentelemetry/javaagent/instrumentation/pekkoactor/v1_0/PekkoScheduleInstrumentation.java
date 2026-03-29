@@ -30,13 +30,13 @@ public class PekkoScheduleInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, named("scala.concurrent.duration.FiniteDuration")))
             .and(takesArgument(2, named("java.lang.Runnable")))
             .and(takesArgument(3, named("scala.concurrent.ExecutionContext"))),
-        PekkoScheduleInstrumentation.class.getName() + "$ScheduleAdvice");
+        getClass().getName() + "$ScheduleAdvice");
     transformer.applyAdviceToMethod(
         named("scheduleOnce")
             .and(takesArgument(0, named("scala.concurrent.duration.FiniteDuration")))
             .and(takesArgument(1, named("java.lang.Runnable")))
             .and(takesArgument(2, named("scala.concurrent.ExecutionContext"))),
-        PekkoScheduleInstrumentation.class.getName() + "$ScheduleOnceAdvice");
+        getClass().getName() + "$ScheduleOnceAdvice");
   }
 
   @SuppressWarnings("unused")

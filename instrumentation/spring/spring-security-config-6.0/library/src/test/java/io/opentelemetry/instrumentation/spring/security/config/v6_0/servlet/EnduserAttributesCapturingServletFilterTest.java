@@ -28,7 +28,8 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 
 class EnduserAttributesCapturingServletFilterTest {
 
-  @RegisterExtension InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  @RegisterExtension
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   /**
    * Tests to ensure enduser attributes are captured.

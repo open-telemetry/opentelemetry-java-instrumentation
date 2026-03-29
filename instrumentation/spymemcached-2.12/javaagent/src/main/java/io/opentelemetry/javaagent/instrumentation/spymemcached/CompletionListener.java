@@ -39,6 +39,7 @@ public abstract class CompletionListener<T> {
 
   protected void closeAsyncSpan(T future) {
     Span span = Span.fromContext(context);
+    Throwable error = null;
     try {
       processResult(span, future);
     } catch (CancellationException e) {
@@ -53,17 +54,17 @@ public abstract class CompletionListener<T> {
           span.setAttribute(DB_COMMAND_CANCELLED, true);
         }
       } else {
-        instrumenter().end(context, request, null, e);
+        error = e;
       }
     } catch (InterruptedException e) {
       // Avoid swallowing InterruptedException
-      instrumenter().end(context, request, null, e);
+      error = e;
       Thread.currentThread().interrupt();
     } catch (Throwable t) {
       // This should never happen, just in case to make sure we cover all unexpected exceptions
-      instrumenter().end(context, request, null, t);
+      error = t;
     } finally {
-      instrumenter().end(context, request, future, null);
+      instrumenter().end(context, request, future, error);
     }
   }
 

@@ -73,6 +73,7 @@ class VertxRedisClientTest {
   static void cleanup() {
     redis.close();
     client.close();
+    vertx.close();
     redisServer.stop();
   }
 

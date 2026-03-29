@@ -34,7 +34,7 @@ public final class RuntimeMetrics implements AutoCloseable {
    */
   @Deprecated
   public static RuntimeMetrics create(OpenTelemetry openTelemetry) {
-    return new RuntimeMetricsBuilder(openTelemetry).build();
+    return builder(openTelemetry).build();
   }
 
   /**

@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_56.incubator.config;
 
 import io.opentelemetry.api.incubator.config.ConfigProvider;
-import javax.annotation.Nullable;
 
 public final class ApplicationConfigProvider156Incubator
     implements application.io.opentelemetry.api.incubator.config.ConfigProvider {
@@ -20,7 +19,6 @@ public final class ApplicationConfigProvider156Incubator
             configProvider.getInstrumentationConfig());
   }
 
-  @Nullable
   @Override
   public application.io.opentelemetry.api.incubator.config.DeclarativeConfigProperties
       getInstrumentationConfig() {

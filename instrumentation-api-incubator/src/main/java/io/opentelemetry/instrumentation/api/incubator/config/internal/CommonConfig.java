@@ -39,6 +39,7 @@ public final class CommonConfig {
   private final String loggingTraceIdKey;
   private final String loggingSpanIdKey;
   private final String loggingTraceFlagsKey;
+  private final boolean v3Preview;
 
   public CommonConfig(OpenTelemetry openTelemetry) {
     DeclarativeConfigProperties generalConfig =
@@ -115,6 +116,7 @@ public final class CommonConfig {
         commonConfig.get("logging").getString("span_id", LoggingContextConstants.SPAN_ID);
     loggingTraceFlagsKey =
         commonConfig.get("logging").getString("trace_flags", LoggingContextConstants.TRACE_FLAGS);
+    v3Preview = commonConfig.getBoolean("v3_preview", false);
   }
 
   public List<String> getClientRequestHeaders() {
@@ -171,5 +173,9 @@ public final class CommonConfig {
 
   public String getTraceFlagsKey() {
     return loggingTraceFlagsKey;
+  }
+
+  public boolean isV3Preview() {
+    return v3Preview;
   }
 }

@@ -14,7 +14,7 @@ dependencies {
 }
 
 tasks.withType<Test>().configureEach {
-  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  systemProperty("testLatestDeps", findProperty("testLatestDeps"))
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   // to suppress non-fatal errors on jdk17
   jvmArgs("--add-opens=java.base/java.math=ALL-UNNAMED")
@@ -28,6 +28,7 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc")
   }
 
   val testBothSemconv by registering(Test::class) {
@@ -35,6 +36,7 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc/dup")
   }
 
   check {

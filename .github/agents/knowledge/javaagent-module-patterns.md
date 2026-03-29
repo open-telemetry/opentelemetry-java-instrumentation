@@ -36,7 +36,8 @@ public class MyLibrary10InstrumentationModule extends InstrumentationModule {
   directory name excluding version suffix. Names use **kebab-case**. See
   [module-naming.md](module-naming.md) for the full naming convention.
 - `typeInstrumentations()` returns the list of `TypeInstrumentation` implementations — use
-  `Arrays.asList(...)`.
+  `Arrays.asList(...)` for multiple items and `Collections.singletonList(...)` for a single
+  item.
 
 ### `classLoaderMatcher()` — Version-Boundary Detection
 
@@ -81,15 +82,26 @@ class suffices for a simple version boundary — use multiple classes only when:
   present (e.g., Jersey checks both the JAX-RS spec API and the Jersey implementation class;
   AWS SDK Lambda checks both the Lambda module and JSON protocol core).
 
-Place a comment **above each class name string** stating its version:
+Place a comment **above each class name string** stating its version role:
+
+- **Floor class** (proves "at least version X"): use `// added in X.Y`.
+- **Ceiling class** (proves "not yet version Y"): use `// removed in Y.Z`.
+
+**How to identify ceiling classes**: check whether a **newer sibling module** exists for
+the same library (e.g., `mongo-4.0` next to `mongo-3.7`). If the newer module's
+`classLoaderMatcher()` checks a different variant of the same class (e.g.,
+`com.mongodb.internal.async.SingleResultCallback` vs `com.mongodb.async.SingleResultCallback`),
+the old variant was likely removed in the newer version and serves as a ceiling. A ceiling
+class may have been *introduced* much earlier than the module's target version — the relevant
+fact is when it was **removed**, not when it was added.
 
 ```java
 @Override
 public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
   return hasClassesNamed(
-      // class added in 2.17.0 and backported to 2.12.3
+      // added in 2.17.0 and backported to 2.12.3
       "org.apache.logging.log4j.core.lookup.ConfigurationStrSubstitutor",
-      // class added in 2.15.0
+      // added in 2.15.0
       "org.apache.logging.log4j.core.config.arbiters.DefaultArbiter");
 }
 ```
@@ -103,12 +115,29 @@ Another common shape — floor + ceiling:
 @Override
 public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
   return hasClassesNamed(
-      // Not before 3.3.0.GA
+      // added in 3.3.0.GA
       "org.hibernate.transaction.JBossTransactionManagerLookup",
-      // Not in 4.0
+      // removed in 4.0
       "org.hibernate.classic.Validatable");
 }
 ```
+
+Another floor + ceiling example — mongo 3.7 pins to 3.7.x–3.x:
+
+```java
+@Override
+public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+  return hasClassesNamed(
+      // added in 3.7
+      "com.mongodb.MongoClientSettings$Builder",
+      // removed in 4.0 — excludes driver 4.0+ where the 4.0 module takes over
+      "com.mongodb.async.SingleResultCallback");
+}
+```
+
+Here `SingleResultCallback` was introduced in driver 3.0 but **removed in 4.0**. Its
+presence ensures the 3.7 module does not activate on 4.0+ classloaders. The comment must
+say `// removed in 4.0`, not `// added in 3.0` — the purpose is the upper bound.
 
 #### Pattern C: Exclude newer versions with native instrumentation
 
@@ -150,18 +179,22 @@ public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
   versioning signal (added/removed landmark class) is not part of the classes muzzle inspects.
 - **Version comments on landmark classes.** For multi-class checks, `.and(not(...))`
   chains, or cases where the landmark version differs from the module's base version,
-  each `hasClassesNamed()` call must have a `//` comment stating the library version
-  (e.g., `// added in 7.0.0`, `// removed in 3.0`).
-- **Do NOT add version comments on trivial single-class checks.** A single-class
-  `hasClassesNamed(...)` check whose landmark corresponds to the module's base
-  version does not need a comment — the version is obvious from the module name. Do not
-  suggest adding one.
+  each `hasClassesNamed()` call must have a `//` comment stating the class's **role**:
+  - Floor class → `// added in X.Y` (class introduced in version X.Y).
+  - Ceiling class → `// removed in Y.Z` (class removed in version Y.Z, ensuring the
+    module does not activate on Y.Z+).
+  Do not use `// added in` for a ceiling class — that states when the class first appeared,
+  which is irrelevant and misleading; the purpose is the upper bound.
+  To identify ceiling classes, check if a newer sibling module's `classLoaderMatcher()`
+  checks a different variant or replacement class.
+- **Single-class lower-bound comments are required.** When a single-class
+  `hasClassesNamed(...)` check exists solely to establish the module's lower bound, add an
+  inline `// added in X.Y` comment. The comment explains why the matcher exists and which
+  version boundary it enforces. First validate that `X.Y` is factually correct from
+  repository or upstream evidence; do not infer it from the module name alone. Flag a
+  missing comment in this case, and do not flag an existing one for removal unless the
+  comment is demonstrably wrong.
 - Prefer **one landmark class** per version boundary — choose the most stable/specific class.
-- **Always include a positive `hasClassesNamed(...)` match.** A `classLoaderMatcher()` that
-  only uses `not(hasClassesNamed(...))` will match every class loader where the excluded
-  class is absent — including class loaders where the target library is not present at all.
-  Always start with a positive `hasClassesNamed(...)` for a class from the target library,
-  then chain `.and(not(...))` to exclude newer versions.
 - Pair with **muzzle config** (`assertInverse.set(true)`) for full coverage.
 - Use `hasClassesNamed(...)` (from `AgentElementMatchers`) — not raw ByteBuddy matchers.
 - `classLoaderMatcher()` runs against **every class loader** in the JVM before type matching
@@ -224,24 +257,25 @@ sufficient for optimization.
 
 ### Rules
 
-- Do not flag or change the visibility or `final` modifier on `TypeInstrumentation`,
-  `InstrumentationModule`, or advice classes. Both `public class` and package-private `class`
-  (with or without `final`) are acceptable — this is not a style issue in javaagent code.
+- Do not flag or change the visibility or `final` modifier on advice classes.
 - `typeMatcher()` should match only the types the instrumentation genuinely needs. Prefer
   `named("fully.qualified.ClassName")` or `namedOneOf(...)` for single classes.
   `extendsClass(...)` and `implementsInterface(...)` are appropriate when the instrumentation
   targets subclasses or implementors of a type.
 - `transform()` wires method matchers to advice classes via `applyAdviceToMethod()`.
-- Do not add `isMethod()` in method matchers inside `transform()`. `isMethod()` only
-  serves to exclude constructors, but `named(...)` already excludes them because
-  constructors are named `<init>`. Remove `isMethod()` when not needed.
+- `isMethod()` in method matchers inside `transform()` is redundant when the matcher
+  already names a specific, non-empty method — e.g. `named("foo")` or `namedOneOf("foo", "bar")`.
+  Keep `isMethod()` when the name could be empty, since `named("")` matches constructors and
+  class initializers.
 - Reference the advice class using `getClass().getName() + "$InnerClassName"` — not
-  `InnerClassName.class.getName()`, `OuterClass.class.getName()`, or a string literal.
+  `this.getClass().getName() + "$InnerClassName"`, `InnerClassName.class.getName()`,
+  `OuterClass.class.getName()`, or a string literal.
   Any `.class.getName()` reference — whether to the inner advice class or the outer
   instrumentation class — causes class loading in the agent's class loader, where library
   types used by the advice are unavailable (causing `NoClassDefFoundError`).
   `getClass().getName()` avoids this because it is a virtual call on the already-loaded
-  `this` instance, not a class literal.
+  instance, not a class literal. Omit the redundant `this.` qualifier and use the shorter
+  repository convention.
 
 ## Singletons Pattern
 

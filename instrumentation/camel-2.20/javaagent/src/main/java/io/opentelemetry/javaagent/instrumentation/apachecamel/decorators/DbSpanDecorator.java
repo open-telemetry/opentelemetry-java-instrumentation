@@ -144,13 +144,11 @@ class DbSpanDecorator extends BaseSpanDecorator {
     setQueryAttributes(attributes, exchange);
 
     String namespace = getDbNamespace(endpoint);
-    if (namespace != null) {
-      if (emitStableDatabaseSemconv()) {
-        attributes.put(DB_NAMESPACE, namespace);
-      }
-      if (emitOldDatabaseSemconv()) {
-        attributes.put(DB_NAME, namespace);
-      }
+    if (emitStableDatabaseSemconv()) {
+      attributes.put(DB_NAMESPACE, namespace);
+    }
+    if (emitOldDatabaseSemconv()) {
+      attributes.put(DB_NAME, namespace);
     }
   }
 

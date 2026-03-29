@@ -32,6 +32,7 @@ public class GreetingServlet extends HttpServlet {
     try (InputStream remoteInputStream = urlConnection.getInputStream()) {
       long bytesRead = transfer(remoteInputStream, buffer);
       String responseBody = buffer.toString("UTF-8");
+      resp.setContentType("text/plain");
       ServletOutputStream outputStream = resp.getOutputStream();
       outputStream.print(
           bytesRead + " bytes read by " + urlConnection.getClass().getName() + "\n" + responseBody);

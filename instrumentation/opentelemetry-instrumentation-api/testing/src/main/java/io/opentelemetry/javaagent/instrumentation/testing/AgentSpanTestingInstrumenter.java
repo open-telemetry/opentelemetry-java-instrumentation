@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
+import javax.annotation.Nullable;
 
 public final class AgentSpanTestingInstrumenter {
 
@@ -30,8 +31,8 @@ public final class AgentSpanTestingInstrumenter {
   private static final Instrumenter<String, Void> HTTP_SERVER_INSTRUMENTER =
       Instrumenter.<String, Void>builder(GlobalOpenTelemetry.get(), "test", request -> request)
           .addAttributesExtractor(
-              HttpServerAttributesExtractor.create(MockHttpServerAttributesGetter.INSTANCE))
-          .addContextCustomizer(HttpServerRoute.create(MockHttpServerAttributesGetter.INSTANCE))
+              HttpServerAttributesExtractor.create(new MockHttpServerAttributesGetter()))
+          .addContextCustomizer(HttpServerRoute.create(new MockHttpServerAttributesGetter()))
           .addContextCustomizer(
               (context, request, startAttributes) -> context.with(REQUEST_CONTEXT_KEY, request))
           .buildInstrumenter(SpanKindExtractor.alwaysServer());
@@ -42,7 +43,7 @@ public final class AgentSpanTestingInstrumenter {
     return context;
   }
 
-  public static void endHttpServer(Context context, Throwable error) {
+  public static void endHttpServer(Context context, @Nullable Throwable error) {
     HTTP_SERVER_INSTRUMENTER.end(context, context.get(REQUEST_CONTEXT_KEY), null, error);
   }
 
@@ -55,7 +56,7 @@ public final class AgentSpanTestingInstrumenter {
     return context;
   }
 
-  public static void end(Context context, Throwable error) {
+  public static void end(Context context, @Nullable Throwable error) {
     INSTRUMENTER.end(context, context.get(REQUEST_CONTEXT_KEY), null, error);
   }
 

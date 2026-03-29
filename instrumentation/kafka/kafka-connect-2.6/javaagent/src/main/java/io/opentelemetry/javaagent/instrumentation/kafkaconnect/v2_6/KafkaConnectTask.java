@@ -10,6 +10,7 @@ import static java.util.stream.Collectors.toCollection;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import javax.annotation.Nullable;
 import org.apache.kafka.connect.sink.SinkRecord;
 
 public final class KafkaConnectTask {
@@ -28,6 +29,7 @@ public final class KafkaConnectTask {
     return records.stream().map(SinkRecord::topic).collect(toCollection(LinkedHashSet::new));
   }
 
+  @Nullable
   public String getDestinationName() {
     Set<String> topics = getTopics();
     if (topics.isEmpty()) {

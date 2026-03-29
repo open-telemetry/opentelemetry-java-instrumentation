@@ -30,10 +30,6 @@ final class TracingCqlSession {
   private TracingCqlSession() {}
 
   static CqlSession wrapSession(CqlSession session) {
-    if (session == null) {
-      return null;
-    }
-
     List<Class<?>> interfaces = new ArrayList<>();
     Class<?> clazz = session.getClass();
     while (clazz != Object.class) {

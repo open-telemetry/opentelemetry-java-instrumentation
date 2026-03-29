@@ -118,6 +118,7 @@ public final class CouchbaseQuerySanitizer {
     return SqlQuery.create(query.getClass().getSimpleName(), null, null);
   }
 
+  @Nullable
   private static String getQueryText(MethodHandle handle, Object query) {
     if (handle == null) {
       return null;

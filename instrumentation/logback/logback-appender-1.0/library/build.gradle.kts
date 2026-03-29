@@ -25,7 +25,7 @@ dependencies {
     }
   }
 
-  if (findProperty("testLatestDeps") as Boolean) {
+  if (findProperty("testLatestDeps") == "true") {
     testImplementation("ch.qos.logback:logback-classic:latest.release")
   } else {
     testImplementation("ch.qos.logback:logback-classic") {
@@ -64,7 +64,7 @@ tasks.named("collectReachabilityMetadata").configure {
   enabled = false
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 testing {
   suites {
     val slf4j2ApiTest by registering(JvmTestSuite::class) {
@@ -191,8 +191,4 @@ tasks {
   check {
     dependsOn(testing.suites, testStableSemconv, testBothSemconv)
   }
-}
-
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

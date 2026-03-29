@@ -31,15 +31,16 @@ import org.junit.jupiter.api.Test;
 
 public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<Request> {
 
+  protected HttpClient client;
+  protected HttpClient httpsClient;
+
   protected abstract HttpClient createStandardClient();
 
   protected abstract HttpClient createHttpsClient(SslContextFactory.Client sslContextFactory);
 
-  protected HttpClient client = createStandardClient();
-  protected HttpClient httpsClient;
-
   @BeforeEach
   void before() throws Exception {
+    client = createStandardClient();
     client.setConnectTimeout(CONNECTION_TIMEOUT.toMillis());
     client.start();
 
@@ -184,7 +185,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
 
   private static class JettyClientListener
       implements Request.FailureListener, Response.FailureListener {
-    volatile Throwable failure;
+    private volatile Throwable failure;
 
     @Override
     public void onFailure(Request request, Throwable failure) {

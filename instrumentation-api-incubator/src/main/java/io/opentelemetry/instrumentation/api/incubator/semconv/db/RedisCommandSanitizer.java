@@ -39,6 +39,10 @@ public final class RedisCommandSanitizer {
   private static final Map<String, CommandSanitizer> SANITIZERS;
   private static final CommandSanitizer DEFAULT = new CommandAndNumArgs(0);
 
+  // max length of the sanitized command, command loner than that will be truncated to this length
+  // visible for testing
+  static final int LIMIT = 32 * 1024;
+
   static {
     Map<String, CommandSanitizer> sanitizers = new HashMap<>();
 
@@ -369,6 +373,17 @@ public final class RedisCommandSanitizer {
         .sanitize(command, args);
   }
 
+  private static boolean isOverLimit(StringBuilder builder) {
+    return builder.length() > LIMIT;
+  }
+
+  private static String limit(StringBuilder builder) {
+    if (builder.length() > LIMIT) {
+      builder.delete(LIMIT, builder.length());
+    }
+    return builder.toString();
+  }
+
   interface CommandSanitizer {
     String sanitize(String command, List<?> args);
   }
@@ -381,6 +396,9 @@ public final class RedisCommandSanitizer {
       StringBuilder sanitized = new StringBuilder(command);
       for (Object arg : args) {
         sanitized.append(" ").append(argToString(arg));
+        if (isOverLimit(sanitized)) {
+          return limit(sanitized);
+        }
       }
       return sanitized.toString();
     }
@@ -400,9 +418,15 @@ public final class RedisCommandSanitizer {
       StringBuilder sanitized = new StringBuilder(command);
       for (int i = 0; i < numOfArgsToKeep && i < args.size(); ++i) {
         sanitized.append(" ").append(argToString(args.get(i)));
+        if (isOverLimit(sanitized)) {
+          return limit(sanitized);
+        }
       }
       for (int i = numOfArgsToKeep; i < args.size(); ++i) {
         sanitized.append(" ?");
+        if (isOverLimit(sanitized)) {
+          return limit(sanitized);
+        }
       }
       return sanitized.toString();
     }
@@ -423,11 +447,17 @@ public final class RedisCommandSanitizer {
       // append all "initial" arguments before key-value pairs start
       for (int i = 0; i < numOfArgsBeforeKeyValue && i < args.size(); ++i) {
         sanitized.append(" ").append(argToString(args.get(i)));
+        if (isOverLimit(sanitized)) {
+          return limit(sanitized);
+        }
       }
 
       // loop over keys only
       for (int i = numOfArgsBeforeKeyValue; i < args.size(); i += 2) {
         sanitized.append(" ").append(argToString(args.get(i))).append(" ?");
+        if (isOverLimit(sanitized)) {
+          return limit(sanitized);
+        }
       }
       return sanitized.toString();
     }
@@ -454,10 +484,16 @@ public final class RedisCommandSanitizer {
       // log the script, number of keys and all keys
       for (; i < (numberOfKeys + 2) && i < args.size(); ++i) {
         sanitized.append(" ").append(argToString(args.get(i)));
+        if (isOverLimit(sanitized)) {
+          return limit(sanitized);
+        }
       }
       // mask the rest
       for (; i < args.size(); ++i) {
         sanitized.append(" ?");
+        if (isOverLimit(sanitized)) {
+          return limit(sanitized);
+        }
       }
       return sanitized.toString();
     }

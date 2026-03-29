@@ -76,7 +76,7 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(11)
-                                                .hasAttributesSatisfying(
+                                                .hasAttributesSatisfyingExactly(
                                                     equalTo(stringKey("q"), "r"))))));
 
     callback.close();
@@ -122,7 +122,7 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(12.1)
-                                                .hasAttributesSatisfying(
+                                                .hasAttributesSatisfyingExactly(
                                                     equalTo(stringKey("q"), "r"))))));
 
     callback.close();
@@ -168,7 +168,7 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(11)
-                                                .hasAttributesSatisfying(
+                                                .hasAttributesSatisfyingExactly(
                                                     equalTo(stringKey("q"), "r"))))));
 
     callback.close();
@@ -219,7 +219,7 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(12.1)
-                                                .hasAttributesSatisfying(
+                                                .hasAttributesSatisfyingExactly(
                                                     equalTo(stringKey("q"), "r"))))));
 
     callback.close();
@@ -264,7 +264,7 @@ class MeterTest {
                                     point ->
                                         point
                                             .hasValue(123)
-                                            .hasAttributesSatisfying(
+                                            .hasAttributesSatisfyingExactly(
                                                 equalTo(stringKey("q"), "r"))))));
 
     callback.close();
@@ -309,7 +309,7 @@ class MeterTest {
                                     point ->
                                         point
                                             .hasValue(1.23)
-                                            .hasAttributesSatisfying(
+                                            .hasAttributesSatisfyingExactly(
                                                 equalTo(stringKey("q"), "r"))))));
 
     callback.close();

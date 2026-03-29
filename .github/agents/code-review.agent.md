@@ -91,7 +91,14 @@ For each file in scope:
    - PR mode: changed lines only
    - File/directory mode: all lines
 4. Apply checklist rules (below) and insert comments above offending lines.
-5. Prevent duplicates:
+5. Do not flag a non-capturing lambda or method reference as an unnecessary allocation,
+   because on modern JDKs these are typically cached at the call site rather than
+   allocated on every invocation.
+6. Flag a missing `// added in X.Y` comment on a single-class lower-bound
+   `hasClassesNamed(...)` check in `classLoaderMatcher()` only after validating that the
+   stated version is factually correct from repository or upstream evidence; the comment
+   documents why the matcher exists and which version boundary it enforces.
+7. Prevent duplicates:
    - If equivalent `REVIEW:` already exists above the same line, do not add another.
 
 Comment formatting rules:

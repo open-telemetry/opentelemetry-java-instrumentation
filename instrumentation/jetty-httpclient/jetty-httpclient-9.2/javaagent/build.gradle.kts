@@ -7,6 +7,7 @@ muzzle {
     group.set("org.eclipse.jetty")
     module.set("jetty-client")
     versions.set("[9.2,10)")
+    assertInverse.set(true)
   }
 }
 
@@ -26,8 +27,8 @@ dependencies {
 }
 
 tasks {
-  test {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
   val testStableSemconv by registering(Test::class) {

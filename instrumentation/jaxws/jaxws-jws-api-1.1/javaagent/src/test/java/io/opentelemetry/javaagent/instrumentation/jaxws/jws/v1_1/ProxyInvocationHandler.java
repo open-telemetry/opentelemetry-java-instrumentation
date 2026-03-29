@@ -8,9 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
-public class ProxyInvocationHandler implements InvocationHandler {
+class ProxyInvocationHandler implements InvocationHandler {
 
-  final WebServiceDefinitionInterface target;
+  private final WebServiceDefinitionInterface target;
 
   public ProxyInvocationHandler(WebServiceFromInterface webServiceFromInterface) {
     target = webServiceFromInterface;

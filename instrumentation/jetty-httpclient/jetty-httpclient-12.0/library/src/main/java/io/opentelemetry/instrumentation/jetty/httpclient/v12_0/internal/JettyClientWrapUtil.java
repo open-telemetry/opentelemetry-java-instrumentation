@@ -11,6 +11,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.eclipse.jetty.client.Response;
 
 /**
@@ -39,8 +40,9 @@ public final class JettyClientWrapUtil {
    * @param listener listener passed to Jetty client send() method
    * @return wrapped listener
    */
+  @Nullable
   public static Response.CompleteListener wrapTheListener(
-      Response.CompleteListener listener, Context context) {
+      @Nullable Response.CompleteListener listener, Context context) {
     if (listener == null) {
       return listener;
     }

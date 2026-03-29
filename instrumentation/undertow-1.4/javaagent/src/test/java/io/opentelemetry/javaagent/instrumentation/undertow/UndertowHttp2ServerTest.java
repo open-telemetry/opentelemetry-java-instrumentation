@@ -11,12 +11,12 @@ import io.undertow.UndertowOptions;
 class UndertowHttp2ServerTest extends UndertowServerTest {
 
   @Override
-  public void configureUndertow(Undertow.Builder builder) {
+  protected void configureUndertow(Undertow.Builder builder) {
     builder.setServerOption(UndertowOptions.ENABLE_HTTP2, true);
   }
 
   @Override
-  public boolean useHttp2() {
+  protected boolean useHttp2() {
     return true;
   }
 }

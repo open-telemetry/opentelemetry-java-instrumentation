@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2;
 import static io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientWrapUtil.wrapResponseListeners;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2.JettyHttpClientSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -35,11 +34,10 @@ public class JettyHttpClient9Instrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("send"))
+        named("send")
             .and(takesArgument(0, named("org.eclipse.jetty.client.HttpRequest")))
             .and(takesArgument(1, List.class)),
-        JettyHttpClient9Instrumentation.class.getName() + "$JettyHttpClient9Advice");
+        getClass().getName() + "$JettyHttpClient9Advice");
   }
 
   @SuppressWarnings("unused")

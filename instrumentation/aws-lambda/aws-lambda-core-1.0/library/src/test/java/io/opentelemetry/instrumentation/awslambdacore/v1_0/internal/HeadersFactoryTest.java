@@ -31,7 +31,7 @@ class HeadersFactoryTest {
     Map<String, String> headers = HeadersFactory.ofStream(inputStream);
     // then
     assertThat(headers).isNotNull();
-    assertThat(headers.size()).isEqualTo(3);
+    assertThat(headers).hasSize(3);
     assertThat(headers)
         .containsOnly(
             entry("X-B3-TraceId", "4fd0b6131f19f39af59518d127b0cafe"),

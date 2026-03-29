@@ -34,8 +34,8 @@ kotlin {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
   val testExperimental by registering(Test::class) {

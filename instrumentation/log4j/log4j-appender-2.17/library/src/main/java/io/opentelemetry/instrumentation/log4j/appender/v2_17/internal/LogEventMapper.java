@@ -10,12 +10,14 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
+import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -60,7 +62,7 @@ public final class LogEventMapper<T> {
   private final boolean captureCodeAttributes;
   private final boolean captureMapMessageAttributes;
   private final boolean captureMarkerAttribute;
-  private final List<String> captureContextDataAttributes;
+  private final List<AttributeKey<String>> captureContextDataAttributeKeys;
   private final boolean captureAllContextDataAttributes;
   private final boolean captureEventName;
 
@@ -80,7 +82,18 @@ public final class LogEventMapper<T> {
     this.captureMarkerAttribute = captureMarkerAttribute;
     this.captureAllContextDataAttributes =
         captureContextDataAttributes.size() == 1 && captureContextDataAttributes.get(0).equals("*");
-    this.captureContextDataAttributes = captureContextDataAttributes;
+    if (captureAllContextDataAttributes) {
+      this.captureContextDataAttributeKeys = emptyList();
+    } else {
+      List<AttributeKey<String>> keys = new ArrayList<>(captureContextDataAttributes.size());
+      for (String key : captureContextDataAttributes) {
+        if (!OTEL_EVENT_NAME.getKey().equals(key)
+            && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
+          keys.add(getContextDataAttributeKey(key));
+        }
+      }
+      this.captureContextDataAttributeKeys = keys;
+    }
     this.captureEventName = captureEventName;
   }
 
@@ -232,22 +245,15 @@ public final class LogEventMapper<T> {
           (key, value) -> {
             if (!OTEL_EVENT_NAME.getKey().equals(key)
                 && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
-              if (value != null) {
-                builder.setAttribute(getContextDataAttributeKey(key), value);
-              }
+              builder.setAttribute(getContextDataAttributeKey(key), value);
             }
           });
       return;
     }
 
-    for (String key : captureContextDataAttributes) {
-      if (!OTEL_EVENT_NAME.getKey().equals(key)
-          && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
-        String value = contextDataAccessor.getValue(contextData, key);
-        if (value != null) {
-          builder.setAttribute(getContextDataAttributeKey(key), value);
-        }
-      }
+    for (AttributeKey<String> attributeKey : captureContextDataAttributeKeys) {
+      String value = contextDataAccessor.getValue(contextData, attributeKey.getKey());
+      builder.setAttribute(attributeKey, value);
     }
   }
 

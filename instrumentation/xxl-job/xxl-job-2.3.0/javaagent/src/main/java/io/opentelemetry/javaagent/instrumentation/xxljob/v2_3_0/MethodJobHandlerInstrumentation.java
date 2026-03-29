@@ -32,11 +32,12 @@ public class MethodJobHandlerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("execute").and(isPublic()).and(takesNoArguments()),
-        MethodJobHandlerInstrumentation.class.getName() + "$ScheduleAdvice");
+        getClass().getName() + "$ScheduleAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ScheduleAdvice {
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static XxlJobHelper.XxlJobScope onSchedule(
         @Advice.FieldValue("target") Object target, @Advice.FieldValue("method") Method method) {

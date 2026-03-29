@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.consumerProcessInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -38,8 +37,8 @@ public class MessageListenerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(named("getMessageListener")),
-        MessageListenerInstrumentation.class.getName() + "$ConsumerConfigurationDataMethodAdvice");
+        isPublic().and(named("getMessageListener")),
+        getClass().getName() + "$ConsumerConfigurationDataMethodAdvice");
   }
 
   @SuppressWarnings("unused")

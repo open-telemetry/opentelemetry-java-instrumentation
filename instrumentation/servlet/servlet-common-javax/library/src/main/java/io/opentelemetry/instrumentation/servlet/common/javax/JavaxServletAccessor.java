@@ -82,7 +82,7 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
   public Iterable<String> getRequestHeaderNames(HttpServletRequest httpServletRequest) {
     @SuppressWarnings("unchecked") // servlet api uses Enumeration without generic type
     Enumeration<String> names = httpServletRequest.getHeaderNames();
-    return Collections.list(names);
+    return names == null ? emptyList() : Collections.list(names);
   }
 
   @Override

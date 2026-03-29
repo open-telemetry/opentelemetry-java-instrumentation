@@ -19,6 +19,7 @@ jobs:
   # and this is not a reason to hold up the release
 
   release:
+    environment: protected
     permissions:
       contents: write # for creating the release
       id-token: write # for signing artifacts with Sigstore
@@ -271,7 +272,7 @@ jobs:
       - name: Use CLA approved bot
         run: .github/scripts/use-cla-approved-bot.sh
 
-      - uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
+      - uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
         id: otelbot-token
         with:
           app-id: ${{ vars.OTELBOT_APP_ID }}

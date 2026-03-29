@@ -26,7 +26,7 @@ class CompositeCounterTest {
 
   @AfterEach
   @BeforeEach
-  public void cleanup() {
+  void cleanup() {
     Metrics.globalRegistry.forEachMeter(Metrics.globalRegistry::remove);
   }
 

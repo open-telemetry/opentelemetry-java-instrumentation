@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.producerInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -38,12 +37,11 @@ public class KafkaProducerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("send"))
             .and(takesArgument(0, named("org.apache.kafka.clients.producer.ProducerRecord")))
             .and(takesArgument(1, named("org.apache.kafka.clients.producer.Callback"))),
-        KafkaProducerInstrumentation.class.getName() + "$SendAdvice");
+        getClass().getName() + "$SendAdvice");
   }
 
   @SuppressWarnings("unused")

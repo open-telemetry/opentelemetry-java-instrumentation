@@ -16,7 +16,6 @@ import javax.annotation.Nullable;
  * any time.
  */
 public class JavaHttpServerInstrumenterBuilderUtil {
-  private JavaHttpServerInstrumenterBuilderUtil() {}
 
   @Nullable
   private static Function<
@@ -39,4 +38,6 @@ public class JavaHttpServerInstrumenterBuilderUtil {
           serverBuilderExtractor) {
     JavaHttpServerInstrumenterBuilderUtil.serverBuilderExtractor = serverBuilderExtractor;
   }
+
+  private JavaHttpServerInstrumenterBuilderUtil() {}
 }

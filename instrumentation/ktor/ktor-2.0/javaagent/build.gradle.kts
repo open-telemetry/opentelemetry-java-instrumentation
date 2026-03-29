@@ -38,6 +38,8 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:ktor:ktor-3.0:javaagent"))
+  testInstrumentation(project(":instrumentation:kotlinx-coroutines:kotlinx-coroutines-1.0:javaagent"))
+  testInstrumentation(project(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent"))
 
   testImplementation(project(":instrumentation:ktor:ktor-2.0:testing"))
   testImplementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
@@ -61,8 +63,8 @@ kotlin {
 }
 
 tasks {
-  test {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
   val testStableSemconv by registering(Test::class) {

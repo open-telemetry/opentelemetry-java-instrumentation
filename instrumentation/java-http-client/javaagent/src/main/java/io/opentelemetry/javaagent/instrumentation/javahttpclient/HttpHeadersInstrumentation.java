@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.javahttpclient;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.instrumentation.javahttpclient.JavaHttpClientSingletons.setter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -31,16 +30,14 @@ public class HttpHeadersInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isMethod().and(named("headers")),
-        HttpHeadersInstrumentation.class.getName() + "$HeadersAdvice");
+    transformer.applyAdviceToMethod(named("headers"), getClass().getName() + "$HeadersAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class HeadersAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static HttpHeaders methodExit(@Advice.Return HttpHeaders headers) {
       return setter().inject(headers, Context.current());
     }

@@ -48,7 +48,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, byte[].class))
             .and(takesArgument(2, Duration.class))
             .and(returns(named("io.nats.client.Message"))),
-        ConnectionRequestInstrumentation.class.getName() + "$RequestBodyAdvice");
+        getClass().getName() + "$RequestBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("request"))
@@ -58,7 +58,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
             .and(takesArgument(2, byte[].class))
             .and(takesArgument(3, Duration.class))
             .and(returns(named("io.nats.client.Message"))),
-        ConnectionRequestInstrumentation.class.getName() + "$RequestHeadersBodyAdvice");
+        getClass().getName() + "$RequestHeadersBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("request"))
@@ -66,7 +66,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("io.nats.client.Message")))
             .and(takesArgument(1, Duration.class))
             .and(returns(named("io.nats.client.Message"))),
-        ConnectionRequestInstrumentation.class.getName() + "$RequestMessageAdvice");
+        getClass().getName() + "$RequestMessageAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("request"))
@@ -74,7 +74,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, byte[].class))
             .and(returns(named("java.util.concurrent.CompletableFuture"))),
-        ConnectionRequestInstrumentation.class.getName() + "$RequestFutureBodyAdvice");
+        getClass().getName() + "$RequestFutureBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("request"))
@@ -83,14 +83,14 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, named("io.nats.client.impl.Headers")))
             .and(takesArgument(2, byte[].class))
             .and(returns(named("java.util.concurrent.CompletableFuture"))),
-        ConnectionRequestInstrumentation.class.getName() + "$RequestFutureHeadersBodyAdvice");
+        getClass().getName() + "$RequestFutureHeadersBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("request"))
             .and(takesArguments(1))
             .and(takesArgument(0, named("io.nats.client.Message")))
             .and(returns(named("java.util.concurrent.CompletableFuture"))),
-        ConnectionRequestInstrumentation.class.getName() + "$RequestFutureMessageAdvice");
+        getClass().getName() + "$RequestFutureMessageAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("requestWithTimeout"))
@@ -99,7 +99,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, byte[].class))
             .and(takesArgument(2, Duration.class))
             .and(returns(named("java.util.concurrent.CompletableFuture"))),
-        ConnectionRequestInstrumentation.class.getName() + "$RequestTimeoutFutureBodyAdvice");
+        getClass().getName() + "$RequestTimeoutFutureBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("requestWithTimeout"))
@@ -109,8 +109,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
             .and(takesArgument(2, byte[].class))
             .and(takesArgument(3, Duration.class))
             .and(returns(named("java.util.concurrent.CompletableFuture"))),
-        ConnectionRequestInstrumentation.class.getName()
-            + "$RequestTimeoutFutureHeadersBodyAdvice");
+        getClass().getName() + "$RequestTimeoutFutureHeadersBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("requestWithTimeout"))
@@ -118,7 +117,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("io.nats.client.Message")))
             .and(takesArgument(1, Duration.class))
             .and(returns(named("java.util.concurrent.CompletableFuture"))),
-        ConnectionRequestInstrumentation.class.getName() + "$RequestTimeoutFutureMessageAdvice");
+        getClass().getName() + "$RequestTimeoutFutureMessageAdvice");
   }
 
   public static class MessageFutureAdviceScope {
@@ -216,7 +215,6 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
           response = NatsRequest.create(connection, message);
         }
 
-        scope.close();
         PRODUCER_INSTRUMENTER.end(context, request, response, throwable);
       }
     }
@@ -312,8 +310,8 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static CompletableFuture<Message> onExit(
         @Advice.This Connection connection,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Return CompletableFuture<Message> originalReturnValue,
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Return @Nullable CompletableFuture<Message> originalReturnValue,
         @Advice.Enter Object[] enterResult) {
       MessageFutureAdviceScope adviceScope = (MessageFutureAdviceScope) enterResult[0];
       if (adviceScope != null) {
@@ -389,11 +387,9 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static CompletableFuture<Message> onExit(
         @Advice.This Connection connection,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Return CompletableFuture<Message> originalMessageFuture,
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Return @Nullable CompletableFuture<Message> originalMessageFuture,
         @Advice.Enter Object[] enterResult) {
-
-      CompletableFuture<Message> messageFuture = originalMessageFuture;
       MessageFutureAdviceScope adviceScope = (MessageFutureAdviceScope) enterResult[0];
       if (adviceScope != null) {
         return adviceScope.end(connection, originalMessageFuture, throwable);
@@ -425,7 +421,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static CompletableFuture<Message> onExit(
-        @Advice.Return CompletableFuture<Message> originalResult,
+        @Advice.Return @Nullable CompletableFuture<Message> originalResult,
         @Advice.Enter Object[] enterResult) {
 
       @SuppressWarnings("unchecked") // fine

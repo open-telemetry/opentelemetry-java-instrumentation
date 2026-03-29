@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.log4j.appender.v2_17;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -41,8 +40,8 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isProtected().or(isPublic()))
+        isProtected()
+            .or(isPublic())
             .and(named("log"))
             .and(takesArguments(6))
             .and(takesArgument(0, named("org.apache.logging.log4j.Level")))
@@ -51,10 +50,10 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
             .and(takesArgument(3, StackTraceElement.class))
             .and(takesArgument(4, named("org.apache.logging.log4j.message.Message")))
             .and(takesArgument(5, Throwable.class)),
-        Log4jAppenderInstrumentation.class.getName() + "$LogAdvice");
+        getClass().getName() + "$LogAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isProtected().or(isPublic()))
+        isProtected()
+            .or(isPublic())
             .and(named("logMessage"))
             .and(takesArguments(5))
             .and(takesArgument(0, String.class))
@@ -62,7 +61,7 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
             .and(takesArgument(2, named("org.apache.logging.log4j.Marker")))
             .and(takesArgument(3, named("org.apache.logging.log4j.message.Message")))
             .and(takesArgument(4, Throwable.class)),
-        Log4jAppenderInstrumentation.class.getName() + "$LogMessageAdvice");
+        getClass().getName() + "$LogMessageAdvice");
   }
 
   @SuppressWarnings("unused")

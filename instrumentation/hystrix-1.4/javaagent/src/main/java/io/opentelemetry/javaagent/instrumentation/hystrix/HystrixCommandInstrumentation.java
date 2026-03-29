@@ -51,11 +51,10 @@ public class HystrixCommandInstrumentation implements TypeInstrumentation {
   public static class ExecuteAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static Observable<?> stopSpan(
         @Advice.This HystrixInvokableInfo<?> command,
-        @Advice.Return @Nullable Observable<?> result,
-        @Advice.Thrown @Nullable Throwable throwable) {
+        @Advice.Return @Nullable Observable<?> result) {
 
       HystrixRequest request = HystrixRequest.create(command, "execute");
       return Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));
@@ -66,11 +65,10 @@ public class HystrixCommandInstrumentation implements TypeInstrumentation {
   public static class FallbackAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static Observable<?> stopSpan(
         @Advice.This HystrixInvokableInfo<?> command,
-        @Advice.Return @Nullable Observable<?> result,
-        @Advice.Thrown @Nullable Throwable throwable) {
+        @Advice.Return @Nullable Observable<?> result) {
 
       HystrixRequest request = HystrixRequest.create(command, "fallback");
       return Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));

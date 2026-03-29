@@ -11,9 +11,11 @@ muzzle {
   }
 }
 
-val testLatestDeps = findProperty("testLatestDeps") as Boolean
+val testLatestDeps = findProperty("testLatestDeps") == "true"
 
 dependencies {
+  testInstrumentation(project(":instrumentation:log4j:log4j-appender-1.2:javaagent"))
+
   library("org.apache.logging.log4j:log4j-core:2.0")
 
   compileOnly(project(":javaagent-bootstrap"))
@@ -56,7 +58,7 @@ tasks {
     dependsOn(testAsync)
   }
 
-  if (findProperty("denyUnsafe") as Boolean) {
+  if (findProperty("denyUnsafe") == "true") {
     withType<Test>().configureEach {
       enabled = false
     }

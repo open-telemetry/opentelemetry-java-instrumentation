@@ -12,12 +12,11 @@ import static java.util.stream.Collectors.toList;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.sdk.logs.data.internal.ExtendedLogRecordData;
 import java.util.List;
+import org.apache.commons.io.IOUtils;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.testcontainers.containers.GenericContainer;
 
 class JarAnalyzerInstallerTest {
 
@@ -26,26 +25,23 @@ class JarAnalyzerInstallerTest {
 
   @Test
   @SuppressWarnings("ReturnValueIgnored")
-  void jarAnalyzerEnabled() throws InterruptedException {
-    // We clear exported data before running tests. Here we load a class from testcontainers with
-    // the assumption that no testcontainers classes have been loaded yet, and we'll have at least
-    // the testcontainers jar show up in jar analyzer events.
-    GenericContainer.class.getName();
+  void jarAnalyzerEnabled() {
+    // We clear exported data before running tests. Here we load a class from commons-io with the
+    // assumption that no commons-io classes have been loaded yet, and we'll have at least the
+    // commons-io jar show up in jar analyzer events.
+    IOUtils.class.getName();
 
     List<LogRecordData> events =
         Awaitility.await()
             .until(
                 () ->
                     testing.logRecords().stream()
-                        .filter(
-                            record ->
-                                "package.info"
-                                    .equals(((ExtendedLogRecordData) record).getEventName()))
+                        .filter(record -> "package.info".equals(record.getEventName()))
                         .collect(toList()),
                 (eventList) -> !eventList.isEmpty());
 
     assertThat(events)
-        .hasSizeGreaterThan(0)
+        .isNotEmpty()
         .allSatisfy(
             logRecord ->
                 assertThat(logRecord.getAttributes())

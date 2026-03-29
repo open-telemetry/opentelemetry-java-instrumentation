@@ -29,5 +29,5 @@ otelJava {
 
 tasks.test {
   systemProperty("metadataConfig", "otel.instrumentation.common.enduser.id.enabled=true,otel.instrumentation.common.enduser.role.enabled=true,otel.instrumentation.common.enduser.scope.enabled=true")
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  systemProperty("collectMetadata", findProperty("collectMetadata"))
 }

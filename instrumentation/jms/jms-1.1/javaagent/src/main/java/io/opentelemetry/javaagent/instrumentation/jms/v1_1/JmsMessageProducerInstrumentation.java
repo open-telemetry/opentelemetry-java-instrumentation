@@ -43,13 +43,13 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("send").and(takesArgument(0, named("javax.jms.Message"))).and(isPublic()),
-        JmsMessageProducerInstrumentation.class.getName() + "$ProducerAdvice");
+        getClass().getName() + "$ProducerAdvice");
     transformer.applyAdviceToMethod(
         named("send")
             .and(takesArgument(0, named("javax.jms.Destination")))
             .and(takesArgument(1, named("javax.jms.Message")))
             .and(isPublic()),
-        JmsMessageProducerInstrumentation.class.getName() + "$ProducerWithDestinationAdvice");
+        getClass().getName() + "$ProducerWithDestinationAdvice");
   }
 
   public static class AdviceScope {

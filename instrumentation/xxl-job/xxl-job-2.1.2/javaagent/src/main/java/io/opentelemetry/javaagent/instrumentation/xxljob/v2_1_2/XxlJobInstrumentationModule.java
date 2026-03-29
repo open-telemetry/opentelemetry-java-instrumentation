@@ -26,8 +26,10 @@ public class XxlJobInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("com.xxl.job.core.handler.impl.MethodJobHandler")
-        // Class was added in 2.3.0
+    return hasClassesNamed(
+            // added in 2.1.2
+            "com.xxl.job.core.handler.impl.MethodJobHandler")
+        // added in 2.3.0
         .and(not(hasClassesNamed("com.xxl.job.core.context.XxlJobHelper")));
   }
 

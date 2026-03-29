@@ -54,11 +54,10 @@ tasks {
     include("**/ReactorNettyConnectionSpanTest.*", "**/ReactorNettyClientSslTest.*")
     jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.reactor-netty.connection-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   }
 
   test {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
 
     filter {
       excludeTestsMatching("ReactorNettyConnectionSpanTest")

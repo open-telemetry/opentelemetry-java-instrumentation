@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 
+import javax.annotation.Nullable;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 
@@ -18,7 +19,9 @@ import org.apache.coyote.Response;
  * @param <RESPONSE> HttpServletResponse instance
  */
 public interface TomcatServletEntityProvider<REQUEST, RESPONSE> {
+  @Nullable
   REQUEST getServletRequest(Request request);
 
+  @Nullable
   RESPONSE getServletResponse(Response response);
 }

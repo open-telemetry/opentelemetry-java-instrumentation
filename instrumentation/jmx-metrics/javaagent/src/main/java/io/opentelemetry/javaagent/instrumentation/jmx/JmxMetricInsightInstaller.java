@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -65,10 +66,9 @@ public class JmxMetricInsightInstaller implements AgentListener {
   private static void addClasspathRules(String target, JmxTelemetryBuilder builder) {
     ClassLoader classLoader = JmxTelemetryBuilder.class.getClassLoader();
     String resource = String.format("jmx/rules/%s.yaml", target);
-    InputStream input = classLoader.getResourceAsStream(resource);
-    try {
+    try (InputStream input = classLoader.getResourceAsStream(resource)) {
       builder.addRules(input);
-    } catch (RuntimeException e) {
+    } catch (IOException | RuntimeException e) {
       // for now only log JMX metric configuration errors as they do not prevent agent startup
       logger.log(SEVERE, "Error while loading JMX configuration from classpath " + resource, e);
     }

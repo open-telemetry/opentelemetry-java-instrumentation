@@ -39,7 +39,7 @@ public final class JdbcSingletons {
   static {
     AttributesExtractor<DbRequest, Void> servicePeerExtractor =
         ServicePeerAttributesExtractor.create(
-            JdbcAttributesGetter.INSTANCE, GlobalOpenTelemetry.get());
+            new JdbcAttributesGetter(), GlobalOpenTelemetry.get());
 
     CAPTURE_QUERY_PARAMETERS =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jdbc")

@@ -38,7 +38,7 @@ public class ServerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.FieldValue("_applicationInstance") Application application) {
       ApplicationPluginKt.install(
           application, KtorServerTelemetryBuilderKt.getKtorServerTelemetry(), new SetupFunction());

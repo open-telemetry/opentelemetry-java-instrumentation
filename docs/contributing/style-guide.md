@@ -82,7 +82,9 @@ methods.
 Public non-internal non-test classes should be declared `final` where possible.
 "Internal" here includes `.internal` packages **and** `javaagent/src/main/` classes — javaagent
 instrumentation code is not public API.
-"Test" here includes `src/test/` **and** `testing/` modules (test-support code).
+"Test" here includes `src/test/` directories and any module whose directory name starts or ends
+with `testing` or `tests` (e.g., `testing/`, `testing-common/`, `testing-apps/`,
+`quarkus-2.0-testing/`, `smoke-tests/`).
 
 Methods should only be declared `final` if they are in public non-internal non-test non-final classes.
 
@@ -99,6 +101,8 @@ Annotate all parameters and fields that can be `null` with `@Nullable`
 `otel.java-conventions` Gradle plugin as a `compileOnly` dependency).
 
 `@NonNull` is unnecessary as it is the default.
+
+**Test code**: Do not add `@Nullable` annotations in test code.
 
 **Defensive programming**: Public APIs should still check for `null` parameters even if not
 annotated with `@Nullable`. Internal APIs do not need these checks.

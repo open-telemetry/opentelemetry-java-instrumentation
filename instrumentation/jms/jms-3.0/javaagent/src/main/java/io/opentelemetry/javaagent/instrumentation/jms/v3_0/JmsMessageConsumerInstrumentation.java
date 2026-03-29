@@ -44,19 +44,19 @@ public class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
             .and(takesArguments(0).or(takesArguments(1)))
             .and(returns(named("jakarta.jms.Message")))
             .and(isPublic()),
-        JmsMessageConsumerInstrumentation.class.getName() + "$ConsumerAdvice");
+        getClass().getName() + "$ConsumerAdvice");
     transformer.applyAdviceToMethod(
         named("receiveNoWait")
             .and(takesArguments(0))
             .and(returns(named("jakarta.jms.Message")))
             .and(isPublic()),
-        JmsMessageConsumerInstrumentation.class.getName() + "$ConsumerAdvice");
+        getClass().getName() + "$ConsumerAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ConsumerAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Timer onEnter() {
       return Timer.start();
     }

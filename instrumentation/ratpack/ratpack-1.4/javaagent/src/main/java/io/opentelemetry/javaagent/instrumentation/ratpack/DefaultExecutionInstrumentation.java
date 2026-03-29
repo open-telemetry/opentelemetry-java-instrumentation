@@ -32,7 +32,7 @@ public class DefaultExecutionInstrumentation implements TypeInstrumentation {
         nameStartsWith("delimit") // include delimitStream
             .and(takesArgument(0, named("ratpack.func.Action")))
             .and(takesArgument(1, named("ratpack.func.Action"))),
-        DefaultExecutionInstrumentation.class.getName() + "$DelimitAdvice");
+        getClass().getName() + "$DelimitAdvice");
   }
 
   @SuppressWarnings("unused")

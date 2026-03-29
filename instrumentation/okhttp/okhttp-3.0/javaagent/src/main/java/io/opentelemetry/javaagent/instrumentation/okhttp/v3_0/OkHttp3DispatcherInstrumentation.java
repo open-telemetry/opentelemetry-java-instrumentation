@@ -32,7 +32,7 @@ public class OkHttp3DispatcherInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         namedOneOf("enqueue", "enqueue$okhttp")
             .and(takesArgument(0, implementsInterface(named(Runnable.class.getName())))),
-        OkHttp3DispatcherInstrumentation.class.getName() + "$AttachStateAdvice");
+        getClass().getName() + "$AttachStateAdvice");
   }
 
   @SuppressWarnings("unused")

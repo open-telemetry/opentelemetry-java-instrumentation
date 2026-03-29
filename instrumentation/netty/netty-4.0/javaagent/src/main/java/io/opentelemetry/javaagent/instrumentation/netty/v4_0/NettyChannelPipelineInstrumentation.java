@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.netty.common.v4_0.VirtualFieldHelper.CHANNEL_HANDLER;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.NettyClientSingletons.sslInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -40,10 +39,10 @@ public class NettyChannelPipelineInstrumentation
     super.transform(transformer);
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(nameStartsWith("add").or(named("replace")))
+        nameStartsWith("add")
+            .or(named("replace"))
             .and(takesArgument(2, named("io.netty.channel.ChannelHandler"))),
-        NettyChannelPipelineInstrumentation.class.getName() + "$ChannelPipelineAddAdvice");
+        getClass().getName() + "$ChannelPipelineAddAdvice");
   }
 
   /**
@@ -53,7 +52,7 @@ public class NettyChannelPipelineInstrumentation
   @SuppressWarnings("unused")
   public static class ChannelPipelineAddAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static CallDepth trackCallDepth() {
       CallDepth callDepth = CallDepth.forClass(ChannelPipeline.class);
       callDepth.getAndIncrement();

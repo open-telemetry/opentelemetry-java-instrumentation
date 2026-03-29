@@ -1,7 +1,7 @@
 plugins {
   `kotlin-dsl`
   // When updating, update below in dependencies too
-  id("com.diffplug.spotless") version "8.3.0"
+  id("com.diffplug.spotless") version "8.4.0"
 }
 
 spotless {
@@ -54,9 +54,9 @@ dependencies {
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
   // When updating, update above in plugins too
-  implementation("com.diffplug.spotless:spotless-plugin-gradle:8.3.0")
+  implementation("com.diffplug.spotless:spotless-plugin-gradle:8.4.0")
   implementation("com.google.guava:guava:33.5.0-jre")
-  implementation("com.gradleup.shadow:shadow-gradle-plugin:9.3.2") {
+  implementation("com.gradleup.shadow:shadow-gradle-plugin:9.4.0") {
     // plexus-xml 4.1+ pulls in Maven 4 API which uses JPMS-only service registration,
     // causing "No XmlService implementation found" in Gradle's classloader
     // We exclude plexus-xml and plexus-utils here because our current usages of the shadow plugin
@@ -66,7 +66,7 @@ dependencies {
     exclude(group = "org.codehaus.plexus", module = "plexus-xml")
   }
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
-  implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:4.3.2")
+  implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:4.4.0")
   implementation("org.sonatype.gradle.plugins:scan-gradle-plugin:3.1.4")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:2.0.1")
   implementation("org.spdx:spdx-gradle-plugin:0.10.0")

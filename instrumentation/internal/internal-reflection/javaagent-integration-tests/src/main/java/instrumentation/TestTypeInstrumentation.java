@@ -19,15 +19,13 @@ public class TestTypeInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("TestClass");
+    return named("io.opentelemetry.javaagent.instrumentation.internal.reflection.TestClass");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("testMethod"), TestTypeInstrumentation.class.getName() + "$TestAdvice");
-    transformer.applyAdviceToMethod(
-        named("testMethod2"), TestTypeInstrumentation.class.getName() + "$Test2Advice");
+    transformer.applyAdviceToMethod(named("testMethod"), getClass().getName() + "$TestAdvice");
+    transformer.applyAdviceToMethod(named("testMethod2"), getClass().getName() + "$Test2Advice");
   }
 
   @SuppressWarnings("unused")

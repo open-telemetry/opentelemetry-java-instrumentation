@@ -109,7 +109,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isAnnotatedWith(traceAnnotationMatcher).and(not(excludedMethodsMatcher)).and(isMethod()),
-        ExternalAnnotationInstrumentation.class.getName() + "$ExternalAnnotationAdvice");
+        getClass().getName() + "$ExternalAnnotationAdvice");
   }
 
   // visible for testing
