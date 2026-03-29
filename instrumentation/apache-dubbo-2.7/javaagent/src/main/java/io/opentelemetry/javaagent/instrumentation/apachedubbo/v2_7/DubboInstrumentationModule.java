@@ -32,7 +32,7 @@ public class DubboInstrumentationModule extends InstrumentationModule
   public void registerHelperResources(HelperResourceBuilder helperResourceBuilder) {
     helperResourceBuilder.register(
         "META-INF/services/org.apache.dubbo.rpc.Filter",
-        "apache-dubbo-2.7/META-INF/org.apache.dubbo.rpc.Filter");
+        "apache-dubbo-2.7/META-INF/services/org.apache.dubbo.rpc.Filter");
   }
 
   @Override
