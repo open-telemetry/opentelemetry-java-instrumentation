@@ -59,7 +59,7 @@ public final class SemconvStability {
     emitStableRpcSemconv = shouldEmitStable("rpc", v3Preview, optInValues);
 
     emitOldMessageSemconv = shouldEmitOld("message", v3Preview, optInValues);
-    emitStableMessageSemconv = shouldEmitOld("message", v3Preview, optInValues);
+    emitStableMessageSemconv = shouldEmitStable("message", v3Preview, optInValues);
   }
 
   private static Set<String> resolveOptInValues(OpenTelemetry openTelemetry) {
