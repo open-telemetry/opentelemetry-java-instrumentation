@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.testing.junit.message;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessageSemconv;
+
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.List;
 
 // until old message semconv are dropped in 3.0
@@ -14,7 +15,7 @@ public class SemconvMessageStabilityUtil {
 
   public static AttributeKey<List<String>> headerAttributeKey(String headerName) {
     String key;
-    if (SemconvStability.isEmitOldMessageSemconv()) {
+    if (emitOldMessageSemconv()) {
       key = "messaging.header." + headerName.replace('-', '_');
     } else {
       key = "messaging.header." + headerName;

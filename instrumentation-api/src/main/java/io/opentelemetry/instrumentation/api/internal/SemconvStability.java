@@ -137,6 +137,14 @@ public final class SemconvStability {
     return emitStableRpcSemconv;
   }
 
+  public static boolean emitOldMessageSemconv() {
+    return emitOldMessageSemconv;
+  }
+
+  public static boolean emitStableMessageSemconv() {
+    return emitStableMessageSemconv;
+  }
+
   private static final Map<String, String> rpcSystemNameMap = new HashMap<>();
 
   static {
@@ -178,14 +186,6 @@ public final class SemconvStability {
     return openTelemetry instanceof ExtendedOpenTelemetry
         ? ((ExtendedOpenTelemetry) openTelemetry).getInstrumentationConfig(instrumentationName)
         : empty();
-  }
-
-  public static boolean isEmitOldMessageSemconv() {
-    return emitOldMessageSemconv;
-  }
-
-  public static boolean isEmitStableMessageSemconv() {
-    return emitStableMessageSemconv;
   }
 
   private SemconvStability() {}

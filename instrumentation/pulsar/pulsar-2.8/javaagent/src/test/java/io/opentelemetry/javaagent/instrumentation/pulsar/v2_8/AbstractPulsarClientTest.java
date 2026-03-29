@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
-import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -395,7 +394,7 @@ abstract class AbstractPulsarClientTest {
       assertions.add(
           equalTo(
               SemconvMessageStabilityUtil.headerAttributeKey("Test-Message-Header"),
-              Collections.singletonList("test")));
+              singletonList("test")));
     }
     int partitionIndex = TopicName.getPartitionIndex(destination);
     if (partitionIndex != -1) {
@@ -431,7 +430,7 @@ abstract class AbstractPulsarClientTest {
       assertions.add(
           equalTo(
               SemconvMessageStabilityUtil.headerAttributeKey("Test-Message-Header"),
-              Collections.singletonList("test")));
+              singletonList("test")));
     }
     if (isBatch) {
       assertions.add(satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isPositive));
@@ -458,7 +457,7 @@ abstract class AbstractPulsarClientTest {
       assertions.add(
           equalTo(
               SemconvMessageStabilityUtil.headerAttributeKey("Test-Message-Header"),
-              Collections.singletonList("test")));
+              singletonList("test")));
     }
     int partitionIndex = TopicName.getPartitionIndex(destination);
     if (partitionIndex != -1) {

@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
-import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -99,7 +98,7 @@ class WrapperTest extends AbstractWrapperTest {
       assertions.add(
           equalTo(
               SemconvMessageStabilityUtil.headerAttributeKey("Test-Message-Header"),
-              Collections.singletonList("test")));
+              singletonList("test")));
     }
     return assertions;
   }
@@ -123,7 +122,7 @@ class WrapperTest extends AbstractWrapperTest {
       assertions.add(
           equalTo(
               SemconvMessageStabilityUtil.headerAttributeKey("Test-Message-Header"),
-              Collections.singletonList("test")));
+              singletonList("test")));
     }
     return assertions;
   }
@@ -143,7 +142,7 @@ class WrapperTest extends AbstractWrapperTest {
       assertions.add(
           equalTo(
               SemconvMessageStabilityUtil.headerAttributeKey("Test-Message-Header"),
-              Collections.singletonList("test")));
+              singletonList("test")));
     }
     return assertions;
   }

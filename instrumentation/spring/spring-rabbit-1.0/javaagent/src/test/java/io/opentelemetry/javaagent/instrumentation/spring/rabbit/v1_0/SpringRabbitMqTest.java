@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
-import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -131,7 +130,7 @@ class SpringRabbitMqTest {
       assertions.add(
           equalTo(
               SemconvMessageStabilityUtil.headerAttributeKey("Test-Message-Header"),
-              Collections.singletonList("test")));
+              singletonList("test")));
     }
     return assertions;
   }

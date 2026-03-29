@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
-import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -376,7 +375,7 @@ abstract class AbstractRocketMqClientTest {
                               equalTo(
                                   SemconvMessageStabilityUtil.headerAttributeKey(
                                       "Test-Message-Header"),
-                                  Collections.singletonList("test")))
+                                  singletonList("test")))
                           .hasParent(trace.getSpan(0)));
               sendSpanData.set(trace.getSpan(1));
             },
@@ -396,7 +395,7 @@ abstract class AbstractRocketMqClientTest {
                                 equalTo(
                                     SemconvMessageStabilityUtil.headerAttributeKey(
                                         "Test-Message-Header"),
-                                    Collections.singletonList("test")))
+                                    singletonList("test")))
                             // As the child of receive span.
                             .hasParent(trace.getSpan(0)),
                     span ->

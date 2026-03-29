@@ -5,11 +5,13 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessageSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessageSemconv;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.ArrayList;
@@ -126,10 +128,10 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
     for (String name : capturedHeaders) {
       List<String> values = getter.getMessageHeader(request, name);
       if (!values.isEmpty()) {
-        if (SemconvStability.isEmitOldMessageSemconv()) {
+        if (emitOldMessageSemconv()) {
           attributes.put(CapturedMessageHeadersUtil.oldSemconvAttributeKey(name), values);
         }
-        if (SemconvStability.isEmitStableMessageSemconv()) {
+        if (emitStableMessageSemconv()) {
           attributes.put(CapturedMessageHeadersUtil.stableSemconvAttributeKey(name), values);
         }
       }
