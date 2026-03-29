@@ -15,6 +15,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | --- | --- | --- | --- |
 | General | Logic, correctness, reliability, safety, copy/paste mistakes, incorrect comments | Always | — |
 | Style | Style guide | Always | — |
+| Style | Uppercase field names should reflect semantic constants, not simply `static final` | Always | — |
 | Naming | Getter naming (`get` / `is`) | Always | — |
 | Naming | Module/package naming | New or renamed modules/packages | `module-naming.md` |
 | Javaagent | Advice patterns | `@Advice` classes | `javaagent-advice-patterns.md` |

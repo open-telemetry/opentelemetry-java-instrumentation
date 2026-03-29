@@ -20,9 +20,9 @@ public final class ElasticJobSingletons {
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "apache_elasticjob")
           .getBoolean("experimental_span_attributes/development", false);
 
-  private static final Instrumenter<ElasticJobProcessRequest, Void> INSTRUMENTER =
+  private static final Instrumenter<ElasticJobProcessRequest, Void> instrumenter =
       createInstrumenter();
-  private static final ElasticJobHelper HELPER = ElasticJobHelper.create(INSTRUMENTER);
+  private static final ElasticJobHelper helper = ElasticJobHelper.create(instrumenter);
 
   private static Instrumenter<ElasticJobProcessRequest, Void> createInstrumenter() {
     ElasticJobCodeAttributesGetter codeAttributesGetter = new ElasticJobCodeAttributesGetter();
@@ -42,7 +42,7 @@ public final class ElasticJobSingletons {
   }
 
   public static ElasticJobHelper helper() {
-    return HELPER;
+    return helper;
   }
 
   private ElasticJobSingletons() {}

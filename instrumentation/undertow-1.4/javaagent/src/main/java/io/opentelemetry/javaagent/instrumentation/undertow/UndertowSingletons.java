@@ -16,13 +16,13 @@ import io.undertow.server.HttpServerExchange;
 public final class UndertowSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.undertow-1.4";
 
-  private static final Instrumenter<HttpServerExchange, HttpServerExchange> INSTRUMENTER;
+  private static final Instrumenter<HttpServerExchange, HttpServerExchange> instrumenter;
 
   public static final VirtualField<Runnable, PropagatedContext> PROPAGATED_CONTEXT =
       VirtualField.find(Runnable.class, PropagatedContext.class);
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         JavaagentHttpServerInstrumenters.create(
             INSTRUMENTATION_NAME,
             new UndertowHttpAttributesGetter(),
@@ -41,10 +41,10 @@ public final class UndertowSingletons {
                     }));
   }
 
-  private static final UndertowHelper HELPER = new UndertowHelper(INSTRUMENTER);
+  private static final UndertowHelper helper = new UndertowHelper(instrumenter);
 
   public static UndertowHelper helper() {
-    return HELPER;
+    return helper;
   }
 
   private UndertowSingletons() {}

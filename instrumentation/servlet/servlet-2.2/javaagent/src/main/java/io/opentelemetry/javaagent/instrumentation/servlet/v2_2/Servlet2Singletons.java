@@ -23,8 +23,8 @@ public final class Servlet2Singletons {
   public static final VirtualField<ServletResponse, Integer> RESPONSE_STATUS =
       VirtualField.find(ServletResponse.class, Integer.class);
 
-  private static final Servlet2Helper HELPER;
-  private static final Instrumenter<ClassAndMethod, Void> RESPONSE_INSTRUMENTER;
+  private static final Servlet2Helper helper;
+  private static final Instrumenter<ClassAndMethod, Void> responseInstrumenter;
 
   static {
     Servlet2HttpAttributesGetter httpAttributesGetter =
@@ -42,16 +42,16 @@ public final class Servlet2Singletons {
                     spanNameExtractor,
                     httpAttributesGetter);
 
-    HELPER = new Servlet2Helper(instrumenter);
-    RESPONSE_INSTRUMENTER = ResponseInstrumenterFactory.createInstrumenter(INSTRUMENTATION_NAME);
+    helper = new Servlet2Helper(instrumenter);
+    responseInstrumenter = ResponseInstrumenterFactory.createInstrumenter(INSTRUMENTATION_NAME);
   }
 
   public static Servlet2Helper helper() {
-    return HELPER;
+    return helper;
   }
 
   public static Instrumenter<ClassAndMethod, Void> responseInstrumenter() {
-    return RESPONSE_INSTRUMENTER;
+    return responseInstrumenter;
   }
 
   private Servlet2Singletons() {}
