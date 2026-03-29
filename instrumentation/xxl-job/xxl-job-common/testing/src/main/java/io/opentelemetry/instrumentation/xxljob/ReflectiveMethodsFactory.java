@@ -34,21 +34,25 @@ class ReflectiveMethodsFactory {
   }
 
   static Method getMethod() {
-    return getReflectObjectMethod("echo", String.class);
+    try {
+      return ReflectObject.class.getMethod("echo", String.class);
+    } catch (Exception e) {
+      return null;
+    }
   }
 
   static Method getInitMethod() {
-    return getReflectObjectMethod("initMethod");
+    try {
+      return ReflectObject.class.getMethod("initMethod");
+    } catch (Exception e) {
+      return null;
+    }
   }
 
   static Method getDestroyMethod() {
-    return getReflectObjectMethod("destroyMethod");
-  }
-
-  private static Method getReflectObjectMethod(String methodName, Class<?>... parameterTypes) {
     try {
-      return ReflectObject.class.getMethod(methodName, parameterTypes);
-    } catch (NoSuchMethodException | NoClassDefFoundError exception) {
+      return ReflectObject.class.getMethod("destroyMethod");
+    } catch (Exception e) {
       return null;
     }
   }
