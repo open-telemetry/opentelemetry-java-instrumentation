@@ -30,8 +30,8 @@ public class MainView extends VerticalLayout {
       // using reflection because return type of the method changes from void to Optional
       Method method = UI.class.getMethod("navigate", Class.class);
       method.invoke(UI.getCurrent(), navigationTarget);
-    } catch (ReflectiveOperationException exception) {
-      throw new IllegalStateException(exception);
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalStateException(e);
     }
   }
 }

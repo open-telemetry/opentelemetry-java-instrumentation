@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.vaadin;
 
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static java.util.Objects.requireNonNull;
 import static org.awaitility.Awaitility.await;
 
 import com.vaadin.flow.server.Version;
@@ -96,10 +95,7 @@ public abstract class AbstractVaadinTest
 
   protected static void copyClasspathResource(String resource, Path destination) {
     if (!Files.exists(destination)) {
-      try (InputStream inputStream =
-          requireNonNull(
-              AbstractVaadinTest.class.getResourceAsStream(resource),
-              "Classpath resource not found: " + resource)) {
+      try (InputStream inputStream = AbstractVaadinTest.class.getResourceAsStream(resource)) {
         Files.copy(inputStream, destination);
       } catch (IOException e) {
         throw new IllegalStateException(e);
