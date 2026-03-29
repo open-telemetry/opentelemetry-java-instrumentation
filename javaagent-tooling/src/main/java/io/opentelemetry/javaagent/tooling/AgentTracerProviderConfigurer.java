@@ -33,7 +33,8 @@ public class AgentTracerProviderConfigurer implements AutoConfigurationCustomize
       SdkTracerProviderBuilder sdkTracerProviderBuilder, ConfigProperties config) {
 
     // Register additional thread details logging span processor
-    if (config.getBoolean(ADD_THREAD_DETAILS, true)) {
+    boolean v3Preview = config.getBoolean("otel.instrumentation.common.v3-preview", false);
+    if (config.getBoolean(ADD_THREAD_DETAILS, !v3Preview)) {
       sdkTracerProviderBuilder.addSpanProcessor(new AddThreadDetailsSpanProcessor());
     }
 
