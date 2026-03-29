@@ -243,7 +243,7 @@ public abstract class AbstractLog4j2Test {
   }
 
   @Test
-  void fixtestStringMapMessageWinsOverContextData() {
+  void testStringMapMessageWinsOverContextData() {
     ThreadContext.put("key1", "context-value");
     StringMapMessage message = new StringMapMessage();
     message.put("key1", "message-value");
