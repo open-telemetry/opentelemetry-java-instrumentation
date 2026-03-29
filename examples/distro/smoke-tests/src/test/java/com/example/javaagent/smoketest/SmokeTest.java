@@ -9,9 +9,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
 import io.opentelemetry.proto.trace.v1.Span;
@@ -163,7 +161,7 @@ abstract class SmokeTest {
               // TODO: Register parser into object mapper to avoid de -> re -> deserialize.
               try {
                 JsonFormat.parser().merge(OBJECT_MAPPER.writeValueAsString(it), builder);
-              } catch (InvalidProtocolBufferException | JsonProcessingException e) {
+              } catch (IOException e) {
                 e.printStackTrace();
               }
               return builder.build();

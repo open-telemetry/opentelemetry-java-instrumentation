@@ -56,9 +56,9 @@ class AgentInstrumentationTest {
             if (loader != BOOTSTRAP_CLASSLOADER) {
               bootstrapClassesIncorrectlyLoaded.add(bootstrapClass);
             }
-          } catch (ClassNotFoundException | NoClassDefFoundError e) {
+          } catch (Throwable t) {
             throw new RuntimeException(
-                "Failed to load bootstrap class: " + info.getName() + " in " + bootstrapPrefix, e);
+                "Failed to load bootstrap class: " + info.getName() + " in " + bootstrapPrefix, t);
           }
         }
       }

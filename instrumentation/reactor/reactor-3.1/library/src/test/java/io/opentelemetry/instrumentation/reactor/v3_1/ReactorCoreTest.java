@@ -53,12 +53,12 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
     MethodHandles.Lookup lookup = MethodHandles.publicLookup();
     try {
       return lookup.findVirtual(type, "contextWrite", methodType(type, Function.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
+    } catch (ReflectiveOperationException e) {
       // ignore
     }
     try {
       return lookup.findVirtual(type, "subscriberContext", methodType(type, Function.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
+    } catch (ReflectiveOperationException e) {
       throw new RuntimeException(e);
     }
   }
@@ -540,10 +540,10 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
       Method retryWhenMethod = Flux.class.getMethod("retryWhen", retryClass);
       Method retrySpecMethod = retryClass.getMethod("indefinitely");
       return (Flux<T>) retryWhenMethod.invoke(flux, retrySpecMethod.invoke(retryClass));
-    } catch (ClassNotFoundException | NoSuchMethodException exception) {
+    } catch (ReflectiveOperationException e) {
       // ignore
-    } catch (Exception exception) {
-      throw new IllegalStateException(exception);
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
     }
     throw new IllegalStateException("Could not find retryWhen method");
   }

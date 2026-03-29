@@ -10,6 +10,13 @@
 - JUnit 5, AssertJ assertions (not JUnit `assertEquals`/`assertTrue`).
 - Test classes and methods should be package-private (no `public`).
 
+## Catch Style
+
+- When multiple caught exceptions in a test have identical handling, prefer a single
+  catch of their nearest common parent type instead of a multi-catch.
+- This preference applies even when the nearest common parent is `Exception` or
+  `Throwable`.
+
 ## Span Attribute Assertions
 
 - Use `span.hasAttributesSatisfyingExactly(...)` with `equalTo(...)`/`satisfies(...)` for

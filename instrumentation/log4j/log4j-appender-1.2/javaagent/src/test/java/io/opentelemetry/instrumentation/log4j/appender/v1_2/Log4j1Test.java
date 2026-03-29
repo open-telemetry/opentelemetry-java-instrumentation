@@ -49,7 +49,7 @@ class Log4j1Test {
       Field java1 = Loader.class.getDeclaredField("java1");
       java1.setAccessible(true);
       java1.set(null, false);
-    } catch (NoSuchFieldException | IllegalAccessException e) {
+    } catch (ReflectiveOperationException e) {
       throw new RuntimeException(e);
     }
   }

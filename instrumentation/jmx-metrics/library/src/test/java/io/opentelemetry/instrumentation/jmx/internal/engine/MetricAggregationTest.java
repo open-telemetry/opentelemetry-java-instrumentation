@@ -22,8 +22,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import javax.management.InstanceNotFoundException;
-import javax.management.MBeanRegistrationException;
+import javax.management.JMException;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
 import javax.management.MalformedObjectNameException;
@@ -85,7 +84,7 @@ class MetricAggregationTest {
             instance -> {
               try {
                 theServer.unregisterMBean(instance.getObjectName());
-              } catch (InstanceNotFoundException | MBeanRegistrationException e) {
+              } catch (JMException e) {
                 throw new RuntimeException(e);
               }
             });

@@ -9,9 +9,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection;
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
 import java.util.Objects;
@@ -44,7 +42,7 @@ class ResteasySingleConnection implements SingleConnection {
     URI uri;
     try {
       uri = new URL("http", host, port, path).toURI();
-    } catch (MalformedURLException | URISyntaxException e) {
+    } catch (Exception e) {
       throw new ExecutionException(e);
     }
 
