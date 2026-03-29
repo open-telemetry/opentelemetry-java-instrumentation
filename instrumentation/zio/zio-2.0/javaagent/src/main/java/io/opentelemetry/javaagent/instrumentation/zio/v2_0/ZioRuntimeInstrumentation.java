@@ -24,8 +24,7 @@ public class ZioRuntimeInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("defaultSupervisor"),
-        getClass().getName() + "$DefaultSupervisorAdvice");
+        named("defaultSupervisor"), getClass().getName() + "$DefaultSupervisorAdvice");
   }
 
   @SuppressWarnings("unused")
