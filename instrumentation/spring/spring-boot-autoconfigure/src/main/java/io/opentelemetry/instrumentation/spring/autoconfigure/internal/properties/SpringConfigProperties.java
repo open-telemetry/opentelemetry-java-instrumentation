@@ -5,13 +5,15 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties;
 
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
+
 import io.opentelemetry.api.internal.ConfigUtil;
 import io.opentelemetry.exporter.otlp.internal.OtlpConfigUtil;
 import io.opentelemetry.instrumentation.resources.internal.ResourceProviderPropertiesCustomizer;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +27,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
  * any time.
  */
 public class SpringConfigProperties implements ConfigProperties {
-  private final Environment environment;
+  private final CachedPropertyResolver environment;
 
   private final ExpressionParser parser;
   private final OtlpExporterProperties otlpExporterProperties;
@@ -44,7 +46,7 @@ public class SpringConfigProperties implements ConfigProperties {
       OtelResourceProperties resourceProperties,
       OtelSpringProperties otelSpringProperties,
       ConfigProperties otelSdkProperties) {
-    this.environment = environment;
+    this.environment = new CachedPropertyResolver(environment);
     this.parser = parser;
     this.otlpExporterProperties = otlpExporterProperties;
     this.resourceProperties = resourceProperties;
@@ -97,14 +99,14 @@ public class SpringConfigProperties implements ConfigProperties {
   private static Map<String, String> createMapForListProperty(
       String key, List<String> springList, ConfigProperties configProperties) {
     if (!springList.isEmpty()) {
-      return Collections.singletonMap(key, String.join(",", springList));
+      return singletonMap(key, String.join(",", springList));
     } else {
       String otelList = configProperties.getString(key);
       if (otelList != null) {
-        return Collections.singletonMap(key, otelList);
+        return singletonMap(key, otelList);
       }
     }
-    return Collections.emptyMap();
+    return emptyMap();
   }
 
   private static ConfigProperties createCustomizedListProperties(
@@ -154,8 +156,8 @@ public class SpringConfigProperties implements ConfigProperties {
     String normalizedName = ConfigUtil.normalizeEnvironmentVariableKey(name);
     String value = environment.getProperty(normalizedName, String.class);
     if (value == null && normalizedName.equals("otel.exporter.otlp.protocol")) {
-      // SDK autoconfigure module defaults to `grpc`, but this module aligns with recommendation
-      // in specification to default to `http/protobuf`
+      // SDK autoconfigure module defaults to `grpc`, but this module aligns with
+      // recommendation in specification to default to `http/protobuf`
       return OtlpConfigUtil.PROTOCOL_HTTP_PROTOBUF;
     }
     return or(value, otelSdkProperties.getString(name));
@@ -193,10 +195,9 @@ public class SpringConfigProperties implements ConfigProperties {
         otelSdkProperties.getDouble(name));
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // reading list form environment loses generic type
   @Override
   public List<String> getList(String name) {
-
     String normalizedName = ConfigUtil.normalizeEnvironmentVariableKey(name);
 
     List<String> list = listPropertyValues.get(normalizedName);
@@ -210,7 +211,8 @@ public class SpringConfigProperties implements ConfigProperties {
       }
     }
 
-    return or(environment.getProperty(normalizedName, List.class), otelSdkProperties.getList(name));
+    List<String> envValue = (List<String>) environment.getProperty(normalizedName, List.class);
+    return orNonNull(envValue, otelSdkProperties.getList(name));
   }
 
   @Nullable
@@ -220,17 +222,31 @@ public class SpringConfigProperties implements ConfigProperties {
     if (value == null) {
       return otelSdkProperties.getDuration(name);
     }
-    return DefaultConfigProperties.createFromMap(Collections.singletonMap(name, value))
-        .getDuration(name);
+    return DefaultConfigProperties.createFromMap(singletonMap(name, value)).getDuration(name);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // reading map loses generic type
   @Override
   public Map<String, String> getMap(String name) {
     Map<String, String> otelSdkMap = otelSdkProperties.getMap(name);
 
     String normalizedName = ConfigUtil.normalizeEnvironmentVariableKey(name);
     // maps from config properties are not supported by Environment, so we have to fake it
+    Map<String, String> specialMap = getSpecialMapProperty(normalizedName, otelSdkMap);
+    if (specialMap != null) {
+      return specialMap;
+    }
+
+    String value = environment.getProperty(normalizedName);
+    if (value == null) {
+      return otelSdkMap;
+    }
+    return (Map<String, String>) parser.parseExpression(value).getValue();
+  }
+
+  @Nullable
+  private Map<String, String> getSpecialMapProperty(
+      String normalizedName, Map<String, String> otelSdkMap) {
     switch (normalizedName) {
       case "otel.resource.attributes":
         return mergeWithOtel(resourceProperties.getAttributes(), otelSdkMap);
@@ -243,14 +259,8 @@ public class SpringConfigProperties implements ConfigProperties {
       case "otel.exporter.otlp.traces.headers":
         return mergeWithOtel(otlpExporterProperties.getTraces().getHeaders(), otelSdkMap);
       default:
-        break;
+        return null;
     }
-
-    String value = environment.getProperty(normalizedName);
-    if (value == null) {
-      return otelSdkMap;
-    }
-    return (Map<String, String>) parser.parseExpression(value).getValue();
   }
 
   /**
@@ -270,6 +280,10 @@ public class SpringConfigProperties implements ConfigProperties {
 
   @Nullable
   private static <T> T or(@Nullable T first, @Nullable T second) {
+    return first != null ? first : second;
+  }
+
+  private static <T> T orNonNull(@Nullable T first, T second) {
     return first != null ? first : second;
   }
 }

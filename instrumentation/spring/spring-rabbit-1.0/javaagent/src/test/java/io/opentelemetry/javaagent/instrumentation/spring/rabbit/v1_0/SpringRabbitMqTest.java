@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -15,24 +16,22 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +55,7 @@ import org.springframework.context.annotation.Bean;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-public class SpringRabbitMqTest {
+class SpringRabbitMqTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -111,7 +110,7 @@ public class SpringRabbitMqTest {
       boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 equalTo(MESSAGING_SYSTEM, "rabbitmq"),
                 equalTo(MESSAGING_DESTINATION_NAME, destination),
                 satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)));
@@ -129,16 +128,14 @@ public class SpringRabbitMqTest {
     }
     if (testHeaders) {
       assertions.add(
-          equalTo(
-              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
-              Collections.singletonList("test")));
+          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
     }
     return assertions;
   }
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
-  public void testContextPropagation(boolean testHeaders) throws Exception {
+  void testContextPropagation(boolean testHeaders) throws Exception {
     try (Connection connection = connectionFactory.newConnection()) {
       try (Channel ignored = connection.createChannel()) {
         testing.runWithSpan(
@@ -225,7 +222,7 @@ public class SpringRabbitMqTest {
   }
 
   @Test
-  public void testAnonymousQueueSpanName() throws Exception {
+  void testAnonymousQueueSpanName() throws Exception {
     try (Connection connection = connectionFactory.newConnection()) {
       try (Channel ignored = connection.createChannel()) {
         String anonymousQueueName = applicationContext.getBean(AnonymousQueue.class).getName();
@@ -242,8 +239,7 @@ public class SpringRabbitMqTest {
                         span.hasName("<generated> process")
                             .hasAttribute(
                                 equalTo(
-                                    MessagingIncubatingAttributes
-                                        .MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
+                                    MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
                                     anonymousQueueName))),
             trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.qos")),
             trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.consume")),

@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.internal.lambda;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker;
+import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldInstalledMarker;
 import org.junit.jupiter.api.Test;
 
 class LambdaInstrumentationTest {

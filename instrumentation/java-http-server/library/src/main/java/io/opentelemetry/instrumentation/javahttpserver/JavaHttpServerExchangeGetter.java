@@ -6,22 +6,17 @@
 package io.opentelemetry.instrumentation.javahttpserver;
 
 import static java.util.Collections.emptyIterator;
-import static java.util.Collections.emptyList;
 
 import com.sun.net.httpserver.HttpExchange;
-import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Iterator;
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum JavaHttpServerExchangeGetter implements ExtendedTextMapGetter<HttpExchange> {
-  INSTANCE;
+final class JavaHttpServerExchangeGetter implements TextMapGetter<HttpExchange> {
 
   @Override
-  public Iterable<String> keys(@Nullable HttpExchange exchange) {
-    if (exchange == null) {
-      return emptyList();
-    }
+  public Iterable<String> keys(HttpExchange exchange) {
     return exchange.getRequestHeaders().keySet();
   }
 

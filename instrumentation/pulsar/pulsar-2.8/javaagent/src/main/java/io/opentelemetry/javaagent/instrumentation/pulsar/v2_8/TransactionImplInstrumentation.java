@@ -15,6 +15,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons;
 import java.util.concurrent.CompletableFuture;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -31,15 +32,16 @@ public class TransactionImplInstrumentation implements TypeInstrumentation {
             .and(isPublic())
             .and(takesArguments(1))
             .and(takesArgument(0, String.class)),
-        TransactionImplInstrumentation.class.getName() + "$RegisterProducedTopicAdvice");
+        getClass().getName() + "$RegisterProducedTopicAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class RegisterProducedTopicAdvice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void after(@Advice.Return(readOnly = false) CompletableFuture<Void> future) {
-      future = PulsarSingletons.wrap(future);
+    public static CompletableFuture<Void> after(@Advice.Return CompletableFuture<Void> future) {
+      return PulsarSingletons.wrap(future);
     }
   }
 }

@@ -16,5 +16,5 @@ public abstract class OpenSearchRestRequest {
 
   public abstract String getMethod();
 
-  public abstract String getOperation();
+  public abstract String getEndpoint();
 }

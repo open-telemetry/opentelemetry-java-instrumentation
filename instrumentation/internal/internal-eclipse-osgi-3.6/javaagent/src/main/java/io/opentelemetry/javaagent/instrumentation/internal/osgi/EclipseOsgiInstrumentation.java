@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.osgi;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
@@ -13,6 +12,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.InClassLoaderMatcher;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -36,7 +36,7 @@ class EclipseOsgiInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("isDynamicallyImported")).and(returns(boolean.class)),
+        named("isDynamicallyImported").and(returns(boolean.class)),
         this.getClass().getName() + "$IsDynamicallyImportedAdvice");
   }
 
@@ -52,13 +52,11 @@ class EclipseOsgiInstrumentation implements TypeInstrumentation {
       return InClassLoaderMatcher.get() && !packageName.startsWith("io.opentelemetry.");
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(
-        @Advice.Return(readOnly = false) boolean result,
-        @Advice.Enter boolean inClassLoaderMatcher) {
-      if (inClassLoaderMatcher) {
-        result = false;
-      }
+    public static boolean onExit(
+        @Advice.Return boolean originalResult, @Advice.Enter boolean inClassLoaderMatcher) {
+      return inClassLoaderMatcher ? false : originalResult;
     }
   }
 }

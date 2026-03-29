@@ -25,4 +25,9 @@ public class ClickHouseClientV2InstrumentationModule extends InstrumentationModu
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ClickHouseClientV2Instrumentation());
   }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
+  }
 }

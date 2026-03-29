@@ -5,12 +5,24 @@
 
 package io.opentelemetry.instrumentation.javahttpclient;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -19,7 +31,10 @@ import java.net.http.HttpResponse;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<HttpRequest> {
 
@@ -105,5 +120,76 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
           }
           return attributes;
         });
+  }
+
+  @SuppressWarnings("Interruption") // test calls CompletableFuture.cancel with true
+  @Test
+  void cancelRequest() throws InterruptedException {
+    boolean isJdk11 = "11".equals(System.getProperty("java.specification.version"));
+    String method = "GET";
+    URI uri = resolveAddress("/long-request");
+
+    CompletableFuture<String> future =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              HttpRequest request =
+                  HttpRequest.newBuilder()
+                      .uri(uri)
+                      .method(method, HttpRequest.BodyPublishers.noBody())
+                      .header("delay", String.valueOf(SECONDS.toMillis(5)))
+                      .build();
+              return client
+                  .sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                  .thenApply(HttpResponse::body)
+                  .whenComplete(
+                      (response, throwable) ->
+                          testing.runWithSpan(
+                              "child",
+                              () -> {
+                                if (throwable != null && throwable.getCause() != null) {
+                                  Span.current()
+                                      .setAttribute(
+                                          "throwable", throwable.getCause().getClass().getName());
+                                }
+                              }))
+                  // this stage is only added to trigger the whenComplete stage when this stage gets
+                  // cancelled
+                  .exceptionally(ex -> "cancelled");
+            });
+
+    // sleep a bit to let the request start
+    Thread.sleep(1_000);
+    future.cancel(true);
+    assertThatThrownBy(future::get).isInstanceOf(CancellationException.class);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfying(
+                            equalTo(URL_FULL, uri.toString()),
+                            equalTo(SERVER_ADDRESS, uri.getHost()),
+                            equalTo(SERVER_PORT, uri.getPort()),
+                            equalTo(HTTP_REQUEST_METHOD, method),
+                            equalTo(ERROR_TYPE, CancellationException.class.getName())),
+                span ->
+                    span.hasName("test-http-server")
+                        .hasKind(SpanKind.SERVER)
+                        .hasParent(trace.getSpan(1))
+                        // jdk 11 does not cancel the request on the server side so the request
+                        // succeeds
+                        .hasStatus(isJdk11 ? StatusData.unset() : StatusData.error()),
+                span ->
+                    span.hasName("child")
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("throwable"), CancellationException.class.getName()))));
   }
 }

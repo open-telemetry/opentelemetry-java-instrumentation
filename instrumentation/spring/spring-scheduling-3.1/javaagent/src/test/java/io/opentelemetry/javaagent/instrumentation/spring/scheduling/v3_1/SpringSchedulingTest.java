@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionPrefixAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -13,8 +14,9 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.component.IntervalTask;
@@ -32,7 +34,6 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -68,7 +69,7 @@ class SpringSchedulingTest {
       task.blockUntilExecute();
 
       List<AttributeAssertion> assertions = codeFunctionAssertions(TriggerTask.class, "run");
-      assertions.add(equalTo(AttributeKey.stringKey("job.system"), JOB_SYSTEM));
+      assertions.add(equalTo(stringKey("job.system"), JOB_SYSTEM));
 
       assertThat(task).isNotNull();
       testing.waitAndAssertTraces(
@@ -89,7 +90,7 @@ class SpringSchedulingTest {
       task.blockUntilExecute();
 
       List<AttributeAssertion> assertions = codeFunctionAssertions(IntervalTask.class, "run");
-      assertions.add(equalTo(AttributeKey.stringKey("job.system"), JOB_SYSTEM));
+      assertions.add(equalTo(stringKey("job.system"), JOB_SYSTEM));
 
       assertThat(task).isNotNull();
       testing.waitAndAssertTraces(
@@ -107,11 +108,11 @@ class SpringSchedulingTest {
     try (AnnotationConfigApplicationContext context =
         new AnnotationConfigApplicationContext(LambdaTaskConfig.class)) {
       LambdaTaskConfigurer configurer = context.getBean(LambdaTaskConfigurer.class);
-      configurer.singleUseLatch.await(2000, TimeUnit.MILLISECONDS);
+      configurer.singleUseLatch.await(2000, MILLISECONDS);
 
       List<AttributeAssertion> assertions =
           codeFunctionPrefixAssertions(LambdaTaskConfigurer.class.getName() + "$$Lambda", "run");
-      assertions.add(equalTo(AttributeKey.stringKey("job.system"), JOB_SYSTEM));
+      assertions.add(equalTo(stringKey("job.system"), JOB_SYSTEM));
 
       assertThat(configurer).isNotNull();
       testing.waitAndAssertTraces(
@@ -129,11 +130,11 @@ class SpringSchedulingTest {
     try (AnnotationConfigApplicationContext context =
         new AnnotationConfigApplicationContext(EnhancedClassTaskConfig.class)) {
       CountDownLatch latch = context.getBean(CountDownLatch.class);
-      latch.await(5, TimeUnit.SECONDS);
+      latch.await(5, SECONDS);
 
       List<AttributeAssertion> assertions =
           codeFunctionAssertions(EnhancedClassTaskConfig.class, "run");
-      assertions.add(equalTo(AttributeKey.stringKey("job.system"), JOB_SYSTEM));
+      assertions.add(equalTo(stringKey("job.system"), JOB_SYSTEM));
 
       assertThat(latch).isNotNull();
       testing.waitAndAssertTraces(
@@ -154,7 +155,7 @@ class SpringSchedulingTest {
       task.blockUntilExecute();
 
       List<AttributeAssertion> assertions = codeFunctionAssertions(TaskWithError.class, "run");
-      assertions.add(equalTo(AttributeKey.stringKey("job.system"), JOB_SYSTEM));
+      assertions.add(equalTo(stringKey("job.system"), JOB_SYSTEM));
 
       assertThat(task).isNotNull();
       testing.waitAndAssertTraces(
@@ -169,7 +170,7 @@ class SpringSchedulingTest {
                               event ->
                                   event
                                       .hasName("exception")
-                                      .hasAttributesSatisfying(
+                                      .hasAttributesSatisfyingExactly(
                                           equalTo(
                                               EXCEPTION_TYPE,
                                               IllegalStateException.class.getName()),

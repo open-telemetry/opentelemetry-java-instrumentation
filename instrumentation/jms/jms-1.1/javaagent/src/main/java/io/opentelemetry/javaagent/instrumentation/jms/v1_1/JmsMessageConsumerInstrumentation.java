@@ -14,9 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.Timer;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jms.MessageWithDestination;
@@ -44,38 +42,34 @@ public class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
             .and(takesArguments(0).or(takesArguments(1)))
             .and(returns(named("javax.jms.Message")))
             .and(isPublic()),
-        JmsMessageConsumerInstrumentation.class.getName() + "$ConsumerAdvice");
+        getClass().getName() + "$ConsumerAdvice");
     transformer.applyAdviceToMethod(
         named("receiveNoWait")
             .and(takesArguments(0))
             .and(returns(named("javax.jms.Message")))
             .and(isPublic()),
-        JmsMessageConsumerInstrumentation.class.getName() + "$ConsumerAdvice");
+        getClass().getName() + "$ConsumerAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ConsumerAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Timer onEnter() {
       return Timer.start();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(
-        @Advice.Enter Timer timer,
-        @Advice.Return Message message,
-        @Advice.Thrown Throwable throwable) {
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void stopSpan(@Advice.Enter Timer timer, @Advice.Return Message message) {
       if (message == null) {
         // Do not create span when no message is received
         return;
       }
 
-      Context parentContext = Java8BytecodeBridge.currentContext();
       MessageWithDestination request =
           MessageWithDestination.create(JavaxMessageAdapter.create(message), null);
 
-      createReceiveSpan(consumerReceiveInstrumenter(), request, timer, throwable);
+      createReceiveSpan(consumerReceiveInstrumenter(), request, timer, null);
     }
   }
 }

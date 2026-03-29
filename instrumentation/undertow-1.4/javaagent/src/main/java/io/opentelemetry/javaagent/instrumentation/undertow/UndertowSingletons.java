@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.undertow;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.undertow.UndertowActiveHandlers;
@@ -16,12 +18,15 @@ public final class UndertowSingletons {
 
   private static final Instrumenter<HttpServerExchange, HttpServerExchange> INSTRUMENTER;
 
+  public static final VirtualField<Runnable, PropagatedContext> PROPAGATED_CONTEXT =
+      VirtualField.find(Runnable.class, PropagatedContext.class);
+
   static {
     INSTRUMENTER =
         JavaagentHttpServerInstrumenters.create(
             INSTRUMENTATION_NAME,
             new UndertowHttpAttributesGetter(),
-            UndertowExchangeGetter.INSTANCE,
+            new UndertowExchangeGetter(),
             builder ->
                 builder.addContextCustomizer(
                     (context, request, attributes) -> {

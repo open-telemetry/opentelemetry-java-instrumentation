@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.log4j.appender.v1_2;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -31,38 +30,37 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isProtected())
+        isProtected()
             .and(named("forcedLog"))
             .and(takesArguments(4))
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, named("org.apache.log4j.Priority")))
             .and(takesArgument(2, Object.class))
             .and(takesArgument(3, Throwable.class)),
-        Log4jAppenderInstrumentation.class.getName() + "$ForcedLogAdvice");
+        getClass().getName() + "$ForcedLogAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ForcedLogAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(
+    public static CallDepth methodEnter(
         @Advice.This Category logger,
         @Advice.Argument(0) String fqcn,
         @Advice.Argument(1) Priority level,
         @Advice.Argument(2) Object message,
-        @Advice.Argument(3) Throwable t,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+        @Advice.Argument(3) Throwable t) {
       // need to track call depth across all loggers to avoid double capture when one logging
       // framework delegates to another
-      callDepth = CallDepth.forClass(LoggerProvider.class);
+      CallDepth callDepth = CallDepth.forClass(LoggerProvider.class);
       if (callDepth.getAndIncrement() == 0) {
         LogEventMapper.INSTANCE.capture(fqcn, logger, level, message, t);
       }
+      return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(@Advice.Local("otelCallDepth") CallDepth callDepth) {
+    public static void methodExit(@Advice.Enter CallDepth callDepth) {
       callDepth.decrementAndGet();
     }
   }

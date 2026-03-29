@@ -7,6 +7,7 @@ muzzle {
     group.set("org.eclipse.jetty")
     module.set("jetty-server")
     versions.set("[11, 12)")
+    assertInverse.set(true)
   }
 }
 
@@ -27,4 +28,8 @@ dependencies {
 
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
+}
+
+tasks.test {
+  systemProperty("collectMetadata", findProperty("collectMetadata"))
 }

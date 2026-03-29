@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.testing.provider;
 
+import static java.util.Collections.singletonList;
+
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.testing.exporter.TestExportersUtil;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizer;
@@ -24,12 +26,17 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.SpanEx
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.SpanProcessorModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.TracerProviderModel;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @AutoService(DeclarativeConfigurationCustomizerProvider.class)
 public class AgentTestExporterCustomizerProvider
     implements DeclarativeConfigurationCustomizerProvider {
+
+  @Override
+  public int order() {
+    return Integer.MIN_VALUE; // run before other customizers that might add exporters
+  }
+
   @Override
   public void customize(DeclarativeConfigurationCustomizer customizer) {
     TestExportersUtil.initTestExporters();
@@ -82,7 +89,7 @@ public class AgentTestExporterCustomizerProvider
     model.withLoggerProvider(
         new LoggerProviderModel()
             .withProcessors(
-                Collections.singletonList(
+                singletonList(
                     new LogRecordProcessorModel()
                         .withSimple(
                             new SimpleLogRecordProcessorModel()
@@ -102,7 +109,7 @@ public class AgentTestExporterCustomizerProvider
     model.withMeterProvider(
         new MeterProviderModel()
             .withReaders(
-                Collections.singletonList(
+                singletonList(
                     new MetricReaderModel()
                         .withPeriodic(
                             new PeriodicMetricReaderModel()

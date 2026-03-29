@@ -5,8 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_3.springdata;
 
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
+
 import java.io.File;
-import java.util.Collections;
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
@@ -59,7 +61,7 @@ class Config {
     Node testNode =
         new Node(
             new Environment(InternalSettingsPreparer.prepareSettings(settings)),
-            Collections.singletonList(Netty3Plugin.class)) {};
+            singletonList(Netty3Plugin.class)) {};
     testNode.start();
     // disable periodic refresh in InternalClusterInfoService as it creates spans that tests don't
     // expect
@@ -70,8 +72,7 @@ class Config {
         .updateSettings(
             new ClusterUpdateSettingsRequest()
                 .transientSettings(
-                    Collections.singletonMap(
-                        "cluster.routing.allocation.disk.threshold_enabled", false)));
+                    singletonMap("cluster.routing.allocation.disk.threshold_enabled", false)));
 
     return testNode;
   }

@@ -41,7 +41,13 @@ dependencies {
 }
 
 tasks {
-  test {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
+  }
+
+  if (findProperty("denyUnsafe") == "true") {
+    withType<Test>().configureEach {
+      enabled = false
+    }
   }
 }

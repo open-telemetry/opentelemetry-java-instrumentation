@@ -9,6 +9,10 @@ import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import java.util.Collection;
 import javax.annotation.Nullable;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public abstract class ServletMappingResolverFactory implements MappingResolver.Factory {
 
   private volatile MappingResolverHolder holder;
@@ -16,6 +20,7 @@ public abstract class ServletMappingResolverFactory implements MappingResolver.F
   @Nullable
   protected abstract Mappings getMappings();
 
+  @Nullable
   private MappingResolver build() {
     Mappings mappings = getMappings();
     if (mappings == null) {
@@ -39,13 +44,17 @@ public abstract class ServletMappingResolverFactory implements MappingResolver.F
 
   // using a holder class to distinguish build() returning null from build() not called
   private static class MappingResolverHolder {
-    final MappingResolver mappingResolver;
+    @Nullable final MappingResolver mappingResolver;
 
-    MappingResolverHolder(MappingResolver mappingResolver) {
+    MappingResolverHolder(@Nullable MappingResolver mappingResolver) {
       this.mappingResolver = mappingResolver;
     }
   }
 
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
   public static class Mappings {
     private final Collection<String> mappings;
 

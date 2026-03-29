@@ -5,7 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties;
 
-import java.util.Collections;
+import static java.util.Collections.emptyMap;
+
 import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -15,7 +16,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties(prefix = "otel.resource")
 public class OtelResourceProperties {
-  private Map<String, String> attributes = Collections.emptyMap();
+  private Map<String, String> attributes = emptyMap();
 
   public Map<String, String> getAttributes() {
     return attributes;

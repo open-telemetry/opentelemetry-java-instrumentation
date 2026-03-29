@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.graphql.v12_0;
 
 import graphql.execution.instrumentation.Instrumentation;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.graphql.internal.OpenTelemetryInstrumentationHelper;
+import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.OpenTelemetryInstrumentationHelper;
 
 @SuppressWarnings({"AbbreviationAsWordInName", "MemberName"})
 public final class GraphQLTelemetry {
@@ -28,16 +28,23 @@ public final class GraphQLTelemetry {
   private final OpenTelemetryInstrumentationHelper helper;
 
   GraphQLTelemetry(
-      OpenTelemetry openTelemetry, boolean sanitizeQuery, boolean addOperationNameToSpanName) {
+      OpenTelemetry openTelemetry,
+      boolean captureQuery,
+      boolean sanitizeQuery,
+      boolean addOperationNameToSpanName) {
     helper =
         OpenTelemetryInstrumentationHelper.create(
-            openTelemetry, INSTRUMENTATION_NAME, sanitizeQuery, addOperationNameToSpanName);
+            openTelemetry,
+            INSTRUMENTATION_NAME,
+            captureQuery,
+            sanitizeQuery,
+            addOperationNameToSpanName);
   }
 
   /**
    * Returns a new {@link Instrumentation} that generates telemetry for received GraphQL requests.
    */
-  public Instrumentation newInstrumentation() {
+  public Instrumentation createInstrumentation() {
     return new OpenTelemetryInstrumentation(helper);
   }
 }

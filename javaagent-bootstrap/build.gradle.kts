@@ -1,5 +1,6 @@
 plugins {
   id("otel.java-conventions")
+  id("otel.nullaway-conventions")
   id("otel.publish-conventions")
 }
 
@@ -8,7 +9,7 @@ group = "io.opentelemetry.javaagent"
 dependencies {
   implementation(project(":instrumentation-api"))
 
-  testImplementation(project(":testing-common"))
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation(project(":instrumentation:resources:library"))
 }
 

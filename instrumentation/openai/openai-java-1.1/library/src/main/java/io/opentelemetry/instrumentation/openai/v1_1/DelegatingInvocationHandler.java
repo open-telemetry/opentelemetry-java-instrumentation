@@ -18,7 +18,7 @@ abstract class DelegatingInvocationHandler<T, S extends DelegatingInvocationHand
 
   protected final T delegate;
 
-  public DelegatingInvocationHandler(T delegate) {
+  DelegatingInvocationHandler(T delegate) {
     this.delegate = delegate;
   }
 
@@ -33,10 +33,9 @@ abstract class DelegatingInvocationHandler<T, S extends DelegatingInvocationHand
 
   protected abstract Class<T> getProxyType();
 
-  @SuppressWarnings("rawtypes")
-  public T createProxy() {
+  T createProxy() {
     Class<T> proxyType = getProxyType();
-    Object proxy = Proxy.newProxyInstance(CLASS_LOADER, new Class[] {proxyType}, this);
+    Object proxy = Proxy.newProxyInstance(CLASS_LOADER, new Class<?>[] {proxyType}, this);
     return proxyType.cast(proxy);
   }
 }

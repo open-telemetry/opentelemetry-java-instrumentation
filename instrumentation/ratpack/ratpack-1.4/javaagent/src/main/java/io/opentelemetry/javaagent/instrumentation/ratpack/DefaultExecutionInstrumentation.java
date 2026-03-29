@@ -12,6 +12,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import ratpack.exec.internal.Continuation;
@@ -30,18 +32,24 @@ public class DefaultExecutionInstrumentation implements TypeInstrumentation {
         nameStartsWith("delimit") // include delimitStream
             .and(takesArgument(0, named("ratpack.func.Action")))
             .and(takesArgument(1, named("ratpack.func.Action"))),
-        DefaultExecutionInstrumentation.class.getName() + "$DelimitAdvice");
+        getClass().getName() + "$DelimitAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class DelimitAdvice {
 
+    @AssignReturned.ToArguments({
+      @ToArgument(value = 0, index = 0),
+      @ToArgument(value = 1, index = 1)
+    })
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrap(
-        @Advice.Argument(value = 0, readOnly = false) Action<? super Throwable> onError,
-        @Advice.Argument(value = 1, readOnly = false) Action<? super Continuation> segment) {
-      onError = ActionWrapper.wrapIfNeeded(onError);
-      segment = ActionWrapper.wrapIfNeeded(segment);
+    public static Object[] wrap(
+        @Advice.Argument(0) Action<? super Throwable> originalOnError,
+        @Advice.Argument(1) Action<? super Continuation> originalSegment) {
+
+      Action<? super Throwable> onError = ActionWrapper.wrapIfNeeded(originalOnError);
+      Action<? super Continuation> segment = ActionWrapper.wrapIfNeeded(originalSegment);
+      return new Object[] {onError, segment};
     }
   }
 }

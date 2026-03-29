@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.docs.parsers;
 
+import static io.opentelemetry.instrumentation.docs.parsers.TelemetryParser.normalizeWhenCondition;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
@@ -62,8 +64,7 @@ public class EmittedMetricsParser {
                 path -> {
                   String content = FileManager.readFileToString(path.toString());
                   if (content != null) {
-                    String when = content.substring(0, content.indexOf('\n'));
-                    String whenKey = when.replace("when: ", "");
+                    String whenKey = normalizeWhenCondition(content);
 
                     int metricsIndex = content.indexOf("metrics_by_scope:");
                     if (metricsIndex != -1) {

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
+import static java.util.Collections.emptyList;
+
 import io.micrometer.core.instrument.AbstractMeter;
 import io.micrometer.core.instrument.FunctionTimer;
 import io.micrometer.core.instrument.Measurement;
@@ -14,13 +16,13 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableDoubleCounter;
 import io.opentelemetry.api.metrics.ObservableLongCounter;
-import java.util.Collections;
+import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
 import java.util.concurrent.TimeUnit;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
 
 final class OpenTelemetryFunctionTimer<T> extends AbstractMeter
-    implements FunctionTimer, RemovableMeter {
+    implements FunctionTimer, RemovableMeter, OpenTelemetryInstrument {
   private final TimeUnit baseTimeUnit;
   private final ObservableLongCounter observableCount;
   private final ObservableDoubleCounter observableTotalTime;
@@ -90,7 +92,7 @@ final class OpenTelemetryFunctionTimer<T> extends AbstractMeter
   @Override
   public Iterable<Measurement> measure() {
     UnsupportedReadLogger.logWarning();
-    return Collections.emptyList();
+    return emptyList();
   }
 
   @Override

@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -42,7 +42,7 @@ class SerializerTest {
   @Test
   void shouldSerializeCollection() {
     // given
-    List<String> collection = Arrays.asList("one", "two", "three");
+    List<String> collection = asList("one", "two", "three");
     // when
     String serialized = new Serializer().serialize(collection);
     // then
@@ -52,7 +52,7 @@ class SerializerTest {
   @Test
   void shouldSerializeEmptyCollectionAsNull() {
     // given
-    List<String> collection = Collections.emptyList();
+    List<String> collection = emptyList();
     // when
     String serialized = new Serializer().serialize(collection);
     // then
@@ -60,7 +60,7 @@ class SerializerTest {
   }
 
   @Test
-  void shouldSerializeMapAsKeyCollection() {
+  void shouldSerializeMap() {
     // given
     Map<String, Object> map = new HashMap<>();
     map.put("uno", 1L);
@@ -69,6 +69,6 @@ class SerializerTest {
     // when
     String serialized = new Serializer().serialize(map);
     // then
-    assertThat(serialized).isEqualTo("[uno,dos,tres]");
+    assertThat(serialized).isEqualTo("[uno:1,dos:[],tres:cuatro]");
   }
 }

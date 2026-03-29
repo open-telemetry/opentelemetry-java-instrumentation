@@ -23,7 +23,7 @@ testing {
   suites {
     val version20Test by registering(JvmTestSuite::class) {
       dependencies {
-        if (findProperty("testLatestDeps") as Boolean) {
+        if (findProperty("testLatestDeps") == "true") {
           implementation("io.kubernetes:client-java-api:latest.release")
         } else {
           implementation("io.kubernetes:client-java-api:20.0.0")
@@ -39,7 +39,28 @@ tasks {
   }
 }
 
-tasks.withType<Test>().configureEach {
-  // TODO run tests both with and without experimental span attributes
-  jvmArgs("-Dotel.instrumentation.kubernetes-client.experimental-span-attributes=true")
+tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.kubernetes-client.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.kubernetes-client.experimental-span-attributes=true")
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+  }
+
+  check {
+    dependsOn(testExperimental, testStableSemconv)
+  }
 }

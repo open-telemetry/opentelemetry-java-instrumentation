@@ -61,8 +61,20 @@ testing {
 }
 
 tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+  }
+
   check {
-    dependsOn(testing.suites)
+    dependsOn(testing.suites, testStableSemconv)
   }
 }
 
@@ -73,7 +85,7 @@ configurations.configureEach {
 
 // async-http-client 2.0 does not work with Netty versions newer than this due to referencing an
 // internal file.
-if (!(findProperty("testLatestDeps") as Boolean)) {
+if (!(findProperty("testLatestDeps") == "true")) {
   configurations.configureEach {
     resolutionStrategy {
       eachDependency {
@@ -84,7 +96,4 @@ if (!(findProperty("testLatestDeps") as Boolean)) {
       }
     }
   }
-}
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

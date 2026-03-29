@@ -16,7 +16,7 @@ class JsrConfigBatchJobTest extends SpringBatchTest {
 
   @RegisterExtension static final JavaxBatchConfigRunner runner = new JavaxBatchConfigRunner();
 
-  public JsrConfigBatchJobTest() {
+  JsrConfigBatchJobTest() {
     super(runner);
   }
 }

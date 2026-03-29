@@ -22,11 +22,11 @@ dependencies {
 }
 
 tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  systemProperty("collectMetadata", findProperty("collectMetadata"))
 }
 
 // since 2.3.x, undertow is compiled by JDK 11
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 if (latestDepTest) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)

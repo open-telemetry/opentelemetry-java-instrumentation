@@ -46,7 +46,7 @@ public class AkkaForkJoinTaskInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("exec").and(takesArguments(0)).and(not(isAbstract())),
-        AkkaForkJoinTaskInstrumentation.class.getName() + "$ForkJoinTaskAdvice");
+        getClass().getName() + "$ForkJoinTaskAdvice");
   }
 
   @SuppressWarnings("unused")

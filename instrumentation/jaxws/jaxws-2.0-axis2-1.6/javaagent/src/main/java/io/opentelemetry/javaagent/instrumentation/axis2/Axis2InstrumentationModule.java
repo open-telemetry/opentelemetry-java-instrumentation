@@ -6,16 +6,18 @@
 package io.opentelemetry.javaagent.instrumentation.axis2;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.Collections;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class Axis2InstrumentationModule extends InstrumentationModule {
+public class Axis2InstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public Axis2InstrumentationModule() {
     super("axis2", "axis2-1.6", "jaxws");
   }
@@ -28,6 +30,11 @@ public class Axis2InstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Collections.singletonList(new InvocationListenerRegistryTypeInstrumentation());
+    return singletonList(new InvocationListenerRegistryTypeInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

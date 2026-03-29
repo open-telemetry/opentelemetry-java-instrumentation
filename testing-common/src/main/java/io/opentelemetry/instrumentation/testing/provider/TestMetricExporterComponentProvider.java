@@ -5,12 +5,13 @@
 
 package io.opentelemetry.instrumentation.testing.provider;
 
+import static java.util.Objects.requireNonNull;
+
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
-import java.util.Objects;
 
-public class TestMetricExporterComponentProvider implements ComponentProvider<MetricExporter> {
+public class TestMetricExporterComponentProvider implements ComponentProvider {
 
   private static MetricExporter metricExporter;
 
@@ -26,7 +27,7 @@ public class TestMetricExporterComponentProvider implements ComponentProvider<Me
 
   @Override
   public MetricExporter create(DeclarativeConfigProperties config) {
-    return Objects.requireNonNull(metricExporter, "metricExporter must not be null");
+    return requireNonNull(metricExporter, "metricExporter must not be null");
   }
 
   public static void setMetricExporter(MetricExporter metricExporter) {

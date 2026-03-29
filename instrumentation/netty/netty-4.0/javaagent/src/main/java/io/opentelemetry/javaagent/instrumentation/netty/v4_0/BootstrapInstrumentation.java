@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionReq
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.netty.v4.common.NettyScope;
+import io.opentelemetry.javaagent.instrumentation.netty.common.v4_0.NettyScope;
 import java.net.SocketAddress;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -33,12 +33,12 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
         named("doConnect0")
             .and(takesArgument(2, SocketAddress.class))
             .and(takesArgument(4, named("io.netty.channel.ChannelPromise"))),
-        BootstrapInstrumentation.class.getName() + "$ConnectAdvice");
+        getClass().getName() + "$ConnectAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ConnectAdvice {
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static NettyScope startConnect(@Advice.Argument(2) SocketAddress remoteAddress) {
 
       Context parentContext = Java8BytecodeBridge.currentContext();

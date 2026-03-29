@@ -24,7 +24,7 @@ import org.jboss.logmanager.Logger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class JbossLogmanagerMdcTest {
+class JbossLogmanagerMdcTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -102,14 +102,16 @@ public class JbossLogmanagerMdcTest {
     assertThat(logRecords.get(0).getMessage()).isEqualTo("log message 1");
     assertThat(logRecords.get(0).getMdc("trace_id")).isEqualTo(span1.getSpanContext().getTraceId());
     assertThat(logRecords.get(0).getMdc("span_id")).isEqualTo(span1.getSpanContext().getSpanId());
-    assertThat(logRecords.get(0).getMdc("trace_flags")).isEqualTo("01");
+    assertThat(logRecords.get(0).getMdc("trace_flags"))
+        .isEqualTo(span1.getSpanContext().getTraceFlags().asHex());
 
     if (getMdcCopy != null) {
       @SuppressWarnings("unchecked")
       Map<String, String> copiedMdc = (Map<String, String>) getMdcCopy.invoke(logRecords.get(0));
       assertThat(copiedMdc.get("trace_id")).isEqualTo(span1.getSpanContext().getTraceId());
       assertThat(copiedMdc.get("span_id")).isEqualTo(span1.getSpanContext().getSpanId());
-      assertThat(copiedMdc.get("trace_flags")).isEqualTo("01");
+      assertThat(copiedMdc.get("trace_flags"))
+          .isEqualTo(span1.getSpanContext().getTraceFlags().asHex());
     }
 
     assertThat(logRecords.get(1).getMessage()).isEqualTo("log message 2");
@@ -120,14 +122,16 @@ public class JbossLogmanagerMdcTest {
     assertThat(logRecords.get(2).getMessage()).isEqualTo("log message 3");
     assertThat(logRecords.get(2).getMdc("trace_id")).isEqualTo(span2.getSpanContext().getTraceId());
     assertThat(logRecords.get(2).getMdc("span_id")).isEqualTo(span2.getSpanContext().getSpanId());
-    assertThat(logRecords.get(2).getMdc("trace_flags")).isEqualTo("01");
+    assertThat(logRecords.get(2).getMdc("trace_flags"))
+        .isEqualTo(span2.getSpanContext().getTraceFlags().asHex());
 
     if (getMdcCopy != null) {
       @SuppressWarnings("unchecked")
       Map<String, String> copiedMdc = (Map<String, String>) getMdcCopy.invoke(logRecords.get(2));
       assertThat(copiedMdc.get("trace_id")).isEqualTo(span2.getSpanContext().getTraceId());
       assertThat(copiedMdc.get("span_id")).isEqualTo(span2.getSpanContext().getSpanId());
-      assertThat(copiedMdc.get("trace_flags")).isEqualTo("01");
+      assertThat(copiedMdc.get("trace_flags"))
+          .isEqualTo(span2.getSpanContext().getTraceFlags().asHex());
     }
   }
 }

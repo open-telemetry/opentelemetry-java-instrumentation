@@ -67,7 +67,7 @@ configurations {
 }
 
 tasks {
-  if (findProperty("testLatestDeps") as Boolean) {
+  if (findProperty("testLatestDeps") == "true") {
     // Separate task
     named("test") {
       enabled = false
@@ -86,11 +86,20 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  }
+
+  if (findProperty("denyUnsafe") == "true") {
+    withType<Test>().configureEach {
+      enabled = false
+    }
   }
 }
 
-if (findProperty("testLatestDeps") as Boolean) {
+if (findProperty("testLatestDeps") == "true") {
   configurations.named("latestDepTestRuntimeClasspath") {
     resolutionStrategy {
       eachDependency {

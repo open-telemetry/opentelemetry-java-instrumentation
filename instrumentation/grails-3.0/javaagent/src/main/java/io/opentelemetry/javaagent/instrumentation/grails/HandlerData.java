@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.grails;
 
-import io.opentelemetry.instrumentation.api.semconv.util.SpanNames;
-
 public class HandlerData {
 
   private final Object controller;
@@ -17,7 +15,11 @@ public class HandlerData {
     this.action = action;
   }
 
-  String spanName() {
-    return SpanNames.fromMethod(controller.getClass(), action);
+  public Object getController() {
+    return controller;
+  }
+
+  public String getAction() {
+    return action;
   }
 }

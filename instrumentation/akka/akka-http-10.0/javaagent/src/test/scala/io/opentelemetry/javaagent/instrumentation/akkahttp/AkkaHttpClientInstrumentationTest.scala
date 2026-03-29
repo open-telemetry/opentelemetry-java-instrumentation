@@ -26,6 +26,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.{
 import java.net.URI
 import java.util
 import java.util.concurrent.Executor
+import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.extension.RegisterExtension
 
 import java.util.function.BiFunction
@@ -119,6 +120,11 @@ class AkkaHttpClientInstrumentationTest
   ): Unit = {
     options.disableTestRedirects()
     options.disableTestNonStandardHttpMethod()
+    // On Windows, non-routable addresses timeout instead of failing fast, causing test timeout
+    // before the HTTP client can create a span, resulting in only the parent span.
+    if (OS.WINDOWS.isCurrentOs()) {
+      options.disableTestRemoteConnection()
+    }
     // singleConnection test would require instrumentation to support requests made through pools
     // (newHostConnectionPool, superPool, etc), which is currently not supported.
     options.setSingleConnectionFactory(

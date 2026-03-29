@@ -15,10 +15,11 @@ val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] =
 tasks {
   withType<JavaCompile>().configureEach {
     with(options) {
+      compilerArgs.add("-XDaddTypeAnnotationsToSymbol=true")
       errorprone {
         if (disableErrorProne) {
           logger.warn("Errorprone has been disabled. Build may not result in a valid PR build.")
-          isEnabled.set(false)
+          enabled.set(false)
         }
 
         disableWarningsInGeneratedCode.set(true)
@@ -57,13 +58,18 @@ tasks {
         // Suggests using Guava types for fields but we don't use Guava
         disable("ImmutableMemberCollection")
 
-        // Fully qualified names may be necessary when deprecating a class to avoid
-        // deprecation warning.
+        // The built-in UnnecessarilyFullyQualified check is replaced by the custom
+        // OtelUnnecessarilyFullyQualified check which handles application.* and
+        // other repo-specific conventions (e.g. deprecated-for-removal exemptions).
+        // The disable() also disables the custom check via its altNames, so we
+        // must explicitly re-enable it.
         disable("UnnecessarilyFullyQualified")
+        if (!project.name.equals("custom-checks")) {
+          warn("OtelUnnecessarilyFullyQualified")
+        }
 
         // TODO (trask) use animal sniffer
         disable("Java8ApiChecker")
-        disable("AndroidJdkLibsChecker")
 
         // apparently disabling android doesn't disable this
         disable("StaticOrDefaultInterfaceMethod")
@@ -124,6 +130,7 @@ tasks {
         disable("NonFinalStaticField")
 
         // Requires adding compile dependency to JSpecify
+        disable("AddNullMarkedToClass")
         disable("AddNullMarkedToPackageInfo")
 
         if (testLatestDeps) {
@@ -131,16 +138,24 @@ tasks {
           // version. Disable rules that suggest using new language features.
           disable("StatementSwitchToExpressionSwitch")
           disable("PatternMatchingInstanceof")
+          // Disable our custom deprecation check since newer library versions
+          // may deprecate APIs that weren't deprecated before.
+          //
+          // Except for the custom-checks project to avoid "not a valid checker name" error.
+          if (!project.name.equals("custom-checks")) {
+            disable("OtelDeprecatedApiUsage")
+          }
         }
 
         if (name.contains("Jmh") || name.contains("Test")) {
           // Allow underscore in test-type method names
           disable("MemberName")
         }
-        if ((project.path.endsWith(":testing") || name.contains("Test")) && !project.name.equals("custom-checks")) {
+        if ((project.path.endsWith("testing") || name.contains("Test")) && !project.name.equals("custom-checks")) {
           // This check causes too many failures, ignore the ones in tests
           disable("OtelCanIgnoreReturnValueSuggester")
           disable("OtelInternalJavadoc")
+          disable("SuppressWarningsWithoutExplanation")
         }
       }
     }

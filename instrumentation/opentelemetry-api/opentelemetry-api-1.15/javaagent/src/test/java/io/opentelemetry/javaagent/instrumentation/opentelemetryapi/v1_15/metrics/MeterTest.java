@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_15.metrics;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.BatchCallback;
 import io.opentelemetry.api.metrics.Meter;
@@ -51,7 +51,7 @@ class MeterTest {
     BatchCallback callback =
         meter.batchCallback(
             () -> {
-              observableMeasurement.record(11, Attributes.of(AttributeKey.stringKey("q"), "r"));
+              observableMeasurement.record(11, Attributes.of(stringKey("q"), "r"));
             },
             observableMeasurement);
 
@@ -67,6 +67,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasLongSumSatisfying(
                             sum ->
@@ -75,8 +76,8 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(11)
-                                                .hasAttributesSatisfying(
-                                                    equalTo(AttributeKey.stringKey("q"), "r"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("q"), "r"))))));
 
     callback.close();
 
@@ -96,7 +97,7 @@ class MeterTest {
     BatchCallback callback =
         meter.batchCallback(
             () -> {
-              observableMeasurement.record(12.1, Attributes.of(AttributeKey.stringKey("q"), "r"));
+              observableMeasurement.record(12.1, Attributes.of(stringKey("q"), "r"));
             },
             observableMeasurement);
 
@@ -112,6 +113,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasDoubleSumSatisfying(
                             sum ->
@@ -120,8 +122,8 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(12.1)
-                                                .hasAttributesSatisfying(
-                                                    equalTo(AttributeKey.stringKey("q"), "r"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("q"), "r"))))));
 
     callback.close();
 
@@ -141,7 +143,7 @@ class MeterTest {
     BatchCallback callback =
         meter.batchCallback(
             () -> {
-              observableMeasurement.record(11, Attributes.of(AttributeKey.stringKey("q"), "r"));
+              observableMeasurement.record(11, Attributes.of(stringKey("q"), "r"));
             },
             observableMeasurement);
 
@@ -157,6 +159,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasLongSumSatisfying(
                             sum ->
@@ -165,8 +168,8 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(11)
-                                                .hasAttributesSatisfying(
-                                                    equalTo(AttributeKey.stringKey("q"), "r"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("q"), "r"))))));
 
     callback.close();
 
@@ -191,7 +194,7 @@ class MeterTest {
     BatchCallback callback =
         meter.batchCallback(
             () -> {
-              observableMeasurement.record(12.1, Attributes.of(AttributeKey.stringKey("q"), "r"));
+              observableMeasurement.record(12.1, Attributes.of(stringKey("q"), "r"));
             },
             observableMeasurement);
 
@@ -207,6 +210,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasDoubleSumSatisfying(
                             sum ->
@@ -215,8 +219,8 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(12.1)
-                                                .hasAttributesSatisfying(
-                                                    equalTo(AttributeKey.stringKey("q"), "r"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("q"), "r"))))));
 
     callback.close();
 
@@ -236,7 +240,7 @@ class MeterTest {
     BatchCallback callback =
         meter.batchCallback(
             () -> {
-              observableMeasurement.record(123, Attributes.of(AttributeKey.stringKey("q"), "r"));
+              observableMeasurement.record(123, Attributes.of(stringKey("q"), "r"));
             },
             observableMeasurement);
 
@@ -252,6 +256,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasLongGaugeSatisfying(
                             gauge ->
@@ -259,8 +264,8 @@ class MeterTest {
                                     point ->
                                         point
                                             .hasValue(123)
-                                            .hasAttributesSatisfying(
-                                                equalTo(AttributeKey.stringKey("q"), "r"))))));
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(stringKey("q"), "r"))))));
 
     callback.close();
 
@@ -280,7 +285,7 @@ class MeterTest {
     BatchCallback callback =
         meter.batchCallback(
             () -> {
-              observableMeasurement.record(1.23, Attributes.of(AttributeKey.stringKey("q"), "r"));
+              observableMeasurement.record(1.23, Attributes.of(stringKey("q"), "r"));
             },
             observableMeasurement);
 
@@ -296,6 +301,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasDoubleGaugeSatisfying(
                             gauge ->
@@ -303,8 +309,8 @@ class MeterTest {
                                     point ->
                                         point
                                             .hasValue(1.23)
-                                            .hasAttributesSatisfying(
-                                                equalTo(AttributeKey.stringKey("q"), "r"))))));
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(stringKey("q"), "r"))))));
 
     callback.close();
 

@@ -23,7 +23,7 @@ public final class SpringPulsarSingletons {
 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
-    SpringPulsarMessageAttributesGetter getter = SpringPulsarMessageAttributesGetter.INSTANCE;
+    SpringPulsarMessageAttributesGetter getter = new SpringPulsarMessageAttributesGetter();
     MessageOperation operation = MessageOperation.PROCESS;
     boolean messagingReceiveInstrumentationEnabled =
         ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
@@ -40,10 +40,10 @@ public final class SpringPulsarSingletons {
     if (messagingReceiveInstrumentationEnabled) {
       builder.addSpanLinksExtractor(
           new PropagatorBasedSpanLinksExtractor<>(
-              openTelemetry.getPropagators().getTextMapPropagator(), MessageHeaderGetter.INSTANCE));
+              openTelemetry.getPropagators().getTextMapPropagator(), new MessageHeaderGetter()));
       INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
     } else {
-      INSTRUMENTER = builder.buildConsumerInstrumenter(MessageHeaderGetter.INSTANCE);
+      INSTRUMENTER = builder.buildConsumerInstrumenter(new MessageHeaderGetter());
     }
   }
 

@@ -12,9 +12,14 @@ import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public abstract class ServletFilterMappingResolverFactory<FILTERREGISTRATION>
     extends ServletMappingResolverFactory {
 
+  @Nullable
   protected abstract FILTERREGISTRATION getFilterRegistration();
 
   protected abstract Collection<String> getUrlPatternMappings(
@@ -23,6 +28,7 @@ public abstract class ServletFilterMappingResolverFactory<FILTERREGISTRATION>
   protected abstract Collection<String> getServletNameMappings(
       FILTERREGISTRATION filterRegistration);
 
+  @Nullable
   protected abstract Collection<String> getServletMappings(String servletName);
 
   @Override

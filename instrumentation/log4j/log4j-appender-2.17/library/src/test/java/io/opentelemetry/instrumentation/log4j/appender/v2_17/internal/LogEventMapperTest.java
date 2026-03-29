@@ -5,25 +5,27 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17.internal;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import javax.annotation.Nullable;
+import java.util.stream.Stream;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class LogEventMapperTest {
 
@@ -32,17 +34,17 @@ class LogEventMapperTest {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE, false, false, false, false, emptyList());
+            ContextDataAccessorImpl.INSTANCE, false, false, false, false, emptyList(), false);
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
-    AttributesBuilder attributes = Attributes.builder();
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
 
     // when
-    mapper.captureContextDataAttributes(attributes, contextData);
+    mapper.captureContextDataAttributes(builder, contextData);
 
     // then
-    assertThat(attributes.build()).isEmpty();
+    verifyNoInteractions(builder);
   }
 
   @Test
@@ -50,17 +52,24 @@ class LogEventMapperTest {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE, false, false, false, false, singletonList("key2"));
+            ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
+            false,
+            false,
+            singletonList("key2"),
+            false);
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
-    AttributesBuilder attributes = Attributes.builder();
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
 
     // when
-    mapper.captureContextDataAttributes(attributes, contextData);
+    mapper.captureContextDataAttributes(builder, contextData);
 
     // then
-    assertThat(attributes.build()).containsOnly(attributeEntry("key2", "value2"));
+    verify(builder).setAttribute(stringKey("key2"), "value2");
+    verifyNoMoreInteractions(builder);
   }
 
   @Test
@@ -68,18 +77,56 @@ class LogEventMapperTest {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE, false, false, false, false, singletonList("*"));
+            ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
+            false,
+            false,
+            singletonList("*"),
+            false);
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
-    AttributesBuilder attributes = Attributes.builder();
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
 
     // when
-    mapper.captureContextDataAttributes(attributes, contextData);
+    mapper.captureContextDataAttributes(builder, contextData);
 
     // then
-    assertThat(attributes.build())
-        .containsOnly(attributeEntry("key1", "value1"), attributeEntry("key2", "value2"));
+    verify(builder).setAttribute(stringKey("key1"), "value1");
+    verify(builder).setAttribute(stringKey("key2"), "value2");
+    verifyNoMoreInteractions(builder);
+  }
+
+  private static Stream<Arguments> eventNameProperties() {
+    return Stream.of(Arguments.of("event.name", true), Arguments.of("otel.event.name", false));
+  }
+
+  @ParameterizedTest
+  @MethodSource("eventNameProperties")
+  void testCaptureEventNameFromContextData(String eventNameProperty, boolean captureEventName) {
+    // given
+    LogEventMapper<Map<String, String>> mapper =
+        new LogEventMapper<>(
+            ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
+            false,
+            false,
+            singletonList("key1"),
+            captureEventName);
+    Map<String, String> contextData = new HashMap<>();
+    contextData.put("key1", "value1");
+    contextData.put(eventNameProperty, "MyEventName");
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    // when
+    mapper.captureContextDataAttributes(builder, contextData);
+
+    // then
+    verify(builder).setAttribute(stringKey("key1"), "value1");
+    verify(builder).setEventName("MyEventName");
+    verifyNoMoreInteractions(builder);
   }
 
   @Test
@@ -87,21 +134,26 @@ class LogEventMapperTest {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE, false, false, false, false, singletonList("*"));
+            ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
+            false,
+            false,
+            singletonList("*"),
+            false);
 
     StringMapMessage message = new StringMapMessage();
     message.put("key1", "value1");
     message.put("message", "value2");
 
-    LogRecordBuilder logRecordBuilder = mock(LogRecordBuilder.class);
-    AttributesBuilder attributes = Attributes.builder();
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
 
     // when
-    mapper.captureMessage(logRecordBuilder, attributes, message);
+    mapper.captureMessage(builder, message);
 
     // then
-    verify(logRecordBuilder).setBody("value2");
-    assertThat(attributes.build()).isEmpty();
+    verify(builder).setBody("value2");
+    verifyNoMoreInteractions(builder);
   }
 
   @Test
@@ -109,21 +161,21 @@ class LogEventMapperTest {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE, false, false, true, false, singletonList("*"));
+            ContextDataAccessorImpl.INSTANCE, false, false, true, false, singletonList("*"), false);
 
     StringMapMessage message = new StringMapMessage();
     message.put("key1", "value1");
     message.put("message", "value2");
 
-    LogRecordBuilder logRecordBuilder = mock(LogRecordBuilder.class);
-    AttributesBuilder attributes = Attributes.builder();
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
 
     // when
-    mapper.captureMessage(logRecordBuilder, attributes, message);
+    mapper.captureMessage(builder, message);
 
     // then
-    verify(logRecordBuilder).setBody("value2");
-    assertThat(attributes.build()).containsOnly(attributeEntry("key1", "value1"));
+    verify(builder).setBody("value2");
+    verify(builder).setAttribute(stringKey("key1"), "value1");
+    verifyNoMoreInteractions(builder);
   }
 
   @Test
@@ -131,22 +183,22 @@ class LogEventMapperTest {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE, false, false, true, false, singletonList("*"));
+            ContextDataAccessorImpl.INSTANCE, false, false, true, false, singletonList("*"), false);
 
     StringMapMessage message = new StringMapMessage();
     message.put("key1", "value1");
     message.put("key2", "value2");
 
-    LogRecordBuilder logRecordBuilder = mock(LogRecordBuilder.class);
-    AttributesBuilder attributes = Attributes.builder();
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
 
     // when
-    mapper.captureMessage(logRecordBuilder, attributes, message);
+    mapper.captureMessage(builder, message);
 
     // then
-    verify(logRecordBuilder, never()).setBody(anyString());
-    assertThat(attributes.build())
-        .containsOnly(attributeEntry("key1", "value1"), attributeEntry("key2", "value2"));
+    verify(builder, never()).setBody(anyString());
+    verify(builder).setAttribute(stringKey("key1"), "value1");
+    verify(builder).setAttribute(stringKey("key2"), "value2");
+    verifyNoMoreInteractions(builder);
   }
 
   @Test
@@ -154,29 +206,28 @@ class LogEventMapperTest {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE, false, false, true, false, singletonList("*"));
+            ContextDataAccessorImpl.INSTANCE, false, false, true, false, singletonList("*"), false);
 
     StructuredDataMessage message = new StructuredDataMessage("an id", "a message", "a type");
     message.put("key1", "value1");
     message.put("message", "value2");
 
-    LogRecordBuilder logRecordBuilder = mock(LogRecordBuilder.class);
-    AttributesBuilder attributes = Attributes.builder();
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
 
     // when
-    mapper.captureMessage(logRecordBuilder, attributes, message);
+    mapper.captureMessage(builder, message);
 
     // then
-    verify(logRecordBuilder).setBody("a message");
-    assertThat(attributes.build())
-        .containsOnly(attributeEntry("key1", "value1"), attributeEntry("message", "value2"));
+    verify(builder).setBody("a message");
+    verify(builder).setAttribute(stringKey("key1"), "value1");
+    verify(builder).setAttribute(stringKey("message"), "value2");
+    verifyNoMoreInteractions(builder);
   }
 
   private enum ContextDataAccessorImpl implements ContextDataAccessor<Map<String, String>> {
     INSTANCE;
 
     @Override
-    @Nullable
     public String getValue(Map<String, String> contextData, String key) {
       return contextData.get(key);
     }

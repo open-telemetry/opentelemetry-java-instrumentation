@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  implementation(project(":testing-common"))
+  implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
   compileOnly("org.springframework.boot:spring-boot-starter-test:1.5.17.RELEASE")
   compileOnly("org.springframework.boot:spring-boot-starter-web:1.5.17.RELEASE")

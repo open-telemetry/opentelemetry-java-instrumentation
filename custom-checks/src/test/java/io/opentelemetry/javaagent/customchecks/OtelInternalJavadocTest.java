@@ -14,7 +14,7 @@ class OtelInternalJavadocTest {
   void test() {
     doTest(
         "internal/InternalJavadocPositiveCases.java",
-        """
+"""
 package io.opentelemetry.javaagent.customchecks.internal;
 
 // BUG: Diagnostic contains: doesn't end with any of the applicable javadoc disclaimers
@@ -30,7 +30,7 @@ public class InternalJavadocPositiveCases {
 """);
     doTest(
         "internal/InternalJavadocNegativeCases.java",
-        """
+"""
 package io.opentelemetry.javaagent.customchecks.internal;
 
 /**

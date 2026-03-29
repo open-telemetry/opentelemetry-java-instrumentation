@@ -3,8 +3,8 @@ plugins {
 }
 
 dependencies {
-  api(project(":testing-common"))
-  implementation("org.testcontainers:oracle-free")
+  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  implementation("org.testcontainers:testcontainers-oracle-free")
 
   compileOnly("com.oracle.database.jdbc:ucp:11.2.0.4")
 }

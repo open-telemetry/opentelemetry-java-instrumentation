@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.mongo.v4_0;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -15,6 +14,8 @@ import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -28,16 +29,14 @@ final class BaseClusterInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("selectServerAsync"))
             .and(takesArgument(0, named("com.mongodb.selector.ServerSelector")))
             .and(takesArgument(1, named("com.mongodb.internal.async.SingleResultCallback"))),
         this.getClass().getName() + "$SingleResultCallbackArg1Advice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("selectServerAsync"))
             .and(takesArgument(0, named("com.mongodb.selector.ServerSelector")))
             .and(takesArgument(2, named("com.mongodb.internal.async.SingleResultCallback"))),
@@ -47,20 +46,22 @@ final class BaseClusterInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SingleResultCallbackArg1Advice {
 
+    @AssignReturned.ToArguments(@ToArgument(1))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrapCallback(
-        @Advice.Argument(value = 1, readOnly = false) SingleResultCallback<Object> callback) {
-      callback = new SingleResultCallbackWrapper(Java8BytecodeBridge.currentContext(), callback);
+    public static SingleResultCallback<Object> wrapCallback(
+        @Advice.Argument(1) SingleResultCallback<Object> callback) {
+      return new SingleResultCallbackWrapper(Java8BytecodeBridge.currentContext(), callback);
     }
   }
 
   @SuppressWarnings("unused")
   public static class SingleResultCallbackArg2Advice {
 
+    @AssignReturned.ToArguments(@ToArgument(2))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrapCallback(
-        @Advice.Argument(value = 2, readOnly = false) SingleResultCallback<Object> callback) {
-      callback = new SingleResultCallbackWrapper(Java8BytecodeBridge.currentContext(), callback);
+    public static SingleResultCallback<Object> wrapCallback(
+        @Advice.Argument(2) SingleResultCallback<Object> callback) {
+      return new SingleResultCallbackWrapper(Java8BytecodeBridge.currentContext(), callback);
     }
   }
 }

@@ -31,13 +31,13 @@ public class AkkaScheduleInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, named("scala.concurrent.duration.FiniteDuration")))
             .and(takesArgument(2, named("java.lang.Runnable")))
             .and(takesArgument(3, named("scala.concurrent.ExecutionContext"))),
-        AkkaScheduleInstrumentation.class.getName() + "$ScheduleAdvice");
+        getClass().getName() + "$ScheduleAdvice");
     transformer.applyAdviceToMethod(
         named("scheduleOnce")
             .and(takesArgument(0, named("scala.concurrent.duration.FiniteDuration")))
             .and(takesArgument(1, named("java.lang.Runnable")))
             .and(takesArgument(2, named("scala.concurrent.ExecutionContext"))),
-        AkkaScheduleInstrumentation.class.getName() + "$ScheduleOnceAdvice");
+        getClass().getName() + "$ScheduleOnceAdvice");
   }
 
   @SuppressWarnings("unused")

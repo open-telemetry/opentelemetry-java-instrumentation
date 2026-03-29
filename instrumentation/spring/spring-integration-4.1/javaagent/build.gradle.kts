@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 // context "leak" here is intentional: spring-integration instrumentation will always override
@@ -80,10 +81,10 @@ tasks {
   }
 
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 }
 

@@ -20,7 +20,7 @@ public class AwsSdkTelemetryBuilder {
 
   private List<String> capturedHeaders = emptyList();
   private boolean captureExperimentalSpanAttributes;
-  private boolean messagingReceiveInstrumentationEnabled;
+  private boolean messagingReceiveTelemetryEnabled;
 
   AwsSdkTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -56,9 +56,9 @@ public class AwsSdkTelemetryBuilder {
    * connecting it to the producer trace.
    */
   @CanIgnoreReturnValue
-  public AwsSdkTelemetryBuilder setMessagingReceiveInstrumentationEnabled(
-      boolean messagingReceiveInstrumentationEnabled) {
-    this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
+  public AwsSdkTelemetryBuilder setMessagingReceiveTelemetryEnabled(
+      boolean messagingReceiveTelemetryEnabled) {
+    this.messagingReceiveTelemetryEnabled = messagingReceiveTelemetryEnabled;
     return this;
   }
 
@@ -70,6 +70,6 @@ public class AwsSdkTelemetryBuilder {
         openTelemetry,
         capturedHeaders,
         captureExperimentalSpanAttributes,
-        messagingReceiveInstrumentationEnabled);
+        messagingReceiveTelemetryEnabled);
   }
 }

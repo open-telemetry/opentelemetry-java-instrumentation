@@ -6,17 +6,19 @@
 package io.opentelemetry.javaagent.instrumentation.awslambdacore.v1_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.Arrays;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class AwsLambdaInstrumentationModule extends InstrumentationModule {
+public class AwsLambdaInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public AwsLambdaInstrumentationModule() {
     super("aws-lambda-core", "aws-lambda-core-1.0", "aws-lambda");
@@ -24,8 +26,14 @@ public class AwsLambdaInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // aws-lambda-events-2.2 is used when SQSEvent is present
-    return not(hasClassesNamed("com.amazonaws.services.lambda.runtime.events.SQSEvent"));
+    return hasClassesNamed(
+            // aws-lambda-java-core 1.0.0+
+            "com.amazonaws.services.lambda.runtime.RequestHandler")
+        .and(
+            not(
+                hasClassesNamed(
+                    // aws-lambda-events-2.2 is used when SQSEvent is present
+                    "com.amazonaws.services.lambda.runtime.events.SQSEvent")));
   }
 
   @Override
@@ -35,8 +43,13 @@ public class AwsLambdaInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Arrays.asList(
+    return asList(
         new AwsLambdaRequestHandlerInstrumentation(),
         new AwsLambdaRequestStreamHandlerInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

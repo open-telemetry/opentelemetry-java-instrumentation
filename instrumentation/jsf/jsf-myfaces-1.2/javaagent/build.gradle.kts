@@ -19,11 +19,12 @@ dependencies {
   implementation(project(":instrumentation:jsf:jsf-javax-common:javaagent"))
 
   testImplementation(project(":instrumentation:jsf:jsf-javax-common:testing"))
+
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
-  testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
+  testInstrumentation(project(":instrumentation:jsf:jsf-myfaces-3.0:javaagent"))
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 testing {
   suites {
     val myfaces12Test by registering(JvmTestSuite::class) {
@@ -57,4 +58,6 @@ tasks {
 
 tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  systemProperty("collectMetadata", findProperty("collectMetadata"))
+  systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

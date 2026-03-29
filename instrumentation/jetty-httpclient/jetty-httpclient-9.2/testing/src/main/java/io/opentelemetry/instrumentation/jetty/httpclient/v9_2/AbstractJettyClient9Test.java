@@ -5,13 +5,14 @@
 
 package io.opentelemetry.instrumentation.jetty.httpclient.v9_2;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.Request;
@@ -28,7 +29,7 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
   private HttpClient httpsClient;
 
   @BeforeEach
-  public void before() throws Exception {
+  void before() throws Exception {
     // Start the main Jetty HttpClient and a https client
     client = createStandardClient();
     client.setConnectTimeout(CONNECTION_TIMEOUT.toMillis());
@@ -41,7 +42,7 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
   }
 
   @AfterEach
-  public void after() throws Exception {
+  void after() throws Exception {
     client.stop();
     httpsClient.stop();
   }
@@ -59,9 +60,9 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
     headers.forEach(request::header);
 
     if (uri.toString().contains("/read-timeout")) {
-      request.timeout(READ_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+      request.timeout(READ_TIMEOUT.toMillis(), MILLISECONDS);
     } else if (uri.toString().contains("192.0.2.1")) {
-      request.timeout(CONNECTION_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+      request.timeout(CONNECTION_TIMEOUT.toMillis(), MILLISECONDS);
     }
 
     return request;

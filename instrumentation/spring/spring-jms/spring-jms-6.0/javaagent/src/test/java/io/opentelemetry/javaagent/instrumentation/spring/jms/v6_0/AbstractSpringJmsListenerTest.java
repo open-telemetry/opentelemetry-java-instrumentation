@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v6_0;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -16,7 +17,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -45,12 +45,12 @@ abstract class AbstractSpringJmsListenerTest {
   @BeforeAll
   static void setUp() {
     broker =
-        new GenericContainer<>("quay.io/artemiscloud/activemq-artemis-broker:artemis.2.27.0")
-            .withEnv("AMQ_USER", "test")
-            .withEnv("AMQ_PASSWORD", "test")
+        new GenericContainer<>("apache/activemq-artemis:2.44.0")
+            .withEnv("ARTEMIS_USER", "test")
+            .withEnv("ARTEMIS_PASSWORD", "test")
             .withEnv("JAVA_TOOL_OPTIONS", "-Dbrokerconfig.maxDiskUsage=-1")
             .withExposedPorts(61616, 8161)
-            .waitingFor(Wait.forLogMessage(".*Server is now live.*", 1))
+            .waitingFor(Wait.forLogMessage(".*Server is now active.*", 1))
             .withStartupTimeout(Duration.ofMinutes(2))
             .withLogConsumer(new Slf4jLogConsumer(logger));
     broker.start();
@@ -83,7 +83,7 @@ abstract class AbstractSpringJmsListenerTest {
     // then
     CompletableFuture<String> receivedMessage =
         applicationContext.getBean("receivedMessage", CompletableFuture.class);
-    assertThat(receivedMessage.get(10, TimeUnit.SECONDS)).isEqualTo(message);
+    assertThat(receivedMessage.get(10, SECONDS)).isEqualTo(message);
 
     assertSpringJmsListener();
   }

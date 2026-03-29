@@ -22,10 +22,14 @@ dependencies {
 
   implementation(project(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-common:javaagent"))
 
+  testInstrumentation(project(":instrumentation:jdbc:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent"))
 
   testLibrary("io.vertx:vertx-pg-client:$version")
+  testImplementation("io.vertx:vertx-jdbc-client:$version")
+  testImplementation("io.agroal:agroal-pool:2.5")
+  testImplementation("org.hsqldb:hsqldb:2.3.4")
 }
 
 val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
@@ -39,8 +43,8 @@ tasks {
   val testStableSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
   }
 
   check {

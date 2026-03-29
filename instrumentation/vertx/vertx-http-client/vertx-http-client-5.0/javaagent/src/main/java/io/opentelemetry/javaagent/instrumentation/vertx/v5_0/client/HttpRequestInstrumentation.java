@@ -61,27 +61,23 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isMethod().and(nameStartsWith("end").or(named("sendHead"))),
-        HttpRequestInstrumentation.class.getName() + "$EndRequestAdvice");
+        this.getClass().getName() + "$EndRequestAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod().and(named("handleException")),
-        HttpRequestInstrumentation.class.getName() + "$HandleExceptionAdvice");
+        named("handleException"), this.getClass().getName() + "$HandleExceptionAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("handleResponse"))
+        named("handleResponse")
             .and(takesArgument(1, named("io.vertx.core.http.HttpClientResponse"))),
-        HttpRequestInstrumentation.class.getName() + "$HandleResponseAdvice");
+        this.getClass().getName() + "$HandleResponseAdvice");
 
     transformer.applyAdviceToMethod(
         isMethod().and(isPrivate()).and(nameStartsWith("write").or(nameStartsWith("connected"))),
-        HttpRequestInstrumentation.class.getName() + "$MountContextAdvice");
+        this.getClass().getName() + "$MountContextAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("exceptionHandler"))
-            .and(takesArgument(0, named("io.vertx.core.Handler"))),
-        HttpRequestInstrumentation.class.getName() + "$ExceptionHandlerAdvice");
+        named("exceptionHandler").and(takesArgument(0, named("io.vertx.core.Handler"))),
+        this.getClass().getName() + "$ExceptionHandlerAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -135,6 +131,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class HandleExceptionAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope handleException(
         @Advice.This HttpClientRequest request, @Advice.Argument(0) Throwable t) {
@@ -150,7 +147,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void handleResponseExit(@Advice.Enter Scope scope) {
+    public static void handleResponseExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }
@@ -160,6 +157,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class HandleResponseAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope handleResponseEnter(
         @Advice.This HttpClientRequest request, @Advice.Argument(1) HttpClientResponse response) {
@@ -176,7 +174,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void handleResponseExit(@Advice.Enter Scope scope) {
+    public static void handleResponseExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }
@@ -186,6 +184,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class MountContextAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope mountContext(@Advice.This HttpClientRequest request) {
       Contexts contexts = CONTEXTS.get(request);
@@ -197,7 +196,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void unmountContext(@Advice.Enter Scope scope) {
+    public static void unmountContext(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }
@@ -207,16 +206,16 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ExceptionHandlerAdvice {
 
+    @Nullable
     @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Handler<Throwable> wrapExceptionHandler(
         @Advice.This HttpClientRequest request,
-        @Advice.Argument(0) Handler<Throwable> originalHandler) {
-      Handler<Throwable> handler = originalHandler;
-      if (handler != null) {
-        handler = ExceptionHandlerWrapper.wrap(instrumenter(), request, CONTEXTS, handler);
+        @Advice.Argument(0) @Nullable Handler<Throwable> handler) {
+      if (handler == null) {
+        return null;
       }
-      return handler;
+      return ExceptionHandlerWrapper.wrap(instrumenter(), request, CONTEXTS, handler);
     }
   }
 }

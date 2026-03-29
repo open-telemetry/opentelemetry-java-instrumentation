@@ -4,7 +4,7 @@ plugins {
 
 muzzle {
   pass {
-    group.set("com.clickhouse.client")
+    group.set("com.clickhouse")
     module.set("clickhouse-client")
     versions.set("[0.5.0,)")
     assertInverse.set(true)
@@ -19,12 +19,14 @@ dependencies {
   testLibrary("com.clickhouse:clickhouse-client:0.5.0")
   testLibrary("com.clickhouse:clickhouse-http-client:0.5.0")
   testLibrary("org.apache.httpcomponents.client5:httpclient5:5.2.3")
+
+  testInstrumentation(project(":instrumentation:clickhouse:clickhouse-client-v2-0.8:javaagent"))
 }
 
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
   val testStableSemconv by registering(Test::class) {

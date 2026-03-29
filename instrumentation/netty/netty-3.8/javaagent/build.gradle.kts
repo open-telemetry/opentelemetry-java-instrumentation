@@ -36,7 +36,7 @@ dependencies {
 }
 
 // We need to force the dependency to the earliest supported version because other libraries declare newer versions.
-if (!(findProperty("testLatestDeps") as Boolean)) {
+if (!(findProperty("testLatestDeps") == "true")) {
   configurations.configureEach {
     if (!name.contains("muzzle")) {
       resolutionStrategy {
@@ -53,6 +53,17 @@ if (!(findProperty("testLatestDeps") as Boolean)) {
 
 tasks {
   test {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
   }
 }

@@ -17,18 +17,29 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.trace.data.LinkData;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 
 class InterceptorsTest extends AbstractInterceptorsTest {
+
+  private static final KafkaTelemetry kafkaTelemetry =
+      KafkaTelemetry.builder(testing.getOpenTelemetry())
+          .setMessagingReceiveTelemetryEnabled(true)
+          .setCapturedHeaders(singletonList("Test-Message-Header"))
+          .build();
+
+  @Override
+  protected KafkaTelemetry kafkaTelemetry() {
+    return kafkaTelemetry;
+  }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
@@ -92,9 +103,7 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                             equalTo(MESSAGING_SYSTEM, "kafka"),
                             equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                             equalTo(MESSAGING_OPERATION, "process"),
-                            equalTo(
-                                MESSAGING_MESSAGE_BODY_SIZE,
-                                greeting.getBytes(StandardCharsets.UTF_8).length),
+                            equalTo(MESSAGING_MESSAGE_BODY_SIZE, greeting.getBytes(UTF_8).length),
                             satisfies(
                                 MESSAGING_DESTINATION_PARTITION_ID,
                                 AbstractStringAssert::isNotEmpty),

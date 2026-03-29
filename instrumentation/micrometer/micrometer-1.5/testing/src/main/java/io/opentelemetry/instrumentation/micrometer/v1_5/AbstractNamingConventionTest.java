@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
@@ -18,7 +19,6 @@ import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.config.NamingConvention;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.Test;
 
@@ -144,7 +144,7 @@ public abstract class AbstractNamingConventionTest {
             num,
             AtomicLong::longValue,
             AtomicLong::doubleValue,
-            TimeUnit.SECONDS);
+            SECONDS);
 
     // then
     testing()
@@ -244,7 +244,7 @@ public abstract class AbstractNamingConventionTest {
     Timer timer = Metrics.timer("renamedTimer", "tag", "value");
 
     // when
-    timer.record(10, TimeUnit.SECONDS);
+    timer.record(10, SECONDS);
 
     // then
     testing()

@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api(project(":testing-common"))
+  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
   api("software.amazon.awssdk:apache-client:2.2.0")
   // older versions don't play nice with armeria http server
@@ -29,8 +29,8 @@ dependencies {
 
   // used to record LLM responses in bedrock tests
   implementation("com.github.tomakehurst:wiremock-jre8:2.35.2")
-  implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.2")
-  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.18.2")
+  implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
 
   implementation("io.opentelemetry:opentelemetry-api")
 }

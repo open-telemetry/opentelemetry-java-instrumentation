@@ -13,7 +13,7 @@ import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
 
 @Component
-public class TestListener {
+class TestListener {
 
   private static final Logger logger = LoggerFactory.getLogger(TestListener.class);
 

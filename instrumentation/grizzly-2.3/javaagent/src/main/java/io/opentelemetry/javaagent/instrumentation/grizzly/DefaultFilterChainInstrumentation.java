@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.grizzly;
 
 import static io.opentelemetry.javaagent.instrumentation.grizzly.GrizzlySingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -31,8 +30,7 @@ public class DefaultFilterChainInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPrivate())
+        isPrivate()
             .and(named("notifyFailure"))
             .and(takesArgument(0, named("org.glassfish.grizzly.filterchain.FilterChainContext")))
             .and(takesArgument(1, Throwable.class)),
@@ -49,9 +47,7 @@ public class DefaultFilterChainInstrumentation implements TypeInstrumentation {
       HttpRequestPacket request = GrizzlyStateStorage.removeRequest(ctx);
       if (context != null && request != null) {
         Throwable error = GrizzlyErrorHolder.getOrDefault(context, throwable);
-        if (error == null) {
-          error = AppServerBridge.getException(context);
-        }
+        error = AppServerBridge.getException(context, error);
         instrumenter().end(context, request, null, error);
       }
     }

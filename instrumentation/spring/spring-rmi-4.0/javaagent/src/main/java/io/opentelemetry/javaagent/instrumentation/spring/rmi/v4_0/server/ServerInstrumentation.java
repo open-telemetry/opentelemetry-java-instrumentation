@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.server;
 
 import static io.opentelemetry.javaagent.bootstrap.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.SpringRmiSingletons.serverInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static java.util.Objects.requireNonNull;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -34,8 +34,7 @@ public class ServerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("invoke"))
+        named("invoke")
             .and(takesArgument(0, named("org.springframework.remoting.support.RemoteInvocation"))),
         this.getClass().getName() + "$InvokeMethodAdvice");
   }
@@ -45,12 +44,15 @@ public class ServerInstrumentation implements TypeInstrumentation {
 
     public static class AdviceScope {
       private final CallDepth callDepth;
-      private final ClassAndMethod request;
-      private final Context context;
-      private final Scope scope;
+      @Nullable private final ClassAndMethod request;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
 
       private AdviceScope(
-          CallDepth callDepth, ClassAndMethod request, Context context, Scope scope) {
+          CallDepth callDepth,
+          @Nullable ClassAndMethod request,
+          @Nullable Context context,
+          @Nullable Scope scope) {
         this.callDepth = callDepth;
         this.request = request;
         this.context = context;
@@ -64,6 +66,10 @@ public class ServerInstrumentation implements TypeInstrumentation {
         }
 
         Context parentContext = THREAD_LOCAL_CONTEXT.getAndResetContext();
+        if (parentContext == null) {
+          return new AdviceScope(callDepth, null, null, null);
+        }
+
         Class<?> serverClass = rmiExporter.getService().getClass();
         String methodName = remoteInvocation.getMethodName();
         ClassAndMethod request = ClassAndMethod.create(serverClass, methodName);
@@ -81,7 +87,8 @@ public class ServerInstrumentation implements TypeInstrumentation {
           return;
         }
         scope.close();
-        serverInstrumenter().end(context, request, null, throwable);
+        // scope non-null implies context and request are both non-null (see enter method above)
+        serverInstrumenter().end(requireNonNull(context), requireNonNull(request), null, throwable);
       }
     }
 
@@ -94,8 +101,11 @@ public class ServerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
-      adviceScope.exit(throwable);
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.exit(throwable);
+      }
     }
   }
 }

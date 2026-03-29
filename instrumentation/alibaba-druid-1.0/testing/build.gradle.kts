@@ -3,9 +3,7 @@ plugins {
 }
 
 dependencies {
-  api(project(":testing-common"))
-  api("org.mockito:mockito-core")
-  api("org.mockito:mockito-junit-jupiter")
+  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
   compileOnly("com.alibaba:druid:1.0.0")
 }

@@ -5,13 +5,14 @@
 
 package io.opentelemetry.instrumentation.resources;
 
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
+
 import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.resources.internal.JarServiceNameResourceExtractor;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ServiceAttributes;
 import java.util.Map;
 
 /**
@@ -31,8 +32,8 @@ public final class JarServiceNameDetector implements ConditionalResourceProvider
     String serviceName = config.getString("otel.service.name");
     Map<String, String> resourceAttributes = config.getMap("otel.resource.attributes");
     return serviceName == null
-        && !resourceAttributes.containsKey(ServiceAttributes.SERVICE_NAME.getKey())
-        && "unknown_service:java".equals(existing.getAttribute(ServiceAttributes.SERVICE_NAME));
+        && !resourceAttributes.containsKey(SERVICE_NAME.getKey())
+        && "unknown_service:java".equals(existing.getAttribute(SERVICE_NAME));
   }
 
   @Override

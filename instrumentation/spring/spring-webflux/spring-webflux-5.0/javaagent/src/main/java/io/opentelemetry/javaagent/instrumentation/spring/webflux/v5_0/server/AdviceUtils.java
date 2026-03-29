@@ -41,7 +41,7 @@ public final class AdviceUtils {
     }
   }
 
-  public static <T> Mono<T> wrapMono(Mono<T> mono, Context context) {
+  public static <T> Mono<T> wrapMono(Mono<T> mono, @Nullable Context context) {
     if (context == null) {
       return mono;
     }
@@ -50,7 +50,7 @@ public final class AdviceUtils {
 
   @FunctionalInterface
   interface OnSpanEnd {
-    void end(Throwable throwable);
+    void end(@Nullable Throwable throwable);
   }
 
   private static class ContextMono<T> extends Mono<T> {

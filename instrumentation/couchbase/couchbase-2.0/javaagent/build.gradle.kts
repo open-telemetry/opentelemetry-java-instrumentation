@@ -26,6 +26,12 @@ dependencies {
 
   testImplementation(project(":instrumentation:couchbase:couchbase-common:testing"))
 
+  testInstrumentation(project(":instrumentation:couchbase:couchbase-2.6:javaagent"))
+  testInstrumentation(project(":instrumentation:couchbase:couchbase-3.1:javaagent"))
+  testInstrumentation(project(":instrumentation:couchbase:couchbase-3.1.6:javaagent"))
+  testInstrumentation(project(":instrumentation:couchbase:couchbase-3.2:javaagent"))
+  testInstrumentation(project(":instrumentation:couchbase:couchbase-3.4:javaagent"))
+
   latestDepTestLibrary("org.springframework.data:spring-data-couchbase:2.+") // see couchbase-2.6 module
   latestDepTestLibrary("com.couchbase.client:java-client:2.5.+") // see couchbase-2.6 module
 }
@@ -37,7 +43,7 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
   val testStableSemconv by registering(Test::class) {
@@ -50,5 +56,11 @@ tasks {
 
   check {
     dependsOn(testStableSemconv)
+  }
+
+  if (findProperty("denyUnsafe") == "true") {
+    withType<Test>().configureEach {
+      enabled = false
+    }
   }
 }

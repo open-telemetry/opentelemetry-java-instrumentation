@@ -9,12 +9,12 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import application.io.opentelemetry.context.Context;
 import io.opentelemetry.api.internal.InstrumentationUtil;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -44,12 +44,12 @@ public class InstrumentationUtilInstrumentation implements TypeInstrumentation {
       return true;
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void methodExit(
-        @Advice.Argument(0) Context context, @Advice.Return(readOnly = false) boolean result) {
-      result =
-          InstrumentationUtil.shouldSuppressInstrumentation(
-              AgentContextStorage.getAgentContext(context));
+    public static boolean methodExit(
+        @Advice.Argument(0) application.io.opentelemetry.context.Context context) {
+      return InstrumentationUtil.shouldSuppressInstrumentation(
+          AgentContextStorage.getAgentContext(context));
     }
   }
 

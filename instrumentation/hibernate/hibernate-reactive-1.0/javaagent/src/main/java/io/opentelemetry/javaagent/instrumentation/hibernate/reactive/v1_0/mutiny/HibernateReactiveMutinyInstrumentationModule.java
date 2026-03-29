@@ -10,10 +10,12 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class HibernateReactiveMutinyInstrumentationModule extends InstrumentationModule {
+public class HibernateReactiveMutinyInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public HibernateReactiveMutinyInstrumentationModule() {
     super("hibernate-reactive", "hibernate-reactive-1.0", "hibernate-reactive-mutiny");
@@ -22,5 +24,10 @@ public class HibernateReactiveMutinyInstrumentationModule extends Instrumentatio
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new MutinySessionFactoryInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

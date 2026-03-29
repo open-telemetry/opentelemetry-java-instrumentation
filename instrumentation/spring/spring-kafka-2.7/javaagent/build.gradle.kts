@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -29,10 +30,10 @@ dependencies {
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.5.3")
   testLibrary("org.springframework.boot:spring-boot-starter:2.5.3")
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-kafka:latest.release")
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
+val latestDepTest = findProperty("testLatestDeps") == "true"
 
 testing {
   suites {
@@ -46,17 +47,17 @@ testing {
         implementation("org.springframework.kafka:spring-kafka:$springKafkaVersion")
         implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
         implementation("org.springframework.boot:spring-boot-starter:$springBootVersion")
+
+        if (latestDepTest) {
+          implementation("org.springframework.boot:spring-boot-starter-kafka:latest.release")
+        }
       }
 
       targets {
         all {
           testTask.configure {
-            usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-
             jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
             jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
-
-            systemProperty("collectMetadata", collectMetadata)
           }
         }
       }
@@ -65,19 +66,27 @@ testing {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("testLatestDeps", latestDepTest)
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
+  }
 
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-
+    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
     systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
-    systemProperty("collectMetadata", collectMetadata)
+  }
+
+  test {
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
   }
 
   check {
-    dependsOn(testing.suites)
+    dependsOn(testing.suites, testExperimental)
   }
 }
 

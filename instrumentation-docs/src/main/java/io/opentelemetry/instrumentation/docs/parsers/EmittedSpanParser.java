@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.docs.parsers;
 
+import static io.opentelemetry.instrumentation.docs.parsers.TelemetryParser.normalizeWhenCondition;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
 import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
@@ -49,8 +51,7 @@ public class EmittedSpanParser {
                 path -> {
                   String content = FileManager.readFileToString(path.toString());
                   if (content != null) {
-                    String when = content.substring(0, content.indexOf('\n'));
-                    String whenKey = when.replace("when: ", "");
+                    String whenKey = normalizeWhenCondition(content);
 
                     spansByScope.putIfAbsent(whenKey, new StringBuilder("spans_by_scope:\n"));
 
@@ -64,7 +65,8 @@ public class EmittedSpanParser {
                   }
                 });
       } catch (IOException e) {
-        logger.severe("Error reading span files: " + e.getMessage());
+        logger.severe(
+            "Error reading span files from " + instrumentationDirectory + ": " + e.getMessage());
       }
     }
 

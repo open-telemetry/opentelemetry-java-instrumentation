@@ -14,6 +14,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.CompletableFuture;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.reactivestreams.Subscriber;
@@ -52,20 +54,21 @@ public class AbstractStreamMessageSubscriptionInstrumentation implements TypeIns
   @SuppressWarnings("unused")
   public static class WrapSubscriberAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(1))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrapSubscriber(
-        @Advice.Argument(value = 1, readOnly = false) Subscriber<?> subscriber) {
-      subscriber = SubscriberWrapper.wrap(subscriber);
+    public static Subscriber<?> wrapSubscriber(@Advice.Argument(1) Subscriber<?> subscriber) {
+      return SubscriberWrapper.wrap(subscriber);
     }
   }
 
   @SuppressWarnings("unused")
   public static class WrapCompletableFutureAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(4))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrapCompletableFuture(
-        @Advice.Argument(value = 4, readOnly = false) CompletableFuture<?> future) {
-      future = CompletableFutureWrapper.wrap(future);
+    public static CompletableFuture<?> wrapCompletableFuture(
+        @Advice.Argument(4) CompletableFuture<?> future) {
+      return CompletableFutureWrapper.wrap(future);
     }
   }
 }

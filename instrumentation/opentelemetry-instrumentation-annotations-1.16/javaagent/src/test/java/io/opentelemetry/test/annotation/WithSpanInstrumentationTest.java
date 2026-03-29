@@ -5,11 +5,12 @@
 
 package io.opentelemetry.test.annotation;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.api.trace.SpanKind;
@@ -29,7 +30,6 @@ import net.bytebuddy.description.annotation.AnnotationDescription;
 import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
 import net.bytebuddy.implementation.bind.annotation.This;
-import net.bytebuddy.matcher.ElementMatchers;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -324,8 +324,8 @@ class WithSpanInstrumentationTest {
 
     List<AttributeAssertion> assertions =
         new ArrayList<>(codeAttributeAssertions("withSpanAttributes"));
-    assertions.add(equalTo(AttributeKey.stringKey("implicitName"), "foo"));
-    assertions.add(equalTo(AttributeKey.stringKey("explicitName"), "bar"));
+    assertions.add(equalTo(stringKey("implicitName"), "foo"));
+    assertions.add(equalTo(stringKey("explicitName"), "bar"));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -334,7 +334,7 @@ class WithSpanInstrumentationTest {
                     span.hasName("TracedWithSpan.withSpanAttributes")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfying(assertions)));
+                        .hasAttributesSatisfyingExactly(assertions)));
   }
 
   // Needs to be public for ByteBuddy
@@ -365,7 +365,7 @@ class WithSpanInstrumentationTest {
             .visit(
                 new MemberAttributeExtension.ForMethod()
                     .annotateMethod(AnnotationDescription.Builder.ofType(WithSpan.class).build())
-                    .on(ElementMatchers.named("run")))
+                    .on(named("run")))
             .make()
             .load(getClass().getClassLoader())
             .getLoaded();
@@ -380,7 +380,7 @@ class WithSpanInstrumentationTest {
                   span.hasName("GeneratedJava6TestClass.run")
                       .hasKind(SpanKind.INTERNAL)
                       .hasNoParent()
-                      .hasAttributesSatisfying(
+                      .hasAttributesSatisfyingExactly(
                           SemconvCodeStabilityUtil.codeFunctionAssertions(
                               "GeneratedJava6TestClass", "run"));
                 },

@@ -3,7 +3,5 @@ plugins {
 }
 
 dependencies {
-  implementation(project(":instrumentation-api"))
-
-  testImplementation(project(":testing-common"))
+  implementation(project(":instrumentation:runtime-telemetry:library"))
 }

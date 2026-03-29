@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -25,4 +26,11 @@ dependencies {
 
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
+}
+
+if (findProperty("denyUnsafe") == "true") {
+  // org.elasticmq:elasticmq-rest-sqs_2.13 uses unsafe. Future versions are likely to fix this.
+  tasks.withType<Test>().configureEach {
+    enabled = false
+  }
 }

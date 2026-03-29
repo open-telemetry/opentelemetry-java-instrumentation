@@ -19,9 +19,11 @@ dependencies {
   library("com.squareup.okhttp3:okhttp:3.0.0")
 
   testImplementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
+
+  testInstrumentation(project(":instrumentation:okhttp:okhttp-2.2:javaagent"))
 }
 
-val testLatestDeps = findProperty("testLatestDeps") as Boolean
+val testLatestDeps = findProperty("testLatestDeps") == "true"
 
 testing {
   suites {
@@ -44,7 +46,18 @@ tasks {
     dependsOn(testing.suites)
   }
 
-  test {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
   }
 }

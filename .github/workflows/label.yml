@@ -7,10 +7,14 @@ permissions:
 jobs:
   label:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
     steps:
+    - uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
+      id: otelbot-token
+      with:
+        app-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_APP_ID }}
+        private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+
     - uses: actions/labeler@634933edcd8ababfe52f92936142cc22ac488b1b # v6.0.1
       with:
-        repo-token: "${{ secrets.GITHUB_TOKEN }}"
+        # Not using GITHUB_TOKEN since labels from that token do not trigger workflows.
+        repo-token: "${{ steps.otelbot-token.outputs.token }}"

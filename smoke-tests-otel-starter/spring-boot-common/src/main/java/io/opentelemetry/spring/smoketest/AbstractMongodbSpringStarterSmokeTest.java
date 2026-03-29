@@ -7,10 +7,11 @@ package io.opentelemetry.spring.smoketest;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.stableDbSystemName;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.MONGODB;
 
 import com.mongodb.client.MongoClient;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.ArrayList;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,9 +36,6 @@ abstract class AbstractMongodbSpringStarterSmokeTest extends AbstractSpringStart
                 span ->
                     span.hasKind(SpanKind.CLIENT)
                         .hasName("listDatabases admin")
-                        .hasAttribute(
-                            maybeStable(DbIncubatingAttributes.DB_SYSTEM),
-                            stableDbSystemName(
-                                DbIncubatingAttributes.DbSystemIncubatingValues.MONGODB))));
+                        .hasAttribute(maybeStable(DB_SYSTEM), stableDbSystemName(MONGODB))));
   }
 }

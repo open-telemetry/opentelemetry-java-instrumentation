@@ -2,6 +2,13 @@ description: >
   This instrumentation enables tracing for Apache Camel 2.x applications by generating spans for
   each route execution. For Camel versions 3.5 and newer, users should instead use the native
   'camel-opentelemetry' component provided directly by the Camel project.
+semantic_conventions:
+  - HTTP_CLIENT_SPANS
+  - HTTP_SERVER_SPANS
+  - DATABASE_CLIENT_SPANS
+  - MESSAGING_SPANS
+features:
+  - HTTP_ROUTE
 library_link: https://camel.apache.org/
 configurations:
   - name: otel.instrumentation.camel.experimental-span-attributes

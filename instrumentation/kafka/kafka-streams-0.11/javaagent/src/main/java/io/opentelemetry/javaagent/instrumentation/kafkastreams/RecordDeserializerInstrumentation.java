@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPackagePrivate;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -17,6 +16,7 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -34,23 +34,23 @@ public class RecordDeserializerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPackagePrivate())
+        isPackagePrivate()
             .and(named("deserialize"))
             .and(takesArgument(1, named("org.apache.kafka.clients.consumer.ConsumerRecord")))
             .and(returns(named("org.apache.kafka.clients.consumer.ConsumerRecord"))),
-        RecordDeserializerInstrumentation.class.getName() + "$DeserializeAdvice");
+        getClass().getName() + "$DeserializeAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class DeserializeAdvice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
+    public static ConsumerRecord<?, ?> onExit(
         @Advice.Argument(1) ConsumerRecord<?, ?> incoming,
-        @Advice.Return(readOnly = false) ConsumerRecord<?, ?> result) {
+        @Advice.Return ConsumerRecord<?, ?> result) {
       if (result == null) {
-        return;
+        return null;
       }
 
       // on 1.x we need to copy headers from incoming to result
@@ -62,6 +62,7 @@ public class RecordDeserializerInstrumentation implements TypeInstrumentation {
 
       // copy the receive CONSUMER span association
       KafkaConsumerContextUtil.set(result, KafkaConsumerContextUtil.get(incoming));
+      return result;
     }
   }
 }

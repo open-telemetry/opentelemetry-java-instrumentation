@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0;
 
-import java.util.Collections;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
 import java.util.List;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
@@ -21,15 +23,15 @@ public class PekkoHttpUtil {
   public static List<String> requestHeader(HttpRequest httpRequest, String name) {
     return httpRequest
         .getHeader(name)
-        .map(httpHeader -> Collections.singletonList(httpHeader.value()))
-        .orElse(Collections.emptyList());
+        .map(httpHeader -> singletonList(httpHeader.value()))
+        .orElse(emptyList());
   }
 
   public static List<String> responseHeader(HttpResponse httpResponse, String name) {
     return httpResponse
         .getHeader(name)
-        .map(httpHeader -> Collections.singletonList(httpHeader.value()))
-        .orElse(Collections.emptyList());
+        .map(httpHeader -> singletonList(httpHeader.value()))
+        .orElse(emptyList());
   }
 
   public static String protocolName(HttpRequest request) {

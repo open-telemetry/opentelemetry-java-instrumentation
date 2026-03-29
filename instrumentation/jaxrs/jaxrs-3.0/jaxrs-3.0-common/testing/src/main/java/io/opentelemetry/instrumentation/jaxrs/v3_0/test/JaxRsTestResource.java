@@ -36,6 +36,8 @@ import java.util.concurrent.CyclicBarrier;
 @SuppressWarnings("IdentifierName")
 @Path("")
 public class JaxRsTestResource {
+  public static final CyclicBarrier BARRIER = new CyclicBarrier(2);
+
   @Path("/success")
   @GET
   public String success() {
@@ -108,8 +110,6 @@ public class JaxRsTestResource {
                   response.resume(INDEXED_CHILD.getBody());
                 }));
   }
-
-  public static final CyclicBarrier BARRIER = new CyclicBarrier(2);
 
   @Path("async")
   @GET

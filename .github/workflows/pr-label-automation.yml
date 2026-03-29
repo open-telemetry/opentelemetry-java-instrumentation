@@ -1,0 +1,73 @@
+name: PR Label Automation
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  auto-label:
+    # Only run on pull request comments
+    if: github.event.issue.pull_request != null
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add breaking change label
+        if: github.event.comment.body == '/breaking-change'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            // Add the breaking change label
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['breaking change']
+            });
+
+            // React to the comment to show it was processed
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: '+1'
+            });
+
+            // Add a reply comment to confirm the action
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: '✅ Added `breaking change` label to this PR.'
+            });
+
+      - name: Add deprecation label
+        if: github.event.comment.body == '/deprecation'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            // Add the deprecation label
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['deprecation']
+            });
+
+            // React to the comment to show it was processed
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: '+1'
+            });
+
+            // Add a reply comment to confirm the action
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: '✅ Added `deprecation` label to this PR.'
+            });

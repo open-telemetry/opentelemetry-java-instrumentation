@@ -50,10 +50,12 @@ public class VaadinSingletons {
                     context.with(REQUEST_HANDLER_CONTEXT_KEY, true))
             .buildInstrumenter();
 
+    RpcCodeAttributesGetter rpcCodeAttributesGetter = new RpcCodeAttributesGetter();
     RPC_INSTRUMENTER =
         Instrumenter.<VaadinRpcRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, VaadinSingletons::rpcSpanName)
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
+            .addAttributesExtractor(CodeAttributesExtractor.create(rpcCodeAttributesGetter))
             .buildInstrumenter();
 
     SERVICE_INSTRUMENTER =

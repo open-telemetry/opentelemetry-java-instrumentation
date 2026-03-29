@@ -22,6 +22,9 @@ public class ContextPropagator {
 
   private static final Logger logger = Logger.getLogger(ContextPropagator.class.getName());
 
+  private static final VirtualField<Connection, Boolean> KNOWN_CONNECTION =
+      VirtualField.find(Connection.class, Boolean.class);
+
   // Internal RMI object ids that we don't want to trace
   private static final ObjID ACTIVATOR_ID = new ObjID(ObjID.ACTIVATOR_ID);
   private static final ObjID DGC_ID = new ObjID(ObjID.DGC_ID);
@@ -29,7 +32,7 @@ public class ContextPropagator {
 
   // RMI object id used to identify agent instrumentation
   public static final ObjID CONTEXT_CALL_ID =
-      new ObjID("io.opentelemetry.javaagent.context-call".hashCode());
+      new ObjID("io.opentelemetry.javaagent.context-call-v2".hashCode());
 
   // Operation id used for checking context propagation is possible
   // RMI expects these operations to have negative identifier, as positive ones mean legacy
@@ -48,24 +51,22 @@ public class ContextPropagator {
     return operationId == CONTEXT_PAYLOAD_OPERATION_ID;
   }
 
-  public void attemptToPropagateContext(
-      VirtualField<Connection, Boolean> knownConnections, Connection c, Context context) {
-    if (checkIfContextCanBePassed(knownConnections, c)) {
+  public void attemptToPropagateContext(Connection c, Context context) {
+    if (checkIfContextCanBePassed(c)) {
       if (!syntheticCall(c, ContextPayload.from(context), CONTEXT_PAYLOAD_OPERATION_ID)) {
         logger.fine("Couldn't send context payload");
       }
     }
   }
 
-  private static boolean checkIfContextCanBePassed(
-      VirtualField<Connection, Boolean> knownConnections, Connection c) {
-    Boolean storedResult = knownConnections.get(c);
+  private static boolean checkIfContextCanBePassed(Connection c) {
+    Boolean storedResult = KNOWN_CONNECTION.get(c);
     if (storedResult != null) {
       return storedResult;
     }
 
     boolean result = syntheticCall(c, null, CONTEXT_CHECK_CALL_OPERATION_ID);
-    knownConnections.set(c, result);
+    KNOWN_CONNECTION.set(c, result);
     return result;
   }
 

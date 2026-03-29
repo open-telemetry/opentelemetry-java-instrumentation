@@ -39,7 +39,7 @@ public class ResteasyRootNodeTypeInstrumentation implements TypeInstrumentation 
                     namedOneOf(
                         "org.jboss.resteasy.core.ResourceInvoker",
                         "org.jboss.resteasy.spi.ResourceInvoker"))),
-        ResteasyRootNodeTypeInstrumentation.class.getName() + "$AddInvokerAdvice");
+        getClass().getName() + "$AddInvokerAdvice");
   }
 
   @SuppressWarnings("unused")

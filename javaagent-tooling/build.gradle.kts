@@ -46,10 +46,12 @@ dependencies {
   implementation("io.opentelemetry.contrib:opentelemetry-gcp-resources")
   implementation("io.opentelemetry.contrib:opentelemetry-cloudfoundry-resources")
   implementation("io.opentelemetry.contrib:opentelemetry-baggage-processor")
+  implementation("io.opentelemetry.contrib:opentelemetry-samplers")
 
   api("net.bytebuddy:byte-buddy-dep")
   implementation("org.ow2.asm:asm-tree")
   implementation("org.ow2.asm:asm-util")
+  implementation("com.fasterxml.jackson.core:jackson-databind")
 
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service-annotations")
@@ -59,10 +61,8 @@ dependencies {
   compileOnly("com.google.code.findbugs:annotations")
   testCompileOnly("com.google.code.findbugs:annotations")
 
-  testImplementation(project(":testing-common"))
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("com.google.guava:guava")
-  testImplementation("org.junit-pioneer:junit-pioneer")
-  testImplementation("com.fasterxml.jackson.core:jackson-databind")
 }
 
 testing {
@@ -102,14 +102,29 @@ testing {
       }
     }
 
-    val testPatchBytecodeVersion by registering(JvmTestSuite::class) {
+    val testConfigFile by registering(JvmTestSuite::class) {
       dependencies {
-        implementation(project(":javaagent-bootstrap"))
         implementation(project(":javaagent-tooling"))
-        implementation("net.bytebuddy:byte-buddy-dep")
+        // requires mockito-inline
+        implementation("uk.org.webcompere:system-stubs-jupiter")
+      }
+    }
 
-        // Used by byte-buddy but not brought in as a transitive dependency.
-        compileOnly("com.google.code.findbugs:annotations")
+    val testDistributionConfig by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":javaagent-extension-api"))
+        implementation(project(":instrumentation-api-incubator"))
+        implementation(project(":javaagent-tooling"))
+        implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+      }
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs(
+              "-Dotel.config.file=$projectDir/src/testDistributionConfig/resources/distribution-config.yaml"
+            )
+          }
+        }
       }
     }
   }
@@ -131,7 +146,7 @@ tasks {
   // TODO this should live in jmh-conventions
   named<JavaCompile>("jmhCompileGeneratedClasses") {
     options.errorprone {
-      isEnabled.set(false)
+      enabled.set(false)
     }
   }
 

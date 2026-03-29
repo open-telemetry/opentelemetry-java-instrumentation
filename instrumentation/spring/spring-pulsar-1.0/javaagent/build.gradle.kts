@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -12,6 +13,8 @@ muzzle {
   }
 }
 
+val latestDepTest = findProperty("testLatestDeps") == "true"
+
 dependencies {
   library("org.springframework.pulsar:spring-pulsar:1.0.0")
   implementation(project(":instrumentation:pulsar:pulsar-2.8:javaagent"))
@@ -22,9 +25,12 @@ dependencies {
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:3.2.4")
   testLibrary("org.springframework.boot:spring-boot-starter:3.2.4")
+
+  if (latestDepTest) {
+    testLibrary("org.springframework.boot:spring-boot-starter-pulsar:latest.release")
+  }
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
 val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
 
 testing {
@@ -34,7 +40,7 @@ testing {
         implementation(project(":instrumentation:spring:spring-pulsar-1.0:testing"))
 
         if (latestDepTest) {
-          implementation("org.springframework.pulsar:spring-pulsar:latest.release")
+          implementation("org.springframework.boot:spring-boot-starter-pulsar:latest.release")
           implementation("org.springframework.boot:spring-boot-starter-test:latest.release")
           implementation("org.springframework.boot:spring-boot-starter:latest.release")
         } else {
@@ -47,8 +53,6 @@ testing {
       targets {
         all {
           testTask.configure {
-            usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-
             jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=true")
             jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
           }
@@ -59,17 +63,24 @@ testing {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("collectMetadata", collectMetadata)
+  }
 
+  test {
     jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=false")
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-
-    systemProperty("collectMetadata", collectMetadata)
   }
 
   check {
     dependsOn(testing.suites)
+  }
+
+  if (findProperty("denyUnsafe") == "true") {
+    withType<Test>().configureEach {
+      enabled = false
+    }
   }
 }
 

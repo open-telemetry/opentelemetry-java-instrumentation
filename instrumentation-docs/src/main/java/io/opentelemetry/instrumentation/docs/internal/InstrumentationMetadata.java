@@ -37,6 +37,18 @@ public class InstrumentationMetadata {
 
   private List<ConfigurationOption> configurations = emptyList();
 
+  @JsonProperty("semantic_conventions")
+  private List<SemanticConvention> semanticConventions = emptyList();
+
+  @JsonProperty("additional_telemetry")
+  private List<ManualTelemetryEntry> additionalTelemetry = emptyList();
+
+  @JsonProperty("override_telemetry")
+  @Nullable
+  private Boolean overrideTelemetry;
+
+  private List<InstrumentationFeature> features = emptyList();
+
   public InstrumentationMetadata() {
     this.classification = InstrumentationClassification.LIBRARY.name();
   }
@@ -47,13 +59,16 @@ public class InstrumentationMetadata {
       String classification,
       @Nullable String libraryLink,
       @Nullable String displayName,
+      @Nullable List<SemanticConvention> semanticConventions,
       @Nullable List<ConfigurationOption> configurations) {
     this.classification = classification;
     this.disabledByDefault = disabledByDefault;
     this.description = description;
     this.libraryLink = libraryLink;
     this.displayName = displayName;
+    this.semanticConventions = Objects.requireNonNullElse(semanticConventions, emptyList());
     this.configurations = Objects.requireNonNullElse(configurations, emptyList());
+    this.overrideTelemetry = null;
   }
 
   @Nullable
@@ -101,6 +116,14 @@ public class InstrumentationMetadata {
     this.configurations = Objects.requireNonNullElse(configurations, emptyList());
   }
 
+  public List<SemanticConvention> getSemanticConventions() {
+    return semanticConventions;
+  }
+
+  public void setSemanticConventions(@Nullable List<SemanticConvention> semanticConventions) {
+    this.semanticConventions = Objects.requireNonNullElse(semanticConventions, emptyList());
+  }
+
   @Nullable
   public String getLibraryLink() {
     return libraryLink;
@@ -108,6 +131,30 @@ public class InstrumentationMetadata {
 
   public void setLibraryLink(@Nullable String libraryLink) {
     this.libraryLink = libraryLink;
+  }
+
+  public List<ManualTelemetryEntry> getAdditionalTelemetry() {
+    return additionalTelemetry;
+  }
+
+  public void setAdditionalTelemetry(@Nullable List<ManualTelemetryEntry> additionalTelemetry) {
+    this.additionalTelemetry = Objects.requireNonNullElse(additionalTelemetry, emptyList());
+  }
+
+  public Boolean getOverrideTelemetry() {
+    return Objects.requireNonNullElse(overrideTelemetry, false);
+  }
+
+  public void setOverrideTelemetry(@Nullable Boolean overrideTelemetry) {
+    this.overrideTelemetry = overrideTelemetry;
+  }
+
+  public List<InstrumentationFeature> getFeatures() {
+    return features;
+  }
+
+  public void setFeatures(@Nullable List<InstrumentationFeature> features) {
+    this.features = Objects.requireNonNullElse(features, emptyList());
   }
 
   /**
@@ -122,6 +169,10 @@ public class InstrumentationMetadata {
     @Nullable private String libraryLink;
     @Nullable private String displayName;
     private List<ConfigurationOption> configurations = emptyList();
+    private List<SemanticConvention> semanticConventions = emptyList();
+    private List<ManualTelemetryEntry> additionalTelemetry = emptyList();
+    @Nullable private Boolean overrideTelemetry;
+    private List<InstrumentationFeature> features = emptyList();
 
     @CanIgnoreReturnValue
     public Builder description(@Nullable String description) {
@@ -159,14 +210,46 @@ public class InstrumentationMetadata {
       return this;
     }
 
+    @CanIgnoreReturnValue
+    public Builder semanticConventions(@Nullable List<SemanticConvention> semanticConventions) {
+      this.semanticConventions = Objects.requireNonNullElse(semanticConventions, emptyList());
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder additionalTelemetry(@Nullable List<ManualTelemetryEntry> additionalTelemetry) {
+      this.additionalTelemetry = Objects.requireNonNullElse(additionalTelemetry, emptyList());
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder overrideTelemetry(@Nullable Boolean overrideTelemetry) {
+      this.overrideTelemetry = overrideTelemetry;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder features(@Nullable List<InstrumentationFeature> features) {
+      this.features = Objects.requireNonNullElse(features, emptyList());
+      return this;
+    }
+
     public InstrumentationMetadata build() {
-      return new InstrumentationMetadata(
-          description,
-          disabledByDefault,
-          classification != null ? classification : InstrumentationClassification.LIBRARY.name(),
-          libraryLink,
-          displayName,
-          configurations);
+      InstrumentationMetadata metadata =
+          new InstrumentationMetadata(
+              description,
+              disabledByDefault,
+              classification != null
+                  ? classification
+                  : InstrumentationClassification.LIBRARY.name(),
+              libraryLink,
+              displayName,
+              semanticConventions,
+              configurations);
+      metadata.setAdditionalTelemetry(additionalTelemetry);
+      metadata.setOverrideTelemetry(overrideTelemetry);
+      metadata.setFeatures(features);
+      return metadata;
     }
   }
 }

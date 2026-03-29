@@ -1,4 +1,8 @@
-description: This instrumentation enables HTTP server spans and HTTP server metrics for Grizzly applications.
+display_name: Eclipse Grizzly
+description: This instrumentation enables HTTP server spans and HTTP server metrics for Grizzly.
+semantic_conventions:
+  - HTTP_SERVER_SPANS
+  - HTTP_SERVER_METRICS
 library_link: https://javaee.github.io/grizzly/httpserverframework.html
 configurations:
   - name: otel.instrumentation.http.known-methods
@@ -14,10 +18,6 @@ configurations:
   - name: otel.instrumentation.http.server.capture-response-headers
     description: List of HTTP response headers to capture in HTTP server telemetry.
     type: list
-    default: ""
-  - name: otel.instrumentation.common.peer-service-mapping
-    description: Used to specify a mapping from host names or IP addresses to peer services.
-    type: map
     default: ""
   - name: otel.instrumentation.http.server.emit-experimental-telemetry
     description: >

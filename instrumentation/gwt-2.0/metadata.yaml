@@ -1,2 +1,5 @@
+display_name: GWT
 description: This instrumentation enables RPC server spans for GWT RPC requests.
+semantic_conventions:
+  - RPC_SERVER_SPANS
 library_link: https://www.gwtproject.org/

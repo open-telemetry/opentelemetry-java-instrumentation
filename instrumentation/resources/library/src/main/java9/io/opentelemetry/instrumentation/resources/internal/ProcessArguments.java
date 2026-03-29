@@ -12,6 +12,8 @@ package io.opentelemetry.instrumentation.resources.internal;
 public final class ProcessArguments {
 
   public static String[] getProcessArguments() {
+    // note: ProcessHandle arguments() always returns null on Windows
+    //       https://bugs.openjdk.org/browse/JDK-8176725
     return ProcessHandle.current().info().arguments().orElseGet(() -> new String[0]);
   }
 

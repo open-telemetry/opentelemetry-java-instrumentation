@@ -43,6 +43,10 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
     return testing;
   }
 
+  protected boolean isExperimentalSpanAttributesEnabled() {
+    return true;
+  }
+
   @Test
   void success() {
     AbstractTraced<T, U> traced = newTraced();
@@ -92,7 +96,10 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
 
     List<AttributeAssertion> attributeAssertions =
         codeFunctionAssertions(traced.getClass(), "completable");
-    attributeAssertions.add(equalTo(booleanKey(canceledKey()), true));
+
+    if (isExperimentalSpanAttributesEnabled()) {
+      attributeAssertions.add(equalTo(booleanKey(canceledKey()), true));
+    }
 
     testing.waitAndAssertTraces(
         trace ->

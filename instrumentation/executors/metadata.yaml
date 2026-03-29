@@ -1,3 +1,4 @@
+display_name: Java Executors
 description: >
   The executor instrumentation ensures that context is automatically propagated when using common
   Java executors (e.g., ThreadPoolExecutor, ScheduledThreadPoolExecutor, ForkJoinPool). When a task
@@ -5,6 +6,8 @@ description: >
   eventually runs, even if it’s on a different thread, the instrumentation reactivates that context,
   enabling consistent correlation across concurrent and asynchronous workflows.
 library_link: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Executor.html
+features:
+- CONTEXT_PROPAGATION
 configurations:
   - name: otel.instrumentation.executors.include
     description: List of Executor subclasses to be instrumented.

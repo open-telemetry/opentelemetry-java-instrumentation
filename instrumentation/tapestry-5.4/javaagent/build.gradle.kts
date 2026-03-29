@@ -26,9 +26,10 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
-  testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
 }
 
 tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  systemProperty("collectMetadata", findProperty("collectMetadata"))
 }

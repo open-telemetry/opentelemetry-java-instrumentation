@@ -8,18 +8,21 @@ package io.opentelemetry.javaagent.instrumentation.hibernate;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateInstrumenterFactory.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES;
 
 import java.util.UUID;
+import javax.annotation.Nullable;
 
 public class SessionInfo {
-  private final String sessionId;
+  @Nullable private final String sessionId;
 
   public SessionInfo() {
     sessionId = generateSessionId();
   }
 
+  @Nullable
   public String getSessionId() {
     return sessionId;
   }
 
+  @Nullable
   private static String generateSessionId() {
     if (!CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       return null;

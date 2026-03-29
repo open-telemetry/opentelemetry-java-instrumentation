@@ -7,18 +7,20 @@ package io.opentelemetry.javaagent.instrumentation.scalaexecutors;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.instrumentation.scalaexecutors.VirtualFields.CALLABLE_PROPAGATED_CONTEXT;
+import static io.opentelemetry.javaagent.instrumentation.scalaexecutors.VirtualFields.FORK_JOIN_TASK_PROPAGATED_CONTEXT;
+import static io.opentelemetry.javaagent.instrumentation.scalaexecutors.VirtualFields.RUNNABLE_PROPAGATED_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.bootstrap.executors.TaskAdviceHelper;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.Callable;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -49,7 +51,7 @@ public class ScalaForkJoinTaskInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("exec").and(takesArguments(0)).and(not(isAbstract())),
-        ScalaForkJoinTaskInstrumentation.class.getName() + "$ForkJoinTaskAdvice");
+        getClass().getName() + "$ForkJoinTaskAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -57,46 +59,38 @@ public class ScalaForkJoinTaskInstrumentation implements TypeInstrumentation {
 
     /**
      * When {@link ForkJoinTask} object is submitted to {@link ForkJoinPool} as {@link Runnable} or
-     * {@link Callable} it will not get wrapped, instead it will be casted to {@code ForkJoinTask}
+     * {@link Callable} it will not get wrapped, instead it will be cast to {@code ForkJoinTask}
      * directly. This means state is still stored in {@code Runnable} or {@code Callable} and we
      * need to use that state.
      */
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope enter(@Advice.This ForkJoinTask<?> thiz) {
-      VirtualField<ForkJoinTask<?>, PropagatedContext> virtualField =
-          VirtualField.find(ForkJoinTask.class, PropagatedContext.class);
-      Scope scope = TaskAdviceHelper.makePropagatedContextCurrent(virtualField, thiz);
+      Scope scope =
+          TaskAdviceHelper.makePropagatedContextCurrent(FORK_JOIN_TASK_PROPAGATED_CONTEXT, thiz);
+      Scope newScope = null;
       if (thiz instanceof Runnable) {
-        VirtualField<Runnable, PropagatedContext> runnableVirtualField =
-            VirtualField.find(Runnable.class, PropagatedContext.class);
-        Scope newScope =
-            TaskAdviceHelper.makePropagatedContextCurrent(runnableVirtualField, (Runnable) thiz);
-        if (null != newScope) {
-          if (null != scope) {
-            newScope.close();
-          } else {
-            scope = newScope;
-          }
-        }
+        newScope =
+            TaskAdviceHelper.makePropagatedContextCurrent(
+                RUNNABLE_PROPAGATED_CONTEXT, (Runnable) thiz);
       }
       if (thiz instanceof Callable) {
-        VirtualField<Callable<?>, PropagatedContext> callableVirtualField =
-            VirtualField.find(Callable.class, PropagatedContext.class);
-        Scope newScope =
-            TaskAdviceHelper.makePropagatedContextCurrent(callableVirtualField, (Callable<?>) thiz);
-        if (null != newScope) {
-          if (null != scope) {
-            newScope.close();
-          } else {
-            scope = newScope;
-          }
+        newScope =
+            TaskAdviceHelper.makePropagatedContextCurrent(
+                CALLABLE_PROPAGATED_CONTEXT, (Callable<?>) thiz);
+      }
+      if (newScope != null) {
+        if (scope != null) {
+          newScope.close();
+        } else {
+          scope = newScope;
         }
       }
       return scope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exit(@Advice.Enter Scope scope) {
+    public static void exit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

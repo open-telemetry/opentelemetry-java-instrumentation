@@ -7,11 +7,12 @@ package io.opentelemetry.instrumentation.graphql.v20_0;
 
 import graphql.execution.ResultPath;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.OpenTelemetryInstrumentationState;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import javax.annotation.Nullable;
 
-final class Graphql20OpenTelemetryInstrumentationState
-    extends io.opentelemetry.instrumentation.graphql.internal.OpenTelemetryInstrumentationState {
+final class Graphql20OpenTelemetryInstrumentationState extends OpenTelemetryInstrumentationState {
   private static final String ROOT_PATH = ResultPath.rootPath().toString();
 
   private final ConcurrentMap<String, Context> contextStorage = new ConcurrentHashMap<>();
@@ -26,6 +27,7 @@ final class Graphql20OpenTelemetryInstrumentationState
     this.contextStorage.put(ROOT_PATH, context);
   }
 
+  @Nullable
   public Context setContextForPath(ResultPath resultPath, Context context) {
     return contextStorage.putIfAbsent(resultPath.toString(), context);
   }
@@ -37,7 +39,7 @@ final class Graphql20OpenTelemetryInstrumentationState
         currentPath != null;
         currentPath = currentPath.getParent()) {
 
-      Context parentContext = contextStorage.getOrDefault(currentPath.toString(), null);
+      Context parentContext = contextStorage.get(currentPath.toString());
 
       if (parentContext != null) {
         return parentContext;

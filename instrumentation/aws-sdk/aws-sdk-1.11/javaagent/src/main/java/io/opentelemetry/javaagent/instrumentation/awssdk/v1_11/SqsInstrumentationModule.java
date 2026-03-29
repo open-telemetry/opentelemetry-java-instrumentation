@@ -22,8 +22,7 @@ public class SqsInstrumentationModule extends AbstractAwsSdkInstrumentationModul
 
   @Override
   public void doTransform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        none(), SqsInstrumentationModule.class.getName() + "$RegisterAdvice");
+    transformer.applyAdviceToMethod(none(), getClass().getName() + "$RegisterAdvice");
   }
 
   @SuppressWarnings("unused")

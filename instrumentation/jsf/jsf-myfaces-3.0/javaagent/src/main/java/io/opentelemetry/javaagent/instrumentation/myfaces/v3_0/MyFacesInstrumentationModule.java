@@ -5,22 +5,37 @@
 
 package io.opentelemetry.javaagent.instrumentation.myfaces.v3_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class MyFacesInstrumentationModule extends InstrumentationModule {
+public class MyFacesInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public MyFacesInstrumentationModule() {
     super("jsf-myfaces", "jsf-myfaces-3.0");
+  }
+
+  @Override
+  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // jakarta.faces was introduced in JSF 3.0, replacing javax.faces
+    return hasClassesNamed("jakarta.faces.context.FacesContext");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ActionListenerImplInstrumentation(), new RestoreViewExecutorInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

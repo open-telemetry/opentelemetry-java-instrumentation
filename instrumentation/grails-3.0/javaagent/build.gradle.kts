@@ -18,10 +18,6 @@ muzzle {
   }
 }
 
-otelJava {
-  maxJavaVersionSupported.set(JavaVersion.VERSION_17)
-}
-
 val grailsVersion = "3.0.6" // first version that the tests pass on
 val springBootVersion = "1.2.5.RELEASE"
 
@@ -31,7 +27,6 @@ dependencies {
   library("org.grails:grails-plugin-url-mappings:$grailsVersion")
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
-  testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
   testInstrumentation(project(":instrumentation:tomcat:tomcat-7.0:javaagent"))
   testInstrumentation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-3.1:javaagent"))
 
@@ -42,14 +37,7 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-tomcat:2.+") // related dependency
 }
 
-// testing-common pulls in groovy 4 and spock as dependencies, exclude them
-configurations.configureEach {
-  exclude("org.apache.groovy", "groovy")
-  exclude("org.apache.groovy", "groovy-json")
-  exclude("org.spockframework", "spock-core")
-}
-
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 
 if (!latestDepTest) {
   configurations.configureEach {
@@ -57,7 +45,7 @@ if (!latestDepTest) {
       resolutionStrategy {
         eachDependency {
           if (requested.group == "org.codehaus.groovy") {
-            useVersion("3.0.9")
+            useVersion("3.0.25")
           }
         }
       }
@@ -73,6 +61,17 @@ configurations.testRuntimeClasspath {
   }
 }
 
+spotless {
+  groovy {
+    target("src/**/*.groovy")
+    licenseHeaderFile(
+      rootProject.file("buildscripts/spotless.license.java"),
+      "(package|import|(?:abstract )?class)"
+    )
+    endWithNewline()
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", latestDepTest)
@@ -82,7 +81,13 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
     systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  }
+
+  if (findProperty("denyUnsafe") == "true") {
+    withType<Test>().configureEach {
+      enabled = false
+    }
   }
 }

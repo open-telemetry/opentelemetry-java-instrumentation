@@ -10,8 +10,14 @@ jobs:
   markdown-lint-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4.0.1
 
       - name: Run markdownlint
         run: |
-          npx markdownlint-cli@0.45.0 -c .github/config/markdownlint.yml -p .gitignore **/*.md -i licenses/licenses.md
+          if ! mise run lint:markdown; then
+            echo "markdownlint failed. To auto-fix many issues locally, run:"
+            echo "  mise run lint:markdown --fix"
+            exit 1
+          fi

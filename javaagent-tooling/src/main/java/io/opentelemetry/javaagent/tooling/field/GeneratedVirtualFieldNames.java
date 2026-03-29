@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.field;
 
+import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldAccessorMarker;
+
 final class GeneratedVirtualFieldNames {
 
   /**
@@ -13,7 +15,8 @@ final class GeneratedVirtualFieldNames {
    * 'isolating' (or 'module') classloaders like jboss and osgi see injected classes. This works
    * because we instrument those classloaders to load everything inside bootstrap packages.
    */
-  static final String DYNAMIC_CLASSES_PACKAGE = "io.opentelemetry.javaagent.bootstrap.field.";
+  static final String DYNAMIC_CLASSES_PACKAGE =
+      VirtualFieldAccessorMarker.class.getPackage().getName() + ".";
 
   private GeneratedVirtualFieldNames() {}
 

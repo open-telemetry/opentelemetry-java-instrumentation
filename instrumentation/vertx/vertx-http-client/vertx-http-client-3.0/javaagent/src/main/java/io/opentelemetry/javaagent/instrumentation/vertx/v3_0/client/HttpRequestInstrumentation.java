@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.instrumentation.vertx.v3_0.client.VertxClientSingletons.CONTEXTS;
 import static io.opentelemetry.javaagent.instrumentation.vertx.v3_0.client.VertxClientSingletons.REQUEST_INFO;
 import static io.opentelemetry.javaagent.instrumentation.vertx.v3_0.client.VertxClientSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -61,26 +60,21 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(nameStartsWith("end").or(named("sendHead"))),
-        HttpRequestInstrumentation.class.getName() + "$EndRequestAdvice");
+        nameStartsWith("end").or(named("sendHead")), getClass().getName() + "$EndRequestAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod().and(named("handleException")),
-        HttpRequestInstrumentation.class.getName() + "$HandleExceptionAdvice");
+        named("handleException"), getClass().getName() + "$HandleExceptionAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod().and(named("handleResponse")),
-        HttpRequestInstrumentation.class.getName() + "$HandleResponseAdvice");
+        named("handleResponse"), getClass().getName() + "$HandleResponseAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod().and(isPrivate()).and(nameStartsWith("write").or(nameStartsWith("connected"))),
-        HttpRequestInstrumentation.class.getName() + "$MountContextAdvice");
+        isPrivate().and(nameStartsWith("write").or(nameStartsWith("connected"))),
+        getClass().getName() + "$MountContextAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("exceptionHandler"))
-            .and(takesArgument(0, named("io.vertx.core.Handler"))),
-        HttpRequestInstrumentation.class.getName() + "$ExceptionHandlerAdvice");
+        named("exceptionHandler").and(takesArgument(0, named("io.vertx.core.Handler"))),
+        getClass().getName() + "$ExceptionHandlerAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -155,7 +149,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void handleResponseExit(@Advice.Enter @Nullable Scope scope) {
+    public static void handleExceptionExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

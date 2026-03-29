@@ -67,11 +67,7 @@ testing {
   suites {
     val tapirTest by registering(JvmTestSuite::class) {
       dependencies {
-        // this only exists to make Intellij happy since it doesn't (currently at least) understand our
-        // inclusion of this artifact inside :testing-common
-        compileOnly(project.dependencies.project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
-
-        if (findProperty("testLatestDeps") as Boolean) {
+        if (findProperty("testLatestDeps") == "true") {
           implementation("com.typesafe.akka:akka-http_2.13:latest.release")
           implementation("com.typesafe.akka:akka-stream_2.13:latest.release")
           implementation("com.softwaremill.sttp.tapir:tapir-pekko-http-server_2.13:latest.release")
@@ -91,16 +87,22 @@ tasks {
     jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
   check {
     dependsOn(testing.suites)
   }
+
+  if (findProperty("denyUnsafe") == "true") {
+    withType<Test>().configureEach {
+      enabled = false
+    }
+  }
 }
 
-if (findProperty("testLatestDeps") as Boolean) {
+if (findProperty("testLatestDeps") == "true") {
   configurations {
     // pekko artifact name is different for regular and latest tests
     testImplementation {

@@ -5,8 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.log4j.mdc.v1_2;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -19,7 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class Log4j1MdcTest {
+class Log4j1MdcTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -38,16 +37,16 @@ public class Log4j1MdcTest {
 
     List<LoggingEvent> events = ListAppender.getEvents();
 
-    assertEquals(2, events.size());
-    assertEquals("log message 1", events.get(0).getMessage());
-    assertNull(events.get(0).getMDC("trace_id"));
-    assertNull(events.get(0).getMDC("span_id"));
-    assertNull(events.get(0).getMDC("trace_flags"));
+    assertThat(events).hasSize(2);
+    assertThat(events.get(0).getMessage()).isEqualTo("log message 1");
+    assertThat(events.get(0).getMDC("trace_id")).isNull();
+    assertThat(events.get(0).getMDC("span_id")).isNull();
+    assertThat(events.get(0).getMDC("trace_flags")).isNull();
 
-    assertEquals("log message 2", events.get(1).getMessage());
-    assertNull(events.get(1).getMDC("trace_id"));
-    assertNull(events.get(1).getMDC("span_id"));
-    assertNull(events.get(1).getMDC("trace_flags"));
+    assertThat(events.get(1).getMessage()).isEqualTo("log message 2");
+    assertThat(events.get(1).getMDC("trace_id")).isNull();
+    assertThat(events.get(1).getMDC("span_id")).isNull();
+    assertThat(events.get(1).getMDC("trace_flags")).isNull();
   }
 
   @Test
@@ -72,23 +71,25 @@ public class Log4j1MdcTest {
 
     List<LoggingEvent> events = ListAppender.getEvents();
 
-    assertEquals(3, events.size());
-    assertEquals("log message 1", events.get(0).getMessage());
-    assertEquals(events.get(0).getMDC("trace_id"), span1.getSpanContext().getTraceId());
-    assertEquals(events.get(0).getMDC("span_id"), span1.getSpanContext().getSpanId());
-    assertEquals(events.get(0).getMDC("trace_flags"), "01");
+    assertThat(events).hasSize(3);
+    assertThat(events.get(0).getMessage()).isEqualTo("log message 1");
+    assertThat(events.get(0).getMDC("trace_id")).isEqualTo(span1.getSpanContext().getTraceId());
+    assertThat(events.get(0).getMDC("span_id")).isEqualTo(span1.getSpanContext().getSpanId());
+    assertThat(events.get(0).getMDC("trace_flags"))
+        .isEqualTo(span1.getSpanContext().getTraceFlags().asHex());
 
-    assertEquals("log message 2", events.get(1).getMessage());
-    assertNull(events.get(1).getMDC("trace_id"));
-    assertNull(events.get(1).getMDC("span_id"));
-    assertNull(events.get(1).getMDC("trace_flags"));
+    assertThat(events.get(1).getMessage()).isEqualTo("log message 2");
+    assertThat(events.get(1).getMDC("trace_id")).isNull();
+    assertThat(events.get(1).getMDC("span_id")).isNull();
+    assertThat(events.get(1).getMDC("trace_flags")).isNull();
 
-    assertEquals("log message 3", events.get(2).getMessage());
+    assertThat(events.get(2).getMessage()).isEqualTo("log message 3");
     // this explicit getMDCCopy() call here is to make sure that whole instrumentation is tested
     events.get(2).getMDCCopy();
-    assertEquals(events.get(2).getMDC("trace_id"), span2.getSpanContext().getTraceId());
-    assertEquals(events.get(2).getMDC("span_id"), span2.getSpanContext().getSpanId());
-    assertEquals(events.get(2).getMDC("trace_flags"), "01");
+    assertThat(events.get(2).getMDC("trace_id")).isEqualTo(span2.getSpanContext().getTraceId());
+    assertThat(events.get(2).getMDC("span_id")).isEqualTo(span2.getSpanContext().getSpanId());
+    assertThat(events.get(2).getMDC("trace_flags"))
+        .isEqualTo(span2.getSpanContext().getTraceFlags().asHex());
   }
 
   @Test
@@ -97,12 +98,12 @@ public class Log4j1MdcTest {
 
     List<LoggingEvent> events = ListAppender.getEvents();
 
-    assertEquals(1, events.size());
-    assertEquals("log message 1", events.get(0).getMessage());
-    assertNull(events.get(0).getMDC("trace_id"));
-    assertNull(events.get(0).getMDC("span_id"));
-    assertNull(events.get(0).getMDC("trace_flags"));
-    assertEquals("unknown_service:java", events.get(0).getMDC("service.name"));
-    assertEquals("java", events.get(0).getMDC("telemetry.sdk.language"));
+    assertThat(events).hasSize(1);
+    assertThat(events.get(0).getMessage()).isEqualTo("log message 1");
+    assertThat(events.get(0).getMDC("trace_id")).isNull();
+    assertThat(events.get(0).getMDC("span_id")).isNull();
+    assertThat(events.get(0).getMDC("trace_flags")).isNull();
+    assertThat(events.get(0).getMDC("service.name")).isEqualTo("unknown_service:java");
+    assertThat(events.get(0).getMDC("telemetry.sdk.language")).isEqualTo("java");
   }
 }

@@ -5,9 +5,11 @@
 
 package io.opentelemetry.javaagent.bootstrap.servlet;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
+
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -15,6 +17,9 @@ import javax.annotation.Nullable;
 
 /**
  * Helper class for finding a mapping that matches current request from a collection of mappings.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public final class MappingResolver {
   private final Set<String> exactMatches;
@@ -23,8 +28,8 @@ public final class MappingResolver {
 
   private MappingResolver(
       Set<String> exactMatches, List<WildcardMatcher> wildcardMatchers, boolean hasDefault) {
-    this.exactMatches = exactMatches.isEmpty() ? Collections.emptySet() : exactMatches;
-    this.wildcardMatchers = wildcardMatchers.isEmpty() ? Collections.emptyList() : wildcardMatchers;
+    this.exactMatches = exactMatches.isEmpty() ? emptySet() : exactMatches;
+    this.wildcardMatchers = wildcardMatchers.isEmpty() ? emptyList() : wildcardMatchers;
     this.hasDefault = hasDefault;
   }
 
@@ -144,6 +149,9 @@ public final class MappingResolver {
    * Factory interface for creating {@link MappingResolver} instances. The main reason this class is
    * here is that we need to ensure that the class used for {@code VirtualField} lookup is always
    * the same. If we would use an injected class it could be different in different class loaders.
+   *
+   * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+   * at any time.
    */
   public interface Factory {
 

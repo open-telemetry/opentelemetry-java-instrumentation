@@ -34,16 +34,14 @@ public class DefaultExecControllerInstrumentation implements TypeInstrumentation
     transformer.applyAdviceToMethod(
         named("setInitializers")
             .and(takesArgument(0, named("com.google.common.collect.ImmutableList"))),
-        DefaultExecControllerInstrumentation.class.getName() + "$SetInitializersAdvice");
+        getClass().getName() + "$SetInitializersAdvice");
 
     transformer.applyAdviceToMethod(
         named("setInterceptors")
             .and(takesArgument(0, named("com.google.common.collect.ImmutableList"))),
-        DefaultExecControllerInstrumentation.class.getName() + "$SetInterceptorsAdvice");
+        getClass().getName() + "$SetInterceptorsAdvice");
 
-    transformer.applyAdviceToMethod(
-        isConstructor(),
-        DefaultExecControllerInstrumentation.class.getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
   }
 
   @SuppressWarnings("unused")

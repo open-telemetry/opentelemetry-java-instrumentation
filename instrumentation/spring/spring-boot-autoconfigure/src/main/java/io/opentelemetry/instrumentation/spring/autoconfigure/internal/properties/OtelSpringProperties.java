@@ -5,7 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties;
 
-import java.util.Collections;
+import static java.util.Collections.emptyList;
+
 import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -32,7 +33,7 @@ public final class OtelSpringProperties {
        * change at any time.
        */
       public static final class Resource {
-        private List<String> providers = Collections.emptyList();
+        private List<String> providers = emptyList();
 
         public List<String> getProviders() {
           return providers;
@@ -64,7 +65,7 @@ public final class OtelSpringProperties {
        * change at any time.
        */
       public static final class Resource {
-        private List<String> providers = Collections.emptyList();
+        private List<String> providers = emptyList();
 
         public List<String> getProviders() {
           return providers;
@@ -121,7 +122,7 @@ public final class OtelSpringProperties {
        * change at any time.
        */
       public static final class View {
-        private List<String> config = Collections.emptyList();
+        private List<String> config = emptyList();
 
         public List<String> getConfig() {
           return config;
@@ -153,7 +154,7 @@ public final class OtelSpringProperties {
        * change at any time.
        */
       public static final class Disabled {
-        private List<String> keys = Collections.emptyList();
+        private List<String> keys = emptyList();
 
         public List<String> getKeys() {
           return keys;
@@ -200,7 +201,7 @@ public final class OtelSpringProperties {
    * any time.
    */
   public static final class HasExporters {
-    private List<String> exporter = Collections.emptyList();
+    private List<String> exporter = emptyList();
 
     public List<String> getExporter() {
       return exporter;
@@ -226,8 +227,8 @@ public final class OtelSpringProperties {
        * change at any time.
        */
       public static final class Client {
-        private List<String> captureRequestHeaders = Collections.emptyList();
-        private List<String> captureResponseHeaders = Collections.emptyList();
+        private List<String> captureRequestHeaders = emptyList();
+        private List<String> captureResponseHeaders = emptyList();
 
         public List<String> getCaptureRequestHeaders() {
           return captureRequestHeaders;
@@ -251,8 +252,8 @@ public final class OtelSpringProperties {
        * change at any time.
        */
       public static final class Server {
-        private List<String> captureRequestHeaders = Collections.emptyList();
-        private List<String> captureResponseHeaders = Collections.emptyList();
+        private List<String> captureRequestHeaders = emptyList();
+        private List<String> captureResponseHeaders = emptyList();
 
         public List<String> getCaptureRequestHeaders() {
           return captureRequestHeaders;
@@ -275,7 +276,7 @@ public final class OtelSpringProperties {
 
       private Server server = new Server();
 
-      private List<String> knownMethods = Collections.emptyList();
+      private List<String> knownMethods = emptyList();
 
       public Client getClient() {
         return client;
@@ -313,7 +314,7 @@ public final class OtelSpringProperties {
     }
   }
 
-  private List<String> propagators = Collections.emptyList();
+  private List<String> propagators = emptyList();
 
   private Java java = new Java();
 

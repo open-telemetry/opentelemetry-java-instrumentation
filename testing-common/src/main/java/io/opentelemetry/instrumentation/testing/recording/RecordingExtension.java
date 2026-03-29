@@ -25,6 +25,7 @@ public final class RecordingExtension extends WireMockExtension
 
   private final String apiUrl;
 
+  // calling varargs extensions method creates generic array
   @SuppressWarnings({"unchecked", "varargs"})
   public RecordingExtension(String apiUrl) {
     super(

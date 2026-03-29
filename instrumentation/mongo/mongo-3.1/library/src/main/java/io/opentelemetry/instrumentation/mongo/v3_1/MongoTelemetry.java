@@ -9,6 +9,8 @@ import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrumenterFactory;
+import io.opentelemetry.instrumentation.mongo.v3_1.internal.TracingCommandListener;
 
 // TODO this class is used for all Mongo versions. Extract to mongo-common module
 /** Entrypoint to OpenTelemetry instrumentation of the MongoDB client. */
@@ -23,25 +25,26 @@ public final class MongoTelemetry {
    * Returns a new {@link MongoTelemetryBuilder} configured with the given {@link OpenTelemetry}.
    */
   public static MongoTelemetryBuilder builder(OpenTelemetry openTelemetry) {
-    return new MongoTelemetryBuilder(openTelemetry);
+    return new MongoTelemetryBuilder(openTelemetry, "io.opentelemetry.mongo-3.1");
   }
 
   private final Instrumenter<CommandStartedEvent, Void> instrumenter;
 
   MongoTelemetry(
       OpenTelemetry openTelemetry,
-      boolean statementSanitizationEnabled,
+      String instrumentationName,
+      boolean querySanitizationEnabled,
       int maxNormalizedQueryLength) {
     this.instrumenter =
         MongoInstrumenterFactory.createInstrumenter(
-            openTelemetry, statementSanitizationEnabled, maxNormalizedQueryLength);
+            openTelemetry, instrumentationName, querySanitizationEnabled, maxNormalizedQueryLength);
   }
 
   /**
    * Returns a new {@link CommandListener} that can be used with methods like {@link
    * com.mongodb.MongoClientOptions.Builder#addCommandListener(CommandListener)}.
    */
-  public CommandListener newCommandListener() {
+  public CommandListener createCommandListener() {
     return new TracingCommandListener(instrumenter);
   }
 }

@@ -14,6 +14,7 @@ public final class GraphQLTelemetryBuilder {
 
   private final OpenTelemetry openTelemetry;
 
+  private boolean captureQuery = true;
   private boolean sanitizeQuery = true;
   private boolean dataFetcherInstrumentationEnabled = false;
   private boolean trivialDataFetcherInstrumentationEnabled = false;
@@ -23,11 +24,30 @@ public final class GraphQLTelemetryBuilder {
     this.openTelemetry = openTelemetry;
   }
 
+  /**
+   * Sets whether query should be captured in {@code graphql.document} span attribute. Default is
+   * {@code true}.
+   */
+  @CanIgnoreReturnValue
+  public GraphQLTelemetryBuilder setCaptureQuery(boolean captureQuery) {
+    this.captureQuery = captureQuery;
+    return this;
+  }
+
   /** Sets whether sensitive information should be removed from queries. Default is {@code true}. */
   @CanIgnoreReturnValue
-  public GraphQLTelemetryBuilder setSanitizeQuery(boolean sanitizeQuery) {
+  public GraphQLTelemetryBuilder setQuerySanitizationEnabled(boolean sanitizeQuery) {
     this.sanitizeQuery = sanitizeQuery;
     return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setQuerySanitizationEnabled(boolean)} instead. Will be removed in 3.0.
+   */
+  @Deprecated // to be removed in 3.0
+  @CanIgnoreReturnValue
+  public GraphQLTelemetryBuilder setSanitizeQuery(boolean sanitizeQuery) {
+    return setQuerySanitizationEnabled(sanitizeQuery);
   }
 
   /** Sets whether spans are created for GraphQL Data Fetchers. Default is {@code false}. */
@@ -56,9 +76,20 @@ public final class GraphQLTelemetryBuilder {
    * only when the server is not exposed to malicious clients.
    */
   @CanIgnoreReturnValue
-  public GraphQLTelemetryBuilder setAddOperationNameToSpanName(boolean addOperationNameToSpanName) {
+  public GraphQLTelemetryBuilder setOperationNameInSpanNameEnabled(
+      boolean addOperationNameToSpanName) {
     this.addOperationNameToSpanName = addOperationNameToSpanName;
     return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setOperationNameInSpanNameEnabled(boolean)} instead. Will be removed in
+   *     3.0.
+   */
+  @Deprecated // to be removed in 3.0
+  @CanIgnoreReturnValue
+  public GraphQLTelemetryBuilder setAddOperationNameToSpanName(boolean addOperationNameToSpanName) {
+    return setOperationNameInSpanNameEnabled(addOperationNameToSpanName);
   }
 
   /**
@@ -68,6 +99,7 @@ public final class GraphQLTelemetryBuilder {
   public GraphQLTelemetry build() {
     return new GraphQLTelemetry(
         openTelemetry,
+        captureQuery,
         sanitizeQuery,
         GraphqlInstrumenterFactory.createDataFetcherInstrumenter(
             openTelemetry, dataFetcherInstrumentationEnabled),

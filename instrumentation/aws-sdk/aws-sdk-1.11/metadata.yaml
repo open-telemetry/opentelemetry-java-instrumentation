@@ -3,11 +3,17 @@ description: >
   and metrics for calls to AWS services including DynamoDB, EC2, Kinesis, Lambda, RDS, S3, secrets
   manager, SNS/SQS and step functions.
 library_link: https://aws.amazon.com/sdk-for-java/
+semantic_conventions:
+  - HTTP_CLIENT_SPANS
+  - DATABASE_CLIENT_SPANS
+  - DATABASE_CLIENT_METRICS
+  - MESSAGING_SPANS
+  - GENAI_CLIENT_SPANS
+  - GENAI_CLIENT_METRICS
 configurations:
   - name: otel.instrumentation.aws-sdk.experimental-span-attributes
     description: >
-      Enables the experimental span attributes `aws.agent`, `aws.bucket.name`, `aws.queue.url`,
-      `aws.queue.name`, `aws.stream.name`, `aws.table.name`, `aws.lambda.function.arn` and
+      Enables the experimental span attributes `aws.agent`, `aws.queue.name`, `aws.lambda.function.arn` and
       `aws.lambda.function.name` for AWS SDK instrumentation.
     type: boolean
     default: false

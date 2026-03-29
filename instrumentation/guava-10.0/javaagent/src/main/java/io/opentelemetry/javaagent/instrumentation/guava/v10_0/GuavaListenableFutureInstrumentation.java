@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.guava.v10_0;
 
+import static io.opentelemetry.javaagent.instrumentation.guava.v10_0.InstrumentationHelper.PROPAGATED_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
@@ -19,7 +20,6 @@ import java.util.concurrent.Executor;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.matcher.ElementMatchers;
 
 public class GuavaListenableFutureInstrumentation implements TypeInstrumentation {
   @Override
@@ -32,7 +32,7 @@ public class GuavaListenableFutureInstrumentation implements TypeInstrumentation
     transformer.applyAdviceToMethod(
         isConstructor(), this.getClass().getName() + "$AbstractFutureAdvice");
     transformer.applyAdviceToMethod(
-        named("addListener").and(ElementMatchers.takesArguments(Runnable.class, Executor.class)),
+        named("addListener").and(takesArguments(Runnable.class, Executor.class)),
         this.getClass().getName() + "$AddListenerAdvice");
   }
 
@@ -52,9 +52,7 @@ public class GuavaListenableFutureInstrumentation implements TypeInstrumentation
     public static PropagatedContext addListenerEnter(@Advice.Argument(0) Runnable task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
-        VirtualField<Runnable, PropagatedContext> virtualField =
-            VirtualField.find(Runnable.class, PropagatedContext.class);
-        return ExecutorAdviceHelper.attachContextToTask(context, virtualField, task);
+        return ExecutorAdviceHelper.attachContextToTask(context, PROPAGATED_CONTEXT, task);
       }
       return null;
     }
@@ -64,9 +62,8 @@ public class GuavaListenableFutureInstrumentation implements TypeInstrumentation
         @Advice.Argument(0) Runnable task,
         @Advice.Enter PropagatedContext propagatedContext,
         @Advice.Thrown Throwable throwable) {
-      VirtualField<Runnable, PropagatedContext> virtualField =
-          VirtualField.find(Runnable.class, PropagatedContext.class);
-      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable, virtualField, task);
+      ExecutorAdviceHelper.cleanUpAfterSubmit(
+          propagatedContext, throwable, PROPAGATED_CONTEXT, task);
     }
   }
 }

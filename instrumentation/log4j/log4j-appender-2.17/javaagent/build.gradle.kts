@@ -11,16 +11,18 @@ muzzle {
   }
 }
 
-val testLatestDeps = findProperty("testLatestDeps") as Boolean
+val testLatestDeps = findProperty("testLatestDeps") == "true"
 
 dependencies {
+  testInstrumentation(project(":instrumentation:log4j:log4j-appender-1.2:javaagent"))
+
   library("org.apache.logging.log4j:log4j-core:2.0")
 
   compileOnly(project(":javaagent-bootstrap"))
 
   implementation(project(":instrumentation:log4j:log4j-appender-2.17:library"))
 
-  testImplementation("org.awaitility:awaitility")
+  testImplementation(project(":instrumentation:log4j:log4j-appender-2.17:testing"))
 
   if (testLatestDeps) {
     // this dependency is needed for the slf4j->log4j test
@@ -55,6 +57,12 @@ tasks {
   check {
     dependsOn(testAsync)
   }
+
+  if (findProperty("denyUnsafe") == "true") {
+    withType<Test>().configureEach {
+      enabled = false
+    }
+  }
 }
 
 tasks.withType<Test>().configureEach {
@@ -64,6 +72,7 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-map-message-attributes=true")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=*")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-marker-attribute=true")
+  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-event-name=true")
 }
 
 configurations {

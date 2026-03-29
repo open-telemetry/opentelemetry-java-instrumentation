@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0;
 
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 
 public final class SpringBatchInstrumentationConfig {
 
@@ -13,11 +14,13 @@ public final class SpringBatchInstrumentationConfig {
 
   // the item level instrumentation is very chatty so it's disabled by default
   private static final boolean ITEM_TRACING_ENABLED =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.spring-batch.item.enabled", false);
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "spring_batch")
+          .get("item")
+          .getBoolean("enabled", false);
   private static final boolean CREATE_ROOT_SPAN_FOR_CHUNK =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.spring-batch.experimental.chunk.new-trace", false);
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "spring_batch")
+          .get("chunk/development")
+          .getBoolean("new_trace", false);
 
   public static String instrumentationName() {
     return INSTRUMENTATION_NAME;

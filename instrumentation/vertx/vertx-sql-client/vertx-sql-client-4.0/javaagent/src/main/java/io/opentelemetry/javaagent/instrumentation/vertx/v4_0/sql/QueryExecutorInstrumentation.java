@@ -19,6 +19,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil;
 import io.vertx.core.impl.future.PromiseInternal;
+import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.impl.PreparedStatement;
 import io.vertx.sqlclient.impl.QueryExecutorUtil;
 import javax.annotation.Nullable;
@@ -35,11 +36,10 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isConstructor(), QueryExecutorInstrumentation.class.getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("executeSimpleQuery", "executeExtendedQuery", "executeBatchQuery"),
-        QueryExecutorInstrumentation.class.getName() + "$QueryAdvice");
+        getClass().getName() + "$QueryAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -80,10 +80,11 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
         }
 
         // The parameter we need are in different positions, we are not going to have separate
-        // advices for all of them. The method gets the statement either as String or
+        // advices for all of them. The method gets the query either as String or
         // PreparedStatement, use the first argument that is either of these. PromiseInternal is
         // always at the end of the argument list.
         String sql = null;
+        boolean preparedStatement = false;
         PromiseInternal<?> promiseInternal = null;
         for (Object argument : arguments) {
           if (sql == null) {
@@ -91,6 +92,7 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
               sql = (String) argument;
             } else if (argument instanceof PreparedStatement) {
               sql = ((PreparedStatement) argument).sql();
+              preparedStatement = true;
             }
           } else if (argument instanceof PromiseInternal) {
             promiseInternal = (PromiseInternal<?>) argument;
@@ -100,8 +102,21 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
           return new AdviceScope(callDepth);
         }
 
+        SqlConnectOptions connectOptions = QueryExecutorUtil.getConnectOptions(queryExecutor);
+        // connectOptions is null when the pool was created via JDBCPool which bypasses the
+        // Pool.pool() factory, in that case we skip vertx-sql-client span creation and let JDBC
+        // instrumentation handle it
+        if (connectOptions == null) {
+          return new AdviceScope(callDepth);
+        }
+        // Try db system stored from pool class first (handles generic SqlConnectOptions),
+        // fall back to class name detection on the connect options itself
+        String dbSystem = VertxSqlClientSingletons.getConnectOptionsDbSystem(connectOptions);
+        if (dbSystem == null) {
+          dbSystem = VertxSqlClientUtil.getDbSystemNameFromClassName(connectOptions);
+        }
         VertxSqlClientRequest otelRequest =
-            new VertxSqlClientRequest(sql, QueryExecutorUtil.getConnectOptions(queryExecutor));
+            new VertxSqlClientRequest(sql, connectOptions, preparedStatement, dbSystem);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, otelRequest)) {
           return new AdviceScope(callDepth, null, null, null);

@@ -29,7 +29,11 @@ public class ElasticsearchApiClientInstrumentationModule extends Instrumentation
     // instrumentation
     // that introduced the class `co.elastic.clients.transport.instrumentation.Instrumentation`.
     // Disabling agent instrumentation for those cases.
-    return not(hasClassesNamed("co.elastic.clients.transport.instrumentation.Instrumentation"));
+    return hasClassesNamed(
+            // present since 7.16 (base version of this instrumentation)
+            "co.elastic.clients.elasticsearch.ElasticsearchClient")
+        // added in 8.10 (native OTel instrumentation)
+        .and(not(hasClassesNamed("co.elastic.clients.transport.instrumentation.Instrumentation")));
   }
 
   @Override
@@ -41,5 +45,10 @@ public class ElasticsearchApiClientInstrumentationModule extends Instrumentation
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new RestClientTransportInstrumentation(), new RestClientHttpClientInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

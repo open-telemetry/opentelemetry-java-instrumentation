@@ -46,7 +46,7 @@ use common configuration method:
 Let's first look at the yaml file that is used to configure the inferred spans processor:
 
 ```yaml
-file_format: 1.0-rc.1
+file_format: 1.0
 tracer_provider:
   processors:
     - inferred_spans:
@@ -60,7 +60,7 @@ And now the component provider that uses the Declarative Config Bridge:
 ```java
 
 @AutoService(ComponentProvider.class)
-public class InferredSpansComponentProvider implements ComponentProvider<SpanProcessor> {
+public class InferredSpansComponentProvider implements ComponentProvider {
 
   @Override
   public String getName() {

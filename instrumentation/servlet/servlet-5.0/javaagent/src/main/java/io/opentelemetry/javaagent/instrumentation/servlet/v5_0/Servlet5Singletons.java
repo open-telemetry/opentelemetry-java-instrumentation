@@ -8,18 +8,20 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
+import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
+import io.opentelemetry.instrumentation.servlet.v5_0.internal.Servlet5Accessor;
 import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
+import io.opentelemetry.javaagent.instrumentation.servlet.AgentServletInstrumenterBuilder;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
-import io.opentelemetry.javaagent.instrumentation.servlet.ServletInstrumenterBuilder;
-import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
-import io.opentelemetry.javaagent.instrumentation.servlet.ServletResponseContext;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.ResponseInstrumenterFactory;
 import io.opentelemetry.javaagent.instrumentation.servlet.snippet.OutputStreamSnippetInjectionHelper;
 import jakarta.servlet.Filter;
 import jakarta.servlet.Servlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import javax.annotation.Nullable;
 
 public final class Servlet5Singletons {
 
@@ -28,7 +30,7 @@ public final class Servlet5Singletons {
   private static final Instrumenter<
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
       INSTRUMENTER =
-          ServletInstrumenterBuilder.<HttpServletRequest, HttpServletResponse>create()
+          AgentServletInstrumenterBuilder.<HttpServletRequest, HttpServletResponse>create()
               .build(INSTRUMENTATION_NAME, Servlet5Accessor.INSTANCE);
 
   private static final ServletHelper<HttpServletRequest, HttpServletResponse> HELPER =
@@ -56,6 +58,7 @@ public final class Servlet5Singletons {
     return SNIPPET_INJECTION_HELPER;
   }
 
+  @Nullable
   public static MappingResolver getMappingResolver(Object servletOrFilter) {
     MappingResolver.Factory factory = getMappingResolverFactory(servletOrFilter);
     if (factory != null) {
@@ -64,6 +67,7 @@ public final class Servlet5Singletons {
     return null;
   }
 
+  @Nullable
   private static MappingResolver.Factory getMappingResolverFactory(Object servletOrFilter) {
     boolean servlet = servletOrFilter instanceof Servlet;
     if (servlet) {

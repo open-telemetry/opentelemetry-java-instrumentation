@@ -7,6 +7,7 @@ muzzle {
     group.set("io.dropwizard")
     module.set("dropwizard-views")
     versions.set("(,3.0.0)")
+    assertInverse.set(true)
   }
 }
 
@@ -20,6 +21,6 @@ dependencies {
 tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
 
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  systemProperty("collectMetadata", findProperty("collectMetadata"))
   systemProperty("metadataConfig", "otel.instrumentation.common.experimental.view-telemetry.enabled=true")
 }

@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.jmx.rules;
 
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.awaitility.Awaitility.await;
@@ -13,9 +16,9 @@ import com.linecorp.armeria.server.ServerBuilder;
 import com.linecorp.armeria.server.grpc.GrpcService;
 import com.linecorp.armeria.testing.junit5.server.ServerExtension;
 import io.grpc.stub.StreamObserver;
-import io.opentelemetry.instrumentation.jmx.yaml.JmxConfig;
-import io.opentelemetry.instrumentation.jmx.yaml.JmxRule;
-import io.opentelemetry.instrumentation.jmx.yaml.RuleParser;
+import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxConfig;
+import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule;
+import io.opentelemetry.instrumentation.jmx.internal.yaml.RuleParser;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceResponse;
 import io.opentelemetry.proto.collector.metrics.v1.MetricsServiceGrpc;
@@ -28,15 +31,12 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.stream.Collectors;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -50,19 +50,19 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.utility.MountableFile;
 
 /** Base class for testing YAML metric definitions with a real target system */
-public class TargetSystemTest {
+class TargetSystemTest {
 
   private static final Logger logger = LoggerFactory.getLogger(TargetSystemTest.class);
   private static final Logger targetSystemLogger = LoggerFactory.getLogger("targetSystem");
 
   private static final String AGENT_PATH = "/opentelemetry-instrumentation-javaagent.jar";
-  protected static final String APP_PATH = "/testapp.war";
 
   private static final Network network = Network.newNetwork();
 
   private static OtlpGrpcServer otlpServer;
   private static Path agentPath;
-  private static Path testAppPath;
+  private static Path testWebAppPath;
+
   private static String otlpEndpoint;
 
   private GenericContainer<?> targetSystem;
@@ -76,10 +76,10 @@ public class TargetSystemTest {
     otlpEndpoint = "http://host.testcontainers.internal:" + otlpServer.httpPort();
 
     TargetSystemTest.agentPath = getArtifactPath("io.opentelemetry.javaagent.path");
-    TargetSystemTest.testAppPath = getArtifactPath("io.opentelemetry.testapp.path");
+    TargetSystemTest.testWebAppPath = getArtifactPath("io.opentelemetry.testapp.path");
   }
 
-  private static Path getArtifactPath(String systemProperty) {
+  protected static Path getArtifactPath(String systemProperty) {
     String pathValue = System.getProperty(systemProperty);
     assertThat(pathValue).isNotNull();
     Path path = Paths.get(pathValue);
@@ -102,10 +102,10 @@ public class TargetSystemTest {
         stop(targetDependency);
       }
     }
-    targetDependencies = Collections.emptyList();
+    targetDependencies = emptyList();
   }
 
-  private static void stop(@Nullable GenericContainer<?> container) {
+  private static void stop(GenericContainer<?> container) {
     if (container != null && container.isRunning()) {
       container.stop();
     }
@@ -120,6 +120,10 @@ public class TargetSystemTest {
     }
   }
 
+  protected static String getOtlpEndpoint() {
+    return otlpEndpoint;
+  }
+
   protected static String javaAgentJvmArgument() {
     return "-javaagent:" + AGENT_PATH;
   }
@@ -127,7 +131,7 @@ public class TargetSystemTest {
   protected static List<String> javaPropertiesToJvmArgs(Map<String, String> config) {
     return config.entrySet().stream()
         .map(e -> String.format("-D%s=%s", e.getKey(), e.getValue()))
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   /**
@@ -150,12 +154,9 @@ public class TargetSystemTest {
     // disable runtime telemetry metrics
     config.put("otel.instrumentation.runtime-telemetry.enabled", "false");
     // set yaml config files to test
-    config.put("otel.jmx.target", "tomcat");
     config.put(
         "otel.jmx.config",
-        yamlFiles.stream()
-            .map(TargetSystemTest::containerYamlPath)
-            .collect(Collectors.joining(",")));
+        yamlFiles.stream().map(TargetSystemTest::containerYamlPath).collect(joining(",")));
     return config;
   }
 
@@ -165,7 +166,7 @@ public class TargetSystemTest {
    * @param target target system to start
    */
   protected void startTarget(GenericContainer<?> target) {
-    startTarget(target, Collections.emptyList());
+    startTarget(target, emptyList());
   }
 
   /**
@@ -204,9 +205,14 @@ public class TargetSystemTest {
     }
   }
 
+  protected static void copyTestAppToTarget(
+      Path from, GenericContainer<?> target, String targetPath) {
+    logger.info("copying test application {} to container {}", from, targetPath);
+    target.withCopyFileToContainer(MountableFile.forHostPath(from), targetPath);
+  }
+
   protected static void copyTestWebAppToTarget(GenericContainer<?> target, String targetPath) {
-    logger.info("copying test application {} to container {}", testAppPath, targetPath);
-    target.withCopyFileToContainer(MountableFile.forHostPath(testAppPath), targetPath);
+    copyTestAppToTarget(testWebAppPath, target, targetPath);
   }
 
   private static String yamlResourcePath(String yaml) {
@@ -265,7 +271,7 @@ public class TargetSystemTest {
                           // TODO: disabling batch span exporter might help remove unwanted metrics
                           sm -> sm.getScope().getName().equals("io.opentelemetry.jmx"))
                       .flatMap(sm -> sm.getMetricsList().stream())
-                      .collect(Collectors.toList());
+                      .collect(toList());
 
               assertThat(metrics).describedAs("Metrics received but not from JMX").isNotEmpty();
 

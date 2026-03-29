@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpServletResponseWrapper;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * Notes on Content-Length: the snippet length is only added to the content length when injection
@@ -41,7 +42,7 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
 
   private long contentLength = UNSET;
 
-  private SnippetInjectingPrintWriter snippetInjectingPrintWriter = null;
+  @Nullable private SnippetInjectingPrintWriter snippetInjectingPrintWriter = null;
 
   public Servlet5SnippetInjectingResponseWrapper(HttpServletResponse response, String snippet) {
     super(response);

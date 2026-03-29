@@ -1,0 +1,54 @@
+plugins {
+  id("otel.javaagent-instrumentation")
+}
+
+muzzle {
+  pass {
+    group.set("org.apache.rocketmq")
+    module.set("rocketmq-client-java")
+    versions.set("[5.0.0,)")
+    assertInverse.set(true)
+  }
+}
+
+dependencies {
+  library("org.apache.rocketmq:rocketmq-client-java:5.0.0")
+
+  testInstrumentation(project(":instrumentation:rocketmq:rocketmq-client-4.8:javaagent"))
+
+  // earlier versions have bugs that may make tests flaky.
+  testLibrary("org.apache.rocketmq:rocketmq-client-java:5.0.2")
+}
+
+tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
+
+  val testReceiveSpanDisabled by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
+    }
+    include("**/RocketMqClientSuppressReceiveSpanTest.*")
+  }
+
+  test {
+    filter {
+      excludeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
+    }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+  }
+
+  check {
+    dependsOn(testReceiveSpanDisabled)
+  }
+
+  if (findProperty("denyUnsafe") == "true") {
+    withType<Test>().configureEach {
+      enabled = false
+    }
+  }
+}

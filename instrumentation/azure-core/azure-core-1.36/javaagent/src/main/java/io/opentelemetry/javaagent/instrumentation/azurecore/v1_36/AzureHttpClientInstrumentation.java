@@ -8,17 +8,19 @@ package io.opentelemetry.javaagent.instrumentation.azurecore.v1_36;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.azurecore.v1_36.SuppressNestedClientHelper.disallowNestedClientSpanMono;
 import static io.opentelemetry.javaagent.instrumentation.azurecore.v1_36.SuppressNestedClientHelper.disallowNestedClientSpanSync;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.azure.core.http.HttpResponse;
+import com.azure.core.util.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import reactor.core.publisher.Mono;
@@ -33,15 +35,13 @@ public class AzureHttpClientInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("send"))
             .and(takesArgument(1, named("com.azure.core.util.Context")))
             .and(returns(named("reactor.core.publisher.Mono"))),
         this.getClass().getName() + "$SuppressNestedClientMonoAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("sendSync"))
             .and(takesArgument(1, named("com.azure.core.util.Context")))
             .and(returns(named("com.azure.core.http.HttpResponse"))),
@@ -50,27 +50,25 @@ public class AzureHttpClientInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class SuppressNestedClientMonoAdvice {
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void asyncSendExit(
-        @Advice.Argument(1) com.azure.core.util.Context azContext,
-        @Advice.Return(readOnly = false) Mono<HttpResponse> mono) {
-      mono = disallowNestedClientSpanMono(mono, azContext);
+    public static Mono<HttpResponse> asyncSendExit(
+        @Advice.Argument(1) Context azContext, @Advice.Return Mono<HttpResponse> mono) {
+      return disallowNestedClientSpanMono(mono, azContext);
     }
   }
 
   @SuppressWarnings("unused")
   public static class SuppressNestedClientSyncAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void syncSendEnter(
-        @Advice.Argument(1) com.azure.core.util.Context azContext,
-        @Advice.Local("otelScope") Scope scope) {
-      scope = disallowNestedClientSpanSync(azContext);
+    public static Scope syncSendEnter(@Advice.Argument(1) Context azContext) {
+      return disallowNestedClientSpanSync(azContext);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void syncSendExit(
-        @Advice.Return HttpResponse response, @Advice.Local("otelScope") Scope scope) {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void syncSendExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

@@ -1,5 +1,3 @@
-// Enable testing scala code in groovy spock tests.
-
 plugins {
   scala
 }

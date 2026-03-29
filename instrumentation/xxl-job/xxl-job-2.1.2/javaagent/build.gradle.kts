@@ -25,15 +25,30 @@ dependencies {
   testInstrumentation(project(":instrumentation:xxl-job:xxl-job-1.9.2:javaagent"))
   testInstrumentation(project(":instrumentation:xxl-job:xxl-job-2.3.0:javaagent"))
 
+  testImplementation("org.apache.groovy:groovy")
   testImplementation(project(":instrumentation:xxl-job:xxl-job-common:testing"))
   latestDepTestLibrary("com.xuxueli:xxl-job-core:2.2.+") { // see xxl-job-2.3.0 module
     exclude("org.codehaus.groovy", "groovy")
   }
 }
 
-tasks.withType<Test>().configureEach {
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  jvmArgs("-Dotel.instrumentation.xxl-job.experimental-span-attributes=true")
+tasks {
+  withType<Test>().configureEach {
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.xxl-job.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.xxl-job.experimental-span-attributes=true")
+  }
+
+  check {
+    dependsOn(testExperimental)
+  }
 }

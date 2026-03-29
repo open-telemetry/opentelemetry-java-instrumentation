@@ -7,6 +7,7 @@ muzzle {
     group.set("com.netflix.hystrix")
     module.set("hystrix-core")
     versions.set("[1.4.0,)")
+    assertInverse.set(true)
   }
 }
 
@@ -24,9 +25,8 @@ tasks {
   withType<Test>().configureEach {
     // Disable so failure testing below doesn't inadvertently change the behavior.
     jvmArgs("-Dhystrix.command.default.circuitBreaker.enabled=false")
-    jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
 
     // Uncomment for debugging:
     // jvmArgs("-Dhystrix.command.default.execution.timeout.enabled=false")
@@ -42,5 +42,11 @@ tasks {
 
   check {
     dependsOn(testExperimental)
+  }
+
+  if (findProperty("denyUnsafe") == "true") {
+    withType<Test>().configureEach {
+      enabled = false
+    }
   }
 }

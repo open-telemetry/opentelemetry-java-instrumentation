@@ -27,7 +27,7 @@ dependencies {
     }
   }
 
-  if (findProperty("testLatestDeps") as Boolean) {
+  if (findProperty("testLatestDeps") == "true") {
     testImplementation("ch.qos.logback:logback-classic:latest.release")
   } else {
     testImplementation("ch.qos.logback:logback-classic") {
@@ -46,7 +46,7 @@ dependencies {
 
   implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
 
-  testImplementation("org.awaitility:awaitility")
+  testImplementation(project(":instrumentation:logback:logback-appender-1.0:testing"))
 }
 
 tasks.withType<Test>().configureEach {

@@ -1,6 +1,10 @@
+display_name: HttpURLConnection
 description: >
-  This instrumentation enables the generation of HTTP client spans and HTTP client metrics for
-  requests made using `java.net.HttpURLConnection`.
+  This instrumentation enables HTTP client spans and HTTP client metrics for requests made using
+  java.net.HttpURLConnection.
+semantic_conventions:
+  - HTTP_CLIENT_SPANS
+  - HTTP_CLIENT_METRICS
 library_link: https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/net/HttpURLConnection.html
 configurations:
   - name: otel.instrumentation.http.known-methods

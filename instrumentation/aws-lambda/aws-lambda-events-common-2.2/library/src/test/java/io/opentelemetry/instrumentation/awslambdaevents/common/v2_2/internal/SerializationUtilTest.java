@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.services.lambda.runtime.events.KinesisEvent;
@@ -14,13 +15,12 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.ScheduledEvent;
 import com.amazonaws.services.lambda.runtime.events.models.s3.S3EventNotification;
 import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import org.joda.time.DateTime;
 import org.junit.jupiter.api.Test;
 
-public class SerializationUtilTest {
+class SerializationUtilTest {
 
   private static final Map<Class<?>, String> events = buildEventExamples();
 
@@ -218,7 +218,7 @@ public class SerializationUtilTest {
     assertThat(record.getKinesis().getPartitionKey()).isEqualTo("1");
     assertThat(record.getKinesis().getSequenceNumber())
         .isEqualTo("49590338271490256608559692538361571095921575989136588898");
-    assertThat(new String(record.getKinesis().getData().array(), StandardCharsets.UTF_8))
+    assertThat(new String(record.getKinesis().getData().array(), UTF_8))
         .isEqualTo("Hello, this is a test.");
   }
 
@@ -278,8 +278,7 @@ public class SerializationUtilTest {
     String eventBody = events.get(ScheduledEvent.class);
     ScheduledEvent event =
         SerializationUtil.fromJson(
-            new ByteArrayInputStream(eventBody.getBytes(StandardCharsets.UTF_8)),
-            ScheduledEvent.class);
+            new ByteArrayInputStream(eventBody.getBytes(UTF_8)), ScheduledEvent.class);
 
     assertScheduledEvent(event);
   }
@@ -297,8 +296,7 @@ public class SerializationUtilTest {
     String eventBody = events.get(KinesisEvent.class);
     KinesisEvent event =
         SerializationUtil.fromJson(
-            new ByteArrayInputStream(eventBody.getBytes(StandardCharsets.UTF_8)),
-            KinesisEvent.class);
+            new ByteArrayInputStream(eventBody.getBytes(UTF_8)), KinesisEvent.class);
 
     assertKinesisEvent(event);
   }
@@ -316,7 +314,7 @@ public class SerializationUtilTest {
     String eventBody = events.get(SQSEvent.class);
     SQSEvent event =
         SerializationUtil.fromJson(
-            new ByteArrayInputStream(eventBody.getBytes(StandardCharsets.UTF_8)), SQSEvent.class);
+            new ByteArrayInputStream(eventBody.getBytes(UTF_8)), SQSEvent.class);
 
     assertSqsEvent(event);
   }
@@ -334,7 +332,7 @@ public class SerializationUtilTest {
     String eventBody = events.get(S3Event.class);
     S3Event event =
         SerializationUtil.fromJson(
-            new ByteArrayInputStream(eventBody.getBytes(StandardCharsets.UTF_8)), S3Event.class);
+            new ByteArrayInputStream(eventBody.getBytes(UTF_8)), S3Event.class);
 
     assertS3Event(event);
   }
@@ -352,7 +350,7 @@ public class SerializationUtilTest {
     String eventBody = events.get(SNSEvent.class);
     SNSEvent event =
         SerializationUtil.fromJson(
-            new ByteArrayInputStream(eventBody.getBytes(StandardCharsets.UTF_8)), SNSEvent.class);
+            new ByteArrayInputStream(eventBody.getBytes(UTF_8)), SNSEvent.class);
 
     assertSnsEvent(event);
   }

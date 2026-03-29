@@ -1,4 +1,7 @@
 description: This instrumentation enables database client spans and database client metrics for Elasticsearch REST clients.
+semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+  - DATABASE_CLIENT_METRICS
 library_link: https://www.elastic.co/guide/en/elasticsearch/client/java-rest
 configurations:
   - name: otel.instrumentation.elasticsearch.capture-search-query

@@ -19,6 +19,7 @@ public class HeaderDumpingServlet extends HttpServlet {
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    resp.setContentType("text/plain");
     PrintWriter response = resp.getWriter();
     Enumeration<String> headerNames = req.getHeaderNames();
     while (headerNames.hasMoreElements()) {

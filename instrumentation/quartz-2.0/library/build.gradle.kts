@@ -8,3 +8,16 @@ dependencies {
 
   testImplementation(project(":instrumentation:quartz-2.0:testing"))
 }
+
+tasks {
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.quartz.experimental-span-attributes=true")
+  }
+
+  check {
+    dependsOn(testExperimental)
+  }
+}

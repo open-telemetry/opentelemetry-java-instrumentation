@@ -10,6 +10,8 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenters;
 
 public final class OkHttp2Singletons {
@@ -18,6 +20,9 @@ public final class OkHttp2Singletons {
   private static final Instrumenter<Request, Response> INSTRUMENTER;
   private static final TracingInterceptor TRACING_INTERCEPTOR;
 
+  public static final VirtualField<Runnable, PropagatedContext> PROPAGATED_CONTEXT =
+      VirtualField.find(Runnable.class, PropagatedContext.class);
+
   static {
     INSTRUMENTER =
         JavaagentHttpClientInstrumenters.create(
@@ -25,10 +30,6 @@ public final class OkHttp2Singletons {
 
     TRACING_INTERCEPTOR =
         new TracingInterceptor(INSTRUMENTER, GlobalOpenTelemetry.get().getPropagators());
-  }
-
-  public static Instrumenter<Request, Response> instrumenter() {
-    return INSTRUMENTER;
   }
 
   public static Interceptor tracingInterceptor() {

@@ -18,8 +18,9 @@ import org.springframework.context.annotation.Configuration;
  * any time.
  */
 @Configuration
-@SuppressWarnings("OtelPrivateConstructorForUtilityClass")
 public class OpenTelemetryAppenderAutoConfiguration {
+
+  public OpenTelemetryAppenderAutoConfiguration() {}
 
   @ConditionalOnEnabledInstrumentation(module = "log4j-appender")
   @ConditionalOnClass(org.apache.logging.log4j.core.LoggerContext.class)

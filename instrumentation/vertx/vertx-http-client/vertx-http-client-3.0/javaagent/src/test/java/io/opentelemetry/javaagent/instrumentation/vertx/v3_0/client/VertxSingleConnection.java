@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.v3_0.client;
 
+import static java.util.Objects.requireNonNull;
+
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
@@ -14,7 +16,6 @@ import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -24,7 +25,7 @@ class VertxSingleConnection implements SingleConnection {
   private final String host;
   private final int port;
 
-  public VertxSingleConnection(String host, int port) {
+  VertxSingleConnection(String host, int port) {
     this.host = host;
     this.port = port;
     HttpClientOptions clientOptions =
@@ -35,7 +36,7 @@ class VertxSingleConnection implements SingleConnection {
   @Override
   public int doRequest(String path, Map<String, String> headers)
       throws ExecutionException, InterruptedException {
-    String requestId = Objects.requireNonNull(headers.get(REQUEST_ID_HEADER));
+    String requestId = requireNonNull(headers.get(REQUEST_ID_HEADER));
 
     HttpClientRequest request = httpClient.request(HttpMethod.GET, port, host, path);
     headers.forEach(request::putHeader);

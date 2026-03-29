@@ -45,6 +45,7 @@ out/
 ######################
 .vscode
 **/bin/
+.metals
 
 # Others #
 ##########
@@ -60,5 +61,4 @@ replay_pid*
 .telemetry*
 .lycheecache
 
-!java-agent/benchmark/releases/*.jar
-
+build-scan.txt

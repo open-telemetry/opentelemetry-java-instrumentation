@@ -1,5 +1,5 @@
 /*
- * Instrumentation for Hibernate between 3.5 and 4.
+ * Instrumentation for Hibernate between 3.3 and 4.
  * Has the same logic as the Hibernate 4+ instrumentation, but is copied rather than sharing a codebase. This is because
  * the root interface for Session/StatelessSession - SharedSessionContract - isn't present before version 4. So the
  * instrumentation isn't able to reference it.
@@ -40,7 +40,7 @@ dependencies {
   latestDepTestLibrary("org.hibernate:hibernate-core:3.+") // see hibernate-4.0 module
 }
 
-if (findProperty("testLatestDeps") as Boolean) {
+if (findProperty("testLatestDeps") == "true") {
   configurations {
     // Needed for test, but for latestDepTest this would otherwise bundle a second incompatible version of hibernate-core.
     testImplementation {
@@ -55,7 +55,7 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
   val testExperimental by registering(Test::class) {
@@ -66,14 +66,17 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
   }
 
-  val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}StableSemconv") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
+        jvmArgs("-Dotel.semconv-stability.opt-in=database")
+      }
+    }
 
   check {
-    dependsOn(testStableSemconv, testExperimental)
+    dependsOn(testing.suites, testExperimental, stableSemconvSuites)
   }
 }

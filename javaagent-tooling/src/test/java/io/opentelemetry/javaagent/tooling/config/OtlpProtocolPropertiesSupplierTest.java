@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling.config;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
@@ -22,6 +23,7 @@ class OtlpProtocolPropertiesSupplierTest {
   @AfterEach
   void setUp() {
     GlobalOpenTelemetry.resetForTest();
+    AgentDistributionConfig.resetForTest();
   }
 
   @SetSystemProperty(
@@ -31,8 +33,7 @@ class OtlpProtocolPropertiesSupplierTest {
   void keepUserOtlpProtocolConfiguration() {
     // when
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
-        OpenTelemetryInstaller.installOpenTelemetrySdk(
-            this.getClass().getClassLoader(), EarlyInitAgentConfig.create());
+        OpenTelemetryInstaller.installOpenTelemetrySdk(this.getClass().getClassLoader());
 
     // then
     assertThat(
@@ -44,8 +45,7 @@ class OtlpProtocolPropertiesSupplierTest {
   void defaultHttpProtobufOtlpProtocolConfiguration() {
     // when
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
-        OpenTelemetryInstaller.installOpenTelemetrySdk(
-            this.getClass().getClassLoader(), EarlyInitAgentConfig.create());
+        OpenTelemetryInstaller.installOpenTelemetrySdk(this.getClass().getClassLoader());
 
     // then
     assertThat(

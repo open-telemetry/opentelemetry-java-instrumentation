@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0;
 
 import static io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0.SpringWebMvcSingletons.modelAndViewInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -37,18 +36,16 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isProtected())
+        isProtected()
             .and(named("onRefresh"))
             .and(takesArgument(0, named("org.springframework.context.ApplicationContext")))
             .and(takesArguments(1)),
-        DispatcherServletInstrumentation.class.getName() + "$HandlerMappingAdvice");
+        getClass().getName() + "$HandlerMappingAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isProtected())
+        isProtected()
             .and(named("render"))
             .and(takesArgument(0, named("org.springframework.web.servlet.ModelAndView"))),
-        DispatcherServletInstrumentation.class.getName() + "$RenderAdvice");
+        getClass().getName() + "$RenderAdvice");
   }
 
   /**

@@ -1,3 +1,4 @@
+display_name: Apache DBCP
 description: >
   This instrumentation enables database connection pools metrics for Apache DBCP.
 
@@ -6,3 +7,15 @@ description: >
   this happens automatically as all Spring beans that support JMX registration are automatically
   registered by default.
 library_link: https://commons.apache.org/proper/commons-dbcp/
+semantic_conventions:
+  - DATABASE_POOL_METRICS
+configurations:
+  - name: otel.semconv-stability.opt-in
+    description: >
+      Opt-in to emit stable semantic conventions instead of the old
+      experimental semantic conventions. Accepts a comma-separated list of semantic convention
+      groups (e.g., `database`, `http`, `messaging`). Use `<group>/dup` to emit both old and new
+      conventions simultaneously. Stable semantic conventions will become the default in version
+      3.0 of the agent.
+    type: list
+    default: ""

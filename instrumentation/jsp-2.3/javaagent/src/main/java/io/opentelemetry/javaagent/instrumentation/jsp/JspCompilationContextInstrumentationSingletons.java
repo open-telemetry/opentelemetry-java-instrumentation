@@ -8,18 +8,19 @@ package io.opentelemetry.javaagent.instrumentation.jsp;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import javax.annotation.Nullable;
 import org.apache.jasper.JspCompilationContext;
 import org.apache.jasper.compiler.Compiler;
 
 public class JspCompilationContextInstrumentationSingletons {
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.jsp.experimental-span-attributes", false);
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jsp")
+          .getBoolean("experimental_span_attributes/development", false);
 
   private static final Instrumenter<JspCompilationContext, Void> INSTRUMENTER;
 
@@ -30,6 +31,7 @@ public class JspCompilationContextInstrumentationSingletons {
                 "io.opentelemetry.jsp-2.3",
                 JspCompilationContextInstrumentationSingletons::spanNameOnCompile)
             .addAttributesExtractor(new CompilationAttributesExtractor())
+            .setEnabled(ExperimentalConfig.get().viewTelemetryEnabled())
             .buildInstrumenter(SpanKindExtractor.alwaysInternal());
   }
 

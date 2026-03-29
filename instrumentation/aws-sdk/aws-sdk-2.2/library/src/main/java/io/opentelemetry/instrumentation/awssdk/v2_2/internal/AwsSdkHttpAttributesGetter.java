@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import static java.util.Collections.emptyList;
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -60,9 +61,10 @@ class AwsSdkHttpAttributesGetter
   }
 
   @Override
+  @Nullable
   public Integer getServerPort(ExecutionAttributes request) {
     SdkHttpRequest httpRequest =
         request.getAttribute(TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE);
-    return httpRequest.port();
+    return HttpConstants.portOrDefaultFromScheme(httpRequest.port(), httpRequest.protocol());
   }
 }

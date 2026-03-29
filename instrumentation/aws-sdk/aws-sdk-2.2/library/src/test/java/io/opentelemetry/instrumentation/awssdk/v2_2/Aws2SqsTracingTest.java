@@ -32,7 +32,7 @@ abstract class Aws2SqsTracingTest extends AbstractAws2SqsTracingTest {
     AwsSdkTelemetryBuilder telemetryBuilder =
         AwsSdkTelemetry.builder(getTesting().getOpenTelemetry())
             .setCaptureExperimentalSpanAttributes(true)
-            .setMessagingReceiveInstrumentationEnabled(true)
+            .setMessagingReceiveTelemetryEnabled(true)
             .setCapturedHeaders(singletonList("Test-Message-Header"));
 
     configure(telemetryBuilder);
@@ -44,7 +44,7 @@ abstract class Aws2SqsTracingTest extends AbstractAws2SqsTracingTest {
   @Override
   protected ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder() {
     return ClientOverrideConfiguration.builder()
-        .addExecutionInterceptor(telemetry.newExecutionInterceptor());
+        .addExecutionInterceptor(telemetry.createExecutionInterceptor());
   }
 
   @Override

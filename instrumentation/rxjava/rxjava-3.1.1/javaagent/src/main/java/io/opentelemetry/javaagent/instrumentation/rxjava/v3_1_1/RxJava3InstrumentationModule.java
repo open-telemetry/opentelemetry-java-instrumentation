@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.rxjava.v3_1_1;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.Collections;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -28,6 +28,6 @@ public class RxJava3InstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Collections.singletonList(new RxJavaPluginsInstrumentation());
+    return singletonList(new RxJavaPluginsInstrumentation());
   }
 }

@@ -21,7 +21,13 @@ muzzle {
   pass {
     group.set("com.vaadin")
     module.set("flow-server")
-    versions.set("[3.1.0,)")
+    versions.set("[3.1.0,25.0.0)")
+  }
+  // not supported yet
+  fail {
+    group.set("com.vaadin")
+    module.set("flow-server")
+    versions.set("[25.0.0,)")
   }
 }
 
@@ -34,7 +40,6 @@ dependencies {
   compileOnly("com.vaadin:flow-server:2.2.0")
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
-  testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
   testInstrumentation(project(":instrumentation:tomcat:tomcat-7.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
   testInstrumentation(project(":instrumentation:tomcat:tomcat-10.0:javaagent"))
@@ -77,10 +82,15 @@ testing {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    // Enable legacy OpenSSL provider for Node.js 17+ compatibility with webpack 4
+    environment("NODE_OPTIONS", "--openssl-legacy-provider")
   }
 
   check {
-    if (findProperty("testLatestDeps") as Boolean) {
+    if (findProperty("testLatestDeps") == "true") {
       dependsOn(testing.suites.named("vaadin14LatestTest"), testing.suites.named("vaadinLatestTest"))
     } else {
       dependsOn(testing.suites.named("vaadin142Test"), testing.suites.named("vaadin16Test"))
@@ -96,7 +106,4 @@ configurations.configureEach {
       force("org.slf4j:slf4j-api:1.7.36")
     }
   }
-}
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }
