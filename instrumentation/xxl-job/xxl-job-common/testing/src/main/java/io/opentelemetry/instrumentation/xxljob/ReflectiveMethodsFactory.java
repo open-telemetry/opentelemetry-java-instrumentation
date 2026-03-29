@@ -36,7 +36,7 @@ class ReflectiveMethodsFactory {
   static Method getMethod() {
     try {
       return ReflectObject.class.getMethod("echo", String.class);
-    } catch (Exception e) {
+    } catch (Throwable t) {
       return null;
     }
   }
@@ -44,7 +44,7 @@ class ReflectiveMethodsFactory {
   static Method getInitMethod() {
     try {
       return ReflectObject.class.getMethod("initMethod");
-    } catch (Exception e) {
+    } catch (Throwable t) {
       return null;
     }
   }
@@ -52,7 +52,7 @@ class ReflectiveMethodsFactory {
   static Method getDestroyMethod() {
     try {
       return ReflectObject.class.getMethod("destroyMethod");
-    } catch (Exception e) {
+    } catch (Throwable t) {
       return null;
     }
   }
