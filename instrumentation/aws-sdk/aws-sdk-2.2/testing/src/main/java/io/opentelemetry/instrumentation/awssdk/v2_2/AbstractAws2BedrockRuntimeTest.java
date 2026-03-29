@@ -18,9 +18,14 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_TOKEN_TYPE;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_USAGE_INPUT_TOKENS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_USAGE_OUTPUT_TOKENS;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues.CHAT;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues.TEXT_COMPLETION;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiProviderNameIncubatingValues.AWS_BEDROCK;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.INPUT;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.OUTPUT;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
@@ -31,15 +36,17 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.recording.RecordingExtension;
-import io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.awscore.client.builder.AwsClientBuilder;
@@ -138,10 +145,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(
-                                    GEN_AI_OPERATION_NAME,
-                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
-                                        .CHAT),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 8),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 14),
@@ -164,14 +168,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.INPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)),
                                 point ->
                                     point
@@ -179,14 +177,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.OUTPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
@@ -201,10 +193,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
@@ -267,10 +256,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(
-                                    GEN_AI_OPERATION_NAME,
-                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
-                                        .CHAT),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 10),
                                 satisfies(
@@ -299,14 +285,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.INPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)),
                                 point ->
                                     point
@@ -314,14 +294,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.OUTPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
@@ -336,10 +310,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
@@ -417,10 +388,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(
-                                    GEN_AI_OPERATION_NAME,
-                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
-                                        .CHAT),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 415),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 162),
@@ -443,14 +411,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.INPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)),
                                 point ->
                                     point
@@ -458,14 +420,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.OUTPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
@@ -480,10 +436,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx0 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
@@ -585,10 +538,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(
-                                    GEN_AI_OPERATION_NAME,
-                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
-                                        .CHAT),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 554),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 57),
@@ -611,14 +561,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.INPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)),
                                 point ->
                                     point
@@ -626,14 +570,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.OUTPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
@@ -648,10 +586,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx1 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
@@ -805,7 +740,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
     }
 
     List<ToolUseBlock> toolUses =
-        responseChunksTools.stream().map(ToolUseBlock.Builder::build).collect(Collectors.toList());
+        responseChunksTools.stream().map(ToolUseBlock.Builder::build).collect(toList());
 
     String seattleToolUseId0 = "";
     String sanFranciscoToolUseId0 = "";
@@ -834,10 +769,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(
-                                    GEN_AI_OPERATION_NAME,
-                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
-                                        .CHAT),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 415),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 162),
@@ -860,14 +792,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.INPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)),
                                 point ->
                                     point
@@ -875,14 +801,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.OUTPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
@@ -897,10 +817,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx0 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
@@ -1021,10 +938,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(
-                                    GEN_AI_OPERATION_NAME,
-                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
-                                        .CHAT),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 554),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 59),
@@ -1047,14 +961,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.INPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)),
                                 point ->
                                     point
@@ -1062,14 +970,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.OUTPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
@@ -1084,10 +986,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx1 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
@@ -1249,10 +1148,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(
-                                    GEN_AI_OPERATION_NAME,
-                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
-                                        .CHAT),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 8),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 10),
@@ -1275,14 +1171,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.INPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)),
                                 point ->
                                     point
@@ -1290,14 +1180,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.OUTPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
@@ -1312,10 +1196,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
@@ -1393,10 +1274,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(
-                                    GEN_AI_OPERATION_NAME,
-                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
-                                        .CHAT),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 5),
                                 satisfies(
@@ -1479,10 +1357,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(
-                                    GEN_AI_OPERATION_NAME,
-                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
-                                        .TEXT_COMPLETION),
+                                equalTo(GEN_AI_OPERATION_NAME, TEXT_COMPLETION),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 10),
                                 satisfies(
@@ -1511,15 +1386,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.INPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues
-                                                    .TEXT_COMPLETION),
+                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, TEXT_COMPLETION),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)),
                                 point ->
                                     point
@@ -1527,15 +1395,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.OUTPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues
-                                                    .TEXT_COMPLETION),
+                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, TEXT_COMPLETION),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
@@ -1550,11 +1411,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues
-                                                    .TEXT_COMPLETION),
+                                            equalTo(GEN_AI_OPERATION_NAME, TEXT_COMPLETION),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
@@ -1644,10 +1501,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(
-                                    GEN_AI_OPERATION_NAME,
-                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
-                                        .TEXT_COMPLETION),
+                                equalTo(GEN_AI_OPERATION_NAME, TEXT_COMPLETION),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 100),
                                 satisfies(
@@ -1676,15 +1530,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.INPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues
-                                                    .TEXT_COMPLETION),
+                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, TEXT_COMPLETION),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)),
                                 point ->
                                     point
@@ -1692,15 +1539,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.OUTPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues
-                                                    .TEXT_COMPLETION),
+                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, TEXT_COMPLETION),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
@@ -1715,11 +1555,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues
-                                                    .TEXT_COMPLETION),
+                                            equalTo(GEN_AI_OPERATION_NAME, TEXT_COMPLETION),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
@@ -1818,10 +1654,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(
-                                    GEN_AI_OPERATION_NAME,
-                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
-                                        .CHAT),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 10),
                                 satisfies(
@@ -1850,14 +1683,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.INPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)),
                                 point ->
                                     point
@@ -1865,14 +1692,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.OUTPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
@@ -1887,10 +1708,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
@@ -2000,10 +1818,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(
-                                    GEN_AI_OPERATION_NAME,
-                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
-                                        .CHAT),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 100),
                                 satisfies(
@@ -2032,14 +1847,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.INPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)),
                                 point ->
                                     point
@@ -2047,14 +1856,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.OUTPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
@@ -2069,10 +1872,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
@@ -2100,14 +1900,13 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             KeyValue.of("content", Value.of(text.toString())))));
   }
 
-  @Test
-  void testInvokeModelAnthropicClaude() {
+  @ParameterizedTest
+  @MethodSource("modelArgs")
+  void testInvokeModelAnthropicClaude(String modelId) {
     BedrockRuntimeClientBuilder builder = BedrockRuntimeClient.builder();
     builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
     configureClient(builder);
     BedrockRuntimeClient client = builder.build();
-
-    String modelId = "anthropic.claude-v2";
 
     Document requestPayload =
         Document.mapBuilder()
@@ -2154,14 +1953,11 @@ public abstract class AbstractAws2BedrockRuntimeTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("chat anthropic.claude-v2")
+                        span.hasName("chat " + modelId)
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(
-                                    GEN_AI_OPERATION_NAME,
-                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
-                                        .CHAT),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 10),
                                 satisfies(
@@ -2190,14 +1986,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.INPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)),
                                 point ->
                                     point
@@ -2205,14 +1995,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.OUTPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
@@ -2227,10 +2011,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
@@ -2254,6 +2035,11 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of(
                                 "content", Value.of("Okay, I just said \"This is a test")))));
+  }
+
+  private static Stream<Arguments> modelArgs() {
+    return Stream.of(
+        Arguments.of("anthropic.claude-v2"), Arguments.of("global.anthropic.claude-v2"));
   }
 
   @Test
@@ -2299,10 +2085,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(
-                                    GEN_AI_OPERATION_NAME,
-                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
-                                        .CHAT),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 10),
                                 satisfies(
@@ -2358,10 +2141,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(
-                                    GEN_AI_OPERATION_NAME,
-                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
-                                        .CHAT),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 10),
                                 satisfies(
@@ -2426,10 +2206,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(
-                                    GEN_AI_OPERATION_NAME,
-                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
-                                        .CHAT),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 10),
                                 satisfies(
@@ -2487,10 +2264,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(
-                                    GEN_AI_OPERATION_NAME,
-                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
-                                        .CHAT),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 10),
                                 satisfies(
@@ -2579,10 +2353,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(
-                                    GEN_AI_OPERATION_NAME,
-                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
-                                        .CHAT),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 10),
                                 satisfies(
@@ -2611,14 +2382,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.INPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)),
                                 point ->
                                     point
@@ -2626,14 +2391,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.OUTPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
@@ -2648,10 +2407,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
@@ -2795,10 +2551,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(
-                                    GEN_AI_OPERATION_NAME,
-                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
-                                        .CHAT),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 416),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 166),
@@ -2821,14 +2574,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.INPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)),
                                 point ->
                                     point
@@ -2836,14 +2583,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.OUTPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
@@ -2858,10 +2599,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
     SpanContext spanCtx0 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
@@ -2991,10 +2729,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(
-                                    GEN_AI_OPERATION_NAME,
-                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
-                                        .CHAT),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 559),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 59),
@@ -3017,14 +2752,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.INPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)),
                                 point ->
                                     point
@@ -3032,14 +2761,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.OUTPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
@@ -3054,10 +2777,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx1 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
@@ -3308,10 +3028,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(
-                                    GEN_AI_OPERATION_NAME,
-                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
-                                        .CHAT),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 416),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 165),
@@ -3334,14 +3051,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.INPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)),
                                 point ->
                                     point
@@ -3349,14 +3060,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.OUTPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
@@ -3371,10 +3076,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
     SpanContext spanCtx0 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
@@ -3547,10 +3249,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(
-                                    GEN_AI_OPERATION_NAME,
-                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
-                                        .CHAT),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 558),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 58),
@@ -3573,14 +3272,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.INPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)),
                                 point ->
                                     point
@@ -3588,14 +3281,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.OUTPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
@@ -3610,10 +3297,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx1 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
@@ -3796,10 +3480,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(
-                                    GEN_AI_OPERATION_NAME,
-                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
-                                        .CHAT),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 380),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 133),
@@ -3822,14 +3503,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.INPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)),
                                 point ->
                                     point
@@ -3837,14 +3512,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.OUTPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
@@ -3859,10 +3528,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
     SpanContext spanCtx0 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
@@ -3970,10 +3636,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(
-                                    GEN_AI_OPERATION_NAME,
-                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
-                                        .CHAT),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 590),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 132),
@@ -3996,14 +3659,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.INPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)),
                                 point ->
                                     point
@@ -4011,14 +3668,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.OUTPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
@@ -4033,10 +3684,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx1 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
@@ -4293,10 +3941,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(
-                                    GEN_AI_OPERATION_NAME,
-                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
-                                        .CHAT),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 380),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 144),
@@ -4319,14 +3964,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.INPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)),
                                 point ->
                                     point
@@ -4334,14 +3973,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.OUTPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
@@ -4356,10 +3989,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
     SpanContext spanCtx0 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
@@ -4507,10 +4137,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(
-                                    GEN_AI_OPERATION_NAME,
-                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
-                                        .CHAT),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 601),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 145),
@@ -4533,14 +4160,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.INPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)),
                                 point ->
                                     point
@@ -4548,14 +4169,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasCount(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_TOKEN_TYPE,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiTokenTypeIncubatingValues.OUTPUT),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
@@ -4570,10 +4185,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(
-                                                GEN_AI_OPERATION_NAME,
-                                                GenAiIncubatingAttributes
-                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx1 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();

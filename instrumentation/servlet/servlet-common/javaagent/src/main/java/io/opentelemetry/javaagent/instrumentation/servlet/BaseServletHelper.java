@@ -7,13 +7,23 @@ package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER_FILTER;
+import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ID;
+import static java.util.Collections.emptyList;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.servlet.internal.ServletAccessor;
+import io.opentelemetry.instrumentation.servlet.internal.ServletAdditionalAttributesExtractor;
+import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
+import io.opentelemetry.instrumentation.servlet.internal.ServletRequestParametersExtractor;
+import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
@@ -21,16 +31,26 @@ import io.opentelemetry.javaagent.bootstrap.servlet.ServletAsyncContext;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import java.security.Principal;
+import java.util.List;
 import java.util.function.Function;
+import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class BaseServletHelper<REQUEST, RESPONSE> {
+  private static final Logger logger = Logger.getLogger(BaseServletHelper.class.getName());
+
+  private static final List<String> CAPTURE_REQUEST_PARAMETERS =
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
+          .getScalarList("capture_request_parameters/development", String.class, emptyList());
+  private static final boolean TRACE_ID_REQUEST_ATTRIBUTE_ENABLED =
+      readTraceIdRequestAttributeEnabled();
+
   protected final Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
       instrumenter;
   protected final ServletAccessor<REQUEST, RESPONSE> accessor;
   private final ServletSpanNameProvider<REQUEST> spanNameProvider;
   private final Function<REQUEST, String> contextPathExtractor;
-  private final ServletRequestParametersExtractor<REQUEST, RESPONSE> parameterExtractor;
+  @Nullable private final ServletRequestParametersExtractor<REQUEST, RESPONSE> parameterExtractor;
 
   protected BaseServletHelper(
       Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> instrumenter,
@@ -40,9 +60,30 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     this.spanNameProvider = new ServletSpanNameProvider<>(accessor);
     this.contextPathExtractor = accessor::getRequestContextPath;
     this.parameterExtractor =
-        ServletRequestParametersExtractor.enabled()
-            ? new ServletRequestParametersExtractor<>(accessor)
+        !CAPTURE_REQUEST_PARAMETERS.isEmpty()
+            ? new ServletRequestParametersExtractor<>(accessor, CAPTURE_REQUEST_PARAMETERS)
             : null;
+  }
+
+  private static boolean readTraceIdRequestAttributeEnabled() {
+    DeclarativeConfigProperties config =
+        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet");
+    Boolean deprecatedTraceIdRequestAttributeEnabled =
+        config.getBoolean("add_trace_id_request_attribute/development");
+    if (deprecatedTraceIdRequestAttributeEnabled != null) {
+      logger.warning(
+          "The otel.instrumentation.servlet.experimental.add-trace-id-request-attribute"
+              + " setting is deprecated and will be removed in a future version."
+              + " Use otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled"
+              + " instead.");
+    }
+    return config
+        .get("trace_id_request_attribute/development")
+        .getBoolean(
+            "enabled",
+            deprecatedTraceIdRequestAttributeEnabled != null
+                ? deprecatedTraceIdRequestAttributeEnabled
+                : true);
   }
 
   public boolean shouldStart(Context parentContext, ServletRequestContext<REQUEST> requestContext) {
@@ -53,13 +94,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     Context context = instrumenter.start(parentContext, requestContext);
 
     REQUEST request = requestContext.request();
-    SpanContext spanContext = Span.fromContext(context).getSpanContext();
-    // we do this e.g. so that servlet containers can use these values in their access logs
-    // TODO: These are only available when using servlet instrumentation or when server
-    //  instrumentation extends servlet instrumentation e.g. jetty. Either remove or make sure they
-    //  also work on tomcat and wildfly.
-    accessor.setRequestAttribute(request, "trace_id", spanContext.getTraceId());
-    accessor.setRequestAttribute(request, "span_id", spanContext.getSpanId());
+    addRequestAttributes(request, context);
 
     context = addServletContextPath(context, request);
     context = addAsyncContext(context);
@@ -67,6 +102,16 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     attachServerContext(context, request);
 
     return context;
+  }
+
+  private void addRequestAttributes(REQUEST request, Context context) {
+    if (!TRACE_ID_REQUEST_ATTRIBUTE_ENABLED) {
+      return;
+    }
+
+    SpanContext spanContext = Span.fromContext(context).getSpanContext();
+    accessor.setRequestAttribute(request, "trace_id", spanContext.getTraceId());
+    accessor.setRequestAttribute(request, "span_id", spanContext.getSpanId());
   }
 
   protected Context addServletContextPath(Context context, REQUEST request) {
@@ -77,6 +122,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     return ServletAsyncContext.init(context);
   }
 
+  @Nullable
   public Context getServerContext(REQUEST request) {
     Object context = accessor.getRequestAttribute(request, ServletHelper.CONTEXT_ATTRIBUTE);
     return context instanceof Context ? (Context) context : null;
@@ -100,11 +146,13 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
           result, servlet ? SERVER : SERVER_FILTER, spanNameProvider, mappingResolver, request);
     }
 
+    addRequestAttributes(request, context);
+
     return result;
   }
 
   /**
-   * Capture servlet specific span attributes when SERVER span is not create by servlet
+   * Capture servlet specific span attributes when SERVER span is not created by servlet
    * instrumentation.
    */
   public void captureServletAttributes(Context context, REQUEST request) {
@@ -121,8 +169,8 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   }
 
   /**
-   * Capture servlet request parameters as span attributes when SERVER span is not create by servlet
-   * instrumentation.
+   * Capture servlet request parameters as span attributes when SERVER span is not created by
+   * servlet instrumentation.
    *
    * <p>When SERVER span is created by servlet instrumentation we register {@link
    * ServletRequestParametersExtractor} as an attribute extractor. When SERVER span is not created
@@ -138,7 +186,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
 
   /**
    * Capture {@link EnduserIncubatingAttributes#ENDUSER_ID} as span attributes when SERVER span is
-   * not create by servlet instrumentation.
+   * not created by servlet instrumentation.
    *
    * <p>When SERVER span is created by servlet instrumentation we register {@link
    * ServletAdditionalAttributesExtractor} as an attribute extractor. When SERVER span is not
@@ -151,10 +199,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
 
     Principal principal = accessor.getRequestUserPrincipal(request);
     if (principal != null) {
-      String name = principal.getName();
-      if (name != null) {
-        serverSpan.setAttribute(EnduserIncubatingAttributes.ENDUSER_ID, name);
-      }
+      serverSpan.setAttribute(ENDUSER_ID, principal.getName());
     }
   }
 

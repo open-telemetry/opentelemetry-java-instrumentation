@@ -5,19 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.jsf.javax;
 
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
+
+import javax.annotation.Nullable;
 import javax.faces.component.ActionSource2;
 import javax.faces.event.ActionEvent;
 
 public class JsfRequest {
-  private final String spanName;
+  @Nullable private final String spanName;
 
   public JsfRequest(ActionEvent event) {
     this.spanName = getSpanName(event);
   }
 
   public String spanName() {
-    return Objects.requireNonNull(spanName);
+    return requireNonNull(spanName);
   }
 
   public boolean shouldStartSpan() {

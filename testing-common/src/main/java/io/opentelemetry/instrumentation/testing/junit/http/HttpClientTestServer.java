@@ -9,9 +9,13 @@ import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest.TEST_REQUEST_HEADER;
 import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest.TEST_RESPONSE_HEADER;
 import static io.opentelemetry.testing.internal.armeria.common.MediaType.PLAIN_TEXT_UTF_8;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.test.server.http.RequestContextGetter;
@@ -30,7 +34,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 import javax.net.ssl.KeyManagerFactory;
 
 public final class HttpClientTestServer extends ServerExtension {
@@ -108,7 +111,7 @@ public final class HttpClientTestServer extends ServerExtension {
               writer.write(ResponseHeaders.of(HttpStatus.OK));
               writer.write(HttpData.ofUtf8("Hello"));
 
-              long delay = TimeUnit.SECONDS.toMillis(1);
+              long delay = SECONDS.toMillis(1);
               String delayString = req.headers().get("delay");
               if (delayString != null) {
                 delay = Long.parseLong(delayString);
@@ -120,9 +123,15 @@ public final class HttpClientTestServer extends ServerExtension {
                         writer.close();
                       },
                       delay,
-                      TimeUnit.MILLISECONDS);
+                      MILLISECONDS);
 
               return writer;
+            })
+        .service(
+            "/hello/{name}",
+            (ctx, req) -> {
+              String name = ctx.pathParam("name");
+              return HttpResponse.of("Hello, %s!", name != null ? name : "unknown");
             })
         .decorator(
             (delegate, ctx, req) -> {
@@ -131,7 +140,7 @@ public final class HttpClientTestServer extends ServerExtension {
                   throw new AssertionError((Object) ("more than one " + field + " header present"));
                 }
               }
-              SpanBuilder span =
+              SpanBuilder spanBuilder =
                   tracer
                       .spanBuilder("test-http-server")
                       .setSpanKind(SERVER)
@@ -143,9 +152,20 @@ public final class HttpClientTestServer extends ServerExtension {
 
               String traceRequestId = req.headers().get("test-request-id");
               if (traceRequestId != null) {
-                span.setAttribute("test.request.id", Integer.parseInt(traceRequestId));
+                spanBuilder.setAttribute("test.request.id", Integer.parseInt(traceRequestId));
               }
-              span.startSpan().end();
+              Span span = spanBuilder.startSpan();
+              ctx.log()
+                  .whenComplete()
+                  .thenAccept(
+                      log -> {
+                        Throwable error = log.responseCause();
+                        if (error != null) {
+                          span.recordException(error);
+                          span.setStatus(StatusCode.ERROR);
+                        }
+                        span.end();
+                      });
 
               // this header is set by java http client http/2 tests
               // we delay the response a bit to ensure that client can send the full request before

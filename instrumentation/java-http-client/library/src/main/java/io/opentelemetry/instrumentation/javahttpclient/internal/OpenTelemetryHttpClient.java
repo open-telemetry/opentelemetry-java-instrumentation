@@ -91,7 +91,7 @@ public final class OpenTelemetryHttpClient extends HttpClient {
       HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler)
       throws IOException, InterruptedException {
     Context parentContext = Context.current();
-    if (request == null || !instrumenter.shouldStart(parentContext, request)) {
+    if (!instrumenter.shouldStart(parentContext, request)) {
       return client.send(request, responseBodyHandler);
     }
 
@@ -127,7 +127,7 @@ public final class OpenTelemetryHttpClient extends HttpClient {
   private <T> CompletableFuture<HttpResponse<T>> traceAsync(
       HttpRequest request, Function<HttpRequest, CompletableFuture<HttpResponse<T>>> action) {
     Context parentContext = Context.current();
-    if (request == null || !instrumenter.shouldStart(parentContext, request)) {
+    if (!instrumenter.shouldStart(parentContext, request)) {
       return action.apply(request);
     }
 
@@ -142,8 +142,9 @@ public final class OpenTelemetryHttpClient extends HttpClient {
       instrumenter.end(context, request, null, t);
       throw t;
     }
-    future = future.whenComplete(new ResponseConsumer(instrumenter, context, request));
-    future = CompletableFutureWrapper.wrap(future, parentContext);
+    future =
+        CompletableFutureWrapper.wrap(future, parentContext)
+            .whenComplete(new ResponseConsumer(instrumenter, context, request));
     return future;
   }
 }

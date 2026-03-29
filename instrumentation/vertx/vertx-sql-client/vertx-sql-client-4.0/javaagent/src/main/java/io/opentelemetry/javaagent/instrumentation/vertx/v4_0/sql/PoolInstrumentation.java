@@ -7,11 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.sql;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.getDbSystemNameFromClassName;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.getPoolSqlConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.setPoolConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.setSqlConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.wrapContext;
 import static io.opentelemetry.javaagent.instrumentation.vertx.v4_0.sql.VertxSqlClientSingletons.attachConnectOptions;
+import static io.opentelemetry.javaagent.instrumentation.vertx.v4_0.sql.VertxSqlClientSingletons.storeConnectOptionsDbSystem;
+import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -27,6 +30,7 @@ import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -44,58 +48,66 @@ public class PoolInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    // In vertx 4.x, database-specific sub-interfaces like PgPool and MySQLPool declare their own
+    // static pool() methods that take subtypes of SqlConnectOptions (e.g. PgConnectOptions) and
+    // return subtypes of Pool. These are independent static methods, not overrides, and have their
+    // own separate code paths. hasSuperType is needed to match these variant signatures.
     transformer.applyAdviceToMethod(
         named("pool")
             .and(isStatic())
             .and(takesArguments(3))
-            .and(takesArgument(1, named("io.vertx.sqlclient.SqlConnectOptions")))
-            .and(returns(named("io.vertx.sqlclient.Pool"))),
-        PoolInstrumentation.class.getName() + "$PoolAdvice");
+            .and(takesArgument(1, hasSuperType(named("io.vertx.sqlclient.SqlConnectOptions"))))
+            .and(returns(hasSuperType(named("io.vertx.sqlclient.Pool")))),
+        getClass().getName() + "$PoolAdvice");
 
     transformer.applyAdviceToMethod(
         named("getConnection").and(takesNoArguments()).and(returns(named("io.vertx.core.Future"))),
-        PoolInstrumentation.class.getName() + "$GetConnectionAdvice");
+        getClass().getName() + "$GetConnectionAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class PoolAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(1) SqlConnectOptions sqlConnectOptions,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = CallDepth.forClass(Pool.class);
+    public static CallDepth onEnter(@Advice.Argument(1) SqlConnectOptions sqlConnectOptions) {
+      CallDepth callDepth = CallDepth.forClass(Pool.class);
       if (callDepth.getAndIncrement() > 0) {
-        return;
+        return callDepth;
       }
 
       // set connection options to ThreadLocal, they will be read in SqlClientBase constructor
       setSqlConnectOptions(sqlConnectOptions);
+      return callDepth;
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Return Pool pool,
         @Advice.Argument(1) SqlConnectOptions sqlConnectOptions,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+        @Advice.Enter CallDepth callDepth) {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
 
-      setPoolConnectOptions(pool, sqlConnectOptions);
+      if (pool != null) {
+        setPoolConnectOptions(pool, sqlConnectOptions);
+        // Detect db system from pool implementation class (e.g. PgPool -> postgresql).
+        // This handles cases where connect options is a generic SqlConnectOptions
+        // but the pool is database-specific (e.g. Hibernate Reactive).
+        storeConnectOptionsDbSystem(sqlConnectOptions, getDbSystemNameFromClassName(pool));
+      }
       setSqlConnectOptions(null);
     }
   }
 
   @SuppressWarnings("unused")
   public static class GetConnectionAdvice {
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This Pool pool, @Advice.Return(readOnly = false) Future<SqlConnection> future) {
+    public static Future<SqlConnection> onExit(
+        @Advice.This Pool pool, @Advice.Return Future<SqlConnection> future) {
       // copy connect options stored on pool to new connection
       SqlConnectOptions sqlConnectOptions = getPoolSqlConnectOptions(pool);
-
-      future = attachConnectOptions(future, sqlConnectOptions);
-      future = wrapContext(future);
+      return wrapContext(attachConnectOptions(future, sqlConnectOptions));
     }
   }
 }

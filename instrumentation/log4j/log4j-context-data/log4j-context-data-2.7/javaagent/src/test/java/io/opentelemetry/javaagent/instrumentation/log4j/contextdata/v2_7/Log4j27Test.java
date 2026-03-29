@@ -34,7 +34,7 @@ class Log4j27Test extends Log4j2Test {
 
     List<ListAppender.LoggedEvent> events = ListAppender.get().getEvents();
 
-    assertThat(events.size()).isEqualTo(1);
+    assertThat(events).hasSize(1);
     assertThat(events.get(0).getMessage()).isEqualTo("log message 1");
     assertThat(events.get(0).getContextData().get("trace_id")).isNull();
     assertThat(events.get(0).getContextData().get("span_id")).isNull();

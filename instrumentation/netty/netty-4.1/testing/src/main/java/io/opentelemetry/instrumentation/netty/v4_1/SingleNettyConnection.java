@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.netty.v4_1;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -18,7 +20,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
@@ -65,6 +66,6 @@ public class SingleNettyConnection implements SingleConnection {
     headers.forEach((k, v) -> request.headers().set(k, v));
 
     channel.writeAndFlush(request).get();
-    return result.get(20, TimeUnit.SECONDS);
+    return result.get(20, SECONDS);
   }
 }

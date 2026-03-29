@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.semconv.http;
 
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -24,12 +25,10 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.entry;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.net.ConnectException;
 import java.util.HashMap;
@@ -183,8 +182,7 @@ class HttpClientAttributesExtractorTest {
             entry(HTTP_REQUEST_METHOD, "POST"),
             entry(URL_FULL, "http://github.com"),
             entry(
-                AttributeKey.stringArrayKey("http.request.header.custom-request-header"),
-                asList("123", "456")),
+                stringArrayKey("http.request.header.custom-request-header"), asList("123", "456")),
             entry(SERVER_ADDRESS, "github.com"),
             entry(SERVER_PORT, 80L),
             entry(HTTP_REQUEST_RESEND_COUNT, 2L));
@@ -195,7 +193,7 @@ class HttpClientAttributesExtractorTest {
         .containsOnly(
             entry(HTTP_RESPONSE_STATUS_CODE, 202L),
             entry(
-                AttributeKey.stringArrayKey("http.response.header.custom-response-header"),
+                stringArrayKey("http.response.header.custom-response-header"),
                 asList("654", "321")),
             entry(NETWORK_PROTOCOL_VERSION, "1.1"),
             entry(NETWORK_PEER_ADDRESS, "4.3.2.1"),
@@ -233,10 +231,8 @@ class HttpClientAttributesExtractorTest {
     Map<String, String> request = new HashMap<>();
     request.put("urlFull", url);
 
-    HttpClientAttributesExtractorBuilder<Map<String, String>, Map<String, String>> builder =
-        HttpClientAttributesExtractor.builder(new TestHttpClientAttributesGetter());
-    Experimental.setRedactQueryParameters(builder, true);
-    AttributesExtractor<Map<String, String>, Map<String, String>> extractor = builder.build();
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);

@@ -11,12 +11,14 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.instrumentation.tomcat.common.TomcatServerHandlerInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class Tomcat7InstrumentationModule extends InstrumentationModule {
+public class Tomcat7InstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public Tomcat7InstrumentationModule() {
     super("tomcat", "tomcat-7.0");
@@ -38,5 +40,10 @@ public class Tomcat7InstrumentationModule extends InstrumentationModule {
         new TomcatServerHandlerInstrumentation(
             packageName + ".Tomcat7ServerHandlerAdvice",
             packageName + ".Tomcat7AttachResponseAdvice"));
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

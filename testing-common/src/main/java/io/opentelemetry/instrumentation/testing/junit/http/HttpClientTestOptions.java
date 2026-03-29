@@ -5,17 +5,19 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static java.util.Arrays.asList;
+
 import com.google.auto.value.AutoValue;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.ServerAttributes;
-import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -29,15 +31,17 @@ public abstract class HttpClientTestOptions {
   public static final Set<AttributeKey<?>> DEFAULT_HTTP_ATTRIBUTES =
       Collections.unmodifiableSet(
           new HashSet<>(
-              Arrays.asList(
-                  NetworkAttributes.NETWORK_PROTOCOL_VERSION,
-                  ServerAttributes.SERVER_ADDRESS,
-                  ServerAttributes.SERVER_PORT,
-                  UrlAttributes.URL_FULL,
-                  HttpAttributes.HTTP_REQUEST_METHOD)));
+              asList(
+                  NETWORK_PROTOCOL_VERSION,
+                  SERVER_ADDRESS,
+                  SERVER_PORT,
+                  URL_FULL,
+                  HTTP_REQUEST_METHOD)));
 
   public static final BiFunction<URI, String, String> DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER =
       (uri, method) -> HttpConstants._OTHER.equals(method) ? "HTTP" : method;
+
+  public static final Function<URI, String> DEFAULT_EXPECTED_URL_TEMPLATE_MAPPER = uri -> null;
 
   public static final int FOUND_STATUS_CODE = HttpStatus.FOUND.code();
 
@@ -55,6 +59,8 @@ public abstract class HttpClientTestOptions {
   public abstract BiFunction<String, Integer, SingleConnection> getSingleConnectionFactory();
 
   public abstract BiFunction<URI, String, String> getExpectedClientSpanNameMapper();
+
+  public abstract Function<URI, String> getExpectedUrlTemplateMapper();
 
   abstract HttpClientInstrumentationType getInstrumentationType();
 
@@ -95,6 +101,10 @@ public abstract class HttpClientTestOptions {
 
   public abstract Function<URI, String> getHttpProtocolVersion();
 
+  public abstract boolean getTestServicePeerName();
+
+  public abstract Function<URI, String> getExpectedServicePeerName();
+
   @Nullable
   abstract SpanEndsAfterType getSpanEndsAfterType();
 
@@ -120,6 +130,7 @@ public abstract class HttpClientTestOptions {
           .setClientSpanErrorMapper((uri, exception) -> exception)
           .setSingleConnectionFactory((host, port) -> null)
           .setExpectedClientSpanNameMapper(DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER)
+          .setExpectedUrlTemplateMapper(DEFAULT_EXPECTED_URL_TEMPLATE_MAPPER)
           .setInstrumentationType(HttpClientInstrumentationType.HIGH_LEVEL)
           .setSpanEndsAfterType(SpanEndsAfterType.HEADERS)
           .setTestWithClientParent(true)
@@ -137,6 +148,8 @@ public abstract class HttpClientTestOptions {
           .setTestNonStandardHttpMethod(true)
           .setTestCaptureHttpHeaders(true)
           .setHasSendRequest(true)
+          .setTestServicePeerName(true)
+          .setExpectedServicePeerName(uri -> "test-peer-service")
           .setHttpProtocolVersion(uri -> "1.1");
     }
 
@@ -151,6 +164,8 @@ public abstract class HttpClientTestOptions {
     Builder setSingleConnectionFactory(BiFunction<String, Integer, SingleConnection> value);
 
     Builder setExpectedClientSpanNameMapper(BiFunction<URI, String, String> value);
+
+    Builder setExpectedUrlTemplateMapper(Function<URI, String> value);
 
     Builder setInstrumentationType(HttpClientInstrumentationType instrumentationType);
 
@@ -183,6 +198,10 @@ public abstract class HttpClientTestOptions {
     Builder setTestNonStandardHttpMethod(boolean value);
 
     Builder setHasSendRequest(boolean value);
+
+    Builder setTestServicePeerName(boolean value);
+
+    Builder setExpectedServicePeerName(Function<URI, String> value);
 
     Builder setHttpProtocolVersion(Function<URI, String> value);
 

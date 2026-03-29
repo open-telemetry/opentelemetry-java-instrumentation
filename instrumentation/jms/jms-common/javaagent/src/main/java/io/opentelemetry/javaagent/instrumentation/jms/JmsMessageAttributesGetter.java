@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -97,11 +98,11 @@ enum JmsMessageAttributesGetter implements MessagingAttributesGetter<MessageWith
     try {
       String value = messageWithDestination.message().getStringProperty(name);
       if (value != null) {
-        return Collections.singletonList(value);
+        return singletonList(value);
       }
     } catch (Exception exception) {
       logger.log(FINE, "Failure getting JMS message header", exception);
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 }

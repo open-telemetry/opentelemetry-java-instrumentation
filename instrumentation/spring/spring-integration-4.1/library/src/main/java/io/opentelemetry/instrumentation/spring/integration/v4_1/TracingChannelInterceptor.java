@@ -16,6 +16,7 @@ import java.lang.invoke.MethodType;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.springframework.aop.framework.Advised;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.messaging.Message;
@@ -188,7 +189,7 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
   private static void ensureNativeHeadersAreMutable(MessageHeaderAccessor headerAccessor) {
     Object nativeMap = headerAccessor.getHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS);
     if (nativeMap != null && !(nativeMap instanceof LinkedMultiValueMap)) {
-      @SuppressWarnings("unchecked")
+      @SuppressWarnings("unchecked") // cast to actual type
       Map<String, List<String>> map = (Map<String, List<String>>) nativeMap;
       headerAccessor.setHeader(
           NativeMessageHeaderAccessor.NATIVE_HEADERS, new LinkedMultiValueMap<>(map));
@@ -202,11 +203,15 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
         .build();
   }
 
+  @Nullable
   private static final Class<?> directWithAttributesChannelClass =
       getDirectWithAttributesChannelClass();
+
+  @Nullable
   private static final MethodHandle channelGetAttributeMh =
       getChannelAttributeMh(directWithAttributesChannelClass);
 
+  @Nullable
   private static Class<?> getDirectWithAttributesChannelClass() {
     try {
       return Class.forName(
@@ -216,7 +221,9 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
     }
   }
 
-  private static MethodHandle getChannelAttributeMh(Class<?> directWithAttributesChannelClass) {
+  @Nullable
+  private static MethodHandle getChannelAttributeMh(
+      @Nullable Class<?> directWithAttributesChannelClass) {
     if (directWithAttributesChannelClass == null) {
       return null;
     }
@@ -241,6 +248,10 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
     if (!directWithAttributesChannelClass.isInstance(messageChannel)) {
       // we can only tell if it is an output channel for instances of DirectWithAttributesChannel
       // that are used by spring cloud stream
+      return false;
+    }
+
+    if (channelGetAttributeMh == null) {
       return false;
     }
 

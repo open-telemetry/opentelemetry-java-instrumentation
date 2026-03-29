@@ -57,6 +57,7 @@ dependencies {
   bootstrapLibs(project(":instrumentation-api"))
   // opentelemetry-api is an api dependency of :instrumentation-api, but opentelemetry-api-incubator is not
   bootstrapLibs("io.opentelemetry:opentelemetry-api-incubator")
+  bootstrapLibs(project(":instrumentation-api-incubator"))
   bootstrapLibs(project(":instrumentation-annotations-support"))
   bootstrapLibs(project(":javaagent-bootstrap"))
 
@@ -70,11 +71,8 @@ dependencies {
     exclude("io.opentelemetry", "opentelemetry-sdk-extension-autoconfigure-spi")
   }
   baseJavaagentLibs(project(":javaagent-extension-api"))
-  baseJavaagentLibs(project(":instrumentation-api-incubator"))
 
-  baseJavaagentLibs(project(":javaagent-tooling")) {
-    exclude("io.opentelemetry", "opentelemetry-sdk-extension-autoconfigure-spi")
-  }
+  baseJavaagentLibs(project(":javaagent-tooling"))
   baseJavaagentLibs(project(":javaagent-internal-logging-application"))
   baseJavaagentLibs(project(":javaagent-internal-logging-simple", configuration = "shadow"))
   baseJavaagentLibs(project(":muzzle"))
@@ -92,11 +90,14 @@ dependencies {
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.47:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.50:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.52:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.56:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.57:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.59:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-instrumentation-api:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent"))
   baseJavaagentLibs(project(":instrumentation:executors:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-application-logger:javaagent"))
-  baseJavaagentLibs(project(":instrumentation:internal:internal-class-loader:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:internal:internal-class-loader:javaagent", configuration = "shaded"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-eclipse-osgi-3.6:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-lambda:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-reflection:javaagent"))
@@ -110,7 +111,7 @@ dependencies {
   testCompileOnly(project(":javaagent-bootstrap"))
   testCompileOnly(project(":javaagent-extension-api"))
 
-  testImplementation(project(":testing-common"))
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2")
 }
 
@@ -128,7 +129,11 @@ project(":instrumentation").subprojects {
 
   plugins.withId("otel.javaagent-instrumentation") {
     javaagentDependencies.run {
-      add(javaagentLibs.name, project(subProj.path))
+      // exclude :instrumentation:internal:internal-class-loader:javaagent we added the shaded
+      // configuration from it to baseJavaagentLibs
+      if (!subProj.path.contains("internal-class-loader")) {
+        add(javaagentLibs.name, project(subProj.path))
+      }
     }
   }
 
@@ -149,34 +154,28 @@ tasks {
   val buildBootstrapLibs by registering(ShadowJar::class) {
     configurations = listOf(bootstrapLibs)
 
-    excludeNonBootstrapClasses()
+    // exclude the agent part of the javaagent-extension-api; these classes will be added in relocate tasks
+    exclude("io/opentelemetry/javaagent/extension/**")
 
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    duplicatesStrategy = DuplicatesStrategy.FAIL
 
     archiveFileName.set("bootstrapLibs.jar")
   }
 
-  val relocateBaseJavaagentLibsTmp by registering(ShadowJar::class) {
+  val relocateBaseJavaagentLibs by registering(ShadowJar::class) {
     configurations = listOf(baseJavaagentLibs)
 
     excludeBootstrapClasses()
 
     duplicatesStrategy = DuplicatesStrategy.FAIL
-
-    archiveFileName.set("baseJavaagentLibs-relocated-tmp.jar")
-  }
-
-  val relocateBaseJavaagentLibs by registering(Jar::class) {
-    dependsOn(relocateBaseJavaagentLibsTmp)
-
-    copyByteBuddy(relocateBaseJavaagentLibsTmp.get().archiveFile)
-
-    duplicatesStrategy = DuplicatesStrategy.FAIL
+    exclude("META-INF/LICENSE")
+    exclude("META-INF/NOTICE")
+    exclude("META-INF/maven/**")
 
     archiveFileName.set("baseJavaagentLibs-relocated.jar")
   }
 
-  val relocateJavaagentLibsTmp by registering(ShadowJar::class) {
+  val relocateJavaagentLibs by registering(ShadowJar::class) {
     configurations = listOf(javaagentLibs)
 
     excludeBootstrapClasses()
@@ -184,16 +183,12 @@ tasks {
     exclude("okhttp3/internal/publicsuffix/PublicSuffixDatabase.list")
 
     duplicatesStrategy = DuplicatesStrategy.FAIL
-
-    archiveFileName.set("javaagentLibs-relocated-tmp.jar")
-  }
-
-  val relocateJavaagentLibs by registering(Jar::class) {
-    dependsOn(relocateJavaagentLibsTmp)
-
-    copyByteBuddy(relocateJavaagentLibsTmp.get().archiveFile)
-
-    duplicatesStrategy = DuplicatesStrategy.FAIL
+    filesMatching("META-INF/io/opentelemetry/instrumentation/**") {
+      duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    }
+    exclude("META-INF/LICENSE")
+    exclude("META-INF/NOTICE")
+    exclude("META-INF/maven/**")
 
     archiveFileName.set("javaagentLibs-relocated.jar")
   }
@@ -271,7 +266,7 @@ tasks {
     jvmArgs("-Dotel.metrics.exporter=none")
     jvmArgs("-Dotel.logs.exporter=none")
 
-    jvmArgumentProviders.add(JavaagentProvider(shadowJar.flatMap { it.archiveFile }))
+    jvmArgumentProviders.add(JavaagentProvider(shadowJar.flatMap { it.archiveFile }.map { it.asFile.absolutePath }))
 
     testLogging {
       events("started")
@@ -282,10 +277,27 @@ tasks {
     delete(rootProject.file("licenses"))
   }
 
+  val trimLicenseTrailingWhitespace by registering {
+    val licenseFile = rootDir.toPath().resolve("licenses/licenses.md")
+    val newline = System.lineSeparator()
+    doLast {
+      if (Files.exists(licenseFile)) {
+        val content = String(Files.readAllBytes(licenseFile), Charsets.UTF_8)
+        val normalized = content.lineSequence()
+          .map { it.trimEnd() }
+          .toList()
+          .dropLastWhile { it.isEmpty() }
+          .joinToString(newline) + newline
+        Files.write(licenseFile, normalized.toByteArray(Charsets.UTF_8))
+      }
+    }
+  }
+
   val removeLicenseDate by registering {
     // removing the license report date makes it idempotent
+    val rootDirPath = rootDir.toPath()
     doLast {
-      val filePath = rootDir.toPath().resolve("licenses").resolve("licenses.md")
+      val filePath = rootDirPath.resolve("licenses").resolve("licenses.md")
       if (Files.exists(filePath)) {
         val datePattern =
           Pattern.compile("^_[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} .*_$")
@@ -300,19 +312,27 @@ tasks {
     }
   }
 
-  val generateLicenseReportEnabled =
+  val generateLicenseReportEnabled = providers.provider {
     gradle.startParameter.taskNames.any { it.equals("generateLicenseReport") }
-  named("generateLicenseReport").configure {
+  }
+  val generateLicenseReportTask = named("generateLicenseReport")
+  generateLicenseReportTask.configure {
     dependsOn(cleanLicenses)
-    finalizedBy(":spotlessApply")
+    finalizedBy(trimLicenseTrailingWhitespace)
     finalizedBy(removeLicenseDate)
     // disable licence report generation unless this task is explicitly run
     // the files produced by this task are used by other tasks without declaring them as dependency
     // which gradle considers an error
-    enabled = enabled && generateLicenseReportEnabled
+    enabled = enabled && generateLicenseReportEnabled.get()
+    // License report plugin is not configuration cache compatible
+    // https://github.com/jk1/Gradle-License-Report/issues/280
+    notCompatibleWithConfigurationCache("License report plugin uses Project at execution time")
   }
-  if (generateLicenseReportEnabled) {
-    project.parent?.tasks?.getByName("spotlessMisc")?.dependsOn(named("generateLicenseReport"))
+  val parentSpotlessMiscTask = project.parent?.tasks?.named("spotlessMisc")
+  if (generateLicenseReportEnabled.get()) {
+    parentSpotlessMiscTask?.configure {
+      dependsOn(generateLicenseReportTask)
+    }
   }
 
   // Because we reconfigure publishing to only include the shadow jar, the Gradle metadata is not correct.
@@ -369,7 +389,7 @@ project.afterEvaluate {
 }
 
 licenseReport {
-  outputDir = rootProject.file("licenses").absolutePath
+  outputDir = rootProject.layout.projectDirectory.dir("licenses").asFile.absolutePath
 
   renderers = arrayOf(InventoryMarkdownReportRenderer())
 
@@ -396,8 +416,8 @@ fun CopySpec.isolateClasses(jar: Provider<RegularFile>) {
     // important to keep prefix "inst" short, as it is prefixed to lots of strings in runtime mem
     into("inst")
     rename("(^.*)\\.class\$", "\$1.classdata")
-    // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
-    rename("""^LICENSE$""", "LICENSE.renamed")
+    exclude("""^LICENSE$""")
+    exclude("META-INF/LICENSE.txt")
     exclude("META-INF/INDEX.LIST")
     exclude("META-INF/*.DSA")
     exclude("META-INF/*.SF")
@@ -406,58 +426,25 @@ fun CopySpec.isolateClasses(jar: Provider<RegularFile>) {
   }
 }
 
-fun CopySpec.copyByteBuddy(jar: Provider<RegularFile>) {
-  // Byte buddy jar includes classes compiled for java 5 at the root of the jar and the same classes
-  // compiled for java 8 under META-INF/versions/9. Here we move the classes from
-  // META-INF/versions/9/net/bytebuddy to net/bytebuddy to get rid of the duplicate classes.
-  from(zipTree(jar)) {
-    eachFile {
-      if (path.startsWith("net/bytebuddy/") &&
-        // this is our class that we have placed in the byte buddy package, need to preserve it
-        !path.startsWith("net/bytebuddy/agent/builder/AgentBuilderUtil")
-      ) {
-        exclude()
-      } else if (path.startsWith("META-INF/versions/9/net/bytebuddy/")) {
-        path = path.removePrefix("META-INF/versions/9/")
-      }
-    }
-    includeEmptyDirs = false
-  }
-}
-
-// exclude bootstrap projects from javaagent libs - they won't be added to inst/
-fun ShadowJar.excludeNonBootstrapClasses() {
-  // exclude the agent part of the javaagent-extension-api; these classes will be added in relocate tasks
-  exclude("io/opentelemetry/javaagent/extension/**")
-  exclude("**/instrumentation/api/incubator/sdk/**")
-}
-
 // exclude bootstrap projects from javaagent libs - they won't be added to inst/
 fun ShadowJar.excludeBootstrapClasses() {
   dependencies {
     exclude(project(":instrumentation-api"))
+    exclude(project(":instrumentation-api-incubator"))
     exclude(project(":instrumentation-annotations-support"))
     exclude(project(":javaagent-bootstrap"))
   }
 
   // exclude the bootstrap part of the javaagent-extension-api
   exclude("io/opentelemetry/javaagent/bootstrap/**")
-
-  // all in instrumentation-api-incubator except the bridge package
-  exclude("io/opentelemetry/instrumentation/api/incubator/builder/**")
-  exclude("io/opentelemetry/instrumentation/api/incubator/config/**")
-  exclude("io/opentelemetry/instrumentation/api/incubator/instrumenter/**")
-  exclude("io/opentelemetry/instrumentation/api/incubator/log/**")
-  exclude("io/opentelemetry/instrumentation/api/incubator/semconv/**")
 }
 
 class JavaagentProvider(
-  @InputFile
-  @PathSensitive(PathSensitivity.RELATIVE)
-  val agentJar: Provider<RegularFile>,
+  @Input
+  val agentJarPath: Provider<String>,
 ) : CommandLineArgumentProvider {
   override fun asArguments(): Iterable<String> = listOf(
-    "-javaagent:${file(agentJar).absolutePath}",
+    "-javaagent:${agentJarPath.get()}",
     "-Dotel.javaagent.testing.transform-safe-logging.enabled=true"
   )
 }

@@ -25,13 +25,14 @@ $ java -javaagent:path/to/opentelemetry-javaagent.jar \
 
 No targets are enabled by default. The supported target environments are listed below.
 
-- [activemq](javaagent/activemq.md)
-- [camel](javaagent/camel.md)
+- [activemq](library/activemq.md)
+- [camel](library/camel.md)
 - [jetty](library/jetty.md)
 - [kafka-broker](javaagent/kafka-broker.md)
+- [kafka-connect](library/kafka-connect.md)
 - [tomcat](library/tomcat.md)
 - [wildfly](library/wildfly.md)
-- [hadoop](javaagent/hadoop.md)
+- [hadoop](library/hadoop.md)
 
 The [jvm](library/jvm.md) metrics definitions are also included in the [jmx-metrics library](./library)
 to allow reusing them without instrumentation. When using instrumentation, the [runtime-telemetry](../runtime-telemetry)
@@ -229,6 +230,10 @@ The metric descriptions will remain undefined, unless they are provided by the q
 ### State Metrics
 
 Some JMX attributes expose current state as a non-numeric MBean attribute, in order to capture those as metrics it is recommended to use the special `state` metric type.
+
+This type of metric fits the [semantic conventions recommendations for state metric](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/how-to-write-conventions/status-metrics.md),
+using the `.status` suffix is compliant with the [naming recommendations](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/how-to-write-conventions/status-metrics.md#naming).
+
 For example, with Tomcat connector, the `Catalina:type=Connector,port=*` MBean has `stateName` (of type `String`), we can define the following rule:
 
 ```yaml
@@ -238,56 +243,60 @@ rules:
     mapping:
       stateName:
         type: state
-        metric: tomcat.connector
+        metric: tomcat.connector.status
         metricAttribute:
           port: param(port)
-          connector_state:
+          tomcat.connector.state:
             ok: STARTED
             failed: [STOPPED,FAILED]
             degraded: '*'
 ```
 
-For a given value of `port`, let's say `8080` This will capture the `tomcat.connector.state` metric of type `updowncounter` with value `0` or `1` and the `state` metric attribute will have a value in [`ok`,`failed`,`degraded`].
-For every sample, 3 metrics will be captured for each value of `state` depending on the value of `stateName`:
+For a given value of `port`, let's say `8080` This will capture the `tomcat.connector.status` metric of type `updowncounter` with value `0` or `1` and the `tomcat.connector.state` metric attribute will have a value in [`ok`,`failed`,`degraded`].
+For every sample, 3 metrics will be captured for each value of `tomcat.connector.state` depending on the value of `stateName`:
 
 When `stateName` = `STARTED`, we have:
 
-- `tomcat.connector` value = `1`, attributes `port` = `8080` and `connector_state` = `ok`
-- `tomcat.connector` value = `0`, attributes `port` = `8080` and `connector_state` = `failed`
-- `tomcat.connector` value = `0`, attributes `port` = `8080` and `connector_state` = `degraded`
+- `tomcat.connector.status` value = `1`, attributes `port` = `8080` and `tomcat.connector.state` = `ok`
+- `tomcat.connector.status` value = `0`, attributes `port` = `8080` and `tomcat.connector.state` = `failed`
+- `tomcat.connector.status` value = `0`, attributes `port` = `8080` and `tomcat.connector.state` = `degraded`
 
 When `stateName` = `STOPPED` or `FAILED`, we have:
 
-- `tomcat.connector` value = `0`, attributes `port` = `8080` and `connector_state` = `ok`
-- `tomcat.connector` value = `1`, attributes `port` = `8080` and `connector_state` = `failed`
-- `tomcat.connector` value = `0`, attributes `port` = `8080` and `connector_state` = `degraded`
+- `tomcat.connector.status` value = `0`, attributes `port` = `8080` and `tomcat.connector.state` = `ok`
+- `tomcat.connector.status` value = `1`, attributes `port` = `8080` and `tomcat.connector.state` = `failed`
+- `tomcat.connector.status` value = `0`, attributes `port` = `8080` and `tomcat.connector.state` = `degraded`
 
 For other values of `stateName`, we have:
 
-- `tomcat.connector` value = `0`, attributes `port` = `8080` and `connector_state` = `ok`
-- `tomcat.connector` value = `0`, attributes `port` = `8080` and `connector_state` = `failed`
-- `tomcat.connector` value = `1`, attributes `port` = `8080` and `connector_state` = `degraded`
+- `tomcat.connector.status` value = `0`, attributes `port` = `8080` and `tomcat.connector.state` = `ok`
+- `tomcat.connector.status` value = `0`, attributes `port` = `8080` and `tomcat.connector.state` = `failed`
+- `tomcat.connector.status` value = `1`, attributes `port` = `8080` and `tomcat.connector.state` = `degraded`
 
 Each state key can be mapped to one or more values of the MBean attribute using:
+
 - a string literal or a string array
 - a `*` character to provide default option and avoid enumerating all values, this value must be quoted in YAML
 
 Exactly one `*` value must be present in the mapping to ensure all possible values of the MBean attribute can be mapped to a state key.
 
-The default value indicated by `*` does not require a dedicated state key. For example, if we want to have `connector_state` metric attribute with values `on` or `off`, we can use:
+The default value indicated by `*` does not require a dedicated state key. For example, if we want to have `tomcat.connector.state` metric attribute with values `on` or `off`, we can use:
+
 ```yaml
-          connector_state:
+          tomcat.connector.state:
             on: STARTED
             off: [STOPPED,FAILED,'*']
 ```
+
 In the particular case where only two values are defined, we can simplify further by explicitly defining one state and rely on default for the other.
+
 ```yaml
-          connector_state:
+          tomcat.connector.state:
             on: STARTED
             off: '*'
 ```
 
-State metrics do not have a unit (nor source unit) and use an empty string `""` as unit.
+State metrics do not need to define `unit` nor `sourceUnit` attributes, the unit of the metric will always be `1`.
 
 ### Metric attributes modifiers
 
@@ -296,7 +305,6 @@ JMX attributes values may require modification or normalization in order to fit 
 For example, with JVM memory, the `java.lang:name=*,type=MemoryPool` MBeans have `type` attribute with either `HEAP` or `NON_HEAP` value.
 However, in the semantic conventions the metric attribute `jvm.memory.type` should be lower-cased to fit the `jvm.memory.used` definition, in this case we can
 apply the `lowercase` metric attribute transformation as follows:
-
 
 ```yaml
 ---
@@ -308,7 +316,7 @@ rules:
         metric: jvm.memory.used
         unit: By
         metricAttribute:
-          jvm.memory.pool.name	: param(name)
+          jvm.memory.pool.name: param(name)
           jvm.memory.type: lowercase(beanattr(Type))
 ```
 
@@ -333,6 +341,7 @@ Currently available unit conversions:
 | ns           | s      |
 
 Example of defining unit conversion in yaml file:
+
 ```yaml
 rules:
   - beans:
@@ -346,6 +355,7 @@ rules:
         unit: s
         desc: The longest request processing time
 ```
+
 `sourceUnit` can also be defined on rule level (see [Making shortcuts](#making-shortcuts))
 
 ### Filtering negative values
@@ -392,11 +402,13 @@ where the `name` parameter in the MBean name is NOT mapped to a metric attribute
 ```
 
 When two or more MBean parameters are used, it is also possible to perform a partial aggregation:
+
 - parameters not mapped as metric attributes are discarded
 - parameters mapped as metric attributes with `param(<mbeanParam>)` are preserved
 - values are aggregated with mapped metric attributes
 
 The applied aggregation depends on the metric type:
+
 - `counter` or `updowncounter`: sum aggregation
 - `gauge`: last-value aggregation
 
@@ -449,12 +461,12 @@ The following table explains the used terms with more details.
 
 | Syntactic Element  | Description                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 |--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| OBJECTNAME         | A syntactically valid string representing an ObjectName (see [ObjectName constructor](https://docs.oracle.com/javase/8/docs/api/javax/management/ObjectName.html#ObjectName-java.lang.String-)).                                                                                                                                                                                                                                                    |
-| ATTRIBUTE          | Any well-formed string that can be used as a metric [attribute](https://opentelemetry.io/docs/reference/specification/common/#attribute) key.                                                                                                                                                                                                                                                                                                       |
+| OBJECTNAME         | A syntactically valid string representing an [ObjectName](https://docs.oracle.com/javase/8/docs/api/javax/management/ObjectName.html#ObjectName-java.lang.String-).                                                                                                                                                                                                                                                                                 |
+| ATTRIBUTE          | Any well-formed string that can be used as a metric [attribute](https://opentelemetry.io/docs/specs/otel/common/#attribute).                                                                                                                                                                                                                                                                                                                        |
 | ATTR               | A non-empty string used as a name of the MBean attribute. The MBean attribute value must be a String, otherwise the specified metric attribute will not be used.                                                                                                                                                                                                                                                                                    |
 | PARAM              | A non-empty string used as a property key in the ObjectName identifying the MBean which provides the metric value. If the ObjectName does not have a property with the given key, the specified metric attribute will not be used.                                                                                                                                                                                                                  |
 | METRIC_NAME_PREFIX | Any non-empty string which will be prepended to the specified metric (instrument) names.                                                                                                                                                                                                                                                                                                                                                            |
-| METRIC_NAME        | Any non-empty string. The string, prefixed by the optional prefix (see above) must satisfy [instrument naming rule](https://opentelemetry.io/docs/reference/specification/metrics/api/#instrument-naming-rule).                                                                                                                                                                                                                                     |
+| METRIC_NAME        | Any non-empty string. The string, prefixed by the optional prefix (see above) must satisfy [instrument naming rule](https://opentelemetry.io/docs/specs/otel/metrics/api/#instrument-name-syntax).                                                                                                                                                                                                                                                  |
 | TYPE               | One of `counter`, `updowncounter`, or `gauge`. The default is `gauge`. This value is case insensitive.                                                                                                                                                                                                                                                                                                                                              |
 | DESCRIPTION        | Any string to be used as human-readable [description](https://opentelemetry.io/docs/reference/specification/metrics/api/#instrument-description) of the metric. If the description is not provided by the rule, an attempt will be made to extract one automatically from the corresponding MBean.                                                                                                                                                  |
 | UNIT               | A string identifying the [unit](https://opentelemetry.io/docs/reference/specification/metrics/api/#instrument-unit) of measurements reported by the metric. Enclose the string in single or double quotes if using unit annotations.                                                                                                                                                                                                                |
@@ -469,3 +481,38 @@ This version of JMX Metric Insight has a number of limitations.
 - MBean attributes with the same name but belonging to different MBeans described by a single metric rule must have the same type (long or double).
 - All MBeans which are described by the specified ObjectNames in a single rule must be registered with the same MBeanServer instance.
 - While MBeanServers and MBeans can be created dynamically by the application, it is assumed that they will live indefinitely. Their disappearance may not be recognized properly, and may lead to some memory leaks.
+
+## JMX metrics definitions recommendations
+
+The goals of pre-defined metrics-definitions are:
+
+- to provide a set of commonly used metrics for some known target systems, hence allowing users to capture essential metrics without configuration.
+- to provide a set of consistent and well-known metrics for some known target systems.
+- to serve as examples for users to extend those metric definitions.
+
+The pre-defined metrics definitions are not meant to be exhaustive and thus should focus on a limited set of essential metrics for each target system.
+
+To contribute to pre-defined metrics definitions or extend them through custom configuration, we recommend following the following guidelines:
+
+- align and reuse [semantic conventions metrics recommendations and definitions](https://opentelemetry.io/docs/specs/semconv/general/metrics/) when possible.
+- namespace metric names and metric attributes with the target system as prefix.
+- metrics measuring time should prefer to use `duration` over `time`, also the metric value should use seconds as unit, using unit conversion if needed.
+- metric name should not be the prefix of another metric, for example `request.duration` and `request.duration.last` should be avoided.
+- when a metric is exposed in JMX as "current value", only capture the "current value" and ignore any pre-aggregation (for example mean, min, max, ...) as it is better handled by a backend, for example
+  - `threadpool.thread.count`
+- when a metric is not exposed as "current value" and only exposed in JMX as aggregate values, capture those aggregate values with `.{aggregation}` suffix, examples:
+  - `request.duration.mean` or `request.duration.average`: choice should ideally align with the underlying implementation (MBean attribute name) to preserve implementation semantics.
+  - `request.duration.min`
+  - `request.duration.max`
+  - `request.duration.sum` : for the cumulative value, prefer "sum" over "total" for consistency.
+  - `request.duration.last` : for the last request duration
+  - For those pre-aggregated metrics:
+    - if pre-aggregation is `sum`, the metric type should be `counter` as metric can be aggregated
+    - otherwise, the metric type should be `gauge` as the metric can't be aggregated automatically:
+      - without knowledge of the metric pre-aggregation (encoded in name), for example: min and max.
+      - it will likely produce meaningless results: mean of mean, or mean across multiple instances.
+- when a metric represents an upper limit of a resource, use the `.limit` suffix, for example:
+  - `threadpool.thread.limit` to represent the upper limit of `threadpool.thread.count`
+- when metrics represent an upper and lower bounds or a resource, use the `.limit.upper` and `.limit.lower`suffixes, for example:
+  - `pool.limit.upper` to represent the upper limit of the pool size (maximum capacity)
+  - `pool.limit.lower` to represent the minimum number of threads that should be kept in the pool, even if there is no load.

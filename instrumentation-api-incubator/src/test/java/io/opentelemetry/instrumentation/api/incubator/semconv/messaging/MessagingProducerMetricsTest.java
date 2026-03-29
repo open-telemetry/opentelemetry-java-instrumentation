@@ -7,6 +7,14 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
@@ -17,9 +25,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
-import io.opentelemetry.semconv.ServerAttributes;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
 class MessagingProducerMetricsTest {
@@ -38,19 +43,17 @@ class MessagingProducerMetricsTest {
 
     Attributes requestAttributes =
         Attributes.builder()
-            .put(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "pulsar")
-            .put(
-                MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                "persistent://public/default/topic")
-            .put(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish")
-            .put(ServerAttributes.SERVER_PORT, 6650)
-            .put(ServerAttributes.SERVER_ADDRESS, "localhost")
+            .put(MESSAGING_SYSTEM, "pulsar")
+            .put(MESSAGING_DESTINATION_NAME, "persistent://public/default/topic")
+            .put(MESSAGING_OPERATION, "publish")
+            .put(SERVER_PORT, 6650)
+            .put(SERVER_ADDRESS, "localhost")
             .build();
 
     Attributes responseAttributes =
         Attributes.builder()
-            .put(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, "1:1:0:0")
-            .put(MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID, "1")
+            .put(MESSAGING_MESSAGE_ID, "1:1:0:0")
+            .put(MESSAGING_DESTINATION_PARTITION_ID, "1")
             .build();
 
     Context parent =
@@ -87,19 +90,13 @@ class MessagingProducerMetricsTest {
                                     point
                                         .hasSum(0.15 /* seconds */)
                                         .hasAttributesSatisfying(
+                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(MESSAGING_DESTINATION_PARTITION_ID, "1"),
                                             equalTo(
-                                                MessagingIncubatingAttributes.MESSAGING_SYSTEM,
-                                                "pulsar"),
-                                            equalTo(
-                                                MessagingIncubatingAttributes
-                                                    .MESSAGING_DESTINATION_PARTITION_ID,
-                                                "1"),
-                                            equalTo(
-                                                MessagingIncubatingAttributes
-                                                    .MESSAGING_DESTINATION_NAME,
+                                                MESSAGING_DESTINATION_NAME,
                                                 "persistent://public/default/topic"),
-                                            equalTo(ServerAttributes.SERVER_PORT, 6650),
-                                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"))
+                                            equalTo(SERVER_PORT, 6650),
+                                            equalTo(SERVER_ADDRESS, "localhost"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -121,6 +118,6 @@ class MessagingProducerMetricsTest {
   }
 
   private static long nanos(int millis) {
-    return TimeUnit.MILLISECONDS.toNanos(millis);
+    return MILLISECONDS.toNanos(millis);
   }
 }

@@ -26,7 +26,10 @@ public class ContextPropagationOperator34InstrumentationModule extends Instrumen
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return hasClassesNamed(
-        "application.io.opentelemetry.context.Context", "reactor.util.context.ContextView");
+        // added in 1.0.0
+        "application.io.opentelemetry.context.Context",
+        // added in 3.4.0
+        "reactor.util.context.ContextView");
   }
 
   @Override
@@ -38,5 +41,10 @@ public class ContextPropagationOperator34InstrumentationModule extends Instrumen
   public String getModuleGroup() {
     // This module uses the api context bridge helpers, therefore must be in the same classloader
     return "opentelemetry-api-bridge";
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

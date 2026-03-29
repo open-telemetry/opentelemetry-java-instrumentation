@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.testing.provider;
 
+import static java.util.Collections.singletonList;
+
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizer;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ConsoleExporterModel;
@@ -22,10 +24,15 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.SpanEx
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.SpanProcessorModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.TracerProviderModel;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class TestExporterCustomizerProvider implements DeclarativeConfigurationCustomizerProvider {
+
+  @Override
+  public int order() {
+    return Integer.MIN_VALUE; // run before other customizers that might add exporters
+  }
+
   @Override
   public void customize(DeclarativeConfigurationCustomizer customizer) {
     if (TestSpanExporterComponentProvider.getSpanExporter() == null) {
@@ -79,7 +86,7 @@ public class TestExporterCustomizerProvider implements DeclarativeConfigurationC
     model.withLoggerProvider(
         new LoggerProviderModel()
             .withProcessors(
-                Collections.singletonList(
+                singletonList(
                     new LogRecordProcessorModel()
                         .withSimple(
                             new SimpleLogRecordProcessorModel()
@@ -99,7 +106,7 @@ public class TestExporterCustomizerProvider implements DeclarativeConfigurationC
     model.withMeterProvider(
         new MeterProviderModel()
             .withReaders(
-                Collections.singletonList(
+                singletonList(
                     new MetricReaderModel()
                         .withPeriodic(
                             new PeriodicMetricReaderModel()

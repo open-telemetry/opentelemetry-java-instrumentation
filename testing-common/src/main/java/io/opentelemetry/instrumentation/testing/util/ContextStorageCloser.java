@@ -52,7 +52,7 @@ public final class ContextStorageCloser {
   private abstract static class ContextRestorer {
     abstract void restore();
 
-    @SuppressWarnings("SystemOut")
+    @SuppressWarnings("SystemOut") // only used for debugging tests
     boolean runWithRestore(AutoCloseable target) {
       try {
         target.close();
@@ -85,7 +85,7 @@ public final class ContextStorageCloser {
       Object pendingScopes = getStrictContextStoragePendingScopes(strictContextStorage);
       Field mapField = pendingScopes.getClass().getDeclaredField("map");
       mapField.setAccessible(true);
-      @SuppressWarnings("unchecked")
+      @SuppressWarnings("unchecked") // casting reflection result
       ConcurrentHashMap<Object, Object> map =
           (ConcurrentHashMap<Object, Object>) mapField.get(pendingScopes);
       Map<Object, Object> copy = new HashMap<>(map);

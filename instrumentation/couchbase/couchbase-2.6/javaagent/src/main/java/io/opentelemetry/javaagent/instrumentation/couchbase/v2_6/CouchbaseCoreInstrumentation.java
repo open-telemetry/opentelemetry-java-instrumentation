@@ -5,14 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_6;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_6.VirtualFieldHelper.COUCHBASE_REQUEST_INFO;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.couchbase.client.core.message.CouchbaseRequest;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -31,11 +30,10 @@ public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(takesArgument(0, named("com.couchbase.client.core.message.CouchbaseRequest")))
             .and(named("send")),
-        CouchbaseCoreInstrumentation.class.getName() + "$CouchbaseCoreAdvice");
+        getClass().getName() + "$CouchbaseCoreAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -43,9 +41,7 @@ public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addOperationIdToSpan(@Advice.Argument(0) CouchbaseRequest request) {
-      VirtualField<CouchbaseRequest, CouchbaseRequestInfo> virtualField =
-          VirtualField.find(CouchbaseRequest.class, CouchbaseRequestInfo.class);
-      CouchbaseRequestInfo requestInfo = virtualField.get(request);
+      CouchbaseRequestInfo requestInfo = COUCHBASE_REQUEST_INFO.get(request);
       if (requestInfo != null) {
         return;
       }
@@ -55,7 +51,7 @@ public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
       if (requestInfo != null) {
         // The scope from the initial rxJava subscribe is not available to the networking layer
         // To transfer the request info it is added to the context store
-        virtualField.set(request, requestInfo);
+        COUCHBASE_REQUEST_INFO.set(request, requestInfo);
 
         requestInfo.setOperationId(request.operationId());
       }

@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
-import application.io.opentelemetry.api.metrics.ObservableDoubleCounter;
+import io.opentelemetry.api.metrics.ObservableDoubleCounter;
 
-public final class ApplicationObservableDoubleCounter implements ObservableDoubleCounter {
+public final class ApplicationObservableDoubleCounter
+    implements application.io.opentelemetry.api.metrics.ObservableDoubleCounter {
 
-  private final io.opentelemetry.api.metrics.ObservableDoubleCounter agentCounter;
+  private final ObservableDoubleCounter agentCounter;
 
-  public ApplicationObservableDoubleCounter(
-      io.opentelemetry.api.metrics.ObservableDoubleCounter agentCounter) {
+  public ApplicationObservableDoubleCounter(ObservableDoubleCounter agentCounter) {
     this.agentCounter = agentCounter;
   }
 

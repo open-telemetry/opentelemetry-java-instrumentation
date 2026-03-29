@@ -24,8 +24,7 @@ public class InvocationListenerRegistryTypeInstrumentation implements TypeInstru
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isTypeInitializer(),
-        InvocationListenerRegistryTypeInstrumentation.class.getName() + "$ClassInitializerAdvice");
+        isTypeInitializer(), getClass().getName() + "$ClassInitializerAdvice");
   }
 
   @SuppressWarnings("unused")

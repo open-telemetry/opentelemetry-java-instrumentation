@@ -1,5 +1,5 @@
 /*
- * Instrumentation for Hibernate between 3.5 and 4.
+ * Instrumentation for Hibernate between 3.3 and 4.
  * Has the same logic as the Hibernate 4+ instrumentation, but is copied rather than sharing a codebase. This is because
  * the root interface for Session/StatelessSession - SharedSessionContract - isn't present before version 4. So the
  * instrumentation isn't able to reference it.
@@ -35,11 +35,12 @@ dependencies {
   testImplementation("com.sun.xml.bind:jaxb-core:2.2.11")
   testImplementation("com.sun.xml.bind:jaxb-impl:2.2.11")
   testImplementation("javax.activation:activation:1.1.1")
+  testImplementation(project(":instrumentation:hibernate:testing"))
 
   latestDepTestLibrary("org.hibernate:hibernate-core:3.+") // see hibernate-4.0 module
 }
 
-if (findProperty("testLatestDeps") as Boolean) {
+if (findProperty("testLatestDeps") == "true") {
   configurations {
     // Needed for test, but for latestDepTest this would otherwise bundle a second incompatible version of hibernate-core.
     testImplementation {
@@ -50,21 +51,32 @@ if (findProperty("testLatestDeps") as Boolean) {
 
 tasks {
   withType<Test>().configureEach {
-    // TODO run tests both with and without experimental span attributes
-    jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testExperimental by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
   }
 
+  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}StableSemconv") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
+
+        jvmArgs("-Dotel.semconv-stability.opt-in=database")
+      }
+    }
+
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites, testExperimental, stableSemconvSuites)
   }
 }

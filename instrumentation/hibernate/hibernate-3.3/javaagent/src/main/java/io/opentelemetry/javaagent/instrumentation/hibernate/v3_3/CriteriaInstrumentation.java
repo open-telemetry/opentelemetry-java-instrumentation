@@ -7,13 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Hibernate3Singletons.CRITERIA_SESSION_INFO;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Hibernate3Singletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -41,8 +40,8 @@ public class CriteriaInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(namedOneOf("list", "uniqueResult", "scroll")),
-        CriteriaInstrumentation.class.getName() + "$CriteriaMethodAdvice");
+        namedOneOf("list", "uniqueResult", "scroll"),
+        getClass().getName() + "$CriteriaMethodAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -61,9 +60,7 @@ public class CriteriaInstrumentation implements TypeInstrumentation {
         entityName = ((CriteriaImpl) criteria).getEntityOrClassName();
       }
 
-      VirtualField<Criteria, SessionInfo> criteriaVirtualField =
-          VirtualField.find(Criteria.class, SessionInfo.class);
-      SessionInfo sessionInfo = criteriaVirtualField.get(criteria);
+      SessionInfo sessionInfo = CRITERIA_SESSION_INFO.get(criteria);
 
       Context parentContext = Java8BytecodeBridge.currentContext();
       HibernateOperation hibernateOperation =

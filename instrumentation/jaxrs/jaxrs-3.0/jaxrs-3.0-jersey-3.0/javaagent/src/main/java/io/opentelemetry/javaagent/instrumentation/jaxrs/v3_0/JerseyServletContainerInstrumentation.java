@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -31,11 +30,10 @@ public class JerseyServletContainerInstrumentation implements TypeInstrumentatio
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("service"))
+        named("service")
             .and(takesArgument(0, named("jakarta.servlet.http.HttpServletRequest")))
             .and(takesArgument(1, named("jakarta.servlet.http.HttpServletResponse"))),
-        JerseyServletContainerInstrumentation.class.getName() + "$ServiceAdvice");
+        getClass().getName() + "$ServiceAdvice");
   }
 
   @SuppressWarnings("unused")

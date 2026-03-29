@@ -5,10 +5,6 @@
 
 package io.opentelemetry.instrumentation.testing.junit;
 
-import static io.opentelemetry.sdk.testing.assertj.TracesAssert.assertThat;
-
-import io.opentelemetry.sdk.trace.data.SpanData;
-import java.util.List;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -34,12 +30,10 @@ class LibraryInstrumentationExtensionTest {
         });
 
     // then
-    List<List<SpanData>> traces = testing.waitForTraces(1);
-    assertThat(traces)
-        .hasTracesSatisfyingExactly(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    parentSpan -> parentSpan.hasName("parent"),
-                    childSpan -> childSpan.hasName("child")));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                parentSpan -> parentSpan.hasName("parent"),
+                childSpan -> childSpan.hasName("child")));
   }
 }

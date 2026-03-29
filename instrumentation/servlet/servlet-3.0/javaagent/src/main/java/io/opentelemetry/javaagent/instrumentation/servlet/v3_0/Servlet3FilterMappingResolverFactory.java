@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletFilterMappingResolverFactory;
 import java.util.Collection;
+import javax.annotation.Nullable;
 import javax.servlet.FilterConfig;
 import javax.servlet.FilterRegistration;
 import javax.servlet.ServletContext;
@@ -21,6 +22,7 @@ public class Servlet3FilterMappingResolverFactory
   }
 
   @Override
+  @Nullable
   protected FilterRegistration getFilterRegistration() {
     String filterName = filterConfig.getFilterName();
     ServletContext servletContext = filterConfig.getServletContext();
@@ -41,6 +43,7 @@ public class Servlet3FilterMappingResolverFactory
   }
 
   @Override
+  @Nullable
   @SuppressWarnings("ReturnsNullCollection")
   protected Collection<String> getServletMappings(String servletName) {
     ServletRegistration servletRegistration =

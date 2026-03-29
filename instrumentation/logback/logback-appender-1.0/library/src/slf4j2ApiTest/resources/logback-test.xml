@@ -14,9 +14,12 @@
     <captureCodeAttributes>true</captureCodeAttributes>
     <captureMarkerAttribute>true</captureMarkerAttribute>
     <captureKeyValuePairAttributes>true</captureKeyValuePairAttributes>
+    <captureTemplate>true</captureTemplate>
     <captureArguments>true</captureArguments>
-    <captureLogstashAttributes>true</captureLogstashAttributes>
+    <captureLogstashMarkerAttributes>true</captureLogstashMarkerAttributes>
+    <captureLogstashStructuredArguments>true</captureLogstashStructuredArguments>
     <captureMdcAttributes>*</captureMdcAttributes>
+    <captureEventName>true</captureEventName>
   </appender>
 
   <root level="INFO">

@@ -41,9 +41,10 @@ tasks {
     // from the okhttp instrumentation we need OkHttp3IgnoredTypesConfigurer to fix context leaks
     jvmArgs("-Dotel.instrumentation.okhttp.enabled=false")
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
-  if (!(findProperty("testLatestDeps") as Boolean)) {
+  if (!(findProperty("testLatestDeps") == "true")) {
     check {
       dependsOn(testing.suites)
     }
@@ -53,6 +54,7 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 

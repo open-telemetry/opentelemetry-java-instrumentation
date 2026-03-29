@@ -14,7 +14,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * Iterates over a class, its superclass, and its interfaces in the following breath-first-like
+ * Iterates over a class, its superclass, and its interfaces in the following breadth-first-like
  * manner:
  *
  * <p>1. BaseClass

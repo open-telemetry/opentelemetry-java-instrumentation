@@ -14,8 +14,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.LoggerFactory;
-import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.localstack.LocalStackContainer;
 import org.testcontainers.utility.DockerImageName;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
@@ -35,7 +35,7 @@ class S3CrtClientTest {
   static void setUp() {
     localStack =
         new LocalStackContainer(DockerImageName.parse("localstack/localstack:2.0.2"))
-            .withServices(LocalStackContainer.Service.S3)
+            .withServices("s3")
             .withEnv("DEBUG", "1")
             .withStartupTimeout(Duration.ofMinutes(2));
     localStack.start();
@@ -47,7 +47,7 @@ class S3CrtClientTest {
 
     s3Client =
         S3AsyncClient.crtBuilder()
-            .endpointOverride(localStack.getEndpointOverride(LocalStackContainer.Service.S3))
+            .endpointOverride(localStack.getEndpoint())
             .credentialsProvider(credentialsProvider)
             .region(Region.of(localStack.getRegion()))
             .build();

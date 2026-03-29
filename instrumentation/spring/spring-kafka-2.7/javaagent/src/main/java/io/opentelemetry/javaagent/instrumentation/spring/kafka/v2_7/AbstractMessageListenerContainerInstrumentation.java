@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7;
 
 import static io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7.SpringKafkaSingletons.telemetry;
-import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -35,7 +34,6 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
     // and failure methods on a batch interceptor
     transformer.applyAdviceToMethod(
         named("getRecordInterceptor")
-            .and(isProtected())
             .and(takesArguments(0))
             .and(returns(named("org.springframework.kafka.listener.RecordInterceptor"))),
         this.getClass().getName() + "$GetRecordInterceptorAdvice");

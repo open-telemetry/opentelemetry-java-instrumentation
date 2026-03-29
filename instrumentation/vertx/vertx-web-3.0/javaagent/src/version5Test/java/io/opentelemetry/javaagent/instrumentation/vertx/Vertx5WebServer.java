@@ -32,6 +32,13 @@ public class Vertx5WebServer extends AbstractVertxWebServer {
         .createHttpServer()
         .requestHandler(mainRouter)
         .listen(port)
-        .onComplete(it -> startPromise.complete());
+        .onComplete(
+            result -> {
+              if (result.succeeded()) {
+                startPromise.complete();
+              } else {
+                startPromise.fail(result.cause());
+              }
+            });
   }
 }

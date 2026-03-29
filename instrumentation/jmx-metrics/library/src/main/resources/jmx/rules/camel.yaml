@@ -1,0 +1,352 @@
+---
+rules:
+
+  # Context Level Metrics
+
+  - bean: org.apache.camel:context=*,type=context,name=*
+    prefix: camel.context.
+    metricAttribute:
+      camel.context: param(context)
+    mapping:
+      # camel.context.route.started
+      StartedRoutes:
+        metric: route.started
+        type: updowncounter
+        unit: "{route}"
+        desc: Indicates the number of routes started successfully since context start-up or the last reset operation.
+      # camel.context.route.added
+      TotalRoutes:
+        metric: route.added
+        type: counter
+        unit: "{route}"
+        desc: Indicates the total number of routes added successfully since context start-up or the last reset operation.
+      # camel.context.exchange.count
+      ExchangesTotal:
+        metric: exchange.count
+        type: counter
+        unit: "{exchange}"
+        desc: Indicates the total number of exchanges, passed or failed, processed since context start-up or the last reset operation.
+      # camel.context.exchange.completed
+      ExchangesCompleted:
+        metric: exchange.completed
+        type: counter
+        unit: "{exchange}"
+        desc: Indicates the total number of exchanges processed successfully since context start-up or the last reset operation.
+      # camel.context.exchange.failed.count
+      ExchangesFailed:
+        metric: exchange.failed.count
+        type: counter
+        unit: "{exchange}"
+        desc: Indicates the total number of exchanges that failed to process since context start-up or the last reset operation.
+      # camel.context.exchange.failed.handled
+      FailuresHandled:
+        metric: exchange.failed.handled
+        unit: "{exchange}"
+        type: counter
+        desc: Indicates the number of exchanges failed and handled by an ExceptionHandler in the context.
+      # camel.context.exchange.inflight
+      ExchangesInflight:
+        metric: exchange.inflight
+        type: updowncounter
+        unit: "{exchange}"
+        desc: Indicates the number of exchanges currently transiting the context.
+      # camel.context.exchange.redelivered.count
+      Redeliveries:
+        metric: exchange.redelivered.count
+        type: counter
+        unit: "{exchange}"
+        desc: Number of exchanges redelivered (internal only)  since context start-up or the last reset operation.
+      # camel.context.exchange.redelivered.external
+      ExternalRedeliveries:
+        metric: exchange.redelivered.external
+        type: counter
+        unit: "{exchange}"
+        desc: The total number of all external initiated redeliveries (such as from JMS broker) since context start-up or the last reset operation.
+      # camel.context.exchange.processing.duration.max
+      MaxProcessingTime:
+        metric: exchange.processing.duration.max
+        type: gauge
+        sourceUnit: ms
+        unit: s
+        desc: Indicates the longest time to process an exchange since context start-up or the last reset operation.
+      # camel.context.exchange.processing.duration.mean
+      MeanProcessingTime:
+        metric: exchange.processing.duration.mean
+        type: gauge
+        sourceUnit: ms
+        unit: s
+        desc: Indicates the mean processing time for all exchanges processed since context start-up or the last reset operation.
+      # camel.context.exchange.processing.duration.min
+      MinProcessingTime:
+        metric: exchange.processing.duration.min
+        type: gauge
+        sourceUnit: ms
+        unit: s
+        desc: Indicates the shortest time to process an exchange since context start-up or the last reset operation.
+      # camel.context.exchange.processing.duration.last
+      LastProcessingTime:
+        metric: exchange.processing.duration.last
+        type: gauge
+        sourceUnit: ms
+        unit: s
+        desc: Indicates the time it took to process the last exchange.
+      # camel.context.exchange.processing.duration.last_delta
+      DeltaProcessingTime:
+        metric: exchange.processing.duration.last_delta
+        type: gauge
+        sourceUnit: ms
+        unit: s
+        desc: Indicates the difference of the Processing Time of the last two exchanges transited the context.
+      # camel.context.exchange.processing.duration.sum
+      TotalProcessingTime:
+        metric: exchange.processing.duration.sum
+        type: counter
+        sourceUnit: ms
+        unit: s
+        desc: Indicates the total processing time to process all exchanges since context start-up or the last reset operation.
+
+  # Route Level metrics
+
+  - bean: org.apache.camel:context=*,type=routes,name=*
+    prefix: camel.route.
+    metricAttribute:
+      camel.context: param(context)
+      camel.route: beanattr(RouteId)
+    mapping:
+      # camel.route.exchange.count
+      ExchangesTotal:
+        metric: exchange.count
+        type: counter
+        unit: "{exchange}"
+        desc: Indicates the total number of exchanges, passed or failed, that the route has processed since route start-up or the last reset operation.
+      # camel.route.exchange.completed
+      ExchangesCompleted:
+        metric: exchange.completed
+        type: counter
+        unit: "{exchange}"
+        desc: Indicates the total number of exchanges the route has processed successfully since route start-up or the last reset operation.
+      # camel.route.exchange.failed.count
+      ExchangesFailed:
+        metric: exchange.failed.count
+        type: counter
+        unit: "{exchange}"
+        desc: Indicates the total number of exchanges that the route has failed to process since route start-up or the last reset operation.
+      # camel.route.exchange.failed.handled
+      FailuresHandled:
+        metric: exchange.failed.handled
+        unit: "{exchange}"
+        type: counter
+        desc: Indicates the number of exchanges failed and handled by an ExceptionHandler in the route.
+      # camel.route.exchange.inflight
+      ExchangesInflight:
+        metric: exchange.inflight
+        type: updowncounter
+        unit: "{exchange}"
+        desc: Indicates the number of exchanges currently transiting the route.
+      # camel.route.exchange.redelivered.count
+      Redeliveries:
+        metric: exchange.redelivered.count
+        type: counter
+        unit: "{exchange}"
+        desc: Number of exchanges redelivered (internal only)  since route start-up or the last reset operation.
+      # camel.route.exchange.redelivered.external
+      ExternalRedeliveries:
+        metric: exchange.redelivered.external
+        type: counter
+        unit: "{exchange}"
+        desc: The total number of all external initiated redeliveries (such as from JMS broker) since the route start-up or the last reset operation.
+      # camel.route.exchange.processing.duration.max
+      MaxProcessingTime:
+        metric: exchange.processing.duration.max
+        type: gauge
+        sourceUnit: ms
+        unit: s
+        desc: Indicates the longest time to process an exchange since the route start-up or the last reset operation.
+      # camel.route.exchange.processing.duration.mean
+      MeanProcessingTime:
+        metric: exchange.processing.duration.mean
+        type: gauge
+        sourceUnit: ms
+        unit: s
+        desc: Indicates the mean processing time for all exchanges processed since the route start-up or the last reset operation.
+      # camel.route.exchange.processing.duration.min
+      MinProcessingTime:
+        metric: exchange.processing.duration.min
+        type: gauge
+        sourceUnit: ms
+        unit: s
+        desc: Indicates the shortest time to process an exchange since the route start-up or the last reset operation.
+      # camel.route.exchange.processing.duration.last
+      LastProcessingTime:
+        metric: exchange.processing.duration.last
+        type: gauge
+        sourceUnit: ms
+        unit: s
+        desc: Indicates the time it took the route to process the last exchange.
+      # camel.route.exchange.processing.duration.last_delta
+      DeltaProcessingTime:
+        metric: exchange.processing.duration.last_delta
+        type: gauge
+        sourceUnit: ms
+        unit: s
+        desc: Indicates the difference of the Processing Time of the last two exchanges transited the route.
+      # camel.route.exchange.processing.duration.sum
+      TotalProcessingTime:
+        metric: exchange.processing.duration.sum
+        type: counter
+        sourceUnit: ms
+        unit: s
+        desc: Indicates the total processing time of all exchanges the selected processed since route start-up or the last reset operation.
+
+  # Processor Level Metrics
+
+  - bean: org.apache.camel:context=*,type=processors,name=*
+    prefix: camel.processor.
+    metricAttribute:
+      camel.context: param(context)
+      camel.route: beanattr(RouteId)
+      camel.processor: beanattr(ProcessorId)
+      camel.destination: beanattr(Destination)
+    mapping:
+      # camel.processor.exchange.count
+      ExchangesTotal:
+        metric: exchange.count
+        type: counter
+        unit: "{exchange}"
+        desc: Indicates the total number of exchanges, passed or failed, that the selected processor has processed since processor start-up or the last reset operation.
+      # camel.processor.exchange.completed
+      ExchangesCompleted:
+        metric: exchange.completed
+        type: counter
+        unit: "{exchange}"
+        desc: Indicates the total number of exchanges the selected processor has processed successfully since processor start-up or the last reset operation.
+      # camel.processor.exchange.failed.count
+      ExchangesFailed:
+        metric: exchange.failed.count
+        type: counter
+        unit: "{exchange}"
+        desc: Indicates the total number of exchanges that the selected processor has failed to process since processor start-up or the last reset operation.
+      # camel.processor.exchange.failed.handled
+      FailuresHandled:
+        metric: exchange.failed.handled
+        unit: "{exchange}"
+        type: counter
+        desc: Indicates the number of exchanges failed and handled by an ExceptionHandler in the context.
+      # camel.processor.exchange.inflight
+      ExchangesInflight:
+        metric: exchange.inflight
+        type: updowncounter
+        unit: "{exchange}"
+        desc: Indicates the number of exchanges currently transiting the processor.
+      # camel.processor.exchange.redelivered.count
+      Redeliveries:
+        metric: exchange.redelivered.count
+        type: counter
+        unit: "{exchange}"
+        desc: Number of exchanges redelivered (internal only)  since selected processor start-up or the last reset operation.
+      # camel.processor.exchange.redelivered.external
+      ExternalRedeliveries:
+        metric: exchange.redelivered.external
+        type: counter
+        unit: "{exchange}"
+        desc: The total number of all external initiated redeliveries (such as from JMS broker) since processor start-up or the last reset operation.
+      # camel.processor.exchange.processing.duration.max
+      MaxProcessingTime:
+        metric: exchange.processing.duration.max
+        type: gauge
+        sourceUnit: ms
+        unit: s
+        desc: Indicates the longest time to process an exchange since processor start-up or the last reset operation.
+      # camel.processor.exchange.processing.duration.mean
+      MeanProcessingTime:
+        metric: exchange.processing.duration.mean
+        type: gauge
+        sourceUnit: ms
+        unit: s
+        desc: Indicates the mean processing time for all exchanges processed since processor start-up or the last reset operation.
+      # camel.processor.exchange.processing.duration.min
+      MinProcessingTime:
+        metric: exchange.processing.duration.min
+        type: gauge
+        sourceUnit: ms
+        unit: s
+        desc: Indicates the shortest time to process an exchange since processor start-up or the last reset operation.
+      # camel.processor.exchange.processing.duration.last
+      LastProcessingTime:
+        metric: exchange.processing.duration.last
+        type: gauge
+        sourceUnit: ms
+        unit: s
+        desc: Indicates the time it took the selected processor to process the last exchange.
+      # camel.processor.exchange.processing.duration.last_delta
+      DeltaProcessingTime:
+        metric: exchange.processing.duration.last_delta
+        type: gauge
+        sourceUnit: ms
+        unit: s
+        desc: Indicates the difference of the Processing Time of the last two exchanges transited the selected processor.
+      # camel.processor.exchange.processing.duration.sum
+      TotalProcessingTime:
+        metric: exchange.processing.duration.sum
+        type: counter
+        sourceUnit: ms
+        unit: s
+        desc: Indicates the total processing time to process all exchanges since start-up or the last reset operation.
+
+ # Thread Pools
+
+  - bean: org.apache.camel:context=*,type=threadpools,name=*
+    prefix: camel.threadpool.
+    metricAttribute:
+      camel.context: param(context)
+      camel.route: beanattr(RouteId)
+      camel.threadpool.name: beanattr(Id)
+    mapping:
+      # camel.threadpool.task.count
+      TaskCount:
+        metric: task.count
+        type: counter
+        unit: "{task}"
+        desc: The approximate total number of tasks that have ever been scheduled for execution.
+      # camel.threadpool.task.active
+      ActiveCount:
+        metric: task.active
+        type: updowncounter
+        unit: "{thread}"
+        desc: The approximate number of threads that are actively executing tasks.
+      # camel.threadpool.task.completed
+      CompletedTaskCount:
+        metric: task.completed
+        type: counter
+        unit: "{task}"
+        desc: The approximate total number of tasks that have completed execution. Because the states of tasks and threads may change dynamically during computation, the returned value is only an approximation, but one that does not ever decrease across successive calls.
+      # camel.threadpool.task.queue.size
+      TaskQueueSize:
+        metric: task.queue.size
+        type: updowncounter
+        unit: "{task}"
+        desc:  The number of Tasks in the Task Queue.
+      # camel.threadpool.thread.count
+      PoolSize:
+        metric: thread.count
+        type: updowncounter
+        unit: "{thread}"
+        desc: The current number of threads in the pool.
+      # camel.threadpool.thread.max
+      LargestPoolSize:
+        metric: thread.max
+        type: gauge
+        unit: "{thread}"
+        desc: The largest number of threads that have ever simultaneously been in the pool.
+      # camel.threadpool.thread.limit.upper
+      MaximumPoolSize:
+        metric: thread.limit.upper
+        type: updowncounter
+        unit: "{thread}"
+        desc: The maximum possible number of threads in the pool.
+      # camel.threadpool.thread.limit.lower
+      CorePoolSize:
+        metric: thread.limit.lower
+        type: updowncounter
+        unit: "{thread}"
+        desc: The number of threads that are always kept in the pool, even if they are idle.

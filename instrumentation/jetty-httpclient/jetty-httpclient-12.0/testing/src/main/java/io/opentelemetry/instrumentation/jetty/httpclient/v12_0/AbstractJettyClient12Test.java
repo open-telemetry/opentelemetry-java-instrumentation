@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.jetty.httpclient.v12_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
@@ -16,7 +17,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.eclipse.jetty.client.ContentResponse;
 import org.eclipse.jetty.client.HttpClient;
@@ -31,15 +31,16 @@ import org.junit.jupiter.api.Test;
 
 public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<Request> {
 
+  protected HttpClient client;
+  protected HttpClient httpsClient;
+
   protected abstract HttpClient createStandardClient();
 
   protected abstract HttpClient createHttpsClient(SslContextFactory.Client sslContextFactory);
 
-  protected HttpClient client = createStandardClient();
-  protected HttpClient httpsClient;
-
   @BeforeEach
   void before() throws Exception {
+    client = createStandardClient();
     client.setConnectTimeout(CONNECTION_TIMEOUT.toMillis());
     client.start();
 
@@ -74,7 +75,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
 
     request.method(method);
     if (uri.toString().contains("/read-timeout")) {
-      request.timeout(READ_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+      request.timeout(READ_TIMEOUT.toMillis(), MILLISECONDS);
     }
 
     return request;
@@ -184,7 +185,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
 
   private static class JettyClientListener
       implements Request.FailureListener, Response.FailureListener {
-    volatile Throwable failure;
+    private volatile Throwable failure;
 
     @Override
     public void onFailure(Request request, Throwable failure) {

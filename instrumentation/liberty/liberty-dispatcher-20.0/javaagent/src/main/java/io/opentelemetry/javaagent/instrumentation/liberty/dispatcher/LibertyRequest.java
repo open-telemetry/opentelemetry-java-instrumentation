@@ -5,19 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 
+import static java.util.Collections.emptyList;
+
 import com.ibm.wsspi.genericbnf.HeaderField;
 import com.ibm.wsspi.http.channel.HttpRequestMessage;
 import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
 public class LibertyRequest {
   private final HttpRequestMessage httpRequestMessage;
-  private final String serverSocketAddress;
+  @Nullable private final String serverSocketAddress;
   private final int serverSocketPort;
-  private final String clientSocketAddress;
+  @Nullable private final String clientSocketAddress;
   private final int clientSocketPort;
 
   public LibertyRequest(
@@ -55,6 +56,7 @@ public class LibertyRequest {
     return httpRequestMessage.getAllHeaderNames();
   }
 
+  @Nullable
   public String getHeaderValue(String name) {
     HeaderField hf = httpRequestMessage.getHeader(name);
     return hf != null ? hf.asString() : null;
@@ -63,7 +65,7 @@ public class LibertyRequest {
   public List<String> getHeaderValues(String name) {
     List<HeaderField> headers = httpRequestMessage.getHeaders(name);
     if (headers.isEmpty()) {
-      return Collections.emptyList();
+      return emptyList();
     }
     List<String> stringHeaders = new ArrayList<>(headers.size());
     for (HeaderField header : headers) {
@@ -76,6 +78,7 @@ public class LibertyRequest {
     return httpRequestMessage.getVersion();
   }
 
+  @Nullable
   public String getServerSocketAddress() {
     return serverSocketAddress;
   }
@@ -84,6 +87,7 @@ public class LibertyRequest {
     return serverSocketPort;
   }
 
+  @Nullable
   public String getClientSocketAddress() {
     return clientSocketAddress;
   }

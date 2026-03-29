@@ -21,7 +21,7 @@ dependencies {
 
   library("org.apache.kafka:kafka-clients:0.11.0.0")
 
-  testImplementation("org.testcontainers:kafka")
+  testImplementation("org.testcontainers:testcontainers-kafka")
   testImplementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:testing"))
 }
 
@@ -29,10 +29,8 @@ tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-
-    // TODO run tests both with and without experimental span attributes
-    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
   val testPropagationDisabled by registering(Test::class) {
@@ -54,6 +52,20 @@ tasks {
     include("**/KafkaClientSuppressReceiveSpansTest.*")
   }
 
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      excludeTestsMatching("KafkaClientPropagationDisabledTest")
+      excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
+    }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+
+    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
+  }
+
   test {
     filter {
       excludeTestsMatching("KafkaClientPropagationDisabledTest")
@@ -63,6 +75,15 @@ tasks {
   }
 
   check {
-    dependsOn(testPropagationDisabled, testReceiveSpansDisabled)
+    dependsOn(testPropagationDisabled, testReceiveSpansDisabled, testExperimental)
+  }
+}
+
+val latestDepTest = findProperty("testLatestDeps") == "true"
+
+// kafka 4.1 requires java 11
+if (latestDepTest) {
+  otelJava {
+    minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }
 }

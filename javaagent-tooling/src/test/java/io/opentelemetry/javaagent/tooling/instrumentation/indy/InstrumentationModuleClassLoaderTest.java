@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
+import static java.util.Collections.emptyList;
+import static net.bytebuddy.matcher.ElementMatchers.any;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -34,12 +36,26 @@ import java.util.jar.JarOutputStream;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.implementation.FixedValue;
-import net.bytebuddy.matcher.ElementMatchers;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 @SuppressWarnings("ClassNamedLikeTypeParameter")
 class InstrumentationModuleClassLoaderTest {
+
+  static {
+    // Windows holds open handles to JAR files loaded through URLClassLoader even after the
+    // class loader is closed. Disabling URLConnection caching on Windows to prevent this.
+    // Without this, instrumentation-module.jar cannot be deleted during test cleanup.
+    if (OS.WINDOWS.isCurrentOs()) {
+      try {
+        // Must call setDefaultUseCaches on a jar: URL connection before any JARs are opened
+        new URL("jar:file://dummy.jar!/").openConnection().setDefaultUseCaches(false);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
 
   @Test
   void checkLookup() throws Throwable {
@@ -50,11 +66,11 @@ class InstrumentationModuleClassLoaderTest {
     ClassLoader dummyParent = new URLClassLoader(new URL[] {}, null);
 
     InstrumentationModuleClassLoader m1 =
-        new InstrumentationModuleClassLoader(dummyParent, dummyParent, ElementMatchers.any());
+        new InstrumentationModuleClassLoader(dummyParent, dummyParent, any());
     m1.installInjectedClasses(toInject);
 
     InstrumentationModuleClassLoader m2 =
-        new InstrumentationModuleClassLoader(dummyParent, dummyParent, ElementMatchers.any());
+        new InstrumentationModuleClassLoader(dummyParent, dummyParent, any());
     m2.installInjectedClasses(toInject);
 
     // MethodHandles.publicLookup() always succeeds on the first invocation
@@ -89,7 +105,7 @@ class InstrumentationModuleClassLoaderTest {
 
     ClassLoader dummyParent = new URLClassLoader(new URL[] {}, null);
     InstrumentationModuleClassLoader m1 =
-        new InstrumentationModuleClassLoader(dummyParent, dummyParent, ElementMatchers.any());
+        new InstrumentationModuleClassLoader(dummyParent, dummyParent, any());
     m1.installInjectedClasses(toInject);
 
     Class<?> injected = Class.forName(A.class.getName(), true, m1);
@@ -131,7 +147,7 @@ class InstrumentationModuleClassLoaderTest {
       toInject.put(C.class.getName(), BytecodeWithUrl.create(C.class.getName(), moduleSourceCl));
 
       InstrumentationModuleClassLoader moduleCl =
-          new InstrumentationModuleClassLoader(appCl, agentCl, ElementMatchers.any());
+          new InstrumentationModuleClassLoader(appCl, agentCl, any());
       moduleCl.installInjectedClasses(toInject);
 
       // Verify precedence for classloading
@@ -153,21 +169,21 @@ class InstrumentationModuleClassLoaderTest {
 
       // Verify precedence for looking up .class resources
       URL resourceA = moduleCl.getResource(getClassFile(A.class));
-      assertThat(resourceA.toString()).startsWith("jar:file:" + appJar);
+      assertThat(resourceA.toString()).startsWith("jar:" + appJar.toUri().toURL());
       assertThat(Collections.list(moduleCl.getResources(getClassFile(A.class))))
           .containsExactly(resourceA);
       assertThat(moduleCl.getResourceAsStream(getClassFile(A.class)))
           .hasBinaryContent(appClasses.get(A.class.getName()));
 
       URL resourceB = moduleCl.getResource(getClassFile(B.class));
-      assertThat(resourceB.toString()).startsWith("jar:file:" + agentJar);
+      assertThat(resourceB.toString()).startsWith("jar:" + agentJar.toUri().toURL());
       assertThat(Collections.list(moduleCl.getResources(getClassFile(B.class))))
           .containsExactly(resourceB);
       assertThat(moduleCl.getResourceAsStream(getClassFile(B.class)))
           .hasBinaryContent(agentClasses.get(B.class.getName()));
 
       URL resourceC = moduleCl.getResource(getClassFile(C.class));
-      assertThat(resourceC.toString()).startsWith("jar:file:" + moduleJar);
+      assertThat(resourceC.toString()).startsWith("jar:" + moduleJar.toUri().toURL());
       assertThat(Collections.list(moduleCl.getResources(getClassFile(C.class))))
           .containsExactly(resourceC);
       assertThat(moduleCl.getResourceAsStream(getClassFile(C.class)))
@@ -193,6 +209,14 @@ class InstrumentationModuleClassLoaderTest {
       appCl.close();
       agentCl.close();
       moduleSourceCl.close();
+
+      // On Windows, force garbage collection to release file handles to JAR files.
+      // Without this, all three JAR files (dummy-app.jar, dummy-agent.jar,
+      // instrumentation-module.jar) cannot be deleted during test cleanup, even with
+      // setDefaultUseCaches(false) above.
+      if (OS.WINDOWS.isCurrentOs()) {
+        System.gc();
+      }
     }
   }
 
@@ -207,7 +231,7 @@ class InstrumentationModuleClassLoaderTest {
 
     @Override
     public List<TypeInstrumentation> typeInstrumentations() {
-      return Collections.emptyList();
+      return emptyList();
     }
 
     @Override
@@ -223,14 +247,14 @@ class InstrumentationModuleClassLoaderTest {
     ClassLoader agentCl = HideMe.class.getClassLoader();
 
     InstrumentationModuleClassLoader nothingHidden =
-        new InstrumentationModuleClassLoader(null, agentCl, ElementMatchers.any());
+        new InstrumentationModuleClassLoader(null, agentCl, any());
     nothingHidden.installModule(module);
 
     assertThat(nothingHidden.loadClass(HideMe.class.getName())).isSameAs(HideMe.class);
 
     module.hiddenPackages.add(HideMe.class.getPackage().getName());
     InstrumentationModuleClassLoader classHidden =
-        new InstrumentationModuleClassLoader(null, agentCl, ElementMatchers.any());
+        new InstrumentationModuleClassLoader(null, agentCl, any());
     classHidden.installModule(module);
 
     assertThatThrownBy(() -> classHidden.loadClass(HideMe.class.getName()))

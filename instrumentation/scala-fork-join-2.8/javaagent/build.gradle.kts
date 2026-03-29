@@ -23,3 +23,9 @@ dependencies {
 
   testImplementation(project(":instrumentation:executors:testing"))
 }
+
+if (findProperty("denyUnsafe") == "true") {
+  tasks.withType<Test>().configureEach {
+    enabled = false
+  }
+}

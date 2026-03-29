@@ -46,7 +46,7 @@ public class SpringJmsMessageListenerInstrumentation implements TypeInstrumentat
             .and(isPublic())
             .and(takesArguments(2))
             .and(takesArgument(0, named("javax.jms.Message"))),
-        SpringJmsMessageListenerInstrumentation.class.getName() + "$MessageListenerAdvice");
+        getClass().getName() + "$MessageListenerAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -81,13 +81,14 @@ public class SpringJmsMessageListenerInstrumentation implements TypeInstrumentat
         return new AdviceScope(request, context, context.makeCurrent());
       }
 
-      public void exit(Throwable throwable) {
+      public void exit(@Nullable Throwable throwable) {
         scope.close();
         listenerInstrumenter().end(context, request, null, throwable);
       }
     }
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Nullable
     public static AdviceScope onEnter(@Advice.Argument(0) Message message) {
       return AdviceScope.enter(message);
     }

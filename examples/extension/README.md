@@ -30,7 +30,7 @@ contain extension jars) for the `otel.javaagent.extensions` value.
 
 To simplify deployment, you can embed extensions into the OpenTelemetry Java Agent to produce a single jar file. With an integrated extension, you no longer need the `-Dotel.javaagent.extensions` command line option.
 
-For more information, see the `extendedAgent` task in [build.gradle](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/examples/extension/build.gradle#:~:text=extendedAgent).
+For more information, see the `extendedAgent` task in [build.gradle.kts](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/examples/extension/build.gradle.kts#:~:text=extendedAgent).
 
 ## Extensions examples
 
@@ -74,7 +74,7 @@ The `InstrumenterCustomizerProvider` extension point allows you to customize ins
 - Add custom attributes and metrics to existing instrumentations
 - Customize context
 - Transform span names to match your naming conventions
-- Apply customizations conditionally based on instrumentation name
+- Apply customizations conditionally based on instrumentation name or type (HTTP client, HTTP server, DB client, etc.)
 
 ### "I don't want this span at all"
 

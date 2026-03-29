@@ -6,10 +6,10 @@
 package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonTokenId;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import io.opentelemetry.testing.internal.jackson.core.JsonTokenId;
 import java.io.IOException;
 import javax.annotation.Nullable;
 import org.joda.time.DateTime;

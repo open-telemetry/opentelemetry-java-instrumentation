@@ -7,7 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.twilio;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.javaagent.instrumentation.twilio.ExperimentalTestHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -25,7 +28,6 @@ import com.twilio.http.TwilioRestClient;
 import com.twilio.rest.api.v2010.account.Call;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -33,9 +35,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import org.apache.http.HttpEntity;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -144,9 +144,7 @@ class TwilioClientTest {
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
         .thenReturn(
-            new Response(
-                new ByteArrayInputStream(MESSAGE_RESPONSE_BODY.getBytes(StandardCharsets.UTF_8)),
-                200));
+            new Response(new ByteArrayInputStream(MESSAGE_RESPONSE_BODY.getBytes(UTF_8)), 200));
 
     Message message =
         testing.runWithSpan(
@@ -163,7 +161,7 @@ class TwilioClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("test").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName("MessageCreator.create")
                         .hasKind(CLIENT)
@@ -171,11 +169,14 @@ class TwilioClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("twilio.type"),
-                                "com.twilio.rest.api.v2010.account.Message"),
+                                experimental("com.twilio.rest.api.v2010.account.Message")),
                             equalTo(
-                                stringKey("twilio.account"), "AC14984e09e497506cf0d5eb59b1f6ace7"),
-                            equalTo(stringKey("twilio.sid"), "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
-                            equalTo(stringKey("twilio.status"), "sent"))));
+                                stringKey("twilio.account"),
+                                experimental("AC14984e09e497506cf0d5eb59b1f6ace7")),
+                            equalTo(
+                                stringKey("twilio.sid"),
+                                experimental("MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")),
+                            equalTo(stringKey("twilio.status"), experimental("sent")))));
   }
 
   @Test
@@ -183,9 +184,7 @@ class TwilioClientTest {
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
         .thenReturn(
-            new Response(
-                new ByteArrayInputStream(CALL_RESPONSE_BODY.getBytes(StandardCharsets.UTF_8)),
-                200));
+            new Response(new ByteArrayInputStream(CALL_RESPONSE_BODY.getBytes(UTF_8)), 200));
 
     Call call =
         testing.runWithSpan(
@@ -202,18 +201,22 @@ class TwilioClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("test").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName("CallCreator.create")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                stringKey("twilio.type"), "com.twilio.rest.api.v2010.account.Call"),
+                                stringKey("twilio.type"),
+                                experimental("com.twilio.rest.api.v2010.account.Call")),
                             equalTo(
-                                stringKey("twilio.account"), "ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
-                            equalTo(stringKey("twilio.sid"), "CAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
-                            equalTo(stringKey("twilio.status"), "completed"))));
+                                stringKey("twilio.account"),
+                                experimental("ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")),
+                            equalTo(
+                                stringKey("twilio.sid"),
+                                experimental("CAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")),
+                            equalTo(stringKey("twilio.status"), experimental("completed")))));
   }
 
   @Test
@@ -246,7 +249,7 @@ class TwilioClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("test").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName("MessageCreator.create")
                         .hasKind(CLIENT)
@@ -254,11 +257,14 @@ class TwilioClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("twilio.type"),
-                                "com.twilio.rest.api.v2010.account.Message"),
+                                experimental("com.twilio.rest.api.v2010.account.Message")),
                             equalTo(
-                                stringKey("twilio.account"), "AC14984e09e497506cf0d5eb59b1f6ace7"),
-                            equalTo(stringKey("twilio.sid"), "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
-                            equalTo(stringKey("twilio.status"), "sent"))));
+                                stringKey("twilio.account"),
+                                experimental("AC14984e09e497506cf0d5eb59b1f6ace7")),
+                            equalTo(
+                                stringKey("twilio.sid"),
+                                experimental("MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")),
+                            equalTo(stringKey("twilio.status"), experimental("sent")))));
   }
 
   @SuppressWarnings("CannotMockMethod")
@@ -299,7 +305,7 @@ class TwilioClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("test").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName("MessageCreator.create")
                         .hasParent(trace.getSpan(0))
@@ -307,11 +313,14 @@ class TwilioClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("twilio.type"),
-                                "com.twilio.rest.api.v2010.account.Message"),
+                                experimental("com.twilio.rest.api.v2010.account.Message")),
                             equalTo(
-                                stringKey("twilio.account"), "AC14984e09e497506cf0d5eb59b1f6ace7"),
-                            equalTo(stringKey("twilio.sid"), "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
-                            equalTo(stringKey("twilio.status"), "sent"))));
+                                stringKey("twilio.account"),
+                                experimental("AC14984e09e497506cf0d5eb59b1f6ace7")),
+                            equalTo(
+                                stringKey("twilio.sid"),
+                                experimental("MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")),
+                            equalTo(stringKey("twilio.status"), experimental("sent")))));
   }
 
   @Test
@@ -342,7 +351,7 @@ class TwilioClientTest {
                       .createAsync(realTwilioRestClient);
 
               try {
-                return future.get(10, TimeUnit.SECONDS);
+                return future.get(10, SECONDS);
               } finally {
                 Thread.sleep(1000);
               }
@@ -353,7 +362,7 @@ class TwilioClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("test").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName("MessageCreator.createAsync")
                         .hasKind(CLIENT)
@@ -361,11 +370,14 @@ class TwilioClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("twilio.type"),
-                                "com.twilio.rest.api.v2010.account.Message"),
+                                experimental("com.twilio.rest.api.v2010.account.Message")),
                             equalTo(
-                                stringKey("twilio.account"), "AC14984e09e497506cf0d5eb59b1f6ace7"),
-                            equalTo(stringKey("twilio.sid"), "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
-                            equalTo(stringKey("twilio.status"), "sent"))));
+                                stringKey("twilio.account"),
+                                experimental("AC14984e09e497506cf0d5eb59b1f6ace7")),
+                            equalTo(
+                                stringKey("twilio.sid"),
+                                experimental("MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")),
+                            equalTo(stringKey("twilio.status"), experimental("sent")))));
   }
 
   @Test
@@ -373,9 +385,7 @@ class TwilioClientTest {
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
         .thenReturn(
-            new Response(
-                new ByteArrayInputStream(ERROR_RESPONSE_BODY.getBytes(StandardCharsets.UTF_8)),
-                500));
+            new Response(new ByteArrayInputStream(ERROR_RESPONSE_BODY.getBytes(UTF_8)), 500));
 
     assertThatThrownBy(
             () ->
@@ -402,6 +412,7 @@ class TwilioClientTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
+                        .hasTotalAttributeCount(0)
                         .hasException(new ApiException("Testing Failure"))));
   }
 
@@ -410,9 +421,7 @@ class TwilioClientTest {
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
         .thenReturn(
-            new Response(
-                new ByteArrayInputStream(MESSAGE_RESPONSE_BODY.getBytes(StandardCharsets.UTF_8)),
-                200));
+            new Response(new ByteArrayInputStream(MESSAGE_RESPONSE_BODY.getBytes(UTF_8)), 200));
 
     Message message =
         Message.creator(
@@ -432,11 +441,14 @@ class TwilioClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("twilio.type"),
-                                "com.twilio.rest.api.v2010.account.Message"),
+                                experimental("com.twilio.rest.api.v2010.account.Message")),
                             equalTo(
-                                stringKey("twilio.account"), "AC14984e09e497506cf0d5eb59b1f6ace7"),
-                            equalTo(stringKey("twilio.sid"), "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
-                            equalTo(stringKey("twilio.status"), "sent"))));
+                                stringKey("twilio.account"),
+                                experimental("AC14984e09e497506cf0d5eb59b1f6ace7")),
+                            equalTo(
+                                stringKey("twilio.sid"),
+                                experimental("MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")),
+                            equalTo(stringKey("twilio.status"), experimental("sent")))));
   }
 
   @Test
@@ -444,9 +456,7 @@ class TwilioClientTest {
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
         .thenReturn(
-            new Response(
-                new ByteArrayInputStream(MESSAGE_RESPONSE_BODY.getBytes(StandardCharsets.UTF_8)),
-                200));
+            new Response(new ByteArrayInputStream(MESSAGE_RESPONSE_BODY.getBytes(UTF_8)), 200));
 
     Message message =
         testing.runWithSpan(
@@ -460,7 +470,7 @@ class TwilioClientTest {
                       .createAsync(twilioRestClient);
 
               try {
-                return future.get(10, TimeUnit.SECONDS);
+                return future.get(10, SECONDS);
               } finally {
                 Thread.sleep(1000);
               }
@@ -472,7 +482,7 @@ class TwilioClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("test").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName("MessageCreator.createAsync")
                         .hasKind(CLIENT)
@@ -480,11 +490,14 @@ class TwilioClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("twilio.type"),
-                                "com.twilio.rest.api.v2010.account.Message"),
+                                experimental("com.twilio.rest.api.v2010.account.Message")),
                             equalTo(
-                                stringKey("twilio.account"), "AC14984e09e497506cf0d5eb59b1f6ace7"),
-                            equalTo(stringKey("twilio.sid"), "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
-                            equalTo(stringKey("twilio.status"), "sent"))));
+                                stringKey("twilio.account"),
+                                experimental("AC14984e09e497506cf0d5eb59b1f6ace7")),
+                            equalTo(
+                                stringKey("twilio.sid"),
+                                experimental("MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")),
+                            equalTo(stringKey("twilio.status"), experimental("sent")))));
   }
 
   @Test
@@ -492,9 +505,7 @@ class TwilioClientTest {
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
         .thenReturn(
-            new Response(
-                new ByteArrayInputStream(ERROR_RESPONSE_BODY.getBytes(StandardCharsets.UTF_8)),
-                500));
+            new Response(new ByteArrayInputStream(ERROR_RESPONSE_BODY.getBytes(UTF_8)), 500));
 
     assertThatThrownBy(
             () ->
@@ -509,7 +520,7 @@ class TwilioClientTest {
                               .createAsync(twilioRestClient);
 
                       try {
-                        return future.get(10, TimeUnit.SECONDS);
+                        return future.get(10, SECONDS);
                       } finally {
                         Thread.sleep(1000);
                       }
@@ -529,14 +540,14 @@ class TwilioClientTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
+                        .hasTotalAttributeCount(0)
                         .hasException(new ApiException("Testing Failure"))));
   }
 
   private static CloseableHttpResponse mockResponse(String body, int statusCode)
       throws IOException {
     HttpEntity httpEntity = mock(HttpEntity.class);
-    when(httpEntity.getContent())
-        .thenReturn(new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8)));
+    when(httpEntity.getContent()).thenReturn(new ByteArrayInputStream(body.getBytes(UTF_8)));
     when(httpEntity.isRepeatable()).thenReturn(true);
 
     StatusLine statusLine = mock(StatusLine.class);

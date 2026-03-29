@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.testing.provider;
 
+import static java.util.Objects.requireNonNull;
+
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.logs.export.LogRecordExporter;
-import java.util.Objects;
 
-public class TestLogRecordExporterComponentProvider
-    implements ComponentProvider<LogRecordExporter> {
+public class TestLogRecordExporterComponentProvider implements ComponentProvider {
 
   private static LogRecordExporter logRecordExporter;
 
@@ -27,7 +27,7 @@ public class TestLogRecordExporterComponentProvider
 
   @Override
   public LogRecordExporter create(DeclarativeConfigProperties config) {
-    return Objects.requireNonNull(logRecordExporter, "logRecordExporter must not be null");
+    return requireNonNull(logRecordExporter, "logRecordExporter must not be null");
   }
 
   public static void setLogRecordExporter(LogRecordExporter logRecordExporter) {

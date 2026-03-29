@@ -78,6 +78,7 @@ class AsyncServlet extends HttpServlet {
     try {
       latch.await();
     } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
       throw new RuntimeException(e);
     }
   }

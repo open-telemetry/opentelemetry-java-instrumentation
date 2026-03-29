@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import org.junit.jupiter.api.AfterEach;
@@ -21,13 +22,13 @@ class OpenTelemetryInstallerTest {
   @AfterEach
   void setUp() {
     GlobalOpenTelemetry.resetForTest();
+    AgentDistributionConfig.resetForTest();
   }
 
   @Test
   void globalOpenTelemetry() {
     AutoConfiguredOpenTelemetrySdk sdk =
-        OpenTelemetryInstaller.installOpenTelemetrySdk(
-            EarlyInitAgentConfig.class.getClassLoader(), EarlyInitAgentConfig.create());
+        OpenTelemetryInstaller.installOpenTelemetrySdk(EarlyInitAgentConfig.class.getClassLoader());
 
     assertThat(sdk).isNotNull().isNotEqualTo(OpenTelemetry.noop());
   }

@@ -7,24 +7,36 @@
   ignorePaths: [
     'instrumentation/**',
   ],
-  // needed in order to get patch-only updates in package rules below
-  // unfortunately you can't combine updateTypes and separateMinorPatch in the same package rule
-  // so we have to apply it globally here, see
-  // https://github.com/renovatebot/renovate/discussions/8399#discussioncomment-305798
-  separateMinorPatch: true,
   packageRules: [
+
+    // ── Scheduling & grouping ──────────────────────────────────────────
+
     {
-      // this is to reduce the number of renovate PRs
+      // group all patch updates into a single weekly PR
+      groupName: 'all patch versions',
+      matchUpdateTypes: [
+        'patch',
+      ],
+      schedule: [
+        '* 0-7 * * 2', // weekly, before 8am on Tuesday
+      ],
+    },
+    {
+      // group GitHub Actions, dockerfile, and custom.regex updates into a single weekly PR
+      // (must be after patch rule so that it wins for GH Action patches)
       matchManagers: [
         'github-actions',
         'dockerfile',
+        'custom.regex',
       ],
-      extends: [
-        'schedule:weekly',
+      schedule: [
+        '* 0-7 * * 2', // weekly, before 8am on Tuesday
       ],
       groupName: 'weekly update',
-      separateMinorPatch: false,  // overrides separateMinorPatch specified above
     },
+
+    // ── Version constraints ────────────────────────────────────────────
+
     {
       matchPackageNames: [
         'io.opentelemetry.contrib:opentelemetry-azure-resources',
@@ -44,59 +56,12 @@
       allowedVersions: '!/\\-SNAPSHOT$/',
     },
     {
-      groupName: 'quarkus packages',
+      // currently using gradle plugin org.playframework.play 3.1.0 milestone releases
+      // but don't want to pick up SNAPSHOT releases
       matchPackageNames: [
-        'io.quarkus{/,}**',
+        'org.playframework.play:**',
       ],
-    },
-    {
-      groupName: 'gradle develocity packages',
-      matchPackageNames: [
-        'com.gradle.develocity{/,}**',
-      ],
-    },
-    {
-      groupName: 'armeria packages',
-      matchPackageNames: [
-        'com.linecorp.armeria:{/,}**',
-      ],
-    },
-    {
-      groupName: 'spotless packages',
-      matchPackageNames: [
-        'com.diffplug.spotless{/,}**',
-      ],
-    },
-    {
-      groupName: 'byte buddy packages',
-      matchPackageNames: [
-        'net.bytebuddy:{/,}**',
-      ],
-    },
-    {
-      groupName: 'gradle shadow packages',
-      matchPackageNames: [
-        'com.gradleup.shadow{/,}**',
-      ],
-    },
-    {
-      groupName: 'guava packages',
-      matchPackageNames: [
-        'com.google.guava{/,}**',
-      ],
-    },
-    {
-      groupName: 'jackson packages',
-      matchPackageNames: [
-        'com.fasterxml.jackson{/,}**',
-      ],
-    },
-    {
-      // prevent update to 2.4-groovy-4.0-SNAPSHOT
       allowedVersions: '!/\\-SNAPSHOT$/',
-      matchPackageNames: [
-        'org.spockframework:{/,}**',
-      ],
     },
     {
       // prevent 3.0.1u2 -> 3.0.1
@@ -106,11 +71,139 @@
       allowedVersions: '!/3\\.0\\.1$/',
     },
     {
+      // system-stubs-jupiter 2.1+ requires Java 11+
+      matchPackageNames: [
+        'uk.org.webcompere:system-stubs-jupiter',
+      ],
+      allowedVersions: '/^2\\.0\\./',
+    },
+    {
+      // intentionally using Logback 1.2 (for Spring Boot 2) in these smoke tests
+      matchFileNames: [
+        'smoke-tests/images/spring-boot/build.gradle.kts',
+        'smoke-tests-otel-starter/spring-boot-2/build.gradle.kts',
+        'smoke-tests-otel-starter/spring-boot-reactive-2/build.gradle.kts',
+      ],
+      matchPackageNames: [
+        'ch.qos.logback:**',
+      ],
+      allowedVersions: '/^1\\.2\\./',
+    },
+    {
+      // intentionally aligning netty 4.0 versions in this convention
+      matchFileNames: [
+        'conventions/src/main/kotlin/otel.java-conventions.gradle.kts',
+      ],
+      matchPackageNames: [
+        'io.netty:netty-bom',
+      ],
+      matchCurrentVersion: '/^4\\.0\\./',
+      allowedVersions: '/^4\\.0\\./',
+    },
+    {
+      // intentionally aligning netty 4.1 versions in this convention
+      matchFileNames: [
+        'conventions/src/main/kotlin/otel.java-conventions.gradle.kts',
+      ],
+      matchPackageNames: [
+        'io.netty:netty-bom',
+      ],
+      matchCurrentVersion: '/^4\\.1\\./',
+      allowedVersions: '/^4\\.1\\./',
+    },
+    {
+      // intentionally using scala 2.11 in otel.scala-conventions.gradle.kts
+      matchFileNames: [
+        'conventions/src/main/kotlin/otel.scala-conventions.gradle.kts',
+      ],
+      matchPackageNames: [
+        'org.scala-lang:scala-library',
+      ],
+      allowedVersions: '/^2\\.11\\./',
+    },
+    {
+      // intentionally using logback 1.3 in dependency management (for Java 8 support)
+      matchFileNames: [
+        'dependencyManagement/build.gradle.kts',
+      ],
+      matchPackageNames: [
+        'ch.qos.logback:**',
+      ],
+      allowedVersions: '/^1\\.3\\./',
+    },
+
+    // ── Package family groups ──────────────────────────────────────────
+
+    {
+      groupName: 'quarkus packages',
+      matchPackageNames: [
+        'io.quarkus:**',
+      ],
+    },
+    {
+      groupName: 'gradle develocity packages',
+      matchPackageNames: [
+        'com.gradle.develocity:**',
+      ],
+    },
+    {
+      groupName: 'armeria packages',
+      matchPackageNames: [
+        'com.linecorp.armeria:**',
+      ],
+    },
+    {
+      groupName: 'spotless packages',
+      matchPackageNames: [
+        'com.diffplug.spotless',
+        'com.diffplug.spotless:**',
+      ],
+    },
+    {
+      groupName: 'byte buddy packages',
+      matchPackageNames: [
+        'net.bytebuddy:**',
+      ],
+    },
+    {
+      groupName: 'gradle shadow packages',
+      matchPackageNames: [
+        'com.gradleup.shadow:**',
+      ],
+    },
+    {
+      groupName: 'guava packages',
+      matchPackageNames: [
+        'com.google.guava:**',
+      ],
+    },
+    {
+      groupName: 'jackson packages',
+      matchPackageNames: [
+        'com.fasterxml.jackson:**',
+        'com.fasterxml.jackson.core:**',
+      ],
+    },
+
+    // ── Disabled updates (Java version compatibility) ──────────────────
+
+    {
       // OpenTelemetry SDK updates are handled by auto-update-otel-sdk.yml
       enabled: false,
       matchPackageNames: [
-        'io.opentelemetry:{/,}**',
+        'io.opentelemetry:**',
       ],
+    },
+    {
+      // junit 6+ requires Java 17+
+      matchPackageNames: [
+        'org.junit:**',
+        'org.junit.jupiter:**',
+      ],
+      matchUpdateTypes: [
+        'major',
+      ],
+      enabled: false,
     },
     {
       // junit-pioneer 2+ requires Java 11+
@@ -129,19 +222,8 @@
       ],
       enabled: false,
       matchPackageNames: [
-        'org.mockito:{/,}**',
+        'org.mockito:**',
       ],
-    },
-    {
-      // system-stubs-jupiter 2.1+ requires Java 11+
-      matchPackageNames: [
-        'uk.org.webcompere:system-stubs-jupiter',
-      ],
-      matchUpdateTypes: [
-        'major',
-        'minor',
-      ],
-      enabled: false,
     },
     {
       // wiremock 3+ requires Java 11+
@@ -154,9 +236,42 @@
       ],
     },
     {
-      // intentionally using Spring Boot 2 in this smoke tests
-      // new versions of Spring Boot 3 are tested with
-      // https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/dc4330e0a3060bd7d8c4090ad0b8fc4727e68113/settings.gradle.kts#L43-L45
+      // snakeyaml-engine 3+ requires Java 11+
+      matchUpdateTypes: [
+        'major',
+      ],
+      enabled: false,
+      matchPackageNames: [
+        'org.snakeyaml:snakeyaml-engine'
+      ],
+    },
+    {
+      // groovy 5+ requires Java 11+
+      matchUpdateTypes: [
+        'major',
+      ],
+      enabled: false,
+      matchPackageNames: [
+        'org.apache.groovy:**'
+      ],
+    },
+    {
+      // intentionally using Spring Boot 2 to make sure the earliest version is supported
+      matchFileNames: [
+        'smoke-tests/images/spring-boot/build.gradle.kts',
+        'smoke-tests-otel-starter/spring-boot-2/build.gradle.kts',
+        'smoke-tests-otel-starter/spring-boot-common/build.gradle.kts',
+        'smoke-tests-otel-starter/spring-boot-reactive-2/build.gradle.kts',
+        'smoke-tests-otel-starter/spring-boot-reactive-common/build.gradle.kts',
+        'smoke-tests-otel-starter/spring-smoke-testing/build.gradle.kts',
+      ],
+      matchPackageNames: [
+        'org.springframework.boot:spring-boot-dependencies',
+      ],
+      enabled: false
+    },
+    {
+      // Spring Boot 2 smoke tests are intentionally using slf4j 1.x
       matchFileNames: [
         'smoke-tests/images/spring-boot/build.gradle.kts',
         'smoke-tests-otel-starter/spring-boot-2/build.gradle.kts',
@@ -167,42 +282,11 @@
       ],
       matchPackageNames: [
         'org.slf4j:slf4j-api',
-        'org.springframework.boot:org.springframework.boot.gradle.plugin', // this is for plugin id "org.springframework.boot"
-        'org.springframework.boot:spring-boot-dependencies',
       ],
       matchUpdateTypes: [
         'major',
-        'minor',
       ],
       enabled: false,
-    },
-    {
-      // intentionally using Spring Boot 2 in this smoke tests
-      matchFileNames: [
-        'smoke-tests-otel-starter/spring-boot-2/build.gradle.kts',
-        'smoke-tests-otel-starter/spring-boot-reactive-2/build.gradle.kts',
-      ],
-      matchPackageNames: [
-        'ch.qos.logback:logback-classic',
-      ],
-      matchUpdateTypes: [
-        'minor',
-      ],
-      enabled: false,
-    },
-    {
-      // intentionally using logback 1.2 in this smoke tests
-      matchFileNames: [
-        'smoke-tests/images/spring-boot/build.gradle.kts',
-      ],
-      matchUpdateTypes: [
-        'major',
-        'minor',
-      ],
-      enabled: false,
-      matchPackageNames: [
-        'ch.qos.logback:{/,}**',
-      ],
     },
     {
       // intentionally using slf4j 1 in this smoke tests
@@ -214,7 +298,7 @@
       ],
       enabled: false,
       matchPackageNames: [
-        'org.slf4j:{/,}**',
+        'org.slf4j:**',
       ],
     },
     {
@@ -228,40 +312,12 @@
       ],
       enabled: false,
       matchPackageNames: [
-        'com.google.inject:{/,}**',
-        'com.google.inject.extensions:{/,}**',
+        'com.google.inject:**',
+        'com.google.inject.extensions:**',
       ],
     },
     {
-      // intentionally aligning both netty 4.0 and 4.1 version in this convention
-      matchFileNames: [
-        'conventions/src/main/kotlin/otel.java-conventions.gradle.kts',
-      ],
-      matchPackageNames: [
-        'io.netty:netty-bom',
-      ],
-      matchUpdateTypes: [
-        'major',
-        'minor',
-      ],
-      enabled: false,
-    },
-    {
-      // intentionally using scala 2.11 in otel.scala-conventions.gradle.kts
-      matchFileNames: [
-        'conventions/src/main/kotlin/otel.scala-conventions.gradle.kts',
-      ],
-      matchPackageNames: [
-        'org.scala-lang:scala-library',
-      ],
-      matchUpdateTypes: [
-        'major',
-        'minor',
-      ],
-      enabled: false,
-    },
-    {
-      // intentionally using Java 11 in some examples
+      // intentionally testing against specific major Java versions
       matchPackageNames: [
         'eclipse-temurin',
       ],
@@ -295,33 +351,6 @@
       enabled: false,
     },
     {
-      // intentionally using logback 1.3 in dependency management (for Java 8 support)
-      matchFileNames: [
-        'dependencyManagement/build.gradle.kts',
-      ],
-      matchUpdateTypes: [
-        'major',
-        'minor',
-      ],
-      enabled: false,
-      matchPackageNames: [
-        'ch.qos.logback:{/,}**',
-      ],
-    },
-    {
-      // intentionally using Spring Boot 2 in dependency management (for Java 8 support)
-      matchFileNames: [
-        'dependencyManagement/build.gradle.kts',
-      ],
-      matchUpdateTypes: [
-        'major',
-      ],
-      enabled: false,
-      matchPackageNames: [
-        'org.springframework.boot:spring-boot-dependencies{/,}**',
-      ],
-    },
-    {
       // pinned version to Jetty 8 (Servlet 3.0) for compatibility
       matchFileNames: [
         'examples/distro/instrumentation/servlet-3/build.gradle',
@@ -331,16 +360,52 @@
       ],
       enabled: false,
       matchPackageNames: [
-        'org.eclipse.jetty:{/,}**',
+        'org.eclipse.jetty:**',
       ],
     },
   ],
   customManagers: [
     {
+      // keep SHA-pinned raw.githubusercontent.com URLs in mise.toml up to date
+      customType: 'regex',
+      datasourceTemplate: 'github-tags',
+      managerFilePatterns: [
+        '/^mise\\.toml$/',
+      ],
+      matchStrings: [
+        'https://raw\\.githubusercontent\\.com/(?<depName>[^/]+/[^/]+)/(?<currentDigest>[a-f0-9]{40})/.*#\\s*(?<currentValue>v\\S+)',
+      ],
+    },
+    {
+      customType: 'regex',
+      datasourceTemplate: 'docker',
+      managerFilePatterns: [
+        '.github/workflows/**',
+        '**/*.gradle.kts',
+      ],
+      matchStrings: [
+        '(?<currentValue>\\d+) # renovate\\(java-version\\)',
+        '"(?<currentValue>\\d+)" // renovate\\(java-version\\)',
+      ],
+      // using zulu because new releases get published quickly
+      depNameTemplate: 'azul/zulu-openjdk',
+    },
+    {
+      customType: 'regex',
+      datasourceTemplate: 'docker',
+      managerFilePatterns: [
+        '**/build.gradle.kts',
+      ],
+      matchStrings: [
+        '"(?<depName>eclipse-temurin):(?<currentValue>[^"@]+)@(?<currentDigest>sha256:[0-9a-f]+)"',
+        '"(?<depName>ibm-semeru-runtimes):(?<currentValue>[^"@]+)@(?<currentDigest>sha256:[0-9a-f]+)"',
+      ],
+    },
+    {
       customType: 'regex',
       datasourceTemplate: 'pypi',
       managerFilePatterns: [
-        '/^.github/workflows//',
+        '.github/workflows/**',
       ],
       matchStrings: [
         'pip install (?<depName>[^=]+)==(?<currentValue>[^\\s]+)',
@@ -350,7 +415,7 @@
       customType: 'regex',
       datasourceTemplate: 'npm',
       managerFilePatterns: [
-        '/^.github/workflows//',
+        '.github/workflows/**',
       ],
       matchStrings: [
         'npx (?<depName>[^@]+)@(?<currentValue>[^\\s]+)',

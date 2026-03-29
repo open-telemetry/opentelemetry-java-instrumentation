@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
+import static java.util.Collections.singletonMap;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
-import java.util.Collections;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -33,7 +34,7 @@ class AwsXrayPropagatorTest {
     AwsXrayPropagator.getInstance()
         .extract(
             Context.root(),
-            Collections.singletonMap(
+            singletonMap(
                 "X-Amzn-Trace-Id",
                 "Root=1-35a77be2-beae321878f706079d392ac3;Parent=df79f9d51134dc0b;Sampled=1"),
             StringMapGetter.INSTANCE);

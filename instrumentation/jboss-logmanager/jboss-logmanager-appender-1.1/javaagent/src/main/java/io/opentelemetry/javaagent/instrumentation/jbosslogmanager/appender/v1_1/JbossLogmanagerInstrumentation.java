@@ -41,20 +41,19 @@ public class JbossLogmanagerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CallLogRawAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(
-        @Advice.This Logger logger,
-        @Advice.Argument(0) ExtLogRecord record,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+    public static CallDepth methodEnter(
+        @Advice.This Logger logger, @Advice.Argument(0) ExtLogRecord record) {
       // need to track call depth across all loggers in order to avoid double capture when one
       // logging framework delegates to another
-      callDepth = CallDepth.forClass(LoggerProvider.class);
+      CallDepth callDepth = CallDepth.forClass(LoggerProvider.class);
       if (callDepth.getAndIncrement() == 0) {
         LoggingEventMapper.INSTANCE.capture(logger, record);
       }
+      return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(@Advice.Local("otelCallDepth") CallDepth callDepth) {
+    public static void methodExit(@Advice.Enter CallDepth callDepth) {
       callDepth.decrementAndGet();
     }
   }

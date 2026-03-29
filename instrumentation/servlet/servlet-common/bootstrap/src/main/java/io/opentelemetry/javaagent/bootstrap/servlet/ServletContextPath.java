@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.bootstrap.servlet;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 
 /**
  * The context key here is used to propagate the servlet context path throughout the request, so
@@ -34,7 +35,7 @@ public final class ServletContextPath {
     }
     String contextPath = contextPathExtractor.apply(request);
     if (contextPath == null) {
-      // context path isn't know yet
+      // context path isn't known yet
       return context;
     }
     if (contextPath.isEmpty() || contextPath.equals("/")) {
@@ -44,9 +45,9 @@ public final class ServletContextPath {
     return context.with(CONTEXT_KEY, new ServletContextPath(contextPath));
   }
 
-  private final String contextPath;
+  @Nullable private final String contextPath;
 
-  private ServletContextPath(String contextPath) {
+  private ServletContextPath(@Nullable String contextPath) {
     this.contextPath = contextPath;
   }
 
@@ -55,7 +56,8 @@ public final class ServletContextPath {
    * given {@code spanName}. If there is no servlet path stored in the context, returns {@code
    * spanName}.
    */
-  public static String prepend(Context context, String spanName) {
+  @Nullable
+  public static String prepend(Context context, @Nullable String spanName) {
     ServletContextPath servletContextPath = context.get(CONTEXT_KEY);
     if (servletContextPath != null) {
       String value = servletContextPath.contextPath;

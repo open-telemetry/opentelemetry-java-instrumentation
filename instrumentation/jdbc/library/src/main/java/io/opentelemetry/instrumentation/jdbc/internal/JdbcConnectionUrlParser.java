@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo.DEFAULT;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
 import static java.util.logging.Level.FINE;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
@@ -14,7 +16,6 @@ import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -50,7 +51,9 @@ public enum JdbcConnectionUrlParser {
           if (colonIndex != -1) {
             user = user.substring(0, colonIndex);
           }
-          builder.user(user);
+          if (!user.isEmpty()) {
+            builder.user(user);
+          }
         }
 
         String path = uri.getPath();
@@ -61,7 +64,7 @@ public enum JdbcConnectionUrlParser {
           path = path.substring(1);
         }
         if (!path.isEmpty()) {
-          builder.db(path);
+          builder.name(path);
         }
         if (uri.getHost() != null) {
           builder.host(uri.getHost());
@@ -89,13 +92,6 @@ public enum JdbcConnectionUrlParser {
       }
 
       String[] split = jdbcUrl.split(";", 2);
-      if (split.length > 1) {
-        Map<String, String> props = splitQuery(split[1], ";");
-        populateStandardProperties(builder, props);
-        if (props.containsKey("instance")) {
-          builder.name(props.get("instance"));
-        }
-      }
 
       String urlServerName = split[0].substring(hostIndex + 17);
       if (!urlServerName.isEmpty()) {
@@ -104,8 +100,16 @@ public enum JdbcConnectionUrlParser {
 
       int databaseLoc = serverName.indexOf("/");
       if (databaseLoc > 1) {
-        builder.db(serverName.substring(databaseLoc + 1));
+        builder.name(serverName.substring(databaseLoc + 1));
         serverName = serverName.substring(0, databaseLoc);
+      }
+
+      if (split.length > 1) {
+        Map<String, String> props = splitQuery(split[1], ";");
+        populateStandardProperties(builder, props);
+        if (props.containsKey("instance")) {
+          builder.name(props.get("instance"));
+        }
       }
 
       int portLoc = serverName.indexOf(":");
@@ -292,9 +296,9 @@ public enum JdbcConnectionUrlParser {
 
       if (paramLoc > 0) {
         populateStandardProperties(builder, splitQuery(jdbcUrl.substring(paramLoc + 1), "&"));
-        builder.db(jdbcUrl.substring(dbLoc + 1, paramLoc));
+        builder.name(jdbcUrl.substring(dbLoc + 1, paramLoc));
       } else {
-        builder.db(jdbcUrl.substring(dbLoc + 1));
+        builder.name(jdbcUrl.substring(dbLoc + 1));
       }
 
       if (portLoc > 0) {
@@ -328,9 +332,9 @@ public enum JdbcConnectionUrlParser {
 
       if (paramLoc > 0) {
         populateStandardProperties(builder, splitQuery(jdbcUrl.substring(paramLoc + 1), "&"));
-        builder.db(jdbcUrl.substring(dbLoc + 1, paramLoc));
+        builder.name(jdbcUrl.substring(dbLoc + 1, paramLoc));
       } else if (dbLoc != -1) {
-        builder.db(jdbcUrl.substring(dbLoc + 1));
+        builder.name(jdbcUrl.substring(dbLoc + 1));
       }
 
       if (jdbcUrl.startsWith("address=")) {
@@ -806,7 +810,10 @@ public enum JdbcConnectionUrlParser {
       if (host != null) {
         builder.host(host);
       }
-      return builder.name(instance);
+      if (instance != null) {
+        builder.name(instance);
+      }
+      return builder;
     }
   },
 
@@ -911,6 +918,84 @@ public enum JdbcConnectionUrlParser {
       }
       return GENERIC_URL_LIKE.doParse(clickhouseUrl, builder);
     }
+  },
+  /**
+   * Sample urls:
+   *
+   * <ul>
+   *   <li>jdbc:oceanbase://host:port/dbname
+   *   <li>jdbc:oceanbase:oracle://host:port/dbname
+   * </ul>
+   */
+  OCEANBASE("oceanbase") {
+    @Override
+    DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
+      int protoLoc = jdbcUrl.indexOf("://");
+      int typeEndLoc = jdbcUrl.indexOf(':');
+      if (protoLoc > typeEndLoc) {
+        String subtype = jdbcUrl.substring(typeEndLoc + 1, protoLoc);
+        builder.subtype(subtype);
+        if (subtype.equals(DbSystemValues.ORACLE)) {
+          builder.system(DbSystemValues.ORACLE);
+        }
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder);
+      } else {
+        return GENERIC_URL_LIKE.doParse(jdbcUrl, builder);
+      }
+    }
+  },
+  /**
+   * <a href="https://www.alibabacloud.com/help/en/lindorm/user-guide/view-endpoints">Driver
+   * configuration doc</a>
+   *
+   * <p>Sample urls:
+   *
+   * <ul>
+   *   <li>jdbc:lindorm:table:url=http//server_name:30060/test
+   *   <li>jdbc:lindorm:tsdb:url=http://server_name:8242/test
+   *   <li>jabc:lindorm:search:url=http://server_name:30070/test
+   * </ul>
+   */
+  LINDORM("lindorm") {
+    private static final String DEFAULT_HOST = "localhost";
+    private static final int DEFAULT_PORT = 30060;
+
+    @Override
+    DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
+      String lindormUrl = jdbcUrl.substring("lindorm:".length());
+      DbInfo dbInfo = builder.build();
+      if (dbInfo.getHost() == null) {
+        builder.host(DEFAULT_HOST);
+      }
+      if (dbInfo.getPort() == null) {
+        builder.port(DEFAULT_PORT);
+      }
+
+      int urlIndex = lindormUrl.indexOf(":url=");
+      if (urlIndex < 0) {
+        return builder;
+      }
+      builder.subtype(lindormUrl.substring(0, urlIndex));
+      String realUrl = lindormUrl.substring(urlIndex + 5);
+      return GENERIC_URL_LIKE.doParse(realUrl, builder);
+    }
+  },
+  /** Sample url: jdbc:polardb://server_name:1901/dbname */
+  POLARDB("polardb") {
+    private static final int DEFAULT_PORT = 1521;
+    private static final String DEFAULT_HOST = "localhost";
+
+    @Override
+    DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
+      DbInfo dbInfo = builder.build();
+      if (dbInfo.getHost() == null) {
+        builder.host(DEFAULT_HOST);
+      }
+      if (dbInfo.getPort() == null) {
+        builder.port(DEFAULT_PORT);
+      }
+      return GENERIC_URL_LIKE.doParse(jdbcUrl, builder);
+    }
   };
 
   private static final Logger logger = Logger.getLogger(JdbcConnectionUrlParser.class.getName());
@@ -930,7 +1015,7 @@ public enum JdbcConnectionUrlParser {
   private final List<String> typeKeys;
 
   JdbcConnectionUrlParser(String... typeKeys) {
-    this.typeKeys = Collections.unmodifiableList(Arrays.asList(typeKeys));
+    this.typeKeys = Collections.unmodifiableList(asList(typeKeys));
   }
 
   abstract DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder);
@@ -943,8 +1028,13 @@ public enum JdbcConnectionUrlParser {
     connectionUrl = connectionUrl.toLowerCase(Locale.ROOT);
 
     String jdbcUrl;
-    if (connectionUrl.startsWith("jdbc:")) {
+    if (connectionUrl.startsWith("jdbc:tracing:")) {
+      // see https://github.com/opentracing-contrib/java-jdbc
+      jdbcUrl = connectionUrl.substring("jdbc:tracing:".length());
+    } else if (connectionUrl.startsWith("jdbc:")) {
       jdbcUrl = connectionUrl.substring("jdbc:".length());
+    } else if (connectionUrl.startsWith("jdbc-secretsmanager:tracing:")) {
+      jdbcUrl = connectionUrl.substring("jdbc-secretsmanager:tracing:".length());
     } else if (connectionUrl.startsWith("jdbc-secretsmanager:")) {
       jdbcUrl = connectionUrl.substring("jdbc-secretsmanager:".length());
     } else {
@@ -1001,7 +1091,7 @@ public enum JdbcConnectionUrlParser {
   // Source: https://stackoverflow.com/a/13592567
   private static Map<String, String> splitQuery(String query, String separator) {
     if (query == null || query.isEmpty()) {
-      return Collections.emptyMap();
+      return emptyMap();
     }
     Map<String, String> queryPairs = new LinkedHashMap<>();
     String[] pairs = query.split(separator);
@@ -1025,15 +1115,16 @@ public enum JdbcConnectionUrlParser {
 
   private static void populateStandardProperties(DbInfo.Builder builder, Map<?, ?> props) {
     if (props != null && !props.isEmpty()) {
-      if (props.containsKey("user")) {
-        builder.user((String) props.get("user"));
+      String user = (String) props.get("user");
+      if (user != null && !user.isEmpty()) {
+        builder.user(user);
       }
 
       if (props.containsKey("databasename")) {
-        builder.db((String) props.get("databasename"));
+        builder.name((String) props.get("databasename"));
       }
       if (props.containsKey("databaseName")) {
-        builder.db((String) props.get("databaseName"));
+        builder.name((String) props.get("databaseName"));
       }
 
       if (props.containsKey("servername")) {
@@ -1068,7 +1159,7 @@ public enum JdbcConnectionUrlParser {
   }
 
   // see
-  // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-spans.md
+  // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/database-spans.md
   private static String toDbSystem(String type) {
     switch (type) {
       case "as400": // IBM AS400 Database
@@ -1100,6 +1191,12 @@ public enum JdbcConnectionUrlParser {
         return DbSystemValues.HANADB;
       case "clickhouse": // ClickHouse
         return DbSystemValues.CLICKHOUSE;
+      case "oceanbase": // Oceanbase
+        return DbSystemValues.OCEANBASE;
+      case "polardb": // PolarDB
+        return DbSystemValues.POLARDB;
+      case "lindorm": // Lindorm
+        return DbSystemValues.LINDORM;
       default:
         return DbSystemValues.OTHER_SQL; // Unknown DBMS
     }
@@ -1120,6 +1217,9 @@ public enum JdbcConnectionUrlParser {
     static final String MARIADB = "mariadb";
     static final String H2 = "h2";
     static final String CLICKHOUSE = "clickhouse";
+    static final String OCEANBASE = "oceanbase";
+    static final String POLARDB = "polardb";
+    static final String LINDORM = "lindorm";
 
     private DbSystemValues() {}
   }

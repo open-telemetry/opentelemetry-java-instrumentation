@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.logback.appender.v1_0;
 
 import static io.opentelemetry.javaagent.instrumentation.logback.appender.v1_0.LogbackSingletons.mapper;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -32,32 +31,30 @@ class LogbackInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("callAppenders"))
             .and(takesArguments(1))
             .and(takesArgument(0, named("ch.qos.logback.classic.spi.ILoggingEvent"))),
-        LogbackInstrumentation.class.getName() + "$CallAppendersAdvice");
+        getClass().getName() + "$CallAppendersAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class CallAppendersAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(
-        @Advice.Argument(0) ILoggingEvent event,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+    public static CallDepth methodEnter(@Advice.Argument(0) ILoggingEvent event) {
       // need to track call depth across all loggers in order to avoid double capture when one
       // logging framework delegates to another
-      callDepth = CallDepth.forClass(LoggerProvider.class);
+      CallDepth callDepth = CallDepth.forClass(LoggerProvider.class);
       if (callDepth.getAndIncrement() == 0) {
         mapper()
             .emit(GlobalOpenTelemetry.get().getLogsBridge(), event, Thread.currentThread().getId());
       }
+      return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(@Advice.Local("otelCallDepth") CallDepth callDepth) {
+    public static void methodExit(@Advice.Enter CallDepth callDepth) {
       callDepth.decrementAndGet();
     }
   }

@@ -10,6 +10,7 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 /**
@@ -26,7 +27,8 @@ import java.util.List;
  * </ul>
  */
 @AutoService(InstrumentationModule.class)
-public class LibertyInstrumentationModule extends InstrumentationModule {
+public class LibertyInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public LibertyInstrumentationModule() {
     super("liberty", "liberty-20.0");
@@ -35,5 +37,10 @@ public class LibertyInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new LibertyWebAppInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

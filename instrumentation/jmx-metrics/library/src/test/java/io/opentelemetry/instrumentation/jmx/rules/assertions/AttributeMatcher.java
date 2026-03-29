@@ -5,12 +5,10 @@
 
 package io.opentelemetry.instrumentation.jmx.rules.assertions;
 
-import javax.annotation.Nullable;
-
 /** Implements functionality of matching data point attributes. */
 public class AttributeMatcher {
   private final String attributeName;
-  @Nullable private final String attributeValue;
+  private final String attributeValue;
 
   /**
    * Create instance used to match data point attribute with any value.
@@ -27,7 +25,7 @@ public class AttributeMatcher {
    * @param attributeName attribute name
    * @param attributeValue attribute value
    */
-  AttributeMatcher(String attributeName, @Nullable String attributeValue) {
+  AttributeMatcher(String attributeName, String attributeValue) {
     this.attributeName = attributeName;
     this.attributeValue = attributeValue;
   }

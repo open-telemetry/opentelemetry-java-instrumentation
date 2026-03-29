@@ -5,12 +5,13 @@
 
 package io.opentelemetry.instrumentation.testing.provider;
 
+import static java.util.Objects.requireNonNull;
+
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
-import java.util.Objects;
 
-public class TestSpanExporterComponentProvider implements ComponentProvider<SpanExporter> {
+public class TestSpanExporterComponentProvider implements ComponentProvider {
 
   private static SpanExporter spanExporter;
 
@@ -26,7 +27,7 @@ public class TestSpanExporterComponentProvider implements ComponentProvider<Span
 
   @Override
   public SpanExporter create(DeclarativeConfigProperties config) {
-    return Objects.requireNonNull(spanExporter, "spanExporter must not be null");
+    return requireNonNull(spanExporter, "spanExporter must not be null");
   }
 
   public static SpanExporter getSpanExporter() {

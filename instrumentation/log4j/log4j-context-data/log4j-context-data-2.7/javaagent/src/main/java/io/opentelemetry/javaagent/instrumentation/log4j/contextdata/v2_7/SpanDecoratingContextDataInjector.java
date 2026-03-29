@@ -5,13 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.log4j.contextdata.v2_7;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.baggage.BaggageEntry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
 import java.util.List;
 import java.util.Map;
@@ -23,8 +24,9 @@ import org.apache.logging.log4j.util.StringMap;
 
 public final class SpanDecoratingContextDataInjector implements ContextDataInjector {
   private static final boolean BAGGAGE_ENABLED =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.log4j-context-data.add-baggage", false);
+      DeclarativeConfigUtil.getInstrumentationConfig(
+              GlobalOpenTelemetry.get(), "log4j_context_data")
+          .getBoolean("add_baggage", false);
   private static final String TRACE_ID_KEY = AgentCommonConfig.get().getTraceIdKey();
   private static final String SPAN_ID_KEY = AgentCommonConfig.get().getSpanIdKey();
   private static final String TRACE_FLAGS_KEY = AgentCommonConfig.get().getTraceFlagsKey();

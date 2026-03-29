@@ -1,0 +1,13 @@
+display_name: Apache ElasticJob
+description: This instrumentation enables spans for Apache ElasticJob job executions.
+library_link: https://shardingsphere.apache.org/elasticjob/
+configurations:
+  - name: otel.instrumentation.apache-elasticjob.experimental-span-attributes
+    description: >
+      Enables experimental span attributes `job.system`, `scheduling.apache-elasticjob.job.name`,
+      `scheduling.apache-elasticjob.task.id`, `scheduling.apache-elasticjob.sharding.item.index`,
+      `scheduling.apache-elasticjob.sharding.total.count`,
+      `scheduling.apache-elasticjob.sharding.item.parameter`, and
+      `scheduling.apache-elasticjob.job.type`.
+    type: boolean
+    default: false

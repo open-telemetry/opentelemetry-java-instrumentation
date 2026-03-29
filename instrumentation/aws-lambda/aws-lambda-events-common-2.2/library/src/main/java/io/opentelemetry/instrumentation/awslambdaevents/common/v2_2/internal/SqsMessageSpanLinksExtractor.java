@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 
+import static java.util.Collections.singletonMap;
+
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -13,9 +15,9 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
-import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 class SqsMessageSpanLinksExtractor implements SpanLinksExtractor<SQSMessage> {
   private static final String AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY = "AWSTraceHeader";
@@ -31,8 +33,8 @@ class SqsMessageSpanLinksExtractor implements SpanLinksExtractor<SQSMessage> {
           AwsXrayPropagator.getInstance()
               .extract(
                   Context.root(), // We don't want the ambient context.
-                  Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentHeader),
-                  MapGetter.INSTANCE);
+                  singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentHeader),
+                  new MapGetter());
       SpanContext messageSpanCtx = Span.fromContext(xrayContext).getSpanContext();
       if (messageSpanCtx.isValid()) {
         spanLinks.addLink(messageSpanCtx);
@@ -40,16 +42,17 @@ class SqsMessageSpanLinksExtractor implements SpanLinksExtractor<SQSMessage> {
     }
   }
 
-  private enum MapGetter implements TextMapGetter<Map<String, String>> {
-    INSTANCE;
-
+  private static class MapGetter implements TextMapGetter<Map<String, String>> {
     @Override
     public Iterable<String> keys(Map<String, String> map) {
       return map.keySet();
     }
 
     @Override
-    public String get(Map<String, String> map, String s) {
+    public String get(@Nullable Map<String, String> map, String s) {
+      if (map == null) {
+        return null;
+      }
       return map.get(s.toLowerCase(Locale.ROOT));
     }
   }

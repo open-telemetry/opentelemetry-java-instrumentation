@@ -6,11 +6,11 @@
 package io.opentelemetry.instrumentation.testing;
 
 import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
-import io.opentelemetry.api.incubator.config.GlobalConfigProvider;
 import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.api.trace.TracerBuilder;
@@ -25,6 +25,7 @@ import io.opentelemetry.instrumentation.testing.internal.MetaDataCollector;
 import io.opentelemetry.instrumentation.testing.provider.TestLogRecordExporterComponentProvider;
 import io.opentelemetry.instrumentation.testing.provider.TestMetricExporterComponentProvider;
 import io.opentelemetry.instrumentation.testing.provider.TestSpanExporterComponentProvider;
+import io.opentelemetry.instrumentation.testing.util.KeysVerifyingPropagator;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.logs.SdkLoggerProvider;
@@ -44,12 +45,10 @@ import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
+import java.io.File;
 import java.io.IOException;
-import java.net.URL;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * An implementation of {@link InstrumentationTestRunner} that initializes OpenTelemetry SDK and
@@ -67,7 +66,6 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
 
   static {
     GlobalOpenTelemetry.resetForTest();
-    GlobalConfigProvider.resetForTest();
 
     testSpanExporter = InMemorySpanExporter.create();
     testMetricExporter = InMemoryMetricExporter.create(AggregationTemporality.DELTA);
@@ -104,6 +102,7 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
             .setPropagators(
                 ContextPropagators.create(
                     TextMapPropagator.composite(
+                        KeysVerifyingPropagator.getInstance(),
                         W3CTraceContextPropagator.getInstance(),
                         W3CBaggagePropagator.getInstance())))
             .buildAndRegisterGlobal();
@@ -124,7 +123,6 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
   public void beforeTestClass() {
     // just in case: if there was any test that modified the global instance, reset it
     GlobalOpenTelemetry.resetForTest();
-    GlobalConfigProvider.resetForTest();
     GlobalOpenTelemetry.set(openTelemetrySdk);
   }
 
@@ -133,20 +131,17 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
     // Generates files in a `.telemetry` directory within the instrumentation module with all
     // captured emitted metadata to be used by the instrumentation-docs Doc generator.
     if (Boolean.getBoolean("collectMetadata")) {
-      URL resource = this.getClass().getClassLoader().getResource("");
-      if (resource == null) {
-        return;
-      }
-      String path = Paths.get(resource.getPath()).toString();
+      String path = new File("").getAbsolutePath();
 
-      MetaDataCollector.writeTelemetryToFiles(path, metricsByScope, tracesByScope);
+      MetaDataCollector.writeTelemetryToFiles(
+          path, metricsByScope, tracesByScope, instrumentationScopes);
     }
   }
 
   @Override
   public void clearAllExportedData() {
     // Flush meter provider to remove any lingering measurements
-    openTelemetrySdk.getSdkMeterProvider().forceFlush().join(10, TimeUnit.SECONDS);
+    openTelemetrySdk.getSdkMeterProvider().forceFlush().join(10, SECONDS);
     testSpanExporter.reset();
     testMetricExporter.reset();
     testLogRecordExporter.reset();
@@ -169,7 +164,7 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
 
   @Override
   public List<MetricData> getExportedMetrics() {
-    metricReader.forceFlush().join(10, TimeUnit.SECONDS);
+    metricReader.forceFlush().join(10, SECONDS);
     return testMetricExporter.getFinishedMetricItems();
   }
 

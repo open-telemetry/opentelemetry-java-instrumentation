@@ -21,10 +21,12 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContexts;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerTracingHandler;
-import io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyHttpServerResponseBeforeCommitHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyServerSingletons;
 
 public final class Helpers {
+
+  private static final VirtualField<ChannelHandler, ChannelHandler> CHANNEL_HANDLER =
+      VirtualField.find(ChannelHandler.class, ChannelHandler.class);
 
   private Helpers() {}
 
@@ -52,17 +54,14 @@ public final class Helpers {
             channel.pipeline().context(Http2StreamFrameToHttpObjectCodec.class);
         if (codecCtx != null) {
           if (channel.pipeline().get(HttpServerTracingHandler.class) == null) {
-            VirtualField<ChannelHandler, ChannelHandler> virtualField =
-                VirtualField.find(ChannelHandler.class, ChannelHandler.class);
-            ChannelHandler ourHandler =
-                NettyServerSingletons.serverTelemetry()
-                    .createCombinedHandler(NettyHttpServerResponseBeforeCommitHandler.INSTANCE);
+
+            ChannelHandler ourHandler = NettyServerSingletons.createCombinedHandler();
 
             channel
                 .pipeline()
                 .addAfter(codecCtx.name(), ourHandler.getClass().getName(), ourHandler);
             // attach this in this way to match up with how netty instrumentation expects things
-            virtualField.set(codecCtx.handler(), ourHandler);
+            CHANNEL_HANDLER.set(codecCtx.handler(), ourHandler);
           }
         }
       }
@@ -93,15 +92,13 @@ public final class Helpers {
             channel.pipeline().context(Http2StreamFrameToHttpObjectCodec.class);
         if (codecCtx != null) {
           if (channel.pipeline().get(HttpClientTracingHandler.class) == null) {
-            VirtualField<ChannelHandler, ChannelHandler> virtualField =
-                VirtualField.find(ChannelHandler.class, ChannelHandler.class);
             ChannelHandler ourHandler = clientHandlerFactory().createCombinedHandler();
 
             channel
                 .pipeline()
                 .addAfter(codecCtx.name(), ourHandler.getClass().getName(), ourHandler);
             // attach this in this way to match up with how netty instrumentation expects things
-            virtualField.set(codecCtx.handler(), ourHandler);
+            CHANNEL_HANDLER.set(codecCtx.handler(), ourHandler);
           }
         }
       }

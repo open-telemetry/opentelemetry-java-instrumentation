@@ -54,6 +54,7 @@ import org.reactivestreams.Subscriber;
  *
  * <p>Instrumentation can be disabled by calling the {@link TracingAssembly#disable()} method.
  */
+@SuppressWarnings("SuppressWarningsWithoutExplanation") // RxJavaPlugins uses raw types
 public final class TracingAssembly {
 
   @SuppressWarnings("rawtypes")
@@ -278,7 +279,7 @@ public final class TracingAssembly {
                     }));
   }
 
-  private static RxJava2AsyncOperationEndStrategy asyncOperationEndStrategy;
+  @Nullable private static RxJava2AsyncOperationEndStrategy asyncOperationEndStrategy;
 
   private static void enableWithSpanStrategy(boolean captureExperimentalSpanAttributes) {
     asyncOperationEndStrategy =
@@ -341,7 +342,7 @@ public final class TracingAssembly {
   }
 
   private static <T> Function<? super T, ? extends T> compose(
-      Function<? super T, ? extends T> before, Function<? super T, ? extends T> after) {
+      @Nullable Function<? super T, ? extends T> before, Function<? super T, ? extends T> after) {
     if (before == null) {
       return after;
     }
@@ -349,7 +350,7 @@ public final class TracingAssembly {
   }
 
   private static <T, U> BiFunction<? super T, ? super U, ? extends U> biCompose(
-      BiFunction<? super T, ? super U, ? extends U> before,
+      @Nullable BiFunction<? super T, ? super U, ? extends U> before,
       BiFunction<? super T, ? super U, ? extends U> after) {
     if (before == null) {
       return after;

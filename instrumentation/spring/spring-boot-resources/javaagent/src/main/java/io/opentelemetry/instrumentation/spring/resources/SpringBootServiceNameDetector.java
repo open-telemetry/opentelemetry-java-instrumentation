@@ -5,15 +5,16 @@
 
 package io.opentelemetry.instrumentation.spring.resources;
 
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.FINER;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ServiceAttributes;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
@@ -71,7 +72,14 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
 
   @Override
   public Resource createResource(ConfigProperties config) {
+    return create();
+  }
 
+  Resource createResource(DeclarativeConfigProperties config) {
+    return create();
+  }
+
+  private Resource create() {
     logger.log(FINER, "Performing Spring Boot service name auto-detection...");
     // Note: The order should be consistent with the order of Spring matching, but noting
     // that we have "first one wins" while Spring has "last one wins".
@@ -99,7 +107,7 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
         .map(
             serviceName -> {
               logger.log(FINE, "Auto-detected Spring Boot service name: {0}", serviceName);
-              return Resource.builder().put(ServiceAttributes.SERVICE_NAME, serviceName).build();
+              return Resource.builder().put(SERVICE_NAME, serviceName).build();
             })
         .orElseGet(Resource::empty);
   }
@@ -111,8 +119,8 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
     String serviceName = config.getString("otel.service.name");
     Map<String, String> resourceAttributes = config.getMap("otel.resource.attributes");
     return serviceName == null
-        && !resourceAttributes.containsKey(ServiceAttributes.SERVICE_NAME.getKey())
-        && "unknown_service:java".equals(resource.getAttribute(ServiceAttributes.SERVICE_NAME));
+        && !resourceAttributes.containsKey(SERVICE_NAME.getKey())
+        && "unknown_service:java".equals(resource.getAttribute(SERVICE_NAME));
   }
 
   @Override
@@ -177,6 +185,7 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
     return findByClasspathYamlFile("bootstrap.yaml");
   }
 
+  @Nullable
   private String findByClasspathYamlFile(String fileName) {
     String result = loadFromClasspath(fileName, SpringBootServiceNameDetector::parseNameFromYaml);
     if (logger.isLoggable(FINER)) {
@@ -210,7 +219,7 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
   }
 
   @Nullable
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // for casting yaml parsed objects
   private static String parseNameFromYaml(InputStream in) {
     try {
       LoadSettings settings = LoadSettings.builder().build();

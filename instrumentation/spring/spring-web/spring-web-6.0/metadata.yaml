@@ -1,1 +1,14 @@
-description: This instrumentation enriches HTTP server spans and metrics with route information.
+display_name: Spring Web
+description: >
+  This instrumentation enriches HTTP client spans with URL template information for Spring's
+  RestTemplate 6.0+.
+features:
+  - HTTP_ROUTE
+library_link: https://github.com/spring-projects/spring-framework
+configurations:
+  - name: otel.instrumentation.http.client.emit-experimental-telemetry
+    description: >
+      Enables the capture of experimental HTTP client telemetry, including URL template
+      as the span name.
+    type: boolean
+    default: false

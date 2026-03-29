@@ -6,13 +6,13 @@
 package io.opentelemetry.javaagent.extension.instrumentation;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableSet;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -88,8 +88,19 @@ public abstract class InstrumentationModule implements Ordered {
    * Allows instrumentation modules to disable themselves by default, or to additionally disable
    * themselves on some other condition.
    */
+  public boolean defaultEnabled() {
+    return AgentDistributionConfig.get().isInstrumentationDefaultEnabled();
+  }
+
+  /**
+   * Allows instrumentation modules to disable themselves by default, or to additionally disable
+   * themselves on some other condition.
+   *
+   * @deprecated Use {@link #defaultEnabled()} instead.
+   */
+  @Deprecated // will be removed in 3.0.0
   public boolean defaultEnabled(ConfigProperties config) {
-    return config.getBoolean("otel.instrumentation.common.default-enabled", true);
+    return defaultEnabled();
   }
 
   /**
@@ -153,15 +164,14 @@ public abstract class InstrumentationModule implements Ordered {
    * detected ones.
    */
   public List<String> getAdditionalHelperClassNames() {
-    return Collections.emptyList();
+    return emptyList();
   }
 
-  // InstrumentationModule is loaded before ExperimentalConfig is initialized
   private static class IndyConfigurationHolder {
     private static final boolean indyEnabled;
 
     static {
-      indyEnabled = ExperimentalConfig.get().indyEnabled();
+      indyEnabled = AgentDistributionConfig.get().isIndyEnabled();
       if (indyEnabled) {
         logger.info("Enabled indy for instrumentation modules");
       }

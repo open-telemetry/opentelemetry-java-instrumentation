@@ -13,9 +13,9 @@ dependencies {
   compileOnly("org.apache.commons:commons-dbcp2")
   compileOnly("org.springframework.kafka:spring-kafka")
   compileOnly("org.springframework.boot:spring-boot-starter-data-mongodb")
-  compileOnly("org.testcontainers:junit-jupiter")
-  compileOnly("org.testcontainers:kafka")
-  compileOnly("org.testcontainers:mongodb")
+  compileOnly("org.testcontainers:testcontainers-junit-jupiter")
+  compileOnly("org.testcontainers:testcontainers-kafka")
+  compileOnly("org.testcontainers:testcontainers-mongodb")
   compileOnly("org.springframework.boot:spring-boot-starter-aop")
 
   api(project(":smoke-tests-otel-starter:spring-smoke-testing"))

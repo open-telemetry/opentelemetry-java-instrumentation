@@ -14,7 +14,7 @@ public final class PlayWsClientInstrumenterFactory {
 
   public static Instrumenter<Request, Response> createInstrumenter(String instrumentationName) {
     return JavaagentHttpClientInstrumenters.create(
-        instrumentationName, new PlayWsClientHttpAttributesGetter(), HttpHeaderSetter.INSTANCE);
+        instrumentationName, new PlayWsClientHttpAttributesGetter(), new HttpHeaderSetter());
   }
 
   private PlayWsClientInstrumenterFactory() {}

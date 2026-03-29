@@ -16,7 +16,7 @@ import org.springframework.jms.config.JmsListenerContainerFactory;
 abstract class AbstractConfig {
 
   @Bean
-  public ConnectionFactory connectionFactory(@Value("${test.broker-url}") String artemisBrokerUrl) {
+  ConnectionFactory connectionFactory(@Value("${test.broker-url}") String artemisBrokerUrl) {
     ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(artemisBrokerUrl);
     connectionFactory.setUser("test");
     connectionFactory.setPassword("test");
@@ -24,15 +24,14 @@ abstract class AbstractConfig {
   }
 
   @Bean
-  public JmsListenerContainerFactory<?> jmsListenerContainerFactory(
-      ConnectionFactory connectionFactory) {
+  JmsListenerContainerFactory<?> jmsListenerContainerFactory(ConnectionFactory connectionFactory) {
     DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
     factory.setConnectionFactory(connectionFactory);
     return factory;
   }
 
   @Bean
-  public CompletableFuture<String> receivedMessage() {
+  CompletableFuture<String> receivedMessage() {
     return new CompletableFuture<>();
   }
 }

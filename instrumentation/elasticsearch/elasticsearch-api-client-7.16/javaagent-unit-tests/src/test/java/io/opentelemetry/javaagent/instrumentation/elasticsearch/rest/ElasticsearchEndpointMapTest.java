@@ -5,26 +5,26 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest;
 
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.ElasticsearchEndpointDefinition;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.apiclient.ElasticsearchEndpointMap;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
 class ElasticsearchEndpointMapTest {
 
   private static final Set<String> SEARCH_ENDPOINTS =
       new HashSet<>(
-          Arrays.asList(
+          asList(
               "search",
               "async_search.submit",
               "msearch",
@@ -73,7 +73,7 @@ class ElasticsearchEndpointMapTest {
       for (String route :
           esEndpointDefinition.getRoutes().stream()
               .map(ElasticsearchEndpointDefinition.Route::getName)
-              .collect(Collectors.toList())) {
+              .collect(toList())) {
         List<String> pathParts = getPathParts(route);
         String resolvedRoute = route.replace("{", "").replace("}", "");
         Map<String, String> observedParams = new HashMap<>();

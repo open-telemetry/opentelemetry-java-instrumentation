@@ -14,6 +14,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.vertx.core.Handler;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -34,15 +36,15 @@ public class HttpClientConnectionInstrumentation implements TypeInstrumentation 
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("createStream").and(takesArgument(1, named("io.vertx.core.Handler"))),
-        HttpClientConnectionInstrumentation.class.getName() + "$CreateStreamAdvice");
+        getClass().getName() + "$CreateStreamAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class CreateStreamAdvice {
+    @AssignReturned.ToArguments(@ToArgument(1))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrapHandler(
-        @Advice.Argument(value = 1, readOnly = false) Handler<?> handler) {
-      handler = HandlerWrapper.wrap(handler);
+    public static Handler<?> wrapHandler(@Advice.Argument(1) Handler<?> handler) {
+      return HandlerWrapper.wrap(handler);
     }
   }
 }

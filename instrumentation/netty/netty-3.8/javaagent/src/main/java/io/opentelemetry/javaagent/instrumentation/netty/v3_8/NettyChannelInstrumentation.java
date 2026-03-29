@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.VirtualFieldHelper.CONNECTION_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyClientSingletons.connectionInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -16,7 +17,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
 import io.opentelemetry.instrumentation.netty.common.internal.Timer;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
@@ -65,12 +65,10 @@ public class NettyChannelInstrumentation implements TypeInstrumentation {
         return null;
       }
 
-      VirtualField<Channel, NettyConnectionContext> virtualField =
-          VirtualField.find(Channel.class, NettyConnectionContext.class);
-      if (virtualField.get(channel) != null) {
+      if (CONNECTION_CONTEXT.get(channel) != null) {
         return null;
       }
-      virtualField.set(channel, new NettyConnectionContext(parentContext));
+      CONNECTION_CONTEXT.set(channel, new NettyConnectionContext(parentContext));
 
       NettyConnectionRequest request = NettyConnectionRequest.connect(remoteAddress);
       Timer timer = Timer.start();

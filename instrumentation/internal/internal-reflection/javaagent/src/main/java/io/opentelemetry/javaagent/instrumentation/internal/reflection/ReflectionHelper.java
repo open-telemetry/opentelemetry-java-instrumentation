@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.internal.reflection;
 
 import io.opentelemetry.javaagent.bootstrap.InstrumentationProxy;
-import io.opentelemetry.javaagent.bootstrap.VirtualFieldAccessorMarker;
-import io.opentelemetry.javaagent.bootstrap.VirtualFieldDetector;
-import io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker;
+import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldAccessorMarker;
+import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldDetector;
+import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldInstalledMarker;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -66,7 +66,6 @@ public final class ReflectionHelper {
     }
     List<Class<?>> result = new ArrayList<>(interfaces.length);
     Collection<String> virtualFieldClassNames = new HashSet<>();
-    boolean hasVirtualFieldMarker = false;
     for (Class<?> interfaceClass : interfaces) {
       // filter out virtual field marker and accessor interfaces
       if (interfaceClass == VirtualFieldInstalledMarker.class) {

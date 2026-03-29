@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQS_QUEUE_URL;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
@@ -23,7 +24,9 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
@@ -35,8 +38,6 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.testing.internal.armeria.internal.shaded.guava.collect.ImmutableList;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -65,10 +66,10 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                       publishSpan.set(trace.getSpan(0));
                       List<AttributeAssertion> attributes =
                           new ArrayList<>(
-                              Arrays.asList(
+                              asList(
                                   equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                   equalTo(
-                                      stringKey("aws.queue.url"),
+                                      AWS_SQS_QUEUE_URL,
                                       "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
                                   satisfies(
                                       AWS_REQUEST_ID,
@@ -106,7 +107,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
               List<Consumer<SpanDataAssert>> spanAsserts = new ArrayList<>();
               if (withParent) {
                 spanAsserts.addAll(
-                    Arrays.asList(
+                    asList(
                         span -> span.hasName("parent").hasNoParent(),
                         /*
                          * This span represents HTTP "sending of receive message" operation. It's always single,
@@ -122,7 +123,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                     equalTo(
-                                        stringKey("aws.queue.url"),
+                                        AWS_SQS_QUEUE_URL,
                                         "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
                                     satisfies(
                                         AWS_REQUEST_ID,
@@ -141,11 +142,11 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
               }
 
               spanAsserts.addAll(
-                  Arrays.asList(
+                  asList(
                       span -> {
                         List<AttributeAssertion> attributes =
                             new ArrayList<>(
-                                Arrays.asList(
+                                asList(
                                     equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                     equalTo(RPC_SYSTEM, "aws-api"),
                                     equalTo(RPC_SERVICE, "Sqs"),
@@ -183,7 +184,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                       span -> {
                         List<AttributeAssertion> attributes =
                             new ArrayList<>(
-                                Arrays.asList(
+                                asList(
                                     equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                     equalTo(RPC_SYSTEM, "aws-api"),
                                     equalTo(RPC_SERVICE, "Sqs"),
@@ -240,7 +241,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
     SendMessageRequest newSendMessageRequest =
         sendMessageRequest.toBuilder()
             .messageAttributes(
-                Collections.singletonMap(
+                singletonMap(
                     "Test-Message-Header",
                     MessageAttributeValue.builder().dataType("String").stringValue("test").build()))
             .build();
@@ -316,7 +317,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                 int finalI = i;
                 spanAsserts.addAll(
                     new ArrayList<>(
-                        Arrays.asList(
+                        asList(
                             span -> {
                               if (!isXrayInjectionEnabled() && finalI == 2) {
                                 // last message in batch has too many attributes so injecting

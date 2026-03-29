@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.resources;
 
+import static io.opentelemetry.semconv.incubating.HostIncubatingAttributes.HOST_NAME;
+import static io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes.PROCESS_PID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.incubating.HostIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.condition.EnabledOnJre;
@@ -27,7 +27,7 @@ class SecurityManagerResourceTest {
   @Test
   void hostResourceTestEmpty() {
     Attributes attributes = HostResource.buildResource().getAttributes();
-    assertThat(attributes.asMap()).containsOnlyKeys(HostIncubatingAttributes.HOST_NAME);
+    assertThat(attributes.asMap()).containsOnlyKeys(HOST_NAME);
   }
 
   @Test
@@ -38,7 +38,7 @@ class SecurityManagerResourceTest {
   @Test
   void processResourceEmpty() {
     Attributes attributes = ProcessResource.buildResource().getAttributes();
-    assertThat(attributes.asMap()).containsOnlyKeys(ProcessIncubatingAttributes.PROCESS_PID);
+    assertThat(attributes.asMap()).containsOnlyKeys(PROCESS_PID);
   }
 
   @Test

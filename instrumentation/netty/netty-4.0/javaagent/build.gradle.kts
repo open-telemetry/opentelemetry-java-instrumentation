@@ -49,7 +49,7 @@ tasks {
   }
 
   test {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
 
     filter {
       excludeTestsMatching("Netty40ConnectionSpanTest")
@@ -57,13 +57,24 @@ tasks {
     }
   }
 
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+    filter {
+      excludeTestsMatching("Netty40ConnectionSpanTest")
+      excludeTestsMatching("Netty40ClientSslTest")
+    }
+  }
+
   check {
-    dependsOn(testConnectionSpan)
+    dependsOn(testConnectionSpan, testStableSemconv)
   }
 }
 
 // We need to force the dependency to the earliest supported version because other libraries declare newer versions.
-if (!(findProperty("testLatestDeps") as Boolean)) {
+if (!(findProperty("testLatestDeps") == "true")) {
   configurations.configureEach {
     if (!name.contains("muzzle")) {
       resolutionStrategy {

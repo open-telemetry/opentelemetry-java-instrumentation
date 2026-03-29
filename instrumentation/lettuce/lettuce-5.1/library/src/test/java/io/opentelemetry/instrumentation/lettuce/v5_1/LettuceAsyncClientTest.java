@@ -13,7 +13,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class LettuceAsyncClientTest extends AbstractLettuceAsyncClientTest {
   @RegisterExtension
-  static InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Override
   public InstrumentationExtension testing() {
@@ -24,7 +24,11 @@ class LettuceAsyncClientTest extends AbstractLettuceAsyncClientTest {
   protected RedisClient createClient(String uri) {
     return RedisClient.create(
         ClientResources.builder()
-            .tracing(LettuceTelemetry.create(testing().getOpenTelemetry()).newTracing())
+            .tracing(
+                LettuceTelemetry.builder(testing().getOpenTelemetry())
+                    .setEncodingSpanEventsEnabled(true)
+                    .build()
+                    .createTracing())
             .build(),
         uri);
   }

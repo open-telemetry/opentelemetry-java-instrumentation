@@ -29,7 +29,7 @@ tasks {
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", true)
     systemProperty("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", true)
     systemProperty("otel.instrumentation.messaging.experimental.capture-headers", "Test-Message-Header")
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
   }
 
   val testStableSemconv by registering(Test::class) {

@@ -8,12 +8,13 @@ package io.opentelemetry.javaagent.instrumentation.xxljob.common;
 import com.xxl.job.core.glue.GlueTypeEnum;
 import com.xxl.job.core.handler.IJobHandler;
 import java.lang.reflect.Method;
+import javax.annotation.Nullable;
 
 public final class XxlJobProcessRequest {
 
-  private String methodName;
+  @Nullable private String methodName;
   private int jobId;
-  private Class<?> declaringClass;
+  @Nullable private Class<?> declaringClass;
   private boolean failed;
   private final GlueTypeEnum glueType;
 
@@ -22,7 +23,7 @@ public final class XxlJobProcessRequest {
   }
 
   public static XxlJobProcessRequest createRequestForMethod(
-      GlueTypeEnum glueType, Class<?> declaringClass, String methodName) {
+      GlueTypeEnum glueType, Class<?> declaringClass, @Nullable String methodName) {
     XxlJobProcessRequest request = new XxlJobProcessRequest(glueType);
     request.declaringClass = declaringClass;
     request.methodName = methodName;
@@ -45,7 +46,8 @@ public final class XxlJobProcessRequest {
     return createRequestForMethod(GlueTypeEnum.BEAN, handler.getClass(), "execute");
   }
 
-  public static XxlJobProcessRequest createMethodJobRequest(Object target, Method method) {
+  public static XxlJobProcessRequest createMethodJobRequest(
+      Object target, @Nullable Method method) {
     return createRequestForMethod(
         GlueTypeEnum.BEAN, target.getClass(), method != null ? method.getName() : null);
   }
@@ -58,6 +60,7 @@ public final class XxlJobProcessRequest {
     return failed;
   }
 
+  @Nullable
   public String getMethodName() {
     return methodName;
   }
@@ -66,6 +69,7 @@ public final class XxlJobProcessRequest {
     return jobId;
   }
 
+  @Nullable
   public Class<?> getDeclaringClass() {
     return declaringClass;
   }

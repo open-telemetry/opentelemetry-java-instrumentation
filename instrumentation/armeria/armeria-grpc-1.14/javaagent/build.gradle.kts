@@ -29,7 +29,7 @@ tasks.named<Checkstyle>("checkstyleTest") {
   exclude("**/example/**")
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 protobuf {
   protoc {
     val protocVersion = if (latestDepTest) "3.25.5" else "3.19.2"
@@ -37,7 +37,7 @@ protobuf {
   }
   plugins {
     id("grpc") {
-      val grpcVersion = if (latestDepTest) "1.43.2" else "1.68.1"
+      val grpcVersion = if (latestDepTest) "1.68.1" else "1.43.2"
       artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
     }
   }
@@ -59,6 +59,32 @@ afterEvaluate {
   }
 }
 
-tasks.test {
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc")
+  }
+
+  val testBothSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc/dup")
+  }
+
+  check {
+    dependsOn(testStableSemconv, testBothSemconv)
+  }
+}
+
+if (findProperty("denyUnsafe") == "true") {
+  tasks.withType<Test>().configureEach {
+    enabled = false
+  }
 }

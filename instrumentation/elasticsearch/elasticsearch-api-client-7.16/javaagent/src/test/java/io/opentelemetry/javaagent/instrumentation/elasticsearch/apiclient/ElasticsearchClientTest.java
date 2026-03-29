@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.apiclient;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -20,6 +21,8 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ELASTICSEARCH;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
@@ -33,17 +36,21 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class ElasticsearchClientTest {
+  private static final Logger logger = LoggerFactory.getLogger(ElasticsearchClientTest.class);
+
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -57,9 +64,10 @@ class ElasticsearchClientTest {
   @BeforeAll
   static void setUp() {
     elasticsearch =
-        new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:7.17.2");
+        new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:7.17.28");
     // limit memory usage
     elasticsearch.withEnv("ES_JAVA_OPTS", "-Xmx256m -Xms256m");
+    elasticsearch.withLogConsumer(new Slf4jLogConsumer(logger));
     elasticsearch.start();
 
     httpHost = HttpHost.create(elasticsearch.getHttpHostAddress());
@@ -87,7 +95,7 @@ class ElasticsearchClientTest {
   @Test
   void elasticsearchStatus() throws IOException {
     InfoResponse response = client.info();
-    assertThat(response.version().number()).isEqualTo("7.17.2");
+    assertThat(response.version().number()).isEqualTo("7.17.28");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -97,7 +105,7 @@ class ElasticsearchClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "elasticsearch"),
+                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), "info"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(URL_FULL, httpHost.toURI() + "/"),
@@ -112,6 +120,7 @@ class ElasticsearchClientTest {
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(URL_FULL, httpHost.toURI() + "/"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
@@ -133,7 +142,7 @@ class ElasticsearchClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "elasticsearch"),
+                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), "index"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
@@ -153,6 +162,7 @@ class ElasticsearchClientTest {
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "PUT"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(
                                 URL_FULL,
                                 httpHost.toURI() + "/test-index/_doc/test-id?timeout=10s"),
@@ -186,9 +196,9 @@ class ElasticsearchClientTest {
                               countDownLatch.countDown();
                             })));
     //noinspection ResultOfMethodCallIgnored
-    countDownLatch.await(10, TimeUnit.SECONDS);
+    countDownLatch.await(10, SECONDS);
 
-    assertThat(request.getResponse().version().number()).isEqualTo("7.17.2");
+    assertThat(request.getResponse().version().number()).isEqualTo("7.17.28");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -199,7 +209,7 @@ class ElasticsearchClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "elasticsearch"),
+                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), "info"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
@@ -214,6 +224,7 @@ class ElasticsearchClientTest {
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(URL_FULL, httpHost.toURI() + "/"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
                 span ->

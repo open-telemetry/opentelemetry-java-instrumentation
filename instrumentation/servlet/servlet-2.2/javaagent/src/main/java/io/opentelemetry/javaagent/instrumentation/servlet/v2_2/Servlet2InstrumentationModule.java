@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
@@ -14,7 +15,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.HttpServletResponseInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterInstrumentation;
-import java.util.Arrays;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -30,12 +30,17 @@ public class Servlet2InstrumentationModule extends InstrumentationModule
   // this is required to make sure servlet 2 instrumentation won't apply to servlet 3
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return not(hasClassesNamed("javax.servlet.AsyncEvent", "javax.servlet.AsyncListener"));
+    return not(
+        hasClassesNamed(
+            // added in 3.0
+            "javax.servlet.AsyncEvent",
+            // added in 3.0
+            "javax.servlet.AsyncListener"));
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Arrays.asList(
+    return asList(
         new Servlet2HttpServletResponseInstrumentation(),
         new ServletAndFilterInstrumentation(BASE_PACKAGE, adviceClassName(".Servlet2Advice")),
         new HttpServletResponseInstrumentation(

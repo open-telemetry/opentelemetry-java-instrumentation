@@ -17,7 +17,7 @@ will enable metric and span collection:
 ```kotlin
 tasks {
   test {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
     ...
   }
 }
@@ -68,7 +68,7 @@ or use the helper script that will run only the currently supported tests (recom
 
 ## Instrumentation Hierarchy
 
-An "InstrumentationModule" represents a module that that targets specific code in a
+An "InstrumentationModule" represents a module that targets specific code in a
 framework/library/technology. Each module will have a name, a namespace, and a group.
 
 Using these structures as examples:
@@ -114,6 +114,39 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
 * name
   * Identifier for instrumentation module, used to enable/disable
   * Configured in `InstrumentationModule` code for each module
+* semantic_conventions
+  * The semantic conventions that the instrumentation module adheres to
+  * Options are:
+    * HTTP_CLIENT_SPANS
+    * HTTP_CLIENT_METRICS
+    * HTTP_SERVER_SPANS
+    * HTTP_SERVER_METRICS
+    * RPC_CLIENT_SPANS
+    * RPC_CLIENT_METRICS
+    * RPC_SERVER_SPANS
+    * RPC_SERVER_METRICS
+    * MESSAGING_SPANS
+    * DATABASE_CLIENT_SPANS
+    * DATABASE_CLIENT_METRICS
+    * DATABASE_POOL_METRICS
+    * JVM_RUNTIME_METRICS
+    * GRAPHQL_SERVER_SPANS
+    * FAAS_SERVER_SPANS
+    * GENAI_CLIENT_SPANS
+    * GENAI_CLIENT_METRIC
+* features
+  * The specific functionality that the instrumentation provides
+  * Options are:
+    * HTTP_ROUTE
+    * CONTEXT_PROPAGATION
+    * AUTO_INSTRUMENTATION_SHIM
+    * CONTROLLER_SPANS
+    * VIEW_SPANS
+    * LOGGING_BRIDGE
+    * RESOURCE_DETECTOR
+* library_link
+  * URL to the library or framework's main website or documentation, or if those don't exist, the
+  GitHub repository.
 * source_path
   * Path to the source code of the instrumentation module
 * minimum_java_version
@@ -123,9 +156,14 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
   * Short description of what the instrumentation does
 * target_versions
   * List of supported versions by the module, broken down by `library` or `javaagent` support
-* scope
-  * Name: The scope name of the instrumentation, `io.opentelemetry.{instrumentation name}`
-* configurations settings
+* scope (See [instrumentation-scope](https://opentelemetry.io/docs/specs/otel/common/instrumentation-scope/)
+  docs)
+  * name: The scope name of the instrumentation, `io.opentelemetry.{instrumentation name}`
+  * schema_url: Location of the telemetry schema that the instrumentation’s emitted telemetry
+    conforms to. (See [telemetry schema docs](https://opentelemetry.io/docs/specs/otel/schemas/#schema-url))
+  * attributes: The instrumentation scope’s optional attributes provide additional information
+    about the scope.
+* configuration settings
   * List of settings that are available for the instrumentation module
   * Each setting has a name, description, type, and default value
 * metrics
@@ -145,14 +183,38 @@ additional information about the instrumentation module.
 As of now, the following fields are supported, all of which are optional:
 
 ```yaml
-description: "Instruments..."   # Description of the instrumentation module
-disabled_by_default: true       # Defaults to `false`
-classification: internal        # instrumentation classification: library | internal | custom
+description: "This instrumentation enables..."    # Description of the instrumentation module
+semantic_conventions:                             # List of semantic conventions the instrumentation adheres to
+  - HTTP_CLIENT_SPANS
+  - DATABASE_CLIENT_SPANS
+  - JVM_RUNTIME_METRICS
+features:                                        # List of features this instrumentation provides
+  - HTTP_ROUTE
+  - CONTEXT_PROPAGATION
+disabled_by_default: true                         # Defaults to `false`
+classification: internal                          # instrumentation classification: library | internal | custom
+library_link: https://...                         # URL to the library or framework's main website or documentation
 configurations:
   - name: otel.instrumentation.common.db-statement-sanitizer.enabled
     description: Enables statement sanitization for database queries.
     type: boolean               # boolean | string | list | map
     default: true
+override_telemetry: false                         # Set to true to ignore auto-generated .telemetry files
+additional_telemetry:                             # Manually document telemetry metadata
+  - when: "default"
+    metrics:
+      - name: "metric.name"
+        description: "Metric description"
+        type: "COUNTER"
+        unit: "1"
+        attributes:
+          - name: "attribute.name"
+            type: "STRING"
+    spans:
+      - span_kind: "CLIENT"
+        attributes:
+          - name: "span.attribute"
+            type: "STRING"
 ```
 
 ### Gradle File Derived Information
@@ -160,8 +222,7 @@ configurations:
 We parse gradle files in order to determine several pieces of metadata:
 
 - Javaagent versions are determined by the `muzzle` plugin configurations
-- Library versions are determined by the library dependency versions
-  - when available, latestDepTestLibrary is used to determine the latest supported version
+- Standalone Library versions are identified, but we do not try and parse version ranges
 - Minimum Java version is determined by the `otelJava` configurations
 
 ### Scope
@@ -185,6 +246,50 @@ data will be excluded from git and just generated on demand.
 
 Each file has a `when` value along with the list of metrics that indicates whether the telemetry is
 emitted by default or via a configuration option.
+
+#### Manual Telemetry Documentation
+
+In addition to auto-generated telemetry data from test runs, you can manually document telemetry
+metadata directly in the `metadata.yaml` file. This is useful for:
+
+- Documenting telemetry that may not be captured during test runs
+- Overriding auto-generated telemetry data when it's incomplete or incorrect
+- Adding additional telemetry documentation that complements the auto-generated data
+
+You can add manual telemetry documentation using the `additional_telemetry` field:
+
+```yaml
+additional_telemetry:
+  - when: "default"  # or any configuration condition
+    metrics:
+      - name: "my.custom.metric"
+        description: "Description of the metric"
+        type: "COUNTER"
+        unit: "1"
+        attributes:
+          - name: "attribute.name"
+            type: "STRING"
+    spans:
+      - span_kind: "CLIENT"
+        attributes:
+          - name: "span.attribute"
+            type: "STRING"
+```
+
+To completely replace auto-generated telemetry data (ignoring `.telemetry` files), set `override_telemetry: true`:
+
+```yaml
+override_telemetry: true
+additional_telemetry:
+  - when: "default"
+    metrics:
+      - name: "documented.metric"
+        description: "This replaces all auto-generated metrics"
+        type: "GAUGE"
+        unit: "ms"
+```
+
+When both manual and auto-generated telemetry exist for the same `when` condition, they are merged with manual entries taking precedence in case of conflicts (same metric name or span kind).
 
 ## Doc Synchronization
 

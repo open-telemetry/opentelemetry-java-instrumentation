@@ -34,11 +34,17 @@ dependencies {
   testImplementation(project(":instrumentation:executors:testing"))
 }
 
-if (findProperty("testLatestDeps") as Boolean) {
+if (findProperty("testLatestDeps") == "true") {
   configurations {
     // pekko artifact name is different for regular and latest tests
     testImplementation {
       exclude("org.apache.pekko", "pekko-actor_2.12")
     }
+  }
+}
+
+if (findProperty("denyUnsafe") == "true") {
+  tasks.withType<Test>().configureEach {
+    enabled = false
   }
 }

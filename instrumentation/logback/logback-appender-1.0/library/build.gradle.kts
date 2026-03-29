@@ -25,7 +25,7 @@ dependencies {
     }
   }
 
-  if (findProperty("testLatestDeps") as Boolean) {
+  if (findProperty("testLatestDeps") == "true") {
     testImplementation("ch.qos.logback:logback-classic:latest.release")
   } else {
     testImplementation("ch.qos.logback:logback-classic") {
@@ -40,6 +40,7 @@ dependencies {
     }
   }
 
+  testImplementation(project(":instrumentation:logback:logback-appender-1.0:testing"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
 }
 
@@ -57,21 +58,42 @@ graalvmNative {
   toolchainDetection.set(false)
 }
 
-// To be able to execute the tests as GraalVM native executables
-configurations.configureEach {
-  exclude("org.apache.groovy", "groovy")
-  exclude("org.apache.groovy", "groovy-json")
-  exclude("org.spockframework", "spock-core")
+// Disable collectReachabilityMetadata task to avoid configuration isolation issues
+// See https://github.com/gradle/gradle/issues/17559
+tasks.named("collectReachabilityMetadata").configure {
+  enabled = false
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 testing {
   suites {
     val slf4j2ApiTest by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
-        implementation(project(":testing-common"))
+
+        if (latestDepTest) {
+          implementation("ch.qos.logback:logback-classic:latest.release")
+          implementation("org.slf4j:slf4j-api:latest.release")
+        } else {
+          implementation("ch.qos.logback:logback-classic") {
+            version {
+              strictly("1.3.0")
+            }
+          }
+          implementation("org.slf4j:slf4j-api") {
+            version {
+              strictly("2.0.0")
+            }
+          }
+        }
+      }
+    }
+
+    val logstashMarkerTest by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
+        implementation("io.opentelemetry:opentelemetry-sdk-testing")
 
         if (latestDepTest) {
           implementation("ch.qos.logback:logback-classic:latest.release")
@@ -97,11 +119,39 @@ testing {
       }
     }
 
+    val logstashStructuredArgsTest by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
+        implementation("io.opentelemetry:opentelemetry-sdk-testing")
+
+        if (latestDepTest) {
+          implementation("ch.qos.logback:logback-classic:latest.release")
+          implementation("org.slf4j:slf4j-api:latest.release")
+          implementation("net.logstash.logback:logstash-logback-encoder:latest.release")
+        } else {
+          implementation("ch.qos.logback:logback-classic") {
+            version {
+              strictly("1.3.0")
+            }
+          }
+          implementation("org.slf4j:slf4j-api") {
+            version {
+              strictly("2.0.0")
+            }
+          }
+          implementation("net.logstash.logback:logstash-logback-encoder") {
+            version {
+              strictly("6.6")
+            }
+          }
+        }
+      }
+    }
+
     val asyncAppenderTest by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
-        implementation(project(":testing-common"))
 
         if (latestDepTest) {
           implementation("ch.qos.logback:logback-classic:latest.release")
@@ -141,8 +191,4 @@ tasks {
   check {
     dependsOn(testing.suites, testStableSemconv, testBothSemconv)
   }
-}
-
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

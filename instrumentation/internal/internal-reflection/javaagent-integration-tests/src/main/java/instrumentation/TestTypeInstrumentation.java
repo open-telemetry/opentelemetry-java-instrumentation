@@ -5,12 +5,13 @@
 
 package instrumentation;
 
+import static instrumentation.TestSingletons.STRING;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -18,35 +19,33 @@ public class TestTypeInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("TestClass");
+    return named("io.opentelemetry.javaagent.instrumentation.internal.reflection.TestClass");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("testMethod"), TestTypeInstrumentation.class.getName() + "$TestAdvice");
-    transformer.applyAdviceToMethod(
-        named("testMethod2"), TestTypeInstrumentation.class.getName() + "$Test2Advice");
+    transformer.applyAdviceToMethod(named("testMethod"), getClass().getName() + "$TestAdvice");
+    transformer.applyAdviceToMethod(named("testMethod2"), getClass().getName() + "$Test2Advice");
   }
 
   @SuppressWarnings("unused")
   public static class TestAdvice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit
-    public static void methodExit(
-        @Advice.This Runnable test, @Advice.Return(readOnly = false) String result) {
-      VirtualField.find(Runnable.class, String.class).set(test, "instrumented");
-      result = "instrumented";
+    public static String methodExit(@Advice.This Runnable test) {
+      STRING.set(test, "instrumented");
+      return "instrumented";
     }
   }
 
   @SuppressWarnings("unused")
   public static class Test2Advice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit
-    public static void methodExit(
-        @Advice.This Runnable test, @Advice.Return(readOnly = false) String result) {
-      result = VirtualField.find(Runnable.class, String.class).get(test);
+    public static String methodExit(@Advice.This Runnable test) {
+      return STRING.get(test);
     }
   }
 }

@@ -57,6 +57,7 @@ public class Servlet2ResponseSendAdvice {
     }
   }
 
+  @Nullable
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static AdviceScope start(
       @Advice.Origin("#t") Class<?> declaringClass, @Advice.Origin("#m") String methodName) {
@@ -66,7 +67,11 @@ public class Servlet2ResponseSendAdvice {
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
-      @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
+      @Advice.Thrown @Nullable Throwable throwable,
+      @Advice.Enter @Nullable AdviceScope adviceScope) {
+    if (adviceScope == null) {
+      return;
+    }
     adviceScope.exit(throwable);
   }
 }

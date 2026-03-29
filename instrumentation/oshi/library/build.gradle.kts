@@ -9,7 +9,7 @@ dependencies {
   testImplementation(project(":instrumentation:oshi:testing"))
 }
 
-if (osdetector.os == "osx" && osdetector.arch == "aarch_64" && !(findProperty("testLatestDeps") as Boolean)) {
+if (osdetector.os == "osx" && osdetector.arch == "aarch_64" && !(findProperty("testLatestDeps") == "true")) {
   // 5.5.0 is the first version that works on arm mac
   configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.github.oshi:oshi-core:5.5.0")
 }

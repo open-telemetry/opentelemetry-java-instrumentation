@@ -1,5 +1,6 @@
 plugins {
   id("otel.library-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 dependencies {
@@ -21,14 +22,18 @@ dependencies {
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.5.3")
   testLibrary("org.springframework.boot:spring-boot-starter:2.5.3")
+
+  // tests don't work with spring boot 4 yet
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:3.+") // documented limitation
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter:3.+") // documented limitation
 }
 
 tasks.withType<Test>().configureEach {
   usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  systemProperty("testLatestDeps", findProperty("testLatestDeps"))
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 
 // spring 6 (which spring-kafka 3.+ uses) requires java 17
 if (latestDepTest) {

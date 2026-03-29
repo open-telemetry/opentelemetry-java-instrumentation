@@ -14,8 +14,7 @@ import java.lang.reflect.Parameter;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
-public enum WithSpanParameterAttributeNamesExtractor implements ParameterAttributeNamesExtractor {
-  INSTANCE;
+final class WithSpanParameterAttributeNamesExtractor implements ParameterAttributeNamesExtractor {
 
   private static final Class<? extends Annotation> spanAttributeAnnotation;
   private static final Function<Annotation, String> spanAttributeValueFunction;
@@ -53,6 +52,9 @@ public enum WithSpanParameterAttributeNamesExtractor implements ParameterAttribu
 
   @Nullable
   private static String attributeName(Parameter parameter) {
+    if (spanAttributeAnnotation == null) {
+      return null;
+    }
     Annotation annotation = parameter.getDeclaredAnnotation(spanAttributeAnnotation);
     if (annotation == null) {
       return null;

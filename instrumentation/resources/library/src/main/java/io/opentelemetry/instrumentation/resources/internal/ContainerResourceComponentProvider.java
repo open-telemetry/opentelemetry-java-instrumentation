@@ -19,6 +19,6 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 @AutoService(ComponentProvider.class)
 public class ContainerResourceComponentProvider extends ResourceComponentProvider {
   public ContainerResourceComponentProvider() {
-    super("container", ContainerResource::get);
+    super("container", p -> ContainerResource.get());
   }
 }

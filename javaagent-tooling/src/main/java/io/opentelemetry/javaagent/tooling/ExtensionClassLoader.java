@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import java.io.File;
@@ -22,9 +24,9 @@ import java.security.CodeSource;
 import java.security.PermissionCollection;
 import java.security.Permissions;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import javax.annotation.Nullable;
@@ -41,7 +43,6 @@ import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
 // TODO find a way to initialize logging before using this class
 @SuppressWarnings("SystemOut")
 public class ExtensionClassLoader extends URLClassLoader {
-  public static final String EXTENSIONS_CONFIG = "otel.javaagent.extensions";
 
   private final boolean isSecurityManagerSupportEnabled;
 
@@ -53,15 +54,12 @@ public class ExtensionClassLoader extends URLClassLoader {
   }
 
   public static ClassLoader getInstance(
-      ClassLoader parent,
-      File javaagentFile,
-      boolean isSecurityManagerSupportEnabled,
-      EarlyInitAgentConfig earlyConfig) {
+      ClassLoader parent, File javaagentFile, boolean isSecurityManagerSupportEnabled) {
     List<URL> extensions = new ArrayList<>();
 
     includeEmbeddedExtensionsIfFound(extensions, javaagentFile);
 
-    extensions.addAll(parseLocation(earlyConfig.getString(EXTENSIONS_CONFIG), javaagentFile));
+    extensions.addAll(parseLocation(EarlyInitAgentConfig.get().getExtensions(), javaagentFile));
 
     // TODO when logging is configured add warning about deprecated property
 
@@ -127,7 +125,7 @@ public class ExtensionClassLoader extends URLClassLoader {
   // visible for testing
   static List<URL> parseLocation(@Nullable String locationName, File javaagentFile) {
     if (locationName == null) {
-      return Collections.emptyList();
+      return emptyList();
     }
 
     List<URL> result = new ArrayList<>();
@@ -200,5 +198,51 @@ public class ExtensionClassLoader extends URLClassLoader {
       URL url, ClassLoader parent, boolean isSecurityManagerSupportEnabled) {
     super(new URL[] {url}, parent);
     this.isSecurityManagerSupportEnabled = isSecurityManagerSupportEnabled;
+  }
+
+  @Override
+  public Enumeration<URL> findResources(String name) throws IOException {
+    Enumeration<URL> result = super.findResources(name);
+    // Agent shades instrumentation-api-incubator, in extensions references to these classes are
+    // remapped at load time. Here we handle looking up the service files for the classes that
+    // were renamed using the original name.
+    if (name.startsWith(
+        "META-INF/services/io.opentelemetry.javaagent.shaded.instrumentation.api.incubator")) {
+      String originalName =
+          name.replace(
+              "opentelemetry.javaagent.shaded.instrumentation", "opentelemetry.instrumentation");
+      return new CompoundEnumeration<>(result, super.findResources(originalName));
+    }
+    return result;
+  }
+
+  private static class CompoundEnumeration<E> implements Enumeration<E> {
+    private final Enumeration<E>[] enumerations;
+    private int index = 0;
+
+    @SafeVarargs
+    @SuppressWarnings("varargs")
+    CompoundEnumeration(Enumeration<E>... enumerations) {
+      this.enumerations = enumerations;
+    }
+
+    @Override
+    public boolean hasMoreElements() {
+      while (index < enumerations.length) {
+        if (enumerations[index].hasMoreElements()) {
+          return true;
+        }
+        index++;
+      }
+      return false;
+    }
+
+    @Override
+    public E nextElement() {
+      if (!hasMoreElements()) {
+        throw new NoSuchElementException();
+      }
+      return enumerations[index].nextElement();
+    }
   }
 }

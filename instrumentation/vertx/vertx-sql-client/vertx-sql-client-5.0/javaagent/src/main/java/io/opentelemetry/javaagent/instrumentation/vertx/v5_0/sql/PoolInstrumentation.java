@@ -12,6 +12,7 @@ import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClien
 import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.setSqlConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.wrapContext;
 import static io.opentelemetry.javaagent.instrumentation.vertx.v5_0.sql.VertxSqlClientSingletons.attachConnectOptions;
+import static io.opentelemetry.javaagent.instrumentation.vertx.v5_0.sql.VertxSqlClientSingletons.resolveAndStoreDbSystem;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -19,7 +20,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -28,6 +28,7 @@ import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -40,7 +41,10 @@ public class PoolInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("io.vertx.sqlclient.Pool"));
+    // Match both the Pool interface (for static pool() factory methods) and classes/interfaces
+    // that implement/extend Pool (for instance methods like getConnection())
+    return implementsInterface(named("io.vertx.sqlclient.Pool"))
+        .or(named("io.vertx.sqlclient.Pool"));
   }
 
   @Override
@@ -51,56 +55,53 @@ public class PoolInstrumentation implements TypeInstrumentation {
             .and(takesArguments(3))
             .and(takesArgument(1, named("io.vertx.sqlclient.SqlConnectOptions")))
             .and(returns(named("io.vertx.sqlclient.Pool"))),
-        PoolInstrumentation.class.getName() + "$PoolAdvice");
+        getClass().getName() + "$PoolAdvice");
 
     transformer.applyAdviceToMethod(
         named("getConnection").and(takesNoArguments()).and(returns(named("io.vertx.core.Future"))),
-        PoolInstrumentation.class.getName() + "$GetConnectionAdvice");
+        getClass().getName() + "$GetConnectionAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class PoolAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(1) SqlConnectOptions sqlConnectOptions,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = CallDepth.forClass(Pool.class);
+    public static CallDepth onEnter(@Advice.Argument(1) SqlConnectOptions sqlConnectOptions) {
+      CallDepth callDepth = CallDepth.forClass(Pool.class);
       if (callDepth.getAndIncrement() > 0) {
-        return;
+        return callDepth;
       }
 
       // set connection options to ThreadLocal, they will be read in SqlClientBase constructor
       setSqlConnectOptions(sqlConnectOptions);
+      return callDepth;
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.Return Pool pool,
         @Advice.Argument(1) SqlConnectOptions sqlConnectOptions,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+        @Advice.Enter CallDepth callDepth) {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
 
-      VirtualField<Pool, SqlConnectOptions> virtualField =
-          VirtualField.find(Pool.class, SqlConnectOptions.class);
-      virtualField.set(pool, sqlConnectOptions);
-
       setPoolConnectOptions(pool, sqlConnectOptions);
+      resolveAndStoreDbSystem(pool, sqlConnectOptions);
       setSqlConnectOptions(null);
     }
   }
 
   @SuppressWarnings("unused")
   public static class GetConnectionAdvice {
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This Pool pool, @Advice.Return(readOnly = false) Future<SqlConnection> future) {
+    public static Future<SqlConnection> onExit(
+        @Advice.This Pool pool, @Advice.Return Future<SqlConnection> future) {
       // copy connect options stored on pool to new connection
       SqlConnectOptions sqlConnectOptions = getPoolSqlConnectOptions(pool);
 
-      future = attachConnectOptions(future, sqlConnectOptions);
-      future = wrapContext(future);
+      return wrapContext(attachConnectOptions(future, sqlConnectOptions));
     }
   }
 }

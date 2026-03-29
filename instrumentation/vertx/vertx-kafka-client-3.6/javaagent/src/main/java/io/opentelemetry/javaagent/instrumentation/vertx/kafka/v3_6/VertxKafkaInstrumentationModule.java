@@ -10,10 +10,12 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class VertxKafkaInstrumentationModule extends InstrumentationModule {
+public class VertxKafkaInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public VertxKafkaInstrumentationModule() {
     super("vertx-kafka-client", "vertx-kafka-client-3.6", "vertx");
@@ -23,5 +25,10 @@ public class VertxKafkaInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new KafkaReadStreamImplInstrumentation(), new KafkaConsumerRecordsImplInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

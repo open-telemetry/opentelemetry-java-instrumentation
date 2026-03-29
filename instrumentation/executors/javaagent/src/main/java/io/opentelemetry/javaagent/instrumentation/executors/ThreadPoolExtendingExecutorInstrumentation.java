@@ -14,6 +14,8 @@ import io.opentelemetry.javaagent.bootstrap.executors.ContextPropagatingRunnable
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -37,22 +39,26 @@ public class ThreadPoolExtendingExecutorInstrumentation implements TypeInstrumen
   @SuppressWarnings("unused")
   public static class BeforeExecuteAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(1))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.Argument(value = 1, readOnly = false) Runnable runnable) {
+    public static Runnable onEnter(@Advice.Argument(1) Runnable runnable) {
       if (runnable instanceof ContextPropagatingRunnable) {
-        runnable = ((ContextPropagatingRunnable) runnable).unwrap();
+        return ((ContextPropagatingRunnable) runnable).unwrap();
       }
+      return runnable;
     }
   }
 
   @SuppressWarnings("unused")
   public static class AfterExecuteAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.Argument(value = 0, readOnly = false) Runnable runnable) {
+    public static Runnable onEnter(@Advice.Argument(0) Runnable runnable) {
       if (runnable instanceof ContextPropagatingRunnable) {
-        runnable = ((ContextPropagatingRunnable) runnable).unwrap();
+        return ((ContextPropagatingRunnable) runnable).unwrap();
       }
+      return runnable;
     }
   }
 }

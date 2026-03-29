@@ -1,1 +1,10 @@
-classification: internal
+display_name: Java Util Logging (JUL)
+description: This instrumentation bridges Java Util Logging (JUL) log records to OpenTelemetry logs.
+features:
+  - LOGGING_BRIDGE
+library_link: https://docs.oracle.com/en/java/javase/11/docs/api/java.logging/java/util/logging/package-summary.html
+configurations:
+  - name: otel.instrumentation.java-util-logging.experimental-log-attributes
+    description: Enables capturing the experimental `thread.name` and `thread.id` log attributes.
+    type: boolean
+    default: false

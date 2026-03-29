@@ -18,17 +18,19 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.Arrays.asList;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.Test;
@@ -68,8 +70,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     MESSAGING_CLIENT_ID,
                                     stringAssert -> stringAssert.startsWith("producer")),
                                 satisfies(
-                                    MessagingIncubatingAttributes
-                                        .MESSAGING_DESTINATION_PARTITION_ID,
+                                    MESSAGING_DESTINATION_PARTITION_ID,
                                     AbstractStringAssert::isNotEmpty),
                                 satisfies(
                                     MESSAGING_KAFKA_MESSAGE_OFFSET,
@@ -86,8 +87,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                 satisfies(
                                     MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative),
                                 satisfies(
-                                    MessagingIncubatingAttributes
-                                        .MESSAGING_DESTINATION_PARTITION_ID,
+                                    MESSAGING_DESTINATION_PARTITION_ID,
                                     AbstractStringAssert::isNotEmpty),
                                 satisfies(
                                     MESSAGING_KAFKA_MESSAGE_OFFSET,
@@ -114,7 +114,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
             });
 
     List<AttributeAssertion> processAttributes =
-        Arrays.asList(
+        asList(
             equalTo(MESSAGING_SYSTEM, "kafka"),
             equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
             equalTo(MESSAGING_OPERATION, "process"),
@@ -127,51 +127,73 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
 
     testing()
         .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("producer"),
-                    span ->
-                        span.hasName("testSingleTopic publish")
-                            .hasKind(SpanKind.PRODUCER)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(MESSAGING_SYSTEM, "kafka"),
-                                equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
-                                equalTo(MESSAGING_OPERATION, "publish"),
-                                satisfies(
-                                    MESSAGING_CLIENT_ID,
-                                    stringAssert -> stringAssert.startsWith("producer")),
-                                satisfies(
-                                    MessagingIncubatingAttributes
-                                        .MESSAGING_DESTINATION_PARTITION_ID,
-                                    AbstractStringAssert::isNotEmpty),
-                                satisfies(
-                                    MESSAGING_KAFKA_MESSAGE_OFFSET,
-                                    AbstractLongAssert::isNotNegative),
-                                equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10")),
-                    span ->
-                        span.hasName("testSingleTopic process")
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasParent(trace.getSpan(1))
-                            .hasStatus(StatusData.error())
-                            .hasException(new IllegalArgumentException("boom"))
-                            .hasAttributesSatisfyingExactly(processAttributes),
-                    span -> span.hasName("consumer").hasParent(trace.getSpan(2)),
-                    span ->
-                        span.hasName("testSingleTopic process")
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasParent(trace.getSpan(1))
-                            .hasStatus(StatusData.error())
-                            .hasException(new IllegalArgumentException("boom"))
-                            .hasAttributesSatisfyingExactly(processAttributes),
-                    span -> span.hasName("consumer").hasParent(trace.getSpan(4)),
-                    span ->
-                        span.hasName("testSingleTopic process")
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasParent(trace.getSpan(1))
-                            .hasStatus(StatusData.unset())
-                            .hasAttributesSatisfyingExactly(processAttributes),
-                    span -> span.hasName("consumer").hasParent(trace.getSpan(6))));
+            trace -> {
+              List<Consumer<SpanDataAssert>> assertions =
+                  new ArrayList<>(
+                      asList(
+                          span -> span.hasName("producer"),
+                          span ->
+                              span.hasName("testSingleTopic publish")
+                                  .hasKind(SpanKind.PRODUCER)
+                                  .hasParent(trace.getSpan(0))
+                                  .hasAttributesSatisfyingExactly(
+                                      equalTo(MESSAGING_SYSTEM, "kafka"),
+                                      equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
+                                      equalTo(MESSAGING_OPERATION, "publish"),
+                                      satisfies(
+                                          MESSAGING_CLIENT_ID,
+                                          stringAssert -> stringAssert.startsWith("producer")),
+                                      satisfies(
+                                          MESSAGING_DESTINATION_PARTITION_ID,
+                                          AbstractStringAssert::isNotEmpty),
+                                      satisfies(
+                                          MESSAGING_KAFKA_MESSAGE_OFFSET,
+                                          AbstractLongAssert::isNotNegative),
+                                      equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10")),
+                          span ->
+                              span.hasName("testSingleTopic process")
+                                  .hasKind(SpanKind.CONSUMER)
+                                  .hasParent(trace.getSpan(1))
+                                  .hasStatus(StatusData.error())
+                                  .hasException(new IllegalArgumentException("boom"))
+                                  .hasAttributesSatisfyingExactly(processAttributes),
+                          span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
+              if (Boolean.getBoolean("testLatestDeps")) {
+                assertions.add(
+                    span -> span.hasName("handle exception").hasParent(trace.getSpan(2)));
+              }
+              assertions.addAll(
+                  asList(
+                      span ->
+                          span.hasName("testSingleTopic process")
+                              .hasKind(SpanKind.CONSUMER)
+                              .hasParent(trace.getSpan(1))
+                              .hasStatus(StatusData.error())
+                              .hasException(new IllegalArgumentException("boom"))
+                              .hasAttributesSatisfyingExactly(processAttributes),
+                      span ->
+                          span.hasName("consumer")
+                              .hasParent(
+                                  trace.getSpan(Boolean.getBoolean("testLatestDeps") ? 5 : 4))));
+              if (Boolean.getBoolean("testLatestDeps")) {
+                assertions.add(
+                    span -> span.hasName("handle exception").hasParent(trace.getSpan(5)));
+              }
+              assertions.addAll(
+                  asList(
+                      span ->
+                          span.hasName("testSingleTopic process")
+                              .hasKind(SpanKind.CONSUMER)
+                              .hasParent(trace.getSpan(1))
+                              .hasStatus(StatusData.unset())
+                              .hasAttributesSatisfyingExactly(processAttributes),
+                      span ->
+                          span.hasName("consumer")
+                              .hasParent(
+                                  trace.getSpan(Boolean.getBoolean("testLatestDeps") ? 8 : 6))));
+
+              trace.hasSpansSatisfyingExactly(assertions);
+            });
   }
 
   @Test
@@ -268,7 +290,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
     AtomicReference<SpanData> producer = new AtomicReference<>();
 
     List<AttributeAssertion> processAttributes =
-        Arrays.asList(
+        asList(
             equalTo(MESSAGING_SYSTEM, "kafka"),
             equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
             equalTo(MESSAGING_OPERATION, "process"),

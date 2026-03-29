@@ -5,11 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest.bodyConsumer;
 import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest.controller;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD_FROM_REQUEST_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
@@ -63,6 +65,25 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
                           INDEXED_CHILD.getBody());
                       return null;
                     }));
+    router
+        .post(INDEXED_CHILD_FROM_REQUEST_BODY.getPath())
+        .handler(
+            ctx ->
+                ctx.request()
+                    .bodyHandler(
+                        body ->
+                            controller(
+                                INDEXED_CHILD_FROM_REQUEST_BODY,
+                                () -> {
+                                  String requestBody = body.toString();
+                                  bodyConsumer(INDEXED_CHILD_FROM_REQUEST_BODY, requestBody);
+                                  end(
+                                      ctx.response()
+                                          .setStatusCode(
+                                              INDEXED_CHILD_FROM_REQUEST_BODY.getStatus()),
+                                      requestBody);
+                                  return null;
+                                })));
     router
         .route(QUERY_PARAM.getPath())
         .handler(

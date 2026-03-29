@@ -50,7 +50,13 @@ class ServletFilterTest extends AbstractServletFilterTest {
   protected ConfigurableApplicationContext setupServer() {
     SpringApplication app =
         new SpringApplication(FilteredAppConfig.class, securityConfigClass(), filterConfigClass());
-    app.setDefaultProperties(Map.of("server.port", port, "server.error.include-message", "always"));
+
+    app.setDefaultProperties(
+        Map.of(
+            "server.port",
+            port,
+            testLatestDeps ? "spring.web.error.include-message" : "server.error.include-message",
+            "always"));
     return app.run();
   }
 

@@ -1,6 +1,7 @@
-ARG jdkImage
+ARG jdkImageName
+ARG jdkImageHash
 
-FROM ${jdkImage}
+FROM ${jdkImageName}@sha256:${jdkImageHash}
 ARG version
 ARG baseDownloadUrl
 

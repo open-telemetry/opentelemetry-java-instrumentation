@@ -7,35 +7,20 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 
 final class LettuceDbAttributesGetter
     implements DbClientAttributesGetter<RedisCommand<?, ?, ?>, Void> {
 
-  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getDbSystem(RedisCommand<?, ?, ?> request) {
-    return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getUser(RedisCommand<?, ?, ?> request) {
-    return null;
+  public String getDbSystemName(RedisCommand<?, ?, ?> request) {
+    return DbSystemNameIncubatingValues.REDIS;
   }
 
   @Override
   @Nullable
   public String getDbNamespace(RedisCommand<?, ?, ?> request) {
-    return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getConnectionString(RedisCommand<?, ?, ?> request) {
     return null;
   }
 

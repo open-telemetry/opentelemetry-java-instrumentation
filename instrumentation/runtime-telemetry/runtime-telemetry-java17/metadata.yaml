@@ -1,0 +1,6 @@
+description: >
+  DEPRECATED: This instrumentation enables JVM runtime metrics using JFR (Java 17+). Use the
+  unified runtime-telemetry module instead, which provides both JMX and JFR support.
+semantic_conventions:
+  - JVM_RUNTIME_METRICS
+library_link: https://github.com/open-telemetry/opentelemetry-java-instrumentation/tree/main/instrumentation/runtime-telemetry/runtime-telemetry-java17

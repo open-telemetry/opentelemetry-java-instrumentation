@@ -133,4 +133,4 @@ In order to enable requested propagation for a handler, configure it on the SDK 
   }
 ```
 
-If using the wrappers, set the `OTEL_PROPAGATORS` environment variable as described [here](https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/autoconfigure/README.md#propagator).
+If using the wrappers, set the `OTEL_PROPAGATORS` environment variable as described [here](https://opentelemetry.io/docs/languages/sdk-configuration/general/#otel_propagators).

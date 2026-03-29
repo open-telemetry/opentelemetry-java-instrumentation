@@ -18,6 +18,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import java.util.function.Consumer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -41,31 +43,31 @@ public class AsyncResultSingleInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(0, named("io.vertx.core.Handler"))),
-        this.getClass().getName() + "$ConstructorWithHandlerAdvice");
+        getClass().getName() + "$ConstructorWithHandlerAdvice");
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(0, Consumer.class)),
-        this.getClass().getName() + "$ConstructorWithConsumerAdvice");
+        getClass().getName() + "$ConstructorWithConsumerAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ConstructorWithHandlerAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrapHandler(
-        @Advice.Argument(value = 0, readOnly = false) Handler<Handler<AsyncResult<?>>> handler) {
-      handler =
-          AsyncResultHandlerWrapper.wrapIfNeeded(handler, Java8BytecodeBridge.currentContext());
+    public static Handler<Handler<AsyncResult<?>>> wrapHandler(
+        @Advice.Argument(0) Handler<Handler<AsyncResult<?>>> handler) {
+      return AsyncResultHandlerWrapper.wrapIfNeeded(handler, Java8BytecodeBridge.currentContext());
     }
   }
 
   @SuppressWarnings("unused")
   public static class ConstructorWithConsumerAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrapHandler(
-        @Advice.Argument(value = 0, readOnly = false) Consumer<Handler<AsyncResult<?>>> handler) {
-      handler =
-          AsyncResultConsumerWrapper.wrapIfNeeded(handler, Java8BytecodeBridge.currentContext());
+    public static Consumer<Handler<AsyncResult<?>>> wrapHandler(
+        @Advice.Argument(0) Consumer<Handler<AsyncResult<?>>> handler) {
+      return AsyncResultConsumerWrapper.wrapIfNeeded(handler, Java8BytecodeBridge.currentContext());
     }
   }
 }

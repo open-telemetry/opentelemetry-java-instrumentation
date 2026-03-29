@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.bootstrap.internal;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 
 /**
@@ -14,7 +15,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConf
 public class AgentCommonConfig {
   private AgentCommonConfig() {}
 
-  private static final CommonConfig instance = new CommonConfig(AgentInstrumentationConfig.get());
+  private static final CommonConfig instance = new CommonConfig(GlobalOpenTelemetry.get());
 
   public static CommonConfig get() {
     return instance;

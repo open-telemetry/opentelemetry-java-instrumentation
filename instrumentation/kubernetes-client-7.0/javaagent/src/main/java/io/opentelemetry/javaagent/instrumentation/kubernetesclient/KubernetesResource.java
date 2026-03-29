@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 
 class KubernetesResource {
 
@@ -52,9 +53,9 @@ class KubernetesResource {
       String apiGroup,
       String apiVersion,
       String resource,
-      String subResource,
-      String namespace,
-      String name) {
+      @Nullable String subResource,
+      @Nullable String namespace,
+      @Nullable String name) {
     this.apiGroup = apiGroup;
     this.apiVersion = apiVersion;
     this.resource = resource;
@@ -66,10 +67,10 @@ class KubernetesResource {
   private final String apiGroup;
   private final String apiVersion;
   private final String resource;
-  private final String subResource;
+  @Nullable private final String subResource;
 
-  private final String namespace;
-  private final String name;
+  @Nullable private final String namespace;
+  @Nullable private final String name;
 
   public String getApiGroup() {
     return apiGroup;
@@ -83,14 +84,17 @@ class KubernetesResource {
     return resource;
   }
 
+  @Nullable
   public String getSubResource() {
     return subResource;
   }
 
+  @Nullable
   public String getNamespace() {
     return namespace;
   }
 
+  @Nullable
   public String getName() {
     return name;
   }

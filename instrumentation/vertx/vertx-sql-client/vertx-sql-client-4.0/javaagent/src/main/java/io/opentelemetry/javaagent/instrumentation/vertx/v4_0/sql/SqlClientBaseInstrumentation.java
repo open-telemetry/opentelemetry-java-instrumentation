@@ -31,11 +31,9 @@ public class SqlClientBaseInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
-        isConstructor(), SqlClientBaseInstrumentation.class.getName() + "$ConstructorAdvice");
-    transformer.applyAdviceToMethod(
-        namedOneOf("query", "preparedQuery"),
-        SqlClientBaseInstrumentation.class.getName() + "$QueryAdvice");
+        namedOneOf("query", "preparedQuery"), getClass().getName() + "$QueryAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -50,22 +48,21 @@ public class SqlClientBaseInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class QueryAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.This SqlClientBase<?> sqlClientBase,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = CallDepth.forClass(SqlClientBase.class);
+    public static CallDepth onEnter(@Advice.This SqlClientBase<?> sqlClientBase) {
+      CallDepth callDepth = CallDepth.forClass(SqlClientBase.class);
       if (callDepth.getAndIncrement() > 0) {
-        return;
+        return callDepth;
       }
 
       // set connection options to ThreadLocal, they will be read in QueryExecutor constructor
       SqlConnectOptions sqlConnectOptions = getSqlConnectOptions(sqlClientBase);
       setSqlConnectOptions(sqlConnectOptions);
+      return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Thrown Throwable throwable, @Advice.Local("otelCallDepth") CallDepth callDepth) {
+        @Advice.Thrown Throwable throwable, @Advice.Enter CallDepth callDepth) {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }

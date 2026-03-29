@@ -6,13 +6,16 @@
 package io.opentelemetry.instrumentation.netty.common.v4_0.internal.client;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
+import javax.annotation.Nullable;
 
-enum HttpRequestHeadersSetter implements TextMapSetter<HttpRequestAndChannel> {
-  INSTANCE;
+final class HttpRequestHeadersSetter implements TextMapSetter<NettyCommonRequest> {
 
   @Override
-  public void set(HttpRequestAndChannel requestAndChannel, String key, String value) {
-    requestAndChannel.request().headers().set(key, value);
+  public void set(@Nullable NettyCommonRequest requestAndChannel, String key, String value) {
+    if (requestAndChannel == null) {
+      return;
+    }
+    requestAndChannel.getRequest().headers().set(key, value);
   }
 }

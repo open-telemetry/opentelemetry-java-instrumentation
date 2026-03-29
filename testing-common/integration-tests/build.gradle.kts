@@ -58,7 +58,7 @@ tasks {
       excludeTestsMatching("context.FieldInjectionDisabledTest")
       excludeTestsMatching("context.FieldBackedImplementationTest")
     }
-    // this is needed for AgentInstrumentationSpecificationTest
+    // this is needed for AgentInstrumentationTest
     jvmArgs("-Dotel.javaagent.exclude-classes=config.exclude.packagename.*,config.exclude.SomeClass,config.exclude.SomeClass\$NestedClass")
   }
 

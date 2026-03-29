@@ -30,14 +30,14 @@ public class DefaultExceptionMapperInstrumentation implements TypeInstrumentatio
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("mapUnexpectedExceptions").and(takesArgument(0, named(Exception.class.getName()))),
-        DefaultExceptionMapperInstrumentation.class.getName() + "$ExceptionAdvice");
+        getClass().getName() + "$ExceptionAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ExceptionAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onExit(@Advice.Argument(0) Exception exception) {
+    public static void onEnter(@Advice.Argument(0) Exception exception) {
       Span serverSpan = LocalRootSpan.fromContextOrNull(Java8BytecodeBridge.currentContext());
       if (serverSpan != null) {
         // unwrap exception

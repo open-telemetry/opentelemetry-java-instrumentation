@@ -13,6 +13,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -32,17 +34,16 @@ public class KotlinCoroutineDispatcherInstrumentation implements TypeInstrumenta
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("dispatch").and(takesArgument(1, Runnable.class)),
-        this.getClass().getName() + "$StopContextPropagationAdvice");
+        getClass().getName() + "$StopContextPropagationAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class StopContextPropagationAdvice {
 
-    @Advice.OnMethodEnter
-    public static void enter(@Advice.Argument(value = 1, readOnly = false) Runnable runnable) {
-      if (runnable != null) {
-        runnable = RunnableWrapper.stopPropagation(runnable);
-      }
+    @AssignReturned.ToArguments(@ToArgument(1))
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static Runnable enter(@Advice.Argument(1) Runnable runnable) {
+      return runnable == null ? null : RunnableWrapper.stopPropagation(runnable);
     }
   }
 }

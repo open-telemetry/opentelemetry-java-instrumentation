@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import java.net.InetSocketAddress;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import org.apache.dubbo.common.URL;
@@ -34,13 +34,13 @@ class DubboHeadersGetterTest {
 
     // for latest dep tests call getObjectAttachments, otherwise call getAttachments
     if (Boolean.getBoolean("testLatestDeps")) {
-      when(getObjectAttachments()).thenReturn(Collections.singletonMap("key", "value"));
+      when(getObjectAttachments()).thenReturn(singletonMap("key", "value"));
     } else {
-      when(rpcInvocation.getAttachments()).thenReturn(Collections.singletonMap("key", "value"));
+      when(rpcInvocation.getAttachments()).thenReturn(singletonMap("key", "value"));
     }
     DubboRequest request = DubboRequest.create(rpcInvocation, context);
 
-    Iterator<String> iterator = DubboHeadersGetter.INSTANCE.keys(request).iterator();
+    Iterator<String> iterator = new DubboHeadersGetter().keys(request).iterator();
     assertThat(iterator.hasNext()).isTrue();
     assertThat(iterator.next()).isEqualTo("key");
     assertThat(iterator.hasNext()).isFalse();

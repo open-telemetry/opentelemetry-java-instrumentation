@@ -16,7 +16,7 @@ dependencies {
   latestDepTestLibrary("io.vertx:vertx-codegen:3.+") // documented limitation
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 
 testing {
   suites {
@@ -34,8 +34,10 @@ testing {
           testTask.configure {
             usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
-            systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-
+            systemProperty(
+              "metadataConfig",
+              "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=false",
+            )
             jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
             jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
           }
@@ -46,16 +48,26 @@ testing {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
     systemProperty("testLatestDeps", latestDepTest)
+  }
 
-    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
+  test {
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
   }
 
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
+  }
+
   check {
-    dependsOn(testing.suites)
+    dependsOn(testing.suites, testExperimental)
   }
 }

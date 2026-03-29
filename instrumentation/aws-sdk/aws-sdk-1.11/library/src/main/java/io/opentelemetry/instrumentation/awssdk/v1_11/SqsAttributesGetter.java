@@ -5,15 +5,16 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum SqsAttributesGetter implements MessagingAttributesGetter<Request<?>, Response<?>> {
-  INSTANCE;
+class SqsAttributesGetter implements MessagingAttributesGetter<Request<?>, Response<?>> {
 
   // copied from MessagingIncubatingAttributes.MessagingSystemIncubatingValues
   private static final String AWS_SQS = "aws_sqs";
@@ -27,6 +28,9 @@ enum SqsAttributesGetter implements MessagingAttributesGetter<Request<?>, Respon
   public String getDestination(Request<?> request) {
     Object originalRequest = request.getOriginalRequest();
     String queueUrl = RequestAccess.getQueueUrl(originalRequest);
+    if (queueUrl == null) {
+      return null;
+    }
     int i = queueUrl.lastIndexOf('/');
     return i > 0 ? queueUrl.substring(i + 1) : null;
   }
@@ -86,6 +90,6 @@ enum SqsAttributesGetter implements MessagingAttributesGetter<Request<?>, Respon
   @Override
   public List<String> getMessageHeader(Request<?> request, String name) {
     String value = SqsAccess.getMessageAttribute(request, name);
-    return value != null ? Collections.singletonList(value) : Collections.emptyList();
+    return value != null ? singletonList(value) : emptyList();
   }
 }

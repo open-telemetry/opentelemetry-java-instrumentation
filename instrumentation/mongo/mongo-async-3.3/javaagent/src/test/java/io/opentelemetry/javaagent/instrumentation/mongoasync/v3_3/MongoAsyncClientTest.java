@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.mongoasync.v3_3;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import com.mongodb.ConnectionString;
 import com.mongodb.async.SingleResultCallback;
 import com.mongodb.async.client.MongoClient;
@@ -20,7 +22,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
@@ -116,7 +117,7 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
                   MongoDatabase db = client.getDatabase(dbName);
                   CountDownLatch latch = new CountDownLatch(1);
                   db.createCollection(collectionName, toCallback(result -> latch.countDown()));
-                  latch.await(30, TimeUnit.SECONDS);
+                  latch.await(30, SECONDS);
                   return db.getCollection(collectionName);
                 });
     ignoreTracesAndClear(1);
@@ -143,12 +144,12 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
                   MongoDatabase db = client.getDatabase(dbName);
                   CountDownLatch latch1 = new CountDownLatch(1);
                   db.createCollection(collectionName, toCallback(result -> latch1.countDown()));
-                  latch1.await(30, TimeUnit.SECONDS);
+                  latch1.await(30, SECONDS);
                   MongoCollection<Document> coll = db.getCollection(collectionName);
                   CountDownLatch latch2 = new CountDownLatch(1);
                   coll.insertOne(
                       new Document("password", "OLDPW"), toCallback(result -> latch2.countDown()));
-                  latch2.await(30, TimeUnit.SECONDS);
+                  latch2.await(30, SECONDS);
                   return coll;
                 });
     ignoreTracesAndClear(1);
@@ -181,12 +182,12 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
                   MongoDatabase db = client.getDatabase(dbName);
                   CountDownLatch latch1 = new CountDownLatch(1);
                   db.createCollection(collectionName, toCallback(result -> latch1.countDown()));
-                  latch1.await(30, TimeUnit.SECONDS);
+                  latch1.await(30, SECONDS);
                   MongoCollection<Document> coll = db.getCollection(collectionName);
                   CountDownLatch latch2 = new CountDownLatch(1);
                   coll.insertOne(
                       new Document("password", "SECRET"), toCallback(result -> latch2.countDown()));
-                  latch2.await(30, TimeUnit.SECONDS);
+                  latch2.await(30, SECONDS);
                   return coll;
                 });
     ignoreTracesAndClear(1);
@@ -227,7 +228,7 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
                   MongoDatabase db = client.getDatabase(dbName);
                   CountDownLatch latch = new CountDownLatch(1);
                   db.createCollection(collectionName, toCallback(result -> latch.countDown()));
-                  latch.await(30, TimeUnit.SECONDS);
+                  latch.await(30, SECONDS);
                   return db.getCollection(collectionName);
                 });
     ignoreTracesAndClear(1);

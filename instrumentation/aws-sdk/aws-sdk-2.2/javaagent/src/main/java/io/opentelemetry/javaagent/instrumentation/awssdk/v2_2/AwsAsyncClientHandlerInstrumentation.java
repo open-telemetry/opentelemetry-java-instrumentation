@@ -12,6 +12,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.CompletableFuture;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -35,10 +36,12 @@ public class AwsAsyncClientHandlerInstrumentation implements TypeInstrumentation
   @SuppressWarnings("unused")
   public static class WrapFutureAdvice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void methodExit(@Advice.Return(readOnly = false) CompletableFuture<?> future) {
+    public static CompletableFuture<?> methodExit(@Advice.Return CompletableFuture<?> future) {
+
       // propagate context into CompletableFuture returned from aws async client methods
-      future = CompletableFutureWrapper.wrap(future);
+      return CompletableFutureWrapper.wrap(future);
     }
   }
 }

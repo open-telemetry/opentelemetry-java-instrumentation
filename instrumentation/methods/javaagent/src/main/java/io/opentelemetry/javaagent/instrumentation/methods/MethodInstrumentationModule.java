@@ -10,21 +10,16 @@ import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @AutoService(InstrumentationModule.class)
-public class MethodInstrumentationModule extends InstrumentationModule {
-
-  private static final String TRACE_METHODS_CONFIG = "otel.instrumentation.methods.include";
+public class MethodInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   private final List<TypeInstrumentation> typeInstrumentations;
 
@@ -34,11 +29,8 @@ public class MethodInstrumentationModule extends InstrumentationModule {
   }
 
   private static List<TypeInstrumentation> createInstrumentations() {
-    InstrumentationConfig config = AgentInstrumentationConfig.get();
-    List<TypeInstrumentation> list =
-        config.isDeclarative()
-            ? MethodsConfig.parseDeclarativeConfig(config.getDeclarativeConfig("methods"))
-            : parseConfigProperties();
+    MethodConfiguration config = new MethodConfiguration(GlobalOpenTelemetry.get());
+    List<TypeInstrumentation> list = config.typeInstrumentations();
     // ensure that there is at least one instrumentation so that muzzle reference collection could
     // work
     if (list.isEmpty()) {
@@ -48,22 +40,13 @@ public class MethodInstrumentationModule extends InstrumentationModule {
     return list;
   }
 
-  private static List<TypeInstrumentation> parseConfigProperties() {
-    Map<String, Set<String>> classMethodsToTrace =
-        MethodsConfigurationParser.parse(
-            AgentInstrumentationConfig.get().getString(TRACE_METHODS_CONFIG));
-
-    return classMethodsToTrace.entrySet().stream()
-        .filter(e -> !e.getValue().isEmpty())
-        .map(
-            e ->
-                new MethodInstrumentation(
-                    e.getKey(), singletonMap(SpanKind.INTERNAL, e.getValue())))
-        .collect(Collectors.toList());
-  }
-
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return typeInstrumentations;
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

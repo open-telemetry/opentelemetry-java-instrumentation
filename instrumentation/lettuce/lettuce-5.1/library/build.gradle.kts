@@ -14,7 +14,8 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    jvmArgs("-Dotel.instrumentation.lettuce.experimental.command-encoding-events.enabled=true")
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 

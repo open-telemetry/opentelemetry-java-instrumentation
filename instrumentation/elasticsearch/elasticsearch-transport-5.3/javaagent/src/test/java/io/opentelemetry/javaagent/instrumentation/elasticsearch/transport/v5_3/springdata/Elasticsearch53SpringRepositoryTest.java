@@ -13,6 +13,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ELASTICSEARCH;
 import static java.util.Arrays.asList;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -20,7 +21,6 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +31,6 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import spock.util.environment.Jvm;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -51,7 +50,7 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
     // when running on jdk 21 this test occasionally fails with timeout
     Assumptions.assumeTrue(
         Boolean.getBoolean("testLatestDeps")
-            || !Jvm.getCurrent().isJava21Compatible()
+            || Double.parseDouble(System.getProperty("java.specification.version")) < 21
             || Boolean.getBoolean("collectMetadata"));
 
     DocRepository result =
@@ -91,9 +90,7 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), "SearchAction"),
                             equalTo(
                                 stringKey("elasticsearch.action"), experimental("SearchAction")),
@@ -204,9 +201,7 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), "DeleteAction"),
                             equalTo(
                                 stringKey("elasticsearch.action"), experimental("DeleteAction")),
@@ -243,9 +238,7 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), "SearchAction"),
                             equalTo(
                                 stringKey("elasticsearch.action"), experimental("SearchAction")),
@@ -262,9 +255,7 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
   private static List<AttributeAssertion> indexActionAssertions(long status) {
     return new ArrayList<>(
         asList(
-            equalTo(
-                maybeStable(DB_SYSTEM),
-                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
             equalTo(maybeStable(DB_OPERATION), "IndexAction"),
             equalTo(stringKey("elasticsearch.action"), experimental("IndexAction")),
             equalTo(stringKey("elasticsearch.request"), experimental("IndexRequest")),
@@ -280,9 +271,7 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
   private static List<AttributeAssertion> refreshActionAssertions() {
     return new ArrayList<>(
         asList(
-            equalTo(
-                maybeStable(DB_SYSTEM),
-                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
             equalTo(maybeStable(DB_OPERATION), "RefreshAction"),
             equalTo(stringKey("elasticsearch.action"), experimental("RefreshAction")),
             equalTo(stringKey("elasticsearch.request"), experimental("RefreshRequest")),
@@ -295,9 +284,7 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
   private static List<AttributeAssertion> getActionAssertions(long version) {
     return new ArrayList<>(
         asList(
-            equalTo(
-                maybeStable(DB_SYSTEM),
-                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
             equalTo(maybeStable(DB_OPERATION), "GetAction"),
             equalTo(stringKey("elasticsearch.action"), experimental("GetAction")),
             equalTo(stringKey("elasticsearch.request"), experimental("GetRequest")),

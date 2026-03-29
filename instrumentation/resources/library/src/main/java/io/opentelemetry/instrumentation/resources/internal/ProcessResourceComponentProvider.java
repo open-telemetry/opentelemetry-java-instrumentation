@@ -20,6 +20,6 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 @AutoService(ComponentProvider.class)
 public class ProcessResourceComponentProvider extends ResourceComponentProvider {
   public ProcessResourceComponentProvider() {
-    super("process", () -> ProcessResource.get().merge(ProcessRuntimeResource.get()));
+    super("process", p -> ProcessResource.get().merge(ProcessRuntimeResource.get()));
   }
 }

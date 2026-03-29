@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -17,22 +20,24 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.message.SemconvMessageStabilityUtil;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
@@ -72,6 +77,9 @@ public abstract class KafkaClientBaseTest {
   protected Consumer<Integer, String> consumer;
   private final CountDownLatch consumerReady = new CountDownLatch(1);
 
+  static final boolean isExperimentalEnabled =
+      Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes");
+
   public static final int partition = 0;
   public static final TopicPartition topicPartition = new TopicPartition(SHARED_TOPIC, partition);
 
@@ -91,9 +99,9 @@ public abstract class KafkaClientBaseTest {
 
     try (AdminClient admin = AdminClient.create(adminProps)) {
       admin
-          .createTopics(Collections.singletonList(new NewTopic(SHARED_TOPIC, 1, (short) 1)))
+          .createTopics(singletonList(new NewTopic(SHARED_TOPIC, 1, (short) 1)))
           .all()
-          .get(30, TimeUnit.SECONDS);
+          .get(30, SECONDS);
     }
 
     producer = new KafkaProducer<>(producerProps());
@@ -101,7 +109,7 @@ public abstract class KafkaClientBaseTest {
     consumer = new KafkaConsumer<>(consumerProps());
 
     consumer.subscribe(
-        Collections.singletonList(SHARED_TOPIC),
+        singletonList(SHARED_TOPIC),
         new ConsumerRebalanceListener() {
           @Override
           public void onPartitionsRevoked(Collection<TopicPartition> collection) {}
@@ -149,19 +157,19 @@ public abstract class KafkaClientBaseTest {
   }
 
   public void awaitUntilConsumerIsReady() throws InterruptedException {
-    if (consumerReady.await(0, TimeUnit.SECONDS)) {
+    if (consumerReady.await(0, SECONDS)) {
       return;
     }
     for (int i = 0; i < 10; i++) {
       poll(Duration.ofMillis(100));
-      if (consumerReady.await(1, TimeUnit.SECONDS)) {
+      if (consumerReady.await(1, SECONDS)) {
         break;
       }
     }
     if (consumerReady.getCount() != 0) {
       throw new AssertionError("Consumer wasn't assigned any partitions!");
     }
-    consumer.seekToBeginning(Collections.emptyList());
+    consumer.seekToBeginning(emptyList());
   }
 
   public ConsumerRecords<Integer, String> poll(Duration duration) {
@@ -173,7 +181,7 @@ public abstract class KafkaClientBaseTest {
       String messageKey, String messageValue, boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION, "publish"),
@@ -199,7 +207,7 @@ public abstract class KafkaClientBaseTest {
   protected static List<AttributeAssertion> receiveAttributes(boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION, "receive"),
@@ -223,7 +231,7 @@ public abstract class KafkaClientBaseTest {
       String messageKey, String messageValue, boolean testHeaders, boolean testMultiBaggage) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION, "process"),
@@ -231,8 +239,11 @@ public abstract class KafkaClientBaseTest {
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
                 satisfies(
-                    AttributeKey.longKey("kafka.record.queue_time_ms"),
-                    AbstractLongAssert::isNotNegative)));
+                    longKey("kafka.record.queue_time_ms"),
+                    val ->
+                        val.satisfiesAnyOf(
+                            v -> assertThat(v).isNotNegative(),
+                            v -> assertThat(isExperimentalEnabled).isFalse()))));
     // consumer group is not available in version 0.11
     if (Boolean.getBoolean("testLatestDeps")) {
       assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
@@ -243,9 +254,7 @@ public abstract class KafkaClientBaseTest {
     if (messageValue == null) {
       assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true));
     } else {
-      assertions.add(
-          equalTo(
-              MESSAGING_MESSAGE_BODY_SIZE, messageValue.getBytes(StandardCharsets.UTF_8).length));
+      assertions.add(equalTo(MESSAGING_MESSAGE_BODY_SIZE, messageValue.getBytes(UTF_8).length));
     }
     if (testHeaders) {
       assertions.add(
@@ -255,8 +264,8 @@ public abstract class KafkaClientBaseTest {
     }
 
     if (testMultiBaggage) {
-      assertions.add(equalTo(AttributeKey.stringKey("test-baggage-key-1"), "test-baggage-value-1"));
-      assertions.add(equalTo(AttributeKey.stringKey("test-baggage-key-2"), "test-baggage-value-2"));
+      assertions.add(equalTo(stringKey("test-baggage-key-1"), "test-baggage-value-1"));
+      assertions.add(equalTo(stringKey("test-baggage-key-2"), "test-baggage-value-2"));
     }
     return assertions;
   }

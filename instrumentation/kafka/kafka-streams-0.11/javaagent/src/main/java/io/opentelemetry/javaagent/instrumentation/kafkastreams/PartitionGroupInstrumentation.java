@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.kafkastreams.KafkaStreamsSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.kafkastreams.StateHolder.HOLDER;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPackagePrivate;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -35,11 +34,10 @@ public class PartitionGroupInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPackagePrivate())
+        isPackagePrivate()
             .and(named("nextRecord"))
             .and(returns(named("org.apache.kafka.streams.processor.internals.StampedRecord"))),
-        PartitionGroupInstrumentation.class.getName() + "$NextRecordAdvice");
+        getClass().getName() + "$NextRecordAdvice");
   }
 
   @SuppressWarnings("unused")

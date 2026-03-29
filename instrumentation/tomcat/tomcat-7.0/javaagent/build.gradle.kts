@@ -9,6 +9,8 @@ muzzle {
     // Tomcat 10 is about servlet 5.0
     // 7.0.4 added Request.isAsync, which is needed
     versions.set("[7.0.4, 10)")
+    assertInverse.set(true)
+    excludeInstrumentationName("servlet-3.0")
   }
 }
 
@@ -19,7 +21,6 @@ dependencies {
 
   compileOnly("org.apache.tomcat.embed:tomcat-embed-core:7.0.4")
 
-  testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
   // Make sure nothing breaks due to both 7.0 and 10.0 modules being present together
   testInstrumentation(project(":instrumentation:tomcat:tomcat-10.0:javaagent"))
   // testing whether instrumentation still works when jakarta servlet api is also present
@@ -38,6 +39,6 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 }

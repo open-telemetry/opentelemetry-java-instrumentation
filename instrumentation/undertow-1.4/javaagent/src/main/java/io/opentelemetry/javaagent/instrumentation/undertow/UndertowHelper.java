@@ -35,9 +35,7 @@ public class UndertowHelper {
   }
 
   public void end(Context context, HttpServerExchange exchange, @Nullable Throwable error) {
-    if (error == null) {
-      error = AppServerBridge.getException(context);
-    }
+    error = AppServerBridge.getException(context, error);
 
     instrumenter.end(context, exchange, exchange, error);
   }
@@ -49,7 +47,8 @@ public class UndertowHelper {
     UndertowActiveHandlers.increment(context);
   }
 
-  public void handlerCompleted(Context context, Throwable throwable, HttpServerExchange exchange) {
+  public void handlerCompleted(
+      Context context, @Nullable Throwable throwable, HttpServerExchange exchange) {
     // end the span when this is the last handler to complete and exchange has
     // been completed
     if (UndertowActiveHandlers.decrementAndGet(context) == 0) {
@@ -67,7 +66,7 @@ public class UndertowHelper {
     }
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // we lose type info with attachments
   @Nullable
   public Context getServerContext(HttpServerExchange exchange) {
     AttachmentKey<Context> contextKey =
@@ -78,7 +77,7 @@ public class UndertowHelper {
     return exchange.getAttachment(contextKey);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // we lose type info with attachments
   private static void attachServerContext(Context context, HttpServerExchange exchange) {
     AttachmentKey<Context> contextKey =
         (AttachmentKey<Context>)

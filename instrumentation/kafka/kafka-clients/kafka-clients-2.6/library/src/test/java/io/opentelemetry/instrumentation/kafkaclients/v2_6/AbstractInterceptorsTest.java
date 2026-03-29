@@ -5,18 +5,16 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientBaseTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -28,19 +26,21 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
 
   static final String greeting = "Hello Kafka!";
 
+  protected abstract KafkaTelemetry kafkaTelemetry();
+
   @Override
   public Map<String, Object> producerProps() {
     Map<String, Object> props = super.producerProps();
-    props.put(
-        ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingProducerInterceptor.class.getName());
+    props.putAll(kafkaTelemetry().producerInterceptorConfigProperties());
+    props.putAll(kafkaTelemetry().metricConfigProperties());
     return props;
   }
 
   @Override
   public Map<String, Object> consumerProps() {
     Map<String, Object> props = super.consumerProps();
-    props.put(
-        ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingConsumerInterceptor.class.getName());
+    props.putAll(kafkaTelemetry().consumerInterceptorConfigProperties());
+    props.putAll(kafkaTelemetry().metricConfigProperties());
     return props;
   }
 
@@ -54,14 +54,10 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
           producerRecord
               .headers()
               // add header to test capturing header value as span attribute
-              .add("Test-Message-Header", "test".getBytes(StandardCharsets.UTF_8))
+              .add("Test-Message-Header", "test".getBytes(UTF_8))
               // adding baggage header in w3c baggage format
-              .add(
-                  "baggage",
-                  "test-baggage-key-1=test-baggage-value-1".getBytes(StandardCharsets.UTF_8))
-              .add(
-                  "baggage",
-                  "test-baggage-key-2=test-baggage-value-2".getBytes(StandardCharsets.UTF_8));
+              .add("baggage", "test-baggage-key-1=test-baggage-value-1".getBytes(UTF_8))
+              .add("baggage", "test-baggage-key-2=test-baggage-value-2".getBytes(UTF_8));
           producer.send(
               producerRecord,
               (meta, ex) -> {

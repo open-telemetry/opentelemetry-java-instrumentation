@@ -15,10 +15,8 @@ public final class ApplicationLoggerFlags {
   private static final AtomicBoolean bridgeLoggerFactory = new AtomicBoolean(true);
   private static final AtomicBoolean bridgeSpringBootLogging = new AtomicBoolean(false);
 
-  private ApplicationLoggerFlags() {}
-
   /**
-   * Disables the sfl4j {@code LoggerFactory} instrumentation; and instead enables the Spring Boot
+   * Disables the slf4j {@code LoggerFactory} instrumentation; and instead enables the Spring Boot
    * {@code LoggingApplicationListener} instrumentation. In Spring Boot, an implementation of {@code
    * LoggingApplicationListener} is responsible for initializing the logging library. Even though
    * slf4j (and its {@code LoggerFactory}) is actually logged earlier, it is not usable until the
@@ -44,4 +42,6 @@ public final class ApplicationLoggerFlags {
   public static boolean bridgeSpringBootLogging() {
     return bridgeSpringBootLogging.compareAndSet(true, false);
   }
+
+  private ApplicationLoggerFlags() {}
 }

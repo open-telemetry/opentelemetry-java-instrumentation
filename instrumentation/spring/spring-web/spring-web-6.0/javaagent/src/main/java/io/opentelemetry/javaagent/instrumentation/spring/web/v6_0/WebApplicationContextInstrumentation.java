@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.web.v6_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_SINGLETON;
@@ -44,14 +43,13 @@ public class WebApplicationContextInstrumentation implements TypeInstrumentation
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("postProcessBeanFactory"))
+        named("postProcessBeanFactory")
             .and(
                 takesArgument(
                     0,
                     named(
                         "org.springframework.beans.factory.config.ConfigurableListableBeanFactory"))),
-        WebApplicationContextInstrumentation.class.getName() + "$FilterInjectingAdvice");
+        getClass().getName() + "$FilterInjectingAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -59,7 +57,7 @@ public class WebApplicationContextInstrumentation implements TypeInstrumentation
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(0) ConfigurableListableBeanFactory beanFactory) {
-      if (beanFactory instanceof BeanDefinitionRegistry
+      if (beanFactory instanceof BeanDefinitionRegistry beanDefinitionRegistry
           && !beanFactory.containsBean("otelAutoDispatcherFilter")) {
         // Explicitly loading classes allows to catch any class-loading issue or deal with cases
         // where the class is not visible.
@@ -83,8 +81,7 @@ public class WebApplicationContextInstrumentation implements TypeInstrumentation
           beanDefinition.setScope(SCOPE_SINGLETON);
           beanDefinition.setBeanClass(clazz);
 
-          ((BeanDefinitionRegistry) beanFactory)
-              .registerBeanDefinition("otelAutoDispatcherFilter", beanDefinition);
+          beanDefinitionRegistry.registerBeanDefinition("otelAutoDispatcherFilter", beanDefinition);
         } catch (ClassNotFoundException ignored) {
           // Ignore
         }

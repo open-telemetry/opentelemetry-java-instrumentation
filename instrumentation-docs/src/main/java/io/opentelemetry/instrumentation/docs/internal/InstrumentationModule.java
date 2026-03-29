@@ -6,13 +6,14 @@
 package io.opentelemetry.instrumentation.docs.internal;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.Objects.requireNonNullElse;
+import static java.util.Objects.requireNonNullElseGet;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -27,36 +28,38 @@ public class InstrumentationModule {
   private final String instrumentationName;
   private final String namespace;
   private final String group;
-  private final InstrumentationScopeInfo scopeInfo;
+  private InstrumentationScopeInfo scopeInfo;
   private Map<String, List<EmittedMetrics.Metric>> metrics;
   private Map<String, List<EmittedSpans.Span>> spans;
+  private boolean hasStandaloneLibrary;
 
-  @Nullable private Map<InstrumentationType, Set<String>> targetVersions;
+  @Nullable private Set<String> agentTargetVersions;
 
   @Nullable private Integer minJavaVersion;
 
-  @Nullable private InstrumentationMetaData metadata;
+  @Nullable private InstrumentationMetadata metadata;
 
   /**
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
    * any time.
    */
   public InstrumentationModule(Builder builder) {
-    requireNonNull(builder.srcPath, "srcPath required");
-    requireNonNull(builder.instrumentationName, "instrumentationName required");
-    requireNonNull(builder.namespace, "namespace required");
-    requireNonNull(builder.group, "group required");
-
-    this.metrics = Objects.requireNonNullElseGet(builder.metrics, HashMap::new);
-    this.spans = Objects.requireNonNullElseGet(builder.spans, HashMap::new);
-    this.srcPath = builder.srcPath;
-    this.instrumentationName = builder.instrumentationName;
-    this.namespace = builder.namespace;
-    this.group = builder.group;
+    this.instrumentationName =
+        requireNonNull(builder.instrumentationName, "instrumentationName required");
+    this.srcPath =
+        requireNonNullElse(builder.srcPath, "instrumentation/" + builder.instrumentationName);
+    this.namespace = requireNonNullElse(builder.namespace, builder.instrumentationName);
+    this.group = requireNonNullElse(builder.group, builder.instrumentationName);
+    this.metrics = requireNonNullElseGet(builder.metrics, HashMap::new);
+    this.spans = requireNonNullElseGet(builder.spans, HashMap::new);
+    this.hasStandaloneLibrary = builder.hasStandaloneLibrary;
     this.metadata = builder.metadata;
-    this.targetVersions = builder.targetVersions;
+    this.agentTargetVersions = builder.agentTargetVersions;
     this.minJavaVersion = builder.minJavaVersion;
-    this.scopeInfo = InstrumentationScopeInfo.create("io.opentelemetry." + instrumentationName);
+    this.scopeInfo =
+        requireNonNullElseGet(
+            builder.scopeInfo,
+            () -> InstrumentationScopeInfo.create("io.opentelemetry." + instrumentationName));
   }
 
   public String getSrcPath() {
@@ -71,6 +74,10 @@ public class InstrumentationModule {
     return namespace;
   }
 
+  public boolean hasStandaloneLibrary() {
+    return hasStandaloneLibrary;
+  }
+
   public String getGroup() {
     return group;
   }
@@ -79,17 +86,17 @@ public class InstrumentationModule {
     return scopeInfo;
   }
 
-  public InstrumentationMetaData getMetadata() {
+  public InstrumentationMetadata getMetadata() {
     if (metadata == null) {
-      metadata = new InstrumentationMetaData();
+      metadata = new InstrumentationMetadata();
     }
 
     return metadata;
   }
 
   @Nullable
-  public Map<InstrumentationType, Set<String>> getTargetVersions() {
-    return targetVersions;
+  public Set<String> getAgentTargetVersions() {
+    return agentTargetVersions;
   }
 
   @Nullable
@@ -105,12 +112,20 @@ public class InstrumentationModule {
     return spans;
   }
 
-  public void setTargetVersions(Map<InstrumentationType, Set<String>> targetVersions) {
-    this.targetVersions = targetVersions;
+  public void setAgentTargetVersions(Set<String> agentTargetVersions) {
+    this.agentTargetVersions = agentTargetVersions;
   }
 
-  public void setMetadata(InstrumentationMetaData metadata) {
+  public void setScopeInfo(InstrumentationScopeInfo scopeInfo) {
+    this.scopeInfo = scopeInfo;
+  }
+
+  public void setMetadata(InstrumentationMetadata metadata) {
     this.metadata = metadata;
+  }
+
+  public void setHasStandaloneLibrary(boolean hasStandaloneLibrary) {
+    this.hasStandaloneLibrary = hasStandaloneLibrary;
   }
 
   public void setMinJavaVersion(Integer minJavaVersion) {
@@ -135,10 +150,18 @@ public class InstrumentationModule {
     @Nullable private String namespace;
     @Nullable private String group;
     @Nullable private Integer minJavaVersion;
-    @Nullable private InstrumentationMetaData metadata;
-    @Nullable private Map<InstrumentationType, Set<String>> targetVersions;
+    @Nullable private InstrumentationMetadata metadata;
+    @Nullable private InstrumentationScopeInfo scopeInfo;
+    @Nullable private Set<String> agentTargetVersions;
     @Nullable private Map<String, List<EmittedMetrics.Metric>> metrics;
     @Nullable private Map<String, List<EmittedSpans.Span>> spans;
+    private boolean hasStandaloneLibrary;
+
+    public Builder() {}
+
+    public Builder(String instrumentationName) {
+      this.instrumentationName = instrumentationName;
+    }
 
     @CanIgnoreReturnValue
     public Builder srcPath(String srcPath) {
@@ -159,6 +182,18 @@ public class InstrumentationModule {
     }
 
     @CanIgnoreReturnValue
+    public Builder hasStandaloneLibrary(boolean hasStandaloneLibrary) {
+      this.hasStandaloneLibrary = hasStandaloneLibrary;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder scope(InstrumentationScopeInfo scope) {
+      this.scopeInfo = scope;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
     public Builder minJavaVersion(Integer minJavaVersion) {
       this.minJavaVersion = minJavaVersion;
       return this;
@@ -171,14 +206,14 @@ public class InstrumentationModule {
     }
 
     @CanIgnoreReturnValue
-    public Builder metadata(InstrumentationMetaData metadata) {
+    public Builder metadata(InstrumentationMetadata metadata) {
       this.metadata = metadata;
       return this;
     }
 
     @CanIgnoreReturnValue
-    public Builder targetVersions(Map<InstrumentationType, Set<String>> targetVersions) {
-      this.targetVersions = targetVersions;
+    public Builder targetVersions(Set<String> agentTargetVersions) {
+      this.agentTargetVersions = agentTargetVersions;
       return this;
     }
 

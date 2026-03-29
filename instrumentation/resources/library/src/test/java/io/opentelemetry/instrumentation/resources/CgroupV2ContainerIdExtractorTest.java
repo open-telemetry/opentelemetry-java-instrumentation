@@ -7,15 +7,16 @@ package io.opentelemetry.instrumentation.resources;
 
 import static io.opentelemetry.instrumentation.resources.CgroupV2ContainerIdExtractor.V2_CGROUP_PATH;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -31,7 +32,7 @@ class CgroupV2ContainerIdExtractorTest {
     when(filesystem.isReadable(V2_CGROUP_PATH)).thenReturn(false);
     CgroupV2ContainerIdExtractor extractor = new CgroupV2ContainerIdExtractor(filesystem);
     Optional<String> result = extractor.extractContainerId();
-    assertThat(result).isSameAs(Optional.empty());
+    assertThat(result).isEmpty();
   }
 
   private void verifyContainerId(String rawFileContent, String containerId) throws Exception {
@@ -39,7 +40,7 @@ class CgroupV2ContainerIdExtractorTest {
     when(filesystem.lineList(V2_CGROUP_PATH)).thenReturn(fileToListOfLines(rawFileContent));
     CgroupV2ContainerIdExtractor extractor = new CgroupV2ContainerIdExtractor(filesystem);
     Optional<String> result = extractor.extractContainerId();
-    assertThat(result.orElse("fail")).isEqualTo(containerId);
+    assertThat(result).contains(containerId);
   }
 
   @Test
@@ -91,11 +92,11 @@ class CgroupV2ContainerIdExtractorTest {
         "b4873629b312dc1d77472aba6fb177c6ce9a8f7c205ad7a03302726805007fe6");
   }
 
-  private static List<String> fileToListOfLines(String filename) {
+  private static List<String> fileToListOfLines(String filename) throws IOException {
     InputStream in =
         CgroupV2ContainerIdExtractorTest.class.getClassLoader().getResourceAsStream(filename);
-    return new BufferedReader(new InputStreamReader(in, UTF_8))
-        .lines()
-        .collect(Collectors.toList());
+    try (BufferedReader reader = new BufferedReader(new InputStreamReader(in, UTF_8))) {
+      return reader.lines().collect(toList());
+    }
   }
 }

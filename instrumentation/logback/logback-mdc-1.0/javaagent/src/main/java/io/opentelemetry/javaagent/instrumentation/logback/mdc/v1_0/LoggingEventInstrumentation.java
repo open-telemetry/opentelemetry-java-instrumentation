@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.spanIdKey;
 import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.traceFlagsKey;
 import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.traceIdKey;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -21,7 +20,6 @@ import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.baggage.BaggageEntry;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
@@ -30,6 +28,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -48,28 +47,26 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
-            .and(namedOneOf("getMDCPropertyMap", "getMdc"))
-            .and(takesArguments(0)),
-        LoggingEventInstrumentation.class.getName() + "$GetMdcAdvice");
+        isPublic().and(namedOneOf("getMDCPropertyMap", "getMdc")).and(takesArguments(0)),
+        getClass().getName() + "$GetMdcAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class GetMdcAdvice {
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
+    public static Map<String, String> onExit(
         @Advice.This ILoggingEvent event,
-        @Advice.Return(typing = Typing.DYNAMIC, readOnly = false) Map<String, String> contextData) {
+        @Advice.Return(typing = Typing.DYNAMIC) Map<String, String> contextData) {
 
       if (contextData != null && contextData.containsKey(AgentCommonConfig.get().getTraceIdKey())) {
         // Assume already instrumented event if traceId is present.
-        return;
+        return contextData;
       }
 
-      Context context = VirtualField.find(ILoggingEvent.class, Context.class).get(event);
+      Context context = LogbackSingletons.CONTEXT.get(event);
       if (context == null) {
-        return;
+        return contextData;
       }
 
       Map<String, String> spanContextData = new HashMap<>();
@@ -98,7 +95,7 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
         }
       }
 
-      contextData = spanContextData;
+      return spanContextData;
     }
   }
 }

@@ -5,10 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
+import static io.opentelemetry.javaagent.instrumentation.netty.common.v4_0.VirtualFieldHelper.CHANNEL_HANDLER;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons.clientHandlerFactory;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons.sslInstrumenter;
-import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyServerSingletons.serverTelemetry;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -22,11 +21,10 @@ import io.netty.handler.codec.http.HttpRequestEncoder;
 import io.netty.handler.codec.http.HttpResponseDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpServerCodec;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettySslInstrumentationHandler;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.netty.v4.common.AbstractNettyChannelPipelineInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.netty.common.v4_0.AbstractNettyChannelPipelineInstrumentation;
 import net.bytebuddy.asm.Advice;
 
 public class NettyChannelPipelineInstrumentation
@@ -37,11 +35,11 @@ public class NettyChannelPipelineInstrumentation
     super.transform(transformer);
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(nameStartsWith("add").or(named("replace")))
+        nameStartsWith("add")
+            .or(named("replace"))
             .and(takesArgument(1, String.class))
             .and(takesArgument(2, named("io.netty.channel.ChannelHandler"))),
-        NettyChannelPipelineInstrumentation.class.getName() + "$ChannelPipelineAddAdvice");
+        getClass().getName() + "$ChannelPipelineAddAdvice");
   }
 
   /**
@@ -51,7 +49,7 @@ public class NettyChannelPipelineInstrumentation
   @SuppressWarnings("unused")
   public static class ChannelPipelineAddAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static CallDepth trackCallDepth(@Advice.Argument(2) ChannelHandler handler) {
       // Previously we used one unique call depth tracker for all handlers, using
       // ChannelPipeline.class as a key.
@@ -78,11 +76,8 @@ public class NettyChannelPipelineInstrumentation
         return;
       }
 
-      VirtualField<ChannelHandler, ChannelHandler> instrumentationHandlerField =
-          VirtualField.find(ChannelHandler.class, ChannelHandler.class);
-
       // don't add another instrumentation handler if there already is one attached
-      if (instrumentationHandlerField.get(handler) != null) {
+      if (CHANNEL_HANDLER.get(handler) != null) {
         return;
       }
 
@@ -100,15 +95,11 @@ public class NettyChannelPipelineInstrumentation
       ChannelHandler ourHandler = null;
       // Server pipeline handlers
       if (handler instanceof HttpServerCodec) {
-        ourHandler =
-            serverTelemetry()
-                .createCombinedHandler(NettyHttpServerResponseBeforeCommitHandler.INSTANCE);
+        ourHandler = NettyServerSingletons.createCombinedHandler();
       } else if (handler instanceof HttpRequestDecoder) {
-        ourHandler = serverTelemetry().createRequestHandler();
+        ourHandler = NettyServerSingletons.createRequestHandler();
       } else if (handler instanceof HttpResponseEncoder) {
-        ourHandler =
-            serverTelemetry()
-                .createCombinedHandler(NettyHttpServerResponseBeforeCommitHandler.INSTANCE);
+        ourHandler = NettyServerSingletons.createCombinedHandler();
         // Client pipeline handlers
       } else if (handler instanceof HttpClientCodec) {
         ourHandler = clientHandlerFactory().createCombinedHandler();
@@ -126,7 +117,7 @@ public class NettyChannelPipelineInstrumentation
         try {
           pipeline.addAfter(name, ourHandler.getClass().getName(), ourHandler);
           // associate our handle with original handler so they could be removed together
-          instrumentationHandlerField.set(handler, ourHandler);
+          CHANNEL_HANDLER.set(handler, ourHandler);
         } catch (IllegalArgumentException e) {
           // Prevented adding duplicate handlers.
         }

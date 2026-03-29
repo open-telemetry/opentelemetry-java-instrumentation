@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace;
 
+import io.opentelemetry.api.trace.Tracer;
+
 public interface ApplicationTracerFactory {
 
-  ApplicationTracer newTracer(io.opentelemetry.api.trace.Tracer agentTracer);
+  ApplicationTracer newTracer(Tracer agentTracer);
 }

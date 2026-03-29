@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleCounter;
 import io.opentelemetry.api.metrics.DoubleHistogram;
@@ -57,8 +57,8 @@ class MeterTest {
   void longCounter() {
     LongCounter instrument = meter.counterBuilder("test").setDescription("d").setUnit("u").build();
 
-    instrument.add(5, Attributes.of(AttributeKey.stringKey("q"), "r"));
-    instrument.add(6, Attributes.of(AttributeKey.stringKey("q"), "r"));
+    instrument.add(5, Attributes.of(stringKey("q"), "r"));
+    instrument.add(6, Attributes.of(stringKey("q"), "r"));
 
     testing.waitAndAssertMetrics(
         instrumentationName,
@@ -72,6 +72,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasLongSumSatisfying(
                             sum ->
@@ -80,8 +81,8 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(11)
-                                                .hasAttributesSatisfying(
-                                                    equalTo(AttributeKey.stringKey("q"), "r"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("q"), "r"))))));
   }
 
   @Test
@@ -91,8 +92,7 @@ class MeterTest {
             .counterBuilder("test")
             .setDescription("d")
             .setUnit("u")
-            .buildWithCallback(
-                result -> result.record(11, Attributes.of(AttributeKey.stringKey("q"), "r")));
+            .buildWithCallback(result -> result.record(11, Attributes.of(stringKey("q"), "r")));
 
     testing.waitAndAssertMetrics(
         instrumentationName,
@@ -106,6 +106,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasLongSumSatisfying(
                             sum ->
@@ -114,8 +115,8 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(11)
-                                                .hasAttributesSatisfying(
-                                                    equalTo(AttributeKey.stringKey("q"), "r"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("q"), "r"))))));
 
     close(observableCounter);
 
@@ -132,8 +133,8 @@ class MeterTest {
     DoubleCounter instrument =
         meter.counterBuilder("test").ofDoubles().setDescription("d").setUnit("u").build();
 
-    instrument.add(5.5, Attributes.of(AttributeKey.stringKey("q"), "r"));
-    instrument.add(6.6, Attributes.of(AttributeKey.stringKey("q"), "r"));
+    instrument.add(5.5, Attributes.of(stringKey("q"), "r"));
+    instrument.add(6.6, Attributes.of(stringKey("q"), "r"));
 
     testing.waitAndAssertMetrics(
         instrumentationName,
@@ -147,6 +148,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasDoubleSumSatisfying(
                             sum ->
@@ -155,8 +157,8 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(12.1)
-                                                .hasAttributesSatisfying(
-                                                    equalTo(AttributeKey.stringKey("q"), "r"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("q"), "r"))))));
   }
 
   @Test
@@ -167,8 +169,7 @@ class MeterTest {
             .ofDoubles()
             .setDescription("d")
             .setUnit("u")
-            .buildWithCallback(
-                result -> result.record(12.1, Attributes.of(AttributeKey.stringKey("q"), "r")));
+            .buildWithCallback(result -> result.record(12.1, Attributes.of(stringKey("q"), "r")));
 
     testing.waitAndAssertMetrics(
         instrumentationName,
@@ -182,6 +183,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasDoubleSumSatisfying(
                             sum ->
@@ -190,8 +192,8 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(12.1)
-                                                .hasAttributesSatisfying(
-                                                    equalTo(AttributeKey.stringKey("q"), "r"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("q"), "r"))))));
 
     close(observableCounter);
 
@@ -208,8 +210,8 @@ class MeterTest {
     LongUpDownCounter instrument =
         meter.upDownCounterBuilder("test").setDescription("d").setUnit("u").build();
 
-    instrument.add(5, Attributes.of(AttributeKey.stringKey("q"), "r"));
-    instrument.add(6, Attributes.of(AttributeKey.stringKey("q"), "r"));
+    instrument.add(5, Attributes.of(stringKey("q"), "r"));
+    instrument.add(6, Attributes.of(stringKey("q"), "r"));
 
     testing.waitAndAssertMetrics(
         instrumentationName,
@@ -223,6 +225,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasLongSumSatisfying(
                             sum ->
@@ -231,8 +234,8 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(11)
-                                                .hasAttributesSatisfying(
-                                                    equalTo(AttributeKey.stringKey("q"), "r"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("q"), "r"))))));
   }
 
   @Test
@@ -242,8 +245,7 @@ class MeterTest {
             .upDownCounterBuilder("test")
             .setDescription("d")
             .setUnit("u")
-            .buildWithCallback(
-                result -> result.record(11, Attributes.of(AttributeKey.stringKey("q"), "r")));
+            .buildWithCallback(result -> result.record(11, Attributes.of(stringKey("q"), "r")));
 
     testing.waitAndAssertMetrics(
         instrumentationName,
@@ -257,6 +259,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasLongSumSatisfying(
                             sum ->
@@ -265,8 +268,8 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(11)
-                                                .hasAttributesSatisfying(
-                                                    equalTo(AttributeKey.stringKey("q"), "r"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("q"), "r"))))));
 
     close(observableCounter);
 
@@ -283,8 +286,8 @@ class MeterTest {
     DoubleUpDownCounter instrument =
         meter.upDownCounterBuilder("test").ofDoubles().setDescription("d").setUnit("u").build();
 
-    instrument.add(5.5, Attributes.of(AttributeKey.stringKey("q"), "r"));
-    instrument.add(6.6, Attributes.of(AttributeKey.stringKey("q"), "r"));
+    instrument.add(5.5, Attributes.of(stringKey("q"), "r"));
+    instrument.add(6.6, Attributes.of(stringKey("q"), "r"));
 
     testing.waitAndAssertMetrics(
         instrumentationName,
@@ -298,6 +301,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasDoubleSumSatisfying(
                             sum ->
@@ -306,8 +310,8 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(12.1)
-                                                .hasAttributesSatisfying(
-                                                    equalTo(AttributeKey.stringKey("q"), "r"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("q"), "r"))))));
   }
 
   @Test
@@ -318,8 +322,7 @@ class MeterTest {
             .ofDoubles()
             .setDescription("d")
             .setUnit("u")
-            .buildWithCallback(
-                result -> result.record(12.1, Attributes.of(AttributeKey.stringKey("q"), "r")));
+            .buildWithCallback(result -> result.record(12.1, Attributes.of(stringKey("q"), "r")));
 
     testing.waitAndAssertMetrics(
         instrumentationName,
@@ -333,6 +336,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasDoubleSumSatisfying(
                             sum ->
@@ -341,8 +345,8 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(12.1)
-                                                .hasAttributesSatisfying(
-                                                    equalTo(AttributeKey.stringKey("q"), "r"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("q"), "r"))))));
 
     close(observableCounter);
 
@@ -359,8 +363,8 @@ class MeterTest {
     LongHistogram instrument =
         meter.histogramBuilder("test").ofLongs().setDescription("d").setUnit("u").build();
 
-    instrument.record(5, Attributes.of(AttributeKey.stringKey("q"), "r"));
-    instrument.record(6, Attributes.of(AttributeKey.stringKey("q"), "r"));
+    instrument.record(5, Attributes.of(stringKey("q"), "r"));
+    instrument.record(6, Attributes.of(stringKey("q"), "r"));
 
     testing.waitAndAssertMetrics(
         instrumentationName,
@@ -374,6 +378,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasHistogramSatisfying(
                             histogram ->
@@ -381,8 +386,8 @@ class MeterTest {
                                     point ->
                                         point
                                             .hasSum(11.0)
-                                            .hasAttributesSatisfying(
-                                                equalTo(AttributeKey.stringKey("q"), "r"))))));
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(stringKey("q"), "r"))))));
   }
 
   @Test
@@ -390,8 +395,8 @@ class MeterTest {
     DoubleHistogram instrument =
         meter.histogramBuilder("test").setDescription("d").setUnit("u").build();
 
-    instrument.record(5.5, Attributes.of(AttributeKey.stringKey("q"), "r"));
-    instrument.record(6.6, Attributes.of(AttributeKey.stringKey("q"), "r"));
+    instrument.record(5.5, Attributes.of(stringKey("q"), "r"));
+    instrument.record(6.6, Attributes.of(stringKey("q"), "r"));
 
     testing.waitAndAssertMetrics(
         instrumentationName,
@@ -405,6 +410,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasHistogramSatisfying(
                             histogram ->
@@ -412,8 +418,8 @@ class MeterTest {
                                     point ->
                                         point
                                             .hasSum(12.1)
-                                            .hasAttributesSatisfying(
-                                                equalTo(AttributeKey.stringKey("q"), "r"))))));
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(stringKey("q"), "r"))))));
   }
 
   @Test
@@ -424,8 +430,7 @@ class MeterTest {
             .ofLongs()
             .setDescription("d")
             .setUnit("u")
-            .buildWithCallback(
-                result -> result.record(123, Attributes.of(AttributeKey.stringKey("q"), "r")));
+            .buildWithCallback(result -> result.record(123, Attributes.of(stringKey("q"), "r")));
 
     testing.waitAndAssertMetrics(
         instrumentationName,
@@ -439,6 +444,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasLongGaugeSatisfying(
                             gauge ->
@@ -446,8 +452,8 @@ class MeterTest {
                                     point ->
                                         point
                                             .hasValue(123)
-                                            .hasAttributesSatisfying(
-                                                equalTo(AttributeKey.stringKey("q"), "r"))))));
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(stringKey("q"), "r"))))));
 
     close(observableGauge);
 
@@ -466,8 +472,7 @@ class MeterTest {
             .gaugeBuilder("test")
             .setDescription("d")
             .setUnit("u")
-            .buildWithCallback(
-                result -> result.record(1.23, Attributes.of(AttributeKey.stringKey("q"), "r")));
+            .buildWithCallback(result -> result.record(1.23, Attributes.of(stringKey("q"), "r")));
 
     testing.waitAndAssertMetrics(
         instrumentationName,
@@ -481,6 +486,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasDoubleGaugeSatisfying(
                             gauge ->
@@ -488,8 +494,8 @@ class MeterTest {
                                     point ->
                                         point
                                             .hasValue(1.23)
-                                            .hasAttributesSatisfying(
-                                                equalTo(AttributeKey.stringKey("q"), "r"))))));
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(stringKey("q"), "r"))))));
 
     close(observableGauge);
 

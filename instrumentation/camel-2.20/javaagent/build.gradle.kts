@@ -35,6 +35,8 @@ dependencies {
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:aws-sdk:aws-sdk-1.11:javaagent"))
 
+  testInstrumentation(project(":instrumentation:cassandra:cassandra-3.0:javaagent"))
+
   testImplementation("org.apache.camel:camel-core:$camelversion")
   testImplementation("org.apache.camel:camel-spring-boot-starter:$camelversion")
   testImplementation("org.apache.camel:camel-jetty-starter:$camelversion")
@@ -43,6 +45,8 @@ dependencies {
   testImplementation("org.apache.camel:camel-undertow:$camelversion")
   testImplementation("org.apache.camel:camel-aws:$camelversion")
   testImplementation("org.apache.camel:camel-cassandraql:$camelversion")
+  testImplementation("org.apache.camel:camel-jms:$camelversion")
+  testImplementation("org.apache.activemq:activemq-broker:5.16.5")
 
   testImplementation("org.springframework.boot:spring-boot-starter-test:1.5.17.RELEASE")
   testImplementation("org.springframework.boot:spring-boot-starter:1.5.17.RELEASE")
@@ -50,9 +54,9 @@ dependencies {
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
   testImplementation("org.elasticmq:elasticmq-rest-sqs_2.13")
 
-  testImplementation("org.testcontainers:cassandra")
+  testImplementation("org.testcontainers:testcontainers-cassandra")
   testImplementation("org.testcontainers:testcontainers")
-  testImplementation("org.testcontainers:junit-jupiter")
+  testImplementation("org.testcontainers:testcontainers-junit-jupiter")
   testImplementation("com.datastax.oss:java-driver-core:4.16.0") {
     exclude(group = "io.dropwizard.metrics", module = "metrics-core")
   }
@@ -78,9 +82,9 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
   val testExperimental by registering(Test::class) {
@@ -101,6 +105,12 @@ tasks {
 
   check {
     dependsOn(testStableSemconv, testExperimental)
+  }
+
+  if (findProperty("denyUnsafe") == "true") {
+    withType<Test>().configureEach {
+      enabled = false
+    }
   }
 }
 

@@ -69,15 +69,6 @@ include(":instrumentation:yarpc-1.0:library")
 include(":instrumentation:yarpc-1.0:testing")
 ```
 
-### Instrumentation metadata.yaml (Experimental)
-
-Each module can contain a `metadata.yaml` file that describes the instrumentation. This information
-is then used when generating the [instrumentation-list.yaml](../instrumentation-list.yaml) file.
-The schema for `metadata.yaml` is still in development and may change in the future. See the
-[instrumentation-docs readme](../../instrumentation-docs/readme.md) for more information and the
-latest schema.
-
-
 ### Instrumentation Submodules
 
 When writing instrumentation that requires submodules for different versions, the name of each
@@ -235,7 +226,7 @@ a `testImplementation` dependency on the `testing` submodule. Then, create a tes
 the abstract test class from `testing`. You should implement the abstract `configure()` method to
 initialize the library using the exposed mechanism to register interceptors/listeners, perhaps a
 method like `registerInterceptor`. You can also wrap the object with the instrumentation decorator.
-Make sure that the test class is marked as a library instrumentation test. Both JUnit and Spock test
+Make sure that the test class is marked as a library instrumentation test. JUnit test
 utilities expose a way to specify whether you're running a library or javaagent test. If the tests
 pass, the library instrumentation is working.
 
@@ -291,7 +282,6 @@ You can use the `@RegisterExtension` annotation to make sure that the instrument
 picked up by JUnit. Then, return the same extension instance in the `testing()` method
 implementation so that it's used in all test scenarios implemented in the abstract class.
 
-
 ## Writing Java agent instrumentation
 
 Now that you have working and tested library instrumentation, implement the javaagent
@@ -343,6 +333,11 @@ instrumentation in your test code. If for some reason you need to write unit tes
 code, see [this section](#writing-java-agent-unit-tests).
 
 ## Additional considerations regarding instrumentations
+
+### Documentation
+
+All new instrumentation modules should include relevant documentation. See our docs on
+[Documenting Instrumentation](documenting-instrumentation.md) for more details.
 
 ### Instrumenting code that is not available as a Maven dependency
 

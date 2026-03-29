@@ -53,10 +53,20 @@ public class AzureSdkInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("com.azure.core.util.tracing.Tracer")
+    return hasClassesNamed(
+            // added in 1.14.0
+            "com.azure.core.util.tracing.Tracer")
         // this is needed to prevent this instrumentation from being applied to azure-core 1.19+
-        .and(not(hasClassesNamed("com.azure.core.util.tracing.StartSpanOptions")))
-        .and(not(hasClassesNamed("com.azure.core.tracing.opentelemetry.OpenTelemetryTracer")));
+        .and(
+            not(
+                hasClassesNamed(
+                    // added in 1.19.0
+                    "com.azure.core.util.tracing.StartSpanOptions")))
+        .and(
+            not(
+                hasClassesNamed(
+                    // added in 1.19.0
+                    "com.azure.core.tracing.opentelemetry.OpenTelemetryTracer")));
   }
 
   @Override
@@ -76,5 +86,10 @@ public class AzureSdkInstrumentationModule extends InstrumentationModule
     public void transform(TypeTransformer transformer) {
       // Nothing to instrument, no methods to match
     }
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

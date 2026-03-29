@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.net.URL;
@@ -29,38 +29,38 @@ class ExtensionClassLoaderTest {
     Files.createFile(outputDir.resolve("test.txt"));
     {
       List<URL> result = ExtensionClassLoader.parseLocation(jarPath1, AGENT_FILE);
-      assertEquals(1, result.size());
+      assertThat(result.size()).isEqualTo(1);
     }
     {
       // empty paths are ignored
       List<URL> result = ExtensionClassLoader.parseLocation("," + jarPath1 + ",,,", AGENT_FILE);
-      assertEquals(1, result.size());
+      assertThat(result.size()).isEqualTo(1);
     }
     {
       List<URL> result = ExtensionClassLoader.parseLocation(jarPath1 + "," + jarPath2, AGENT_FILE);
-      assertEquals(2, result.size());
+      assertThat(result.size()).isEqualTo(2);
     }
     {
       List<URL> result = ExtensionClassLoader.parseLocation(outputDir.toString(), AGENT_FILE);
-      assertEquals(2, result.size());
+      assertThat(result.size()).isEqualTo(2);
     }
     {
       List<URL> result =
           ExtensionClassLoader.parseLocation(
               outputDir + "," + jarPath1 + "," + jarPath2, AGENT_FILE);
-      assertEquals(4, result.size());
+      assertThat(result.size()).isEqualTo(4);
     }
     {
       List<URL> result = ExtensionClassLoader.parseLocation("/anydir", AGENT_FILE);
-      assertEquals(0, result.size());
+      assertThat(result.size()).isEqualTo(0);
     }
     {
       List<URL> result = ExtensionClassLoader.parseLocation("/anyfile.jar", AGENT_FILE);
-      assertEquals(0, result.size());
+      assertThat(result.size()).isEqualTo(0);
     }
     {
       List<URL> result = ExtensionClassLoader.parseLocation(jarPath1 + ",/anyfile.jar", AGENT_FILE);
-      assertEquals(1, result.size());
+      assertThat(result.size()).isEqualTo(1);
     }
   }
 

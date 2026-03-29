@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientBaseTest;
@@ -15,11 +17,10 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -47,9 +48,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
           ProducerRecord<Integer, String> producerRecord =
               new ProducerRecord<>(SHARED_TOPIC, 10, greeting);
           if (testHeaders) {
-            producerRecord
-                .headers()
-                .add("Test-Message-Header", "test".getBytes(StandardCharsets.UTF_8));
+            producerRecord.headers().add("Test-Message-Header", "test".getBytes(UTF_8));
           }
           producer
               .send(
@@ -61,7 +60,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                       testing.runWithSpan("producer exception: " + ex, () -> {});
                     }
                   })
-              .get(5, TimeUnit.SECONDS);
+              .get(5, SECONDS);
         });
 
     awaitUntilConsumerIsReady();
@@ -115,7 +114,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
   @Test
   void testPassThroughTombstone()
       throws ExecutionException, InterruptedException, TimeoutException {
-    producer.send(new ProducerRecord<>(SHARED_TOPIC, null)).get(5, TimeUnit.SECONDS);
+    producer.send(new ProducerRecord<>(SHARED_TOPIC, null)).get(5, SECONDS);
     awaitUntilConsumerIsReady();
     ConsumerRecords<?, ?> records = poll(Duration.ofSeconds(5));
     assertThat(records.count()).isEqualTo(1);
@@ -154,14 +153,13 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                             processAttributes(null, null, false, false))));
   }
 
+  @ParameterizedTest
   @DisplayName("test records(TopicPartition) kafka consume")
-  @Test
-  void testRecordsWithTopicPartitionKafkaConsume()
+  @ValueSource(booleans = {true, false})
+  void testRecordsWithTopicPartitionKafkaConsume(boolean testListIterator)
       throws ExecutionException, InterruptedException, TimeoutException {
     String greeting = "Hello from MockConsumer!";
-    producer
-        .send(new ProducerRecord<>(SHARED_TOPIC, partition, null, greeting))
-        .get(5, TimeUnit.SECONDS);
+    producer.send(new ProducerRecord<>(SHARED_TOPIC, partition, null, greeting)).get(5, SECONDS);
 
     testing.waitForTraces(1);
 
@@ -169,12 +167,22 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     ConsumerRecords<?, ?> consumerRecords = poll(Duration.ofSeconds(5));
     List<? extends ConsumerRecord<?, ?>> recordsInPartition =
         consumerRecords.records(KafkaClientBaseTest.topicPartition);
-    assertThat(recordsInPartition.size()).isEqualTo(1);
+    assertThat(recordsInPartition).hasSize(1);
 
     // iterate over records to generate spans
-    for (ConsumerRecord<?, ?> record : recordsInPartition) {
-      assertThat(record.value()).isEqualTo(greeting);
-      assertThat(record.key()).isNull();
+    if (testListIterator) {
+      for (ListIterator<? extends ConsumerRecord<?, ?>> iterator =
+              recordsInPartition.listIterator();
+          iterator.hasNext(); ) {
+        ConsumerRecord<?, ?> record = iterator.next();
+        assertThat(record.value()).isEqualTo(greeting);
+        assertThat(record.key()).isNull();
+      }
+    } else {
+      for (ConsumerRecord<?, ?> record : recordsInPartition) {
+        assertThat(record.value()).isEqualTo(greeting);
+        assertThat(record.key()).isNull();
+      }
     }
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
@@ -225,7 +233,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                       testing.runWithSpan("producer exception: " + ex, () -> {});
                     }
                   })
-              .get(5, TimeUnit.SECONDS);
+              .get(5, SECONDS);
         });
 
     awaitUntilConsumerIsReady();

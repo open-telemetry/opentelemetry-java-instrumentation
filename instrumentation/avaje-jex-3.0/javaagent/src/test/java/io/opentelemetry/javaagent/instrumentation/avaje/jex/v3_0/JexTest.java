@@ -21,7 +21,6 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
 import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import io.avaje.jex.Jex.Server;
 import io.opentelemetry.api.trace.SpanKind;

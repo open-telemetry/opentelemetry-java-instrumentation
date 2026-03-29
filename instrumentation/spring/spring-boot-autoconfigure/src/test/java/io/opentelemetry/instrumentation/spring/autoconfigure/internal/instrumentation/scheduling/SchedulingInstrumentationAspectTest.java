@@ -15,11 +15,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -38,9 +35,8 @@ class SchedulingInstrumentationAspectTest {
   private String unproxiedTesterSimpleClassName;
   private String unproxiedTesterClassName;
 
-  SpringSchedulingInstrumentationAspect newAspect(
-      OpenTelemetry openTelemetry, ConfigProperties configProperties) {
-    return new SpringSchedulingInstrumentationAspect(openTelemetry, configProperties);
+  SpringSchedulingInstrumentationAspect newAspect(OpenTelemetry openTelemetry) {
+    return new SpringSchedulingInstrumentationAspect(openTelemetry);
   }
 
   @BeforeEach
@@ -53,10 +49,7 @@ class SchedulingInstrumentationAspectTest {
     AspectJProxyFactory factory = new AspectJProxyFactory();
     factory.setTarget(unproxiedTester);
 
-    SpringSchedulingInstrumentationAspect aspect =
-        newAspect(
-            testing.getOpenTelemetry(),
-            DefaultConfigProperties.createFromMap(Collections.emptyMap()));
+    SpringSchedulingInstrumentationAspect aspect = newAspect(testing.getOpenTelemetry());
     factory.addAspect(aspect);
 
     schedulingTester = factory.getProxy();

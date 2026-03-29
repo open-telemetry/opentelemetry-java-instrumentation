@@ -15,13 +15,13 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -79,8 +79,7 @@ class SpringIntegrationAndRabbitTest {
                             equalTo(MESSAGING_OPERATION, "publish"),
                             satisfies(MESSAGING_MESSAGE_BODY_SIZE, l -> l.isInstanceOf(Long.class)),
                             satisfies(
-                                MessagingIncubatingAttributes
-                                    .MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
+                                MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
                                 s -> s.isInstanceOf(String.class))),
                 // spring-cloud-stream-binder-rabbit listener puts all messages into a BlockingQueue
                 // immediately after receiving
@@ -104,8 +103,7 @@ class SpringIntegrationAndRabbitTest {
                             equalTo(MESSAGING_OPERATION, "process"),
                             satisfies(MESSAGING_MESSAGE_BODY_SIZE, l -> l.isInstanceOf(Long.class)),
                             satisfies(
-                                MessagingIncubatingAttributes
-                                    .MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
+                                MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
                                 s -> s.isInstanceOf(String.class))),
                 // spring-integration will detect that spring-rabbit has already created a consumer
                 // span and back off

@@ -21,4 +21,9 @@ class ResteasyJettyHttpServerTest extends JaxRsJettyHttpServerTest {
 
     options.setResponseCodeOnNonStandardHttpMethod(500);
   }
+
+  @Override
+  protected boolean testExperimental() {
+    return Boolean.getBoolean("otel.instrumentation.jaxrs.experimental-span-attributes");
+  }
 }

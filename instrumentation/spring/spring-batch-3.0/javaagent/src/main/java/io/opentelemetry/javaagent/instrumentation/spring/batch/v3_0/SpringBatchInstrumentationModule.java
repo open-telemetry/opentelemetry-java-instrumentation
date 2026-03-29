@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -20,8 +21,6 @@ import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.job.JobBuild
 import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.job.JobFactoryBeanInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.job.JobParserJobFactoryBeanInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.step.StepBuilderHelperInstrumentation;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import java.util.Arrays;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -40,7 +39,7 @@ public class SpringBatchInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Arrays.asList(
+    return asList(
         // job instrumentations
         new JobBuilderHelperInstrumentation(),
         new JobFactoryBeanInstrumentation(),
@@ -57,7 +56,7 @@ public class SpringBatchInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public boolean defaultEnabled(ConfigProperties config) {
+  public boolean defaultEnabled() {
     // TODO: replace this with an experimental flag
     return false;
   }

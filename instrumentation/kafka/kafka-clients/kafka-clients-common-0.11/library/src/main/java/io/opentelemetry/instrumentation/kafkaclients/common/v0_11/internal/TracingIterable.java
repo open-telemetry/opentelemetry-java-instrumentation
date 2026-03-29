@@ -16,9 +16,9 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
  */
 public class TracingIterable<K, V> implements Iterable<ConsumerRecord<K, V>> {
   private final Iterable<ConsumerRecord<K, V>> delegate;
-  private final Instrumenter<KafkaProcessRequest, Void> instrumenter;
-  private final BooleanSupplier wrappingEnabled;
-  private final KafkaConsumerContext consumerContext;
+  protected final Instrumenter<KafkaProcessRequest, Void> instrumenter;
+  protected final BooleanSupplier wrappingEnabled;
+  protected final KafkaConsumerContext consumerContext;
   private boolean firstIterator = true;
 
   protected TracingIterable(

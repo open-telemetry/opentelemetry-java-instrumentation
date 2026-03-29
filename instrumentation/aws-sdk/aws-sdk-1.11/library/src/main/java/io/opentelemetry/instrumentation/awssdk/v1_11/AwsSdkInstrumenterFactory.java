@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
@@ -27,7 +28,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
@@ -35,21 +35,10 @@ import javax.annotation.Nullable;
 final class AwsSdkInstrumenterFactory {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-sdk-1.11";
 
-  private static final AttributesExtractor<Request<?>, Response<?>> httpAttributesExtractor =
-      HttpClientAttributesExtractor.create(new AwsSdkHttpAttributesGetter());
-  private static final AttributesExtractor<Request<?>, Response<?>> rpcAttributesExtractor =
-      RpcClientAttributesExtractor.create(AwsSdkRpcAttributesGetter.INSTANCE);
-  private static final AwsSdkExperimentalAttributesExtractor experimentalAttributesExtractor =
-      new AwsSdkExperimentalAttributesExtractor();
-  private static final AwsSdkAttributesExtractor sdkAttributesExtractor =
-      new AwsSdkAttributesExtractor();
-  private static final SnsAttributesExtractor snsAttributesExtractor = new SnsAttributesExtractor();
-
   private static final List<AttributesExtractor<Request<?>, Response<?>>>
       defaultAttributesExtractors = createAttributesExtractors(false);
   private static final List<AttributesExtractor<Request<?>, Response<?>>>
       extendedAttributesExtractors = createAttributesExtractors(true);
-  private static final AwsSdkSpanNameExtractor spanName = new AwsSdkSpanNameExtractor();
 
   private final OpenTelemetry openTelemetry;
   private final List<String> capturedHeaders;
@@ -71,13 +60,13 @@ final class AwsSdkInstrumenterFactory {
       boolean includeExperimental) {
     List<AttributesExtractor<Request<?>, Response<?>>> extractors =
         new ArrayList<>(
-            Arrays.asList(
-                httpAttributesExtractor,
-                rpcAttributesExtractor,
-                snsAttributesExtractor,
-                sdkAttributesExtractor));
+            asList(
+                HttpClientAttributesExtractor.create(new AwsSdkHttpAttributesGetter()),
+                RpcClientAttributesExtractor.create(new AwsSdkRpcAttributesGetter()),
+                new SnsAttributesExtractor(),
+                new AwsSdkAttributesExtractor()));
     if (includeExperimental) {
-      extractors.add(experimentalAttributesExtractor);
+      extractors.add(new AwsSdkExperimentalAttributesExtractor());
     }
     return extractors;
   }
@@ -85,7 +74,7 @@ final class AwsSdkInstrumenterFactory {
   Instrumenter<Request<?>, Response<?>> requestInstrumenter() {
     return createInstrumenter(
         openTelemetry,
-        spanName,
+        new AwsSdkSpanNameExtractor(),
         SpanKindExtractor.alwaysClient(),
         attributesExtractors(),
         emptyList(),
@@ -107,7 +96,7 @@ final class AwsSdkInstrumenterFactory {
 
   Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter() {
     MessageOperation operation = MessageOperation.RECEIVE;
-    SqsReceiveRequestAttributesGetter getter = SqsReceiveRequestAttributesGetter.INSTANCE;
+    SqsReceiveRequestAttributesGetter getter = new SqsReceiveRequestAttributesGetter();
     AttributesExtractor<SqsReceiveRequest, Response<?>> messagingAttributeExtractor =
         messagingAttributesExtractor(getter, operation);
 
@@ -122,7 +111,7 @@ final class AwsSdkInstrumenterFactory {
 
   Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter() {
     MessageOperation operation = MessageOperation.PROCESS;
-    SqsProcessRequestAttributesGetter getter = SqsProcessRequestAttributesGetter.INSTANCE;
+    SqsProcessRequestAttributesGetter getter = new SqsProcessRequestAttributesGetter();
     AttributesExtractor<SqsProcessRequest, Response<?>> messagingAttributeExtractor =
         messagingAttributesExtractor(getter, operation);
 
@@ -175,7 +164,7 @@ final class AwsSdkInstrumenterFactory {
 
   Instrumenter<Request<?>, Response<?>> producerInstrumenter() {
     MessageOperation operation = MessageOperation.PUBLISH;
-    SqsAttributesGetter getter = SqsAttributesGetter.INSTANCE;
+    SqsAttributesGetter getter = new SqsAttributesGetter();
     AttributesExtractor<Request<?>, Response<?>> messagingAttributeExtractor =
         messagingAttributesExtractor(getter, operation);
 
@@ -191,7 +180,7 @@ final class AwsSdkInstrumenterFactory {
   Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter() {
     return createInstrumenter(
         openTelemetry,
-        spanName,
+        new AwsSdkSpanNameExtractor(),
         SpanKindExtractor.alwaysClient(),
         attributesExtractors(),
         builder ->

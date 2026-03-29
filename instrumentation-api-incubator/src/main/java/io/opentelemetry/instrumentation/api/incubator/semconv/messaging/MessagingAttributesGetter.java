@@ -36,18 +36,6 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
   String getConversationId(REQUEST request);
 
   @Nullable
-  @Deprecated
-  default Long getMessagePayloadSize(REQUEST request) {
-    return null;
-  }
-
-  @Nullable
-  @Deprecated
-  default Long getMessagePayloadCompressedSize(REQUEST request) {
-    return null;
-  }
-
-  @Nullable
   Long getMessageBodySize(REQUEST request);
 
   @Nullable

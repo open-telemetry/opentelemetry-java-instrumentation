@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0;
 
 import io.opentelemetry.javaagent.instrumentation.tomcat.common.TomcatServletEntityProvider;
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.coyote.Request;
@@ -13,11 +14,8 @@ import org.apache.coyote.Response;
 
 public class Tomcat7ServletEntityProvider
     implements TomcatServletEntityProvider<HttpServletRequest, HttpServletResponse> {
-  public static final Tomcat7ServletEntityProvider INSTANCE = new Tomcat7ServletEntityProvider();
-
-  private Tomcat7ServletEntityProvider() {}
-
   @Override
+  @Nullable
   public HttpServletRequest getServletRequest(Request request) {
     Object note = request.getNote(1);
 
@@ -29,6 +27,7 @@ public class Tomcat7ServletEntityProvider
   }
 
   @Override
+  @Nullable
   public HttpServletResponse getServletResponse(Response response) {
     Object note = response.getNote(1);
 

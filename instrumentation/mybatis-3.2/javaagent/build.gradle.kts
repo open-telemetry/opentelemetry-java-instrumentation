@@ -19,6 +19,7 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.mybatis.enabled=true")
+  systemProperty("collectMetadata", findProperty("collectMetadata"))
 
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")

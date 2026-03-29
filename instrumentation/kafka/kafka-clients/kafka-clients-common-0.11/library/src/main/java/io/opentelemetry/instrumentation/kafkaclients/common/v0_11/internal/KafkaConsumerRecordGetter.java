@@ -5,22 +5,23 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
-import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
-import java.nio.charset.StandardCharsets;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.toList;
+
+import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Iterator;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import org.apache.kafka.common.header.Header;
 
-enum KafkaConsumerRecordGetter implements ExtendedTextMapGetter<KafkaProcessRequest> {
+enum KafkaConsumerRecordGetter implements TextMapGetter<KafkaProcessRequest> {
   INSTANCE;
 
   @Override
   public Iterable<String> keys(KafkaProcessRequest carrier) {
     return StreamSupport.stream(carrier.getRecord().headers().spliterator(), false)
         .map(Header::key)
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   @Nullable
@@ -34,14 +35,14 @@ enum KafkaConsumerRecordGetter implements ExtendedTextMapGetter<KafkaProcessRequ
     if (value == null) {
       return null;
     }
-    return new String(value, StandardCharsets.UTF_8);
+    return new String(value, UTF_8);
   }
 
   @Override
   public Iterator<String> getAll(@Nullable KafkaProcessRequest carrier, String key) {
     return StreamSupport.stream(carrier.getRecord().headers().headers(key).spliterator(), false)
         .filter(header -> header.value() != null)
-        .map(header -> new String(header.value(), StandardCharsets.UTF_8))
+        .map(header -> new String(header.value(), UTF_8))
         .iterator();
   }
 }

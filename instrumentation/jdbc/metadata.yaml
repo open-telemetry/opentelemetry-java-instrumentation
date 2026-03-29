@@ -1,10 +1,14 @@
+display_name: JDBC
 description: >
-  The JDBC instrumentation provides database client spans and metrics. Each call produces a span
-  named after the SQL verb, enriched with standard DB client attributes (system, database,
-  operation, sanitized statement, peer address) and error details if an exception occurs.
-  
-  There is also a "jdbc-datasource" instrumentation that creates spans for datasource connections,
-  but is disabled by default due to the volume of telemetry produced.
+  This instrumentation enables database client spans and database client metrics for JDBC operations.
+  There is also a datasource instrumentation that creates spans for datasource connections (disabled
+  by default). Note: The instrumentation unwraps pooled connections to cache metadata against the
+  underlying physical connection; without proper unwrapping, repeated metadata extraction can cause
+  performance degradation.
+semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+  - DATABASE_CLIENT_METRICS
+library_link: https://docs.oracle.com/javase/8/docs/api/java/sql/package-summary.html
 configurations:
   - name: otel.instrumentation.jdbc.statement-sanitizer.enabled
     description: Enables statement sanitization for database queries. Takes precedent to 
@@ -17,6 +21,14 @@ configurations:
     default: true
   - name: otel.instrumentation.jdbc.experimental.transaction.enabled
     description: Enables experimental instrumentation to create spans for COMMIT and ROLLBACK operations.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.jdbc.experimental.sqlcommenter.enabled
+    description: >
+      Enables augmenting queries with a comment containing the tracing information. See
+      [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING: augmenting
+      queries with tracing context will make query texts unique, which may have adverse impact on
+      database performance. Consult with database experts before enabling.
     type: boolean
     default: false
   - name: otel.instrumentation.common.peer-service-mapping

@@ -25,6 +25,7 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
 
   private final Instrumenter<KafkaProcessRequest, Void> processInstrumenter;
   @Nullable private final RecordInterceptor<K, V> decorated;
+  private static final ThreadLocal<ThreadState> threadLocalState = new ThreadLocal<>();
 
   InstrumentedRecordInterceptor(
       Instrumenter<KafkaProcessRequest, Void> processInstrumenter,
@@ -48,7 +49,7 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
     return decorated == null ? record : decorated.intercept(record, consumer);
   }
 
-  private void start(ConsumerRecord<K, V> record, Consumer<K, V> consumer) {
+  private void start(ConsumerRecord<K, V> record, @Nullable Consumer<K, V> consumer) {
     Context parentContext = getParentContext(record);
 
     KafkaProcessRequest request = KafkaProcessRequest.create(record, consumer);
@@ -74,7 +75,10 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
         decorated.success(record, consumer);
       }
     } finally {
-      end(record, null);
+      // if thread state is present span is ended in afterRecord
+      if (threadLocalState.get() == null) {
+        end(record, null);
+      }
     }
   }
 
@@ -85,7 +89,13 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
         decorated.failure(record, exception, consumer);
       }
     } finally {
-      end(record, exception);
+      // if thread state is present span is ended in afterRecord
+      ThreadState threadState = threadLocalState.get();
+      if (threadState == null) {
+        end(record, exception);
+      } else {
+        threadState.error = exception;
+      }
     }
   }
 
@@ -102,6 +112,7 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
   @NoMuzzle // method was added in 2.8.0
   @Override
   public void afterRecord(ConsumerRecord<K, V> record, Consumer<K, V> consumer) {
+    end(record, threadLocalState.get().error);
     if (decorated != null) {
       decorated.afterRecord(record, consumer);
     }
@@ -110,6 +121,7 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
   @NoMuzzle // method was added in 2.8.0
   @Override
   public void setupThreadState(Consumer<?, ?> consumer) {
+    threadLocalState.set(new ThreadState());
     if (decorated != null) {
       decorated.setupThreadState(consumer);
     }
@@ -118,8 +130,14 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
   @NoMuzzle // method was added in 2.8.0
   @Override
   public void clearThreadState(Consumer<?, ?> consumer) {
+    threadLocalState.remove();
     if (decorated != null) {
       decorated.clearThreadState(consumer);
     }
+  }
+
+  private static class ThreadState {
+    // used to record the error in failure() so it could be used in afterRecord()
+    @Nullable Throwable error;
   }
 }

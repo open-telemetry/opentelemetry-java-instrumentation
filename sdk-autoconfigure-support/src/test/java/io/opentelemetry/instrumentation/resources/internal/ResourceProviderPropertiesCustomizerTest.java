@@ -5,16 +5,17 @@
 
 package io.opentelemetry.instrumentation.resources.internal;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.SdkAutoconfigureAccess;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -24,12 +25,12 @@ import org.assertj.core.util.Strings;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
-public class ResourceProviderPropertiesCustomizerTest {
+class ResourceProviderPropertiesCustomizerTest {
 
   public static final class Provider implements ResourceProvider {
     @Override
     public Resource createResource(ConfigProperties config) {
-      return Resource.create(Attributes.of(AttributeKey.stringKey("key"), "value"));
+      return Resource.create(Attributes.of(stringKey("key"), "value"));
     }
   }
 
@@ -60,46 +61,26 @@ public class ResourceProviderPropertiesCustomizerTest {
     String className =
         "io.opentelemetry.instrumentation.resources.internal.ResourceProviderPropertiesCustomizerTest$Provider";
     return Stream.of(
+            new EnabledTestCase("explicitEnabled", true, emptySet(), emptySet(), true),
+            new EnabledTestCase("explicitEnabledFalse", false, emptySet(), emptySet(), false),
+            new EnabledTestCase("enabledProvidersEmpty", false, emptySet(), emptySet(), null),
             new EnabledTestCase(
-                "explicitEnabled", true, Collections.emptySet(), Collections.emptySet(), true),
-            new EnabledTestCase(
-                "explicitEnabledFalse",
-                false,
-                Collections.emptySet(),
-                Collections.emptySet(),
-                false),
-            new EnabledTestCase(
-                "enabledProvidersEmpty",
-                false,
-                Collections.emptySet(),
-                Collections.emptySet(),
-                null),
-            new EnabledTestCase(
-                "enabledProvidersContains",
-                true,
-                Collections.singleton(className),
-                Collections.emptySet(),
-                null),
+                "enabledProvidersContains", true, singleton(className), emptySet(), null),
             new EnabledTestCase(
                 "enabledProvidersNotContains",
                 false,
-                Collections.singleton("otherClassName"),
-                Collections.emptySet(),
+                singleton("otherClassName"),
+                emptySet(),
                 null),
             new EnabledTestCase(
-                "disabledProvidersContains",
-                false,
-                Collections.emptySet(),
-                Collections.singleton(className),
-                null),
+                "disabledProvidersContains", false, emptySet(), singleton(className), null),
             new EnabledTestCase(
                 "disabledProvidersNotContains",
                 false,
-                Collections.emptySet(),
-                Collections.singleton("otherClassName"),
+                emptySet(),
+                singleton("otherClassName"),
                 null),
-            new EnabledTestCase(
-                "defaultEnabledFalse", false, Collections.emptySet(), Collections.emptySet(), null))
+            new EnabledTestCase("defaultEnabledFalse", false, emptySet(), emptySet(), null))
         .map(
             tc ->
                 DynamicTest.dynamicTest(
@@ -130,10 +111,9 @@ public class ResourceProviderPropertiesCustomizerTest {
                                   .build());
 
                       if (tc.result) {
-                        assertThat(attributes.get(AttributeKey.stringKey("key")))
-                            .isEqualTo("value");
+                        assertThat(attributes.get(stringKey("key"))).isEqualTo("value");
                       } else {
-                        assertThat(attributes.get(AttributeKey.stringKey("key"))).isNull();
+                        assertThat(attributes.get(stringKey("key"))).isNull();
                       }
                     }));
   }

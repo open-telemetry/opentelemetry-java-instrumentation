@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
+import static java.util.Collections.emptyList;
 import static java.util.logging.Level.FINE;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -27,6 +27,7 @@ public final class ApacheHttpClientRequest {
   @Nullable private final URI uri;
 
   private final HttpRequest delegate;
+  @Nullable private final HttpHost target;
 
   public ApacheHttpClientRequest(HttpHost httpHost, HttpRequest httpRequest) {
     URI calculatedUri = getUri(httpRequest);
@@ -36,11 +37,13 @@ public final class ApacheHttpClientRequest {
       uri = calculatedUri;
     }
     delegate = httpRequest;
+    target = httpHost;
   }
 
   public ApacheHttpClientRequest(HttpUriRequest httpRequest) {
     uri = httpRequest.getURI();
     delegate = httpRequest;
+    target = null;
   }
 
   public List<String> getHeader(String name) {
@@ -50,7 +53,7 @@ public final class ApacheHttpClientRequest {
   // minimize memory overhead by not using streams
   static List<String> headersToList(Header[] headers) {
     if (headers == null || headers.length == 0) {
-      return Collections.emptyList();
+      return emptyList();
     }
     List<String> headersList = new ArrayList<>(headers.length);
     for (int i = 0; i < headers.length; ++i) {
@@ -67,6 +70,7 @@ public final class ApacheHttpClientRequest {
     return delegate.getRequestLine().getMethod();
   }
 
+  @Nullable
   public String getUrl() {
     return uri != null ? uri.toString() : null;
   }
@@ -85,12 +89,35 @@ public final class ApacheHttpClientRequest {
 
   @Nullable
   public String getServerAddress() {
-    return uri == null ? null : uri.getHost();
+    if (uri != null) {
+      return uri.getHost();
+    }
+    if (target != null) {
+      return target.getHostName();
+    }
+    return null;
   }
 
   @Nullable
   public Integer getServerPort() {
-    return uri == null ? null : uri.getPort();
+    if (uri != null) {
+      return uri.getPort();
+    }
+    if (target != null) {
+      return target.getPort();
+    }
+    return null;
+  }
+
+  @Nullable
+  public String getScheme() {
+    if (uri != null) {
+      return uri.getScheme();
+    }
+    if (target != null) {
+      return target.getSchemeName();
+    }
+    return null;
   }
 
   @Nullable

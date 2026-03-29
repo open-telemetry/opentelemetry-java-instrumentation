@@ -5,20 +5,28 @@
 
 package io.opentelemetry.javaagent.instrumentation.powerjob.v4_0;
 
+import static java.util.Collections.singletonList;
+
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.Collections;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class PowerJobInstrumentationModule extends InstrumentationModule {
+public class PowerJobInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public PowerJobInstrumentationModule() {
     super("powerjob", "powerjob-4.0");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Collections.singletonList(new BasicProcessorInstrumentation());
+    return singletonList(new BasicProcessorInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

@@ -25,7 +25,16 @@ public class SpanParser {
 
   // We want to ignore test related attributes
   private static final List<String> EXCLUDED_ATTRIBUTES =
-      List.of("x-test-", "test-baggage-", "test_message");
+      List.of(
+          "asdf",
+          "x-test-",
+          "test-parameter",
+          "test-baggage-",
+          "test_message",
+          "Test_Message",
+          "Test-Message",
+          "some-client-key",
+          "some-server-key");
 
   /**
    * Pull spans from the `.telemetry` directory, filter them by scope, and set them in the module.

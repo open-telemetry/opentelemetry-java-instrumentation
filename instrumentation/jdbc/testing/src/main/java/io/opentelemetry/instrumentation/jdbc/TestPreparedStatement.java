@@ -31,7 +31,7 @@ import java.util.Map;
 
 class TestPreparedStatement extends TestStatement implements PreparedStatement {
   private boolean hasResultSet = true;
-  Map<String, String> parameters;
+  private final Map<String, String> parameters;
 
   TestPreparedStatement(Connection connection) {
     super(connection);
@@ -226,4 +226,9 @@ class TestPreparedStatement extends TestStatement implements PreparedStatement {
   @Override
   @Deprecated
   public void setUnicodeStream(int parameterIndex, InputStream x, int length) throws SQLException {}
+
+  @Override
+  public long executeLargeUpdate() throws SQLException {
+    return 0;
+  }
 }

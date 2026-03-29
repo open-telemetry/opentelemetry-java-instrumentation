@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.ratpack.v1_7;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -32,20 +32,24 @@ public class RequestActionSupportInstrumentation implements TypeInstrumentation 
   }
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("ratpack.http.client.internal.RequestActionSupport");
+  }
+
+  @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPrivate())
+        isPrivate()
             .and(named("send"))
             .and(takesArgument(0, named("ratpack.exec.Downstream")))
             .and(takesArgument(1, named("io.netty.channel.Channel"))),
-        RequestActionSupportInstrumentation.class.getName() + "$SendAdvice");
+        getClass().getName() + "$SendAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(named("connect")).and(takesArgument(0, named("ratpack.exec.Downstream"))),
-        RequestActionSupportInstrumentation.class.getName() + "$ConnectDownstreamAdvice");
+        named("connect").and(takesArgument(0, named("ratpack.exec.Downstream"))),
+        getClass().getName() + "$ConnectDownstreamAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(named("connect")).and(takesArgument(0, named("ratpack.exec.Downstream"))),
-        RequestActionSupportInstrumentation.class.getName() + "$ContextAdvice");
+        named("connect").and(takesArgument(0, named("ratpack.exec.Downstream"))),
+        getClass().getName() + "$ContextAdvice");
   }
 
   @SuppressWarnings("unused")

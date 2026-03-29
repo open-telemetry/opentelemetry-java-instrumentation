@@ -11,11 +11,13 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class ArmeriaInstrumentationModule extends InstrumentationModule {
+public class ArmeriaInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public ArmeriaInstrumentationModule() {
     super("armeria", "armeria-1.3");
   }
@@ -32,5 +34,10 @@ public class ArmeriaInstrumentationModule extends InstrumentationModule {
         new ArmeriaWebClientBuilderInstrumentation(),
         new ArmeriaServerBuilderInstrumentation(),
         new AbstractStreamMessageSubscriptionInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

@@ -7,6 +7,7 @@ muzzle {
     group.set("com.netflix.hystrix")
     module.set("hystrix-core")
     versions.set("[1.4.0,)")
+    assertInverse.set(true)
   }
 }
 
@@ -20,13 +21,32 @@ dependencies {
   library("io.reactivex:rxjava:1.0.8")
 }
 
-tasks.withType<Test>().configureEach {
-  // TODO run tests both with and without experimental span attributes
-  jvmArgs("-Dotel.instrumentation.hystrix.experimental-span-attributes=true")
-  // Disable so failure testing below doesn't inadvertently change the behavior.
-  jvmArgs("-Dhystrix.command.default.circuitBreaker.enabled=false")
-  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
+tasks {
+  withType<Test>().configureEach {
+    // Disable so failure testing below doesn't inadvertently change the behavior.
+    jvmArgs("-Dhystrix.command.default.circuitBreaker.enabled=false")
 
-  // Uncomment for debugging:
-  // jvmArgs("-Dhystrix.command.default.execution.timeout.enabled=false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
+
+    // Uncomment for debugging:
+    // jvmArgs("-Dhystrix.command.default.execution.timeout.enabled=false")
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.hystrix.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.hystrix.experimental-span-attributes=true")
+  }
+
+  check {
+    dependsOn(testExperimental)
+  }
+
+  if (findProperty("denyUnsafe") == "true") {
+    withType<Test>().configureEach {
+      enabled = false
+    }
+  }
 }

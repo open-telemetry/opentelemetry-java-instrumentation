@@ -52,7 +52,7 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
       URL url = LogReplayOpenTelemetryAppenderTest.class.getResource("/logback-test.xml");
       ContextInitializer.class.getMethod("configureByResource", URL.class).invoke(ci, url);
       // by default LoggerContext contains HOSTNAME property we clear it to start with empty context
-      resetLoggerContext();
+      Helper.resetLoggerContext();
     }
   }
 

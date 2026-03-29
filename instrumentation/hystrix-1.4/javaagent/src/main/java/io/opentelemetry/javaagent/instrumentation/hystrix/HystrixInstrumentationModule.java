@@ -35,4 +35,9 @@ public class HystrixInstrumentationModule extends InstrumentationModule
   public List<String> injectedClassNames() {
     return singletonList("rx.OpenTelemetryTracingUtil");
   }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
+  }
 }

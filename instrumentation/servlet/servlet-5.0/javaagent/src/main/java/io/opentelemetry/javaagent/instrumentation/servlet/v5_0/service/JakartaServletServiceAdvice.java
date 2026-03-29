@@ -10,12 +10,12 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Si
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
-import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
-import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Accessor;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5HttpServerResponseMutator;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet.Servlet5SnippetInjectingResponseWrapper;
 import jakarta.servlet.Servlet;
@@ -35,7 +35,7 @@ public class JakartaServletServiceAdvice {
   public static class AdviceScope {
     private final CallDepth callDepth;
     private final ServletRequestContext<HttpServletRequest> requestContext;
-    private final Context context;
+    @Nullable private final Context context;
     private final Scope scope;
 
     public AdviceScope(
@@ -50,7 +50,7 @@ public class JakartaServletServiceAdvice {
       Context attachedContext = helper().getServerContext(request);
       Context contextToUpdate;
 
-      requestContext = new ServletRequestContext<>(request, servletOrFilter);
+      requestContext = new ServletRequestContext<>(request);
       if (attachedContext == null && helper().shouldStart(currentContext, requestContext)) {
         context = helper().start(currentContext, requestContext);
         helper().setAsyncListenerResponse(context, (HttpServletResponse) response);
@@ -81,7 +81,10 @@ public class JakartaServletServiceAdvice {
       if (context != null) {
         // Only trigger response customizer once, so only if server span was created here
         HttpServerResponseCustomizerHolder.getCustomizer()
-            .customize(contextToUpdate, (HttpServletResponse) response, Servlet5Accessor.INSTANCE);
+            .customize(
+                contextToUpdate,
+                (HttpServletResponse) response,
+                Servlet5HttpServerResponseMutator.INSTANCE);
       }
     }
 
