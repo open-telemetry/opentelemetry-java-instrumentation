@@ -6,12 +6,17 @@
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboInternalHelper;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.apache.dubbo.rpc.Filter;
 import org.apache.dubbo.rpc.Result;
 
 /** Entrypoint for instrumenting Apache Dubbo servers and clients. */
 public final class DubboTelemetry {
+
+  static {
+    DubboInternalHelper.setServerInstrumenterExtractor(t -> t.serverInstrumenter);
+  }
 
   private final Instrumenter<DubboRequest, Result> serverInstrumenter;
   private final Instrumenter<DubboRequest, Result> clientInstrumenter;

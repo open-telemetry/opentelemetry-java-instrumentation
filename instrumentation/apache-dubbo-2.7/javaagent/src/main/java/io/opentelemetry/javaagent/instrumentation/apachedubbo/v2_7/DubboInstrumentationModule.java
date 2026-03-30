@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
@@ -54,7 +54,11 @@ public class DubboInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new ResourceInjectingTypeInstrumentation());
+    return asList(
+        new ResourceInjectingTypeInstrumentation(),
+        new DubboProtocolInstrumentation(),
+        new DecodeableRpcInvocationInstrumentation(),
+        new GrpcRequestHandlerMappingInstrumentation());
   }
 
   // A type instrumentation is needed to trigger resource injection.
