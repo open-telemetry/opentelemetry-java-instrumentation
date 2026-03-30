@@ -18,6 +18,7 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.CoreSubscriber;
+import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Mono;
 import reactor.util.annotation.NonNull;
 
@@ -74,7 +75,7 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
     }
   }
 
-  private static class TelemetryWrappedSubscriber implements CoreSubscriber<Void> {
+  private static class TelemetryWrappedSubscriber extends BaseSubscriber<Void> {
     private final CoreSubscriber<? super Void> actual;
     private final Instrumenter<ServerWebExchange, ServerWebExchange> instrumenter;
     private final Context currentOtelContext;
@@ -97,23 +98,25 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
     }
 
     @Override
-    public void onSubscribe(Subscription s) {
-      actual.onSubscribe(s);
+    protected void hookOnSubscribe(Subscription subscription) {
+      actual.onSubscribe(this);
     }
 
     @Override
-    public void onNext(Void unused) {}
-
-    @Override
-    public void onError(Throwable t) {
-      onTerminal(currentOtelContext, t);
-      actual.onError(t);
+    protected void hookOnError(Throwable throwable) {
+      onTerminal(currentOtelContext, throwable);
+      actual.onError(throwable);
     }
 
     @Override
-    public void onComplete() {
+    protected void hookOnComplete() {
       onTerminal(currentOtelContext, null);
       actual.onComplete();
+    }
+
+    @Override
+    protected void hookOnCancel() {
+      end(currentOtelContext, null);
     }
 
     private void onTerminal(Context currentContext, @Nullable Throwable t) {
