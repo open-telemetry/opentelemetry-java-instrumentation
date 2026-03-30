@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.config.bridge;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -38,7 +39,7 @@ public final class ConfigPropertiesBackedConfigProvider implements ConfigProvide
   public static final class Builder {
     private final Map<String, String> mappings = new HashMap<>();
 
-    @com.google.errorprone.annotations.CanIgnoreReturnValue
+    @CanIgnoreReturnValue
     public Builder addMapping(String declarativeProperty, String configProperty) {
       mappings.put(declarativeProperty, configProperty);
       return this;

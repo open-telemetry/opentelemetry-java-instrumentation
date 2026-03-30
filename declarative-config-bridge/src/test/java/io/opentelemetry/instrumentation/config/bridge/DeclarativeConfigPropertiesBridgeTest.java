@@ -18,7 +18,6 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings("deprecation")
 class DeclarativeConfigPropertiesBridgeTest {
 
   private ConfigProperties bridge;
