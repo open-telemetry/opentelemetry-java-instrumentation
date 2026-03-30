@@ -156,6 +156,7 @@ tasks {
           disable("OtelCanIgnoreReturnValueSuggester")
           disable("OtelInternalJavadoc")
           disable("SuppressWarningsWithoutExplanation")
+          disable("InterruptedExceptionSwallowed")
         }
       }
     }

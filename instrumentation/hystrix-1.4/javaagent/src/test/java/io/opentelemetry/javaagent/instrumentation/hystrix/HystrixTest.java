@@ -133,10 +133,7 @@ class HystrixTest {
                     cmd -> {
                       try {
                         return cmd.queue().get();
-                      } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        throw new RuntimeException(e);
-                      } catch (ExecutionException e) {
+                      } catch (Exception e) {
                         throw new RuntimeException(e);
                       }
                     })),

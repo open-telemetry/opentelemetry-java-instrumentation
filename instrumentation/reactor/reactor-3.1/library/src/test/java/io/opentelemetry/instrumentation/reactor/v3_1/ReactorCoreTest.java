@@ -529,8 +529,7 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
       Function<Flux<Throwable>, ? extends Publisher<?>> function =
           err -> Flux.create(sink -> sink.next(-1));
       return (Flux<T>) method.invoke(flux, function);
-    } catch (NoSuchMethodException exception) {
-      // ignore
+    } catch (NoSuchMethodException ignored) {
     } catch (Exception exception) {
       throw new IllegalStateException(exception);
     }
@@ -540,10 +539,7 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
       Method retryWhenMethod = Flux.class.getMethod("retryWhen", retryClass);
       Method retrySpecMethod = retryClass.getMethod("indefinitely");
       return (Flux<T>) retryWhenMethod.invoke(flux, retrySpecMethod.invoke(retryClass));
-    } catch (ReflectiveOperationException e) {
-      // ignore
-    } catch (RuntimeException e) {
-      throw new IllegalStateException(e);
+    } catch (ReflectiveOperationException ignored) {
     }
     throw new IllegalStateException("Could not find retryWhen method");
   }

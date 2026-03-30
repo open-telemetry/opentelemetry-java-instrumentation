@@ -115,10 +115,7 @@ class TargetSystemTest {
   static void afterAll() {
     try {
       otlpServer.stop().get();
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new RuntimeException(e);
-    } catch (ExecutionException e) {
+    } catch (Exception e) {
       throw new RuntimeException(e);
     }
   }
