@@ -32,12 +32,13 @@ public class ScriptJobHandlerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("execute").and(isPublic()).and(takesNoArguments()),
-        ScriptJobHandlerInstrumentation.class.getName() + "$ScheduleAdvice");
+        getClass().getName() + "$ScheduleAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ScheduleAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static XxlJobHelper.XxlJobScope onSchedule(
         @Advice.FieldValue("glueType") GlueTypeEnum glueType,
@@ -47,7 +48,7 @@ public class ScriptJobHandlerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object result,
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) @Nullable Object result,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable XxlJobHelper.XxlJobScope scope) {
       helper().endSpan(scope, result, throwable);

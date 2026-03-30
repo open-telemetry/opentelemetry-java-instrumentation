@@ -137,7 +137,7 @@ public abstract class AbstractVertxKafkaTest {
     // a batch.
     int maxAttempts = 5;
     for (int i = 1; i <= maxAttempts; i++) {
-      BatchRecordsHandler.reset();
+      BatchRecordsHandler.reset(records.length);
       kafkaConsumer.pause();
 
       // wait a bit to ensure that the consumer has really paused

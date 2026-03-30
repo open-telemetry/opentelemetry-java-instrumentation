@@ -5,7 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sql;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
+import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MICROSOFT_SQL_SERVER;
+import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MYSQL;
+import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQL;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.IBM_DB2;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ORACLE_DB;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
@@ -16,27 +22,42 @@ import java.util.Collection;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
-enum VertxSqlClientAttributesGetter
+class VertxSqlClientAttributesGetter
     implements SqlClientAttributesGetter<VertxSqlClientRequest, Void> {
-  INSTANCE;
 
   private static final Function<Throwable, String> responseStatusExtractor =
       createResponseStatusExtractor();
 
   @Override
   public String getDbSystemName(VertxSqlClientRequest request) {
+    return request.getDbSystemName();
+  }
+
+  @Deprecated // to be removed in 3.0
+  @Override
+  @Nullable
+  public String getDbSystem(VertxSqlClientRequest request) {
+    // preserving old behavior: db.system was never set for vertx sql client
     return null;
   }
 
   @Override
   public SqlDialect getSqlDialect(VertxSqlClientRequest request) {
-    // the underlying database is unknown, use the safer default that sanitizes double-quoted
-    // fragments as string literals (note that this can lead to incorrect summarization
-    // for databases that do use double quotes as identifiers)
-    //
-    // TODO do better in
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16254
-    return DOUBLE_QUOTES_ARE_STRING_LITERALS;
+    switch (request.getDbSystemName()) {
+      case MYSQL:
+        // MySQL treats double-quoted fragments as string literals by default
+        return DOUBLE_QUOTES_ARE_STRING_LITERALS;
+      case MICROSOFT_SQL_SERVER:
+        // SQL Server can treat double quotes as string literals when QUOTED_IDENTIFIER is OFF.
+        return DOUBLE_QUOTES_ARE_STRING_LITERALS;
+      case POSTGRESQL:
+      case ORACLE_DB:
+      case IBM_DB2:
+        // These databases treat double-quoted fragments as identifiers
+        return DOUBLE_QUOTES_ARE_IDENTIFIERS;
+      default:
+        return DOUBLE_QUOTES_ARE_STRING_LITERALS;
+    }
   }
 
   @Deprecated // to be removed in 3.0

@@ -38,8 +38,7 @@ class GraphqlInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        none(), this.getClass().getName() + "$AddInstrumentationAdvice");
+    transformer.applyAdviceToMethod(none(), getClass().getName() + "$AddInstrumentationAdvice");
 
     transformer.applyTransformer(
         (builder, typeDescription, classLoader, javaModule, protectionDomain) ->

@@ -38,14 +38,14 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
         named("sendCommand")
             .and(takesArguments(1))
             .and(takesArgument(0, named("redis.clients.jedis.CommandArguments"))),
-        this.getClass().getName() + "$SendCommand2Advice");
+        getClass().getName() + "$SendCommand2Advice");
 
     transformer.applyAdviceToMethod(
         named("sendCommand")
             .and(takesArguments(2))
             .and(takesArgument(0, named("redis.clients.jedis.commands.ProtocolCommand")))
             .and(takesArgument(1, is(byte[][].class))),
-        this.getClass().getName() + "$SendCommandAdvice");
+        getClass().getName() + "$SendCommandAdvice");
   }
 
   public static class AdviceScope {

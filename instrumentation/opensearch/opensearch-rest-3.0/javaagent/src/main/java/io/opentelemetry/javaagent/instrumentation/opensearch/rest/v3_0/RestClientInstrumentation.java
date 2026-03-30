@@ -40,13 +40,13 @@ public class RestClientInstrumentation implements TypeInstrumentation {
         named("performRequest")
             .and(takesArguments(1))
             .and(takesArgument(0, named("org.opensearch.client.Request"))),
-        this.getClass().getName() + "$PerformRequestAdvice");
+        getClass().getName() + "$PerformRequestAdvice");
     transformer.applyAdviceToMethod(
         named("performRequestAsync")
             .and(takesArguments(2))
             .and(takesArgument(0, named("org.opensearch.client.Request")))
             .and(takesArgument(1, named("org.opensearch.client.ResponseListener"))),
-        this.getClass().getName() + "$PerformRequestAsyncAdvice");
+        getClass().getName() + "$PerformRequestAsyncAdvice");
   }
 
   public static class AdviceScope {

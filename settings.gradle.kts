@@ -7,7 +7,7 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "2.3.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.9.0"
-    id("org.graalvm.buildtools.native") version "1.0.0"
+    id("org.graalvm.buildtools.native") version "0.11.5"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.9.6"
   }
@@ -535,12 +535,15 @@ include(":instrumentation:play:play-ws:play-ws-common:testing")
 include(":instrumentation:powerjob-4.0:javaagent")
 include(":instrumentation:pulsar:pulsar-2.8:javaagent")
 include(":instrumentation:pulsar:pulsar-2.8:javaagent-unit-tests")
-include(":instrumentation:quarkus-resteasy-reactive:common-testing")
 include(":instrumentation:quarkus-resteasy-reactive:javaagent")
-includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus2-plugin")
-include(":instrumentation:quarkus-resteasy-reactive:quarkus2-testing")
-includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus3-plugin")
-include(":instrumentation:quarkus-resteasy-reactive:quarkus3-testing")
+include(":instrumentation:quarkus-resteasy-reactive:quarkus-common-testing")
+includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus-common-plugin")
+includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus-2.0-plugin")
+include(":instrumentation:quarkus-resteasy-reactive:quarkus-2.0-testing")
+includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus-3.0-plugin")
+include(":instrumentation:quarkus-resteasy-reactive:quarkus-3.0-testing")
+includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus-3.9-plugin")
+include(":instrumentation:quarkus-resteasy-reactive:quarkus-3.9-testing")
 include(":instrumentation:quartz-2.0:javaagent")
 include(":instrumentation:quartz-2.0:library")
 include(":instrumentation:quartz-2.0:testing")

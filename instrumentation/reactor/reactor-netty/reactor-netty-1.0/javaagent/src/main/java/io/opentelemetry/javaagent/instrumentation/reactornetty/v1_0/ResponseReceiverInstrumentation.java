@@ -47,30 +47,30 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("response").and(takesArguments(0)).and(returns(named("reactor.core.publisher.Mono"))),
-        this.getClass().getName() + "$ResponseMonoAdvice");
+        getClass().getName() + "$ResponseMonoAdvice");
     transformer.applyAdviceToMethod(
         named("response")
             .and(takesArguments(1))
             .and(takesArgument(0, BiFunction.class))
             .and(returns(named("reactor.core.publisher.Flux"))),
-        this.getClass().getName() + "$ResponseFluxAdvice");
+        getClass().getName() + "$ResponseFluxAdvice");
     transformer.applyAdviceToMethod(
         named("responseConnection")
             .and(takesArguments(1))
             .and(takesArgument(0, BiFunction.class))
             .and(returns(named("reactor.core.publisher.Flux"))),
-        this.getClass().getName() + "$ResponseConnectionAdvice");
+        getClass().getName() + "$ResponseConnectionAdvice");
     transformer.applyAdviceToMethod(
         named("responseContent")
             .and(takesArguments(0))
             .and(returns(named("reactor.netty.ByteBufFlux"))),
-        this.getClass().getName() + "$ResponseContentAdvice");
+        getClass().getName() + "$ResponseContentAdvice");
     transformer.applyAdviceToMethod(
         named("responseSingle")
             .and(takesArguments(1))
             .and(takesArgument(0, BiFunction.class))
             .and(returns(named("reactor.core.publisher.Mono"))),
-        this.getClass().getName() + "$ResponseSingleAdvice");
+        getClass().getName() + "$ResponseSingleAdvice");
   }
 
   public static class AdviceScope {

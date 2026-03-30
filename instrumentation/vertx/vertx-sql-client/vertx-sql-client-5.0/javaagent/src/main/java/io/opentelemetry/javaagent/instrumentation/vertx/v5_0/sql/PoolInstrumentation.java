@@ -12,6 +12,7 @@ import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClien
 import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.setSqlConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.wrapContext;
 import static io.opentelemetry.javaagent.instrumentation.vertx.v5_0.sql.VertxSqlClientSingletons.attachConnectOptions;
+import static io.opentelemetry.javaagent.instrumentation.vertx.v5_0.sql.VertxSqlClientSingletons.resolveAndStoreDbSystem;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -40,7 +41,10 @@ public class PoolInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("io.vertx.sqlclient.Pool"));
+    // Match both the Pool interface (for static pool() factory methods) and classes/interfaces
+    // that implement/extend Pool (for instance methods like getConnection())
+    return implementsInterface(named("io.vertx.sqlclient.Pool"))
+        .or(named("io.vertx.sqlclient.Pool"));
   }
 
   @Override
@@ -51,11 +55,11 @@ public class PoolInstrumentation implements TypeInstrumentation {
             .and(takesArguments(3))
             .and(takesArgument(1, named("io.vertx.sqlclient.SqlConnectOptions")))
             .and(returns(named("io.vertx.sqlclient.Pool"))),
-        PoolInstrumentation.class.getName() + "$PoolAdvice");
+        getClass().getName() + "$PoolAdvice");
 
     transformer.applyAdviceToMethod(
         named("getConnection").and(takesNoArguments()).and(returns(named("io.vertx.core.Future"))),
-        PoolInstrumentation.class.getName() + "$GetConnectionAdvice");
+        getClass().getName() + "$GetConnectionAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -83,6 +87,7 @@ public class PoolInstrumentation implements TypeInstrumentation {
       }
 
       setPoolConnectOptions(pool, sqlConnectOptions);
+      resolveAndStoreDbSystem(pool, sqlConnectOptions);
       setSqlConnectOptions(null);
     }
   }

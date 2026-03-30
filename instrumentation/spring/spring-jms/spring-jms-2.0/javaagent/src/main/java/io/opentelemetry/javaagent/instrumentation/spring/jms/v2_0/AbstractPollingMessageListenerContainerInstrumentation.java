@@ -28,7 +28,7 @@ public class AbstractPollingMessageListenerContainerInstrumentation implements T
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("receiveAndExecute"), this.getClass().getName() + "$ReceiveAndExecuteAdvice");
+        named("receiveAndExecute"), getClass().getName() + "$ReceiveAndExecuteAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -28,7 +28,7 @@ public class SqsTemplateInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("getQueueAttributes").and(returns(CompletableFuture.class)),
-        this.getClass().getName() + "$GetQueueAttributesAdvice");
+        getClass().getName() + "$GetQueueAttributesAdvice");
   }
 
   @SuppressWarnings("unused")

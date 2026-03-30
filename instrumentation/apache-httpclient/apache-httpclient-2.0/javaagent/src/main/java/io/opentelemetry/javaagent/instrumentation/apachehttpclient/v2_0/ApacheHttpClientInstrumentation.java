@@ -40,7 +40,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         named("executeMethod")
             .and(takesArguments(3))
             .and(takesArgument(1, named("org.apache.commons.httpclient.HttpMethod"))),
-        this.getClass().getName() + "$ExecuteMethodAdvice");
+        getClass().getName() + "$ExecuteMethodAdvice");
   }
 
   @SuppressWarnings("unused")

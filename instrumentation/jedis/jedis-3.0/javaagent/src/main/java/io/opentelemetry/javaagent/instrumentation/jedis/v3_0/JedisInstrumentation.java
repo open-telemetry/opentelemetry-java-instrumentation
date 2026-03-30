@@ -42,7 +42,7 @@ public class JedisInstrumentation implements TypeInstrumentation {
                         "getConnection",
                         "isBroken",
                         "toString"))),
-        this.getClass().getName() + "$JedisMethodAdvice");
+        getClass().getName() + "$JedisMethodAdvice");
   }
 
   @SuppressWarnings("unused")

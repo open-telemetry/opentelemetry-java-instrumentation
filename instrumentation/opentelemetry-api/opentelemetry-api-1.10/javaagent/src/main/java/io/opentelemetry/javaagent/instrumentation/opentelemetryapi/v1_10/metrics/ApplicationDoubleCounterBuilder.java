@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metric
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.metrics.DoubleCounterBuilder;
+import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
 import java.util.function.Consumer;
 
 public class ApplicationDoubleCounterBuilder
@@ -42,11 +43,13 @@ public class ApplicationDoubleCounterBuilder
   public application.io.opentelemetry.api.metrics.ObservableDoubleCounter buildWithCallback(
       Consumer<application.io.opentelemetry.api.metrics.ObservableDoubleMeasurement>
           applicationCallback) {
+    Consumer<ObservableDoubleMeasurement> callback =
+        agentMeasurement ->
+            applicationCallback.accept(
+                new ApplicationObservableDoubleMeasurement(agentMeasurement));
     return new ApplicationObservableDoubleCounter(
-        agentBuilder.buildWithCallback(
-            agentMeasurement ->
-                applicationCallback.accept(
-                    new ApplicationObservableDoubleMeasurement(agentMeasurement))));
+        CallbackAnchor.anchor(agentBuilder::buildWithCallback, callback),
+        CallbackAnchor.releaseOnClose(callback));
   }
 
   // added in 1.15.0

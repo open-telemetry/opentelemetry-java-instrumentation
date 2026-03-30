@@ -25,7 +25,7 @@ public class TestInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("shouldSuppressInstrumentation"), this.getClass().getName() + "$TestAdvice");
+        named("shouldSuppressInstrumentation"), getClass().getName() + "$TestAdvice");
   }
 
   @SuppressWarnings("unused")

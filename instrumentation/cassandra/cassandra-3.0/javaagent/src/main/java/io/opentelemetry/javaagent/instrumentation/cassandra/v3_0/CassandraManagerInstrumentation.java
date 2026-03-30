@@ -29,7 +29,7 @@ public class CassandraManagerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isPrivate().and(named("newSession")).and(takesArguments(0)),
-        this.getClass().getName() + "$NewSessionAdvice");
+        getClass().getName() + "$NewSessionAdvice");
   }
 
   @SuppressWarnings("unused")

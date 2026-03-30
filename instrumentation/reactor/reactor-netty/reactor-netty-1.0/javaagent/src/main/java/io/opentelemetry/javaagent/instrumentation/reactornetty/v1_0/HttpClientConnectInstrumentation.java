@@ -30,7 +30,7 @@ public class HttpClientConnectInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("connect").and(returns(named("reactor.core.publisher.Mono"))),
-        this.getClass().getName() + "$ConnectAdvice");
+        getClass().getName() + "$ConnectAdvice");
   }
 
   @SuppressWarnings("unused")

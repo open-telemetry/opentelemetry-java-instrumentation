@@ -31,7 +31,7 @@ public class JavalinInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("handle").and(takesArgument(0, named("io.javalin.http.Context"))),
-        this.getClass().getName() + "$HandlerAdapterAdvice");
+        getClass().getName() + "$HandlerAdapterAdvice");
   }
 
   @SuppressWarnings("unused")

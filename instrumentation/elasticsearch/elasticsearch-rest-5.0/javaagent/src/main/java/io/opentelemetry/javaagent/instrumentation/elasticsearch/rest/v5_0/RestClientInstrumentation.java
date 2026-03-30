@@ -40,7 +40,7 @@ public class RestClientInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, String.class)) // method
             .and(takesArgument(1, String.class)) // endpoint
             .and(takesArgument(5, named("org.elasticsearch.client.ResponseListener"))),
-        this.getClass().getName() + "$PerformRequestAsyncAdvice");
+        getClass().getName() + "$PerformRequestAsyncAdvice");
   }
 
   @SuppressWarnings("unused")

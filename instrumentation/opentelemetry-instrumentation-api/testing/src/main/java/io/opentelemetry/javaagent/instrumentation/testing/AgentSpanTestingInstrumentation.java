@@ -26,9 +26,9 @@ public class AgentSpanTestingInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("runWithHttpServerSpan"), this.getClass().getName() + "$RunWithHttpServerSpanAdvice");
+        named("runWithHttpServerSpan"), getClass().getName() + "$RunWithHttpServerSpanAdvice");
     transformer.applyAdviceToMethod(
-        named("runWithAllSpanKeys"), this.getClass().getName() + "$RunWithAllSpanKeysAdvice");
+        named("runWithAllSpanKeys"), getClass().getName() + "$RunWithAllSpanKeysAdvice");
   }
 
   public static class AdviceScope {

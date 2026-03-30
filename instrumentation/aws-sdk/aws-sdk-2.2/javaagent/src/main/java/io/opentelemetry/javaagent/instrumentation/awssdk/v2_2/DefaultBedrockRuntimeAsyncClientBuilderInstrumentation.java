@@ -26,7 +26,7 @@ public class DefaultBedrockRuntimeAsyncClientBuilderInstrumentation implements T
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("buildClient"), this.getClass().getName() + "$BuildClientAdvice");
+        named("buildClient"), getClass().getName() + "$BuildClientAdvice");
   }
 
   @SuppressWarnings("unused")

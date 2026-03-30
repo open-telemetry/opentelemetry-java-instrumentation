@@ -28,7 +28,7 @@ public class KafkaReceiverInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("create").and(isStatic()).and(returns(named("reactor.kafka.receiver.KafkaReceiver"))),
-        this.getClass().getName() + "$CreateAdvice");
+        getClass().getName() + "$CreateAdvice");
   }
 
   @SuppressWarnings("unused")

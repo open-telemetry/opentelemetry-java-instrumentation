@@ -40,7 +40,7 @@ public class HandlerInstrumentation implements TypeInstrumentation {
         named("handleRequest")
             .and(takesArgument(0, named("io.undertow.server.HttpServerExchange")))
             .and(isPublic()),
-        this.getClass().getName() + "$HandleRequestAdvice");
+        getClass().getName() + "$HandleRequestAdvice");
   }
 
   @SuppressWarnings("unused")

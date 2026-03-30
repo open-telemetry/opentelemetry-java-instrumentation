@@ -28,18 +28,17 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("isInstrumented"), this.getClass().getName() + "$MarkInstrumentedAdvice");
+        named("isInstrumented"), getClass().getName() + "$MarkInstrumentedAdvice");
     transformer.applyAdviceToMethod(
-        named("incrementContextCount"),
-        this.getClass().getName() + "$StoreAndIncrementApiUsageAdvice");
+        named("incrementContextCount"), getClass().getName() + "$StoreAndIncrementApiUsageAdvice");
     transformer.applyAdviceToMethod(
-        named("getContextCount"), this.getClass().getName() + "$GetApiUsageAdvice");
+        named("getContextCount"), getClass().getName() + "$GetApiUsageAdvice");
     transformer.applyAdviceToMethod(
-        named("putContextCount"), this.getClass().getName() + "$PutApiUsageAdvice");
+        named("putContextCount"), getClass().getName() + "$PutApiUsageAdvice");
     transformer.applyAdviceToMethod(
-        named("removeContextCount"), this.getClass().getName() + "$RemoveApiUsageAdvice");
+        named("removeContextCount"), getClass().getName() + "$RemoveApiUsageAdvice");
     transformer.applyAdviceToMethod(
-        named("useMultipleFields"), this.getClass().getName() + "$UseMultipleFieldsAdvice");
+        named("useMultipleFields"), getClass().getName() + "$UseMultipleFieldsAdvice");
   }
 
   @SuppressWarnings("unused")

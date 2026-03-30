@@ -33,7 +33,7 @@ public class RouteInstrumentation implements TypeInstrumentation {
         named("beforeHandle")
             .and(takesArgument(0, named("org.restlet.Request")))
             .and(takesArgument(1, named("org.restlet.Response"))),
-        this.getClass().getName() + "$RouteBeforeHandleAdvice");
+        getClass().getName() + "$RouteBeforeHandleAdvice");
   }
 
   @SuppressWarnings("unused")

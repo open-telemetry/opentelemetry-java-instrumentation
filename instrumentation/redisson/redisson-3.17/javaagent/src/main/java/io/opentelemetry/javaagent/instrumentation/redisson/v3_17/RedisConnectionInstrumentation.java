@@ -31,7 +31,7 @@ public class RedisConnectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("send"), this.getClass().getName() + "$SendAdvice");
+    transformer.applyAdviceToMethod(named("send"), getClass().getName() + "$SendAdvice");
   }
 
   @SuppressWarnings("unused")

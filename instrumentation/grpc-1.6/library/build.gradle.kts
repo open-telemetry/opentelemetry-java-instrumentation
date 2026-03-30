@@ -24,10 +24,6 @@ tasks {
     jvmArgs("-Djava.net.preferIPv4Stack=true")
   }
 
-  test {
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-  }
-
   val testStableSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath

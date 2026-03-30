@@ -33,7 +33,7 @@ public class GatewayDelegatingRouterFunctionInstrumentation implements TypeInstr
             .and(named("route"))
             .and(takesArgument(0, named("org.springframework.web.servlet.function.ServerRequest")))
             .and(takesArguments(1)),
-        this.getClass().getName() + "$RouteAdvice");
+        getClass().getName() + "$RouteAdvice");
   }
 
   @SuppressWarnings("unused")

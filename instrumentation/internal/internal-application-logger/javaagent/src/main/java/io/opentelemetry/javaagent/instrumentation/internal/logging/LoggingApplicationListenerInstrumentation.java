@@ -30,7 +30,7 @@ public class LoggingApplicationListenerInstrumentation implements TypeInstrument
   public void transform(TypeTransformer transformer) {
     // the logger is properly initialized once this method exits
     transformer.applyAdviceToMethod(
-        named("initialize"), this.getClass().getName() + "$InitializeAdvice");
+        named("initialize"), getClass().getName() + "$InitializeAdvice");
   }
 
   @SuppressWarnings("unused")

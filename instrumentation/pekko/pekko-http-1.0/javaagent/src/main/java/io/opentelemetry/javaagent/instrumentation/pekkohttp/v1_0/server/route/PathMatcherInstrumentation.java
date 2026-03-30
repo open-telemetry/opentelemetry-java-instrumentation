@@ -30,7 +30,7 @@ public class PathMatcherInstrumentation implements TypeInstrumentation {
         named("apply")
             .and(takesArgument(0, named("org.apache.pekko.http.scaladsl.model.Uri$Path")))
             .and(returns(named("org.apache.pekko.http.scaladsl.server.PathMatcher"))),
-        this.getClass().getName() + "$ApplyAdvice");
+        getClass().getName() + "$ApplyAdvice");
   }
 
   @SuppressWarnings("unused")

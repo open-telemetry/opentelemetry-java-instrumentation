@@ -39,10 +39,10 @@ public class ResponseInstrumentation implements TypeInstrumentation {
         named("onCompleted")
             .and(takesArgument(0, named("com.ning.http.client.Response")))
             .and(isPublic()),
-        this.getClass().getName() + "$OnCompletedAdvice");
+        getClass().getName() + "$OnCompletedAdvice");
     transformer.applyAdviceToMethod(
         named("onThrowable").and(takesArgument(0, Throwable.class)).and(isPublic()),
-        this.getClass().getName() + "$OnThrowableAdvice");
+        getClass().getName() + "$OnThrowableAdvice");
   }
 
   @SuppressWarnings("unused")

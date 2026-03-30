@@ -42,7 +42,7 @@ public class ClickHouseClientV1Instrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         namedOneOf("executeAndWait", "execute")
             .and(takesArgument(0, named("com.clickhouse.client.ClickHouseRequest"))),
-        this.getClass().getName() + "$ExecuteAndWaitAdvice");
+        getClass().getName() + "$ExecuteAndWaitAdvice");
   }
 
   @SuppressWarnings("unused")

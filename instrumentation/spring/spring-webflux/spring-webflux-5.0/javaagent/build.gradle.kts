@@ -27,6 +27,7 @@ muzzle {
     group.set("io.projectreactor.netty")
     module.set("reactor-netty")
     versions.set("[0.8.0.RELEASE,)")
+    assertInverse.set(true)
     extraDependency("org.springframework:spring-webflux:5.1.0.RELEASE")
   }
 

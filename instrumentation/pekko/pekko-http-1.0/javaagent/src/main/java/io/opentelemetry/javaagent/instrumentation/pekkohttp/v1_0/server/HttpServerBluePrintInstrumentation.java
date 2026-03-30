@@ -28,7 +28,7 @@ public class HttpServerBluePrintInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("requestPreparation")
             .and(returns(named("org.apache.pekko.stream.scaladsl.BidiFlow"))),
-        this.getClass().getName() + "$PekkoBindAndHandleAdvice");
+        getClass().getName() + "$PekkoBindAndHandleAdvice");
   }
 
   @SuppressWarnings("unused")

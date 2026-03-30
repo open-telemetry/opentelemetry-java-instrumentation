@@ -35,7 +35,7 @@ public class ClientCallableRpcInstrumentation implements TypeInstrumentation {
             .and(takesArgument(2, named(String.class.getName())))
             .and(takesArgument(3, named("elemental.json.JsonArray")))
             .and(takesArgument(4, named(int.class.getName()))),
-        this.getClass().getName() + "$InvokeMethodAdvice");
+        getClass().getName() + "$InvokeMethodAdvice");
   }
 
   @SuppressWarnings("unused")

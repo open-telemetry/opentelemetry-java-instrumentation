@@ -33,7 +33,7 @@ public class ContextBuilderInstrumentation implements TypeInstrumentation {
         named("build")
             .and(takesArgument(0, named("org.springframework.web.server.ServerWebExchange")))
             .and(isPublic()),
-        this.getClass().getName() + "$BuildAdvice");
+        getClass().getName() + "$BuildAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -28,30 +28,30 @@ public final class Servlet3Singletons {
 
   private static final Instrumenter<
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
-      INSTRUMENTER =
+      instrumenter =
           AgentServletInstrumenterBuilder.<HttpServletRequest, HttpServletResponse>create()
               .build(INSTRUMENTATION_NAME, Servlet3Accessor.INSTANCE);
 
-  private static final ServletHelper<HttpServletRequest, HttpServletResponse> HELPER =
-      new ServletHelper<>(INSTRUMENTER, Servlet3Accessor.INSTANCE);
+  private static final ServletHelper<HttpServletRequest, HttpServletResponse> helper =
+      new ServletHelper<>(instrumenter, Servlet3Accessor.INSTANCE);
 
   public static final VirtualField<Servlet, MappingResolver.Factory> SERVLET_MAPPING_RESOLVER =
       VirtualField.find(Servlet.class, MappingResolver.Factory.class);
   public static final VirtualField<Filter, MappingResolver.Factory> FILTER_MAPPING_RESOLVER =
       VirtualField.find(Filter.class, MappingResolver.Factory.class);
 
-  private static final Instrumenter<ClassAndMethod, Void> RESPONSE_INSTRUMENTER =
+  private static final Instrumenter<ClassAndMethod, Void> responseInstrumenter =
       ResponseInstrumenterFactory.createInstrumenter(INSTRUMENTATION_NAME);
 
-  private static final OutputStreamSnippetInjectionHelper SNIPPET_INJECTION_HELPER =
+  private static final OutputStreamSnippetInjectionHelper snippetInjectionHelper =
       new OutputStreamSnippetInjectionHelper(() -> ExperimentalSnippetHolder.getSnippet());
 
   public static ServletHelper<HttpServletRequest, HttpServletResponse> helper() {
-    return HELPER;
+    return helper;
   }
 
   public static Instrumenter<ClassAndMethod, Void> responseInstrumenter() {
-    return RESPONSE_INSTRUMENTER;
+    return responseInstrumenter;
   }
 
   @Nullable
@@ -64,7 +64,7 @@ public final class Servlet3Singletons {
   }
 
   public static OutputStreamSnippetInjectionHelper getSnippetInjectionHelper() {
-    return SNIPPET_INJECTION_HELPER;
+    return snippetInjectionHelper;
   }
 
   @Nullable

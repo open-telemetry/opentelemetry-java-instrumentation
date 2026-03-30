@@ -33,7 +33,7 @@ public class CamelContextInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("start").and(isPublic()).and(takesArguments(0)),
-        this.getClass().getName() + "$StartAdvice");
+        getClass().getName() + "$StartAdvice");
   }
 
   @SuppressWarnings("unused")
