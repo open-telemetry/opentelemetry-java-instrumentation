@@ -1136,7 +1136,11 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
           assertThat(attrs).containsEntry(HTTP_REQUEST_METHOD, method);
 
-          assertThat(attrs).containsEntry(HTTP_RESPONSE_STATUS_CODE, statusCode);
+          if (statusCode > 0) {
+            assertThat(attrs).containsEntry(HTTP_RESPONSE_STATUS_CODE, statusCode);
+          } else {
+            assertThat(attrs).doesNotContainKey(HTTP_RESPONSE_STATUS_CODE);
+          }
           if (statusCode >= 500) {
             assertThat(attrs).containsEntry(ERROR_TYPE, String.valueOf(statusCode));
           }

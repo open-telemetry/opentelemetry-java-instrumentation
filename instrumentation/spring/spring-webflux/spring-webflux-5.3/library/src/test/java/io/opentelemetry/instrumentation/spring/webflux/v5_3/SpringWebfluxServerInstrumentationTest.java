@@ -75,7 +75,7 @@ public final class SpringWebfluxServerInstrumentationTest
 
   @Test
   void cancelRequest() throws InterruptedException {
-    ServerEndpoint endpoint = new ServerEndpoint("CANCEL", "cancel", 200, null, false);
+    ServerEndpoint endpoint = new ServerEndpoint("CANCEL", "cancel", 0, null, false);
     String method = "GET";
     AggregatedHttpRequest request = request(endpoint, method);
 

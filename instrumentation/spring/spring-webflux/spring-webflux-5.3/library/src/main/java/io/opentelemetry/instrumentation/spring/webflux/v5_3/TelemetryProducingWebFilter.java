@@ -116,7 +116,7 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
 
     @Override
     protected void hookOnCancel() {
-      end(currentOtelContext, null);
+      end(currentOtelContext, true, null);
     }
 
     private void onTerminal(Context currentContext, @Nullable Throwable t) {
@@ -133,6 +133,10 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
     }
 
     private void end(Context currentContext, @Nullable Throwable t) {
+      end(currentContext, false, t);
+    }
+
+    private void end(Context currentContext, boolean cancel, @Nullable Throwable t) {
       // Update HTTP route now, because during instrumenter.start()
       // the HTTP route isn't available from the exchange attributes, but is afterwards
       HttpServerRoute.update(
@@ -143,7 +147,7 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
                   ? null
                   : WebfluxServerHttpAttributesGetter.INSTANCE.getHttpRoute(exchange),
           exchange);
-      instrumenter.end(currentContext, exchange, exchange, t);
+      instrumenter.end(currentContext, exchange, cancel ? null : exchange, t);
     }
   }
 }
