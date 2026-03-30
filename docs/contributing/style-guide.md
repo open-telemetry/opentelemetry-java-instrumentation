@@ -92,6 +92,24 @@ Fields should be declared `final` where possible.
 
 Method parameters and local variables should never be declared `final`.
 
+### Uppercase field names
+
+Use uppercase (`SCREAMING_SNAKE_CASE`) for constant-like fields whose value is treated as a stable
+identifier or immutable descriptor.
+
+Examples that may remain uppercase include:
+
+- literal strings, numbers, and booleans that behave like module constants
+- semantic keys and handles such as `AttributeKey`, `ContextKey`, `VirtualField`,
+  `MethodHandle`, and `Pattern`
+- canonical singleton or sentinel fields named `INSTANCE`, `EMPTY`, or `NOOP`
+
+Do not use uppercase solely because a field is `static final`.
+
+Use lower camel case for runtime-created collaborator objects even when they are `static final`,
+for example loggers, instrumenters, helpers, sanitizers, mappers, caches, and similar service
+objects.
+
 ### `@Nullable` annotation usage
 
 **Note: This section is aspirational and may not reflect the current codebase.**

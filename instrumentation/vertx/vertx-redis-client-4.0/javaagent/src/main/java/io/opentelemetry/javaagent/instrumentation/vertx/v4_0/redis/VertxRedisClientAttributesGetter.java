@@ -16,7 +16,7 @@ import javax.annotation.Nullable;
 final class VertxRedisClientAttributesGetter
     implements DbClientAttributesGetter<VertxRedisClientRequest, Void> {
 
-  private static final RedisCommandSanitizer SANITIZER =
+  private static final RedisCommandSanitizer sanitizer =
       RedisCommandSanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
   @Override
@@ -50,7 +50,7 @@ final class VertxRedisClientAttributesGetter
 
   @Override
   public String getDbQueryText(VertxRedisClientRequest request) {
-    return SANITIZER.sanitize(request.getCommand(), request.getArgs());
+    return sanitizer.sanitize(request.getCommand(), request.getArgs());
   }
 
   @Nullable
