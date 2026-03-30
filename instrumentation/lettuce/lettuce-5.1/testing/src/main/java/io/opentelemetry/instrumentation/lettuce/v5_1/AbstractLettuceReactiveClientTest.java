@@ -276,7 +276,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
     // The digest() signature changed between 5 -> 6
     try {
       digestMethod = commandsClass.getMethod("digest", String.class);
-    } catch (NoSuchMethodException unused) {
+    } catch (NoSuchMethodException ignored) {
       digestMethod = commandsClass.getMethod("digest", Object.class);
     }
     String res = (String) digestMethod.invoke(reactiveCommands, "test");

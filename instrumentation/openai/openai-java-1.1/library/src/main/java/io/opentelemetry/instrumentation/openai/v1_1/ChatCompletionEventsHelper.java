@@ -265,7 +265,7 @@ final class ChatCompletionEventsHelper {
 
     try {
       return (String) methodHandle.invoke(object);
-    } catch (Throwable ignore) {
+    } catch (Throwable ignored) {
       return "";
     }
   }
@@ -326,7 +326,7 @@ final class ChatCompletionEventsHelper {
 
       try {
         return new V1FunctionAccess(toolCall, functionHandle.invoke(toolCall));
-      } catch (Throwable ignore) {
+      } catch (Throwable ignored) {
         return null;
       }
     }
@@ -421,7 +421,7 @@ final class ChatCompletionEventsHelper {
         }
         Object functionToolCall = optional.get();
         return new V3FunctionAccess(functionToolCall, functionHandle.invoke(functionToolCall));
-      } catch (Throwable ignore) {
+      } catch (Throwable ignored) {
         return null;
       }
     }

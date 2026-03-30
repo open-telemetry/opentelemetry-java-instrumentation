@@ -22,75 +22,77 @@ import org.restlet.util.Series;
  */
 public final class MessageAttributesAccessor {
 
-  private static final MethodHandle GET_ATTRIBUTES;
-  private static final MethodHandle SET_VALUE;
-  private static final Class<?> HEADER_CLASS;
-  private static final MethodHandle NEW_SERIES;
+  private static final MethodHandle GET_ATTRIBUTES = findGetAttributes();
+  private static final MethodHandle SET_VALUE = findSetValue();
+  private static final Class<?> HEADER_CLASS = findHeaderClass();
+  private static final MethodHandle NEW_SERIES = findNewSeries();
 
-  static {
-    MethodHandle getAttributes = null;
-    MethodHandle setValue = null;
-    Class<?> headerClass = null;
-    MethodHandle newSeries = null;
-
+  @Nullable
+  private static MethodHandle findGetAttributes() {
     MethodHandles.Lookup lookup = MethodHandles.lookup();
     try {
-      getAttributes = lookup.findVirtual(Message.class, "getAttributes", methodType(Map.class));
+      return lookup.findVirtual(Message.class, "getAttributes", methodType(Map.class));
     } catch (NoSuchMethodException | IllegalAccessException e) {
       // changed the return type to ConcurrentMap in version 2.1
       try {
-        getAttributes =
-            lookup.findVirtual(Message.class, "getAttributes", methodType(ConcurrentMap.class));
-      } catch (NoSuchMethodException | IllegalAccessException ex) {
-        // ignored
+        return lookup.findVirtual(Message.class, "getAttributes", methodType(ConcurrentMap.class));
+      } catch (NoSuchMethodException | IllegalAccessException f) {
+        return null;
       }
     }
+  }
 
-    Class<?> setValueReturnType = null;
+  @Nullable
+  private static MethodHandle findSetValue() {
+    Class<?> setValueReturnType;
     try {
       // changed the generic bound to NamedValue in version 2.1; earlier than that it's Parameter
       setValueReturnType = Class.forName("org.restlet.util.NamedValue");
     } catch (ClassNotFoundException e) {
       try {
         setValueReturnType = Class.forName("org.restlet.data.Parameter");
-      } catch (ClassNotFoundException ex) {
-        // ignored
-      }
-    }
-    if (setValueReturnType != null) {
-      try {
-        setValue =
-            lookup.findVirtual(
-                Series.class, "set", methodType(setValueReturnType, String.class, String.class));
-      } catch (NoSuchMethodException | IllegalAccessException e) {
-        // ignored
+      } catch (ClassNotFoundException f) {
+        return null;
       }
     }
 
     try {
+      return MethodHandles.lookup()
+          .findVirtual(
+              Series.class, "set", methodType(setValueReturnType, String.class, String.class));
+    } catch (NoSuchMethodException | IllegalAccessException e) {
+      return null;
+    }
+  }
+
+  @Nullable
+  private static Class<?> findHeaderClass() {
+    try {
       // restlet 2.3+
-      headerClass = Class.forName("org.restlet.data.Header");
+      return Class.forName("org.restlet.data.Header");
     } catch (ClassNotFoundException e) {
       try {
         // restlet 2.1-2.2
-        headerClass = Class.forName("org.restlet.engine.header.Header");
-      } catch (ClassNotFoundException ex) {
+        return Class.forName("org.restlet.engine.header.Header");
+      } catch (ClassNotFoundException f) {
         // restlet 2.0 does not have Header
+        return null;
       }
     }
-    if (headerClass != null) {
-      // restlet 2.1+ Series has different constructor
-      try {
-        newSeries = lookup.findConstructor(Series.class, methodType(void.class, Class.class));
-      } catch (NoSuchMethodException | IllegalAccessException e) {
-        // ignored
-      }
-    }
+  }
 
-    GET_ATTRIBUTES = getAttributes;
-    SET_VALUE = setValue;
-    HEADER_CLASS = headerClass;
-    NEW_SERIES = newSeries;
+  @Nullable
+  private static MethodHandle findNewSeries() {
+    if (HEADER_CLASS == null) {
+      return null;
+    }
+    try {
+      // restlet 2.1+ Series has different constructor
+      return MethodHandles.lookup()
+          .findConstructor(Series.class, methodType(void.class, Class.class));
+    } catch (NoSuchMethodException | IllegalAccessException e) {
+      return null;
+    }
   }
 
   @SuppressWarnings("unchecked") // casting result of MethodHandle.invoke

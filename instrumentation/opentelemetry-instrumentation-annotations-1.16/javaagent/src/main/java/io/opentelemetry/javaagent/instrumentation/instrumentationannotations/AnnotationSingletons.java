@@ -36,18 +36,20 @@ public final class AnnotationSingletons {
   // The reason for using reflection here is that it needs to be compatible with the old version of
   // @WithSpan annotation that does not include the inheritContext option to avoid failing the
   // muzzle check.
-  @Nullable private static MethodHandle inheritContextMethodHandle = null;
+  @Nullable
+  private static final MethodHandle INHERIT_CONTEXT_METHOD_HANDLE =
+      findInheritContextMethodHandle();
 
-  static {
+  @Nullable
+  private static MethodHandle findInheritContextMethodHandle() {
     try {
-      inheritContextMethodHandle =
-          MethodHandles.publicLookup()
-              .findVirtual(
-                  application.io.opentelemetry.instrumentation.annotations.WithSpan.class,
-                  "inheritContext",
-                  MethodType.methodType(boolean.class));
-    } catch (NoSuchMethodException | IllegalAccessException ignore) {
-      // ignore
+      return MethodHandles.publicLookup()
+          .findVirtual(
+              application.io.opentelemetry.instrumentation.annotations.WithSpan.class,
+              "inheritContext",
+              MethodType.methodType(boolean.class));
+    } catch (NoSuchMethodException | IllegalAccessException e) {
+      return null;
     }
   }
 
@@ -135,7 +137,7 @@ public final class AnnotationSingletons {
   }
 
   private static boolean inheritContextFromMethod(Method method) {
-    if (inheritContextMethodHandle == null) {
+    if (INHERIT_CONTEXT_METHOD_HANDLE == null) {
       return true;
     }
 
@@ -143,12 +145,10 @@ public final class AnnotationSingletons {
         method.getDeclaredAnnotation(
             application.io.opentelemetry.instrumentation.annotations.WithSpan.class);
     try {
-      return (boolean) inheritContextMethodHandle.invoke(annotation);
-    } catch (Throwable ignore) {
-      // ignore
+      return (boolean) INHERIT_CONTEXT_METHOD_HANDLE.invoke(annotation);
+    } catch (Throwable e) {
+      return true;
     }
-
-    return true;
   }
 
   private AnnotationSingletons() {}

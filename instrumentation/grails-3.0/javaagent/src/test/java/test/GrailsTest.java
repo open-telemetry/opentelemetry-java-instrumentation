@@ -86,7 +86,7 @@ class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationContext> 
       try {
         ServerProperties.class.getDeclaredMethod("getServlet");
         return "server.servlet.contextPath";
-      } catch (NoSuchMethodException ignore) {
+      } catch (NoSuchMethodException ignored) {
         return "server.context-path";
       }
     }

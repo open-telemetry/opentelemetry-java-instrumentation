@@ -45,7 +45,7 @@ public class SoapFaultBuilderInstrumentation implements TypeInstrumentation {
       // if fiber is not attached current() throws IllegalStateException
       try {
         request = Fiber.current().getPacket();
-      } catch (IllegalStateException ignore) {
+      } catch (IllegalStateException ignored) {
         // fiber not available
       }
       if (request != null) {

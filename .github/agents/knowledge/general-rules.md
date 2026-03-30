@@ -17,6 +17,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Style | Style guide | Always | — |
 | Style | Uppercase field names should reflect semantic constants, not simply `static final` | Always | — |
 | Naming | Getter naming (`get` / `is`) | Always | — |
+| Style | Prefer `e` for used exceptions, prefer `f` for used exceptions in nested catch clauses when an outer catch already uses `e`, allow `error` for specific `*Error` catch types, prefer `t` for used `Throwable` values, and `ignored` for intentionally unused catch parameters | Catch clauses, `Throwable` params | — |
 | Naming | Module/package naming | New or renamed modules/packages | `module-naming.md` |
 | Javaagent | Advice patterns | `@Advice` classes | `javaagent-advice-patterns.md` |
 | Javaagent | Module structure patterns | `InstrumentationModule`, `TypeInstrumentation`, `Singletons` | `javaagent-module-patterns.md` |
@@ -54,6 +55,21 @@ Flag real defects, including:
 
 Only flag substantive problems, not stylistic preference.
 
+## [Javaagent] Best-Effort Suppressed Failures
+
+When javaagent runtime code intentionally suppresses a `Throwable` to avoid breaking the
+application, do not silently swallow it.
+
+- Prefer `ExceptionLogger.logSuppressedError(...)` for suppressed failures in javaagent code.
+  It logs at `FINE` and matches the agent's default ByteBuddy advice suppression path in
+  `ExceptionHandlers.defaultExceptionHandler()`.
+- Use this for best-effort hooks such as response customizers, bootstrap fallbacks, or other
+  optional extension points where failure must not change application behavior.
+- Do not introduce ad-hoc local loggers for one-off suppressed javaagent failures when
+  `ExceptionLogger` is available from bootstrap.
+- Keep the message action-oriented and specific (for example, "Failed to customize Netty 4.1
+  HTTP server response").
+
 ## [Style] Style Guide
 
 Read and apply `docs/contributing/style-guide.md`.
@@ -75,6 +91,21 @@ Do not flag the following patterns (common false positives):
 ## [Naming] Getter Naming
 
 Public API getters should use `get*` (or `is*` for booleans).
+
+## [Style] Catch Exception Variable Naming
+
+Prefer `e` as the exception variable name in catch clauses when the exception is
+used.
+
+For nested catch clauses, when an outer catch already uses `e`, prefer `f` as the
+inner exception variable name when the exception is used.
+
+`error` is also acceptable when the caught type is a specific `*Error` subtype.
+
+Prefer `t` for used `Throwable` values, including `catch (Throwable t)` and
+`Throwable` callback parameters.
+
+If a catch parameter is intentionally unused, prefer `ignored` over `ignore`.
 
 ## [Style] Prefer Instance Creation Over Singletons
 
