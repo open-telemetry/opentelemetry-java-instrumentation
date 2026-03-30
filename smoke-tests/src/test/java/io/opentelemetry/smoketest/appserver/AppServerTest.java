@@ -53,9 +53,7 @@ public abstract class AppServerTest extends AbstractSmokeTest<AppServerImage> {
 
     // In reduced mode (PR builds), only run a representative subset of the full matrix.
     // The full matrix runs on merge to main.
-    if (Boolean.getBoolean("reducedSmokeTests")) {
-      skipIfNotReduced(appServer);
-    }
+    skipIfNotReduced(Boolean.getBoolean("reducedSmokeTests"), appServer);
 
     // ibm-semeru-runtimes doesn't publish windows images
     // adoptopenjdk is deprecated and doesn't publish Windows 2022 images
@@ -66,11 +64,12 @@ public abstract class AppServerTest extends AbstractSmokeTest<AppServerImage> {
   }
 
   // Reduced smoke test rules for PR builds. The full matrix runs on merge to main.
-  // These rules match reduceTargets() in smoke-tests/images/servlet/build.gradle.kts,
-  // which controls which Docker images are built. Both sides apply the same logic:
   // Tomcat covers all JDKs (hotspot), TomEE covers all JDKs (openj9),
   // Websphere is already minimal, other servers test only minimum JDK on hotspot.
-  private void skipIfNotReduced(AppServer appServer) {
+  private void skipIfNotReduced(boolean reducedSmokeTests, AppServer appServer) {
+    if (!reducedSmokeTests) {
+      return;
+    }
     String jdk = appServer.jdk();
     boolean isOpenj9 = jdk.contains("-openj9");
 

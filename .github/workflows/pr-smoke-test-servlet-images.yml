@@ -52,8 +52,8 @@ jobs:
 
       - name: Build Linux docker images
         if: matrix.os != 'windows-latest'
-        run: ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }} -PreducedSmokeTests=true
+        run: ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}
 
       - name: Build Windows docker images
         if: matrix.os == 'windows-latest'
-        run: ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }} -PreducedSmokeTests=true
+        run: ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}

@@ -177,26 +177,6 @@ val targets = mapOf(
   ),
 )
 
-// In reduced mode (PR builds), shrink the matrix to a representative subset.
-// Tomcat covers all JDKs (hotspot), TomEE covers all JDKs (openj9),
-// other servers test only their minimum supported JDK on hotspot.
-// AppServerTest.skipIfNotReduced() applies the same rules at test time.
-fun reduceTargets(full: Map<String, List<ImageTarget>>): Map<String, List<ImageTarget>> = full.mapValues { (server, matrices) ->
-  when (server) {
-    "tomcat" -> matrices.map { it.copy(vm = listOf("hotspot")) }
-
-    "tomee" -> matrices.map { it.copy(vm = listOf("openj9")) }
-
-    "websphere" -> matrices
-
-    else -> matrices.map { it.copy(vm = listOf("hotspot"), jdk = listOf(it.jdk.first())) }
-      .distinctBy { listOf(it.version, it.jdk, it.vm, it.war) }
-  }
-}
-
-val reducedSmokeTests = findProperty("reducedSmokeTests") == "true"
-val activeTargets = if (reducedSmokeTests) reduceTargets(targets) else targets
-
 tasks {
   val buildLinuxTestImages by registering {
     group = "build"
@@ -208,8 +188,8 @@ tasks {
     description = "Builds all Windows Docker images for the test matrix"
   }
 
-  val linuxImages = createDockerTasks(buildLinuxTestImages, false, activeTargets)
-  val windowsImages = createDockerTasks(buildWindowsTestImages, true, activeTargets)
+  val linuxImages = createDockerTasks(buildLinuxTestImages, false, targets)
+  val windowsImages = createDockerTasks(buildWindowsTestImages, true, targets)
 
   val pushLinuxImages by registering(DockerPushImage::class) {
     dependsOn(buildLinuxTestImages)
@@ -227,7 +207,7 @@ tasks {
 
   val printSmokeTestsConfigurations by registering {
     doFirst {
-      for ((server, matrices) in activeTargets) {
+      for ((server, matrices) in targets) {
         val smokeTestServer = findProperty("smokeTestServer")
         if (smokeTestServer != null && server != smokeTestServer) {
           continue
