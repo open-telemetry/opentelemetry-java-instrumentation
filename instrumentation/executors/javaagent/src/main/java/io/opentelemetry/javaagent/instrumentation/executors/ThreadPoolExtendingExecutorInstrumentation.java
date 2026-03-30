@@ -30,10 +30,10 @@ public class ThreadPoolExtendingExecutorInstrumentation implements TypeInstrumen
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("beforeExecute").and(takesArgument(1, Runnable.class)),
-        this.getClass().getName() + "$BeforeExecuteAdvice");
+        getClass().getName() + "$BeforeExecuteAdvice");
     transformer.applyAdviceToMethod(
         named("afterExecute").and(takesArgument(0, Runnable.class)),
-        this.getClass().getName() + "$AfterExecuteAdvice");
+        getClass().getName() + "$AfterExecuteAdvice");
   }
 
   @SuppressWarnings("unused")

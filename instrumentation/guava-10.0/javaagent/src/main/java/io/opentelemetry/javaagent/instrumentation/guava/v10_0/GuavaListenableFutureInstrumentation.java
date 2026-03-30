@@ -30,10 +30,10 @@ public class GuavaListenableFutureInstrumentation implements TypeInstrumentation
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor(), this.getClass().getName() + "$AbstractFutureAdvice");
+        isConstructor(), getClass().getName() + "$AbstractFutureAdvice");
     transformer.applyAdviceToMethod(
         named("addListener").and(takesArguments(Runnable.class, Executor.class)),
-        this.getClass().getName() + "$AddListenerAdvice");
+        getClass().getName() + "$AddListenerAdvice");
   }
 
   @SuppressWarnings("unused")

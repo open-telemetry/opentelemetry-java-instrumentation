@@ -38,7 +38,7 @@ public class RemoteServerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isMethod().and(isPublic()).and(not(isStatic())),
-        this.getClass().getName() + "$PublicMethodAdvice");
+        getClass().getName() + "$PublicMethodAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -32,10 +32,10 @@ public class DelegatingErrorHandlingRunnableInstrumentation implements TypeInstr
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(1, named("org.springframework.util.ErrorHandler"))),
-        this.getClass().getName() + "$WrapErrorHandlerAdvice");
+        getClass().getName() + "$WrapErrorHandlerAdvice");
 
     transformer.applyAdviceToMethod(
-        isPublic().and(named("run")), this.getClass().getName() + "$RunAdvice");
+        isPublic().and(named("run")), getClass().getName() + "$RunAdvice");
   }
 
   @SuppressWarnings("unused")

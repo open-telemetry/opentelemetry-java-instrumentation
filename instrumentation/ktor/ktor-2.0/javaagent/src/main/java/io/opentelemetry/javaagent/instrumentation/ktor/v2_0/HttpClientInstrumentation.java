@@ -37,7 +37,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         isConstructor()
             .and(takesArguments(2))
             .and(takesArgument(1, named("io.ktor.client.HttpClientConfig"))),
-        this.getClass().getName() + "$ConstructorAdvice");
+        getClass().getName() + "$ConstructorAdvice");
   }
 
   @SuppressWarnings("unused")

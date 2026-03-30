@@ -32,10 +32,10 @@ public class KafkaMetricsProducerInstrumentation implements TypeInstrumentation 
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(0, Map.class)),
-        this.getClass().getName() + "$ConstructorMapAdvice");
+        getClass().getName() + "$ConstructorMapAdvice");
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(0, Properties.class)),
-        this.getClass().getName() + "$ConstructorPropertiesAdvice");
+        getClass().getName() + "$ConstructorPropertiesAdvice");
   }
 
   @SuppressWarnings("unused")

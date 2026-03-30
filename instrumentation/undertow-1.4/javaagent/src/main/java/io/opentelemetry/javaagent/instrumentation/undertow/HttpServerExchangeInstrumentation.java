@@ -32,7 +32,7 @@ public class HttpServerExchangeInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("dispatch").and(takesArguments(Executor.class, Runnable.class)),
-        this.getClass().getName() + "$DispatchAdvice");
+        getClass().getName() + "$DispatchAdvice");
   }
 
   @SuppressWarnings("unused")

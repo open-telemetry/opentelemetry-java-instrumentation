@@ -32,7 +32,7 @@ public class JmsDestinationAccessorInstrumentation implements TypeInstrumentatio
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("receiveFromConsumer").and(returns(named("javax.jms.Message"))),
-        this.getClass().getName() + "$ReceiveAdvice");
+        getClass().getName() + "$ReceiveAdvice");
   }
 
   @SuppressWarnings("unused")

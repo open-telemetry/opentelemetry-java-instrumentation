@@ -32,7 +32,7 @@ public class RestClientTransportInstrumentation implements TypeInstrumentation {
         named("prepareLowLevelRequest")
             .and(takesArgument(1, named("co.elastic.clients.transport.Endpoint")))
             .and(returns(named("org.elasticsearch.client.Request"))),
-        this.getClass().getName() + "$RestClientTransportAdvice");
+        getClass().getName() + "$RestClientTransportAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -39,7 +39,7 @@ public class ActionInvocationInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isPublic().and(named("invokeActionOnly")),
-        this.getClass().getName() + "$InvokeActionOnlyAdvice");
+        getClass().getName() + "$InvokeActionOnlyAdvice");
   }
 
   @SuppressWarnings("unused")

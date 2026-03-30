@@ -27,7 +27,7 @@ public class AcknowledgementExecutionContextInstrumentation implements TypeInstr
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("execute"), this.getClass().getName() + "$ExecuteAdvice");
+    transformer.applyAdviceToMethod(named("execute"), getClass().getName() + "$ExecuteAdvice");
   }
 
   @SuppressWarnings("unused")

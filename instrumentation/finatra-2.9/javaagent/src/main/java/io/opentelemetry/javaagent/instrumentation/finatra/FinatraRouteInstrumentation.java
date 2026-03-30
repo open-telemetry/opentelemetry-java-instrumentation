@@ -41,10 +41,10 @@ public class FinatraRouteInstrumentation implements TypeInstrumentation {
         named("handleMatch")
             .and(takesArguments(2))
             .and(takesArgument(0, named("com.twitter.finagle.http.Request"))),
-        this.getClass().getName() + "$HandleMatchAdvice");
+        getClass().getName() + "$HandleMatchAdvice");
     transformer.applyAdviceToMethod(
         named("copy").and(returns(named("com.twitter.finatra.http.internal.routing.Route"))),
-        this.getClass().getName() + "$CopyAdvice");
+        getClass().getName() + "$CopyAdvice");
   }
 
   @SuppressWarnings("unused")

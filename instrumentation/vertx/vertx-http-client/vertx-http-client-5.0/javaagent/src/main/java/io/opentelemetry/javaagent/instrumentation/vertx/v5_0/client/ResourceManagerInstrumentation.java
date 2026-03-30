@@ -28,7 +28,7 @@ public class ResourceManagerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("withResourceAsync").and(returns(named("io.vertx.core.Future"))),
-        this.getClass().getName() + "$WithResourceAsyncAdvice");
+        getClass().getName() + "$WithResourceAsyncAdvice");
   }
 
   @SuppressWarnings("unused")

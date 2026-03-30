@@ -53,7 +53,7 @@ public class RequestInstrumentation implements TypeInstrumentation {
             .and(named("send"))
             .and(takesArgument(0, named("redis.RedisCommand")))
             .and(returns(named("scala.concurrent.Future"))),
-        this.getClass().getName() + "$SendAdvice");
+        getClass().getName() + "$SendAdvice");
   }
 
   @SuppressWarnings("unused")

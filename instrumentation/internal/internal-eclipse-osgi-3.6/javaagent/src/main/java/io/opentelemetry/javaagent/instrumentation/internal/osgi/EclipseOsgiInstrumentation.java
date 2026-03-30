@@ -37,7 +37,7 @@ class EclipseOsgiInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("isDynamicallyImported").and(returns(boolean.class)),
-        this.getClass().getName() + "$IsDynamicallyImportedAdvice");
+        getClass().getName() + "$IsDynamicallyImportedAdvice");
   }
 
   @SuppressWarnings("unused")

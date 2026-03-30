@@ -40,7 +40,7 @@ public class LettuceClientInstrumentation implements TypeInstrumentation {
             .and(nameStartsWith("connect"))
             .and(nameEndsWith("Async"))
             .and(takesArgument(1, named("io.lettuce.core.RedisURI"))),
-        this.getClass().getName() + "$ConnectAdvice");
+        getClass().getName() + "$ConnectAdvice");
   }
 
   @SuppressWarnings("unused")

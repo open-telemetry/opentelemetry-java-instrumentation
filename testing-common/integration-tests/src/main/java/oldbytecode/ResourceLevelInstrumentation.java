@@ -21,8 +21,7 @@ public class ResourceLevelInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("toString"), this.getClass().getName() + "$ToStringAdvice");
+    transformer.applyAdviceToMethod(named("toString"), getClass().getName() + "$ToStringAdvice");
   }
 
   @SuppressWarnings("unused")

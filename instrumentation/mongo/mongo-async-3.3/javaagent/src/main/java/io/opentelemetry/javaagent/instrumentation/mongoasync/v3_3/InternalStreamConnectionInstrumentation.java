@@ -29,14 +29,14 @@ final class InternalStreamConnectionInstrumentation implements TypeInstrumentati
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("openAsync").and(takesArgument(0, named("com.mongodb.async.SingleResultCallback"))),
-        this.getClass().getName() + "$SingleResultCallbackArg0Advice");
+        getClass().getName() + "$SingleResultCallbackArg0Advice");
     transformer.applyAdviceToMethod(
         named("readAsync").and(takesArgument(1, named("com.mongodb.async.SingleResultCallback"))),
-        this.getClass().getName() + "$SingleResultCallbackArg1Advice");
+        getClass().getName() + "$SingleResultCallbackArg1Advice");
     transformer.applyAdviceToMethod(
         named("sendMessageAsync")
             .and(takesArgument(2, named("com.mongodb.async.SingleResultCallback"))),
-        this.getClass().getName() + "$SingleResultCallbackArg2Advice");
+        getClass().getName() + "$SingleResultCallbackArg2Advice");
   }
 
   @SuppressWarnings("unused")

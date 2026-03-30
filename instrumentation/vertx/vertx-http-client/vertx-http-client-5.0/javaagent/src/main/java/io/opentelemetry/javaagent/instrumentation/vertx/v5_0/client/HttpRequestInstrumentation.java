@@ -61,23 +61,23 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isMethod().and(nameStartsWith("end").or(named("sendHead"))),
-        this.getClass().getName() + "$EndRequestAdvice");
+        getClass().getName() + "$EndRequestAdvice");
 
     transformer.applyAdviceToMethod(
-        named("handleException"), this.getClass().getName() + "$HandleExceptionAdvice");
+        named("handleException"), getClass().getName() + "$HandleExceptionAdvice");
 
     transformer.applyAdviceToMethod(
         named("handleResponse")
             .and(takesArgument(1, named("io.vertx.core.http.HttpClientResponse"))),
-        this.getClass().getName() + "$HandleResponseAdvice");
+        getClass().getName() + "$HandleResponseAdvice");
 
     transformer.applyAdviceToMethod(
         isMethod().and(isPrivate()).and(nameStartsWith("write").or(nameStartsWith("connected"))),
-        this.getClass().getName() + "$MountContextAdvice");
+        getClass().getName() + "$MountContextAdvice");
 
     transformer.applyAdviceToMethod(
         named("exceptionHandler").and(takesArgument(0, named("io.vertx.core.Handler"))),
-        this.getClass().getName() + "$ExceptionHandlerAdvice");
+        getClass().getName() + "$ExceptionHandlerAdvice");
   }
 
   @SuppressWarnings("unused")

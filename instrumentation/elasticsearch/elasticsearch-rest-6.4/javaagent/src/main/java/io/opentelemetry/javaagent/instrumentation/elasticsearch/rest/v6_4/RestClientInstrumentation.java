@@ -39,7 +39,7 @@ public class RestClientInstrumentation implements TypeInstrumentation {
             .and(takesArguments(2))
             .and(takesArgument(0, named("org.elasticsearch.client.Request")))
             .and(takesArgument(1, named("org.elasticsearch.client.ResponseListener"))),
-        this.getClass().getName() + "$PerformRequestAsyncAdvice");
+        getClass().getName() + "$PerformRequestAsyncAdvice");
   }
 
   @SuppressWarnings("unused")

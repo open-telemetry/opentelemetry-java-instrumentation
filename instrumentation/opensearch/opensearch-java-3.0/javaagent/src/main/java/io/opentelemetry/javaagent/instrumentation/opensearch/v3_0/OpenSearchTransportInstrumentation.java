@@ -39,14 +39,14 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
             .and(named("performRequest"))
             .and(takesArgument(0, Object.class))
             .and(takesArgument(1, named("org.opensearch.client.transport.Endpoint"))),
-        this.getClass().getName() + "$PerformRequestAdvice");
+        getClass().getName() + "$PerformRequestAdvice");
 
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("performRequestAsync"))
             .and(takesArgument(0, Object.class))
             .and(takesArgument(1, named("org.opensearch.client.transport.Endpoint"))),
-        this.getClass().getName() + "$PerformRequestAsyncAdvice");
+        getClass().getName() + "$PerformRequestAsyncAdvice");
   }
 
   public static class AdviceScope {

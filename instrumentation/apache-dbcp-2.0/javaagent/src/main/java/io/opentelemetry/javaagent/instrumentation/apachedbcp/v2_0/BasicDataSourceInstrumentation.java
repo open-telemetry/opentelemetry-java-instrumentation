@@ -28,11 +28,10 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer typeTransformer) {
     typeTransformer.applyAdviceToMethod(
         isPublic().and(named("preRegister")).and(takesArguments(2)),
-        this.getClass().getName() + "$PreRegisterAdvice");
+        getClass().getName() + "$PreRegisterAdvice");
 
     typeTransformer.applyAdviceToMethod(
-        isPublic().and(named("postDeregister")),
-        this.getClass().getName() + "$PostDeregisterAdvice");
+        isPublic().and(named("postDeregister")), getClass().getName() + "$PostDeregisterAdvice");
   }
 
   @SuppressWarnings("unused")

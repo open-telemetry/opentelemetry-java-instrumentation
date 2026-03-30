@@ -30,10 +30,10 @@ public class JobFactoryBeanInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(isConstructor(), this.getClass().getName() + "$InitAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$InitAdvice");
     transformer.applyAdviceToMethod(
         named("setJobExecutionListeners").and(takesArguments(1)).and(takesArgument(0, isArray())),
-        this.getClass().getName() + "$SetListenersAdvice");
+        getClass().getName() + "$SetListenersAdvice");
   }
 
   @SuppressWarnings("unused")

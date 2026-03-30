@@ -40,7 +40,7 @@ public class JedisInstrumentation implements TypeInstrumentation {
                         "resetState",
                         "getClient",
                         "disconnect"))),
-        this.getClass().getName() + "$JedisMethodAdvice");
+        getClass().getName() + "$JedisMethodAdvice");
   }
 
   @SuppressWarnings("unused")

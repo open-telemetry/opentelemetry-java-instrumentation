@@ -33,7 +33,7 @@ public class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation 
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("dispatch").and(takesArgument(0, named("io.lettuce.core.protocol.RedisCommand"))),
-        this.getClass().getName() + "$DispatchAdvice");
+        getClass().getName() + "$DispatchAdvice");
   }
 
   @SuppressWarnings("unused")

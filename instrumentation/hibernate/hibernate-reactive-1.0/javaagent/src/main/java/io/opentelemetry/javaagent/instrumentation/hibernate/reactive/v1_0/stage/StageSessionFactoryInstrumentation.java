@@ -30,13 +30,13 @@ public class StageSessionFactoryInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         namedOneOf("withSession", "withStatelessSession").and(takesArgument(0, Function.class)),
-        this.getClass().getName() + "$Function0Advice");
+        getClass().getName() + "$Function0Advice");
     transformer.applyAdviceToMethod(
         namedOneOf("withSession", "withStatelessSession").and(takesArgument(1, Function.class)),
-        this.getClass().getName() + "$Function1Advice");
+        getClass().getName() + "$Function1Advice");
     transformer.applyAdviceToMethod(
         namedOneOf("openSession", "openStatelessSession").and(returns(CompletionStage.class)),
-        this.getClass().getName() + "$OpenSessionAdvice");
+        getClass().getName() + "$OpenSessionAdvice");
   }
 
   @SuppressWarnings("unused")

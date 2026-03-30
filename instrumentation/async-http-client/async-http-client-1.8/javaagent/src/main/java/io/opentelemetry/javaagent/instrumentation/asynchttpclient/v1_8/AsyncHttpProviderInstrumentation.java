@@ -45,7 +45,7 @@ public class AsyncHttpProviderInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("com.ning.http.client.Request")))
             .and(takesArgument(1, named("com.ning.http.client.AsyncHandler")))
             .and(isPublic()),
-        this.getClass().getName() + "$ExecuteAdvice");
+        getClass().getName() + "$ExecuteAdvice");
   }
 
   @SuppressWarnings("unused")

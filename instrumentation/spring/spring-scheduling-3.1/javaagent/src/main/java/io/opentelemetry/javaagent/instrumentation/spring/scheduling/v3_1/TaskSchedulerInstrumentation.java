@@ -46,7 +46,7 @@ public class TaskSchedulerInstrumentation implements TypeInstrumentation {
                                 takesArgument(
                                     // Trigger represents a repeating job
                                     1, named("org.springframework.scheduling.Trigger"))))),
-        this.getClass().getName() + "$ScheduleMethodAdvice");
+        getClass().getName() + "$ScheduleMethodAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -28,23 +28,23 @@ public class SmokeInlinedInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("returnValue").and(takesArgument(0, int.class)),
-        this.getClass().getName() + "$ModifyReturnValueAdvice");
+        getClass().getName() + "$ModifyReturnValueAdvice");
     transformer.applyAdviceToMethod(
         named("methodArguments").and(takesArgument(0, int.class)),
-        this.getClass().getName() + "$ModifyArgumentsAdvice");
+        getClass().getName() + "$ModifyArgumentsAdvice");
     transformer.applyAdviceToMethod(
         named("setVirtualFieldValue")
             .and(takesArgument(0, Object.class))
             .and(takesArgument(1, Integer.class)),
-        this.getClass().getName() + "$VirtualFieldSetAdvice");
+        getClass().getName() + "$VirtualFieldSetAdvice");
     transformer.applyAdviceToMethod(
         named("getVirtualFieldValue")
             .and(takesArgument(0, Object.class))
             .and(returns(Integer.class)),
-        this.getClass().getName() + "$VirtualFieldGetAdvice");
+        getClass().getName() + "$VirtualFieldGetAdvice");
     transformer.applyAdviceToMethod(
         named("localValue").and(takesArgument(0, int[].class)).and(returns(int[].class)),
-        this.getClass().getName() + "$LocalVariableAdvice");
+        getClass().getName() + "$LocalVariableAdvice");
   }
 
   @SuppressWarnings("unused")

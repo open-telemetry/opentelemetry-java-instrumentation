@@ -26,7 +26,7 @@ public class JavaScriptBootstrapUiInstrumentation implements TypeInstrumentation
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("connectClient"), this.getClass().getName() + "$ConnectClientAdvice");
+        named("connectClient"), getClass().getName() + "$ConnectClientAdvice");
   }
 
   @SuppressWarnings("unused")

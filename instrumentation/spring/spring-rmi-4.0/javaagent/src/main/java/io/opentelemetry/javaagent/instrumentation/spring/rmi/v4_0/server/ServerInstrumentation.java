@@ -36,7 +36,7 @@ public class ServerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("invoke")
             .and(takesArgument(0, named("org.springframework.remoting.support.RemoteInvocation"))),
-        this.getClass().getName() + "$InvokeMethodAdvice");
+        getClass().getName() + "$InvokeMethodAdvice");
   }
 
   @SuppressWarnings("unused")

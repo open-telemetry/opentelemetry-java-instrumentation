@@ -29,7 +29,7 @@ public class ReceiverRecordInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor()
             .and(takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecord"))),
-        this.getClass().getName() + "$ConstructorAdvice");
+        getClass().getName() + "$ConstructorAdvice");
   }
 
   @SuppressWarnings("unused")

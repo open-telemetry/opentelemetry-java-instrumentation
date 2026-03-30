@@ -30,7 +30,7 @@ public class AzureHttpClientInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isPublic().and(named("send")).and(returns(named("reactor.core.publisher.Mono"))),
-        this.getClass().getName() + "$SuppressNestedClientAdvice");
+        getClass().getName() + "$SuppressNestedClientAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -28,7 +28,7 @@ public class ConsumerHandlerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("receive").and(returns(named("reactor.core.publisher.Flux"))),
-        this.getClass().getName() + "$ReceiveAdvice");
+        getClass().getName() + "$ReceiveAdvice");
   }
 
   @SuppressWarnings("unused")

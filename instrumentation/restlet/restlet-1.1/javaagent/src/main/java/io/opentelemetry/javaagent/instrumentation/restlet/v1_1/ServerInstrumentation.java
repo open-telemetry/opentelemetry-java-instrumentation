@@ -37,7 +37,7 @@ public class ServerInstrumentation implements TypeInstrumentation {
         named("handle")
             .and(takesArgument(0, named("org.restlet.data.Request")))
             .and(takesArgument(1, named("org.restlet.data.Response"))),
-        this.getClass().getName() + "$ServerHandleAdvice");
+        getClass().getName() + "$ServerHandleAdvice");
   }
 
   @SuppressWarnings("unused")

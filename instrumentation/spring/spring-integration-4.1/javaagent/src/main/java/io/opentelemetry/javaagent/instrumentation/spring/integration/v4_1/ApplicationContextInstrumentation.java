@@ -41,7 +41,7 @@ public class ApplicationContextInstrumentation implements TypeInstrumentation {
                     0,
                     named(
                         "org.springframework.beans.factory.config.ConfigurableListableBeanFactory"))),
-        this.getClass().getName() + "$PostProcessBeanFactoryAdvice");
+        getClass().getName() + "$PostProcessBeanFactoryAdvice");
   }
 
   @SuppressWarnings("unused")

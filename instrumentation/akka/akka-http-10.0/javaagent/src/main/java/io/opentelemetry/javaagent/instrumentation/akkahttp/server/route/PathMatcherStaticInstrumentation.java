@@ -37,7 +37,7 @@ public class PathMatcherStaticInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("apply").and(takesArgument(0, named("akka.http.scaladsl.model.Uri$Path"))),
-        this.getClass().getName() + "$ApplyAdvice");
+        getClass().getName() + "$ApplyAdvice");
   }
 
   @SuppressWarnings("unused")

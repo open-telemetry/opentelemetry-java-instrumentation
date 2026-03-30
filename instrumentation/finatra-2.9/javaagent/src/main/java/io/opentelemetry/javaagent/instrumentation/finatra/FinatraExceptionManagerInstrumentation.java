@@ -29,7 +29,7 @@ public class FinatraExceptionManagerInstrumentation implements TypeInstrumentati
         named("toResponse")
             .and(takesArgument(1, Throwable.class))
             .and(returns(named("com.twitter.finagle.http.Response"))),
-        this.getClass().getName() + "$HandleExceptionAdvice");
+        getClass().getName() + "$HandleExceptionAdvice");
   }
 
   @SuppressWarnings("unused")

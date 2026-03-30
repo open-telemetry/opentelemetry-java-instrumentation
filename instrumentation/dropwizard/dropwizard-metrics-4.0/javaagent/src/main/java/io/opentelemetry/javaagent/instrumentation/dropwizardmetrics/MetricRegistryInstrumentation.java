@@ -26,7 +26,7 @@ public class MetricRegistryInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isDefaultConstructor(), this.getClass().getName() + "$ConstructorAdvice");
+        isDefaultConstructor(), getClass().getName() + "$ConstructorAdvice");
   }
 
   @SuppressWarnings("unused")
