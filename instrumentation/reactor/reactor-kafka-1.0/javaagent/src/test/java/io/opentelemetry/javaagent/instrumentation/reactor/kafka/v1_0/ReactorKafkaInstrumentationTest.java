@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.reactor.kafka.v1_0;
 
 import org.junit.jupiter.api.Test;
 
-// XXX ilma receive telemetryta
 class ReactorKafkaInstrumentationTest extends AbstractReactorKafkaTest {
 
   @Test
