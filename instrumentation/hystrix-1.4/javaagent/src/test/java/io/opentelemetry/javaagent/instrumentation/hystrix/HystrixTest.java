@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -132,7 +133,10 @@ class HystrixTest {
                     cmd -> {
                       try {
                         return cmd.queue().get();
-                      } catch (Exception e) {
+                      } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new RuntimeException(e);
+                      } catch (ExecutionException e) {
                         throw new RuntimeException(e);
                       }
                     })),
