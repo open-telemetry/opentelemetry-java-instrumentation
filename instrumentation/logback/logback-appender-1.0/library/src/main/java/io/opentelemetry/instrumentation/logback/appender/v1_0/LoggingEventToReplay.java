@@ -18,8 +18,8 @@ class LoggingEventToReplay implements ILoggingEvent {
 
   private final ILoggingEvent loggingEvent;
   private final long timeStamp;
-  private StackTraceElement[] callerData;
-  private String threadName;
+  private final StackTraceElement[] callerData;
+  private final String threadName;
 
   LoggingEventToReplay(
       ILoggingEvent loggingEvent,
@@ -29,12 +29,8 @@ class LoggingEventToReplay implements ILoggingEvent {
     // The values are copied because the current values are not more available when the log is
     // replayed
     this.timeStamp = loggingEvent.getTimeStamp();
-    if (captureExperimentalAttributes) {
-      this.threadName = loggingEvent.getThreadName();
-    }
-    if (captureCodeAttributes) {
-      this.callerData = loggingEvent.getCallerData();
-    }
+    this.threadName = captureExperimentalAttributes ? loggingEvent.getThreadName() : null;
+    this.callerData = captureCodeAttributes ? loggingEvent.getCallerData() : null;
   }
 
   @Override
