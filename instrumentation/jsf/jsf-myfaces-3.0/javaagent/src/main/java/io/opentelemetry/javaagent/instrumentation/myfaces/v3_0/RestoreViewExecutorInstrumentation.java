@@ -28,7 +28,7 @@ public class RestoreViewExecutorInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("execute").and(takesArgument(0, named("jakarta.faces.context.FacesContext"))),
-        RestoreViewExecutorInstrumentation.class.getName() + "$ExecuteAdvice");
+        getClass().getName() + "$ExecuteAdvice");
   }
 
   @SuppressWarnings("unused")

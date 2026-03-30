@@ -16,7 +16,8 @@ import io.lettuce.core.RedisURI;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 
 final class LettuceConnectAttributesExtractor implements AttributesExtractor<RedisURI, Void> {
@@ -25,10 +26,10 @@ final class LettuceConnectAttributesExtractor implements AttributesExtractor<Red
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, RedisURI redisUri) {
     if (emitStableDatabaseSemconv()) {
-      attributes.put(DB_SYSTEM_NAME, DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS);
+      attributes.put(DB_SYSTEM_NAME, DbSystemNameIncubatingValues.REDIS);
     }
     if (emitOldDatabaseSemconv()) {
-      attributes.put(DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.REDIS);
+      attributes.put(DB_SYSTEM, DbSystemIncubatingValues.REDIS);
     }
 
     int database = redisUri.getDatabase();

@@ -25,11 +25,10 @@ public class RabbitInstrumenterHelper {
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "rabbitmq")
           .getBoolean("experimental_span_attributes/development", false);
 
-  private static final RabbitInstrumenterHelper INSTRUMENTER_HELPER =
-      new RabbitInstrumenterHelper();
+  private static final RabbitInstrumenterHelper instrumenterHelper = new RabbitInstrumenterHelper();
 
   public static RabbitInstrumenterHelper helper() {
-    return INSTRUMENTER_HELPER;
+    return instrumenterHelper;
   }
 
   public void onPublish(Span span, String exchange, String routingKey) {

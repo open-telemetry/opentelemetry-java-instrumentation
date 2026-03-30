@@ -33,7 +33,7 @@ public class RouterInstrumentation implements TypeInstrumentation {
             .and(takesArguments(4))
             .and(takesArgument(1, named("com.vaadin.flow.router.Location")))
             .and(takesArgument(2, named("com.vaadin.flow.router.NavigationTrigger"))),
-        this.getClass().getName() + "$NavigateAdvice");
+        getClass().getName() + "$NavigateAdvice");
   }
 
   @SuppressWarnings("unused")

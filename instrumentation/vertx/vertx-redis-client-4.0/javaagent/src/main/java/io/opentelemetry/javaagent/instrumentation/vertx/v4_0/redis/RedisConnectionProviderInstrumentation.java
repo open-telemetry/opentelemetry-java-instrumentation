@@ -29,11 +29,11 @@ public class RedisConnectionProviderInstrumentation implements TypeInstrumentati
     // 4.1.0
     transformer.applyAdviceToMethod(
         named("init").and(not(takesArgument(0, named("io.vertx.redis.client.RedisConnection")))),
-        this.getClass().getName() + "$InitAdvice");
+        getClass().getName() + "$InitAdvice");
     // 4.0.0
     transformer.applyAdviceToMethod(
         named("init").and(takesArgument(0, named("io.vertx.redis.client.RedisConnection"))),
-        this.getClass().getName() + "$InitWithConnectionAdvice");
+        getClass().getName() + "$InitWithConnectionAdvice");
   }
 
   @SuppressWarnings("unused")

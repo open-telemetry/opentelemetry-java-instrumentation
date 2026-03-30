@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.okhttp.v2_2;
 
+import static io.opentelemetry.javaagent.instrumentation.okhttp.v2_2.OkHttp2Singletons.PROPAGATED_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
@@ -39,9 +39,7 @@ public class DispatcherInstrumentation implements TypeInstrumentation {
     public static PropagatedContext onEnter(@Advice.Argument(0) Runnable call) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, call)) {
-        VirtualField<Runnable, PropagatedContext> virtualField =
-            VirtualField.find(Runnable.class, PropagatedContext.class);
-        return ExecutorAdviceHelper.attachContextToTask(context, virtualField, call);
+        return ExecutorAdviceHelper.attachContextToTask(context, PROPAGATED_CONTEXT, call);
       }
       return null;
     }
@@ -51,9 +49,8 @@ public class DispatcherInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) Runnable call,
         @Advice.Enter PropagatedContext propagatedContext,
         @Advice.Thrown Throwable throwable) {
-      VirtualField<Runnable, PropagatedContext> virtualField =
-          VirtualField.find(Runnable.class, PropagatedContext.class);
-      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable, virtualField, call);
+      ExecutorAdviceHelper.cleanUpAfterSubmit(
+          propagatedContext, throwable, PROPAGATED_CONTEXT, call);
     }
   }
 }

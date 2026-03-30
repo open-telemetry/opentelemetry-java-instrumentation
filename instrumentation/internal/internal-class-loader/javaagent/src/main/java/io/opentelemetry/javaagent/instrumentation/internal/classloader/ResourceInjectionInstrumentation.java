@@ -40,17 +40,17 @@ public class ResourceInjectionInstrumentation implements TypeInstrumentation {
     applyInlineAdvice(
         transformer,
         named("getResource").and(takesArguments(String.class)).and(returns(URL.class)),
-        this.getClass().getName() + "$GetResourceAdvice");
+        getClass().getName() + "$GetResourceAdvice");
     applyInlineAdvice(
         transformer,
         named("getResources").and(takesArguments(String.class)).and(returns(Enumeration.class)),
-        this.getClass().getName() + "$GetResourcesAdvice");
+        getClass().getName() + "$GetResourcesAdvice");
     applyInlineAdvice(
         transformer,
         named("getResourceAsStream")
             .and(takesArguments(String.class))
             .and(returns(InputStream.class)),
-        this.getClass().getName() + "$GetResourceAsStreamAdvice");
+        getClass().getName() + "$GetResourceAsStreamAdvice");
   }
 
   @SuppressWarnings("unused")

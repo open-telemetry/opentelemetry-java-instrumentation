@@ -7,11 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.sql;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.getDbSystemNameFromClassName;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.getPoolSqlConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.setPoolConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.setSqlConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.wrapContext;
 import static io.opentelemetry.javaagent.instrumentation.vertx.v4_0.sql.VertxSqlClientSingletons.attachConnectOptions;
+import static io.opentelemetry.javaagent.instrumentation.vertx.v4_0.sql.VertxSqlClientSingletons.storeConnectOptionsDbSystem;
+import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -45,17 +48,21 @@ public class PoolInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    // In vertx 4.x, database-specific sub-interfaces like PgPool and MySQLPool declare their own
+    // static pool() methods that take subtypes of SqlConnectOptions (e.g. PgConnectOptions) and
+    // return subtypes of Pool. These are independent static methods, not overrides, and have their
+    // own separate code paths. hasSuperType is needed to match these variant signatures.
     transformer.applyAdviceToMethod(
         named("pool")
             .and(isStatic())
             .and(takesArguments(3))
-            .and(takesArgument(1, named("io.vertx.sqlclient.SqlConnectOptions")))
-            .and(returns(named("io.vertx.sqlclient.Pool"))),
-        PoolInstrumentation.class.getName() + "$PoolAdvice");
+            .and(takesArgument(1, hasSuperType(named("io.vertx.sqlclient.SqlConnectOptions"))))
+            .and(returns(hasSuperType(named("io.vertx.sqlclient.Pool")))),
+        getClass().getName() + "$PoolAdvice");
 
     transformer.applyAdviceToMethod(
         named("getConnection").and(takesNoArguments()).and(returns(named("io.vertx.core.Future"))),
-        PoolInstrumentation.class.getName() + "$GetConnectionAdvice");
+        getClass().getName() + "$GetConnectionAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -72,7 +79,7 @@ public class PoolInstrumentation implements TypeInstrumentation {
       return callDepth;
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Return Pool pool,
         @Advice.Argument(1) SqlConnectOptions sqlConnectOptions,
@@ -81,7 +88,13 @@ public class PoolInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      setPoolConnectOptions(pool, sqlConnectOptions);
+      if (pool != null) {
+        setPoolConnectOptions(pool, sqlConnectOptions);
+        // Detect db system from pool implementation class (e.g. PgPool -> postgresql).
+        // This handles cases where connect options is a generic SqlConnectOptions
+        // but the pool is database-specific (e.g. Hibernate Reactive).
+        storeConnectOptionsDbSystem(sqlConnectOptions, getDbSystemNameFromClassName(pool));
+      }
       setSqlConnectOptions(null);
     }
   }

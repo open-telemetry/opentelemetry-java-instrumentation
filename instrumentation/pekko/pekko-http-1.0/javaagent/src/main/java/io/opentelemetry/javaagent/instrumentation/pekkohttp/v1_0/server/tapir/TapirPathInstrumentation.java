@@ -30,7 +30,7 @@ public class TapirPathInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("toRoute").and(takesArgument(0, named("sttp.tapir.server.ServerEndpoint"))),
-        this.getClass().getName() + "$ApplyAdvice");
+        getClass().getName() + "$ApplyAdvice");
   }
 
   @SuppressWarnings("unused")

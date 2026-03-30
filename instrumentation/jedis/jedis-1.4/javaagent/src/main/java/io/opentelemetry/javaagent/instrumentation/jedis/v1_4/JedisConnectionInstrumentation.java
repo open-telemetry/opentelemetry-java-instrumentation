@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentCo
 import static io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisSingletons.instrumenter;
 import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.is;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -37,8 +36,7 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("sendCommand"))
+        named("sendCommand")
             .and(takesArguments(1))
             .and(
                 takesArgument(
@@ -46,10 +44,9 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
                     namedOneOf(
                         "redis.clients.jedis.Protocol$Command",
                         "redis.clients.jedis.ProtocolCommand"))),
-        this.getClass().getName() + "$SendCommandNoArgsAdvice");
+        getClass().getName() + "$SendCommandNoArgsAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("sendCommand"))
+        named("sendCommand")
             .and(takesArguments(2))
             .and(
                 takesArgument(
@@ -58,7 +55,7 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
                         "redis.clients.jedis.Protocol$Command",
                         "redis.clients.jedis.ProtocolCommand")))
             .and(takesArgument(1, is(byte[][].class))),
-        this.getClass().getName() + "$SendCommandWithArgsAdvice");
+        getClass().getName() + "$SendCommandWithArgsAdvice");
   }
 
   public static class AdviceScope {

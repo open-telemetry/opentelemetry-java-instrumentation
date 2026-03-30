@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.joddhttp.v4_2;
 
 import static io.opentelemetry.javaagent.instrumentation.joddhttp.v4_2.JoddHttpSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -31,8 +30,7 @@ class JoddHttpInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("send")).and(takesArguments(0)),
-        this.getClass().getName() + "$RequestAdvice");
+        named("send").and(takesArguments(0)), getClass().getName() + "$RequestAdvice");
   }
 
   @SuppressWarnings("unused")

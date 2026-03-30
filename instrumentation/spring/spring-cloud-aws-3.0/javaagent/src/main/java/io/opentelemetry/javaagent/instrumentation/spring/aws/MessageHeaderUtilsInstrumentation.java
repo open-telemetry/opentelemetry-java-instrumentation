@@ -30,7 +30,7 @@ public class MessageHeaderUtilsInstrumentation implements TypeInstrumentation {
         namedOneOf("addHeaderIfAbsent", "addHeadersIfAbsent", "removeHeaderIfPresent")
             .and(returns(named("org.springframework.messaging.Message")))
             .and(takesArgument(0, named("org.springframework.messaging.Message"))),
-        this.getClass().getName() + "$PreserveContextAdvice");
+        getClass().getName() + "$PreserveContextAdvice");
   }
 
   @SuppressWarnings("unused")

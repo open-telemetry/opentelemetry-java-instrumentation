@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.restlet.v2_0;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.CONTROLLER;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.restlet.v2_0.RestletSingletons.serverSpanName;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -31,11 +30,10 @@ public class RouteInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("beforeHandle"))
+        named("beforeHandle")
             .and(takesArgument(0, named("org.restlet.Request")))
             .and(takesArgument(1, named("org.restlet.Response"))),
-        this.getClass().getName() + "$RouteBeforeHandleAdvice");
+        getClass().getName() + "$RouteBeforeHandleAdvice");
   }
 
   @SuppressWarnings("unused")

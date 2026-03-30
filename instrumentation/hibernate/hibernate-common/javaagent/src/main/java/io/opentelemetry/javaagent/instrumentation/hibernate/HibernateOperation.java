@@ -5,15 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate;
 
+import javax.annotation.Nullable;
+
 public class HibernateOperation {
   private final String spanName;
-  private final String sessionId;
+  @Nullable private final String sessionId;
 
-  public HibernateOperation(String operation, String entityName, SessionInfo sessionInfo) {
+  public HibernateOperation(
+      String operation, @Nullable String entityName, SessionInfo sessionInfo) {
     this(spanNameForOperation(operation, entityName), sessionInfo);
   }
 
-  public HibernateOperation(String operation, SessionInfo sessionInfo) {
+  public HibernateOperation(String operation, @Nullable SessionInfo sessionInfo) {
     this.spanName = operation;
     this.sessionId = sessionInfo != null ? sessionInfo.getSessionId() : null;
   }
@@ -22,11 +25,12 @@ public class HibernateOperation {
     return spanName;
   }
 
+  @Nullable
   public String getSessionId() {
     return sessionId;
   }
 
-  private static String spanNameForOperation(String operationName, String entityName) {
+  private static String spanNameForOperation(String operationName, @Nullable String entityName) {
     if (entityName != null) {
       return operationName + " " + entityName;
     }

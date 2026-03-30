@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx;
 
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameEndsWith;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -36,19 +35,17 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("createMono"))
+        named("createMono")
             .and(takesArgument(0, Supplier.class))
             .and(returns(named("reactor.core.publisher.Mono"))),
-        LettuceReactiveCommandsInstrumentation.class.getName() + "$CreateMonoAdvice");
+        getClass().getName() + "$CreateMonoAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(nameStartsWith("create"))
+        nameStartsWith("create")
             .and(nameEndsWith("Flux"))
             .and(isPublic())
             .and(takesArgument(0, Supplier.class))
             .and(returns(named("reactor.core.publisher.Flux"))),
-        LettuceReactiveCommandsInstrumentation.class.getName() + "$CreateFluxAdvice");
+        getClass().getName() + "$CreateFluxAdvice");
   }
 
   @SuppressWarnings("unused")

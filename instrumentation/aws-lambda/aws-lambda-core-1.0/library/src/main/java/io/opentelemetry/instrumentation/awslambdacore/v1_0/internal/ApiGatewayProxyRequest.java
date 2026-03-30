@@ -15,7 +15,6 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Map;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -53,7 +52,6 @@ public abstract class ApiGatewayProxyRequest {
     return new NoopRequest(source);
   }
 
-  @Nullable
   public Map<String, String> getHeaders() throws IOException {
     Map<String, String> headers = ofStream(freshStream());
     return (headers == null ? emptyMap() : headers);

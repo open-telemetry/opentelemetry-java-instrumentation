@@ -36,7 +36,7 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
         named("getRecordInterceptor")
             .and(takesArguments(0))
             .and(returns(named("org.springframework.kafka.listener.RecordInterceptor"))),
-        this.getClass().getName() + "$GetRecordInterceptorAdvice");
+        getClass().getName() + "$GetRecordInterceptorAdvice");
   }
 
   @SuppressWarnings("unused")

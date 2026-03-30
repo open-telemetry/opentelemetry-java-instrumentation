@@ -24,12 +24,12 @@ class MultiQuery {
   }
 
   static MultiQuery analyzeWithSummary(
-      Collection<String> rawQueryTexts, boolean querySanitizationEnabled) {
+      Collection<String> rawQueryTexts, SqlDialect dialect, boolean querySanitizationEnabled) {
     UniqueValue uniqueStoredProcedureName = new UniqueValue();
     Set<String> uniqueQueryTexts = new LinkedHashSet<>();
     UniqueValue uniqueQuerySummary = new UniqueValue();
     for (String rawQueryText : rawQueryTexts) {
-      SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyzeWithSummary(rawQueryText);
+      SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyzeWithSummary(rawQueryText, dialect);
       uniqueStoredProcedureName.set(analyzedQuery.getStoredProcedureName());
       uniqueQueryTexts.add(querySanitizationEnabled ? analyzedQuery.getQueryText() : rawQueryText);
       uniqueQuerySummary.set(analyzedQuery.getQuerySummary());

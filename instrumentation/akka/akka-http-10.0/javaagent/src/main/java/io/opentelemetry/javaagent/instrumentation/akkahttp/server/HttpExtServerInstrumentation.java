@@ -29,7 +29,7 @@ public class HttpExtServerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("bindAndHandle").and(takesArgument(0, named("akka.stream.scaladsl.Flow"))),
-        this.getClass().getName() + "$AkkaBindAndHandleAdvice");
+        getClass().getName() + "$AkkaBindAndHandleAdvice");
   }
 
   @SuppressWarnings("unused")

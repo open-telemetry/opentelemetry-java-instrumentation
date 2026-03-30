@@ -5,7 +5,7 @@ plugins {
 dependencies {
   compileOnly("javax.servlet:javax.servlet-api:3.0.1")
   implementation(project(":instrumentation:servlet:servlet-common:library"))
-  api(project(":instrumentation:servlet:servlet-javax-common:library"))
+  api(project(":instrumentation:servlet:servlet-common-javax:library"))
 
   testImplementation(project(":instrumentation:servlet:servlet-3.0:testing"))
 
@@ -28,7 +28,7 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   }
 
-  if (findProperty("testLatestDeps") as Boolean) {
+  if (findProperty("testLatestDeps") == "true") {
     compileTestJava {
       options.release.set(11)
     }

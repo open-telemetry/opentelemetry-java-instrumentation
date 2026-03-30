@@ -15,16 +15,19 @@ import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.common.AttributeKey.valueKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributeType;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.KeyValue;
 import io.opentelemetry.api.common.Value;
+import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.Arrays;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -101,8 +104,7 @@ class ValueAttributeTest {
         "test-span",
         () ->
             Span.current()
-                .setAttribute(
-                    valueKey("key"), Value.of(Arrays.asList(Value.of("a"), Value.of("b")))));
+                .setAttribute(valueKey("key"), Value.of(asList(Value.of("a"), Value.of("b")))));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -110,7 +112,7 @@ class ValueAttributeTest {
                 span ->
                     span.hasName("test-span")
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringArrayKey("key"), Arrays.asList("a", "b")))));
+                            equalTo(stringArrayKey("key"), asList("a", "b")))));
   }
 
   @Test
@@ -119,8 +121,7 @@ class ValueAttributeTest {
         "test-span",
         () ->
             Span.current()
-                .setAttribute(
-                    valueKey("key"), Value.of(Arrays.asList(Value.of(1L), Value.of(2L)))));
+                .setAttribute(valueKey("key"), Value.of(asList(Value.of(1L), Value.of(2L)))));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -128,7 +129,7 @@ class ValueAttributeTest {
                 span ->
                     span.hasName("test-span")
                         .hasAttributesSatisfyingExactly(
-                            equalTo(longArrayKey("key"), Arrays.asList(1L, 2L)))));
+                            equalTo(longArrayKey("key"), asList(1L, 2L)))));
   }
 
   @Test
@@ -137,8 +138,7 @@ class ValueAttributeTest {
         "test-span",
         () ->
             Span.current()
-                .setAttribute(
-                    valueKey("key"), Value.of(Arrays.asList(Value.of(1.1), Value.of(2.2)))));
+                .setAttribute(valueKey("key"), Value.of(asList(Value.of(1.1), Value.of(2.2)))));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -146,7 +146,7 @@ class ValueAttributeTest {
                 span ->
                     span.hasName("test-span")
                         .hasAttributesSatisfyingExactly(
-                            equalTo(doubleArrayKey("key"), Arrays.asList(1.1, 2.2)))));
+                            equalTo(doubleArrayKey("key"), asList(1.1, 2.2)))));
   }
 
   @Test
@@ -155,8 +155,7 @@ class ValueAttributeTest {
         "test-span",
         () ->
             Span.current()
-                .setAttribute(
-                    valueKey("key"), Value.of(Arrays.asList(Value.of(true), Value.of(false)))));
+                .setAttribute(valueKey("key"), Value.of(asList(Value.of(true), Value.of(false)))));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -164,7 +163,7 @@ class ValueAttributeTest {
                 span ->
                     span.hasName("test-span")
                         .hasAttributesSatisfyingExactly(
-                            equalTo(booleanArrayKey("key"), Arrays.asList(true, false)))));
+                            equalTo(booleanArrayKey("key"), asList(true, false)))));
   }
 
   @Test
@@ -198,9 +197,9 @@ class ValueAttributeTest {
   void nestedArrayValue() {
     Value<?> value =
         Value.of(
-            Arrays.asList(
-                Value.of(Arrays.asList(Value.of("a"), Value.of("b"))),
-                Value.of(Arrays.asList(Value.of("c"), Value.of("d")))));
+            asList(
+                Value.of(asList(Value.of("a"), Value.of("b"))),
+                Value.of(asList(Value.of("c"), Value.of("d")))));
     testing.runWithSpan("test-span", () -> Span.current().setAttribute(valueKey("key"), value));
 
     testing.waitAndAssertTraces(
@@ -296,5 +295,44 @@ class ValueAttributeTest {
                             equalTo(stringKey("string"), "hello"),
                             equalTo(longKey("long"), 42L),
                             equalTo(valueKey("bytes"), bytesValue))));
+  }
+
+  @Test
+  void spanBuilderWithValueAttribute() {
+    testing
+        .getOpenTelemetry()
+        .getTracer("test")
+        .spanBuilder("test-span")
+        .setAttribute(valueKey("key"), Value.of("test"))
+        .startSpan()
+        .end();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("test-span")
+                        .hasAttributesSatisfyingExactly(equalTo(stringKey("key"), "test"))));
+  }
+
+  @Test
+  void logRecordBuilderWithValueAttribute() {
+    Logger logger = testing.getOpenTelemetry().getLogsBridge().loggerBuilder("test").build();
+    logger
+        .logRecordBuilder()
+        .setBody("body")
+        .setAttribute(valueKey("key"), Value.of("test"))
+        .emit();
+
+    await()
+        .untilAsserted(
+            () ->
+                assertThat(testing.logRecords())
+                    .satisfiesExactly(
+                        logRecordData -> {
+                          assertThat(logRecordData.getBodyValue().asString()).isEqualTo("body");
+                          assertThat(logRecordData.getAttributes())
+                              .isEqualTo(Attributes.builder().put("key", "test").build());
+                        }));
   }
 }

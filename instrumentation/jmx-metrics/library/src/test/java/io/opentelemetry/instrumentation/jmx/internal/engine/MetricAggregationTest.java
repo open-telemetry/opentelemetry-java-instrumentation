@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.jmx.internal.engine;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.junit.jupiter.params.ParameterizedInvocationConstants.ARGUMENTS_PLACEHOLDER;
@@ -17,12 +18,10 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import io.opentelemetry.sdk.testing.assertj.LongPointAssert;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import javax.annotation.Nullable;
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanRegistrationException;
 import javax.management.MBeanServer;
@@ -92,8 +91,7 @@ class MetricAggregationTest {
             });
   }
 
-  private static ObjectName getObjectName(@Nullable String a, @Nullable String b)
-      throws MalformedObjectNameException {
+  private static ObjectName getObjectName(String a, String b) throws MalformedObjectNameException {
     StringBuilder parts = new StringBuilder();
     parts.append("otel.jmx.test:type=").append(Hello.class.getSimpleName());
     if (a != null) {
@@ -106,8 +104,7 @@ class MetricAggregationTest {
   }
 
   static List<MetricInfo.Type> metricTypes() {
-    return Arrays.asList(
-        MetricInfo.Type.COUNTER, MetricInfo.Type.UPDOWNCOUNTER, MetricInfo.Type.GAUGE);
+    return asList(MetricInfo.Type.COUNTER, MetricInfo.Type.UPDOWNCOUNTER, MetricInfo.Type.GAUGE);
   }
 
   @ParameterizedTest(name = ARGUMENTS_PLACEHOLDER)

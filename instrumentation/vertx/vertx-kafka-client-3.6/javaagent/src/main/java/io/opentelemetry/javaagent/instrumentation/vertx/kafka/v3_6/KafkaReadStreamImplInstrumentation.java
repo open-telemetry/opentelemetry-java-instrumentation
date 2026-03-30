@@ -36,14 +36,14 @@ public class KafkaReadStreamImplInstrumentation implements TypeInstrumentation {
         named("handler")
             .and(takesArguments(1))
             .and(takesArgument(0, named("io.vertx.core.Handler"))),
-        this.getClass().getName() + "$HandlerAdvice");
+        getClass().getName() + "$HandlerAdvice");
     transformer.applyAdviceToMethod(
         named("batchHandler")
             .and(takesArguments(1))
             .and(takesArgument(0, named("io.vertx.core.Handler"))),
-        this.getClass().getName() + "$BatchHandlerAdvice");
+        getClass().getName() + "$BatchHandlerAdvice");
     transformer.applyAdviceToMethod(
-        named("run").and(isPrivate()), this.getClass().getName() + "$RunAdvice");
+        named("run").and(isPrivate()), getClass().getName() + "$RunAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -81,7 +81,7 @@ public class KafkaReadStreamImplInstrumentation implements TypeInstrumentation {
       return KafkaClientsConsumerProcessTracing.setEnabled(false);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(@Advice.Enter boolean previousValue) {
       KafkaClientsConsumerProcessTracing.setEnabled(previousValue);
     }

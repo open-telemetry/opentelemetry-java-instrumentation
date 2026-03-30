@@ -35,7 +35,7 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("singleRequest")
             .and(takesArgument(0, named("org.apache.pekko.http.scaladsl.model.HttpRequest"))),
-        this.getClass().getName() + "$SingleRequestAdvice");
+        getClass().getName() + "$SingleRequestAdvice");
   }
 
   @SuppressWarnings("unused")

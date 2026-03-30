@@ -14,11 +14,12 @@ import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import com.openai.models.completions.CompletionUsage;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesGetter;
 import java.util.List;
-import org.jetbrains.annotations.Nullable;
+import javax.annotation.Nullable;
 
-enum ChatAttributesGetter
+final class ChatAttributesGetter
     implements GenAiAttributesGetter<ChatCompletionCreateParams, ChatCompletion> {
-  INSTANCE;
+
+  ChatAttributesGetter() {}
 
   @Override
   public String getOperationName(ChatCompletionCreateParams request) {

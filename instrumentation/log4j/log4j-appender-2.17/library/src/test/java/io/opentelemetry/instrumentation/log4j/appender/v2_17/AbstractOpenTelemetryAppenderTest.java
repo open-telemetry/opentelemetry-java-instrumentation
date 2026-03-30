@@ -7,13 +7,13 @@ package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFileAndLineAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
+import static java.util.Arrays.asList;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -76,10 +76,10 @@ abstract class AbstractOpenTelemetryAppenderTest {
     boolean async = selector != null && selector.endsWith("AsyncLoggerContextSelector");
     if (async && !Boolean.getBoolean("testLatestDeps")) {
       // source info is not available by default when async logger is used in non latest dep tests
-      return Arrays.asList(assertions);
+      return asList(assertions);
     }
 
-    List<AttributeAssertion> result = new ArrayList<>(Arrays.asList(assertions));
+    List<AttributeAssertion> result = new ArrayList<>(asList(assertions));
     result.addAll(codeFunctionAssertions(testClass, methodName));
     result.addAll(codeFileAndLineAssertions(testClass.getSimpleName() + ".java"));
     return result;

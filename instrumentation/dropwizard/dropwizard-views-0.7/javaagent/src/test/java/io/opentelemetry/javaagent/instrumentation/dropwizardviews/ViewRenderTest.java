@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.dropwizardviews;
 
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -17,6 +18,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Locale;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -32,16 +34,16 @@ class ViewRenderTest {
 
   private static Stream<Arguments> provideParameters() {
     return Stream.of(
-        Arguments.of(new FreemarkerViewRenderer(), "/views/ftl/utf8.ftl"),
-        Arguments.of(new MustacheViewRenderer(), "/views/mustache/utf8.mustache"),
-        Arguments.of(new FreemarkerViewRenderer(), "/views/ftl/utf8.ftl"),
-        Arguments.of(new MustacheViewRenderer(), "/views/mustache/utf8.mustache"));
+        Arguments.of(new FreemarkerViewRenderer(), "/views/ftl/utf8.ftl", UTF_8),
+        Arguments.of(new MustacheViewRenderer(), "/views/mustache/utf8.mustache", UTF_8),
+        Arguments.of(new FreemarkerViewRenderer(), "/views/ftl/iso88591.ftl", ISO_8859_1),
+        Arguments.of(new MustacheViewRenderer(), "/views/mustache/iso88591.mustache", ISO_8859_1));
   }
 
   @ParameterizedTest
   @MethodSource("provideParameters")
-  void testSpan(ViewRenderer renderer, String template) throws IOException {
-    View view = new View(template, UTF_8) {};
+  void testSpan(ViewRenderer renderer, String template, Charset charset) throws IOException {
+    View view = new View(template, charset) {};
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     testing.runWithSpan(
         "parent",
@@ -62,6 +64,6 @@ class ViewRenderTest {
     View view = new View("/views/ftl/utf8.ftl", UTF_8) {};
     new FreemarkerViewRenderer().render(view, Locale.ENGLISH, outputStream);
     Thread.sleep(500);
-    assertThat(testing.spans().size()).isEqualTo(0);
+    assertThat(testing.spans()).isEmpty();
   }
 }

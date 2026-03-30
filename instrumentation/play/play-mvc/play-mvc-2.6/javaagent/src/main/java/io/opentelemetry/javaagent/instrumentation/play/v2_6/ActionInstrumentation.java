@@ -44,7 +44,7 @@ public class ActionInstrumentation implements TypeInstrumentation {
         named("apply")
             .and(takesArgument(0, named("play.api.mvc.Request")))
             .and(returns(named("scala.concurrent.Future"))),
-        this.getClass().getName() + "$ApplyAdvice");
+        getClass().getName() + "$ApplyAdvice");
   }
 
   @SuppressWarnings("unused")

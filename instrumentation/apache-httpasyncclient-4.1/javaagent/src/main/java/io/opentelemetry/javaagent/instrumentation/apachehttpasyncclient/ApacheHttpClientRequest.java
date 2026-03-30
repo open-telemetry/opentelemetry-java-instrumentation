@@ -65,6 +65,7 @@ public final class ApacheHttpClientRequest {
     return delegate.getRequestLine().getMethod();
   }
 
+  @Nullable
   public String getUrl() {
     return uri != null ? uri.toString() : null;
   }
@@ -78,27 +79,37 @@ public final class ApacheHttpClientRequest {
     return protocolVersion.getMajor() + "." + protocolVersion.getMinor();
   }
 
+  @Nullable
   public String getServerAddress() {
-    return uri != null ? uri.getHost() : null;
+    if (uri != null) {
+      return uri.getHost();
+    }
+    if (target != null) {
+      return target.getHostName();
+    }
+    return null;
   }
 
+  @Nullable
   public Integer getServerPort() {
-    if (uri == null) {
-      return null;
+    if (uri != null) {
+      return uri.getPort();
     }
-    int port = uri.getPort();
-    if (port != -1) {
-      return port;
+    if (target != null) {
+      return target.getPort();
     }
-    switch (uri.getScheme()) {
-      case "http":
-        return 80;
-      case "https":
-        return 443;
-      default:
-        logger.log(FINE, "no default port mapping for scheme: {0}", uri.getScheme());
-        return null;
+    return null;
+  }
+
+  @Nullable
+  public String getScheme() {
+    if (uri != null) {
+      return uri.getScheme();
     }
+    if (target != null) {
+      return target.getSchemeName();
+    }
+    return null;
   }
 
   @Nullable

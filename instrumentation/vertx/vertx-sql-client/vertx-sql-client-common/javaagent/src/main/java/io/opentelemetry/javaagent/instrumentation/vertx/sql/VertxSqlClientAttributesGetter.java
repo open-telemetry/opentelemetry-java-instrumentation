@@ -5,27 +5,59 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sql;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
+import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MICROSOFT_SQL_SERVER;
+import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MYSQL;
+import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQL;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.IBM_DB2;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ORACLE_DB;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
-enum VertxSqlClientAttributesGetter
+class VertxSqlClientAttributesGetter
     implements SqlClientAttributesGetter<VertxSqlClientRequest, Void> {
-  INSTANCE;
 
-  private static final List<Function<Exception, String>> responseStatusExtractors =
-      createResponseStatusExtractors();
+  private static final Function<Throwable, String> responseStatusExtractor =
+      createResponseStatusExtractor();
 
   @Override
   public String getDbSystemName(VertxSqlClientRequest request) {
+    return request.getDbSystemName();
+  }
+
+  @Deprecated // to be removed in 3.0
+  @Override
+  @Nullable
+  public String getDbSystem(VertxSqlClientRequest request) {
+    // preserving old behavior: db.system was never set for vertx sql client
     return null;
+  }
+
+  @Override
+  public SqlDialect getSqlDialect(VertxSqlClientRequest request) {
+    switch (request.getDbSystemName()) {
+      case MYSQL:
+        // MySQL treats double-quoted fragments as string literals by default
+        return DOUBLE_QUOTES_ARE_STRING_LITERALS;
+      case MICROSOFT_SQL_SERVER:
+        // SQL Server can treat double quotes as string literals when QUOTED_IDENTIFIER is OFF.
+        return DOUBLE_QUOTES_ARE_STRING_LITERALS;
+      case POSTGRESQL:
+      case ORACLE_DB:
+      case IBM_DB2:
+        // These databases treat double-quoted fragments as identifiers
+        return DOUBLE_QUOTES_ARE_IDENTIFIERS;
+      default:
+        return DOUBLE_QUOTES_ARE_STRING_LITERALS;
+    }
   }
 
   @Deprecated // to be removed in 3.0
@@ -60,14 +92,9 @@ enum VertxSqlClientAttributesGetter
 
   @Nullable
   @Override
-  public String getDbResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
-    for (Function<Exception, String> extractor : responseStatusExtractors) {
-      String status = extractor.apply((Exception) error);
-      if (status != null) {
-        return status;
-      }
-    }
-    return null;
+  public String getErrorType(
+      VertxSqlClientRequest request, @Nullable Void response, @Nullable Throwable error) {
+    return responseStatusExtractor.apply(error);
   }
 
   @Override
@@ -75,14 +102,19 @@ enum VertxSqlClientAttributesGetter
     return request.isParameterizedQuery();
   }
 
-  private static List<Function<Exception, String>> createResponseStatusExtractors() {
-    return Arrays.asList(
-        responseStatusExtractor("io.vertx.sqlclient.DatabaseException", "getSqlState"),
-        // older version only have this method
-        responseStatusExtractor("io.vertx.pgclient.PgException", "getCode"));
+  private static Function<Throwable, String> createResponseStatusExtractor() {
+    Function<Throwable, String> extractor =
+        responseStatusExtractor("io.vertx.sqlclient.DatabaseException", "getSqlState");
+    // older versions only have this method
+    Function<Throwable, String> fallback =
+        responseStatusExtractor("io.vertx.pgclient.PgException", "getCode");
+    return error -> {
+      String status = extractor.apply(error);
+      return status != null ? status : fallback.apply(error);
+    };
   }
 
-  private static Function<Exception, String> responseStatusExtractor(
+  private static Function<Throwable, String> responseStatusExtractor(
       String className, String methodName) {
     try {
       // loaded via reflection, because this class is not available in all versions that we support

@@ -19,10 +19,12 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.POSTGRESQL;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -39,7 +41,6 @@ import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.Tuple;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -144,6 +145,9 @@ class VertxSqlClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                maybeStable(DB_SYSTEM),
+                                emitStableDatabaseSemconv() ? POSTGRESQL : null),
                             equalTo(maybeStable(DB_NAME), DB),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
                             equalTo(maybeStable(DB_STATEMENT), "select * from test"),
@@ -208,20 +212,16 @@ class VertxSqlClientTest {
                                             EXCEPTION_STACKTRACE,
                                             val -> val.isInstanceOf(String.class))))
                         .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                maybeStable(DB_SYSTEM),
+                                emitStableDatabaseSemconv() ? POSTGRESQL : null),
                             equalTo(maybeStable(DB_NAME), DB),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
                             equalTo(maybeStable(DB_STATEMENT), "invalid"),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(
-                                DB_RESPONSE_STATUS_CODE,
-                                emitStableDatabaseSemconv() ? "42601" : null),
-                            equalTo(
-                                ERROR_TYPE,
-                                emitStableDatabaseSemconv()
-                                    ? "io.vertx.pgclient.PgException"
-                                    : null)),
+                            equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -257,6 +257,9 @@ class VertxSqlClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                maybeStable(DB_SYSTEM),
+                                emitStableDatabaseSemconv() ? POSTGRESQL : null),
                             equalTo(maybeStable(DB_NAME), DB),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
                             equalTo(maybeStable(DB_STATEMENT), "select * from test where id = $1"),
@@ -281,7 +284,7 @@ class VertxSqlClientTest {
             "parent",
             () ->
                 pool.preparedQuery("insert into test values ($1, $2) returning *")
-                    .executeBatch(Arrays.asList(Tuple.of(3, "Three"), Tuple.of(4, "Four"))))
+                    .executeBatch(asList(Tuple.of(3, "Three"), Tuple.of(4, "Four"))))
         .toCompletionStage()
         .toCompletableFuture()
         .get(30, SECONDS);
@@ -295,6 +298,9 @@ class VertxSqlClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                maybeStable(DB_SYSTEM),
+                                emitStableDatabaseSemconv() ? POSTGRESQL : null),
                             equalTo(maybeStable(DB_NAME), DB),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
                             equalTo(
@@ -392,6 +398,9 @@ class VertxSqlClientTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
+                                equalTo(
+                                    maybeStable(DB_SYSTEM),
+                                    emitStableDatabaseSemconv() ? POSTGRESQL : null),
                                 equalTo(maybeStable(DB_NAME), DB),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
                                 equalTo(maybeStable(DB_STATEMENT), "select * from test"),
@@ -466,6 +475,9 @@ class VertxSqlClientTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
+                                equalTo(
+                                    maybeStable(DB_SYSTEM),
+                                    emitStableDatabaseSemconv() ? POSTGRESQL : null),
                                 equalTo(maybeStable(DB_NAME), DB),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
                                 equalTo(

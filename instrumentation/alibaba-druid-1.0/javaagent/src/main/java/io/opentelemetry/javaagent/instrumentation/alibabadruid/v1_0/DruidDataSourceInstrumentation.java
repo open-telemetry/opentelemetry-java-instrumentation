@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.alibabadruid.v1_0;
 
 import static io.opentelemetry.javaagent.instrumentation.alibabadruid.v1_0.DruidSingletons.telemetry;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -28,12 +27,12 @@ public class DruidDataSourceInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer typeTransformer) {
     typeTransformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(isStatic()).and(named("addDataSource")),
-        this.getClass().getName() + "$AddDataSourceAdvice");
+        isPublic().and(isStatic()).and(named("addDataSource")),
+        getClass().getName() + "$AddDataSourceAdvice");
 
     typeTransformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(isStatic()).and(named("removeDataSource")),
-        this.getClass().getName() + "$RemoveDataSourceAdvice");
+        isPublic().and(isStatic()).and(named("removeDataSource")),
+        getClass().getName() + "$RemoveDataSourceAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -51,6 +50,7 @@ public class DruidDataSourceInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class RemoveDataSourceAdvice {
+
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.Argument(0) Object dataSource) {
       DruidDataSourceMBean druidDataSource = (DruidDataSourceMBean) dataSource;

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.comparingRootSpanAttribute;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
@@ -558,11 +560,10 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                       .hasAttributesSatisfying(
                           asList(
                               equalTo(
-                                  AttributeKey.stringArrayKey("http.request.header.x-test-request"),
+                                  stringArrayKey("http.request.header.x-test-request"),
                                   singletonList("test")),
                               equalTo(
-                                  AttributeKey.stringArrayKey(
-                                      "http.response.header.x-test-response"),
+                                  stringArrayKey("http.response.header.x-test-response"),
                                   singletonList("test")))),
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         });
@@ -829,13 +830,13 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(AttributeKey.longKey("test.request.id"), requestId)),
+                            equalTo(longKey("test.request.id"), requestId)),
                 span -> assertClientSpan(span, uri, method, 200, null).hasParent(rootSpan),
                 span ->
                     assertServerSpan(span)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(AttributeKey.longKey("test.request.id"), requestId)));
+                            equalTo(longKey("test.request.id"), requestId)));
           });
     }
 
@@ -904,13 +905,13 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(AttributeKey.longKey("test.request.id"), requestId)),
+                            equalTo(longKey("test.request.id"), requestId)),
                 span -> assertClientSpan(span, uri, method, 200, null).hasParent(rootSpan),
                 span ->
                     assertServerSpan(span)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(AttributeKey.longKey("test.request.id"), requestId)),
+                            equalTo(longKey("test.request.id"), requestId)),
                 span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(rootSpan));
           });
     }
@@ -981,13 +982,13 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(AttributeKey.longKey("test.request.id"), requestId)),
+                            equalTo(longKey("test.request.id"), requestId)),
                 span -> assertClientSpan(span, uri, method, 200, null).hasParent(rootSpan),
                 span ->
                     assertServerSpan(span)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(AttributeKey.longKey("test.request.id"), requestId)));
+                            equalTo(longKey("test.request.id"), requestId)));
           });
     }
 
@@ -1101,11 +1102,8 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               if (httpClientAttributes.contains(SERVER_PORT)) {
                 int uriPort = uri.getPort();
                 if (uriPort <= 0) {
-                  if (attrs.get(SERVER_PORT) != null) {
-                    int effectivePort = "https".equals(uri.getScheme()) ? 443 : 80;
-                    assertThat(attrs).containsEntry(SERVER_PORT, effectivePort);
-                  }
-                  // alternatively, peer port is not emitted -- and that's fine too
+                  int effectivePort = defaultPortForScheme(uri.getScheme());
+                  assertThat(attrs).containsEntry(SERVER_PORT, effectivePort);
                 } else {
                   assertThat(attrs).containsEntry(SERVER_PORT, uriPort);
                 }
@@ -1210,5 +1208,15 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
   protected final URI resolveAddress(String path) {
     return URI.create("http://localhost:" + server.httpPort() + path);
+  }
+
+  private static int defaultPortForScheme(String scheme) {
+    if ("https".equals(scheme)) {
+      return 443;
+    }
+    if ("http".equals(scheme)) {
+      return 80;
+    }
+    throw new IllegalArgumentException("Unexpected URI scheme: " + scheme);
   }
 }

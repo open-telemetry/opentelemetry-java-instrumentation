@@ -19,7 +19,7 @@ final class KafkaConnectBatchProcessSpanLinksExtractor
 
   KafkaConnectBatchProcessSpanLinksExtractor(TextMapPropagator propagator) {
     this.singleRecordLinkExtractor =
-        new PropagatorBasedSpanLinksExtractor<>(propagator, SinkRecordHeadersGetter.INSTANCE);
+        new PropagatorBasedSpanLinksExtractor<>(propagator, new SinkRecordHeadersGetter());
   }
 
   @Override

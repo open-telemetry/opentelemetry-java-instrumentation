@@ -20,7 +20,7 @@ public final class GrizzlySingletons {
         JavaagentHttpServerInstrumenters.create(
             "io.opentelemetry.grizzly-2.3",
             new GrizzlyHttpAttributesGetter(),
-            HttpRequestHeadersGetter.INSTANCE,
+            new HttpRequestHeadersGetter(),
             builder ->
                 builder
                     .addContextCustomizer(

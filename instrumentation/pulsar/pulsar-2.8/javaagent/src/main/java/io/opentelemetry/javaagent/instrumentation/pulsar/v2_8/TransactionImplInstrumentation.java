@@ -32,7 +32,7 @@ public class TransactionImplInstrumentation implements TypeInstrumentation {
             .and(isPublic())
             .and(takesArguments(1))
             .and(takesArgument(0, String.class)),
-        TransactionImplInstrumentation.class.getName() + "$RegisterProducedTopicAdvice");
+        getClass().getName() + "$RegisterProducedTopicAdvice");
   }
 
   @SuppressWarnings("unused")

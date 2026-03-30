@@ -8,7 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
+import javax.annotation.Nullable;
 
 final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
 
@@ -17,10 +18,11 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
 
   @Override
   public String getDbSystemName(JedisRequest request) {
-    return DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
+    return DbSystemNameIncubatingValues.REDIS;
   }
 
   @Override
+  @Nullable
   public String getDbNamespace(JedisRequest request) {
     return null;
   }
@@ -33,5 +35,15 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
   @Override
   public String getDbOperationName(JedisRequest request) {
     return request.getCommand().name();
+  }
+
+  @Override
+  public String getServerAddress(JedisRequest request) {
+    return request.getConnection().getHost();
+  }
+
+  @Override
+  public Integer getServerPort(JedisRequest request) {
+    return request.getConnection().getPort();
   }
 }

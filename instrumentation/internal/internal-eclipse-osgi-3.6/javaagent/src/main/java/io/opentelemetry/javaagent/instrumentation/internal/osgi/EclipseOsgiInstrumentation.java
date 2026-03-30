@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.osgi;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
@@ -37,8 +36,8 @@ class EclipseOsgiInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("isDynamicallyImported")).and(returns(boolean.class)),
-        this.getClass().getName() + "$IsDynamicallyImportedAdvice");
+        named("isDynamicallyImported").and(returns(boolean.class)),
+        getClass().getName() + "$IsDynamicallyImportedAdvice");
   }
 
   @SuppressWarnings("unused")

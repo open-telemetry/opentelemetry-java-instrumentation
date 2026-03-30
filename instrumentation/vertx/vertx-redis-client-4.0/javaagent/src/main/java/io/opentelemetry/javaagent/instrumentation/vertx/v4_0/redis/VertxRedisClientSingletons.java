@@ -15,14 +15,13 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.vertx.core.Future;
 import io.vertx.redis.client.Command;
 import io.vertx.redis.client.impl.RedisStandaloneConnection;
 import io.vertx.redis.client.impl.RedisURI;
 import java.util.concurrent.CompletableFuture;
+import javax.annotation.Nullable;
 
 public final class VertxRedisClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-redis-client-4.0";
@@ -39,20 +38,15 @@ public final class VertxRedisClientSingletons {
     // the span name
     SpanNameExtractor<VertxRedisClientRequest> spanNameExtractor =
         VertxRedisClientRequest::getCommand;
+    VertxRedisClientAttributesGetter getter = new VertxRedisClientAttributesGetter();
 
     InstrumenterBuilder<VertxRedisClientRequest, Void> builder =
         Instrumenter.<VertxRedisClientRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
+            .addAttributesExtractor(DbClientAttributesExtractor.create(getter))
+            .addAttributesExtractor(new VertxRedisClientAttributesExtractor())
             .addAttributesExtractor(
-                DbClientAttributesExtractor.create(VertxRedisClientAttributesGetter.INSTANCE))
-            .addAttributesExtractor(VertxRedisClientAttributesExtractor.INSTANCE)
-            .addAttributesExtractor(
-                ServerAttributesExtractor.create(VertxRedisClientNetAttributesGetter.INSTANCE))
-            .addAttributesExtractor(
-                NetworkAttributesExtractor.create(VertxRedisClientNetAttributesGetter.INSTANCE))
-            .addAttributesExtractor(
-                ServicePeerAttributesExtractor.create(
-                    VertxRedisClientNetAttributesGetter.INSTANCE, GlobalOpenTelemetry.get()))
+                ServicePeerAttributesExtractor.create(getter, GlobalOpenTelemetry.get()))
             .addOperationMetrics(DbClientMetrics.get());
 
     INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
@@ -70,7 +64,7 @@ public final class VertxRedisClientSingletons {
         .toCompletionStage()
         .whenComplete(
             (value, throwable) -> {
-              instrumenter().end(context, request, null, null);
+              instrumenter().end(context, request, null, throwable);
               try (Scope ignore = parentContext.makeCurrent()) {
                 if (throwable != null) {
                   result.completeExceptionally(throwable);
@@ -82,11 +76,12 @@ public final class VertxRedisClientSingletons {
     return Future.fromCompletionStage(result);
   }
 
+  @Nullable
   public static RedisURI getRedisUriThreadLocal() {
     return redisUriThreadLocal.get();
   }
 
-  public static void setRedisUriThreadLocal(RedisURI redisUri) {
+  public static void setRedisUriThreadLocal(@Nullable RedisURI redisUri) {
     redisUriThreadLocal.set(redisUri);
   }
 
@@ -94,14 +89,17 @@ public final class VertxRedisClientSingletons {
     commandNameField.set(command, commandName);
   }
 
+  @Nullable
   public static String getCommandName(Command command) {
     return commandNameField.get(command);
   }
 
-  public static void setRedisUri(RedisStandaloneConnection connection, RedisURI redisUri) {
+  public static void setRedisUri(
+      RedisStandaloneConnection connection, @Nullable RedisURI redisUri) {
     redisUriField.set(connection, redisUri);
   }
 
+  @Nullable
   public static RedisURI getRedisUri(RedisStandaloneConnection connection) {
     return redisUriField.get(connection);
   }

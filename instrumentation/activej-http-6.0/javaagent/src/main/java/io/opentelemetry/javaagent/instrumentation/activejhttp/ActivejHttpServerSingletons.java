@@ -21,7 +21,7 @@ public final class ActivejHttpServerSingletons {
         JavaagentHttpServerInstrumenters.create(
             INSTRUMENTATION_NAME,
             new ActivejHttpServerAttributesGetter(),
-            ActivejHttpServerRequestGetter.INSTANCE);
+            new ActivejHttpServerRequestGetter());
   }
 
   public static Instrumenter<HttpRequest, HttpResponse> instrumenter() {

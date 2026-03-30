@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.opensearch.v3_0.OpenSearchSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -21,7 +20,11 @@ import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.opensearch.client.json.JsonpMapper;
+import org.opensearch.client.opensearch.core.MsearchRequest;
+import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.transport.Endpoint;
+import org.opensearch.client.transport.OpenSearchTransport;
 
 public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
   @Override
@@ -32,20 +35,18 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("performRequest"))
             .and(takesArgument(0, Object.class))
             .and(takesArgument(1, named("org.opensearch.client.transport.Endpoint"))),
-        this.getClass().getName() + "$PerformRequestAdvice");
+        getClass().getName() + "$PerformRequestAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("performRequestAsync"))
             .and(takesArgument(0, Object.class))
             .and(takesArgument(1, named("org.opensearch.client.transport.Endpoint"))),
-        this.getClass().getName() + "$PerformRequestAsyncAdvice");
+        getClass().getName() + "$PerformRequestAsyncAdvice");
   }
 
   public static class AdviceScope {
@@ -60,10 +61,21 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    public static AdviceScope start(Object request, Endpoint<Object, Object, Object> endpoint) {
+    public static AdviceScope start(
+        Object request, Endpoint<Object, Object, Object> endpoint, JsonpMapper jsonpMapper) {
       Context parentContext = Context.current();
+
+      String queryBody = null;
+
+      if (OpenSearchSingletons.CAPTURE_SEARCH_QUERY
+          && (request instanceof SearchRequest || request instanceof MsearchRequest)) {
+        queryBody = OpenSearchBodyExtractor.extractSanitized(jsonpMapper, request);
+      }
+
       OpenSearchRequest otelRequest =
-          OpenSearchRequest.create(endpoint.method(request), endpoint.requestUrl(request));
+          OpenSearchRequest.create(
+              endpoint.method(request), endpoint.requestUrl(request), queryBody);
+
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return null;
       }
@@ -94,9 +106,10 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceScope onEnter(
+        @Advice.This OpenSearchTransport openSearchTransport,
         @Advice.Argument(0) Object request,
         @Advice.Argument(1) Endpoint<Object, Object, Object> endpoint) {
-      return AdviceScope.start(request, endpoint);
+      return AdviceScope.start(request, endpoint, openSearchTransport.jsonpMapper());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -114,9 +127,11 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Object[] onEnter(
+        @Advice.This OpenSearchTransport openSearchTransport,
         @Advice.Argument(0) Object request,
         @Advice.Argument(1) Endpoint<Object, Object, Object> endpoint) {
-      AdviceScope adviceScope = AdviceScope.start(request, endpoint);
+      AdviceScope adviceScope =
+          AdviceScope.start(request, endpoint, openSearchTransport.jsonpMapper());
       return new Object[] {adviceScope};
     }
 

@@ -14,14 +14,14 @@ import javax.annotation.Nullable;
  * Helper container for Context attributes for transferring certain information between servlet
  * integration and app-server server handler integrations.
  */
-public class AppServerBridge {
+public final class AppServerBridge {
 
   private static final ContextKey<AppServerBridge> CONTEXT_KEY =
       ContextKey.named("opentelemetry-servlet-app-server-bridge");
 
   private final boolean servletShouldRecordException;
   private boolean captureServletAttributes;
-  private Throwable exception;
+  @Nullable private Throwable exception;
 
   private AppServerBridge(Builder builder) {
     servletShouldRecordException = builder.recordException;
@@ -96,9 +96,9 @@ public class AppServerBridge {
     return Key.class;
   }
 
-  public static class Builder {
-    boolean recordException;
-    boolean captureServletAttributes;
+  public static final class Builder {
+    private boolean recordException;
+    private boolean captureServletAttributes;
 
     /**
      * Use on servers where exceptions thrown during servlet invocation are not propagated to the

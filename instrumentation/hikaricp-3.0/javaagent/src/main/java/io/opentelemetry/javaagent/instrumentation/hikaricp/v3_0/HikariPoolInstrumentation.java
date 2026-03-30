@@ -33,7 +33,7 @@ public class HikariPoolInstrumentation implements TypeInstrumentation {
         named("setMetricsTrackerFactory")
             .and(takesArguments(1))
             .and(takesArgument(0, named("com.zaxxer.hikari.metrics.MetricsTrackerFactory"))),
-        this.getClass().getName() + "$SetMetricsTrackerFactoryAdvice");
+        getClass().getName() + "$SetMetricsTrackerFactoryAdvice");
   }
 
   @SuppressWarnings("unused")

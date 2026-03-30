@@ -24,13 +24,12 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        none(), OpenTelemetryInstrumentation.class.getName() + "$InitAdvice");
+    transformer.applyAdviceToMethod(none(), getClass().getName() + "$InitAdvice");
   }
 
   @SuppressWarnings({"ReturnValueIgnored", "unused"})
   public static class InitAdvice {
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void init() {
       // the sole purpose of this advice is to ensure that ApplicationMeterFactory115 is recognized
       // as helper class and injected into class loader

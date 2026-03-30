@@ -69,8 +69,7 @@ public class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumen
 
     transformer.applyAdviceToMethod(
         named("spinInnerClass"),
-        InnerClassLambdaMetafactoryInstrumentation.class.getName()
-            + (hasInterfaceClassField() ? "$LambdaJdk17Advice" : "$LambdaAdvice"));
+        getClass().getName() + (hasInterfaceClassField() ? "$LambdaJdk17Advice" : "$LambdaAdvice"));
   }
 
   @SuppressWarnings("ReturnValueIgnored")

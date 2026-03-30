@@ -17,7 +17,7 @@ dependencies {
   library("org.apache.dubbo:dubbo:2.7.0")
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 
 testing {
   suites {
@@ -40,14 +40,14 @@ testing {
 }
 
 tasks.withType<Test>().configureEach {
-  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  systemProperty("testLatestDeps", findProperty("testLatestDeps"))
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   // to suppress non-fatal errors on jdk17
   jvmArgs("--add-opens=java.base/java.math=ALL-UNNAMED")
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
 
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  systemProperty("collectMetadata", findProperty("collectMetadata"))
 }
 
 val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
@@ -55,13 +55,23 @@ val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { sui
     testClassesDirs = suite.sources.output.classesDirs
     classpath = suite.sources.runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+    jvmArgs("-Dotel.semconv-stability.opt-in=rpc,service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc,service.peer")
+  }
+}
+
+val bothSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
+  tasks.register<Test>("${suite.name}BothSemconv") {
+    testClassesDirs = suite.sources.output.classesDirs
+    classpath = suite.sources.runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup,service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc/dup,service.peer")
   }
 }
 
 tasks {
   check {
-    dependsOn(testing.suites, stableSemconvSuites)
+    dependsOn(testing.suites, stableSemconvSuites, bothSemconvSuites)
   }
 }

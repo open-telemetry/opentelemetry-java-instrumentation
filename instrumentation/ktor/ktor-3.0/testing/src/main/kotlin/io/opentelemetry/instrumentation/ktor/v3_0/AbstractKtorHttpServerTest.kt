@@ -22,9 +22,12 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.semconv.ServerAttributes
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.milliseconds
 
 abstract class AbstractKtorHttpServerTest : AbstractHttpServerTest<EmbeddedServer<*, *>>() {
 
@@ -77,6 +80,10 @@ abstract class AbstractKtorHttpServerTest : AbstractHttpServerTest<EmbeddedServe
       }
 
       get("/child") {
+        // with ktor 3.0 triggers the issue described in https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/16430
+        withContext(Dispatchers.IO) {
+          delay(1.milliseconds)
+        }
         controller(ServerEndpoint.INDEXED_CHILD) {
           ServerEndpoint.INDEXED_CHILD.collectSpanAttributes { call.request.queryParameters[it] }
           call.respondText(ServerEndpoint.INDEXED_CHILD.body, status = HttpStatusCode.fromValue(ServerEndpoint.INDEXED_CHILD.status))

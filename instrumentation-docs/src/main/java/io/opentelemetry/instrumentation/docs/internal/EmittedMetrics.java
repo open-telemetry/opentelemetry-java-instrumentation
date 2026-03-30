@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * Representation of metrics emitted by an instrumentation. Includes context about whether emitted
@@ -95,6 +96,11 @@ public class EmittedMetrics {
     private String name;
     private String description;
     private String type;
+
+    @Nullable
+    @JsonProperty("is_monotonic")
+    private Boolean isMonotonic;
+
     private String unit;
     private List<TelemetryAttribute> attributes;
 
@@ -107,6 +113,22 @@ public class EmittedMetrics {
       this.name = name;
       this.description = description;
       this.type = type;
+      this.isMonotonic = null;
+      this.unit = unit;
+      this.attributes = attributes;
+    }
+
+    public Metric(
+        String name,
+        String description,
+        String type,
+        @Nullable Boolean isMonotonic,
+        String unit,
+        List<TelemetryAttribute> attributes) {
+      this.name = name;
+      this.description = description;
+      this.type = type;
+      this.isMonotonic = isMonotonic;
       this.unit = unit;
       this.attributes = attributes;
     }
@@ -143,6 +165,52 @@ public class EmittedMetrics {
       this.type = type;
     }
 
+    public String getInstrumentType() {
+      return inferInstrumentType(this.type, this.isMonotonic);
+    }
+
+    /**
+     * Infers the InstrumentType from the MetricDataType string and isMonotonic flag.
+     *
+     * @param metricDataType the MetricDataType string (e.g., "LONG_SUM", "DOUBLE_GAUGE")
+     * @param isMonotonic whether the metric is monotonic (for SUM types), null if not applicable
+     * @return the inferred InstrumentType string
+     */
+    private static String inferInstrumentType(
+        String metricDataType, @Nullable Boolean isMonotonic) {
+      if (metricDataType == null || metricDataType.isEmpty()) {
+        return "";
+      }
+
+      return switch (metricDataType) {
+        case "HISTOGRAM", "EXPONENTIAL_HISTOGRAM", "SUMMARY" -> "histogram";
+        case "LONG_GAUGE", "DOUBLE_GAUGE" -> "gauge";
+        case "LONG_SUM", "DOUBLE_SUM" -> {
+          // Use isMonotonic flag to distinguish between COUNTER and UP_DOWN_COUNTER
+          if (isMonotonic != null && isMonotonic) {
+            yield "counter";
+          } else if (isMonotonic != null) {
+            yield "updowncounter";
+          } else {
+            // Unknown, default to counter
+            yield "counter";
+          }
+        }
+        default -> "";
+      };
+    }
+
+    @Nullable
+    @JsonProperty("is_monotonic")
+    public Boolean getIsMonotonic() {
+      return isMonotonic;
+    }
+
+    @JsonProperty("is_monotonic")
+    public void setIsMonotonic(@Nullable Boolean isMonotonic) {
+      this.isMonotonic = isMonotonic;
+    }
+
     public String getUnit() {
       return unit;
     }
@@ -167,6 +235,7 @@ public class EmittedMetrics {
       private String name = "";
       private String description = "";
       private String type = "";
+      @Nullable private Boolean isMonotonic = null;
       private String unit = "";
       private List<TelemetryAttribute> attributes = new ArrayList<>();
 
@@ -189,6 +258,12 @@ public class EmittedMetrics {
       }
 
       @CanIgnoreReturnValue
+      public Builder isMonotonic(@Nullable Boolean isMonotonic) {
+        this.isMonotonic = isMonotonic;
+        return this;
+      }
+
+      @CanIgnoreReturnValue
       public Builder unit(String unit) {
         this.unit = unit;
         return this;
@@ -201,7 +276,7 @@ public class EmittedMetrics {
       }
 
       public Metric build() {
-        return new Metric(name, description, type, unit, attributes);
+        return new Metric(name, description, type, isMonotonic, unit, attributes);
       }
     }
 

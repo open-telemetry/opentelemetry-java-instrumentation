@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.appender.v1_1;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -13,9 +14,9 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -24,18 +25,17 @@ import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 import org.jboss.logmanager.Level;
 import org.jboss.logmanager.LogContext;
 import org.jboss.logmanager.Logger;
 import org.jboss.logmanager.MDC;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class JbossLogmanagerTest {
 
@@ -148,12 +148,12 @@ class JbossLogmanagerTest {
 
             List<AttributeAssertion> attributeAsserts =
                 new ArrayList<>(
-                    Arrays.asList(
+                    asList(
                         equalTo(THREAD_NAME, Thread.currentThread().getName()),
                         equalTo(THREAD_ID, Thread.currentThread().getId())));
             if (logException) {
               attributeAsserts.addAll(
-                  Arrays.asList(
+                  asList(
                       equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
                       equalTo(EXCEPTION_MESSAGE, "hello"),
                       satisfies(
@@ -193,17 +193,18 @@ class JbossLogmanagerTest {
     }
   }
 
-  @Test
-  void testMdc() {
+  @ParameterizedTest
+  @ValueSource(strings = {"event.name", "otel.event.name"})
+  void testMdc(String eventNameProperty) {
     MDC.put("key1", "val1");
     MDC.put("key2", "val2");
-    MDC.put("event.name", "MyEventName");
+    MDC.put(eventNameProperty, "MyEventName");
     try {
       logger.info("xyz");
     } finally {
       MDC.remove("key1");
       MDC.remove("key2");
-      MDC.remove("event.name");
+      MDC.remove(eventNameProperty);
     }
 
     testing.waitAndAssertLogRecords(
@@ -215,8 +216,8 @@ class JbossLogmanagerTest {
                 .hasSeverityText("INFO")
                 .hasEventName("MyEventName")
                 .hasAttributesSatisfyingExactly(
-                    equalTo(AttributeKey.stringKey("key1"), "val1"),
-                    equalTo(AttributeKey.stringKey("key2"), "val2"),
+                    equalTo(stringKey("key1"), "val1"),
+                    equalTo(stringKey("key2"), "val2"),
                     equalTo(THREAD_NAME, Thread.currentThread().getName()),
                     equalTo(THREAD_ID, Thread.currentThread().getId())));
   }

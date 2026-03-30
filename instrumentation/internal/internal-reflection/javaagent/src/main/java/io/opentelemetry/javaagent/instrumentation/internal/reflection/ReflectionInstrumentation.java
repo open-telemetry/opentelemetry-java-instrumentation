@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.reflection;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -31,24 +30,22 @@ public class ReflectionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("filterFields"))
+        named("filterFields")
             .and(takesArguments(2))
             .and(takesArgument(0, Class.class))
             .and(takesArgument(1, Field[].class))
             .and(isPublic())
             .and(isStatic()),
-        ReflectionInstrumentation.class.getName() + "$FilterFieldsAdvice");
+        getClass().getName() + "$FilterFieldsAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("filterMethods"))
+        named("filterMethods")
             .and(takesArguments(2))
             .and(takesArgument(0, Class.class))
             .and(takesArgument(1, Method[].class))
             .and(isPublic())
             .and(isStatic()),
-        ReflectionInstrumentation.class.getName() + "$FilterMethodsAdvice");
+        getClass().getName() + "$FilterMethodsAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -14,14 +14,14 @@ import org.eclipse.jetty.server.Response;
 public final class Jetty12Singletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jetty-12.0";
 
-  private static final Instrumenter<Request, Response> INSTRUMENTER;
+  private static final Instrumenter<Request, Response> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         JavaagentHttpServerInstrumenters.create(
             INSTRUMENTATION_NAME,
             new Jetty12HttpAttributesGetter(),
-            Jetty12TextMapGetter.INSTANCE,
+            new Jetty12TextMapGetter(),
             builder ->
                 builder.addContextCustomizer(
                     (context, request, attributes) ->
@@ -31,10 +31,10 @@ public final class Jetty12Singletons {
                             .init(context)));
   }
 
-  private static final Jetty12Helper HELPER = new Jetty12Helper(INSTRUMENTER);
+  private static final Jetty12Helper helper = new Jetty12Helper(instrumenter);
 
   public static Jetty12Helper helper() {
-    return HELPER;
+    return helper;
   }
 
   private Jetty12Singletons() {}

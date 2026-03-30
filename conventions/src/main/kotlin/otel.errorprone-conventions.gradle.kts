@@ -58,9 +58,15 @@ tasks {
         // Suggests using Guava types for fields but we don't use Guava
         disable("ImmutableMemberCollection")
 
-        // Replaced by custom OtelUnnecessarilyFullyQualified check which handles
-        // application.* and other repo-specific conventions
+        // The built-in UnnecessarilyFullyQualified check is replaced by the custom
+        // OtelUnnecessarilyFullyQualified check which handles application.* and
+        // other repo-specific conventions (e.g. deprecated-for-removal exemptions).
+        // The disable() also disables the custom check via its altNames, so we
+        // must explicitly re-enable it.
         disable("UnnecessarilyFullyQualified")
+        if (!project.name.equals("custom-checks")) {
+          warn("OtelUnnecessarilyFullyQualified")
+        }
 
         // TODO (trask) use animal sniffer
         disable("Java8ApiChecker")

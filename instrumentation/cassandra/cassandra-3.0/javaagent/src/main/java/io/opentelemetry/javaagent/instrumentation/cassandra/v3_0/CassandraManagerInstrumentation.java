@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -29,8 +28,8 @@ public class CassandraManagerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isPrivate()).and(named("newSession")).and(takesArguments(0)),
-        this.getClass().getName() + "$NewSessionAdvice");
+        isPrivate().and(named("newSession")).and(takesArguments(0)),
+        getClass().getName() + "$NewSessionAdvice");
   }
 
   @SuppressWarnings("unused")

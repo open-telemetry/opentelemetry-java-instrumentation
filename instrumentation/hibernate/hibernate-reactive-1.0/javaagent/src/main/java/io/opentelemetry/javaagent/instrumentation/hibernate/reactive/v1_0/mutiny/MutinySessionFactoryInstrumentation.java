@@ -30,13 +30,13 @@ public class MutinySessionFactoryInstrumentation implements TypeInstrumentation 
         nameStartsWith("open")
             .or(nameStartsWith("with"))
             .and(returns(named("io.smallrye.mutiny.Uni"))),
-        this.getClass().getName() + "$ContextAdvice");
+        getClass().getName() + "$ContextAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ContextAdvice {
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static Uni<?> onExit(@Advice.Return Uni<?> uni) {
       return ContextOperator.plug(uni);
     }

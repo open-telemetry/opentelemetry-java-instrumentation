@@ -22,7 +22,7 @@ public class DuplicateHelperInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("transform"), this.getClass().getName() + "$TestAdvice");
+    transformer.applyAdviceToMethod(named("transform"), getClass().getName() + "$TestAdvice");
   }
 
   @SuppressWarnings("unused")

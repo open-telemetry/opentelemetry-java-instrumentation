@@ -15,9 +15,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 
 class WrapperTest {
 
+  // we don't implement methods introduced in jdbc 4.5 (added in java 26) yet
+  @EnabledForJreRange(max = JRE.JAVA_25)
   @Test
   void wrapperImplementsAllMethods() throws Exception {
     validate(Statement.class, OpenTelemetryStatement.class);

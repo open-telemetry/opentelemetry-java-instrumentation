@@ -9,12 +9,13 @@ import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.UrlParser.p
 
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.ProducerData;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.UrlParser.UrlData;
+import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Message;
 
 public final class PulsarRequest extends BasePulsarRequest {
   private final Message<?> message;
 
-  private PulsarRequest(Message<?> message, String destination, UrlData urlData) {
+  private PulsarRequest(Message<?> message, String destination, @Nullable UrlData urlData) {
     super(destination, urlData);
     this.message = message;
   }
@@ -23,7 +24,7 @@ public final class PulsarRequest extends BasePulsarRequest {
     return new PulsarRequest(message, message.getTopicName(), null);
   }
 
-  public static PulsarRequest create(Message<?> message, String url) {
+  public static PulsarRequest create(Message<?> message, @Nullable String url) {
     return new PulsarRequest(message, message.getTopicName(), parseUrl(url));
   }
 

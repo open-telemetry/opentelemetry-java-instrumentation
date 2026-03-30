@@ -35,10 +35,6 @@ import io.opentelemetry.testing.internal.armeria.common.HttpMethod;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import io.opentelemetry.testing.internal.armeria.common.QueryParams;
 import io.opentelemetry.testing.internal.armeria.common.RequestHeaders;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.function.Consumer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.webapp.WebAppContext;
@@ -192,7 +188,7 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
                     span.hasName(getContextPath() + "/greeting.xhtml")
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent(),
-                span -> handlerSpan(trace, 0, "#{greetingForm.submit()}", null)));
+                span -> assertHandlerSpan(span, trace, 0, "#{greetingForm.submit()}", null)));
   }
 
   @Test
@@ -258,22 +254,20 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
                         .hasNoParent()
                         .hasStatus(StatusData.error())
                         .hasException(expectedException),
-                span -> handlerSpan(trace, 0, "#{greetingForm.submit()}", expectedException)));
+                span ->
+                    assertHandlerSpan(
+                        span, trace, 0, "#{greetingForm.submit()}", expectedException)));
   }
 
-  List<Consumer<SpanDataAssert>> handlerSpan(
-      TraceAssert trace, int parentIndex, String spanName, Exception expectedException) {
-    List<Consumer<SpanDataAssert>> assertions =
-        new ArrayList<>(
-            Arrays.asList(
-                span ->
-                    span.hasName(spanName)
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(parentIndex))));
-
+  private static void assertHandlerSpan(
+      SpanDataAssert span,
+      TraceAssert trace,
+      int parentIndex,
+      String spanName,
+      Exception expectedException) {
+    span.hasName(spanName).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(parentIndex));
     if (expectedException != null) {
-      assertions.add(span -> span.hasStatus(StatusData.error()).hasException(expectedException));
+      span.hasStatus(StatusData.error()).hasException(expectedException);
     }
-    return assertions;
   }
 }

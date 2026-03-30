@@ -31,19 +31,19 @@ public class HttpRequestImplInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(2, String.class)).and(takesArgument(3, int.class)),
-        HttpRequestImplInstrumentation.class.getName() + "$Vertx30Advice");
+        getClass().getName() + "$Vertx30Advice");
     transformer.applyAdviceToMethod(
         isConstructor()
             .and(takesArgument(1, boolean.class))
             .and(takesArgument(3, String.class))
             .and(takesArgument(4, int.class)),
-        HttpRequestImplInstrumentation.class.getName() + "$Vertx34Advice");
+        getClass().getName() + "$Vertx34Advice");
     transformer.applyAdviceToMethod(
         isConstructor()
             .and(takesArgument(1, boolean.class))
             .and(takesArgument(4, String.class))
             .and(takesArgument(5, int.class)),
-        HttpRequestImplInstrumentation.class.getName() + "$Vertx37Advice");
+        getClass().getName() + "$Vertx37Advice");
   }
 
   @SuppressWarnings("unused")

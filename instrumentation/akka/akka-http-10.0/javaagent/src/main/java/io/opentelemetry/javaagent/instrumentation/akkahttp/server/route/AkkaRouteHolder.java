@@ -13,22 +13,21 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import javax.annotation.Nullable;
 
 public class AkkaRouteHolder implements ImplicitContextKeyed {
   private static final ContextKey<AkkaRouteHolder> KEY = named("opentelemetry-akka-route");
 
   private StringBuilder route = new StringBuilder();
-  private Uri.Path lastUnmatchedPath = null;
+  @Nullable private Uri.Path lastUnmatchedPath = null;
   private boolean lastWasMatched = false;
   private final Deque<State> savedStates = new ArrayDeque<>();
 
   public static Context init(Context context) {
-    if (context.get(KEY) != null) {
-      return context;
-    }
     return context.with(new AkkaRouteHolder());
   }
 
+  @Nullable
   public static AkkaRouteHolder get(Context context) {
     return context.get(KEY);
   }
@@ -60,6 +59,7 @@ public class AkkaRouteHolder implements ImplicitContextKeyed {
     }
   }
 
+  @Nullable
   public String route() {
     return lastWasMatched ? route.toString() : null;
   }
@@ -85,10 +85,10 @@ public class AkkaRouteHolder implements ImplicitContextKeyed {
   private AkkaRouteHolder() {}
 
   private static class State {
-    private final Uri.Path lastUnmatchedPath;
+    @Nullable private final Uri.Path lastUnmatchedPath;
     private final StringBuilder route;
 
-    private State(Uri.Path lastUnmatchedPath, StringBuilder route) {
+    private State(@Nullable Uri.Path lastUnmatchedPath, StringBuilder route) {
       this.lastUnmatchedPath = lastUnmatchedPath;
       this.route = route;
     }

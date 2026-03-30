@@ -30,7 +30,7 @@ public class RoutesInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("spark.route.HttpMethod")))
             .and(returns(named("spark.routematch.RouteMatch")))
             .and(isPublic()),
-        this.getClass().getName() + "$FindAdvice");
+        getClass().getName() + "$FindAdvice");
   }
 
   @SuppressWarnings("unused")

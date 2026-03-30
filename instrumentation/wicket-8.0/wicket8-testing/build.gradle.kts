@@ -16,7 +16,7 @@ dependencies {
   latestDepTestLibrary("org.apache.wicket:wicket:9.+") // see wicket10-testing module
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 
 // Wicket 9 requires Java 11
 if (latestDepTest) {

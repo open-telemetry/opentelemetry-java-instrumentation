@@ -50,7 +50,7 @@ public class HttpServerFilterInstrumentation implements TypeInstrumentation {
         @Advice.Argument(2) HttpResponsePacket response) {
       Context context = GrizzlyStateStorage.getContext(ctx);
       HttpServerResponseCustomizerHolder.getCustomizer()
-          .customize(context, response, GrizzlyHttpResponseMutator.INSTANCE);
+          .customize(context, response, new GrizzlyHttpResponseMutator());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

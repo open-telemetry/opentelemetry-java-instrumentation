@@ -27,7 +27,6 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.HashSet;
-import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Response;
@@ -94,8 +93,7 @@ class JettyServlet2Test extends AbstractHttpServerTest<Server> {
   }
 
   @Override
-  public String expectedServerSpanName(
-      ServerEndpoint endpoint, String method, @Nullable String route) {
+  public String expectedServerSpanName(ServerEndpoint endpoint, String method, String route) {
     if (method.equals(HttpConstants._OTHER)) {
       return "HTTP " + getContextPath() + endpoint.getPath();
     }

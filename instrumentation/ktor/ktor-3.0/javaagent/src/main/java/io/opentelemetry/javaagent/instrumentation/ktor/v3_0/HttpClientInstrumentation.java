@@ -13,7 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.ktor.client.HttpClientConfig;
 import io.ktor.client.engine.HttpClientEngineConfig;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.ktor.v2_0.common.internal.KtorBuilderUtil;
+import io.opentelemetry.instrumentation.ktor.common.v2_0.internal.KtorBuilderUtil;
 import io.opentelemetry.instrumentation.ktor.v3_0.KtorClientTelemetry;
 import io.opentelemetry.instrumentation.ktor.v3_0.KtorClientTelemetryBuilder;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
@@ -37,7 +37,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         isConstructor()
             .and(takesArguments(2))
             .and(takesArgument(1, named("io.ktor.client.HttpClientConfig"))),
-        this.getClass().getName() + "$ConstructorAdvice");
+        getClass().getName() + "$ConstructorAdvice");
   }
 
   @SuppressWarnings("unused")

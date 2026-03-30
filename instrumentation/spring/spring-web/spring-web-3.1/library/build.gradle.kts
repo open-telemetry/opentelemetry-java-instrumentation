@@ -11,7 +11,7 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 
 // spring 6 requires java 17
 if (latestDepTest) {
@@ -21,8 +21,8 @@ if (latestDepTest) {
 }
 
 tasks {
-  test {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
   val testStableSemconv by registering(Test::class) {

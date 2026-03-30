@@ -44,7 +44,7 @@ public class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation
             .and(takesArgument(1, named(String.class.getName())))
             .and(takesArgument(2, named(Exception.class.getName())))
             .and(takesArgument(3, named(boolean.class.getName()))),
-        this.getClass().getName() + "$SendResponseAdvice");
+        getClass().getName() + "$SendResponseAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -101,7 +101,7 @@ public class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation
         @Advice.This HttpDispatcherLink httpDispatcherLink,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Argument(value = 0) StatusCodes statusCode,
-        @Advice.Argument(value = 2) Exception failure,
+        @Advice.Argument(value = 2) @Nullable Exception failure,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
 
       if (adviceScope != null) {

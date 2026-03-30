@@ -1,6 +1,6 @@
 otel:
   # "file_format" serves as opt-in to the new file format
-  file_format: "1.0-rc.1"
+  file_format: "1.0"
   resource:
     detection/development:
       detectors:
@@ -45,4 +45,4 @@ otel:
           client:
             emit_experimental_telemetry/development: true
       runtime_telemetry:
-        emit_experimental_telemetry/development: true
+        emit_experimental_metrics/development: true

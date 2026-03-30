@@ -44,14 +44,14 @@ public class TransportConnectorInstrumentation implements TypeInstrumentation {
         named("doResolveAndConnect")
             .and(takesArgument(3, named("io.netty.resolver.AddressResolverGroup")))
             .and(returns(named("reactor.core.publisher.Mono"))),
-        TransportConnectorInstrumentation.class.getName() + "$ResolveAndConnectAdvice");
+        getClass().getName() + "$ResolveAndConnectAdvice");
 
     // handles [1.0.0, 1.0.6)
     transformer.applyAdviceToMethod(
         named("doConnect")
             .and(takesArgument(0, SocketAddress.class))
             .and(takesArgument(2, named("io.netty.channel.ChannelPromise"))),
-        TransportConnectorInstrumentation.class.getName() + "$ConnectAdvice");
+        getClass().getName() + "$ConnectAdvice");
     // handles [1.0.6, )
     transformer.applyAdviceToMethod(
         named("doConnect")
@@ -64,7 +64,7 @@ public class TransportConnectorInstrumentation implements TypeInstrumentation {
                         // since 1.0.34
                         "reactor.netty.transport.TransportConnector$MonoChannelPromise")))
             .and(takesArgument(3, int.class)),
-        TransportConnectorInstrumentation.class.getName() + "$ConnectNewAdvice");
+        getClass().getName() + "$ConnectNewAdvice");
   }
 
   @SuppressWarnings("unused")

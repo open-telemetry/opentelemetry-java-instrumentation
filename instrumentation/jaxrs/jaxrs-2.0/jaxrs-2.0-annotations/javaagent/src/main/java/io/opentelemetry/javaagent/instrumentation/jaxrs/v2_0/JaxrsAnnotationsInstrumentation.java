@@ -65,7 +65,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
                             "javax.ws.rs.PATCH",
                             "javax.ws.rs.POST",
                             "javax.ws.rs.PUT")))),
-        JaxrsAnnotationsInstrumentation.class.getName() + "$JaxRsAnnotationsAdvice");
+        getClass().getName() + "$JaxRsAnnotationsAdvice");
   }
 
   @SuppressWarnings("unused")

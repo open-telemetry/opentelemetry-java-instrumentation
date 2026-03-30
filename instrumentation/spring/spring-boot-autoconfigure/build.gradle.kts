@@ -68,8 +68,7 @@ dependencies {
   implementation(project(":instrumentation:logback:logback-mdc-1.0:library"))
   compileOnly("ch.qos.logback:logback-classic:1.0.0")
   implementation(project(":instrumentation:jdbc:library"))
-  implementation(project(":instrumentation:runtime-telemetry:runtime-telemetry-java8:library"))
-  implementation(project(":instrumentation:runtime-telemetry:runtime-telemetry-java17:library"))
+  implementation(project(":instrumentation:runtime-telemetry:library"))
 
   library("org.springframework.boot:spring-boot-starter-actuator:$springBootVersion")
   library("org.springframework.boot:spring-boot-starter-aop:$springBootVersion")
@@ -159,7 +158,7 @@ dependencies {
   )
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 
 // spring 6 (spring boot 3) requires java 17
 if (latestDepTest) {

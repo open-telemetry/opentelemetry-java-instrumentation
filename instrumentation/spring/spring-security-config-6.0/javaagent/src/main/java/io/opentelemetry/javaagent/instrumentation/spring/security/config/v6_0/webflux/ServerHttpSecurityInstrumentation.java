@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.spring.security.config.v6_0.webflux;
 
 import static io.opentelemetry.javaagent.instrumentation.spring.security.config.v6_0.EnduserAttributesCapturerSingletons.enduserAttributesCapturer;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -30,7 +29,7 @@ public class ServerHttpSecurityInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(named("build")).and(takesArguments(0)),
+        isPublic().and(named("build")).and(takesArguments(0)),
         getClass().getName() + "$BuildAdvice");
   }
 

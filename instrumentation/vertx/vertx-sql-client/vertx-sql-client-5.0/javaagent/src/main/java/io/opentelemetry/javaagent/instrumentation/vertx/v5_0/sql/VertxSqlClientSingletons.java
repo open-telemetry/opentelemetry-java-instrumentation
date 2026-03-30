@@ -5,14 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.v5_0.sql;
 
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OTHER_SQL;
+
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlInstrumenterFactory;
 import io.vertx.core.Future;
+import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.internal.SqlClientBase;
+import io.vertx.sqlclient.internal.command.CommandBase;
+import javax.annotation.Nullable;
 
 public final class VertxSqlClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-sql-client-5.0";
@@ -23,20 +29,66 @@ public final class VertxSqlClientSingletons {
     return INSTRUMENTER;
   }
 
+  private static final VirtualField<Pool, String> poolDbSystem =
+      VirtualField.find(Pool.class, String.class);
+
+  private static final VirtualField<SqlConnectOptions, String> connectOptionsDbSystem =
+      VirtualField.find(SqlConnectOptions.class, String.class);
+
   private static final VirtualField<SqlClientBase, SqlConnectOptions> connectOptionsField =
       VirtualField.find(SqlClientBase.class, SqlConnectOptions.class);
 
+  // CommandBase is a generic type; VirtualField.find requires the raw type
+  @SuppressWarnings("rawtypes")
+  private static final VirtualField<CommandBase, Context> commandContextField =
+      VirtualField.find(CommandBase.class, Context.class);
+
+  // CommandBase is a generic type used as VirtualField key
+  @SuppressWarnings("rawtypes")
+  @Nullable
+  public static Context getCommandContext(CommandBase<?> command) {
+    return commandContextField.get(command);
+  }
+
+  // CommandBase is a generic type used as VirtualField key
+  @SuppressWarnings("rawtypes")
+  public static void setCommandContext(CommandBase<?> command, Context context) {
+    commandContextField.set(command, context);
+  }
+
+  public static void storePoolDbSystem(Pool pool, String dbSystem) {
+    poolDbSystem.set(pool, dbSystem);
+  }
+
+  public static String getConnectOptionsDbSystem(SqlConnectOptions sqlConnectOptions) {
+    if (sqlConnectOptions != null) {
+      String dbSystem = connectOptionsDbSystem.get(sqlConnectOptions);
+      if (dbSystem != null) {
+        return dbSystem;
+      }
+    }
+    return OTHER_SQL;
+  }
+
+  public static void resolveAndStoreDbSystem(Pool pool, SqlConnectOptions sqlConnectOptions) {
+    String dbSystem = poolDbSystem.get(pool);
+    if (sqlConnectOptions != null && dbSystem != null) {
+      connectOptionsDbSystem.set(sqlConnectOptions, dbSystem);
+    }
+  }
+
+  @Nullable
   public static SqlConnectOptions getSqlConnectOptions(SqlClientBase sqlClientBase) {
     return connectOptionsField.get(sqlClientBase);
   }
 
   public static void attachConnectOptions(
-      SqlClientBase sqlClientBase, SqlConnectOptions connectOptions) {
+      SqlClientBase sqlClientBase, @Nullable SqlConnectOptions connectOptions) {
     connectOptionsField.set(sqlClientBase, connectOptions);
   }
 
   public static Future<SqlConnection> attachConnectOptions(
-      Future<SqlConnection> future, SqlConnectOptions connectOptions) {
+      Future<SqlConnection> future, @Nullable SqlConnectOptions connectOptions) {
     return future.map(
         sqlConnection -> {
           if (sqlConnection instanceof SqlClientBase) {

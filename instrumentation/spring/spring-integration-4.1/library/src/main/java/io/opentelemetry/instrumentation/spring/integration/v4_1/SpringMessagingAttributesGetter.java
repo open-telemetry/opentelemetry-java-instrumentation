@@ -13,9 +13,8 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 // this class is needed mostly for correct CONSUMER span suppression
-enum SpringMessagingAttributesGetter
+final class SpringMessagingAttributesGetter
     implements MessagingAttributesGetter<MessageWithChannel, Void> {
-  INSTANCE;
 
   @Override
   @Nullable

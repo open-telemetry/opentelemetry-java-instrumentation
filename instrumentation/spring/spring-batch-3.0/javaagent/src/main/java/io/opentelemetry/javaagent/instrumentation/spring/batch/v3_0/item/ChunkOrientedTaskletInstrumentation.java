@@ -39,7 +39,7 @@ public class ChunkOrientedTaskletInstrumentation implements TypeInstrumentation 
             .and(
                 takesArgument(
                     1, named("org.springframework.batch.core.scope.context.ChunkContext"))),
-        this.getClass().getName() + "$ExecuteAdvice");
+        getClass().getName() + "$ExecuteAdvice");
   }
 
   @SuppressWarnings("unused")

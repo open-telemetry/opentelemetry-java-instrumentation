@@ -9,6 +9,12 @@ muzzle {
     // renamed to quarkus-rest in 3.9.0
     versions.set("(,3.9.0)")
   }
+  pass {
+    group.set("io.quarkus")
+    module.set("quarkus-rest")
+    versions.set("[3.9.0,)")
+    assertInverse.set(true)
+  }
 }
 
 dependencies {

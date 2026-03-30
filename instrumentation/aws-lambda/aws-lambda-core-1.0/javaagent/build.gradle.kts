@@ -7,6 +7,7 @@ muzzle {
     group.set("com.amazonaws")
     module.set("aws-lambda-java-core")
     versions.set("[1.0.0,)")
+    assertInverse.set(true)
     extraDependency("com.amazonaws.serverless:aws-serverless-java-container-core:1.5.2")
   }
 }
@@ -27,5 +28,5 @@ tasks.withType<Test>().configureEach {
   jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  systemProperty("collectMetadata", findProperty("collectMetadata"))
 }

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.security.config.v6_0.servlet;
 import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ID;
 import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ROLE;
 import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_SCOPE;
+import static java.util.Arrays.asList;
 
 import io.opentelemetry.instrumentation.spring.security.config.v6_0.EnduserAttributesCapturer;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -15,7 +16,6 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
-import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.mock.web.MockFilterChain;
@@ -28,7 +28,8 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 
 class EnduserAttributesCapturingServletFilterTest {
 
-  @RegisterExtension InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  @RegisterExtension
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   /**
    * Tests to ensure enduser attributes are captured.
@@ -62,7 +63,7 @@ class EnduserAttributesCapturingServletFilterTest {
                 new PreAuthenticatedAuthenticationToken(
                     "principal",
                     null,
-                    Arrays.asList(
+                    asList(
                         new SimpleGrantedAuthority("ROLE_role1"),
                         new SimpleGrantedAuthority("ROLE_role2"),
                         new SimpleGrantedAuthority("SCOPE_scope1"),

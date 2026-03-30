@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -45,14 +44,13 @@ public class RouterFunctionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("route"))
             .and(
                 takesArgument(
                     0, named("org.springframework.web.reactive.function.server.ServerRequest")))
             .and(takesArguments(1)),
-        this.getClass().getName() + "$RouteAdvice");
+        getClass().getName() + "$RouteAdvice");
   }
 
   /**

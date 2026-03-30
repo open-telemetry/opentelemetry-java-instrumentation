@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.dropwizardviews;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.dropwizardviews.DropwizardSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -38,11 +37,8 @@ public class DropwizardRendererInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("render"))
-            .and(takesArgument(0, named("io.dropwizard.views.View")))
-            .and(isPublic()),
-        this.getClass().getName() + "$RenderAdvice");
+        named("render").and(takesArgument(0, named("io.dropwizard.views.View"))).and(isPublic()),
+        getClass().getName() + "$RenderAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -36,7 +36,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isStatic().and(namedOneOf("create", "newConnection", "from")),
-        this.getClass().getName() + "$CreateAdvice");
+        getClass().getName() + "$CreateAdvice");
 
     // advice classes below expose current context in doOn*/doAfter* callbacks
     transformer.applyAdviceToMethod(
@@ -44,32 +44,32 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
             .and(namedOneOf("doOnRequest", "doAfterRequest"))
             .and(takesArguments(1))
             .and(takesArgument(0, BiConsumer.class)),
-        this.getClass().getName() + "$OnRequestAdvice");
+        getClass().getName() + "$OnRequestAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("doOnRequestError"))
             .and(takesArguments(1))
             .and(takesArgument(0, BiConsumer.class)),
-        this.getClass().getName() + "$OnRequestErrorAdvice");
+        getClass().getName() + "$OnRequestErrorAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(namedOneOf("doOnResponse", "doAfterResponse"))
             .and(takesArguments(1))
             .and(takesArgument(0, BiConsumer.class)),
-        this.getClass().getName() + "$OnResponseAdvice");
+        getClass().getName() + "$OnResponseAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("doOnResponseError"))
             .and(takesArguments(1))
             .and(takesArgument(0, BiConsumer.class)),
-        this.getClass().getName() + "$OnResponseErrorAdvice");
+        getClass().getName() + "$OnResponseErrorAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("doOnError"))
             .and(takesArguments(2))
             .and(takesArgument(0, BiConsumer.class))
             .and(takesArgument(1, BiConsumer.class)),
-        this.getClass().getName() + "$OnErrorAdvice");
+        getClass().getName() + "$OnErrorAdvice");
   }
 
   @SuppressWarnings("unused")

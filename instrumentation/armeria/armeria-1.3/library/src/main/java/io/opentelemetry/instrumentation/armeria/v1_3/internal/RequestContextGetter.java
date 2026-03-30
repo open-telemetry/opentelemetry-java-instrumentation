@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.armeria.v1_3.internal;
 
 import static java.util.Collections.emptyIterator;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 import com.linecorp.armeria.server.ServiceRequestContext;
@@ -15,14 +14,10 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Iterator;
 import javax.annotation.Nullable;
 
-enum RequestContextGetter implements TextMapGetter<ServiceRequestContext> {
-  INSTANCE;
+final class RequestContextGetter implements TextMapGetter<ServiceRequestContext> {
 
   @Override
-  public Iterable<String> keys(@Nullable ServiceRequestContext carrier) {
-    if (carrier == null) {
-      return emptyList();
-    }
+  public Iterable<String> keys(ServiceRequestContext carrier) {
     return carrier.request().headers().names().stream()
         .map(AsciiString::toString)
         .collect(toList());

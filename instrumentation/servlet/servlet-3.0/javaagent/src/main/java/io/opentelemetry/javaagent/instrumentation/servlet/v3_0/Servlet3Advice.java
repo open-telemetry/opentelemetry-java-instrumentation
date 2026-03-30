@@ -10,11 +10,11 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Si
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.servlet.internal.MappingResolver;
 import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
+import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.Servlet3SnippetInjectingResponseWrapper;
 import javax.annotation.Nullable;
 import javax.servlet.Servlet;
@@ -33,7 +33,7 @@ public class Servlet3Advice {
   public static class AdviceScope {
     private final CallDepth callDepth;
     private final ServletRequestContext<HttpServletRequest> requestContext;
-    private final Context context;
+    @Nullable private final Context context;
     private final Scope scope;
 
     public AdviceScope(

@@ -32,7 +32,7 @@ public class JmsDestinationAccessorInstrumentation implements TypeInstrumentatio
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("receiveFromConsumer").and(returns(named("javax.jms.Message"))),
-        this.getClass().getName() + "$ReceiveAdvice");
+        getClass().getName() + "$ReceiveAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -52,7 +52,7 @@ public class JmsDestinationAccessorInstrumentation implements TypeInstrumentatio
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Enter Scope scope) {
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope == null) {
         return;
       }

@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.tapestry;
 
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.CONTROLLER;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -32,25 +31,23 @@ public class InitializeActivePageNameInstrumentation implements TypeInstrumentat
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("handleComponentEvent"))
             .and(takesArguments(2))
             .and(
                 takesArgument(
                     0, named("org.apache.tapestry5.services.ComponentEventRequestParameters")))
             .and(takesArgument(1, named("org.apache.tapestry5.services.ComponentRequestHandler"))),
-        this.getClass().getName() + "$HandleComponentEventAdvice");
+        getClass().getName() + "$HandleComponentEventAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("handlePageRender"))
             .and(takesArguments(2))
             .and(
                 takesArgument(
                     0, named("org.apache.tapestry5.services.PageRenderRequestParameters")))
             .and(takesArgument(1, named("org.apache.tapestry5.services.ComponentRequestHandler"))),
-        this.getClass().getName() + "$HandlePageRenderAdvice");
+        getClass().getName() + "$HandlePageRenderAdvice");
   }
 
   @SuppressWarnings("unused")

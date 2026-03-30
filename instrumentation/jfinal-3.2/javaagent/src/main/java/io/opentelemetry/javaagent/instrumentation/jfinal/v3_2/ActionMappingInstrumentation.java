@@ -23,14 +23,13 @@ public class ActionMappingInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("getAction"), this.getClass().getName() + "$GetActionAdvice");
+    transformer.applyAdviceToMethod(named("getAction"), getClass().getName() + "$GetActionAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class GetActionAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static void exitGetAction(@Advice.Return Action action) {
       JFinalSingletons.updateRoute(action);
     }

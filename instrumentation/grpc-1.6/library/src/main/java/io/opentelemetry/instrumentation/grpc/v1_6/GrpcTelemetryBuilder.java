@@ -12,6 +12,7 @@ import io.grpc.Status;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcMetricsContextCustomizers;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSizeAttributesExtractor;
@@ -151,6 +152,7 @@ public final class GrpcTelemetryBuilder {
   }
 
   /** Returns a new {@link GrpcTelemetry} with the settings of this {@link GrpcTelemetryBuilder}. */
+  @SuppressWarnings("deprecation") // RpcMetricsContextCustomizers is deprecated for removal in 3.0
   public GrpcTelemetry build() {
     SpanNameExtractor<GrpcRequest> originalSpanNameExtractor = new GrpcSpanNameExtractor();
     SpanNameExtractor<? super GrpcRequest> clientSpanNameExtractor =
@@ -167,7 +169,7 @@ public final class GrpcTelemetryBuilder {
         new GrpcClientNetworkAttributesGetter();
     GrpcNetworkServerAttributesGetter netServerAttributesGetter =
         new GrpcNetworkServerAttributesGetter();
-    GrpcRpcAttributesGetter rpcAttributesGetter = GrpcRpcAttributesGetter.INSTANCE;
+    GrpcRpcAttributesGetter rpcAttributesGetter = new GrpcRpcAttributesGetter();
 
     clientInstrumenterBuilder
         .setSpanStatusExtractor(GrpcSpanStatusExtractor.CLIENT)
@@ -177,9 +179,10 @@ public final class GrpcTelemetryBuilder {
         .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
         .addAttributesExtractors(additionalClientExtractors)
         .addAttributesExtractor(
-            new GrpcAttributesExtractor(
-                GrpcRpcAttributesGetter.INSTANCE, capturedClientRequestMetadata))
-        .addOperationMetrics(RpcClientMetrics.get());
+            new GrpcAttributesExtractor(rpcAttributesGetter, capturedClientRequestMetadata))
+        .addOperationMetrics(RpcClientMetrics.get())
+        .addContextCustomizer(
+            RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
     Experimental.addOperationListenerAttributesExtractor(
         clientInstrumenterBuilder, RpcSizeAttributesExtractor.create(rpcAttributesGetter));
     serverInstrumenterBuilder
@@ -189,15 +192,16 @@ public final class GrpcTelemetryBuilder {
         .addAttributesExtractor(ServerAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractor(
-            new GrpcAttributesExtractor(
-                GrpcRpcAttributesGetter.INSTANCE, capturedServerRequestMetadata))
+            new GrpcAttributesExtractor(rpcAttributesGetter, capturedServerRequestMetadata))
         .addAttributesExtractors(additionalServerExtractors)
-        .addOperationMetrics(RpcServerMetrics.get());
+        .addOperationMetrics(RpcServerMetrics.get())
+        .addContextCustomizer(
+            RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
     Experimental.addOperationListenerAttributesExtractor(
         serverInstrumenterBuilder, RpcSizeAttributesExtractor.create(rpcAttributesGetter));
 
     return new GrpcTelemetry(
-        serverInstrumenterBuilder.buildServerInstrumenter(GrpcRequestGetter.INSTANCE),
+        serverInstrumenterBuilder.buildServerInstrumenter(new GrpcRequestGetter()),
         // gRPC client interceptors require two phases, one to set up request and one to execute.
         // So we go ahead and inject manually in this instrumentation.
         clientInstrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient()),

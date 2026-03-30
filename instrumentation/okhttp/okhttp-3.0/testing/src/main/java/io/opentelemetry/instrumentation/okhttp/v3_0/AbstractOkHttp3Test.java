@@ -40,7 +40,7 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
   protected final Call.Factory client = createCallFactory(getClientBuilder(false));
   private final Call.Factory clientWithReadTimeout = createCallFactory(getClientBuilder(true));
 
-  protected OkHttpClient.Builder getClientBuilder(boolean withReadTimeout) {
+  private static OkHttpClient.Builder getClientBuilder(boolean withReadTimeout) {
     OkHttpClient.Builder builder =
         new OkHttpClient.Builder().connectTimeout(CONNECTION_TIMEOUT.toMillis(), MILLISECONDS);
     if (withReadTimeout) {

@@ -373,7 +373,7 @@ public abstract class AbstractJdbcInstrumentationTest {
 
   @ParameterizedTest
   @MethodSource("basicStatementStream")
-  public void testBasicStatement(
+  void testBasicStatement(
       String system,
       Connection conn,
       String username,
@@ -1270,7 +1270,6 @@ public abstract class AbstractJdbcInstrumentationTest {
     List<AttributeAssertion> attributesAssertions =
         codeFunctionAssertions(originalDatasourceClass, "getConnection");
     attributesAssertions.add(equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)));
-    attributesAssertions.add(equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)));
     attributesAssertions.add(equalTo(DB_USER, emitStableDatabaseSemconv() ? null : user));
     attributesAssertions.add(equalTo(maybeStable(DB_NAME), "jdbcunittest"));
     attributesAssertions.add(
@@ -1758,7 +1757,7 @@ public abstract class AbstractJdbcInstrumentationTest {
     Statement createTable2 = connection.createStatement();
     createTable2.execute(
         "CREATE TABLE " + tableName2 + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
-    cleanup.deferCleanup(createTable1);
+    cleanup.deferCleanup(createTable2);
 
     testing().waitForTraces(2);
     testing().clearData();

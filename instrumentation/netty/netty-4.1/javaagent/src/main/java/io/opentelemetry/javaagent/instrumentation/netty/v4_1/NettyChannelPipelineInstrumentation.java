@@ -5,10 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v4.common.VirtualFieldHelper.CHANNEL_HANDLER;
+import static io.opentelemetry.javaagent.instrumentation.netty.common.v4_0.VirtualFieldHelper.CHANNEL_HANDLER;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons.clientHandlerFactory;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons.sslInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -25,7 +24,7 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettySslInstrumentationHandler;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.netty.v4.common.AbstractNettyChannelPipelineInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.netty.common.v4_0.AbstractNettyChannelPipelineInstrumentation;
 import net.bytebuddy.asm.Advice;
 
 public class NettyChannelPipelineInstrumentation
@@ -36,11 +35,11 @@ public class NettyChannelPipelineInstrumentation
     super.transform(transformer);
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(nameStartsWith("add").or(named("replace")))
+        nameStartsWith("add")
+            .or(named("replace"))
             .and(takesArgument(1, String.class))
             .and(takesArgument(2, named("io.netty.channel.ChannelHandler"))),
-        NettyChannelPipelineInstrumentation.class.getName() + "$ChannelPipelineAddAdvice");
+        getClass().getName() + "$ChannelPipelineAddAdvice");
   }
 
   /**
@@ -50,7 +49,7 @@ public class NettyChannelPipelineInstrumentation
   @SuppressWarnings("unused")
   public static class ChannelPipelineAddAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static CallDepth trackCallDepth(@Advice.Argument(2) ChannelHandler handler) {
       // Previously we used one unique call depth tracker for all handlers, using
       // ChannelPipeline.class as a key.

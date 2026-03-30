@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Traci
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -57,14 +58,19 @@ public class KafkaConsumerTelemetry {
     return new ConsumerRecords<>(records);
   }
 
+  @Nullable
   public <K, V> Context buildAndFinishSpan(
       ConsumerRecords<K, V> records, Consumer<K, V> consumer, Timer timer) {
     return buildAndFinishSpan(
         records, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer), timer);
   }
 
+  @Nullable
   public <K, V> Context buildAndFinishSpan(
-      ConsumerRecords<K, V> records, String consumerGroup, String clientId, Timer timer) {
+      ConsumerRecords<K, V> records,
+      @Nullable String consumerGroup,
+      @Nullable String clientId,
+      Timer timer) {
     if (records.isEmpty()) {
       return null;
     }

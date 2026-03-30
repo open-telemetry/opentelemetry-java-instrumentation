@@ -37,7 +37,7 @@ class Jetty12ServerInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, named("org.eclipse.jetty.server.Response")))
             .and(takesArgument(2, named("org.eclipse.jetty.util.Callback")))
             .and(isPublic()),
-        this.getClass().getName() + "$HandlerAdvice");
+        getClass().getName() + "$HandlerAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -61,7 +61,7 @@ class Jetty12ServerInstrumentation implements TypeInstrumentation {
         Context context = helper().start(parentContext, request, response);
         Scope scope = context.makeCurrent();
         HttpServerResponseCustomizerHolder.getCustomizer()
-            .customize(context, response, Jetty12ResponseMutator.INSTANCE);
+            .customize(context, response, new Jetty12ResponseMutator());
         return new AdviceScope(context, scope);
       }
 

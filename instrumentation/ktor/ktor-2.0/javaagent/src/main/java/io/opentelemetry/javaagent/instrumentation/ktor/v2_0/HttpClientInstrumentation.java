@@ -13,9 +13,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.ktor.client.HttpClientConfig;
 import io.ktor.client.engine.HttpClientEngineConfig;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.ktor.common.v2_0.internal.KtorBuilderUtil;
 import io.opentelemetry.instrumentation.ktor.v2_0.KtorClientTelemetry;
 import io.opentelemetry.instrumentation.ktor.v2_0.KtorClientTelemetryBuilder;
-import io.opentelemetry.instrumentation.ktor.v2_0.common.internal.KtorBuilderUtil;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -37,13 +37,13 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         isConstructor()
             .and(takesArguments(2))
             .and(takesArgument(1, named("io.ktor.client.HttpClientConfig"))),
-        this.getClass().getName() + "$ConstructorAdvice");
+        getClass().getName() + "$ConstructorAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(1) HttpClientConfig<HttpClientEngineConfig> httpClientConfig) {
       httpClientConfig.install(KtorClientTelemetry.Companion, new SetupFunction());

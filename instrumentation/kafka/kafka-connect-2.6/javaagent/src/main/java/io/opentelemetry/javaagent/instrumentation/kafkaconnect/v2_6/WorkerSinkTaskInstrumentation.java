@@ -30,7 +30,7 @@ public class WorkerSinkTaskInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     // Instrument the execute method which contains the main polling loop
-    transformer.applyAdviceToMethod(named("execute"), this.getClass().getName() + "$ExecuteAdvice");
+    transformer.applyAdviceToMethod(named("execute"), getClass().getName() + "$ExecuteAdvice");
   }
 
   // This advice suppresses the CONSUMER spans created by the kafka-clients instrumentation

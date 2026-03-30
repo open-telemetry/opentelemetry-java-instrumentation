@@ -15,8 +15,7 @@ import java.util.List;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 
-enum GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, Status> {
-  INSTANCE;
+final class GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, Status> {
 
   @Override
   public String getSystem(GrpcRequest request) {
@@ -44,6 +43,11 @@ enum GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, Status>
       return null;
     }
     return fullMethodName.substring(slashIndex + 1);
+  }
+
+  @Override
+  public String getRpcMethod(GrpcRequest request) {
+    return request.getMethod().getFullMethodName();
   }
 
   @Override

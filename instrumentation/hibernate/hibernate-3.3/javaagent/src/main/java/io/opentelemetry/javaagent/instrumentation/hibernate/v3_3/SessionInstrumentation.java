@@ -9,16 +9,17 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.OperationNameUtil.getEntityName;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.OperationNameUtil.getSessionMethodOperationName;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Hibernate3Singletons.CRITERIA_SESSION_INFO;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Hibernate3Singletons.QUERY_SESSION_INFO;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Hibernate3Singletons.TRANSACTION_SESSION_INFO;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Hibernate3Singletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.any;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -49,8 +50,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     // Session synchronous methods we want to instrument.
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(takesArgument(0, any()))
+        takesArgument(0, any())
             .and(
                 namedOneOf(
                     "save",
@@ -63,28 +63,27 @@ public class SessionInstrumentation implements TypeInstrumentation {
                     "refresh",
                     "insert",
                     "delete")),
-        SessionInstrumentation.class.getName() + "$SessionMethodAdvice");
+        getClass().getName() + "$SessionMethodAdvice");
 
     // Handle the non-generic 'get' separately.
     transformer.applyAdviceToMethod(
-        isMethod().and(named("get")).and(returns(Object.class)).and(takesArgument(0, String.class)),
-        SessionInstrumentation.class.getName() + "$SessionMethodAdvice");
+        named("get").and(returns(Object.class)).and(takesArgument(0, String.class)),
+        getClass().getName() + "$SessionMethodAdvice");
 
     // These methods return some object that we want to instrument, and so the Advice will pin the
     // current SessionInfo to the returned object using a VirtualField.
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(namedOneOf("beginTransaction", "getTransaction"))
+        namedOneOf("beginTransaction", "getTransaction")
             .and(returns(named("org.hibernate.Transaction"))),
-        SessionInstrumentation.class.getName() + "$GetTransactionAdvice");
+        getClass().getName() + "$GetTransactionAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod().and(returns(implementsInterface(named("org.hibernate.Query")))),
-        SessionInstrumentation.class.getName() + "$GetQueryAdvice");
+        returns(implementsInterface(named("org.hibernate.Query"))),
+        getClass().getName() + "$GetQueryAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod().and(returns(implementsInterface(named("org.hibernate.Criteria")))),
-        SessionInstrumentation.class.getName() + "$GetCriteriaAdvice");
+        returns(implementsInterface(named("org.hibernate.Criteria"))),
+        getClass().getName() + "$GetCriteriaAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -127,9 +126,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
     public static void getQuery(@Advice.This Object session, @Advice.Return Query query) {
 
       SessionInfo sessionInfo = SessionUtil.getSessionInfo(session);
-      VirtualField<Query, SessionInfo> queryVirtualField =
-          VirtualField.find(Query.class, SessionInfo.class);
-      queryVirtualField.set(query, sessionInfo);
+      QUERY_SESSION_INFO.set(query, sessionInfo);
     }
   }
 
@@ -141,9 +138,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
         @Advice.This Object session, @Advice.Return Transaction transaction) {
 
       SessionInfo sessionInfo = SessionUtil.getSessionInfo(session);
-      VirtualField<Transaction, SessionInfo> transactionVirtualField =
-          VirtualField.find(Transaction.class, SessionInfo.class);
-      transactionVirtualField.set(transaction, sessionInfo);
+      TRANSACTION_SESSION_INFO.set(transaction, sessionInfo);
     }
   }
 
@@ -154,9 +149,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
     public static void getCriteria(@Advice.This Object session, @Advice.Return Criteria criteria) {
 
       SessionInfo sessionInfo = SessionUtil.getSessionInfo(session);
-      VirtualField<Criteria, SessionInfo> criteriaVirtualField =
-          VirtualField.find(Criteria.class, SessionInfo.class);
-      criteriaVirtualField.set(criteria, sessionInfo);
+      CRITERIA_SESSION_INFO.set(criteria, sessionInfo);
     }
   }
 }

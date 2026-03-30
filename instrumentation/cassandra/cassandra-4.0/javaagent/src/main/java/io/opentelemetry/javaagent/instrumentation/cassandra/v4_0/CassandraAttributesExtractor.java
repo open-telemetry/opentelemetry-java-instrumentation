@@ -32,6 +32,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.UUID;
 import javax.annotation.Nullable;
 
 final class CassandraAttributesExtractor
@@ -60,21 +61,20 @@ final class CassandraAttributesExtractor
         attributes.put(SERVER_ADDRESS, ((InetSocketAddress) address).getHostString());
         attributes.put(SERVER_PORT, ((InetSocketAddress) address).getPort());
       }
-      if (coordinator.getDatacenter() != null) {
-        if (emitStableDatabaseSemconv()) {
-          attributes.put(CASSANDRA_COORDINATOR_DC, coordinator.getDatacenter());
-        }
-        if (emitOldDatabaseSemconv()) {
-          attributes.put(DB_CASSANDRA_COORDINATOR_DC, coordinator.getDatacenter());
-        }
+      String coordinatorDc = coordinator.getDatacenter();
+      if (emitStableDatabaseSemconv()) {
+        attributes.put(CASSANDRA_COORDINATOR_DC, coordinatorDc);
       }
-      if (coordinator.getHostId() != null) {
-        if (emitStableDatabaseSemconv()) {
-          attributes.put(CASSANDRA_COORDINATOR_ID, coordinator.getHostId().toString());
-        }
-        if (emitOldDatabaseSemconv()) {
-          attributes.put(DB_CASSANDRA_COORDINATOR_ID, coordinator.getHostId().toString());
-        }
+      if (emitOldDatabaseSemconv()) {
+        attributes.put(DB_CASSANDRA_COORDINATOR_DC, coordinatorDc);
+      }
+      UUID coordinatorId = coordinator.getHostId();
+      String coordinatorIdAsString = coordinatorId == null ? null : coordinatorId.toString();
+      if (emitStableDatabaseSemconv()) {
+        attributes.put(CASSANDRA_COORDINATOR_ID, coordinatorIdAsString);
+      }
+      if (emitOldDatabaseSemconv()) {
+        attributes.put(DB_CASSANDRA_COORDINATOR_ID, coordinatorIdAsString);
       }
     }
     if (emitStableDatabaseSemconv()) {

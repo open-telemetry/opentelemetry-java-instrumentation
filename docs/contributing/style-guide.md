@@ -7,8 +7,7 @@ This project follows the
 
 ### Auto-formatting
 
-The build will fail if source code is not formatted according to Google Java
-Style.
+One of the CI checks will fail if source code is not formatted according to Google Java Style.
 
 Run the following command to reformat all files:
 
@@ -16,9 +15,9 @@ Run the following command to reformat all files:
 ./gradlew spotlessApply
 ```
 
-For IntelliJ users, an `.editorconfig` file is provided that IntelliJ will automatically use to
-adjust code formatting settings. However, it does not support all required rules, so you may still
-need to run `./gradlew spotlessApply` periodically.
+In addition to Google Java Style formatting, spotless applies
+[custom static importing rules](../../conventions/src/main/kotlin/io/opentelemetry/instrumentation/gradle/StaticImportFormatter.kt)
+(e.g. rewriting `Objects.requireNonNull` to a static import).
 
 #### Pre-commit hook
 
@@ -41,39 +40,6 @@ To run these checks locally:
 ./gradlew checkstyleMain checkstyleTest
 ```
 
-### Static imports
-
-Consider statically importing the following commonly used methods and constants:
-
-- **Test methods**
-  - `io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.*`
-  - `org.assertj.core.api.Assertions.*`
-  - `org.mockito.Mockito.*`
-  - `org.mockito.ArgumentMatchers.*`
-- **Utility methods**
-  - `io.opentelemetry.api.common.AttributeKey.*`
-  - `java.util.Arrays` - `asList`, `stream`
-  - `java.util.Collections` - `singleton*`, `empty*`, `unmodifiable*`, `synchronized*`, `checked*`
-  - `java.util.Objects` - `requireNonNull`
-  - `java.util.function.Function` - `identity`
-  - `java.util.stream.Collectors.*`
-- **Utility constants**
-  - `java.util.Locale.*`
-  - `java.util.concurrent.TimeUnit.*`
-  - `java.util.logging.Level.*`
-  - `java.nio.charset.StandardCharsets.*`
-- **ByteBuddy**
-  - `net.bytebuddy.matcher.ElementMatchers.*`
-  - `io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.*`
-- **OpenTelemetry semantic convention constants**
-  - All constants under `io.opentelemetry.semconv.**`, except for
-    `io.opentelemetry.semconv.SchemaUrls.*` constants
-
-Some of these are enforced by checkstyle rules:
-
-- Look for `RegexpSinglelineJava` in `checkstyle.xml`
-- Use `@SuppressWarnings("checkstyle:RegexpSinglelineJava")` to suppress the checkstyle warning
-
 ## Java Language Conventions
 
 ### Visibility modifiers
@@ -86,15 +52,15 @@ still allows the code to function correctly.
 Classes in `.internal` packages are not considered public API and may change without notice. These
 packages contain implementation details that should not be used by external consumers.
 
-- Use `.internal` packages for implementation classes that need to be public within the module but
-  should not be used externally
-- Try to avoid referencing `.internal` classes from other modules
+Use `.internal` packages for implementation classes that need to be public within the module but
+should not be used externally
 
 ### Class organization
 
 Prefer this order:
 
 - Static fields (final before non-final)
+- Static initializer
 - Instance fields (final before non-final)
 - Constructors
 - Methods
@@ -103,18 +69,46 @@ Prefer this order:
 **Method ordering**: Place calling methods above the methods they call. For example, place private
 methods below the non-private methods that use them.
 
+**Exception — static field initialization**: When a `static final` field is initialized by a
+private static method or a `static {}` block, it is acceptable to place the method or block
+immediately after the field to keep initialization logic co-located, even when this contradicts
+the general method ordering above.
+
 **Static utility classes**: Place the private constructor (used to prevent instantiation) after all
 methods.
 
 ### `final` keyword usage
 
 Public non-internal non-test classes should be declared `final` where possible.
+"Internal" here includes `.internal` packages **and** `javaagent/src/main/` classes — javaagent
+instrumentation code is not public API.
+"Test" here includes `src/test/` directories and any module whose directory name starts or ends
+with `testing` or `tests` (e.g., `testing/`, `testing-common/`, `testing-apps/`,
+`quarkus-2.0-testing/`, `smoke-tests/`).
 
 Methods should only be declared `final` if they are in public non-internal non-test non-final classes.
 
 Fields should be declared `final` where possible.
 
 Method parameters and local variables should never be declared `final`.
+
+### Uppercase field names
+
+Use uppercase (`SCREAMING_SNAKE_CASE`) for constant-like fields whose value is treated as a stable
+identifier or immutable descriptor.
+
+Examples that may remain uppercase include:
+
+- literal strings, numbers, and booleans that behave like module constants
+- semantic keys and handles such as `AttributeKey`, `ContextKey`, `VirtualField`,
+  `MethodHandle`, and `Pattern`
+- canonical singleton or sentinel fields named `INSTANCE`, `EMPTY`, or `NOOP`
+
+Do not use uppercase solely because a field is `static final`.
+
+Use lower camel case for runtime-created collaborator objects even when they are `static final`,
+for example loggers, instrumenters, helpers, sanitizers, mappers, caches, and similar service
+objects.
 
 ### `@Nullable` annotation usage
 
@@ -125,6 +119,8 @@ Annotate all parameters and fields that can be `null` with `@Nullable`
 `otel.java-conventions` Gradle plugin as a `compileOnly` dependency).
 
 `@NonNull` is unnecessary as it is the default.
+
+**Test code**: Do not add `@Nullable` annotations in test code.
 
 **Defensive programming**: Public APIs should still check for `null` parameters even if not
 annotated with `@Nullable`. Internal APIs do not need these checks.

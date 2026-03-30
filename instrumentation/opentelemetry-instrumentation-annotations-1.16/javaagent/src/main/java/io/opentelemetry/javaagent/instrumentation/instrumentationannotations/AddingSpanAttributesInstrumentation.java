@@ -63,10 +63,10 @@ public class AddingSpanAttributesInstrumentation implements TypeInstrumentation 
         annotatedMethodMatcher.and(not(excludedMethodsMatcher)).and(annotatedParametersMatcher);
 
     transformer.applyAdviceToMethod(
-        tracedMethodsWithParameters,
-        AddingSpanAttributesInstrumentation.class.getName() + "$AddingSpanAttributesAdvice");
+        tracedMethodsWithParameters, getClass().getName() + "$AddingSpanAttributesAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class AddingSpanAttributesAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

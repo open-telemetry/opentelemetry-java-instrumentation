@@ -39,7 +39,7 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         namedOneOf("singleRequest", "singleRequestImpl")
             .and(takesArgument(0, named("akka.http.scaladsl.model.HttpRequest"))),
-        this.getClass().getName() + "$SingleRequestAdvice");
+        getClass().getName() + "$SingleRequestAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -54,6 +54,7 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
         this.scope = scope;
       }
 
+      @Nullable
       public static AdviceScope start(HttpRequest request) {
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {

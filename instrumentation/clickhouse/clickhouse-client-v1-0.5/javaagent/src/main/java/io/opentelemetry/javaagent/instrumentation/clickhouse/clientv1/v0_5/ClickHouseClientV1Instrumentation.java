@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv1.v0_5;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.clickhouse.clientv1.v0_5.ClickHouseClientV1Singletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -33,12 +33,16 @@ public class ClickHouseClientV1Instrumentation implements TypeInstrumentation {
   }
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("com.clickhouse.client.ClickHouseClient");
+  }
+
+  @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(namedOneOf("executeAndWait", "execute"))
+        namedOneOf("executeAndWait", "execute")
             .and(takesArgument(0, named("com.clickhouse.client.ClickHouseRequest"))),
-        this.getClass().getName() + "$ExecuteAndWaitAdvice");
+        getClass().getName() + "$ExecuteAndWaitAdvice");
   }
 
   @SuppressWarnings("unused")

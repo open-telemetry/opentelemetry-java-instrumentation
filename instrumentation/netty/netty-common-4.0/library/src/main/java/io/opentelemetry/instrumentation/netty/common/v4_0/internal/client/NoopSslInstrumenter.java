@@ -9,8 +9,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
 import javax.annotation.Nullable;
 
-enum NoopSslInstrumenter implements NettySslInstrumenter {
-  INSTANCE;
+final class NoopSslInstrumenter implements NettySslInstrumenter {
 
   @Override
   public boolean shouldStart(Context parentContext, NettySslRequest request) {

@@ -23,6 +23,7 @@ package io.opentelemetry.instrumentation.reactor.v3_1;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
@@ -33,8 +34,11 @@ import reactor.util.context.Context;
  * https://github.com/opentracing-contrib/java-reactor/blob/master/src/main/java/io/opentracing/contrib/reactor/TracedSubscriber.java
  */
 public class TracingSubscriber<T> implements CoreSubscriber<T> {
-  private static final Class<?> fluxRetrySubscriberClass = getFluxRetrySubscriberClass();
+  @Nullable private static final Class<?> fluxRetrySubscriberClass = getFluxRetrySubscriberClass();
+
+  @Nullable
   private static final Class<?> fluxRetryWhenSubscriberClass = getFluxRetryWhenSubscriberClass();
+
   private final io.opentelemetry.context.Context traceContext;
   private final Subscriber<? super T> subscriber;
   private final Context context;
@@ -98,14 +102,17 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
     return context;
   }
 
+  @Nullable
   private Scope openScope() {
     return openScope(hasContextToPropagate ? traceContext : null);
   }
 
-  private static Scope openScope(io.opentelemetry.context.Context context) {
+  @Nullable
+  private static Scope openScope(@Nullable io.opentelemetry.context.Context context) {
     return context != null ? context.makeCurrent() : null;
   }
 
+  @Nullable
   private static Class<?> getFluxRetrySubscriberClass() {
     try {
       return Class.forName("reactor.core.publisher.FluxRetry$RetrySubscriber");
@@ -114,6 +121,7 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
     }
   }
 
+  @Nullable
   private static Class<?> getFluxRetryWhenSubscriberClass() {
     try {
       return Class.forName("reactor.core.publisher.FluxRetryWhen$RetryWhenMainSubscriber");

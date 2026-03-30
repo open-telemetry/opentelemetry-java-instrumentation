@@ -36,13 +36,12 @@ public class ListenerConsumerInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("run"), this.getClass().getName() + "$RunLoopAdvice");
-    transformer.applyAdviceToMethod(
-        isConstructor(), this.getClass().getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(named("run"), getClass().getName() + "$RunLoopAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
         named("invokeBatchOnMessageWithRecordsOrList")
             .and(takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
-        this.getClass().getName() + "$InvokeBatchAdvice");
+        getClass().getName() + "$InvokeBatchAdvice");
   }
 
   // this advice suppresses the CONSUMER spans created by the kafka-clients instrumentation

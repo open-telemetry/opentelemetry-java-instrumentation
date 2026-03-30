@@ -30,10 +30,10 @@ public final class KafkaConnectSingletons {
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(
-                    KafkaConnectAttributesGetter.INSTANCE, MessageOperation.PROCESS))
+                    new KafkaConnectAttributesGetter(), MessageOperation.PROCESS))
             .addAttributesExtractor(
                 MessagingAttributesExtractor.builder(
-                        KafkaConnectAttributesGetter.INSTANCE, MessageOperation.PROCESS)
+                        new KafkaConnectAttributesGetter(), MessageOperation.PROCESS)
                     .build())
             .addSpanLinksExtractor(spanLinksExtractor)
             .buildInstrumenter(SpanKindExtractor.alwaysConsumer());

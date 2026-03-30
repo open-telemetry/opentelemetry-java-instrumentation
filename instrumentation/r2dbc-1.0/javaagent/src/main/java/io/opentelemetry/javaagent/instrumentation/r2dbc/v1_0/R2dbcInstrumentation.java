@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -29,11 +28,10 @@ class R2dbcInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("find"))
+        named("find")
             .and(takesArguments(1))
             .and(takesArgument(0, named("io.r2dbc.spi.ConnectionFactoryOptions"))),
-        this.getClass().getName() + "$FactoryAdvice");
+        getClass().getName() + "$FactoryAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -41,6 +39,7 @@ class R2dbcInstrumentation implements TypeInstrumentation {
 
     @Advice.AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
+    @Nullable
     public static ConnectionFactory methodExit(
         @Advice.Return @Nullable ConnectionFactory factory,
         @Advice.Argument(0) ConnectionFactoryOptions factoryOptions) {

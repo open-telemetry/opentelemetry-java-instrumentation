@@ -28,19 +28,19 @@ class EmbeddedConfigFile {
   // the entire configuration is copied from
   // https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/incubator/src/main/java/io/opentelemetry/sdk/extension/incubator/fileconfig/DeclarativeConfiguration.java#L66-L79
   // which is not public
-  private static final ObjectMapper MAPPER;
+  private static final ObjectMapper mapper;
 
   static {
-    MAPPER =
+    mapper =
         new ObjectMapper()
             // Create empty object instances for keys which are present but have null values
             .setDefaultSetterInfo(JsonSetter.Value.forValueNulls(Nulls.AS_EMPTY));
     // Boxed primitives which are present but have null values should be set to null, rather than
     // empty instances
-    MAPPER.configOverride(String.class).setSetterInfo(JsonSetter.Value.forValueNulls(Nulls.SET));
-    MAPPER.configOverride(Integer.class).setSetterInfo(JsonSetter.Value.forValueNulls(Nulls.SET));
-    MAPPER.configOverride(Double.class).setSetterInfo(JsonSetter.Value.forValueNulls(Nulls.SET));
-    MAPPER.configOverride(Boolean.class).setSetterInfo(JsonSetter.Value.forValueNulls(Nulls.SET));
+    mapper.configOverride(String.class).setSetterInfo(JsonSetter.Value.forValueNulls(Nulls.SET));
+    mapper.configOverride(Integer.class).setSetterInfo(JsonSetter.Value.forValueNulls(Nulls.SET));
+    mapper.configOverride(Double.class).setSetterInfo(JsonSetter.Value.forValueNulls(Nulls.SET));
+    mapper.configOverride(Boolean.class).setSetterInfo(JsonSetter.Value.forValueNulls(Nulls.SET));
   }
 
   private EmbeddedConfigFile() {}
@@ -99,11 +99,11 @@ class EmbeddedConfigFile {
       Map<String, String> flatProps) {
     Map<String, Object> nested = convertFlatPropsToNested(flatProps);
 
-    return MAPPER.convertValue(nested, OpenTelemetryConfigurationModel.class);
+    return mapper.convertValue(nested, OpenTelemetryConfigurationModel.class);
   }
 
   static ObjectMapper getObjectMapper() {
-    return MAPPER;
+    return mapper;
   }
 
   /**

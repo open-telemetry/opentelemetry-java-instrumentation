@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.azurecore.v1_14;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -30,11 +29,8 @@ public class AzureHttpClientInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
-            .and(named("send"))
-            .and(returns(named("reactor.core.publisher.Mono"))),
-        this.getClass().getName() + "$SuppressNestedClientAdvice");
+        isPublic().and(named("send")).and(returns(named("reactor.core.publisher.Mono"))),
+        getClass().getName() + "$SuppressNestedClientAdvice");
   }
 
   @SuppressWarnings("unused")

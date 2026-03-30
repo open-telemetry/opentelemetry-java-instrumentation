@@ -7,6 +7,7 @@ muzzle {
     group.set("org.apache.httpcomponents.client5")
     module.set("httpclient5")
     versions.set("[5.0,)")
+    assertInverse.set(true)
   }
 }
 
@@ -21,11 +22,8 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-  }
-
-  test {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
   val testStableSemconv by registering(Test::class) {

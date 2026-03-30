@@ -29,7 +29,7 @@ class PlayWsClientTest extends AbstractHttpClientTest<WSRequest> {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  static final AutoCleanupExtension autoCleanup = AutoCleanupExtension.create();
+  @RegisterExtension static final AutoCleanupExtension autoCleanup = AutoCleanupExtension.create();
 
   private static WSClient wsClient;
 

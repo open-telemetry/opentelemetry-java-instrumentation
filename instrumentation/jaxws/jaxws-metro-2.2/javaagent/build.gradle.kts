@@ -6,9 +6,7 @@ muzzle {
   pass {
     group.set("com.sun.xml.ws")
     module.set("jaxws-rt")
-    versions.set("[2.2.0.1,)")
-    // version 2.3.4 depends on org.glassfish.gmbal:gmbal-api-only:4.0.3 which does not exist
-    skip("2.3.4")
+    versions.set("[2.2,)")
     assertInverse.set(true)
   }
 }
@@ -44,6 +42,6 @@ tasks.withType<Test>().configureEach {
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  systemProperty("collectMetadata", findProperty("collectMetadata"))
   systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

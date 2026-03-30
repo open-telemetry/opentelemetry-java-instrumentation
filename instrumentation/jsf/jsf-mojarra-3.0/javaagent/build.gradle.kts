@@ -29,7 +29,7 @@ dependencies {
   testImplementation(project(":instrumentation:jsf:jsf-jakarta-common:testing"))
 
   testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
-  testInstrumentation(project(":instrumentation:servlet:servlet-common:javaagent"))
+  testInstrumentation(project(":instrumentation:jsf:jsf-mojarra-1.2:javaagent"))
 
   // JSF 4+ requires CDI instead of BeanManager, the test should be upgraded first
   latestDepTestLibrary("jakarta.el:jakarta.el-api:4.+") // documented limitation
@@ -40,7 +40,7 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
     systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   }
 }

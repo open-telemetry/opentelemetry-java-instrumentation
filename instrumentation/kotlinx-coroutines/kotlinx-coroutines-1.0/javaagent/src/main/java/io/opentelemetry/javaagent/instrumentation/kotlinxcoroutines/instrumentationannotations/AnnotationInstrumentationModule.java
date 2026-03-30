@@ -40,7 +40,9 @@ public class AnnotationInstrumentationModule extends InstrumentationModule
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return hasClassesNamed(
+        // added in opentelemetry-instrumentation-annotations 1.16.0
         "application.io.opentelemetry.instrumentation.annotations.WithSpan",
+        // added in kotlinx-coroutines 1.0.0
         "kotlinx.coroutines.CoroutineContextKt");
   }
 

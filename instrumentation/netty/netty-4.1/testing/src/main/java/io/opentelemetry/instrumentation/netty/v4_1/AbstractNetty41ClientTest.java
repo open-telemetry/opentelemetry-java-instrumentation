@@ -86,6 +86,7 @@ public abstract class AbstractNetty41ClientTest
           clientExtension().getBootstrap(uri).connect(uri.getHost(), getPort(uri)).sync().channel();
     } catch (InterruptedException exception) {
       Thread.currentThread().interrupt();
+      httpClientResult.complete(exception);
       return;
     } catch (Exception exception) {
       httpClientResult.complete(exception);

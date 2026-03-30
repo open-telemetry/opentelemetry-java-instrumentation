@@ -28,8 +28,7 @@ public class MapperMethodInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("execute"), MapperMethodInstrumentation.class.getName() + "$ExecuteAdvice");
+    transformer.applyAdviceToMethod(named("execute"), getClass().getName() + "$ExecuteAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -99,7 +99,7 @@ class ElasticsearchRest7Test {
   }
 
   @Test
-  public void elasticsearchStatusAsync() throws Exception {
+  void elasticsearchStatusAsync() throws Exception {
     AsyncRequest asyncRequest = new AsyncRequest();
     CountDownLatch countDownLatch = new CountDownLatch(1);
     ResponseListener responseListener =

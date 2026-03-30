@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.cassandra.v4_4;
 
+import static java.util.Arrays.asList;
+
 import com.datastax.dse.driver.api.core.cql.reactive.ReactiveResultSet;
 import com.datastax.dse.driver.internal.core.cql.reactive.DefaultReactiveResultSet;
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -20,7 +22,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -42,7 +43,7 @@ final class TracingCqlSession {
     List<Class<?>> interfaces = new ArrayList<>();
     Class<?> clazz = session.getClass();
     while (clazz != Object.class) {
-      interfaces.addAll(Arrays.asList(clazz.getInterfaces()));
+      interfaces.addAll(asList(clazz.getInterfaces()));
       clazz = clazz.getSuperclass();
     }
     return (CqlSession)
@@ -177,6 +178,7 @@ final class TracingCqlSession {
     return query == null ? "" : query;
   }
 
+  @Nullable
   private static ExecutionInfo getExecutionInfo(
       @Nullable AsyncResultSet asyncResultSet, @Nullable Throwable throwable) {
     if (asyncResultSet != null) {
@@ -186,6 +188,7 @@ final class TracingCqlSession {
     }
   }
 
+  @Nullable
   private static ExecutionInfo getExecutionInfo(@Nullable Throwable throwable) {
     if (throwable instanceof DriverException) {
       return ((DriverException) throwable).getExecutionInfo();

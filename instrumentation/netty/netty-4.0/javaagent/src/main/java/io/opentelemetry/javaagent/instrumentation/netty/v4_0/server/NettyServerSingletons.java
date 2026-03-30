@@ -19,7 +19,7 @@ public final class NettyServerSingletons {
       JavaagentHttpServerInstrumenters.create(
           "io.opentelemetry.netty-4.0",
           new NettyHttpServerAttributesGetter(),
-          HttpRequestHeadersGetter.INSTANCE,
+          new HttpRequestHeadersGetter(),
           builder ->
               builder.addContextCustomizer(
                   (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context)));

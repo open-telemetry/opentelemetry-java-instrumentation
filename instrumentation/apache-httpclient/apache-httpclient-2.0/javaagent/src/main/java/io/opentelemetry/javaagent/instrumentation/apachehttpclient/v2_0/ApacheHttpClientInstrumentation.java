@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentCo
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0.ApacheHttpClientSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -38,11 +37,10 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("executeMethod"))
+        named("executeMethod")
             .and(takesArguments(3))
             .and(takesArgument(1, named("org.apache.commons.httpclient.HttpMethod"))),
-        this.getClass().getName() + "$ExecuteMethodAdvice");
+        getClass().getName() + "$ExecuteMethodAdvice");
   }
 
   @SuppressWarnings("unused")

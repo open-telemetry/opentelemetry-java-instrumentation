@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -21,9 +20,6 @@ import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtr
 public final class MongoInstrumenterFactory {
 
   public static final int DEFAULT_MAX_NORMALIZED_QUERY_LENGTH = 32 * 1024;
-
-  private static final MongoAttributesExtractor attributesExtractor =
-      new MongoAttributesExtractor();
 
   public static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
       OpenTelemetry openTelemetry, String instrumentationName, boolean querySanitizationEnabled) {
@@ -40,6 +36,7 @@ public final class MongoInstrumenterFactory {
       boolean querySanitizationEnabled,
       int maxNormalizedQueryLength) {
 
+    MongoAttributesExtractor attributesExtractor = new MongoAttributesExtractor();
     MongoDbAttributesGetter dbAttributesGetter =
         new MongoDbAttributesGetter(querySanitizationEnabled, maxNormalizedQueryLength);
     SpanNameExtractor<CommandStartedEvent> spanNameExtractor =
@@ -48,8 +45,6 @@ public final class MongoInstrumenterFactory {
     return Instrumenter.<CommandStartedEvent, Void>builder(
             openTelemetry, instrumentationName, spanNameExtractor)
         .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-        .addAttributesExtractor(
-            ServerAttributesExtractor.create(new MongoNetworkAttributesGetter()))
         .addAttributesExtractor(attributesExtractor)
         .addOperationMetrics(DbClientMetrics.get())
         .buildInstrumenter(SpanKindExtractor.alwaysClient());

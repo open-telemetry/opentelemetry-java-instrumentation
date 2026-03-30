@@ -23,7 +23,7 @@ public class StreamThreadInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("runLoop"), this.getClass().getName() + "$RunLoopAdvice");
+    transformer.applyAdviceToMethod(named("runLoop"), getClass().getName() + "$RunLoopAdvice");
   }
 
   // this advice suppresses the CONSUMER spans created by the kafka-clients instrumentation

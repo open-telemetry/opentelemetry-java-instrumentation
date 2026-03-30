@@ -14,11 +14,11 @@ import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobProcessReq
 
 public final class XxlJobSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.xxl-job-1.9.2";
-  private static final Instrumenter<XxlJobProcessRequest, Void> INSTRUMENTER =
+  private static final Instrumenter<XxlJobProcessRequest, Void> instrumenter =
       XxlJobInstrumenterFactory.create(INSTRUMENTATION_NAME);
-  private static final XxlJobHelper HELPER =
+  private static final XxlJobHelper helper =
       XxlJobHelper.create(
-          INSTRUMENTER,
+          instrumenter,
           object -> {
             if (object != null && (object instanceof ReturnT)) {
               ReturnT<?> result = (ReturnT<?>) object;
@@ -28,7 +28,7 @@ public final class XxlJobSingletons {
           });
 
   public static XxlJobHelper helper() {
-    return HELPER;
+    return helper;
   }
 
   @SuppressWarnings({"Unused", "ReturnValueIgnored"})

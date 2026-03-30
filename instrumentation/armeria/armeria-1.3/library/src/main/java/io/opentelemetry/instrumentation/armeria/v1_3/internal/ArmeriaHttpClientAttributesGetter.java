@@ -16,9 +16,8 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum ArmeriaHttpClientAttributesGetter
+final class ArmeriaHttpClientAttributesGetter
     implements HttpClientAttributesGetter<ClientRequestContext, RequestLog> {
-  INSTANCE;
 
   private static final ClassValue<Method> authorityMethodCache =
       new ClassValue<Method>() {
@@ -115,7 +114,7 @@ enum ArmeriaHttpClientAttributesGetter
     }
     int separatorPos = authority.indexOf(':');
     if (separatorPos == -1) {
-      return null;
+      return defaultPortForProtocol(ctx.sessionProtocol());
     }
     try {
       return Integer.parseInt(authority.substring(separatorPos + 1));
@@ -129,6 +128,17 @@ enum ArmeriaHttpClientAttributesGetter
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       ClientRequestContext ctx, @Nullable RequestLog requestLog) {
     return RequestContextAccess.remoteAddress(ctx);
+  }
+
+  @Nullable
+  private static Integer defaultPortForProtocol(SessionProtocol protocol) {
+    if (protocol == SessionProtocol.HTTP) {
+      return 80;
+    }
+    if (protocol == SessionProtocol.HTTPS) {
+      return 443;
+    }
+    return null;
   }
 
   @Nullable

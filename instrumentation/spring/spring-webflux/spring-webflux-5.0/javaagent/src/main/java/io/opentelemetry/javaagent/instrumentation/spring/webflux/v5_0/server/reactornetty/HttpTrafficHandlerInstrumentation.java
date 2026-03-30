@@ -29,8 +29,7 @@ public class HttpTrafficHandlerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("run").and(takesNoArguments()),
-        HttpTrafficHandlerInstrumentation.class.getName() + "$RunAdvice");
+        named("run").and(takesNoArguments()), getClass().getName() + "$RunAdvice");
   }
 
   @SuppressWarnings("unused")

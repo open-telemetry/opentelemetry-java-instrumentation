@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.azurecore.v1_53;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,7 +26,8 @@ import com.azure.core.util.ClientOptions;
 import com.azure.core.util.Context;
 import com.azure.core.util.LibraryTelemetryOptions;
 import com.azure.core.util.TracingOptions;
-import io.opentelemetry.api.common.AttributeKey;
+import com.azure.core.util.tracing.Tracer;
+import com.azure.core.util.tracing.TracerProvider;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
@@ -43,11 +45,11 @@ import reactor.test.StepVerifier;
 class AzureSdkTest {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
   void testHelperClassesInjected() {
-    com.azure.core.util.tracing.Tracer azTracer = createAzTracer();
+    Tracer azTracer = createAzTracer();
     assertThat(azTracer.isEnabled()).isTrue();
 
     assertThat(azTracer.getClass().getName())
@@ -58,7 +60,7 @@ class AzureSdkTest {
 
   @Test
   void testSpan() {
-    com.azure.core.util.tracing.Tracer azTracer = createAzTracer();
+    Tracer azTracer = createAzTracer();
     Context context = azTracer.start("hello", Context.NONE);
     azTracer.end(null, null, context);
 
@@ -70,7 +72,7 @@ class AzureSdkTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasStatus(StatusData.unset())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(AttributeKey.stringKey("az.namespace"), "otel.tests"))));
+                            equalTo(stringKey("az.namespace"), "otel.tests"))));
   }
 
   @Test
@@ -128,9 +130,8 @@ class AzureSdkTest {
     assertThat(hasClientAndHttpKeys.get()).isFalse();
   }
 
-  private static com.azure.core.util.tracing.Tracer createAzTracer() {
-    com.azure.core.util.tracing.TracerProvider azProvider =
-        com.azure.core.util.tracing.TracerProvider.getDefaultProvider();
+  private static Tracer createAzTracer() {
+    TracerProvider azProvider = TracerProvider.getDefaultProvider();
     LibraryTelemetryOptions options = new LibraryTelemetryOptions("test-lib");
     options.setLibraryVersion("test-version");
     options.setResourceProviderNamespace("otel.tests");

@@ -22,6 +22,7 @@ dependencies {
   }
   implementation(project(":instrumentation:xxl-job:xxl-job-common:javaagent"))
 
+  testInstrumentation(project(":instrumentation:xxl-job:xxl-job-1.9.2:javaagent"))
   testInstrumentation(project(":instrumentation:xxl-job:xxl-job-2.1.2:javaagent"))
   testInstrumentation(project(":instrumentation:xxl-job:xxl-job-2.3.0:javaagent"))
 
@@ -32,7 +33,7 @@ dependencies {
   latestDepTestLibrary("com.xuxueli:xxl-job-core:3.2.+") // documented limitation
 }
 
-val testLatestDeps = findProperty("testLatestDeps") as Boolean
+val testLatestDeps = findProperty("testLatestDeps") == "true"
 
 testing {
   suites {
@@ -51,7 +52,15 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     jvmArgs("-Dotel.instrumentation.xxl-job.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.xxl-job.experimental-span-attributes=true")
   }
 
   named("compileXxlJob33TestJava", JavaCompile::class).configure {
@@ -68,5 +77,6 @@ tasks {
 
   check {
     dependsOn(testing.suites)
+    dependsOn(testExperimental)
   }
 }

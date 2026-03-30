@@ -31,7 +31,7 @@ public class JobBuilderHelperInstrumentation implements TypeInstrumentation {
             .and(isProtected())
             .and(takesArguments(1))
             .and(takesArgument(0, named("org.springframework.batch.core.Job"))),
-        this.getClass().getName() + "$EnhanceAdvice");
+        getClass().getName() + "$EnhanceAdvice");
   }
 
   @SuppressWarnings("unused")
