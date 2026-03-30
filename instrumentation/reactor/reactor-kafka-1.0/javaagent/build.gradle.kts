@@ -87,7 +87,6 @@ tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("collectMetadata", findProperty("collectMetadata"))
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
   }
 
   val testExperimental by registering(Test::class) {
@@ -99,11 +98,17 @@ tasks {
     systemProperty("hasConsumerGroup", testLatestDeps)
   }
 
+  val testReceiveSpansDisabled by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+  }
+
   test {
     systemProperty("hasConsumerGroup", testLatestDeps)
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
   }
 
   check {
-    dependsOn(testing.suites, testExperimental)
+    dependsOn(testing.suites, testExperimental, testReceiveSpansDisabled)
   }
 }
