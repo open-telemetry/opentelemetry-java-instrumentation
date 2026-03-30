@@ -38,7 +38,7 @@ public class InitializeActivePageNameInstrumentation implements TypeInstrumentat
                 takesArgument(
                     0, named("org.apache.tapestry5.services.ComponentEventRequestParameters")))
             .and(takesArgument(1, named("org.apache.tapestry5.services.ComponentRequestHandler"))),
-        this.getClass().getName() + "$HandleComponentEventAdvice");
+        getClass().getName() + "$HandleComponentEventAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("handlePageRender"))
@@ -47,7 +47,7 @@ public class InitializeActivePageNameInstrumentation implements TypeInstrumentat
                 takesArgument(
                     0, named("org.apache.tapestry5.services.PageRenderRequestParameters")))
             .and(takesArgument(1, named("org.apache.tapestry5.services.ComponentRequestHandler"))),
-        this.getClass().getName() + "$HandlePageRenderAdvice");
+        getClass().getName() + "$HandlePageRenderAdvice");
   }
 
   @SuppressWarnings("unused")

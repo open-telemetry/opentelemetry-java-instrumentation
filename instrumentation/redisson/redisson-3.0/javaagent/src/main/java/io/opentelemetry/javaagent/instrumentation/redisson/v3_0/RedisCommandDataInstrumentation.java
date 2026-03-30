@@ -34,11 +34,11 @@ public class RedisCommandDataInstrumentation implements TypeInstrumentation {
     // before 3.16.8
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(0, named("org.redisson.misc.RPromise"))),
-        this.getClass().getName() + "$WrapPromiseAdvice");
+        getClass().getName() + "$WrapPromiseAdvice");
     // since 3.16.8
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(0, CompletableFuture.class)),
-        this.getClass().getName() + "$WrapCompletableFutureAdvice");
+        getClass().getName() + "$WrapCompletableFutureAdvice");
   }
 
   @SuppressWarnings("unused")

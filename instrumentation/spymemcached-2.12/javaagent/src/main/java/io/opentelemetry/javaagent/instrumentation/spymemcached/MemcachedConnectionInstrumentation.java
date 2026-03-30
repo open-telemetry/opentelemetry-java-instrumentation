@@ -31,7 +31,7 @@ public class MemcachedConnectionInstrumentation implements TypeInstrumentation {
             .and(takesArguments(2))
             .and(takesArgument(0, named("net.spy.memcached.MemcachedNode")))
             .and(takesArgument(1, named("net.spy.memcached.ops.Operation"))),
-        this.getClass().getName() + "$AddOperationAdvice");
+        getClass().getName() + "$AddOperationAdvice");
   }
 
   @SuppressWarnings("unused")

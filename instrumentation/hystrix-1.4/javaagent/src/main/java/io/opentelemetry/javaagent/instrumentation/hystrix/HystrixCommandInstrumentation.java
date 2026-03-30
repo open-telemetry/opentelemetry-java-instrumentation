@@ -41,10 +41,10 @@ public class HystrixCommandInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("getExecutionObservable").and(returns(named("rx.Observable"))),
-        this.getClass().getName() + "$ExecuteAdvice");
+        getClass().getName() + "$ExecuteAdvice");
     transformer.applyAdviceToMethod(
         named("getFallbackObservable").and(returns(named("rx.Observable"))),
-        this.getClass().getName() + "$FallbackAdvice");
+        getClass().getName() + "$FallbackAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -30,7 +30,7 @@ public class PathMatcherInstrumentation implements TypeInstrumentation {
         named("apply")
             .and(takesArgument(0, named("akka.http.scaladsl.model.Uri$Path")))
             .and(returns(named("akka.http.scaladsl.server.PathMatcher"))),
-        this.getClass().getName() + "$ApplyAdvice");
+        getClass().getName() + "$ApplyAdvice");
   }
 
   @SuppressWarnings("unused")

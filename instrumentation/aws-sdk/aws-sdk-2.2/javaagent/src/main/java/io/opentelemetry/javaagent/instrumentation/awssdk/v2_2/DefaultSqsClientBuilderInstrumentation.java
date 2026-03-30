@@ -25,7 +25,7 @@ public class DefaultSqsClientBuilderInstrumentation implements TypeInstrumentati
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("buildClient"), this.getClass().getName() + "$BuildClientAdvice");
+        named("buildClient"), getClass().getName() + "$BuildClientAdvice");
   }
 
   @SuppressWarnings("unused")

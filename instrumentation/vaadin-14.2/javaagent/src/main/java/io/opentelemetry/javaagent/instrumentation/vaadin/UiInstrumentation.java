@@ -30,7 +30,7 @@ public class UiInstrumentation implements TypeInstrumentation {
     // we can get the path of currently active route from ui
     transformer.applyAdviceToMethod(
         named("setCurrent").and(takesArgument(0, named("com.vaadin.flow.component.UI"))),
-        this.getClass().getName() + "$SetCurrentAdvice");
+        getClass().getName() + "$SetCurrentAdvice");
   }
 
   @SuppressWarnings("unused")

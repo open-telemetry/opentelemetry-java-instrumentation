@@ -30,7 +30,7 @@ public class RestTemplateInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("doExecute").and(takesArgument(1, String.class)),
-        this.getClass().getName() + "$UrlTemplateAdvice");
+        getClass().getName() + "$UrlTemplateAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -41,7 +41,7 @@ public class RequestHandlerInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("com.vaadin.flow.server.VaadinSession")))
             .and(takesArgument(1, named("com.vaadin.flow.server.VaadinRequest")))
             .and(takesArgument(2, named("com.vaadin.flow.server.VaadinResponse"))),
-        this.getClass().getName() + "$HandleRequestAdvice");
+        getClass().getName() + "$HandleRequestAdvice");
   }
 
   @SuppressWarnings("unused")

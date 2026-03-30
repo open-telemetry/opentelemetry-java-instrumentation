@@ -32,7 +32,7 @@ public class PathMatcherStaticInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("apply")
             .and(takesArgument(0, named("org.apache.pekko.http.scaladsl.model.Uri$Path"))),
-        this.getClass().getName() + "$ApplyAdvice");
+        getClass().getName() + "$ApplyAdvice");
   }
 
   @SuppressWarnings("unused")

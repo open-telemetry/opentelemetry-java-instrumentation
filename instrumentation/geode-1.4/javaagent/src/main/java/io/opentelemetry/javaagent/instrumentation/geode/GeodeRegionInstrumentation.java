@@ -53,12 +53,12 @@ public class GeodeRegionInstrumentation implements TypeInstrumentation {
                     .or(nameStartsWith("keySet"))
                     .or(nameStartsWith("put"))
                     .or(nameStartsWith("remove"))),
-        this.getClass().getName() + "$SimpleAdvice");
+        getClass().getName() + "$SimpleAdvice");
     transformer.applyAdviceToMethod(
         isMethod()
             .and(namedOneOf("existsValue", "query", "selectValue"))
             .and(takesArgument(0, String.class)),
-        this.getClass().getName() + "$QueryAdvice");
+        getClass().getName() + "$QueryAdvice");
   }
 
   public static class AdviceScope {

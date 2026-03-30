@@ -28,7 +28,7 @@ public class DefaultKafkaReceiverInstrumentation implements TypeInstrumentation 
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("createConsumerFlux").and(returns(named("reactor.core.publisher.Flux"))),
-        this.getClass().getName() + "$CreateConsumerFluxAdvice");
+        getClass().getName() + "$CreateConsumerFluxAdvice");
   }
 
   @SuppressWarnings("unused")

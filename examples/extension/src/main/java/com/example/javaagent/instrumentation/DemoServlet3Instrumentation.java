@@ -33,7 +33,7 @@ public class DemoServlet3Instrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("javax.servlet.ServletRequest")))
             .and(takesArgument(1, named("javax.servlet.ServletResponse")))
             .and(isPublic()),
-        this.getClass().getName() + "$DemoServlet3Advice");
+        getClass().getName() + "$DemoServlet3Advice");
   }
 
   @SuppressWarnings("unused")

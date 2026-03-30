@@ -28,7 +28,7 @@ public class PromiseMonitoredInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(1, named("scala.Function1"))),
-        this.getClass().getName() + "$WrapFunctionAdvice");
+        getClass().getName() + "$WrapFunctionAdvice");
   }
 
   @SuppressWarnings("unused")

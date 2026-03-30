@@ -30,7 +30,7 @@ public class AwsAsyncClientHandlerInstrumentation implements TypeInstrumentation
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("execute").and(returns(CompletableFuture.class)),
-        this.getClass().getName() + "$WrapFutureAdvice");
+        getClass().getName() + "$WrapFutureAdvice");
   }
 
   @SuppressWarnings("unused")

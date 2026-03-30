@@ -29,7 +29,7 @@ public class NettyResponseFutureInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("toCompletableFuture").and(takesNoArguments()).and(returns(CompletableFuture.class)),
-        this.getClass().getName() + "$WrapFutureAdvice");
+        getClass().getName() + "$WrapFutureAdvice");
   }
 
   @SuppressWarnings("unused")

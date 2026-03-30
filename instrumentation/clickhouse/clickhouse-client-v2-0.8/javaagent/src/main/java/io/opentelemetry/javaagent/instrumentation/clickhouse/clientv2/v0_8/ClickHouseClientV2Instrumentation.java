@@ -40,7 +40,7 @@ public class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, isSubTypeOf(Map.class)))
             .and(takesArgument(2, named("com.clickhouse.client.api.query.QuerySettings"))),
-        this.getClass().getName() + "$QueryAdvice");
+        getClass().getName() + "$QueryAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -28,7 +28,7 @@ public class PekkoHttpServerSourceInstrumentation implements TypeInstrumentation
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("handleWith").and(takesArgument(0, named("org.apache.pekko.stream.scaladsl.Flow"))),
-        this.getClass().getName() + "$PekkoBindAndHandleAdvice");
+        getClass().getName() + "$PekkoBindAndHandleAdvice");
   }
 
   @SuppressWarnings("unused")

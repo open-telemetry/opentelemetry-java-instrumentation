@@ -42,16 +42,15 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
             // Flush seems to have a bug when listeners may not be always called.
             // Also tracing flush is probably of a very limited value.
             .and(not(named("flush"))),
-        this.getClass().getName() + "$AsyncOperationAdvice");
+        getClass().getName() + "$AsyncOperationAdvice");
     transformer.applyAdviceToMethod(
         isMethod().and(isPublic()).and(returns(named("net.spy.memcached.internal.GetFuture"))),
-        this.getClass().getName() + "$AsyncGetAdvice");
+        getClass().getName() + "$AsyncGetAdvice");
     transformer.applyAdviceToMethod(
         isMethod().and(isPublic()).and(returns(named("net.spy.memcached.internal.BulkFuture"))),
-        this.getClass().getName() + "$AsyncBulkAdvice");
+        getClass().getName() + "$AsyncBulkAdvice");
     transformer.applyAdviceToMethod(
-        isPublic().and(namedOneOf("incr", "decr")),
-        this.getClass().getName() + "$SyncOperationAdvice");
+        isPublic().and(namedOneOf("incr", "decr")), getClass().getName() + "$SyncOperationAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -38,7 +38,7 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("query").and(takesArgument(0, named("org.influxdb.dto.Query"))),
-        this.getClass().getName() + "$InfluxDbQueryAdvice");
+        getClass().getName() + "$InfluxDbQueryAdvice");
 
     transformer.applyAdviceToMethod(
         named("write")
@@ -57,10 +57,10 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
                             .and(takesArgument(1, String.class))
                             .and(takesArgument(2, isEnum()))
                             .and(takesArgument(3, named("java.util.concurrent.TimeUnit"))))),
-        this.getClass().getName() + "$InfluxDbModifyAdvice");
+        getClass().getName() + "$InfluxDbModifyAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("createDatabase", "deleteDatabase"),
-        this.getClass().getName() + "$InfluxDbModifyAdvice");
+        getClass().getName() + "$InfluxDbModifyAdvice");
   }
 
   @SuppressWarnings("unused")

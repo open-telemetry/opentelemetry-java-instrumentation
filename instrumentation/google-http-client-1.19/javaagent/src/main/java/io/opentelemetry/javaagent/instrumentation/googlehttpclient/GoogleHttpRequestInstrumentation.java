@@ -38,14 +38,14 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isPublic().and(named("execute")).and(takesArguments(0)),
-        this.getClass().getName() + "$ExecuteAdvice");
+        getClass().getName() + "$ExecuteAdvice");
 
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("executeAsync"))
             .and(takesArguments(1))
             .and(takesArgument(0, Executor.class)),
-        this.getClass().getName() + "$ExecuteAsyncAdvice");
+        getClass().getName() + "$ExecuteAsyncAdvice");
   }
 
   public static class AdviceScope {

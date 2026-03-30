@@ -36,7 +36,7 @@ public class StructuredTaskScopeInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("fork").and(takesArgument(0, Callable.class)),
-        this.getClass().getName() + "$ForkCallableAdvice");
+        getClass().getName() + "$ForkCallableAdvice");
   }
 
   @SuppressWarnings("unused")

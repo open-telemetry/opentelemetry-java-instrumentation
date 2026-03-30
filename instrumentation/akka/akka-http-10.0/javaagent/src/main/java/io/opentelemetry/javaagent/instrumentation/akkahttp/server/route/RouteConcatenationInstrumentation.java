@@ -28,8 +28,8 @@ public class RouteConcatenationInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(isConstructor(), this.getClass().getName() + "$ApplyAdvice");
-    transformer.applyAdviceToMethod(named("$tilde"), this.getClass().getName() + "$ApplyAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ApplyAdvice");
+    transformer.applyAdviceToMethod(named("$tilde"), getClass().getName() + "$ApplyAdvice");
   }
 
   @SuppressWarnings("unused")
