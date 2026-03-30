@@ -542,7 +542,7 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
       return (Flux<T>) retryWhenMethod.invoke(flux, retrySpecMethod.invoke(retryClass));
     } catch (ReflectiveOperationException e) {
       // ignore
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       throw new IllegalStateException(e);
     }
     throw new IllegalStateException("Could not find retryWhen method");
