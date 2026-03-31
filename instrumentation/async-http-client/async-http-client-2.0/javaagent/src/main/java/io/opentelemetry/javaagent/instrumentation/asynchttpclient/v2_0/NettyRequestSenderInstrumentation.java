@@ -17,6 +17,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -66,6 +67,7 @@ public class NettyRequestSenderInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class MountContextAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope mountContext(@Advice.Argument(0) NettyResponseFuture<?> responseFuture) {
       Request request = responseFuture.getCurrentRequest();
@@ -74,7 +76,7 @@ public class NettyRequestSenderInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void unmountContext(@Advice.Enter Scope scope) {
+    public static void unmountContext(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }
