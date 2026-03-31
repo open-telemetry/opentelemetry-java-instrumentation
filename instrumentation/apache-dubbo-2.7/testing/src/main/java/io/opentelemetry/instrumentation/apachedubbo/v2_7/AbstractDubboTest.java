@@ -171,7 +171,7 @@ public abstract class AbstractDubboTest {
                                 "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
                                 equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "dubbo" : null),
                                 equalTo(
@@ -184,6 +184,11 @@ public abstract class AbstractDubboTest {
                                     emitStableRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"
                                         : "hello"),
+                                equalTo(
+                                    maybeStablePeerService(),
+                                    hasServicePeerName() && Boolean.getBoolean("testLatestDeps")
+                                        ? "test-peer-service"
+                                        : null),
                                 satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
                                 satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)))));
 
@@ -357,7 +362,7 @@ public abstract class AbstractDubboTest {
                                 "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
                                 equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "dubbo" : null),
                                 equalTo(
@@ -370,6 +375,11 @@ public abstract class AbstractDubboTest {
                                     emitStableRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"
                                         : "hello"),
+                                equalTo(
+                                    maybeStablePeerService(),
+                                    hasServicePeerName() && Boolean.getBoolean("testLatestDeps")
+                                        ? "test-peer-service"
+                                        : null),
                                 satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
                                 satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)),
                                 // this attribute is not filled reliably, it is either null or
