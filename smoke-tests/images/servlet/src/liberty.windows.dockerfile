@@ -6,7 +6,7 @@ FROM mcr.microsoft.com/windows/servercore:ltsc2022@sha256:d4c6d1a8a1a306b12691c3
 ARG version
 ARG release
 
-ADD https://public.dhe.ibm.com/ibmdl/export/pub/software/openliberty/runtime/release/${release}/openliberty-${version}.zip /server.zip
+RUN ["powershell", "-Command", "$retries = 5; $wait = 3; $url = 'https://public.dhe.ibm.com/ibmdl/export/pub/software/openliberty/runtime/release/' + $env:release + '/openliberty-' + $env:version + '.zip'; for ($i = 1; $i -le $retries; $i++) { try { Invoke-WebRequest -Uri $url -OutFile /server.zip -UseBasicParsing; break } catch { if ($i -eq $retries) { throw } else { Write-Host \"Download attempt $i failed, retrying in $wait seconds...\"; Start-Sleep -Seconds $wait } } }"]
 RUN ["powershell", "-Command", "expand-archive -Path /server.zip -DestinationPath /server"]
 
 FROM ${jdkImageName}@sha256:${jdkImageHash}
