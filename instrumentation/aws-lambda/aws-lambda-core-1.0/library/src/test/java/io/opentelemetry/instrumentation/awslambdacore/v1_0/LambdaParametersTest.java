@@ -26,8 +26,7 @@ class LambdaParametersTest {
     // when
     Object[] params = LambdaParameters.toArray(method, "", context);
     // then
-    assertThat(params).hasSize(1);
-    assertThat(params[0]).isEqualTo(context);
+    assertThat(params).containsExactly(context);
   }
 
   @Test
@@ -39,9 +38,6 @@ class LambdaParametersTest {
     // when
     Object[] params = LambdaParameters.toArray(method, "", context);
     // then
-    assertThat(params).hasSize(3);
-    assertThat(params[0]).isEqualTo("");
-    assertThat(params[1]).isNull();
-    assertThat(params[2]).isEqualTo(context);
+    assertThat(params).containsExactly("", null, context);
   }
 }
