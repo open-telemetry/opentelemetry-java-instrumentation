@@ -34,3 +34,4 @@ aws-lambda-events-2.2:javaagent
 aws-lambda-core-1.0:library
 aws-lambda-events-2.2:library
 aws-lambda-events-2.2:testing
+apache-httpasyncclient-4.1:javaagent
