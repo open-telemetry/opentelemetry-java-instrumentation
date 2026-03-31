@@ -24,6 +24,7 @@ public class AwsLambdaInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 2.2.0
     return hasClassesNamed("com.amazonaws.services.lambda.runtime.events.SQSEvent");
   }
 
