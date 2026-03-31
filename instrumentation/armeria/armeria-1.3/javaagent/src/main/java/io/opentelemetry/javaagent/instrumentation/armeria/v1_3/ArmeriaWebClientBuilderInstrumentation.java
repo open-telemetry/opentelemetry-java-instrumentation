@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.armeria.v1_3;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -26,7 +25,7 @@ public class ArmeriaWebClientBuilderInstrumentation implements TypeInstrumentati
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(named("build")),
+        isPublic().and(named("build")),
         ArmeriaWebClientBuilderInstrumentation.class.getName() + "$BuildAdvice");
   }
 

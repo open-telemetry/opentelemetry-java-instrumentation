@@ -24,7 +24,7 @@ public class ArmeriaInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // Unrelated class which was added in Armeria 1.3.0, the minimum version we support.
+    // added in 1.3.0
     return hasClassesNamed("com.linecorp.armeria.server.metric.PrometheusExpositionServiceBuilder");
   }
 
