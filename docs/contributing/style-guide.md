@@ -92,6 +92,13 @@ Fields should be declared `final` where possible.
 
 Method parameters and local variables should never be declared `final`.
 
+### Null comparisons
+
+Prefer `value == null` and `value != null` over left-hand null comparisons such as
+`null == value` and `null != value`.
+
+This applies throughout the codebase, including Java, Kotlin, and Scala sources.
+
 ### Uppercase field names
 
 Use uppercase (`SCREAMING_SNAKE_CASE`) for constant-like fields whose value is treated as a stable

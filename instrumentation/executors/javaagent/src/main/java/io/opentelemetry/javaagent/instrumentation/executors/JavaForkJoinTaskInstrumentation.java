@@ -70,8 +70,8 @@ public class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
         Scope newScope =
             TaskAdviceHelper.makePropagatedContextCurrent(
                 RUNNABLE_PROPAGATED_CONTEXT, (Runnable) task);
-        if (null != newScope) {
-          if (null != scope) {
+        if (newScope != null) {
+          if (scope != null) {
             newScope.close();
           } else {
             scope = newScope;
@@ -82,8 +82,8 @@ public class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
         Scope newScope =
             TaskAdviceHelper.makePropagatedContextCurrent(
                 CALLABLE_PROPAGATED_CONTEXT, (Callable<?>) task);
-        if (null != newScope) {
-          if (null != scope) {
+        if (newScope != null) {
+          if (scope != null) {
             newScope.close();
           } else {
             scope = newScope;
