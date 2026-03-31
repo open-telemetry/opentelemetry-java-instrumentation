@@ -25,8 +25,9 @@ public class AsyncHttpClientInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // Uri class was added in 1.9.0, not present in 1.8.x
-    return hasClassesNamed("com.ning.http.client.uri.Uri");
+    return hasClassesNamed(
+        // added in 1.9.0
+        "com.ning.http.client.uri.Uri");
   }
 
   @Override
