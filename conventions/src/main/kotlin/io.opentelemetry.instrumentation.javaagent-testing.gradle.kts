@@ -10,6 +10,10 @@ val failOnContextLeakProperty = providers.gradleProperty("failOnContextLeak")
   .map { it != "false" }
   .orElse(true)
 
+val failOnMuzzleMismatchProperty = providers.gradleProperty("failOnMuzzleMismatch")
+  .map { it == "true" }
+  .orElse(false)
+
 val testIndyProperty = providers.gradleProperty("testIndy")
   .map { it == "true" }
   .orElse(false)
@@ -86,6 +90,9 @@ class JavaagentTestArgumentsProvider(
   val failOnContextLeak: Boolean,
 
   @get:Input
+  val failOnMuzzleMismatch: Boolean,
+
+  @get:Input
   val testIndy: Boolean,
 
   @get:Input
@@ -100,6 +107,7 @@ class JavaagentTestArgumentsProvider(
       "-Dotel.javaagent.experimental.initializer.jar=${shadowJar.absolutePath}",
       "-Dotel.javaagent.testing.additional-library-ignores.enabled=false",
       "-Dotel.javaagent.testing.fail-on-context-leak=$failOnContextLeak",
+      "-Dotel.javaagent.testing.fail-on-muzzle-mismatch=$failOnMuzzleMismatch",
       // prevent sporadic gradle deadlocks, see SafeLogger for more details
       "-Dotel.javaagent.testing.transform-safe-logging.enabled=true",
       // Reduce noise in assertion messages since we don't need to verify this in most tests. We check
@@ -140,6 +148,7 @@ afterEvaluate {
     dependsOn(agentForTesting.buildDependencies)
 
     val failOnContextLeakOverride = failOnContextLeakProperty.get()
+    val failOnMuzzleMismatchOverride = failOnMuzzleMismatchProperty.get()
     val testIndyEnabled = testIndyProperty.get()
 
     jvmArgumentProviders.add(
@@ -147,6 +156,7 @@ afterEvaluate {
         agentShadowJar,
         shadowJar.archiveFile.get().asFile,
         failOnContextLeakOverride,
+        failOnMuzzleMismatchOverride,
         testIndyEnabled,
         denyUnsafe
       )

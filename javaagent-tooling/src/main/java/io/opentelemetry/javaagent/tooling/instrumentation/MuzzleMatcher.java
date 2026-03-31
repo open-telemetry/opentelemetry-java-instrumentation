@@ -34,6 +34,9 @@ import net.bytebuddy.utility.JavaModule;
  */
 class MuzzleMatcher implements AgentBuilder.RawMatcher {
 
+  private static final boolean FAIL_ON_MUZZLE_MISMATCH =
+      Boolean.getBoolean("otel.javaagent.testing.fail-on-muzzle-mismatch");
+
   private static final Logger muzzleLogger = Logger.getLogger(MuzzleMatcher.class.getName());
 
   private final TransformSafeLogger instrumentationLogger;
@@ -93,6 +96,11 @@ class MuzzleMatcher implements AgentBuilder.RawMatcher {
         for (Mismatch mismatch : mismatches) {
           muzzleLogger.log(muzzleLogLevel, "-- {0}", mismatch);
         }
+      }
+      if (FAIL_ON_MUZZLE_MISMATCH) {
+        throw new IllegalStateException(
+            "Muzzle mismatch detected for instrumentation "
+                + instrumentationModule.instrumentationName());
       }
     } else {
       if (instrumentationLogger.isLoggable(FINE)) {
