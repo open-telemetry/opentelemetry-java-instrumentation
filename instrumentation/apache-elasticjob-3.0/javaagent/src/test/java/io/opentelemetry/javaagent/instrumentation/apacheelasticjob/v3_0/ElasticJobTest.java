@@ -30,7 +30,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import javax.annotation.Nullable;
 import org.apache.shardingsphere.elasticjob.api.JobConfiguration;
 import org.apache.shardingsphere.elasticjob.http.props.HttpJobProperties;
 import org.apache.shardingsphere.elasticjob.infra.env.IpUtils;
@@ -354,7 +353,6 @@ class ElasticJobTest {
     return tempScript.toString();
   }
 
-  @Nullable
   private static <T> T experimental(T value) {
     return EXPERIMENTAL_ATTRIBUTES_ENABLED ? value : null;
   }
@@ -363,7 +361,7 @@ class ElasticJobTest {
       String jobName,
       long item,
       long totalCount,
-      @Nullable String parameter,
+      String parameter,
       String codeFunction,
       String codeNamespace,
       String jobType) {
