@@ -10,7 +10,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import java.net.InetSocketAddress;
-import java.util.Iterator;
 import java.util.Map;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.rpc.RpcContext;
@@ -40,10 +39,7 @@ class DubboHeadersGetterTest {
     }
     DubboRequest request = DubboRequest.create(rpcInvocation, context);
 
-    Iterator<String> iterator = new DubboHeadersGetter().keys(request).iterator();
-    assertThat(iterator.hasNext()).isTrue();
-    assertThat(iterator.next()).isEqualTo("key");
-    assertThat(iterator.hasNext()).isFalse();
+    assertThat(new DubboHeadersGetter().keys(request)).containsExactly("key");
   }
 
   @SuppressWarnings("unchecked")
