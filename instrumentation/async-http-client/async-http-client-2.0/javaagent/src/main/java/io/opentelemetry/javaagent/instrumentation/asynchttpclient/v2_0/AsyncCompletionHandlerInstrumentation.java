@@ -66,7 +66,7 @@ public class AsyncCompletionHandlerInstrumentation implements TypeInstrumentatio
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
-      if (null != scope) {
+      if (scope != null) {
         scope.close();
       }
     }
@@ -91,7 +91,7 @@ public class AsyncCompletionHandlerInstrumentation implements TypeInstrumentatio
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
-      if (null != scope) {
+      if (scope != null) {
         scope.close();
       }
     }

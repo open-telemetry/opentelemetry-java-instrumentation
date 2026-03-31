@@ -69,8 +69,8 @@ public class AkkaForkJoinTaskInstrumentation implements TypeInstrumentation {
         Scope newScope =
             TaskAdviceHelper.makePropagatedContextCurrent(
                 VirtualFields.RUNNABLE_PROPAGATED_CONTEXT, (Runnable) thiz);
-        if (null != newScope) {
-          if (null != scope) {
+        if (newScope != null) {
+          if (scope != null) {
             newScope.close();
           } else {
             scope = newScope;
@@ -81,8 +81,8 @@ public class AkkaForkJoinTaskInstrumentation implements TypeInstrumentation {
         Scope newScope =
             TaskAdviceHelper.makePropagatedContextCurrent(
                 VirtualFields.CALLABLE_PROPAGATED_CONTEXT, (Callable<?>) thiz);
-        if (null != newScope) {
-          if (null != scope) {
+        if (newScope != null) {
+          if (scope != null) {
             newScope.close();
           } else {
             scope = newScope;
