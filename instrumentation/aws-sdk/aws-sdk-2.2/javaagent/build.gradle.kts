@@ -150,6 +150,14 @@ testing {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
         implementation("org.testcontainers:testcontainers-localstack")
       }
+
+      targets {
+        all {
+          testTask.configure {
+            usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+          }
+        }
+      }
     }
 
     val testBedrockRuntime by registering(JvmTestSuite::class) {
@@ -165,7 +173,6 @@ testing {
           testTask.configure {
             // TODO run tests both with and without genai message capture
             systemProperty("otel.instrumentation.genai.capture-message-content", "true")
-            systemProperty("collectMetadata", collectMetadata)
           }
         }
       }
@@ -213,7 +220,6 @@ tasks {
       excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
     }
     systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
-    systemProperty("collectMetadata", collectMetadata)
   }
 
   check {
