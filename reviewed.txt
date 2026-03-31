@@ -27,3 +27,4 @@ async-http-client-1.9:javaagent
 async-http-client-2.0:javaagent
 armeria-grpc-1.14:javaagent
 armeria-1.3:library
+async-http-client-1-common:javaagent
