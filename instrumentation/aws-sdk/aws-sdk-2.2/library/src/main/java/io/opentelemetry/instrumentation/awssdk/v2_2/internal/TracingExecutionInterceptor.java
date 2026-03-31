@@ -72,6 +72,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".RequestFinisher");
   static final ExecutionAttribute<TracingList> TRACING_MESSAGES_ATTRIBUTE =
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".TracingMessages");
+  private static final RequestHeaderSetter requestHeaderSetter = new RequestHeaderSetter();
 
   private final Instrumenter<ExecutionAttributes, Response> requestInstrumenter;
   private final Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter;
@@ -336,7 +337,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     }
 
     SdkHttpRequest.Builder builder = httpRequest.toBuilder();
-    AwsXrayPropagator.getInstance().inject(otelContext, builder, new RequestHeaderSetter());
+    AwsXrayPropagator.getInstance().inject(otelContext, builder, requestHeaderSetter);
     return builder.build();
   }
 
