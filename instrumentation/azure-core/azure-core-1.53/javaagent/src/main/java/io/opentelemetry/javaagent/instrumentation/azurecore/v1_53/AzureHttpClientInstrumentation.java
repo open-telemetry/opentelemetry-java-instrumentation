@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.azurecore.v1_53;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.azurecore.v1_53.SuppressNestedClientHelper.disallowNestedClientSpanMono;
 import static io.opentelemetry.javaagent.instrumentation.azurecore.v1_53.SuppressNestedClientHelper.disallowNestedClientSpanSync;
@@ -26,6 +27,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 import reactor.core.publisher.Mono;
 
 public class AzureHttpClientInstrumentation implements TypeInstrumentation {
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("com.azure.core.http.HttpClient");
+  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

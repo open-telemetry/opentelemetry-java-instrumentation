@@ -28,7 +28,6 @@ import com.azure.core.util.LibraryTelemetryOptions;
 import com.azure.core.util.TracingOptions;
 import com.azure.core.util.tracing.Tracer;
 import com.azure.core.util.tracing.TracerProvider;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -101,7 +100,7 @@ class AzureSdkTest {
                     span.hasName("myService.testMethod")
                         .hasKind(SpanKind.INTERNAL)
                         .hasStatus(StatusData.unset())
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasKind(SpanKind.CLIENT)
                         .hasName("GET")
