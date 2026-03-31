@@ -8,3 +8,4 @@ apache-dbcp-2.0:testing
 activej-http-6.0:javaagent
 alibaba-druid-1.0:testing
 alibaba-druid-1.0:javaagent
+apache-dubbo-2.7:library-autoconfigure
