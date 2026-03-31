@@ -20,12 +20,12 @@ final class DataSourceMetrics {
   // a weak map does not make sense here because each Meter holds a reference to the dataSource
   // all instrumented/known implementations of BasicDataSourceMXBean do not implement
   // equals()/hashCode(), so it's safe to keep them in a plain ConcurrentHashMap
-  private static final Map<BasicDataSourceMXBean, BatchCallback> dataSourceMetrics =
+  private static final Map<BasicDataSourceMXBean, BatchCallback> dataSourceMetricsByBean =
       new ConcurrentHashMap<>();
 
   static void registerMetrics(
       OpenTelemetry openTelemetry, BasicDataSourceMXBean dataSource, String dataSourceName) {
-    dataSourceMetrics.computeIfAbsent(
+    dataSourceMetricsByBean.computeIfAbsent(
         dataSource,
         ds -> {
           DbConnectionPoolMetrics metrics =
@@ -56,7 +56,7 @@ final class DataSourceMetrics {
   }
 
   static void unregisterMetrics(BasicDataSourceMXBean dataSource) {
-    BatchCallback callback = dataSourceMetrics.remove(dataSource);
+    BatchCallback callback = dataSourceMetricsByBean.remove(dataSource);
     if (callback != null) {
       callback.close();
     }
