@@ -15,8 +15,8 @@ import org.apache.hc.core5.net.URIAuthority;
 
 public class RequestWithHost extends HttpRequestWrapper implements ClassicHttpRequest {
 
-  private final String scheme;
-  private final URIAuthority authority;
+  @Nullable private final String scheme;
+  @Nullable private final URIAuthority authority;
 
   public RequestWithHost(@Nullable HttpHost httpHost, ClassicHttpRequest httpRequest) {
     super(httpRequest);
@@ -30,11 +30,13 @@ public class RequestWithHost extends HttpRequestWrapper implements ClassicHttpRe
   }
 
   @Override
+  @Nullable
   public String getScheme() {
     return scheme;
   }
 
   @Override
+  @Nullable
   public URIAuthority getAuthority() {
     return authority;
   }
