@@ -14,10 +14,10 @@ public final class ActivejHttpServerSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.activej-http-6.0";
 
-  private static final Instrumenter<HttpRequest, HttpResponse> INSTRUMENTER;
+  private static final Instrumenter<HttpRequest, HttpResponse> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         JavaagentHttpServerInstrumenters.create(
             INSTRUMENTATION_NAME,
             new ActivejHttpServerAttributesGetter(),
@@ -25,7 +25,7 @@ public final class ActivejHttpServerSingletons {
   }
 
   public static Instrumenter<HttpRequest, HttpResponse> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private ActivejHttpServerSingletons() {}
