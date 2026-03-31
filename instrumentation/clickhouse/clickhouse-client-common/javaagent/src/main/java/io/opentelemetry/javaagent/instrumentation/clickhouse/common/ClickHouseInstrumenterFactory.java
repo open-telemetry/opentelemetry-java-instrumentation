@@ -12,12 +12,13 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttrib
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 
 public final class ClickHouseInstrumenterFactory {
 
   @SuppressWarnings("deprecation") // to support old semconv
   public static Instrumenter<ClickHouseDbRequest, Void> createInstrumenter(
-      String instrumenterName, Function<Throwable, String> errorCodeExtractor) {
+      String instrumenterName, Function<@Nullable Throwable, String> errorCodeExtractor) {
     ClickHouseAttributesGetter dbAttributesGetter =
         new ClickHouseAttributesGetter(errorCodeExtractor);
 

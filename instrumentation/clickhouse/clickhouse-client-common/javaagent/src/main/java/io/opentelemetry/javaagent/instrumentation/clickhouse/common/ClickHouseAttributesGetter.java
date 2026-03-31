@@ -18,9 +18,9 @@ import javax.annotation.Nullable;
 final class ClickHouseAttributesGetter
     implements SqlClientAttributesGetter<ClickHouseDbRequest, Void> {
 
-  private final Function<Throwable, String> errorCodeExtractor;
+  private final Function<@Nullable Throwable, String> errorCodeExtractor;
 
-  ClickHouseAttributesGetter(Function<Throwable, String> errorCodeExtractor) {
+  ClickHouseAttributesGetter(Function<@Nullable Throwable, String> errorCodeExtractor) {
     this.errorCodeExtractor = errorCodeExtractor;
   }
 
