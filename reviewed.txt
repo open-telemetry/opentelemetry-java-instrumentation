@@ -44,3 +44,4 @@ aws-lambda-core-1.0:javaagent
 aws-sdk-1.11:library
 aws-sdk-2.2:library-autoconfigure
 aws-sdk-2.2:library
+aws-sdk-1.11:testing
