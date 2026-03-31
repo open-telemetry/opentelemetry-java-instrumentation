@@ -29,3 +29,4 @@ armeria-grpc-1.14:javaagent
 armeria-1.3:library
 async-http-client-1-common:javaagent
 avaje-jex-3.0:javaagent
+aws-lambda-core-1.0:testing
