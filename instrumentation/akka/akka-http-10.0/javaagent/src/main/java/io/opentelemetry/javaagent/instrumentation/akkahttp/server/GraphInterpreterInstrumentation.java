@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp.server;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import akka.stream.impl.fusing.GraphInterpreter;
@@ -18,6 +19,11 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class GraphInterpreterInstrumentation implements TypeInstrumentation {
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("akka.http.scaladsl.HttpExt");
+  }
+
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("akka.stream.impl.fusing.GraphInterpreter");
