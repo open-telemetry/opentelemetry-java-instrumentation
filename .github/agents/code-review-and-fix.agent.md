@@ -19,6 +19,21 @@ Primary responsibilities:
 
 Do not stop until all in-scope files are reviewed and fixed where possible.
 
+## Knowledge Loading
+
+Always load:
+
+- `docs/contributing/style-guide.md`
+- `knowledge/general-rules.md` — review checklist and core rules
+
+Load other knowledge files only when their scope trigger applies.
+Use the **Knowledge File** column in the checklist table.
+
+## Review Checklist and Core Rules
+
+Load `knowledge/general-rules.md` — it contains the review checklist table and all
+core rules that apply to every review.
+
 ## Scope Modes
 
 Determine scope from the user request:
@@ -266,7 +281,7 @@ Output content rules:
 - When writing structured output to a file, write only the requested payload. Do not wrap it in Markdown fences,
   add headings, or include extra commentary before or after it.
 
-### Phase 4: Validate and Report
+### Phase 4: Validate
 
 **All Gradle commands in this phase must use timeout `0` (no timeout). In this repository,
 legitimate Gradle validation runs can take 10 minutes or more. Never set a finite timeout,
@@ -284,6 +299,11 @@ earlier Gradle invocation running in the background. Do not launch the next Grad
 until the previous one has definitively completed and you have observed its final exit
 status. If a prior run may still be active, first wait for it or confirm its completion
 before proceeding.
+
+Do not move on to Phase 5 until every Gradle command started in Phase 4 has either:
+
+1. completed and you have observed its final exit status, or
+2. been explicitly recorded as a validation limitation after the recovery loop below.
 
 If a command-execution attempt fails for tool-related reasons, follow this recovery loop before
 reporting a limitation:
@@ -349,6 +369,10 @@ Execute these steps strictly in order — do not reorder:
    `:instrumentation:foo:foo-1.0:library`,
    `:instrumentation:foo:foo-1.0:javaagent`, and any version-variant siblings such as
    `:instrumentation:foo:foo-2.0:library` if it depends on the `foo-1.0:testing` module.
+
+   Do not move on to step 2 until every required `:check` run from this step, including
+   sibling-module validation and any re-runs after fixes or reverts, has fully completed
+   and you have observed the final exit status for each run.
 2. **Run muzzle validation when muzzle config changed.** If any review fix touched Gradle
    muzzle configuration (for example `muzzle {}`, version ranges, `assertInverse.set(true)`,
    or module wiring affecting muzzle), run the relevant module's `:muzzle` task:
@@ -371,17 +395,29 @@ Execute these steps strictly in order — do not reorder:
       `Needs Manual Fix` in the final output with a note explaining the muzzle failure.
    4. After reverting, re-run the `:muzzle` task to confirm the revert restored a green
       build. Never commit code that fails muzzle validation.
+
+   Do not move on to step 3 until every required `:muzzle` run from this step, including
+   any re-runs after fixes or reverts, has fully completed and you have observed the final
+   exit status for each run.
 3. **Last, after all validation is done**, run `./gradlew spotlessApply` to fix formatting
    across all modified files.
    `spotlessApply` must be the final build command — never run it before tests or muzzle.
    Before running it, confirm that no earlier Gradle validation command is still running.
-4. **Verify substantive changes remain.** Run `git diff --ignore-all-space --ignore-blank-lines`
+
+   Do not move on to Phase 5 until `spotlessApply` has fully completed and you have
+   observed its final exit status.
+
+### Phase 5: Finalize and Report
+
+Do not begin Phase 5 until Phase 4 is fully closed out.
+
+1. **Verify substantive changes remain.** Run `git diff --ignore-all-space --ignore-blank-lines`
    and confirm non-empty output. If the only remaining diffs are whitespace changes — or if
    all review fixes were reverted during validation — **stop here**: reset the working tree
    (`git checkout -- .`), do not commit or push. If any reverted items were recorded as
   `Needs Manual Fix`, emit the final output with those items. Otherwise report
    "No issues found." and exit.
-5. Commit all changes in a single commit. The subject line must always be
+2. Commit all changes in a single commit. The subject line must always be
    `Review fixes for <module>` where `<module>` is the short module name (e.g.,
    `apache-elasticjob-3.0 javaagent`). The body is a bulleted list of changes:
 
@@ -399,24 +435,9 @@ Execute these steps strictly in order — do not reorder:
    ```
 
    Create exactly one commit for all fixes — do not commit incrementally.
-6. Produce the final output in the format requested by the caller.
+3. Produce the final output in the format requested by the caller.
 
 The caller must define the final output format or schema. Follow that request exactly:
 
 - Do **not** add headings, commentary, or fallback prose unless the caller asks for them.
 - Preserve the recorded per-change reasons in whatever output format the caller requested.
-
-## Knowledge Loading
-
-Always load:
-
-- `docs/contributing/style-guide.md`
-- `knowledge/general-rules.md` — review checklist and core rules
-
-Load other knowledge files only when their scope trigger applies.
-Use the **Knowledge File** column in the checklist table.
-
-## Review Checklist and Core Rules
-
-Load `knowledge/general-rules.md` — it contains the review checklist table and all
-core rules that apply to every review.
