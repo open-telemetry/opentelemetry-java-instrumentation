@@ -147,7 +147,11 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
                   ? null
                   : WebfluxServerHttpAttributesGetter.INSTANCE.getHttpRoute(exchange),
           exchange);
-      instrumenter.end(currentContext, exchange, cancel ? null : exchange, t);
+      instrumenter.end(
+          currentContext,
+          exchange,
+          cancel && !exchange.getResponse().isCommitted() ? null : exchange,
+          t);
     }
   }
 }
