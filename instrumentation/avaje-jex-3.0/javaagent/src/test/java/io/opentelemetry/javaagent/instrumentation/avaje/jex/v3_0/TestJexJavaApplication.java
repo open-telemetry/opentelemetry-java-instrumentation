@@ -12,7 +12,7 @@ class TestJexJavaApplication {
 
   private TestJexJavaApplication() {}
 
-  public static Server initJex() {
+  static Server initJex() {
     Jex app = Jex.create().contextPath("/test");
     app.get(
         "/param/{id}",
