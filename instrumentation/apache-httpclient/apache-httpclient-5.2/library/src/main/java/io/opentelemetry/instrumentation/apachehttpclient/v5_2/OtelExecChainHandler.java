@@ -23,6 +23,7 @@ class OtelExecChainHandler implements ExecChainHandler {
 
   private static final String REQUEST_PARENT_CONTEXT_ATTRIBUTE_ID =
       OtelExecChainHandler.class.getName() + ".context";
+  private static final HttpHeaderSetter httpHeaderSetter = new HttpHeaderSetter();
 
   private final Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter;
   private final ContextPropagators propagators;
@@ -52,7 +53,7 @@ class OtelExecChainHandler implements ExecChainHandler {
     }
 
     Context context = instrumenter.start(parentContext, instrumenterRequest);
-    propagators.getTextMapPropagator().inject(context, request, new HttpHeaderSetter());
+    propagators.getTextMapPropagator().inject(context, request, httpHeaderSetter);
 
     return execute(request, instrumenterRequest, chain, scope, context);
   }
