@@ -12,6 +12,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.spring.webmvc.boot.AbstractSpringBootBasedTest;
@@ -24,6 +25,7 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.Map;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -110,5 +112,15 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
     super.configure(options);
     options.setResponseCodeOnNonStandardHttpMethod(400);
     options.setExpectedException(new RuntimeException(EXCEPTION.getBody()));
+  }
+
+  @Test
+  void handlerMappingFilterResourceAvailable() {
+    assertThat(
+            getClass()
+                .getClassLoader()
+                .getResource(
+                    "org/springframework/web/servlet/v6_0/OpenTelemetryHandlerMappingFilter.class"))
+        .isNotNull();
   }
 }

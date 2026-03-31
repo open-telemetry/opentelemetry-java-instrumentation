@@ -41,7 +41,7 @@ public class SpringWebMvcInstrumentationModule extends InstrumentationModule
   public void injectClasses(ClassInjector injector) {
     injector
         .proxyBuilder("org.springframework.web.servlet.v6_0.OpenTelemetryHandlerMappingFilter")
-        .inject(InjectionMode.CLASS_AND_RESOURCE);
+        .inject(InjectionMode.CLASS_ONLY);
   }
 
   @Override
