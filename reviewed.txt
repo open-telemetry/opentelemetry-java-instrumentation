@@ -65,3 +65,4 @@ cassandra-4.4:testing
 cassandra-4.4:javaagent
 cdi-testing
 cassandra-common-4.0:testing
+cassandra-4.4:library
