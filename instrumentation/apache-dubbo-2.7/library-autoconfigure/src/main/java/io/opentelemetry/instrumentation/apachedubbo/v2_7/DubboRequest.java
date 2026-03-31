@@ -26,7 +26,7 @@ public abstract class DubboRequest {
         context.getLocalAddress());
   }
 
-  abstract RpcInvocation invocation();
+  public abstract RpcInvocation invocation();
 
   public abstract RpcContext context();
 

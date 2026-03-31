@@ -44,6 +44,10 @@ public class DubboInstrumentationModule extends InstrumentationModule
   public void injectClasses(ClassInjector injector) {
     injector
         .proxyBuilder(
+            "io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7.RegistryAddressCaptureFilter")
+        .inject(InjectionMode.CLASS_ONLY);
+    injector
+        .proxyBuilder(
             "io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7.OpenTelemetryClientFilter")
         .inject(InjectionMode.CLASS_ONLY);
     injector

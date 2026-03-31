@@ -22,11 +22,20 @@ public final class DubboClientNetworkAttributesGetter
   @Nullable
   @Override
   public String getServerAddress(DubboRequest request) {
+    String registryAddress =
+        DubboRegistryUtil.extractRegistryAddress(request.invocation());
+    if (registryAddress != null) {
+      return registryAddress + "/" + DubboRegistryUtil.buildServiceTarget(request.url());
+    }
     return request.url().getHost();
   }
 
+  @Nullable
   @Override
   public Integer getServerPort(DubboRequest request) {
+    if (DubboRegistryUtil.extractRegistryAddress(request.invocation()) != null) {
+      return null;
+    }
     return request.url().getPort();
   }
 
