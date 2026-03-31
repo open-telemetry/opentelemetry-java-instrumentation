@@ -101,6 +101,7 @@ class DbSpanDecorator extends BaseSpanDecorator {
     }
   }
 
+  @Nullable
   private String getDbNamespace(Endpoint endpoint) {
     switch (component) {
       case "mongodb":
