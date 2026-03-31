@@ -160,7 +160,7 @@ public abstract class AbstractAws2SqsBaseTest {
 
     ReceiveMessageResponse response = client.receiveMessage(receiveMessageRequest);
 
-    assertThat(response.messages().size()).isEqualTo(1);
+    assertThat(response.messages()).hasSize(1);
 
     response.messages().forEach(message -> getTesting().runWithSpan("process child", () -> {}));
     assertSqsTraces(false, false);
@@ -178,7 +178,7 @@ public abstract class AbstractAws2SqsBaseTest {
     ReceiveMessageResponse response =
         getTesting().runWithSpan("parent", () -> client.receiveMessage(receiveMessageRequest));
 
-    assertThat(response.messages().size()).isEqualTo(1);
+    assertThat(response.messages()).hasSize(1);
 
     response.messages().forEach(message -> getTesting().runWithSpan("process child", () -> {}));
     assertSqsTraces(true, false);
@@ -196,7 +196,7 @@ public abstract class AbstractAws2SqsBaseTest {
 
     ReceiveMessageResponse response = client.receiveMessage(receiveMessageRequest).get();
 
-    assertThat(response.messages().size()).isEqualTo(1);
+    assertThat(response.messages()).hasSize(1);
 
     response.messages().forEach(message -> getTesting().runWithSpan("process child", () -> {}));
     assertSqsTraces(false, false);
