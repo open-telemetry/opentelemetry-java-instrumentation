@@ -127,10 +127,10 @@ public final class ApacheHttpClientRequest {
   private static URI getCalculatedUri(HttpHost httpHost, URI uri) {
     try {
       String path = uri.getPath();
-      if (!path.startsWith("/")) {
+      if (path == null || !path.startsWith("/")) {
         // elasticsearch RestClient sends relative urls
         // TODO(trask) add test for this and extend to Apache 4, 4.3 and 5
-        path = "/" + path;
+        path = "/" + (path == null ? "" : path);
       }
       return new URI(
           httpHost.getSchemeName(),
