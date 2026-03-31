@@ -16,6 +16,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -69,6 +70,7 @@ public final class SerializationUtil {
     }
   }
 
+  @Nullable
   public static <T> String toJson(T obj) {
     if (obj == null) {
       return null;
