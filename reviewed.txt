@@ -69,3 +69,4 @@ cassandra-4.4:library
 clickhouse-client-common:javaagent
 clickhouse-client-v1-0.5:javaagent
 clickhouse-client-v2-0.8:javaagent
+couchbase-2-common:javaagent
