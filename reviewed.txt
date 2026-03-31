@@ -16,3 +16,4 @@ apache-elasticjob-3.0:javaagent
 akka-http-10.0:javaagent
 apache-httpclient-4.3:library
 apache-httpclient-4.0:javaagent
+apache-httpclient-4.3:testing
