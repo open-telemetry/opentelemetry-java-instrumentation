@@ -12,10 +12,10 @@ import org.apache.commons.httpclient.HttpMethod;
 public final class ApacheHttpClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpclient-2.0";
 
-  private static final Instrumenter<HttpMethod, HttpMethod> INSTRUMENTER;
+  private static final Instrumenter<HttpMethod, HttpMethod> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         JavaagentHttpClientInstrumenters.create(
             INSTRUMENTATION_NAME,
             new ApacheHttpClientHttpAttributesGetter(),
@@ -23,7 +23,7 @@ public final class ApacheHttpClientSingletons {
   }
 
   public static Instrumenter<HttpMethod, HttpMethod> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private ApacheHttpClientSingletons() {}
