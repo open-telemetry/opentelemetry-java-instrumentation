@@ -31,7 +31,7 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
 
   @Override
   void configure(KafkaTelemetryBuilder builder) {
-    builder.setMessagingReceiveInstrumentationEnabled(false);
+    builder.setMessagingReceiveTelemetryEnabled(false);
   }
 
   @Override
@@ -61,7 +61,7 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  protected static List<AttributeAssertion> sendAttributes(boolean testHeaders) {
+  static List<AttributeAssertion> sendAttributes(boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
@@ -79,7 +79,7 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  private static List<AttributeAssertion> processAttributes(String greeting, boolean testHeaders) {
+  static List<AttributeAssertion> processAttributes(String greeting, boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(

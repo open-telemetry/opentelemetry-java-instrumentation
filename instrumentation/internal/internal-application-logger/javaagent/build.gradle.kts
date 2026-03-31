@@ -18,7 +18,7 @@ muzzle {
   }
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 dependencies {
   bootstrap(project(":instrumentation:internal:internal-application-logger:bootstrap"))
 

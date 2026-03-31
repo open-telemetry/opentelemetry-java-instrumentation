@@ -16,7 +16,7 @@ dependencies {
   latestDepTestLibrary("io.vertx:vertx-codegen:3.+") // documented limitation
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 
 testing {
   suites {
@@ -34,7 +34,10 @@ testing {
           testTask.configure {
             usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
-            systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+            systemProperty(
+              "metadataConfig",
+              "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=false",
+            )
             jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
             jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
           }
@@ -47,7 +50,7 @@ testing {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
     systemProperty("testLatestDeps", latestDepTest)
   }
 

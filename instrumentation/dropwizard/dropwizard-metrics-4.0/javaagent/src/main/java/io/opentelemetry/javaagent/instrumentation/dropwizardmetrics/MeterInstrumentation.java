@@ -26,7 +26,7 @@ public class MeterInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("mark").and(takesArguments(long.class)), this.getClass().getName() + "$MarkAdvice");
+        named("mark").and(takesArguments(long.class)), getClass().getName() + "$MarkAdvice");
   }
 
   @SuppressWarnings("unused")

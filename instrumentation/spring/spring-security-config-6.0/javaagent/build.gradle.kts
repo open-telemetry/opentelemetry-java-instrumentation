@@ -8,9 +8,12 @@ muzzle {
     group.set("org.springframework.security")
     module.set("spring-security-config")
     versions.set("[6.0.0,]")
+    assertInverse.set(true)
 
     extraDependency("jakarta.servlet:jakarta.servlet-api:6.0.0")
-    extraDependency("org.springframework.security:spring-security-web:6.0.0")
+    // deliberately not using 6.0.0 because it would also pull in spring-security-core 6.0.0 which
+    // contains the class that we check for to disable the instrumentation on older versions
+    extraDependency("org.springframework.security:spring-security-web:5.5.0")
     extraDependency("io.projectreactor:reactor-core:3.5.0")
   }
 }

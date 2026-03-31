@@ -30,7 +30,7 @@ public class DefaultConnectionPoolInstrumentation implements TypeInstrumentation
     transformer.applyAdviceToMethod(
         named("getAsync")
             .and(takesArgument(0, named("com.mongodb.internal.async.SingleResultCallback"))),
-        this.getClass().getName() + "$SingleResultCallbackAdvice");
+        getClass().getName() + "$SingleResultCallbackAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -187,10 +187,13 @@ public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
   which is irrelevant and misleading; the purpose is the upper bound.
   To identify ceiling classes, check if a newer sibling module's `classLoaderMatcher()`
   checks a different variant or replacement class.
-- **Do NOT add version comments on trivial single-class checks.** A single-class
-  `hasClassesNamed(...)` check whose landmark corresponds to the module's base
-  version does not need a comment — the version is obvious from the module name. Do not
-  suggest adding one.
+- **Single-class lower-bound comments are required.** When a single-class
+  `hasClassesNamed(...)` check exists solely to establish the module's lower bound, add an
+  inline `// added in X.Y` comment. The comment explains why the matcher exists and which
+  version boundary it enforces. First validate that `X.Y` is factually correct from
+  repository or upstream evidence; do not infer it from the module name alone. Flag a
+  missing comment in this case, and do not flag an existing one for removal unless the
+  comment is demonstrably wrong.
 - Prefer **one landmark class** per version boundary — choose the most stable/specific class.
 - Pair with **muzzle config** (`assertInverse.set(true)`) for full coverage.
 - Use `hasClassesNamed(...)` (from `AgentElementMatchers`) — not raw ByteBuddy matchers.
@@ -254,9 +257,7 @@ sufficient for optimization.
 
 ### Rules
 
-- Do not flag or change the visibility or `final` modifier on `TypeInstrumentation`,
-  `InstrumentationModule`, or advice classes. Both `public class` and package-private `class`
-  (with or without `final`) are acceptable — this is not a style issue in javaagent code.
+- Do not flag or change the visibility or `final` modifier on advice classes.
 - `typeMatcher()` should match only the types the instrumentation genuinely needs. Prefer
   `named("fully.qualified.ClassName")` or `namedOneOf(...)` for single classes.
   `extendsClass(...)` and `implementsInterface(...)` are appropriate when the instrumentation
@@ -267,12 +268,14 @@ sufficient for optimization.
   Keep `isMethod()` when the name could be empty, since `named("")` matches constructors and
   class initializers.
 - Reference the advice class using `getClass().getName() + "$InnerClassName"` — not
-  `InnerClassName.class.getName()`, `OuterClass.class.getName()`, or a string literal.
+  `this.getClass().getName() + "$InnerClassName"`, `InnerClassName.class.getName()`,
+  `OuterClass.class.getName()`, or a string literal.
   Any `.class.getName()` reference — whether to the inner advice class or the outer
   instrumentation class — causes class loading in the agent's class loader, where library
   types used by the advice are unavailable (causing `NoClassDefFoundError`).
   `getClass().getName()` avoids this because it is a virtual call on the already-loaded
-  `this` instance, not a class literal.
+  instance, not a class literal. Omit the redundant `this.` qualifier and use the shorter
+  repository convention.
 
 ## Singletons Pattern
 

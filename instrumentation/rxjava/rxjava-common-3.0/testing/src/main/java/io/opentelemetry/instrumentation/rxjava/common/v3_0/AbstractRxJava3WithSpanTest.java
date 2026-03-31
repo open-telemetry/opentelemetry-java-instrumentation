@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.rxjava.common.v3_0;
 
+import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionSuffixAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -34,15 +34,13 @@ import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
 public abstract class AbstractRxJava3WithSpanTest {
-  private static final AttributeKey<Boolean> RXJAVA_CANCELED =
-      AttributeKey.booleanKey("rxjava.canceled");
 
   protected abstract AbstractTracedWithSpan newTraced();
 
   protected abstract InstrumentationExtension testing();
 
   @Test
-  public void captureSpanForCompletedCompletable() {
+  void captureSpanForCompletedCompletable() {
     TestObserver<Object> observer = new TestObserver<>();
     Completable source = Completable.complete();
     newTraced().completable(source).subscribe(observer);
@@ -60,7 +58,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForEventuallyCompletedCompletable() throws InterruptedException {
+  void captureSpanForEventuallyCompletedCompletable() throws InterruptedException {
     CompletableSubject source = CompletableSubject.create();
     TestObserver<Object> observer = new TestObserver<>();
     newTraced().completable(source).subscribe(observer);
@@ -86,7 +84,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForErrorCompletable() {
+  void captureSpanForErrorCompletable() {
     IllegalStateException error = new IllegalStateException("Boom");
     TestObserver<Object> observer = new TestObserver<>();
     Completable source = Completable.error(error);
@@ -107,7 +105,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForEventuallyErrorCompletable() throws InterruptedException {
+  void captureSpanForEventuallyErrorCompletable() throws InterruptedException {
     IllegalStateException error = new IllegalStateException("Boom");
     CompletableSubject source = CompletableSubject.create();
     TestObserver<Object> observer = new TestObserver<>();
@@ -135,7 +133,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForCanceledCompletable() throws InterruptedException {
+  void captureSpanForCanceledCompletable() throws InterruptedException {
     CompletableSubject source = CompletableSubject.create();
     TestObserver<Object> observer = new TestObserver<>();
     newTraced().completable(source).subscribe(observer);
@@ -162,12 +160,13 @@ public abstract class AbstractRxJava3WithSpanTest {
   private static List<AttributeAssertion> canceledAttributesAssertions(String methodName) {
     List<AttributeAssertion> assertions =
         codeFunctionSuffixAssertions(".TracedWithSpan", methodName);
-    assertions.add(equalTo(RXJAVA_CANCELED, ExperimentalTestHelper.experimentalCanceled(true)));
+    assertions.add(
+        equalTo(booleanKey("rxjava.canceled"), ExperimentalTestHelper.experimentalCanceled(true)));
     return assertions;
   }
 
   @Test
-  public void captureSpanForCompletedMaybe() {
+  void captureSpanForCompletedMaybe() {
     Maybe<String> source = Maybe.just("Value");
     TestObserver<Object> observer = new TestObserver<>();
     newTraced().maybe(source).subscribe(observer);
@@ -186,7 +185,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForEmptyMaybe() {
+  void captureSpanForEmptyMaybe() {
     Maybe<String> source = Maybe.empty();
     TestObserver<Object> observer = new TestObserver<>();
     newTraced().maybe(source).subscribe(observer);
@@ -204,7 +203,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForEventuallyCompletedMaybe() throws InterruptedException {
+  void captureSpanForEventuallyCompletedMaybe() throws InterruptedException {
     MaybeSubject<String> source = MaybeSubject.create();
     TestObserver<Object> observer = new TestObserver<>();
     newTraced().maybe(source).subscribe(observer);
@@ -231,7 +230,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForErrorMaybe() {
+  void captureSpanForErrorMaybe() {
     IllegalStateException error = new IllegalStateException("Boom");
     TestObserver<Object> observer = new TestObserver<>();
     Maybe<String> source = Maybe.error(error);
@@ -252,7 +251,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForEventuallyErrorMaybe() throws InterruptedException {
+  void captureSpanForEventuallyErrorMaybe() throws InterruptedException {
     IllegalStateException error = new IllegalStateException("Boom");
     MaybeSubject<String> source = MaybeSubject.create();
     TestObserver<Object> observer = new TestObserver<>();
@@ -281,7 +280,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForCanceledMaybe() throws InterruptedException {
+  void captureSpanForCanceledMaybe() throws InterruptedException {
     MaybeSubject<String> source = MaybeSubject.create();
     TestObserver<Object> observer = new TestObserver<>();
     newTraced().maybe(source).subscribe(observer);
@@ -305,7 +304,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForCompletedSingle() {
+  void captureSpanForCompletedSingle() {
     Single<String> source = Single.just("Value");
     TestObserver<Object> observer = new TestObserver<>();
     newTraced().single(source).subscribe(observer);
@@ -324,7 +323,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForEventuallyCompletedSingle() throws InterruptedException {
+  void captureSpanForEventuallyCompletedSingle() throws InterruptedException {
     SingleSubject<String> source = SingleSubject.create();
     TestObserver<Object> observer = new TestObserver<>();
     newTraced().single(source).subscribe(observer);
@@ -351,7 +350,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForErrorSingle() {
+  void captureSpanForErrorSingle() {
     IllegalStateException error = new IllegalStateException("Boom");
     TestObserver<Object> observer = new TestObserver<>();
     Single<String> source = Single.error(error);
@@ -372,7 +371,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForEventuallyErrorSingle() throws InterruptedException {
+  void captureSpanForEventuallyErrorSingle() throws InterruptedException {
     IllegalStateException error = new IllegalStateException("Boom");
     SingleSubject<String> source = SingleSubject.create();
     TestObserver<String> observer = new TestObserver<>();
@@ -401,7 +400,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForCanceledSingle() throws InterruptedException {
+  void captureSpanForCanceledSingle() throws InterruptedException {
     SingleSubject<String> source = SingleSubject.create();
     TestObserver<Object> observer = new TestObserver<>();
     newTraced().single(source).subscribe(observer);
@@ -425,7 +424,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForCompletedObservable() {
+  void captureSpanForCompletedObservable() {
     TestObserver<Object> observer = new TestObserver<>();
     Observable<String> source = Observable.just("Value");
     newTraced().observable(source).subscribe(observer);
@@ -444,7 +443,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForEventuallyCompletedObservable() throws InterruptedException {
+  void captureSpanForEventuallyCompletedObservable() throws InterruptedException {
     TestObserver<Object> observer = new TestObserver<>();
     UnicastSubject<String> source = UnicastSubject.create();
     newTraced().observable(source).subscribe(observer);
@@ -477,7 +476,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForErrorObservable() {
+  void captureSpanForErrorObservable() {
     IllegalStateException error = new IllegalStateException("Boom");
     Observable<String> source = Observable.error(error);
     TestObserver<Object> observer = new TestObserver<>();
@@ -498,7 +497,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForEventuallyErrorObservable() throws InterruptedException {
+  void captureSpanForEventuallyErrorObservable() throws InterruptedException {
     IllegalStateException error = new IllegalStateException("Boom");
     UnicastSubject<String> source = UnicastSubject.create();
     TestObserver<Object> observer = new TestObserver<>();
@@ -535,7 +534,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForCanceledObservable() throws InterruptedException {
+  void captureSpanForCanceledObservable() throws InterruptedException {
     UnicastSubject<String> source = UnicastSubject.create();
     TestObserver<Object> observer = new TestObserver<>();
     newTraced().observable(source).subscribe(observer);
@@ -567,7 +566,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForCompletedFlowable() {
+  void captureSpanForCompletedFlowable() {
     TestSubscriber<Object> observe = new TestSubscriber<>();
     Flowable<String> source = Flowable.just("Value");
     newTraced().flowable(source).subscribe(observe);
@@ -586,7 +585,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureForEventuallyCompletedFlowable() throws InterruptedException {
+  void captureForEventuallyCompletedFlowable() throws InterruptedException {
     UnicastProcessor<String> source = UnicastProcessor.create();
     TestSubscriber<Object> observer = new TestSubscriber<>();
     newTraced().flowable(source).subscribe(observer);
@@ -620,7 +619,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForErrorFlowable() {
+  void captureSpanForErrorFlowable() {
     IllegalStateException error = new IllegalStateException("Boom");
     TestSubscriber<Object> observer = new TestSubscriber<>();
     Flowable<String> source = Flowable.error(error);
@@ -640,7 +639,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForEventuallyErrorFlowable() throws InterruptedException {
+  void captureSpanForEventuallyErrorFlowable() throws InterruptedException {
     IllegalStateException error = new IllegalStateException("Boom");
     UnicastProcessor<String> source = UnicastProcessor.create();
     TestSubscriber<Object> observer = new TestSubscriber<>();
@@ -677,7 +676,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForCanceledFlowable() throws InterruptedException {
+  void captureSpanForCanceledFlowable() throws InterruptedException {
     UnicastProcessor<String> source = UnicastProcessor.create();
     TestSubscriber<Object> observer = new TestSubscriber<>();
     newTraced().flowable(source).subscribe(observer);
@@ -709,7 +708,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForCompletedParallelFlowable() {
+  void captureSpanForCompletedParallelFlowable() {
     Flowable<String> source = Flowable.just("Value");
     TestSubscriber<Object> observer = new TestSubscriber<>();
     newTraced().parallelFlowable(source.parallel()).sequential().subscribe(observer);
@@ -729,7 +728,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForEventuallyCompletedParallelFlowable() throws InterruptedException {
+  void captureSpanForEventuallyCompletedParallelFlowable() throws InterruptedException {
     UnicastProcessor<String> source = UnicastProcessor.create();
     TestSubscriber<Object> observer = new TestSubscriber<>();
     newTraced().parallelFlowable(source.parallel()).sequential().subscribe(observer);
@@ -764,7 +763,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForErrorParallelFlowable() {
+  void captureSpanForErrorParallelFlowable() {
     IllegalStateException error = new IllegalStateException("Boom");
     TestSubscriber<Object> observer = new TestSubscriber<>();
     Flowable<String> source = Flowable.error(error);
@@ -786,7 +785,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForEventuallyErrorParallelFlowable() throws InterruptedException {
+  void captureSpanForEventuallyErrorParallelFlowable() throws InterruptedException {
     IllegalStateException error = new IllegalStateException("Boom");
     TestSubscriber<Object> observer = new TestSubscriber<>();
     UnicastProcessor<String> source = UnicastProcessor.create();
@@ -807,8 +806,6 @@ public abstract class AbstractRxJava3WithSpanTest {
 
     source.onError(error);
     observer.assertError(error);
-
-    observer.assertError(error);
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -825,7 +822,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForCanceledParallelFlowable() throws InterruptedException {
+  void captureSpanForCanceledParallelFlowable() throws InterruptedException {
     TestSubscriber<Object> observer = new TestSubscriber<>();
     UnicastProcessor<String> source = UnicastProcessor.create();
     newTraced().parallelFlowable(source.parallel()).sequential().subscribe(observer);
@@ -858,7 +855,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForEventuallyCompletedPublisher() throws InterruptedException {
+  void captureSpanForEventuallyCompletedPublisher() throws InterruptedException {
     CustomPublisher source = new CustomPublisher();
     TestSubscriber<String> observer = new TestSubscriber<>();
     newTraced().publisher(source).subscribe(observer);
@@ -883,7 +880,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForEventuallyErrorPublisher() throws InterruptedException {
+  void captureSpanForEventuallyErrorPublisher() throws InterruptedException {
     IllegalStateException error = new IllegalStateException("Boom");
     CustomPublisher source = new CustomPublisher();
     TestSubscriber<Object> observer = new TestSubscriber<>();
@@ -912,7 +909,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   }
 
   @Test
-  public void captureSpanForCanceledPublisher() throws InterruptedException {
+  void captureSpanForCanceledPublisher() throws InterruptedException {
     CustomPublisher source = new CustomPublisher();
     TestSubscriber<Object> observer = new TestSubscriber<>();
     newTraced().publisher(source).subscribe(observer);

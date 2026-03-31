@@ -25,7 +25,7 @@ dependencies {
   testLibrary("io.vertx:vertx-codegen:4.4.2")
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 
 testing {
   suites {

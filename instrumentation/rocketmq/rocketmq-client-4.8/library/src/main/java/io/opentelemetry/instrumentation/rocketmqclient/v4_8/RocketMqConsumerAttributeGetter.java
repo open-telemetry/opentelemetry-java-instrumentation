@@ -13,8 +13,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.common.message.MessageExt;
 
-enum RocketMqConsumerAttributeGetter implements MessagingAttributesGetter<MessageExt, Void> {
-  INSTANCE;
+final class RocketMqConsumerAttributeGetter implements MessagingAttributesGetter<MessageExt, Void> {
 
   @Override
   public String getSystem(MessageExt request) {

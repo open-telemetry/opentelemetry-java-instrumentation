@@ -13,7 +13,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import org.restlet.Request;
 import org.restlet.Response;
-import org.restlet.resource.ResourceException;
 import org.restlet.routing.Filter;
 
 final class TracingFilter extends Filter {
@@ -21,49 +20,32 @@ final class TracingFilter extends Filter {
   private final Instrumenter<Request, Response> instrumenter;
   private final String path;
 
-  public TracingFilter(Instrumenter<Request, Response> instrumenter, String path) {
+  TracingFilter(Instrumenter<Request, Response> instrumenter, String path) {
     this.instrumenter = instrumenter;
     this.path = path;
   }
 
   @Override
   public int doHandle(Request request, Response response) {
-
     Context parentContext = Context.current();
-    Context context = parentContext;
-
-    Scope scope = null;
-
-    if (instrumenter.shouldStart(parentContext, request)) {
-      context = instrumenter.start(parentContext, request);
-      scope = context.makeCurrent();
+    if (!instrumenter.shouldStart(parentContext, request)) {
+      super.doHandle(request, response);
+      return CONTINUE;
     }
 
-    HttpServerRoute.update(context, CONTROLLER, path);
-
-    Throwable statusThrowable = null;
-    try {
+    Throwable error = null;
+    Context context = instrumenter.start(parentContext, request);
+    try (Scope ignored = context.makeCurrent()) {
+      HttpServerRoute.update(context, CONTROLLER, path);
       super.doHandle(request, response);
     } catch (Throwable t) {
-
-      statusThrowable = t;
-
-      if (t instanceof Error || t instanceof RuntimeException) {
-        throw t;
-      } else {
-        throw new ResourceException(t);
-      }
-
+      error = t;
+      throw t;
     } finally {
-
-      if (scope != null) {
-
-        scope.close();
-        if (response.getStatus() != null && response.getStatus().isError()) {
-          statusThrowable = response.getStatus().getThrowable();
-        }
-        instrumenter.end(context, request, response, statusThrowable);
+      if (response.getStatus() != null && response.getStatus().isError()) {
+        error = response.getStatus().getThrowable();
       }
+      instrumenter.end(context, request, response, error);
     }
 
     return CONTINUE;

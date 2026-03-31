@@ -10,7 +10,7 @@ val otelContribVersion = "1.54.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.30"
+val groovyVersion = "4.0.31"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new
@@ -27,12 +27,12 @@ val DEPENDENCY_BOMS = listOf(
   // for some reason boms show up as runtime dependencies in license and vulnerability scans
   // even if they are only used by test dependencies, so not using junit bom since it is LGPL
 
-  "com.fasterxml.jackson:jackson-bom:2.21.1",
+  "com.fasterxml.jackson:jackson-bom:2.21.2",
   "com.google.guava:guava-bom:33.5.0-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
-  "org.testcontainers:testcontainers-bom:2.0.3"
+  "org.testcontainers:testcontainers-bom:2.0.4"
 )
 
 val autoServiceVersion = "1.1.1"

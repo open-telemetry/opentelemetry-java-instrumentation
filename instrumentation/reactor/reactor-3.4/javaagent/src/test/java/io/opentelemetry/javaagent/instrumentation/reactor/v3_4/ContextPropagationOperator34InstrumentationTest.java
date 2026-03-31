@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor.v3_4;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
@@ -49,7 +50,7 @@ class ContextPropagationOperator34InstrumentationTest {
                     span.hasName("parent")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(
-                            attributeEntry("foo", "bar"), attributeEntry("foo2", "bar2"))));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("foo"), "bar"), equalTo(stringKey("foo2"), "bar2"))));
   }
 }

@@ -39,13 +39,13 @@ public class AzureHttpClientInstrumentation implements TypeInstrumentation {
             .and(named("send"))
             .and(takesArgument(1, named("com.azure.core.util.Context")))
             .and(returns(named("reactor.core.publisher.Mono"))),
-        this.getClass().getName() + "$SuppressNestedClientMonoAdvice");
+        getClass().getName() + "$SuppressNestedClientMonoAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("sendSync"))
             .and(takesArgument(1, named("com.azure.core.util.Context")))
             .and(returns(named("com.azure.core.http.HttpResponse"))),
-        this.getClass().getName() + "$SuppressNestedClientSyncAdvice");
+        getClass().getName() + "$SuppressNestedClientSyncAdvice");
   }
 
   @SuppressWarnings("unused")

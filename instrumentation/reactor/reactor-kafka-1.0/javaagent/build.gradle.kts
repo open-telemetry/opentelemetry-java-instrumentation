@@ -35,7 +35,7 @@ dependencies {
   testLibrary("io.projectreactor.kafka:reactor-kafka:1.0.0.RELEASE")
 }
 
-val testLatestDeps = findProperty("testLatestDeps") as Boolean
+val testLatestDeps = findProperty("testLatestDeps") == "true"
 
 testing {
   suites {
@@ -86,8 +86,7 @@ testing {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
   val testExperimental by registering(Test::class) {
@@ -99,11 +98,19 @@ tasks {
     systemProperty("hasConsumerGroup", testLatestDeps)
   }
 
-  test {
+  val testReceiveSpansDisabled by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     systemProperty("hasConsumerGroup", testLatestDeps)
   }
 
+  test {
+    systemProperty("hasConsumerGroup", testLatestDeps)
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+  }
+
   check {
-    dependsOn(testing.suites, testExperimental)
+    dependsOn(testing.suites, testExperimental, testReceiveSpansDisabled)
   }
 }

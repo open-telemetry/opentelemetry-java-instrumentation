@@ -30,13 +30,13 @@ public class JsrChunkProcessorInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isProtected().and(named("doProvide")).and(takesArguments(2)),
-        this.getClass().getName() + "$ProvideAdvice");
+        getClass().getName() + "$ProvideAdvice");
     transformer.applyAdviceToMethod(
         isProtected().and(named("doTransform")).and(takesArguments(1)),
-        this.getClass().getName() + "$TransformAdvice");
+        getClass().getName() + "$TransformAdvice");
     transformer.applyAdviceToMethod(
         isProtected().and(named("doPersist")).and(takesArguments(2)),
-        this.getClass().getName() + "$PersistAdvice");
+        getClass().getName() + "$PersistAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -48,10 +48,9 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
             .and(namedOneOf("connect", "getOutputStream", "getInputStream"))
             // ibm https url connection does not delegate connect, it calls plainConnect instead
             .or(isProtected().and(named("plainConnect"))),
-        this.getClass().getName() + "$HttpUrlConnectionAdvice");
+        getClass().getName() + "$HttpUrlConnectionAdvice");
     transformer.applyAdviceToMethod(
-        isPublic().and(named("getResponseCode")),
-        this.getClass().getName() + "$GetResponseCodeAdvice");
+        isPublic().and(named("getResponseCode")), getClass().getName() + "$GetResponseCodeAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -15,11 +15,20 @@
 - Use `span.hasAttributesSatisfyingExactly(...)` with `equalTo(...)`/`satisfies(...)` for
   attribute checks. Prefer `hasAttributesSatisfyingExactly` over `hasAttributesSatisfying`
   because it is more precise — the non-exact variant silently ignores unexpected attributes.
-  Prefer `hasAttributesSatisfyingExactly` over non-empty `hasAttributes(...)` for consistency.
-  `hasAttributes(Attributes.empty())` is acceptable.
-  `hasTotalAttributeCount(...)` is redundant when paired with
-  `hasAttributesSatisfyingExactly(...)` in the same assertion chain — the exact variant
-  already validates the total attribute count. Remove the `hasTotalAttributeCount` call.
+  Prefer `hasAttributesSatisfyingExactly` over `hasAttributes(...)` for consistency. For
+  zero-attribute assertions, use `hasTotalAttributeCount(0)`.
+- `hasTotalAttributeCount(...)` is redundant when paired with
+  `hasAttributesSatisfyingExactly(...)` in the same assertion chain, because the exact
+  variant already validates the total attribute count. Remove the `hasTotalAttributeCount`
+  call.
+- For non-semconv attribute keys in `equalTo(...)`, use inline `AttributeKey` factory
+  methods — `longKey("name")`, `stringKey("name")`, etc. — directly in the assertion.
+  Do **not** extract them into class-level `private static final AttributeKey<T>` constants.
+  Constants are reserved for semconv keys imported from the semconv library.
+- Do **not** introduce redundant `(long)` casts in `equalTo(longKey(...), value)` when `value`
+  is already an `int` expression or variable. The assertion API already has an
+  `equalTo(AttributeKey<Long>, int)` overload, so `equalTo(longKey("iteration"), iteration)` is
+  preferred over `equalTo(longKey("iteration"), (long) iteration)`.
 
 ## `satisfies()` Lambda Parameters
 

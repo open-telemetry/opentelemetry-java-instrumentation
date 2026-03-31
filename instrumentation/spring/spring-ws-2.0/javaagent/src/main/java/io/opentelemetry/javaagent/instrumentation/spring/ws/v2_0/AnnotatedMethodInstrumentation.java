@@ -46,7 +46,7 @@ public class AnnotatedMethodInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isMethod().and(isAnnotatedWith(namedOneOf(ANNOTATION_CLASSES))),
-        AnnotatedMethodInstrumentation.class.getName() + "$AnnotatedMethodAdvice");
+        getClass().getName() + "$AnnotatedMethodAdvice");
   }
 
   @SuppressWarnings("unused")

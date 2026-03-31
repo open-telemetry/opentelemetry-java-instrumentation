@@ -84,13 +84,31 @@ Public non-internal non-test classes should be declared `final` where possible.
 instrumentation code is not public API.
 "Test" here includes `src/test/` directories and any module whose directory name starts or ends
 with `testing` or `tests` (e.g., `testing/`, `testing-common/`, `testing-apps/`,
-`quarkus2-testing/`, `smoke-tests/`).
+`quarkus-2.0-testing/`, `smoke-tests/`).
 
 Methods should only be declared `final` if they are in public non-internal non-test non-final classes.
 
 Fields should be declared `final` where possible.
 
 Method parameters and local variables should never be declared `final`.
+
+### Uppercase field names
+
+Use uppercase (`SCREAMING_SNAKE_CASE`) for constant-like fields whose value is treated as a stable
+identifier or immutable descriptor.
+
+Examples that may remain uppercase include:
+
+- literal strings, numbers, and booleans that behave like module constants
+- semantic keys and handles such as `AttributeKey`, `ContextKey`, `VirtualField`,
+  `MethodHandle`, and `Pattern`
+- canonical singleton or sentinel fields named `INSTANCE`, `EMPTY`, or `NOOP`
+
+Do not use uppercase solely because a field is `static final`.
+
+Use lower camel case for runtime-created collaborator objects even when they are `static final`,
+for example loggers, instrumenters, helpers, sanitizers, mappers, caches, and similar service
+objects.
 
 ### `@Nullable` annotation usage
 

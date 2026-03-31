@@ -24,12 +24,13 @@ dependencies {
   implementation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-common:javaagent"))
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
+  testInstrumentation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-4.0:javaagent"))
 }
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
   val testStableSemconv by registering(Test::class) {

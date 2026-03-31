@@ -32,10 +32,10 @@ public class RestClientHttpClientInstrumentation implements TypeInstrumentation 
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         namedOneOf("performRequest", "performRequestAsync").and(takesArgument(0, String.class)),
-        this.getClass().getName() + "$PerformRequestAdvice");
+        getClass().getName() + "$PerformRequestAdvice");
     transformer.applyAdviceToMethod(
         named("createRestRequest").and(returns(named("org.elasticsearch.client.Request"))),
-        this.getClass().getName() + "$CreateRestRequestAdvice");
+        getClass().getName() + "$CreateRestRequestAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -14,8 +14,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import javax.annotation.Nullable;
 
-enum JakartaHttpServletRequestGetter implements TextMapGetter<HttpServletRequest> {
-  INSTANCE;
+final class JakartaHttpServletRequestGetter implements TextMapGetter<HttpServletRequest> {
 
   @Override
   public Iterable<String> keys(HttpServletRequest carrier) {

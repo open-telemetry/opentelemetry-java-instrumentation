@@ -32,7 +32,7 @@ public class HooksInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isTypeInitializer().or(named("resetOnEachOperator")),
-        this.getClass().getName() + "$ResetOnEachOperatorAdvice");
+        getClass().getName() + "$ResetOnEachOperatorAdvice");
   }
 
   @SuppressWarnings("unused")

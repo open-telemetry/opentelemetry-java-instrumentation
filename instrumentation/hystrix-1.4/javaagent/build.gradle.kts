@@ -26,7 +26,7 @@ tasks {
     // Disable so failure testing below doesn't inadvertently change the behavior.
     jvmArgs("-Dhystrix.command.default.circuitBreaker.enabled=false")
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
 
     // Uncomment for debugging:
     // jvmArgs("-Dhystrix.command.default.execution.timeout.enabled=false")
@@ -44,7 +44,7 @@ tasks {
     dependsOn(testExperimental)
   }
 
-  if (findProperty("denyUnsafe") as Boolean) {
+  if (findProperty("denyUnsafe") == "true") {
     withType<Test>().configureEach {
       enabled = false
     }

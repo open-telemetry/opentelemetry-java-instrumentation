@@ -32,13 +32,12 @@ val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
     // The agent context debug mechanism isn't compatible with the bridge approach which may add a
     // gRPC context to the root.
     jvmArgs("-Dotel.javaagent.experimental.thread-propagation-debugger.enabled=false")
     jvmArgs("-Dotel.instrumentation.grpc.capture-metadata.client.request=some-client-key")
     jvmArgs("-Dotel.instrumentation.grpc.capture-metadata.server.request=some-server-key")
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
     // latest dep test occasionally fails because network type is ipv6 instead of the expected ipv4
     // and peer address is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
     jvmArgs("-Djava.net.preferIPv4Stack=true")
@@ -99,7 +98,7 @@ tasks {
   }
 }
 
-if (!(findProperty("testLatestDeps") as Boolean)) {
+if (!(findProperty("testLatestDeps") == "true")) {
   configurations.testRuntimeClasspath {
     resolutionStrategy {
       eachDependency {
@@ -111,7 +110,7 @@ if (!(findProperty("testLatestDeps") as Boolean)) {
     }
   }
 
-  if (findProperty("denyUnsafe") as Boolean) {
+  if (findProperty("denyUnsafe") == "true") {
     tasks.withType<Test>().configureEach {
       enabled = false
     }

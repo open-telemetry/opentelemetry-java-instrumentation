@@ -44,7 +44,7 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
                     namedOneOf(
                         "redis.clients.jedis.Protocol$Command",
                         "redis.clients.jedis.ProtocolCommand"))),
-        this.getClass().getName() + "$SendCommandNoArgsAdvice");
+        getClass().getName() + "$SendCommandNoArgsAdvice");
     transformer.applyAdviceToMethod(
         named("sendCommand")
             .and(takesArguments(2))
@@ -55,7 +55,7 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
                         "redis.clients.jedis.Protocol$Command",
                         "redis.clients.jedis.ProtocolCommand")))
             .and(takesArgument(1, is(byte[][].class))),
-        this.getClass().getName() + "$SendCommandWithArgsAdvice");
+        getClass().getName() + "$SendCommandWithArgsAdvice");
   }
 
   public static class AdviceScope {

@@ -18,7 +18,7 @@
         'patch',
       ],
       schedule: [
-        'before 8am on Tuesday',
+        '* 0-7 * * 2', // weekly, before 8am on Tuesday
       ],
     },
     {
@@ -29,8 +29,8 @@
         'dockerfile',
         'custom.regex',
       ],
-      extends: [
-        'schedule:weekly',
+      schedule: [
+        '* 0-7 * * 2', // weekly, before 8am on Tuesday
       ],
       groupName: 'weekly update',
     },
@@ -378,7 +378,7 @@
     },
     {
       customType: 'regex',
-      datasourceTemplate: 'java-version',
+      datasourceTemplate: 'docker',
       managerFilePatterns: [
         '.github/workflows/**',
         '**/*.gradle.kts',
@@ -387,8 +387,8 @@
         '(?<currentValue>\\d+) # renovate\\(java-version\\)',
         '"(?<currentValue>\\d+)" // renovate\\(java-version\\)',
       ],
-      depNameTemplate: 'java',
-      extractVersionTemplate: '^(?<version>\\d+)',
+      // using zulu because new releases get published quickly
+      depNameTemplate: 'azul/zulu-openjdk',
     },
     {
       customType: 'regex',

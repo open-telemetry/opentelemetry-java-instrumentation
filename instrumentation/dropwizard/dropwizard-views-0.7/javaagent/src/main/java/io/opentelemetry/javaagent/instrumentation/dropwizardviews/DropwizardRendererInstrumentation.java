@@ -38,7 +38,7 @@ public class DropwizardRendererInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("render").and(takesArgument(0, named("io.dropwizard.views.View"))).and(isPublic()),
-        this.getClass().getName() + "$RenderAdvice");
+        getClass().getName() + "$RenderAdvice");
   }
 
   @SuppressWarnings("unused")

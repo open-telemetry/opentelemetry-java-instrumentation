@@ -30,7 +30,7 @@ class JoddHttpInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("send").and(takesArguments(0)), this.getClass().getName() + "$RequestAdvice");
+        named("send").and(takesArguments(0)), getClass().getName() + "$RequestAdvice");
   }
 
   @SuppressWarnings("unused")

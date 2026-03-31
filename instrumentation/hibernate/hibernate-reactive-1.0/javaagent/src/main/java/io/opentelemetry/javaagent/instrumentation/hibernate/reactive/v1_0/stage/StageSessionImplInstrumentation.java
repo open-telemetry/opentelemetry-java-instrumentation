@@ -33,7 +33,7 @@ public class StageSessionImplInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("withTransaction")
             .and(takesArgument(0, Function.class).and(returns(CompletionStage.class))),
-        this.getClass().getName() + "$WithTransactionAdvice");
+        getClass().getName() + "$WithTransactionAdvice");
   }
 
   @SuppressWarnings("unused")

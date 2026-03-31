@@ -24,8 +24,7 @@ public class SpringApplicationInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isTypeInitializer(), this.getClass().getName() + "$TypeInitAdvice");
+    transformer.applyAdviceToMethod(isTypeInitializer(), getClass().getName() + "$TypeInitAdvice");
   }
 
   @SuppressWarnings("unused")

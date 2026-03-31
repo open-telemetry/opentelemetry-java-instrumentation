@@ -57,7 +57,7 @@ public final class RuntimeMetrics implements AutoCloseable {
     }
   }
 
-  /** Stop recording JFR events. */
+  /** Stop recording metrics. */
   @Override
   public void close() {
     delegate.close();

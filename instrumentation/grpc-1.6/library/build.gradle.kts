@@ -18,14 +18,10 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
     // latest dep test occasionally fails because network type is ipv6 instead of the expected ipv4
     // and peer address is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
     jvmArgs("-Djava.net.preferIPv4Stack=true")
-  }
-
-  test {
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   }
 
   val testStableSemconv by registering(Test::class) {
@@ -47,7 +43,7 @@ tasks {
   }
 }
 
-if (!(findProperty("testLatestDeps") as Boolean)) {
+if (!(findProperty("testLatestDeps") == "true")) {
   configurations.testRuntimeClasspath {
     resolutionStrategy {
       eachDependency {

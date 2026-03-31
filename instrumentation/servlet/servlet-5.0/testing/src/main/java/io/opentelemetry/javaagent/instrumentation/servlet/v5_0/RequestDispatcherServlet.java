@@ -24,7 +24,7 @@ public class RequestDispatcherServlet {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp)
         throws ServletException, IOException {
-      String target = req.getServletPath().replace("/dispatch", "");
+      String target = getTargetSafely(req);
       ServletContext context = getServletContext();
       RequestDispatcher dispatcher = context.getRequestDispatcher(target);
       dispatcher.forward(req, resp);
@@ -38,18 +38,25 @@ public class RequestDispatcherServlet {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp)
         throws ServletException, IOException {
-      String target = req.getServletPath().replace("/dispatch", "");
+      String target = getTargetSafely(req);
       ServletContext context = getServletContext();
       RequestDispatcher dispatcher = context.getRequestDispatcher(target);
-      // for HTML test case, set the content type before calling include because
-      // setContentType will be rejected if called inside of include
-      // check https://statics.teams.cdn.office.net/evergreen-assets/safelinks/1/atp-safelinks.html
-      if (ServerEndpoint.forPath(target) == ServerEndpoint.forPath("/htmlPrintWriter")
-          || ServerEndpoint.forPath(target) == ServerEndpoint.forPath("/htmlServletOutputStream")) {
+      // For the HTML test cases, set the content type before include() because the response is
+      // already committed for header updates inside the included resource.
+      if ("/htmlPrintWriter".equals(target) || "/htmlServletOutputStream".equals(target)) {
         resp.setContentType("text/html");
       }
       dispatcher.include(req, resp);
     }
+  }
+
+  private static String getTargetSafely(HttpServletRequest req) {
+    String target = req.getServletPath().replace("/dispatch", "");
+    ServerEndpoint endpoint = ServerEndpoint.forPath(target);
+    if (endpoint != null) {
+      return endpoint.getPath();
+    }
+    throw new IllegalStateException("Unexpected endpoint: " + target);
   }
 
   private RequestDispatcherServlet() {}

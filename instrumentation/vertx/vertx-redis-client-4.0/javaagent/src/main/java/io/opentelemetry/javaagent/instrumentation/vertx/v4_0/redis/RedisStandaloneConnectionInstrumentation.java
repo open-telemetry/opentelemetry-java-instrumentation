@@ -34,9 +34,8 @@ public class RedisStandaloneConnectionInstrumentation implements TypeInstrumenta
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("send"), this.getClass().getName() + "$SendAdvice");
-    transformer.applyAdviceToMethod(
-        isConstructor(), this.getClass().getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(named("send"), getClass().getName() + "$SendAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
   }
 
   @SuppressWarnings("unused")

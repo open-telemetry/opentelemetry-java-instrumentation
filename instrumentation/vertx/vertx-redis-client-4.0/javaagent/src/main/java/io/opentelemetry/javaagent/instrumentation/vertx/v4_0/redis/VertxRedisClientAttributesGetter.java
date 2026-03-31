@@ -13,9 +13,8 @@ import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 
-public enum VertxRedisClientAttributesGetter
+final class VertxRedisClientAttributesGetter
     implements DbClientAttributesGetter<VertxRedisClientRequest, Void> {
-  INSTANCE;
 
   private static final RedisCommandSanitizer sanitizer =
       RedisCommandSanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
@@ -36,7 +35,8 @@ public enum VertxRedisClientAttributesGetter
   @Nullable
   public String getDbNamespace(VertxRedisClientRequest request) {
     if (emitStableDatabaseSemconv()) {
-      return String.valueOf(request.getDatabaseIndex());
+      Long databaseIndex = request.getDatabaseIndex();
+      return databaseIndex == null ? null : String.valueOf(databaseIndex);
     }
     return null;
   }

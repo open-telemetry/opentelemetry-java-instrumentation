@@ -27,7 +27,7 @@ public class FinatraRouteBuilderInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("build").and(returns(named("com.twitter.finatra.http.internal.routing.Route"))),
-        this.getClass().getName() + "$BuildAdvice");
+        getClass().getName() + "$BuildAdvice");
   }
 
   @SuppressWarnings("unused")

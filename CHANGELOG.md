@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+### 🚫 Deprecations
+
+- Deprecated GraphQL builder methods `setSanitizeQuery()` and `setAddOperationNameToSpanName()`,
+  and deprecated config key `otel.instrumentation.graphql.add-operation-name-to-span-name.enabled`
+  in favor of `setQuerySanitizationEnabled()`, `setOperationNameInSpanNameEnabled()`, and
+  `otel.instrumentation.graphql.operation-name-in-span-name.enabled`
+
+## Version 2.26.1 (2026-03-23)
+
+### 🔒 Security fixes
+
+- Fix unsafe deserialization in RMI instrumentation that could lead to remote code execution
+  ([CVE-2026-33701](https://github.com/open-telemetry/opentelemetry-java-instrumentation/security/advisories/GHSA-xw7x-h9fj-p2c7),
+   [#16979](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16979))
+
 ## Version 2.26.0 (2026-03-14)
 
 ### ⚠️ Breaking changes to non-stable APIs

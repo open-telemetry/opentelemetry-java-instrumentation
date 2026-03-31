@@ -44,7 +44,7 @@ public class AsyncHttpClientInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("org.asynchttpclient.Request")))
             .and(takesArgument(1, named("org.asynchttpclient.AsyncHandler")))
             .and(isPublic()),
-        this.getClass().getName() + "$ExecuteRequestAdvice");
+        getClass().getName() + "$ExecuteRequestAdvice");
   }
 
   @SuppressWarnings("unused")

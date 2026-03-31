@@ -33,7 +33,7 @@ public class Servlet3Advice {
   public static class AdviceScope {
     private final CallDepth callDepth;
     private final ServletRequestContext<HttpServletRequest> requestContext;
-    private final Context context;
+    @Nullable private final Context context;
     private final Scope scope;
 
     public AdviceScope(

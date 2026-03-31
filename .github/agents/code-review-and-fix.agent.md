@@ -1,5 +1,5 @@
 ---
-description: "Review PRs, files, or directories in opentelemetry-java-instrumentation. Apply safe fixes directly; report unfixable issues in the summary only."
+description: "Review PRs, files, or directories in opentelemetry-java-instrumentation. Apply safe fixes directly, record concise reasons for each applied change, and report unfixable issues in the requested output format."
 tools: [read, edit, execute, search]
 ---
 
@@ -9,9 +9,13 @@ Primary responsibilities:
 
 - Review code against repository standards and established patterns.
 - Apply safe, deterministic fixes directly in source files whenever possible.
+- Record each applied fix with a concise factual reason tied to the repository rule or review guideline that justified it.
 - **Never insert inline comments** (`// REVIEW:`, `# REVIEW:`, etc.) into source files.
-  Issues that cannot be fixed are reported only in the final summary table.
-- Produce a compact summary table of fixed and unresolved items at the end.
+  Issues that cannot be fixed are reported only in the final output.
+- Produce only the output format requested by the caller. Do not assume or add a default output format.
+- Use only the tools actually exposed by the runtime. Do not assume helper or companion tools exist.
+- When a command-execution step fails for tool-related reasons, first re-evaluate the declared tools and retry with a different valid execution strategy before concluding that the environment cannot complete the task.
+- Distinguish between command failure and inability to observe command completion or final status. Do not collapse these into the same explanation.
 
 Do not stop until all in-scope files are reviewed and fixed where possible.
 
@@ -99,8 +103,14 @@ For each file in scope:
 5. For each issue found, use this decision order:
    - Fix now if deterministic, low-risk, and verifiable by local reasoning or targeted checks.
    - If uncertain, potentially breaking, or requiring product/design intent, do not fix — record
-     the issue for the summary table instead.
+     the issue for the final output instead.
    - **Do not insert any inline comments into source files.**
+6. For every applied fix, record enough information to explain it later:
+   - file path
+   - category
+   - concise description of the change
+   - concise reason grounded in the relevant repository rule or review guideline
+   - first relevant line number when the caller asks for line-oriented output
 
 Auto-fix boundaries:
 
@@ -126,7 +136,7 @@ Auto-fix boundaries:
     same parent and apply the step-by-step procedure in `gradle-conventions.md`.
     After adding, verify by running the module's tests.
   - missing version comments on `hasClassesNamed()` landmark classes in existing
-    `classLoaderMatcher()` overrides (multi-class checks or `.and(not(...))` chains only) —
+    `classLoaderMatcher()` overrides, including single-class lower-bound checks —
     determine each class's **role** (floor vs ceiling) and add the matching comment.
     First check: does a **newer** sibling instrumentation module exist for this library
     (e.g., `mongo-4.0` next to `mongo-3.7`)? If so, look at what the newer module checks
@@ -142,6 +152,8 @@ Auto-fix boundaries:
     A ceiling class might have been *introduced* much earlier than the module's target version.
     Do not use `// added in` for a ceiling class — that is misleading. The relevant fact is
     when it was **removed**.
+    Validate the version in the comment before adding or requesting it. Do not guess the
+    version from the module name alone; confirm it with repository or upstream evidence.
     Sources: muzzle `versions.set(...)` ranges, sibling module `classLoaderMatcher()` checks,
     module directory names, existing code comments, Javadoc/release notes.
     Do NOT add a `classLoaderMatcher()` override where one does not already exist —
@@ -151,6 +163,9 @@ Auto-fix boundaries:
     names a specific, non-empty method (e.g., `isMethod().and(named("execute"))` →
     `named("execute")`). Do not remove `isMethod()` when the name could be empty —
     `named("")` matches constructors and static initializers.
+  - redundant `this.` qualifier on advice class references inside `transform()` — prefer
+    `getClass().getName() + "$InnerClassName"`, not `this.getClass().getName() +
+    "$InnerClassName"`
   - singleton-to-instance-creation conversion for stateless telemetry interface
     implementations (`TextMapGetter`, `TextMapSetter`, `*AttributesGetter`,
     `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`) — replace
@@ -176,7 +191,13 @@ Auto-fix boundaries:
     variant already validates the complete attribute set; remove it
   - non-empty `hasAttributes(...)` calls in test assertions — replace with
     `hasAttributesSatisfyingExactly(...)` for consistency with the rest of the codebase.
-    Do **not** convert `hasAttributes(Attributes.empty())` — that is acceptable as-is.
+    For non-semconv attribute keys, use inline `AttributeKey` factory methods directly
+    in the assertion — `equalTo(longKey("name"), value)`, `equalTo(stringKey("name"), value)`,
+    etc. Do **not** extract them into class-level `private static final` constants;
+    constants are reserved for semconv keys from the semconv library.
+  - zero-attribute test assertions — standardize on `hasTotalAttributeCount(0)`;
+    replace `hasAttributesSatisfyingExactly()` and `hasAttributes(Attributes.empty())`
+    with this form
   - redundant `if (value != null)` guards around `AttributesBuilder.put()` calls —
     `put` is a no-op for null values, so remove the conditional and pass the value
     directly (same for span, log, and metrics attribute setters).
@@ -190,8 +211,15 @@ Auto-fix boundaries:
     `@Nullable T` overload is selected directly, null is safe, and the guard is redundant.
   - defensive `if (param == null)` checks on parameters not annotated `@Nullable` —
     these contradict the framework's nullability contract; remove the guard. Conversely,
-    if a call site passes `null` or a method returns `null`, add `@Nullable` to the
-    parameter or return type instead of adding a null guard in the caller/callee.
+    add `@Nullable` to a parameter only when `null` is actually passed by callers or an
+    upstream contract allows it, and add `@Nullable` to a return type only when the
+    method actually returns `null`, instead of adding a null guard in the caller/callee.
+    When justifying `@Nullable` on a parameter, cite the concrete null-passing caller or
+    upstream contract. Do not justify it merely because the method guards against null.
+    For every nullability change you report, explain the concrete runtime null source or
+    flow: which caller can pass `null`, which branch returns `null`, or which optional
+    value may be absent. Do not use abstract justifications such as "nullable contract"
+    unless you also name that concrete null-producing path.
     **Exception — test files**: do not add `@Nullable` in test code.
     If a PR adds `@Nullable` to test files, flag it for removal.
     **Exception**: when the method overrides an interface from the upstream OpenTelemetry
@@ -217,7 +245,7 @@ Auto-fix boundaries:
     add the correctly named/shaped method with the implementation, deprecate the old method
     to delegate to the new one, and add a `@deprecated` Javadoc tag naming the replacement.
     For stable modules, annotate instead: the fix requires a broader compatibility decision.
-- Do not auto-fix (report in summary instead):
+- Do not auto-fix (report in the final output instead):
   - missing `testExperimental` task — when experimental flags are set unconditionally
     on all test tasks instead of being isolated in a dedicated task
   - behavior-changing logic without clear intent
@@ -226,20 +254,47 @@ Auto-fix boundaries:
 - Never change:
   - literal type suffixes (e.g., `200` → `200L` or vice-versa) — Java widens
     automatically; both forms compile identically and the change is noise
+  - non-capturing lambdas or method references as unnecessary allocations; do not flag or
+    fix these, because on modern JDKs these are typically cached at the call site rather
+    than allocated on every invocation
 
-Comment formatting rules:
+Output content rules:
 
-- **File column**: use only the simple class name without the `.java` extension
-  and at most one line number (e.g., `FooClient:42`). For multiple locations,
-  list only the first line and note the others in the Note column
-  (e.g., Note: "… also lines 77, 95").
-- Include reason for non-fix and, when possible, a concrete next action.
+- Include a reason for every non-fix and, when possible, a concrete next action.
+- When the caller requests structured output, use repository-relative file paths.
+- When the caller requests line-oriented output, use the first relevant changed line as the line hint.
+- When writing structured output to a file, write only the requested payload. Do not wrap it in Markdown fences,
+  add headings, or include extra commentary before or after it.
 
 ### Phase 4: Validate and Report
 
-**All Gradle commands in this phase must use timeout `0` (no timeout). Builds and tests in
-this repository can take several minutes — never treat slow output as a hang. Always wait
-for completion.**
+**All Gradle commands in this phase must use timeout `0` (no timeout). In this repository,
+legitimate Gradle validation runs can take 10 minutes or more. Never set a finite timeout,
+never rely on a runtime default timeout, and never treat slow output as a hang. A Gradle
+command is complete only after you have observed that command's final exit status. If the
+runtime reports that a Gradle command is still running, returns control before a final exit
+status is available, shows only partial output, or otherwise stops waiting before the
+command exits, treat that only as an in-progress status update, not as completion. Keep
+waiting on that same command until you have observed its final exit status. Until then, do
+not start another Gradle command and do not emit the final review output.**
+
+**Validation must be strictly serial. Never start more than one Gradle command at a time**
+whether through separate tool calls, parallel tool requests, or any mode that leaves an
+earlier Gradle invocation running in the background. Do not launch the next Gradle command
+until the previous one has definitively completed and you have observed its final exit
+status. If a prior run may still be active, first wait for it or confirm its completion
+before proceeding.
+
+If a command-execution attempt fails for tool-related reasons, follow this recovery loop before
+reporting a limitation:
+
+1. Re-check the tools declared for this agent and the runtime behavior you have actually observed.
+2. Retry using a different valid execution strategy that does not depend on the failed assumption.
+3. Only report a validation limitation after at least one concrete alternate approach has also failed
+   or no alternate approach exists in the declared tool set.
+4. If validation still cannot be completed, the summary and any unresolved item must name the
+   attempted command or validation step and say whether it failed or whether completion or final
+   status could not be confirmed.
 
 **Never pipe Gradle output through `tail`, `head`, `grep`, or any other command** (e.g.,
 `./gradlew :foo:check 2>&1 | tail -30`). Piping masks the Gradle exit code because the
@@ -256,6 +311,9 @@ Execute these steps strictly in order — do not reorder:
    ./gradlew :<module-path>:check -PtestLatestDeps=true
    ```
 
+    Run these as two separate serial executions. Do not start the second command until the
+    first command has fully completed and its final exit status is known.
+
    The first run exercises the default test suites (`test`, `testExperimental`, and any other
    custom test tasks wired into `check`). The second run activates `latestDepTest`, which
    replaces `library` and `testLibrary` dependency versions with `latest.release`.
@@ -269,10 +327,10 @@ Execute these steps strictly in order — do not reorder:
    3. If the failure cannot be resolved after three attempts — or if the only correct
       resolution is to revert the review fix — **revert that specific change**
       (`git checkout -- <file>` for the affected lines) and record the item as
-      `Needs Manual Fix` in the summary table with a note explaining the test failure.
+      `Needs Manual Fix` in the final output with a note explaining the test failure.
    4. After reverting, re-run the affected `:check` tasks to confirm the revert restored
       a green build. If tests still fail on code you did not change, that is a
-      pre-existing failure — note it in the summary but do not block the commit.
+      pre-existing failure — note it in the final output but do not block the commit.
    5. Never commit code that fails tests you can reproduce locally.
 
    **Testing-module dependent validation**: when any modified module is a `testing` module
@@ -310,17 +368,18 @@ Execute these steps strictly in order — do not reorder:
    3. If the failure cannot be resolved after three attempts — or if the only correct
       resolution is to revert the review fix — **revert that specific change**
       (`git checkout -- <file>` for the affected lines) and record the item as
-      `Needs Manual Fix` in the summary table with a note explaining the muzzle failure.
+      `Needs Manual Fix` in the final output with a note explaining the muzzle failure.
    4. After reverting, re-run the `:muzzle` task to confirm the revert restored a green
       build. Never commit code that fails muzzle validation.
 3. **Last, after all validation is done**, run `./gradlew spotlessApply` to fix formatting
    across all modified files.
    `spotlessApply` must be the final build command — never run it before tests or muzzle.
+   Before running it, confirm that no earlier Gradle validation command is still running.
 4. **Verify substantive changes remain.** Run `git diff --ignore-all-space --ignore-blank-lines`
    and confirm non-empty output. If the only remaining diffs are whitespace changes — or if
    all review fixes were reverted during validation — **stop here**: reset the working tree
    (`git checkout -- .`), do not commit or push. If any reverted items were recorded as
-   `Needs Manual Fix`, print the summary table with those items. Otherwise report
+  `Needs Manual Fix`, emit the final output with those items. Otherwise report
    "No issues found." and exit.
 5. Commit all changes in a single commit. The subject line must always be
    `Review fixes for <module>` where `<module>` is the short module name (e.g.,
@@ -340,32 +399,12 @@ Execute these steps strictly in order — do not reorder:
    ```
 
    Create exactly one commit for all fixes — do not commit incrementally.
-6. Print one summary:
-   - Heading: `PR #<number>: <title>` (PR mode) or `<paths>` (file/directory mode)
-   - Table with status (`Fixed` or `Needs Manual Fix`), file, category, and note
+6. Produce the final output in the format requested by the caller.
 
-Template:
+The caller must define the final output format or schema. Follow that request exactly:
 
-```
-| Status | File | Category | Note |
-|--------|------|----------|------|
-| Fixed | Foo:42 | Style | Added class-level deprecation suppression for stable/old semconv dual mode |
-| Needs Manual Fix | Bar:77 | API | Requires compatibility decision before rename |
-```
-
-If no findings:
-> `No issues found.`
-
-When writing the summary to a file (as opposed to printing to the console), the output
-must be **only** the findings table — nothing else:
-
-- Do **not** include headings (`##`), horizontal rules, or "Fix Review Summary" titles.
-- Do **not** include a "Files reviewed" table, per-file checklist, or notes section
-  when there are zero findings. Write only `No issues found.`
-- Do **not** repeat the module path or scope description — the caller already knows it.
-- Do **not** include a totals/summary line (e.g. "Fixed: X · Needs manual fix: Y").
-- The file must contain **only** the table rows (or `No issues found.`).
-  No preamble, no footer, no commentary.
+- Do **not** add headings, commentary, or fallback prose unless the caller asks for them.
+- Preserve the recorded per-change reasons in whatever output format the caller requested.
 
 ## Knowledge Loading
 
@@ -376,7 +415,6 @@ Always load:
 
 Load other knowledge files only when their scope trigger applies.
 Use the **Knowledge File** column in the checklist table.
-Use the **Knowledge File** column below.
 
 ## Review Checklist and Core Rules
 

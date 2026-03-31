@@ -14,10 +14,18 @@ muzzle {
 dependencies {
   library("org.apache.rocketmq:rocketmq-client-java:5.0.0")
 
-  testImplementation(project(":instrumentation:rocketmq:rocketmq-client-5.0:testing"))
+  testInstrumentation(project(":instrumentation:rocketmq:rocketmq-client-4.8:javaagent"))
+
+  // earlier versions have bugs that may make tests flaky.
+  testLibrary("org.apache.rocketmq:rocketmq-client-java:5.0.2")
 }
 
 tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
+
   val testReceiveSpanDisabled by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -27,34 +35,18 @@ tasks {
     include("**/RocketMqClientSuppressReceiveSpanTest.*")
   }
 
-  val testExperimental by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      excludeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
-    }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-
-    jvmArgs("-Dotel.instrumentation.rocketmq-client.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.rocketmq-client.experimental-span-attributes=true")
-  }
-
   test {
     filter {
       excludeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
     }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
   check {
-    dependsOn(testReceiveSpanDisabled, testExperimental)
+    dependsOn(testReceiveSpanDisabled)
   }
 
-  if (findProperty("denyUnsafe") as Boolean) {
+  if (findProperty("denyUnsafe") == "true") {
     withType<Test>().configureEach {
       enabled = false
     }

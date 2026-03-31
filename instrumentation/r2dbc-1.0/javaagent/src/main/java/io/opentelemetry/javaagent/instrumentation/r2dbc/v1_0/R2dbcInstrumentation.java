@@ -31,7 +31,7 @@ class R2dbcInstrumentation implements TypeInstrumentation {
         named("find")
             .and(takesArguments(1))
             .and(takesArgument(0, named("io.r2dbc.spi.ConnectionFactoryOptions"))),
-        this.getClass().getName() + "$FactoryAdvice");
+        getClass().getName() + "$FactoryAdvice");
   }
 
   @SuppressWarnings("unused")

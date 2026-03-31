@@ -16,6 +16,7 @@ import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.Executor;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -31,12 +32,13 @@ public class HttpServerExchangeInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("dispatch").and(takesArguments(Executor.class, Runnable.class)),
-        this.getClass().getName() + "$DispatchAdvice");
+        getClass().getName() + "$DispatchAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class DispatchAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static PropagatedContext enterJobSubmit(@Advice.Argument(1) Runnable task) {
       Context context = Java8BytecodeBridge.currentContext();
@@ -49,8 +51,8 @@ public class HttpServerExchangeInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
         @Advice.Argument(1) Runnable task,
-        @Advice.Enter PropagatedContext propagatedContext,
-        @Advice.Thrown Throwable throwable) {
+        @Advice.Enter @Nullable PropagatedContext propagatedContext,
+        @Advice.Thrown @Nullable Throwable throwable) {
       ExecutorAdviceHelper.cleanUpAfterSubmit(
           propagatedContext, throwable, PROPAGATED_CONTEXT, task);
     }

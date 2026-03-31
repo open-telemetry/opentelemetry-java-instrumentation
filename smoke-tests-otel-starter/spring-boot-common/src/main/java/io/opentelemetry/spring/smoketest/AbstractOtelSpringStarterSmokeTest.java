@@ -39,14 +39,17 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelSpringProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.SpringConfigProperties;
+import io.opentelemetry.instrumentation.test.utils.GcUtils;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeoutException;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.assertj.core.api.MapAssert;
 import org.junit.jupiter.api.MethodOrderer;
@@ -81,6 +84,10 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
   abstract void makeClientCall();
 
   abstract void restTemplateCall(String path);
+
+  protected boolean preferJfr() {
+    return false;
+  }
 
   // can't use @LocalServerPort annotation since it moved packages between Spring Boot 2 and 3
   @Value("${local.server.port}")
@@ -156,7 +163,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
   @Test
   @org.junit.jupiter.api.Order(1) // This test validates startup telemetry, so must run first
   @SuppressWarnings("deprecation") // testing deprecated code semconv
-  void shouldSendTelemetry() {
+  void shouldSendTelemetry() throws InterruptedException, TimeoutException {
     makeClientCall();
 
     testing.waitAndAssertTraces(
@@ -205,26 +212,27 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
         OtelSpringStarterSmokeTestController.TEST_HISTOGRAM,
         AbstractIterableAssert::isNotEmpty);
 
-    // JMX based metrics - test one per JMX bean
-    List<String> jmxMetrics =
+    // Runtime metrics - test one per JMX/JFR source
+    List<String> runtimeMetrics =
         new ArrayList<>(asList("jvm.thread.count", "jvm.memory.used", "jvm.memory.init"));
 
     double javaVersion = Double.parseDouble(System.getProperty("java.specification.version"));
     // See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13503
     // Also not available on Windows (getSystemLoadAverage returns -1)
-    if (javaVersion < 23 && !OS.WINDOWS.isCurrentOs()) {
-      jmxMetrics.add("jvm.system.cpu.load_1m");
+    // Not available when prefer-jfr is enabled (JMX-only metric with no JFR equivalent)
+    if (javaVersion < 23 && !OS.WINDOWS.isCurrentOs() && !preferJfr()) {
+      runtimeMetrics.add("jvm.system.cpu.load_1m");
     }
 
     boolean nativeImage = System.getProperty("org.graalvm.nativeimage.imagecode") != null;
     if (!nativeImage) {
       // GraalVM native image does not support buffer pools - have to investigate why
-      jmxMetrics.add("jvm.buffer.memory.used");
+      runtimeMetrics.add("jvm.buffer.memory.used");
     }
-    jmxMetrics.forEach(
+    runtimeMetrics.forEach(
         metricName ->
             testing.waitAndAssertMetrics(
-                "io.opentelemetry.runtime-telemetry-java8",
+                "io.opentelemetry.runtime-telemetry",
                 metricName,
                 AbstractIterableAssert::isNotEmpty));
 
@@ -260,16 +268,19 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
     }
   }
 
-  protected void assertAdditionalMetrics() {
+  protected void assertAdditionalMetrics() throws InterruptedException, TimeoutException {
     if (!isFlightRecorderAvailable()) {
       return;
     }
+
+    // force gc so we'd get the jvm.gc.duration metric
+    GcUtils.awaitGc(Duration.ofSeconds(10));
 
     double javaVersion = Double.parseDouble(System.getProperty("java.specification.version"));
     // JFR based metrics
     for (String metric :
         asList(
-            "jvm.cpu.limit",
+            "jvm.cpu.count",
             "jvm.buffer.count",
             "jvm.class.count",
             "jvm.cpu.context_switch",
@@ -285,12 +296,8 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
       if (javaVersion >= 25 && "jvm.cpu.longlock".equals(metric)) {
         continue;
       }
-      // gc duration is sometimes missing on jdk 26
-      if (javaVersion >= 26 && "jvm.gc.duration".equals(metric)) {
-        continue;
-      }
       testing.waitAndAssertMetrics(
-          "io.opentelemetry.runtime-telemetry-java17", metric, AbstractIterableAssert::isNotEmpty);
+          "io.opentelemetry.runtime-telemetry", metric, AbstractIterableAssert::isNotEmpty);
     }
   }
 

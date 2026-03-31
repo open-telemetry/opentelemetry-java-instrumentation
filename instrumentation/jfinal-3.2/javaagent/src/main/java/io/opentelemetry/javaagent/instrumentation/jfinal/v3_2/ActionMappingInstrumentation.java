@@ -23,8 +23,7 @@ public class ActionMappingInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("getAction"), this.getClass().getName() + "$GetActionAdvice");
+    transformer.applyAdviceToMethod(named("getAction"), getClass().getName() + "$GetActionAdvice");
   }
 
   @SuppressWarnings("unused")

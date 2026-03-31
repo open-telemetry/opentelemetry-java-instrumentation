@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.toList;
 
 import com.google.auto.value.AutoValue;
 import io.netty.buffer.ByteBuf;
@@ -73,7 +72,11 @@ public abstract class RedissonRequest {
     // get command
     if (command instanceof CommandsData) {
       List<CommandData<?, ?>> commands = ((CommandsData) command).getCommands();
-      return commands.stream().map(RedissonRequest::normalizeSingleCommand).collect(toList());
+      List<String> normalizedCommands = new ArrayList<>(commands.size());
+      for (CommandData<?, ?> singleCommand : commands) {
+        normalizedCommands.add(normalizeSingleCommand(singleCommand));
+      }
+      return normalizedCommands;
     } else if (command instanceof CommandData) {
       return singletonList(normalizeSingleCommand((CommandData<?, ?>) command));
     }

@@ -27,7 +27,7 @@ public class LoggerFactoryInstrumentation implements TypeInstrumentation {
     // once a call to getILoggerFactory() exits we can be certain that slf4j is properly initialized
     transformer.applyAdviceToMethod(
         named("getILoggerFactory").and(takesArguments(0)),
-        this.getClass().getName() + "$GetLoggerFactoryAdvice");
+        getClass().getName() + "$GetLoggerFactoryAdvice");
   }
 
   @SuppressWarnings("unused")

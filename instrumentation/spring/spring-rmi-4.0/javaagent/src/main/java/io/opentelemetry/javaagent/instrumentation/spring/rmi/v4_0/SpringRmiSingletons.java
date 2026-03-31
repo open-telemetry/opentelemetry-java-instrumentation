@@ -24,7 +24,7 @@ public final class SpringRmiSingletons {
       buildServerInstrumenter();
 
   private static Instrumenter<Method, Void> buildClientInstrumenter() {
-    ClientAttributesGetter rpcAttributesGetter = ClientAttributesGetter.INSTANCE;
+    ClientAttributesGetter rpcAttributesGetter = new ClientAttributesGetter();
 
     return Instrumenter.<Method, Void>builder(
             GlobalOpenTelemetry.get(),
@@ -35,7 +35,7 @@ public final class SpringRmiSingletons {
   }
 
   private static Instrumenter<ClassAndMethod, Void> buildServerInstrumenter() {
-    ServerAttributesGetter rpcAttributesGetter = ServerAttributesGetter.INSTANCE;
+    ServerAttributesGetter rpcAttributesGetter = new ServerAttributesGetter();
 
     return Instrumenter.<ClassAndMethod, Void>builder(
             GlobalOpenTelemetry.get(),

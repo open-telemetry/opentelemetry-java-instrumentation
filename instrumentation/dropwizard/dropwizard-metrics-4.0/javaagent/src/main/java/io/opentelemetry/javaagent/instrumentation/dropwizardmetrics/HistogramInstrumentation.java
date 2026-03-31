@@ -26,8 +26,7 @@ public class HistogramInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("update").and(takesArguments(long.class)),
-        this.getClass().getName() + "$UpdateAdvice");
+        named("update").and(takesArguments(long.class)), getClass().getName() + "$UpdateAdvice");
   }
 
   @SuppressWarnings("unused")

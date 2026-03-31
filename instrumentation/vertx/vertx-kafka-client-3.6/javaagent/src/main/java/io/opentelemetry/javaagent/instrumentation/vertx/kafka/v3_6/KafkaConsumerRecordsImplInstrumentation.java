@@ -31,7 +31,7 @@ public class KafkaConsumerRecordsImplInstrumentation implements TypeInstrumentat
             .and(isPublic())
             .and(takesArguments(int.class))
             .and(returns(named("io.vertx.kafka.client.consumer.KafkaConsumerRecord"))),
-        this.getClass().getName() + "$RecordAtAdvice");
+        getClass().getName() + "$RecordAtAdvice");
   }
 
   @SuppressWarnings("unused")

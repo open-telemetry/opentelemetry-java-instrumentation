@@ -14,9 +14,8 @@ import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import org.apache.pulsar.common.naming.TopicName;
 
-enum PulsarBatchMessagingAttributesGetter
+final class PulsarBatchMessagingAttributesGetter
     implements MessagingAttributesGetter<PulsarBatchRequest, Void> {
-  INSTANCE;
 
   @Override
   public String getSystem(PulsarBatchRequest request) {

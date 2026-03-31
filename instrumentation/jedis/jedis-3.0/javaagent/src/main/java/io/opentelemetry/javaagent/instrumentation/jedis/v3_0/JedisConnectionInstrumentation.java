@@ -38,7 +38,7 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
             .and(takesArguments(2))
             .and(takesArgument(0, named("redis.clients.jedis.commands.ProtocolCommand")))
             .and(takesArgument(1, is(byte[][].class))),
-        this.getClass().getName() + "$SendCommandAdvice");
+        getClass().getName() + "$SendCommandAdvice");
   }
 
   @SuppressWarnings("unused")

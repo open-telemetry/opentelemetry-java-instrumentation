@@ -13,7 +13,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.RABBITMQ;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -54,6 +53,6 @@ class ReactorRabbitMqTest extends AbstractRabbitMqTest {
                                 stringKey("rabbitmq.command"), experimental("exchange.declare")),
                             satisfies(NETWORK_PEER_ADDRESS, addr -> addr.isIn(rabbitMqIp, null)),
                             satisfies(NETWORK_TYPE, type -> type.isIn("ipv4", "ipv6", null)),
-                            satisfies(NETWORK_PEER_PORT, port -> assertThat(port).isNotNull()))));
+                            satisfies(NETWORK_PEER_PORT, port -> port.isNotNull()))));
   }
 }

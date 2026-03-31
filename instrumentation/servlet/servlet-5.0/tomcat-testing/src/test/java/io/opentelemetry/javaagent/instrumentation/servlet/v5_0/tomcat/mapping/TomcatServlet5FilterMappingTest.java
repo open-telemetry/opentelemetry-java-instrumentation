@@ -21,7 +21,7 @@ import org.apache.tomcat.util.descriptor.web.FilterDef;
 import org.apache.tomcat.util.descriptor.web.FilterMap;
 
 abstract class TomcatServlet5FilterMappingTest extends TomcatServlet5MappingTest {
-  public void addFilter(Context servletContext, String path, Class<? extends Filter> filter)
+  void addFilter(Context servletContext, String path, Class<? extends Filter> filter)
       throws Exception {
     String name = UUID.randomUUID().toString();
     FilterDef filterDef = new FilterDef();
@@ -34,7 +34,7 @@ abstract class TomcatServlet5FilterMappingTest extends TomcatServlet5MappingTest
     servletContext.addFilterMap(filterMap);
   }
 
-  public void addFilterWithServletName(
+  void addFilterWithServletName(
       Context servletContext, String servletName, Class<? extends Filter> filter) throws Exception {
     String name = UUID.randomUUID().toString();
     FilterDef filterDef = new FilterDef();

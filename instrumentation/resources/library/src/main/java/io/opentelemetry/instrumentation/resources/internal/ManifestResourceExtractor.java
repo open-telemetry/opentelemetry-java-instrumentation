@@ -63,20 +63,16 @@ public final class ManifestResourceExtractor {
   private static Resource extract(Manifest manifest) {
     String serviceName = manifest.getMainAttributes().getValue("Implementation-Title");
     AttributesBuilder builder = Attributes.builder();
-    if (serviceName != null) {
-      builder.put(SERVICE_NAME, serviceName);
-    }
+    builder.put(SERVICE_NAME, serviceName);
 
     String serviceVersion = manifest.getMainAttributes().getValue("Implementation-Version");
-    if (serviceVersion != null) {
-      builder.put(SERVICE_VERSION, serviceVersion);
-    }
+    builder.put(SERVICE_VERSION, serviceVersion);
     return Resource.create(builder.build());
   }
 
   private static Optional<Manifest> readManifest(Path jarPath) {
     try (JarFile jarFile = new JarFile(jarPath.toFile(), false)) {
-      return Optional.of(jarFile.getManifest());
+      return Optional.ofNullable(jarFile.getManifest());
     } catch (IOException exception) {
       logger.log(FINE, "Error reading manifest", exception);
       return Optional.empty();

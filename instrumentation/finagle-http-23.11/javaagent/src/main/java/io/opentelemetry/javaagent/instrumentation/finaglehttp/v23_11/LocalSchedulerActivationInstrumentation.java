@@ -29,7 +29,7 @@ public class LocalSchedulerActivationInstrumentation implements TypeInstrumentat
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("submit").and(takesArguments(Runnable.class)),
-        this.getClass().getName() + "$WrapRunnableAdvice");
+        getClass().getName() + "$WrapRunnableAdvice");
   }
 
   @SuppressWarnings("unused")

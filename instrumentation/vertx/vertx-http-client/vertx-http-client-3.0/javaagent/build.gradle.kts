@@ -26,6 +26,8 @@ dependencies {
   // We need both version as different versions of Vert.x use different versions of Netty
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
+  testInstrumentation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-4.0:javaagent"))
+  testInstrumentation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-5.0:javaagent"))
 
   // 3.9.7 Requires Netty 4.1.60, no other version works with it.
   latestDepTestLibrary(enforcedPlatform("io.netty:netty-bom:4.1.60.Final")) // see vertx-http-client-4.0 module
@@ -36,8 +38,8 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
   val testStableSemconv by registering(Test::class) {

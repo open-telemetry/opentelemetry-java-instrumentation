@@ -30,7 +30,7 @@ public class MutinySessionFactoryInstrumentation implements TypeInstrumentation 
         nameStartsWith("open")
             .or(nameStartsWith("with"))
             .and(returns(named("io.smallrye.mutiny.Uni"))),
-        this.getClass().getName() + "$ContextAdvice");
+        getClass().getName() + "$ContextAdvice");
   }
 
   @SuppressWarnings("unused")

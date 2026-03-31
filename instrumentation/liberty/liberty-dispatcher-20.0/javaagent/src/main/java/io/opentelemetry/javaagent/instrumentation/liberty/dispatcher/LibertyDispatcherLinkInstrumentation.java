@@ -44,7 +44,7 @@ public class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation
             .and(takesArgument(1, named(String.class.getName())))
             .and(takesArgument(2, named(Exception.class.getName())))
             .and(takesArgument(3, named(boolean.class.getName()))),
-        this.getClass().getName() + "$SendResponseAdvice");
+        getClass().getName() + "$SendResponseAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -28,6 +28,17 @@ public class Vertx41WebServer extends AbstractVertxWebServer {
     Router mainRouter = Router.router(vertx);
     mainRouter.route("/vertx-app/*").subRouter(router);
 
-    vertx.createHttpServer().requestHandler(mainRouter).listen(port, it -> startPromise.complete());
+    vertx
+        .createHttpServer()
+        .requestHandler(mainRouter)
+        .listen(
+            port,
+            result -> {
+              if (result.succeeded()) {
+                startPromise.complete();
+              } else {
+                startPromise.fail(result.cause());
+              }
+            });
   }
 }

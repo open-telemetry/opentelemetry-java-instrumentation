@@ -6,13 +6,13 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
+import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 
-enum MapSetter implements TextMapSetter<SendMessageContext> {
-  INSTANCE;
+final class MapSetter implements TextMapSetter<SendMessageContext> {
 
   @Override
-  public void set(SendMessageContext carrier, String key, String value) {
+  public void set(@Nullable SendMessageContext carrier, String key, String value) {
     if (carrier == null) {
       return;
     }

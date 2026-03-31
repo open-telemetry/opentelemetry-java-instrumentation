@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioSingletons.spanName;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -59,12 +58,11 @@ public class TwilioAsyncInstrumentation implements TypeInstrumentation {
        which we weren't interested in annotating.
     */
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(namedOneOf("createAsync", "deleteAsync", "readAsync", "fetchAsync", "updateAsync"))
+        namedOneOf("createAsync", "deleteAsync", "readAsync", "fetchAsync", "updateAsync")
             .and(isPublic())
             .and(not(isAbstract()))
             .and(returns(named("com.google.common.util.concurrent.ListenableFuture"))),
-        TwilioAsyncInstrumentation.class.getName() + "$TwilioClientAsyncAdvice");
+        getClass().getName() + "$TwilioClientAsyncAdvice");
   }
 
   /** Advice for instrumenting Twilio service classes. */

@@ -147,7 +147,7 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
     with(ctx.details) {
       if (id.group == "io.netty" && id.name != "netty") {
         if (id.version.startsWith("4.1.")) {
-          belongsTo("io.netty:netty-bom:4.1.131.Final", false)
+          belongsTo("io.netty:netty-bom:4.1.132.Final", false)
         } else if (id.version.startsWith("4.0.")) {
           belongsTo("io.netty:netty-bom:4.0.56.Final", false)
         }
@@ -179,7 +179,6 @@ testing {
       implementation("org.junit.jupiter:junit-jupiter-api")
       implementation("org.junit.jupiter:junit-jupiter-params")
       runtimeOnly("org.junit.jupiter:junit-jupiter-engine")
-      runtimeOnly("org.junit.vintage:junit-vintage-engine")
       implementation("org.junit-pioneer:junit-pioneer")
 
       implementation("org.assertj:assertj-core")
@@ -419,7 +418,7 @@ afterEvaluate {
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "13.3.0"
+  toolVersion = "13.4.0"
   maxWarnings = 0
 }
 

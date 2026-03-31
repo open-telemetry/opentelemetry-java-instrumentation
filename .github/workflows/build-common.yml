@@ -40,9 +40,9 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+        uses: gradle/actions/setup-gradle@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f # v6.0.1
         with:
-          cache-read-only: ${{ inputs.cache-read-only }}
+          cache-read-only: true
 
       - name: Spotless
         env:
@@ -64,9 +64,9 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+        uses: gradle/actions/setup-gradle@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f # v6.0.1
         with:
-          cache-read-only: ${{ inputs.cache-read-only }}
+          cache-read-only: true
 
       - name: Generate license report
         env:
@@ -105,9 +105,9 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+        uses: gradle/actions/setup-gradle@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f # v6.0.1
         with:
-          cache-read-only: ${{ inputs.cache-read-only }}
+          cache-read-only: true
 
       - name: Generate FOSSA configuration
         run: ./gradlew generateFossaConfiguration
@@ -193,7 +193,7 @@ jobs:
           sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+        uses: gradle/actions/setup-gradle@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f # v6.0.1
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 
@@ -246,9 +246,9 @@ jobs:
           - 11
           - 17
           - 21
-          - 25 # renovate(java-version)
+          - 25
           - 25-deny-unsafe
-          - 26-ea
+          - 26 # renovate(java-version)
         vm:
           - hotspot
           - openj9
@@ -263,8 +263,6 @@ jobs:
         exclude:
           - vm: ${{ inputs.skip-openj9-tests && 'openj9' || '' }}
           - test-java-version: 25-deny-unsafe
-            vm: openj9
-          - test-java-version: 26-ea
             vm: openj9
       fail-fast: false
     steps:
@@ -292,7 +290,7 @@ jobs:
 
       # vaadin tests use pnpm
       - name: Cache pnpm modules
-        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         with:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-test-cache-pnpm-modules
@@ -301,10 +299,9 @@ jobs:
         run: .github/scripts/deadlock-detector.sh
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+        uses: gradle/actions/setup-gradle@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f # v6.0.1
         with:
-          # only push cache for one matrix option since github action cache space is limited
-          cache-read-only: ${{ inputs.cache-read-only || matrix.test-java-version != 11 || matrix.vm != 'hotspot' }}
+          cache-read-only: true
 
       - name: List tests
         env:
@@ -442,10 +439,9 @@ jobs:
           java-version-file: .java-version
 
       - name: Set up Gradle cache
-        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+        uses: gradle/actions/setup-gradle@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f # v6.0.1
         with:
-          # only push cache for one matrix option per OS since github action cache space is limited
-          cache-read-only: ${{ inputs.cache-read-only || matrix.smoke-test-suite != 'tomcat' }}
+          cache-read-only: true
 
       - name: Build
         env:
@@ -498,7 +494,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+        uses: gradle/actions/setup-gradle@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f # v6.0.1
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 
@@ -521,9 +517,9 @@ jobs:
           java-version-file: .java-version
 
       - name: Set up Gradle cache
-        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+        uses: gradle/actions/setup-gradle@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f # v6.0.1
         with:
-          cache-read-only: ${{ inputs.cache-read-only }}
+          cache-read-only: true
 
       - name: Local publish of artifacts
         run: ./gradlew publishToMavenLocal

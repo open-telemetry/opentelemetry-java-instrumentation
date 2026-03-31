@@ -31,7 +31,7 @@ public class ContextDataInjectorFactoryInstrumentation implements TypeInstrument
             .and(isStatic())
             .and(named("createInjector"))
             .and(returns(named("org.apache.logging.log4j.core.ContextDataInjector"))),
-        this.getClass().getName() + "$CreateInjectorAdvice");
+        getClass().getName() + "$CreateInjectorAdvice");
   }
 
   @SuppressWarnings("unused")

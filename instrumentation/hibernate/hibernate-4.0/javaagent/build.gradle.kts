@@ -37,7 +37,7 @@ dependencies {
   testImplementation("org.javassist:javassist:3.28.0-GA")
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+val latestDepTest = findProperty("testLatestDeps") == "true"
 testing {
   suites {
     val version5Test by registering(JvmTestSuite::class) {
@@ -85,9 +85,7 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
   val testExperimental by registering(Test::class) {

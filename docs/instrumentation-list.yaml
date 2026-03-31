@@ -4610,7 +4610,7 @@ libraries:
         aren't added as span attributes.
       type: boolean
       default: true
-    - name: otel.instrumentation.graphql.add-operation-name-to-span-name.enabled
+    - name: otel.instrumentation.graphql.operation-name-in-span-name.enabled
       description: |
         Whether GraphQL operation name is added to the span name. WARNING: The GraphQL operation name is provided by the client and can have high cardinality. Use only when the server is not exposed to malicious clients.
       type: boolean
@@ -4644,7 +4644,7 @@ libraries:
         aren't added as span attributes.
       type: boolean
       default: true
-    - name: otel.instrumentation.graphql.add-operation-name-to-span-name.enabled
+    - name: otel.instrumentation.graphql.operation-name-in-span-name.enabled
       description: |
         Whether GraphQL operation name is added to the span name. WARNING: The GraphQL operation name is provided by the client and can have high cardinality. Use only when the server is not exposed to malicious clients.
       type: boolean
@@ -10279,6 +10279,45 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
+        - name: url.full
+          type: STRING
   - name: okhttp-3.0
     display_name: OkHttp
     description: This instrumentation enables HTTP client spans and HTTP client metrics
@@ -10366,6 +10405,51 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+        - name: url.full
+          type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.request.resend_count
+          type: LONG
+        - name: http.response.status_code
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
         - name: url.full
           type: STRING
   openai:
@@ -10494,7 +10578,7 @@ libraries:
           type: STRING
         - name: db.system
           type: STRING
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -10692,7 +10776,7 @@ libraries:
       name: io.opentelemetry.oshi
     has_standalone_library: true
     javaagent_target_versions:
-    - com.github.oshi:oshi-core:[5.3.1,)
+    - com.github.oshi:oshi-core:[5.0.0,)
     configurations:
     - name: otel.instrumentation.oshi.experimental-metrics.enabled
       description: Enable the experimental `runtime.java.memory` and `runtime.java.cpu_time`
@@ -11582,6 +11666,7 @@ libraries:
     scope:
       name: io.opentelemetry.quarkus-resteasy-reactive
     javaagent_target_versions:
+    - io.quarkus:quarkus-rest:[3.9.0,)
     - io.quarkus:quarkus-resteasy-reactive:(,3.9.0)
   quartz:
   - name: quartz-2.0
@@ -13178,13 +13263,13 @@ libraries:
       description: Enables capturing the experimental `servlet.timeout` span attribute.
       type: boolean
       default: false
-    - name: otel.instrumentation.servlet.capture-request-parameters
+    - name: otel.instrumentation.servlet.experimental.capture-request-parameters
       description: List of request parameter names to capture as span attributes.
       type: list
       default: ''
-    - name: otel.instrumentation.servlet.add-trace-id-request-attribute
-      description: Adds the trace ID and span ID as a request attributes for downstream
-        servlet access.
+    - name: otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
+      description: Enables adding the trace ID and span ID as request attributes for
+        downstream servlet access.
       type: boolean
       default: true
     telemetry:
@@ -13261,13 +13346,13 @@ libraries:
       description: Enables capturing the experimental `servlet.timeout` span attribute.
       type: boolean
       default: false
-    - name: otel.instrumentation.servlet.capture-request-parameters
+    - name: otel.instrumentation.servlet.experimental.capture-request-parameters
       description: List of request parameter names to capture as span attributes.
       type: list
       default: ''
-    - name: otel.instrumentation.servlet.add-trace-id-request-attribute
-      description: Adds the trace ID and span ID as a request attributes for downstream
-        servlet access.
+    - name: otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
+      description: Enables adding the trace ID and span ID as request attributes for
+        downstream servlet access.
       type: boolean
       default: true
     telemetry:
@@ -13350,13 +13435,13 @@ libraries:
       description: Enables capturing the experimental `servlet.timeout` span attribute.
       type: boolean
       default: false
-    - name: otel.instrumentation.servlet.capture-request-parameters
+    - name: otel.instrumentation.servlet.experimental.capture-request-parameters
       description: List of request parameter names to capture as span attributes.
       type: list
       default: ''
-    - name: otel.instrumentation.servlet.add-trace-id-request-attribute
-      description: Adds the trace ID and span ID as a request attributes for downstream
-        servlet access.
+    - name: otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
+      description: Enables adding the trace ID and span ID as request attributes for
+        downstream servlet access.
       type: boolean
       default: true
     telemetry:
@@ -15541,6 +15626,8 @@ libraries:
           type: STRING
         - name: db.query.summary
           type: STRING
+        - name: db.system.name
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -15553,6 +15640,8 @@ libraries:
         - name: db.query.summary
           type: STRING
         - name: db.query.text
+          type: STRING
+        - name: db.system.name
           type: STRING
         - name: error.type
           type: STRING
@@ -15614,6 +15703,8 @@ libraries:
           type: STRING
         - name: db.query.summary
           type: STRING
+        - name: db.system.name
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -15626,6 +15717,8 @@ libraries:
         - name: db.query.summary
           type: STRING
         - name: db.query.text
+          type: STRING
+        - name: db.system.name
           type: STRING
         - name: error.type
           type: STRING

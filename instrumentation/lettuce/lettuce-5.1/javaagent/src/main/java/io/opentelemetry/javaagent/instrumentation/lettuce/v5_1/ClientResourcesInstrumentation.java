@@ -32,8 +32,7 @@ public class ClientResourcesInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPublic().and(isStatic()).and(named("builder")),
-        this.getClass().getName() + "$BuilderAdvice");
+        isPublic().and(isStatic()).and(named("builder")), getClass().getName() + "$BuilderAdvice");
   }
 
   @SuppressWarnings("unused")

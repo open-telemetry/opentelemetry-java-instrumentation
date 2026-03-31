@@ -8,6 +8,7 @@ muzzle {
     group.set("org.springframework")
     module.set("spring-context")
     versions.set("[4.0.0.RELEASE,6)")
+    assertInverse.set(true)
   }
 }
 
@@ -36,7 +37,7 @@ otelJava {
 
 tasks.withType<Test>().configureEach {
   jvmArgs("-Djava.rmi.server.hostname=127.0.0.1")
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  systemProperty("collectMetadata", findProperty("collectMetadata"))
 }
 
 configurations.testRuntimeClasspath {

@@ -29,7 +29,7 @@ public class HttpExtServerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("bindAndHandle")
             .and(takesArgument(0, named("org.apache.pekko.stream.scaladsl.Flow"))),
-        this.getClass().getName() + "$PekkoBindAndHandleAdvice");
+        getClass().getName() + "$PekkoBindAndHandleAdvice");
   }
 
   @SuppressWarnings("unused")

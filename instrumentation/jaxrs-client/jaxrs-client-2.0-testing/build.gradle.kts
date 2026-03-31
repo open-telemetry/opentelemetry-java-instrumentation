@@ -35,7 +35,7 @@ tasks.withType<Test>().configureEach {
   jvmArgs("--add-opens=java.base/java.net=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-  val latestDepTest = findProperty("testLatestDeps") as Boolean
+  val latestDepTest = findProperty("testLatestDeps") == "true"
   systemProperty("testLatestDeps", latestDepTest)
   // in default configuration 3.6.7 retries http request in connectionErrorUnopenedPort test
   // which creates a duplicate span

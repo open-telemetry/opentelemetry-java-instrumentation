@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.servlet.internal;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -83,6 +85,10 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
       ServletRequestContext<REQUEST> requestContext,
       ServletResponseContext<RESPONSE> responseContext,
       String name) {
+    RESPONSE response = responseContext.response();
+    if (response == null) {
+      return emptyList();
+    }
     return accessor.getResponseHeaderValues(responseContext.response(), name);
   }
 

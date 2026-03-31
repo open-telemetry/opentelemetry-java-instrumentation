@@ -66,6 +66,9 @@ public abstract class AbstractReactorKafkaTest {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractReactorKafkaTest.class);
 
+  private static final boolean receiveTelemetryEnabled =
+      Boolean.getBoolean("otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
+
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -128,7 +131,7 @@ public abstract class AbstractReactorKafkaTest {
     props.put("value.deserializer", StringDeserializer.class);
 
     try {
-      // SenderOptions changed from a class to an interface in 1.3.3, using reflection to avoid
+      // ReceiverOptions changed from a class to an interface in 1.3.3, using reflection to avoid
       // linkage error
       ReceiverOptions<String, String> receiverOptions =
           (ReceiverOptions<String, String>)
@@ -153,6 +156,14 @@ public abstract class AbstractReactorKafkaTest {
     Flux<?> producer = sender.send(Flux.just(record));
     testing.runWithSpan("producer", () -> producer.blockLast(Duration.ofSeconds(30)));
 
+    if (receiveTelemetryEnabled) {
+      assertWithReceiveTelemetry(record);
+    } else {
+      assertWithoutReceiveTelemetry(record);
+    }
+  }
+
+  private static void assertWithReceiveTelemetry(SenderRecord<String, String, Object> record) {
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
 
     testing.waitAndAssertSortedTraces(
@@ -182,6 +193,24 @@ public abstract class AbstractReactorKafkaTest {
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(processAttributes(record)),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
+  }
+
+  private static void assertWithoutReceiveTelemetry(SenderRecord<String, String, Object> record) {
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("producer"),
+                span ->
+                    span.hasName("testTopic publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(sendAttributes(record)),
+                span ->
+                    span.hasName("testTopic process")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(processAttributes(record)),
+                span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv

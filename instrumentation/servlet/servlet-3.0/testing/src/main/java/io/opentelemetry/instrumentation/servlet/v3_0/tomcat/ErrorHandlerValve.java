@@ -24,7 +24,8 @@ public class ErrorHandlerValve extends ErrorReportValve {
     }
 
     try {
-      response.getWriter().print(t != null ? t.getCause().getMessage() : response.getMessage());
+      Throwable error = t != null && t.getCause() != null ? t.getCause() : t;
+      response.getWriter().print(error != null ? error.getMessage() : response.getMessage());
     } catch (IOException e) {
       logger.error("Failed to write error response", e);
     }

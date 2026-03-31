@@ -25,7 +25,7 @@ public class MetricsInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isTypeInitializer(), this.getClass().getName() + "$StaticInitializerAdvice");
+        isTypeInitializer(), getClass().getName() + "$StaticInitializerAdvice");
   }
 
   @SuppressWarnings("unused")

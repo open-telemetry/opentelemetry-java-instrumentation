@@ -44,7 +44,7 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
             .and(takesArguments(1))
             .and(takesArgument(0, long.class).or(takesArgument(0, Duration.class)))
             .and(returns(named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
-        this.getClass().getName() + "$PollAdvice");
+        getClass().getName() + "$PollAdvice");
   }
 
   @SuppressWarnings("unused")

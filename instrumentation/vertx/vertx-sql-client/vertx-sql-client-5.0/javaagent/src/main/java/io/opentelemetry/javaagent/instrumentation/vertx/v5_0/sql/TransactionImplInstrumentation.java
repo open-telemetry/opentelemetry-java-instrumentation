@@ -27,7 +27,7 @@ public class TransactionImplInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("wrap").and(returns(named("io.vertx.core.Completable"))),
-        TransactionImplInstrumentation.class.getName() + "$WrapHandlerAdvice");
+        getClass().getName() + "$WrapHandlerAdvice");
   }
 
   @SuppressWarnings("unused")

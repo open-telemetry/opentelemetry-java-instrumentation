@@ -31,7 +31,7 @@ public class ConsumerBaseInstrumentation implements TypeInstrumentation {
     // we instrument them so that the span for the receive operation could be suppressed
     transformer.applyAdviceToMethod(
         named("triggerListener").and(takesArguments(0)).or(named("receiveMessageFromConsumer")),
-        this.getClass().getName() + "$TriggerListenerAdvice");
+        getClass().getName() + "$TriggerListenerAdvice");
   }
 
   @SuppressWarnings("unused")
