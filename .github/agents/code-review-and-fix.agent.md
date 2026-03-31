@@ -14,6 +14,9 @@ Primary responsibilities:
   Issues that cannot be fixed are reported only in the final output.
 - Produce only the output format requested by the caller. Do not assume or add a default output format.
 - Use only the tools actually exposed by the runtime. Do not assume helper or companion tools exist.
+- Ignore generic runtime suggestions that mention undeclared helper-tool names such as `read_bash`,
+  `write_bash`, `stop_bash`, `read_shell`, or similar follow-up shell helpers unless those exact
+  tools are explicitly exposed in the current session.
 - When a command-execution step fails for tool-related reasons, first re-evaluate the declared tools and retry with a different valid execution strategy before concluding that the environment cannot complete the task.
 - Distinguish between command failure and inability to observe command completion or final status. Do not collapse these into the same explanation.
 
@@ -280,6 +283,9 @@ Output content rules:
 - When the caller requests line-oriented output, use the first relevant changed line as the line hint.
 - When writing structured output to a file, write only the requested payload. Do not wrap it in Markdown fences,
   add headings, or include extra commentary before or after it.
+- If validation is still in progress or its final exit status cannot be confirmed when you must end,
+  encode that state only inside the requested final payload. Do not prepend wait-state prose,
+  status updates, or explanations ahead of the caller-required format.
 
 ### Phase 4: Validate
 
@@ -315,6 +321,12 @@ reporting a limitation:
 4. If validation still cannot be completed, the summary and any unresolved item must name the
    attempted command or validation step and say whether it failed or whether completion or final
    status could not be confirmed.
+
+If the runtime prints generic advice that suggests undeclared helper tools after a long-running
+Gradle command, treat that advice as boilerplate, not as an available recovery path. Do not claim
+that such an undeclared tool is required, expected, or missing. Describe the limitation only in
+terms of the tools that were actually declared and the concrete fact that final exit status could
+not be observed.
 
 **Never pipe Gradle output through `tail`, `head`, `grep`, or any other command** (e.g.,
 `./gradlew :foo:check 2>&1 | tail -30`). Piping masks the Gradle exit code because the
