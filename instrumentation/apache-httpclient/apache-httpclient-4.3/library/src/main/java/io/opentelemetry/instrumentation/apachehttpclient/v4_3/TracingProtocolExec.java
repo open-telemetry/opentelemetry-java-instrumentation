@@ -76,7 +76,7 @@ final class TracingProtocolExec implements ClientExecChain {
     }
 
     Context context = instrumenter.start(parentContext, instrumenterRequest);
-    propagators.getTextMapPropagator().inject(context, request, new HttpHeaderSetter());
+    propagators.getTextMapPropagator().inject(context, request, HttpHeaderSetter.INSTANCE);
 
     return execute(route, request, instrumenterRequest, httpContext, httpExecutionAware, context);
   }

@@ -11,6 +11,10 @@ import org.apache.http.client.methods.HttpRequestWrapper;
 
 class HttpHeaderSetter implements TextMapSetter<HttpRequestWrapper> {
 
+  static final HttpHeaderSetter INSTANCE = new HttpHeaderSetter();
+
+  private HttpHeaderSetter() {}
+
   @Override
   public void set(@Nullable HttpRequestWrapper carrier, String key, String value) {
     if (carrier != null) {
