@@ -148,8 +148,8 @@ class AwsLambdaSqsMessageHandlerTest {
     try {
       Constructor<SQSEvent.SQSMessage> ctor = SQSEvent.SQSMessage.class.getDeclaredConstructor();
       return ctor.newInstance();
-    } catch (Throwable t) {
-      throw new AssertionError(t);
+    } catch (ReflectiveOperationException t) {
+      throw new LinkageError(t.getMessage(), t);
     }
   }
 
