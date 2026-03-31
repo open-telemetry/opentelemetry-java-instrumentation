@@ -32,7 +32,6 @@ import com.clickhouse.client.ClickHouseResponse;
 import com.clickhouse.client.ClickHouseResponseSummary;
 import com.clickhouse.data.ClickHouseFormat;
 import com.google.common.collect.ImmutableMap;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -95,14 +94,17 @@ class ClickHouseClientV1Test {
       throws ClickHouseException {
     ClickHouseNode server = ClickHouseNode.of("http://" + host + ":" + port + "?compress=0");
     ClickHouseClient client = ClickHouseClient.builder().build();
-
-    ClickHouseResponse response =
-        client
-            .read(server)
-            .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
-            .query("select * from " + tableName)
-            .executeAndWait();
-    response.close();
+    try {
+      ClickHouseResponse response =
+          client
+              .read(server)
+              .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
+              .query("select * from " + tableName)
+              .executeAndWait();
+      response.close();
+    } finally {
+      client.close();
+    }
 
     testing.waitAndAssertTraces(
         trace ->
@@ -162,7 +164,7 @@ class ClickHouseClientV1Test {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -222,7 +224,7 @@ class ClickHouseClientV1Test {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -336,7 +338,7 @@ class ClickHouseClientV1Test {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -377,7 +379,7 @@ class ClickHouseClientV1Test {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -454,7 +456,7 @@ class ClickHouseClientV1Test {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -524,7 +526,7 @@ class ClickHouseClientV1Test {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
