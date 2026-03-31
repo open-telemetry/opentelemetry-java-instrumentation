@@ -25,8 +25,9 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // introduced in java-client 2.6, removed in 3.x
-    return hasClassesNamed("com.couchbase.client.java.auth.CertAuthenticator");
+    return hasClassesNamed(
+        // added in 2.6.0
+        "com.couchbase.client.java.auth.CertAuthenticator");
   }
 
   @Override
