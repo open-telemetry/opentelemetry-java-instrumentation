@@ -25,3 +25,4 @@ armeria-1.3:testing
 async-http-client-1.8:javaagent
 async-http-client-1.9:javaagent
 async-http-client-2.0:javaagent
+armeria-grpc-1.14:javaagent
