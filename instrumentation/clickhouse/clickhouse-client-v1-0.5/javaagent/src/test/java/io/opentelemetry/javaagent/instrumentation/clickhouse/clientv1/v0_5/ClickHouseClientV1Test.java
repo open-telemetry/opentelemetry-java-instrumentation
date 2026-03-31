@@ -93,8 +93,7 @@ class ClickHouseClientV1Test {
   void testConnectionStringWithoutDatabaseSpecifiedStillGeneratesSpans()
       throws ClickHouseException {
     ClickHouseNode server = ClickHouseNode.of("http://" + host + ":" + port + "?compress=0");
-    ClickHouseClient client = ClickHouseClient.builder().build();
-    try {
+    try (ClickHouseClient client = ClickHouseClient.builder().build()) {
       ClickHouseResponse response =
           client
               .read(server)
@@ -102,8 +101,6 @@ class ClickHouseClientV1Test {
               .query("select * from " + tableName)
               .executeAndWait();
       response.close();
-    } finally {
-      client.close();
     }
 
     testing.waitAndAssertTraces(
