@@ -25,8 +25,9 @@ public class AsyncHttpClientInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // TimeoutsHolder class was added in 1.8.0, not present in 1.7.x
-    return hasClassesNamed("com.ning.http.client.providers.netty.timeout.TimeoutsHolder");
+    return hasClassesNamed(
+        // added in 1.8.0
+        "com.ning.http.client.providers.netty.timeout.TimeoutsHolder");
   }
 
   @Override
