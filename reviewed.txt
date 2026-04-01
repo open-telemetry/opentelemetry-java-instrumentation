@@ -112,3 +112,4 @@ google-http-client-1.19:javaagent
 finatra-2.9:javaagent
 graphql-java-12.0:javaagent
 grails-3.0:javaagent
+graphql-java-12.0:library
