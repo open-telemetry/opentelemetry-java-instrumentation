@@ -142,3 +142,4 @@ http-url-connection:javaagent
 hystrix-1.4:javaagent
 hikaricp-3.0:library
 iceberg-1.8:testing
+internal-application-logger:bootstrap
