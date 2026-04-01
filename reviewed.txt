@@ -151,3 +151,4 @@ influxdb-2.4:javaagent
 internal-lambda:javaagent
 internal-class-loader:javaagent
 internal-reflection:javaagent
+internal-reflection:javaagent-integration-tests
