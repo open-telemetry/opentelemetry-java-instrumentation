@@ -154,7 +154,7 @@ Auto-fix boundaries:
     same parent and apply the step-by-step procedure in `gradle-conventions.md`.
     After adding, verify by running the module's tests.
   - missing version comments on `hasClassesNamed()` landmark classes in existing
-    `classLoaderMatcher()` overrides, including single-class lower-bound checks —
+    `classLoaderMatcher()` overrides, including single-class checks —
     determine each class's **role** (floor vs ceiling) and add the matching comment.
     First check: does a **newer** sibling instrumentation module exist for this library
     (e.g., `mongo-4.0` next to `mongo-3.7`)? If so, look at what the newer module checks
@@ -162,11 +162,13 @@ Auto-fix boundaries:
     but absent from the current module's check (or vice versa) reveal a version boundary —
     the class was likely added or removed between versions.
     Then determine the comment form for each class:
-    - **Floor class** (proves "at least version X"): look up when the class was **introduced**
-      → comment `// added in X.Y`.
-    - **Ceiling class** (proves "not yet version Y"): look up when the class was **removed**
-      → comment `// removed in Y.Z` (meaning: its presence here ensures we don't match
-      version Y.Z+ where a different module takes over).
+    **Floor class** (proves "at least version X"): look up when the class was
+    **introduced** → comment `// added in X.Y`.
+    **Ceiling class** (proves "not yet version Y"): look up when the class was
+    **removed** → comment `// removed in Y.Z` (meaning: its presence here ensures we
+    don't match version Y.Z+ where a different module takes over).
+    **Single class that provides both bounds**: include both facts in one comment,
+    e.g. `// added in X.Y, removed in Y.Z`.
     A ceiling class might have been *introduced* much earlier than the module's target version.
     Do not use `// added in` for a ceiling class — that is misleading. The relevant fact is
     when it was **removed**.

@@ -94,10 +94,11 @@ For each file in scope:
 5. Do not flag a non-capturing lambda or method reference as an unnecessary allocation,
    because on modern JDKs these are typically cached at the call site rather than
    allocated on every invocation.
-6. Flag a missing `// added in X.Y` comment on a single-class lower-bound
-   `hasClassesNamed(...)` check in `classLoaderMatcher()` only after validating that the
-   stated version is factually correct from repository or upstream evidence; the comment
-   documents why the matcher exists and which version boundary it enforces.
+6. Flag a missing version-boundary comment on a single-class `hasClassesNamed(...)`
+   check in `classLoaderMatcher()` only after validating the stated boundary from
+   repository or upstream evidence. Use `// added in X.Y` when the class only provides
+   the lower bound; if the same class also provides the upper bound because it disappears
+   in a newer sibling version, preserve or request `removed in Y.Z` too.
 7. Prevent duplicates:
    - If equivalent `REVIEW:` already exists above the same line, do not add another.
 

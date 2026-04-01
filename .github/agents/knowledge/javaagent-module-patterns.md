@@ -87,6 +87,11 @@ Place a comment **above each class name string** stating its version role:
 - **Floor class** (proves "at least version X"): use `// added in X.Y`.
 - **Ceiling class** (proves "not yet version Y"): use `// removed in Y.Z`.
 
+A single landmark class can sometimes provide **both** bounds: its presence proves the
+module is at least version `X.Y`, and the same class disappears in `Y.Z`, so its presence
+also excludes `Y.Z+`. In that case, a combined comment such as
+`// added in X.Y, removed in Y.Z` is appropriate.
+
 **How to identify ceiling classes**: check whether a **newer sibling module** exists for
 the same library (e.g., `mongo-4.0` next to `mongo-3.7`). If the newer module's
 `classLoaderMatcher()` checks a different variant of the same class (e.g.,
@@ -183,17 +188,20 @@ public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
   - Floor class → `// added in X.Y` (class introduced in version X.Y).
   - Ceiling class → `// removed in Y.Z` (class removed in version Y.Z, ensuring the
     module does not activate on Y.Z+).
+  - Single class that serves as both floor and ceiling → include both boundaries, e.g.
+    `// added in X.Y, removed in Y.Z`.
   Do not use `// added in` for a ceiling class — that states when the class first appeared,
   which is irrelevant and misleading; the purpose is the upper bound.
   To identify ceiling classes, check if a newer sibling module's `classLoaderMatcher()`
   checks a different variant or replacement class.
-- **Single-class lower-bound comments are required.** When a single-class
-  `hasClassesNamed(...)` check exists solely to establish the module's lower bound, add an
-  inline `// added in X.Y` comment. The comment explains why the matcher exists and which
-  version boundary it enforces. First validate that `X.Y` is factually correct from
-  repository or upstream evidence; do not infer it from the module name alone. Flag a
-  missing comment in this case, and do not flag an existing one for removal unless the
-  comment is demonstrably wrong.
+- **Single-class landmark comments are required.** When a single-class
+  `hasClassesNamed(...)` check establishes the module's lower bound, add an inline
+  `// added in X.Y` comment. If that same class also establishes the upper bound because
+  it is removed or replaced in a newer sibling version, include that fact too, e.g.
+  `// added in X.Y, removed in Y.Z`. First validate each stated boundary from repository
+  or upstream evidence; do not infer versions from the module name alone. Flag a missing
+  boundary comment in this case, and do not flag an existing dual-role comment for removal
+  unless it is demonstrably wrong.
 - Prefer **one landmark class** per version boundary — choose the most stable/specific class.
 - Pair with **muzzle config** (`assertInverse.set(true)`) for full coverage.
 - Use `hasClassesNamed(...)` (from `AgentElementMatchers`) — not raw ByteBuddy matchers.
