@@ -97,7 +97,7 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
   void emptyRepo() {
     Iterable<TestDocument> result = repository.findAll();
 
-    assertThat(result.iterator().hasNext()).isFalse();
+    assertThat(result).isEmpty();
 
     testing.waitAndAssertTraces(
         trace ->
