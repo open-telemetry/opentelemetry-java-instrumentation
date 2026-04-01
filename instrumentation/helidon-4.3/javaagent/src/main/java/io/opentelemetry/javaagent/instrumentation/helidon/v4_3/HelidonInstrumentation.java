@@ -34,7 +34,7 @@ public class HelidonInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.Return HttpRouting.Builder httpContext) {
-      HelidonSingletons.FILTERS.forEach(httpContext::addFilter);
+      HelidonSingletons.filters().forEach(httpContext::addFilter);
     }
   }
 }

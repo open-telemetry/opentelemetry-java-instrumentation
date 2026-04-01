@@ -14,7 +14,7 @@ import java.util.List;
 
 public final class HelidonSingletons {
 
-  public static final List<Filter> FILTERS;
+  private static final List<Filter> filters;
 
   static {
     var serverBuilder = HelidonTelemetry.builder(GlobalOpenTelemetry.get());
@@ -23,7 +23,11 @@ public final class HelidonSingletons {
         .configure(AgentCommonConfig.get());
     var serverTelemetry = serverBuilder.build();
 
-    FILTERS = List.of(serverTelemetry.createFilter(), new ResponseCustomizingFilter());
+    filters = List.of(serverTelemetry.createFilter(), new ResponseCustomizingFilter());
+  }
+
+  public static List<Filter> filters() {
+    return filters;
   }
 
   private HelidonSingletons() {}
