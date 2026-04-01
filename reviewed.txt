@@ -86,3 +86,4 @@ dropwizard-metrics-4.0:javaagent
 dropwizard-views-0.7:javaagent
 dropwizard:dropwizard-testing
 elasticsearch-api-client-7.16:javaagent
+elasticsearch-api-client-7.16:javaagent-unit-tests
