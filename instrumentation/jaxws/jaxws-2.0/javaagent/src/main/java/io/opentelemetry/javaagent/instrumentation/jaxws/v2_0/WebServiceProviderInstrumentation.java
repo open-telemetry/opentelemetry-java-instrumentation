@@ -49,11 +49,15 @@ class WebServiceProviderInstrumentation implements TypeInstrumentation {
 
     public static class AdviceScope {
       private final CallDepth callDepth;
-      private final JaxWsRequest request;
-      private final Context context;
-      private final Scope scope;
+      @Nullable private final JaxWsRequest request;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
 
-      private AdviceScope(CallDepth callDepth, JaxWsRequest request, Context context, Scope scope) {
+      private AdviceScope(
+          CallDepth callDepth,
+          @Nullable JaxWsRequest request,
+          @Nullable Context context,
+          @Nullable Scope scope) {
         this.callDepth = callDepth;
         this.request = request;
         this.context = context;
@@ -73,7 +77,7 @@ class WebServiceProviderInstrumentation implements TypeInstrumentation {
         return new AdviceScope(callDepth, request, context, context.makeCurrent());
       }
 
-      public void end(Throwable throwable) {
+      public void end(@Nullable Throwable throwable) {
         if (callDepth.decrementAndGet() > 0 || scope == null) {
           return;
         }
