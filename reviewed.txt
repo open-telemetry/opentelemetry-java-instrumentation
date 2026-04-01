@@ -165,3 +165,4 @@ iceberg-1.8:library
 javalin-5.0:javaagent
 javalin-7.0:javaagent
 jaxrs-client:jaxrs-client-1.1-testing
+java-util-logging:javaagent
