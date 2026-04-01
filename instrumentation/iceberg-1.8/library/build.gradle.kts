@@ -13,6 +13,8 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
 }
 
+val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
+
 tasks.test {
-  systemProperty("collectMetadata", findProperty("collectMetadata"))
+  systemProperty("collectMetadata", collectMetadata)
 }
