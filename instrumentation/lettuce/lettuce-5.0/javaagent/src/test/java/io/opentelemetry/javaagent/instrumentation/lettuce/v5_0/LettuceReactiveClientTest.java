@@ -261,10 +261,11 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
   @Test
   void testDebugSegfaultCommandReturnsMonoVoidWithNoArgumentShouldProduceSpan() {
     // Test Causes redis to crash therefore it needs its own container
-    try (StatefulRedisConnection<String, String> statefulConnection = newContainerConnection()) {
-      RedisReactiveCommands<String, String> commands = statefulConnection.reactive();
-      commands.debugSegfault().subscribe();
-    }
+    StatefulRedisConnection<String, String> statefulConnection = newContainerConnection();
+    cleanup.deferCleanup(statefulConnection);
+
+    RedisReactiveCommands<String, String> commands = statefulConnection.reactive();
+    commands.debugSegfault().subscribe();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -281,10 +282,11 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
   @Test
   void testShutdownCommandShouldProduceSpan() {
     // Test Causes redis to crash therefore it needs its own container
-    try (StatefulRedisConnection<String, String> statefulConnection = newContainerConnection()) {
-      RedisReactiveCommands<String, String> commands = statefulConnection.reactive();
-      commands.shutdown(false).subscribe();
-    }
+    StatefulRedisConnection<String, String> statefulConnection = newContainerConnection();
+    cleanup.deferCleanup(statefulConnection);
+
+    RedisReactiveCommands<String, String> commands = statefulConnection.reactive();
+    commands.shutdown(false).subscribe();
 
     testing.waitAndAssertTraces(
         trace ->

@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.instrumentation.test.utils.GcUtils;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.javaagent.ClassToInstrument;
 import io.opentelemetry.javaagent.ClassToInstrumentChild;
 import java.lang.ref.WeakReference;
@@ -18,8 +19,11 @@ import java.net.URLClassLoader;
 import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ClassLoadingTest {
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private URL[] classpath;
 
@@ -74,29 +78,31 @@ class ClassLoadingTest {
 
   @Test
   void makeSureThatByteBuddyReadsTheClassBytesOnlyOnce() throws Exception {
-    try (CountingClassLoader loader = new CountingClassLoader(classpath)) {
-      loader.loadClass(ClassToInstrument.class.getName());
-      int countAfterFirstLoad = loader.count;
-      loader.loadClass(ClassToInstrumentChild.class.getName());
+    CountingClassLoader loader = new CountingClassLoader(classpath);
+    cleanup.deferCleanup(loader);
 
-      // ClassToInstrumentChild won't cause an additional getResource() because its TypeDescription
-      // is created from transformation bytes.
-      assertThat(loader.count).isPositive().isEqualTo(countAfterFirstLoad);
-    }
+    loader.loadClass(ClassToInstrument.class.getName());
+    int countAfterFirstLoad = loader.count;
+    loader.loadClass(ClassToInstrumentChild.class.getName());
+
+    // ClassToInstrumentChild won't cause an additional getResource() because its TypeDescription
+    // is created from transformation bytes.
+    assertThat(loader.count).isPositive().isEqualTo(countAfterFirstLoad);
   }
 
   @Test
   void makeSureThatByteBuddyDoesntReuseCachedTypeDescriptionsBetweenDifferentClassloaders()
       throws Exception {
-    try (CountingClassLoader loader1 = new CountingClassLoader(classpath);
-        CountingClassLoader loader2 = new CountingClassLoader(classpath)) {
+    CountingClassLoader loader1 = new CountingClassLoader(classpath);
+    cleanup.deferCleanup(loader1);
+    CountingClassLoader loader2 = new CountingClassLoader(classpath);
+    cleanup.deferCleanup(loader2);
 
-      loader1.loadClass(ClassToInstrument.class.getName());
-      loader2.loadClass(ClassToInstrument.class.getName());
+    loader1.loadClass(ClassToInstrument.class.getName());
+    loader2.loadClass(ClassToInstrument.class.getName());
 
-      assertThat(loader1.count).isPositive();
-      assertThat(loader2.count).isPositive();
-      assertThat(loader1.count).isEqualTo(loader2.count);
-    }
+    assertThat(loader1.count).isPositive();
+    assertThat(loader2.count).isPositive();
+    assertThat(loader1.count).isEqualTo(loader2.count);
   }
 }
