@@ -42,6 +42,7 @@ public class StructuredTaskScopeInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ForkCallableAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static PropagatedContext enterCallableFork(@Advice.Argument(0) Callable<?> task) {
       Context context = Java8BytecodeBridge.currentContext();

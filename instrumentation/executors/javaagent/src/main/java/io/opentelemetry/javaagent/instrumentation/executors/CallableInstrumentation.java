@@ -38,6 +38,7 @@ public class CallableInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CallableAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope enter(@Advice.This Callable<?> task) {
       return TaskAdviceHelper.makePropagatedContextCurrent(CALLABLE_PROPAGATED_CONTEXT, task);

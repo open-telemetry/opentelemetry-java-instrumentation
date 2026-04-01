@@ -37,6 +37,7 @@ public class RunnableInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RunnableAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope enter(@Advice.This Runnable thiz) {
       return TaskAdviceHelper.makePropagatedContextCurrent(RUNNABLE_PROPAGATED_CONTEXT, thiz);

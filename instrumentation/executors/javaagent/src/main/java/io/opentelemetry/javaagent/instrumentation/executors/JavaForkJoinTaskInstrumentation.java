@@ -62,6 +62,7 @@ public class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
      * directly. This means state is still stored in {@code Runnable} or {@code Callable} and we
      * need to use that state.
      */
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope enter(@Advice.This ForkJoinTask<?> task) {
       Scope scope =
@@ -104,6 +105,7 @@ public class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ForkAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static PropagatedContext enterFork(@Advice.This ForkJoinTask<?> task) {
       Context context = Java8BytecodeBridge.currentContext();
