@@ -32,7 +32,7 @@ public class ResteasyRootNodeTypeInstrumentation implements TypeInstrumentation 
     transformer.applyAdviceToMethod(
         named("addInvoker")
             .and(takesArgument(0, String.class))
-            // package of ResourceInvoker was changed in reasteasy 4
+            // package of ResourceInvoker was changed in resteasy 4
             .and(
                 takesArgument(
                     1,
