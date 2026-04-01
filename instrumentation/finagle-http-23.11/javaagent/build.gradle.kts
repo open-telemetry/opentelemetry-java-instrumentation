@@ -41,17 +41,23 @@ dependencies {
 }
 
 tasks {
-  val denyUnsafe = findProperty("denyUnsafe") == "true"
-
-  withType<Test>().configureEach {
+  test {
     jvmArgs("-Dotel.instrumentation.http.client.emit-experimental-telemetry=true")
     jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
     systemProperty("collectMetadata", findProperty("collectMetadata"))
+
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.http.client.emit-experimental-telemetry=true," +
+        "otel.instrumentation.http.server.emit-experimental-telemetry=true"
+    )
   }
 
   val testStableSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.http.client.emit-experimental-telemetry=true")
+    jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
     systemProperty(
       "metadataConfig",
@@ -65,7 +71,7 @@ tasks {
     dependsOn(testStableSemconv)
   }
 
-  if (denyUnsafe) {
+  if (findProperty("denyUnsafe") == "true") {
     withType<Test>().configureEach {
       enabled = false
     }
