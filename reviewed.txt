@@ -155,3 +155,4 @@ internal-reflection:javaagent-integration-tests
 internal-url-class-loader:javaagent-integration-tests
 java-http-client:javaagent
 java-http-client:testing
+internal-url-class-loader:javaagent
