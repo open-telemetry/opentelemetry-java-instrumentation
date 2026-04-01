@@ -42,7 +42,7 @@ public class HttpCodecFilterInstrumentation implements TypeInstrumentation {
                         // this is for 2.3 through 2.3.19
                         "org.glassfish.grizzly.http.HttpPacketParsing")))
             .and(isPublic()),
-        HttpCodecFilterInstrumentation.class.getName() + "$HandleReadAdvice");
+        getClass().getName() + "$HandleReadAdvice");
   }
 
   @SuppressWarnings("unused")

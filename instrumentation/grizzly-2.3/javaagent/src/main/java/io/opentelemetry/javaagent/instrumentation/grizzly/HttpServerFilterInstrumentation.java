@@ -38,7 +38,7 @@ public class HttpServerFilterInstrumentation implements TypeInstrumentation {
             .and(takesArgument(2, named("org.glassfish.grizzly.http.HttpResponsePacket")))
             .and(takesArgument(3, named("org.glassfish.grizzly.http.HttpContent")))
             .and(isPrivate()),
-        HttpServerFilterInstrumentation.class.getName() + "$PrepareResponseAdvice");
+        getClass().getName() + "$PrepareResponseAdvice");
   }
 
   @SuppressWarnings("unused")
