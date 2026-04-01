@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.javahttpclient;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -22,13 +23,16 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
@@ -54,6 +58,10 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
   protected abstract void configureHttpClientBuilder(HttpClient.Builder httpClientBuilder);
 
   protected abstract HttpClient configureHttpClient(HttpClient httpClient);
+
+  protected boolean hasPeerService() {
+    return false;
+  }
 
   @Override
   public HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -167,17 +175,22 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent(),
-                span ->
-                    span.hasName("GET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasAttributesSatisfying(
-                            equalTo(URL_FULL, uri.toString()),
-                            equalTo(SERVER_ADDRESS, uri.getHost()),
-                            equalTo(SERVER_PORT, uri.getPort()),
-                            equalTo(HTTP_REQUEST_METHOD, method),
-                            equalTo(ERROR_TYPE, CancellationException.class.getName())),
+                span -> {
+                  List<AttributeAssertion> attributes = new ArrayList<>();
+                  attributes.add(equalTo(URL_FULL, uri.toString()));
+                  attributes.add(equalTo(SERVER_ADDRESS, uri.getHost()));
+                  attributes.add(equalTo(SERVER_PORT, uri.getPort()));
+                  attributes.add(equalTo(HTTP_REQUEST_METHOD, method));
+                  if (hasPeerService()) {
+                    attributes.add(equalTo(maybeStablePeerService(), "test-peer-service"));
+                  }
+                  attributes.add(equalTo(ERROR_TYPE, CancellationException.class.getName()));
+                  span.hasName("GET")
+                      .hasKind(SpanKind.CLIENT)
+                      .hasParent(trace.getSpan(0))
+                      .hasStatus(StatusData.error())
+                      .hasAttributesSatisfyingExactly(attributes);
+                },
                 span ->
                     span.hasName("test-http-server")
                         .hasKind(SpanKind.SERVER)

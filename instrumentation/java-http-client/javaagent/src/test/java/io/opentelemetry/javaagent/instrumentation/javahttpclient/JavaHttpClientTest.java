@@ -23,6 +23,11 @@ class JavaHttpClientTest {
     protected HttpClient configureHttpClient(HttpClient httpClient) {
       return httpClient;
     }
+
+    @Override
+    protected boolean hasPeerService() {
+      return true;
+    }
   }
 
   @Nested
