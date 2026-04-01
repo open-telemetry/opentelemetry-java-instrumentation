@@ -11,7 +11,6 @@ import static io.opentelemetry.javaagent.instrumentation.hibernate.OperationName
 import static io.opentelemetry.javaagent.instrumentation.hibernate.OperationNameUtil.getSessionMethodOperationName;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Hibernate4Singletons.CRITERIA_SESSION_INFO;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Hibernate4Singletons.QUERY_SESSION_INFO;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Hibernate4Singletons.SESSION_SESSION_INFO;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Hibernate4Singletons.SHARED_SESSION_CONTRACT_SESSION_INFO;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Hibernate4Singletons.TRANSACTION_SESSION_INFO;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Hibernate4Singletons.instrumenter;
@@ -143,7 +142,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
     public static void getTransaction(
         @Advice.This SharedSessionContract session, @Advice.Return Transaction transaction) {
 
-      TRANSACTION_SESSION_INFO.set(transaction, SESSION_SESSION_INFO.get(session));
+      TRANSACTION_SESSION_INFO.set(transaction, SHARED_SESSION_CONTRACT_SESSION_INFO.get(session));
     }
   }
 
@@ -154,7 +153,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
     public static void getCriteria(
         @Advice.This SharedSessionContract session, @Advice.Return Criteria criteria) {
 
-      CRITERIA_SESSION_INFO.set(criteria, SESSION_SESSION_INFO.get(session));
+      CRITERIA_SESSION_INFO.set(criteria, SHARED_SESSION_CONTRACT_SESSION_INFO.get(session));
     }
   }
 }
