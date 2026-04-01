@@ -96,7 +96,7 @@ class GwtTest {
     return "/xyz";
   }
 
-  private RemoteWebDriver getDriver() {
+  private static RemoteWebDriver getDriver() {
     RemoteWebDriver driver =
         new RemoteWebDriver(browser.getSeleniumAddress(), new ChromeOptions(), false);
     driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(30));
