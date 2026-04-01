@@ -359,6 +359,7 @@
   "org.glassfish:javax.faces#+": "2.4.0",
   "org.glassfish:javax.faces#2.+": "2.4.0",
   "org.grails:grails-plugin-url-mappings#+": "6.2.3",
+  "org.grails:grails-web-url-mappings#+": "6.2.3",
   "org.gwtproject:gwt-servlet#+": "2.13.0",
   "org.hibernate.orm:hibernate-core#+": "7.2.6.Final",
   "org.hibernate.reactive:hibernate-reactive-core#+": "4.2.5.Final",
