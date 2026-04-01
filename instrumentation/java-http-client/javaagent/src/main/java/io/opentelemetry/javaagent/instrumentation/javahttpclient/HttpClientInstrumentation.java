@@ -103,7 +103,6 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Argument(0) HttpRequest httpRequest,
         @Advice.Return @Nullable HttpResponse<?> httpResponse,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope scope) {

@@ -38,7 +38,6 @@ class ReflectionTest {
     // to them
     assertThat(VirtualFieldInstalledMarker.class.isAssignableFrom(TestClass.class)).isTrue();
     assertThat(VirtualFieldAccessorMarker.class.isAssignableFrom(TestClass.class)).isTrue();
-    assertThat(TestClass.class.getInterfaces()).hasSize(2);
     assertThat(TestClass.class.getInterfaces())
         .containsExactlyInAnyOrder(Runnable.class, Serializable.class);
   }
