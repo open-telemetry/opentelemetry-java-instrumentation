@@ -113,8 +113,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(maybeStable(DB_SYSTEM), REDIS),
                                       satisfies(
                                           maybeStable(DB_STATEMENT),
-                                          stringAssert ->
-                                              stringAssert.startsWith("CLIENT SETINFO lib-ver")),
+                                          val -> val.startsWith("CLIENT SETINFO lib-ver")),
                                       equalTo(maybeStable(DB_OPERATION), "CLIENT"),
                                       equalTo(
                                           ERROR_TYPE,
@@ -136,9 +135,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(maybeStable(DB_SYSTEM), REDIS),
                                       satisfies(
                                           maybeStable(DB_STATEMENT),
-                                          stringAssert ->
-                                              stringAssert.startsWith(
-                                                  "CLIENT MAINT_NOTIFICATIONS")),
+                                          val -> val.startsWith("CLIENT MAINT_NOTIFICATIONS")),
                                       equalTo(maybeStable(DB_OPERATION), "CLIENT"),
                                       equalTo(
                                           ERROR_TYPE,

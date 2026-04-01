@@ -86,9 +86,7 @@ class CriteriaTest extends AbstractHibernateTest {
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "h2:mem:"),
-                            satisfies(
-                                maybeStable(DB_STATEMENT),
-                                stringAssert -> stringAssert.startsWith("select")),
+                            satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("select")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "SELECT Value" : null),

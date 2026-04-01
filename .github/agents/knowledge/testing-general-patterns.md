@@ -39,6 +39,11 @@ Fluent assertion calls like `taskId.contains(jobName)` or `taskId.startsWith(pre
 already proper AssertJ assertions — they throw on failure. Do **not** wrap them in
 `assertThat(value.contains(x)).isTrue()`, which degrades the failure message.
 
+- For generic outer `satisfies(AttributeKey, lambda)` parameters, use `val`.
+  Do not use short generic alternatives like `k` or `v` for the outer parameter.
+- If a `satisfies(...)` lambda contains a nested inner lambda and a second parameter name is
+  required, keep the outer parameter as `val` and use `v` for the nested parameter.
+
 ## AssertJ Idiomatic Simplifications
 
 Prefer built-in AssertJ collection/list assertions over extracting values manually:
