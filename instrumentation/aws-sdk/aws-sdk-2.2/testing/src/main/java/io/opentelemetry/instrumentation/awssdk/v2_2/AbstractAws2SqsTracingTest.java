@@ -81,20 +81,22 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                   equalTo(HTTP_REQUEST_METHOD, "POST"),
                                   equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                   satisfies(
-                                      URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
+                                      URL_FULL,
+                                      val -> val.startsWith("http://localhost:" + sqsPort)),
                                   equalTo(SERVER_ADDRESS, "localhost"),
                                   equalTo(SERVER_PORT, sqsPort),
                                   equalTo(MESSAGING_SYSTEM, AWS_SQS),
                                   equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                                   equalTo(MESSAGING_OPERATION, "publish"),
                                   satisfies(
-                                      MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class))));
+                                      MESSAGING_MESSAGE_ID,
+                                      val -> val.isInstanceOf(String.class))));
 
                       if (captureHeaders) {
                         attributes.add(
                             satisfies(
                                 stringArrayKey("messaging.header.Test_Message_Header"),
-                                v -> v.isEqualTo(ImmutableList.of("test"))));
+                                val -> val.isEqualTo(ImmutableList.of("test"))));
                       }
                       span.hasName("testSdkSqs publish")
                           .hasKind(SpanKind.PRODUCER)
@@ -134,7 +136,8 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                     equalTo(HTTP_REQUEST_METHOD, "POST"),
                                     equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                     satisfies(
-                                        URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
+                                        URL_FULL,
+                                        val -> val.startsWith("http://localhost:" + sqsPort)),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, sqsPort))));
               }
@@ -152,7 +155,8 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                     equalTo(HTTP_REQUEST_METHOD, "POST"),
                                     equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                     satisfies(
-                                        URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
+                                        URL_FULL,
+                                        val -> val.startsWith("http://localhost:" + sqsPort)),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, sqsPort),
                                     equalTo(MESSAGING_SYSTEM, AWS_SQS),
@@ -164,7 +168,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                           attributes.add(
                               satisfies(
                                   stringArrayKey("messaging.header.Test_Message_Header"),
-                                  v -> v.isEqualTo(ImmutableList.of("test"))));
+                                  val -> val.isEqualTo(ImmutableList.of("test"))));
                         }
 
                         if (withParent) {
@@ -189,20 +193,22 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                     equalTo(HTTP_REQUEST_METHOD, "POST"),
                                     equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                     satisfies(
-                                        URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
+                                        URL_FULL,
+                                        val -> val.startsWith("http://localhost:" + sqsPort)),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, sqsPort),
                                     equalTo(MESSAGING_SYSTEM, AWS_SQS),
                                     equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                                     equalTo(MESSAGING_OPERATION, "process"),
                                     satisfies(
-                                        MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class))));
+                                        MESSAGING_MESSAGE_ID,
+                                        val -> val.isInstanceOf(String.class))));
 
                         if (captureHeaders) {
                           attributes.add(
                               satisfies(
                                   stringArrayKey("messaging.header.Test_Message_Header"),
-                                  v -> v.isEqualTo(singletonList("test"))));
+                                  val -> val.isEqualTo(singletonList("test"))));
                         }
 
                         span.hasName("testSdkSqs process")
@@ -300,7 +306,8 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                               equalTo(RPC_METHOD, "ReceiveMessage"),
                               equalTo(HTTP_REQUEST_METHOD, "POST"),
                               equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                              satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
+                              satisfies(
+                                  URL_FULL, val -> val.startsWith("http://localhost:" + sqsPort)),
                               equalTo(SERVER_ADDRESS, "localhost"),
                               equalTo(SERVER_PORT, sqsPort),
                               equalTo(MESSAGING_SYSTEM, AWS_SQS),
@@ -342,14 +349,15 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                       equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                       satisfies(
                                           URL_FULL,
-                                          v -> v.startsWith("http://localhost:" + sqsPort)),
+                                          val -> val.startsWith("http://localhost:" + sqsPort)),
                                       equalTo(SERVER_ADDRESS, "localhost"),
                                       equalTo(SERVER_PORT, sqsPort),
                                       equalTo(MESSAGING_SYSTEM, AWS_SQS),
                                       equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                                       equalTo(MESSAGING_OPERATION, "process"),
                                       satisfies(
-                                          MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class)));
+                                          MESSAGING_MESSAGE_ID,
+                                          val -> val.isInstanceOf(String.class)));
                             },
                             span ->
                                 span.hasName("process child")

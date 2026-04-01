@@ -388,11 +388,11 @@ class ElasticJobTest {
     assertions.add(
         satisfies(
             stringKey("scheduling.apache-elasticjob.task.id"),
-            taskId -> {
+            val -> {
               if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
-                taskId.contains(jobName);
+                val.contains(jobName);
               } else {
-                taskId.isNull();
+                val.isNull();
               }
             }));
 

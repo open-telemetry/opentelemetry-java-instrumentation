@@ -183,22 +183,22 @@ class Netty41ConnectionSpanTest {
                             equalTo(NETWORK_TRANSPORT, "tcp"),
                             satisfies(
                                 NETWORK_TYPE,
-                                k ->
-                                    k.satisfiesAnyOf(
+                                val ->
+                                    val.satisfiesAnyOf(
                                         v -> assertThat(v).isEqualTo("ipv4"),
                                         v -> assertThat(v).isNull())),
                             equalTo(SERVER_ADDRESS, uri.getHost()),
                             equalTo(SERVER_PORT, uri.getPort()),
                             satisfies(
                                 NETWORK_PEER_PORT,
-                                k ->
-                                    k.satisfiesAnyOf(
+                                val ->
+                                    val.satisfiesAnyOf(
                                         v -> assertThat(v).isEqualTo(uri.getPort()),
                                         v -> assertThat(v).isNull())),
                             satisfies(
                                 NETWORK_PEER_ADDRESS,
-                                k ->
-                                    k.satisfiesAnyOf(
+                                val ->
+                                    val.satisfiesAnyOf(
                                         v -> assertThat(v).isEqualTo("127.0.0.1"),
                                         v -> assertThat(v).isNull())),
                             equalTo(maybeStablePeerService(), "test-peer-service"))));
