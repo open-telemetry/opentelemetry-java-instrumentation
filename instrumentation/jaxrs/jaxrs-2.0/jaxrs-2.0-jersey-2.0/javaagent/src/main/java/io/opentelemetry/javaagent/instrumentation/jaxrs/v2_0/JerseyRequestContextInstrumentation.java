@@ -47,7 +47,7 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
       }
 
       @Nullable
-      public static AdviceScope create(
+      public static AdviceScope start(
           Class<?> resourceClass, Method method, ContainerRequestContext requestContext) {
         Jaxrs2HandlerData handlerData = new Jaxrs2HandlerData(resourceClass, method);
         Context context =
@@ -85,7 +85,7 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
         return null;
       }
 
-      return AdviceScope.create(resourceClass, method, requestContext);
+      return AdviceScope.start(resourceClass, method, requestContext);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
