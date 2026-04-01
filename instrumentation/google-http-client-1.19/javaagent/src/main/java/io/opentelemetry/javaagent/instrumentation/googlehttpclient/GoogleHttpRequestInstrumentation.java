@@ -85,6 +85,7 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
       }
     }
 
+    @Nullable
     public static AdviceScope fromVirtualFieldContext(HttpRequest request) {
       Context context = HTTP_REQUEST_CONTEXT.get(request);
       if (context == null) {
