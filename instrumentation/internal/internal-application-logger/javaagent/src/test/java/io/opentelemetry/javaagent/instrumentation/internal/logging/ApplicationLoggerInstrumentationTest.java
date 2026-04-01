@@ -72,7 +72,12 @@ class ApplicationLoggerInstrumentationTest {
               }
             });
 
-    process.waitFor(10, SECONDS);
+    boolean exited = process.waitFor(10, SECONDS);
+    if (!exited) {
+      process.destroyForcibly();
+    }
+    assertThat(exited).as("subprocess should exit within 10 seconds").isTrue();
+    assertThat(process.exitValue()).as("subprocess should exit successfully").isZero();
     return output.join();
   }
 }
