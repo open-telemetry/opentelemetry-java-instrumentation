@@ -131,9 +131,13 @@ abstract class AbstractElasticsearchClientTest {
 
     RESPONSE get() {
       try {
-        latch.await(1, MINUTES);
+        boolean completed = latch.await(1, MINUTES);
+        if (!completed) {
+          throw new IllegalStateException("Timed out waiting for response");
+        }
       } catch (InterruptedException exception) {
         Thread.currentThread().interrupt();
+        throw new IllegalStateException("Interrupted while waiting for response", exception);
       }
       if (response != null) {
         return response;
@@ -146,7 +150,7 @@ abstract class AbstractElasticsearchClientTest {
   }
 
   static class ResultListener<T> implements ActionListener<T> {
-    final Result<T> result;
+    private final Result<T> result;
 
     ResultListener(Result<T> result) {
       this.result = result;
