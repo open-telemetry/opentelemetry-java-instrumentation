@@ -89,7 +89,7 @@ public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    @Advice.OnMethodExit
     public static Class<?> onExit(
         @Advice.Return Class<?> originalResult, @Advice.Enter Class<?> loadedClass) {
       return loadedClass != null ? loadedClass : originalResult;
