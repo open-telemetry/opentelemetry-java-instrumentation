@@ -136,3 +136,4 @@ hibernate-common:javaagent
 hibernate-reactive-1.0:hibernate-reactive-2.0-testing
 hibernate:testing
 hibernate-reactive-1.0:javaagent
+hikaricp-3.0:testing
