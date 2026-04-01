@@ -349,8 +349,8 @@ public abstract class AbstractGraphqlTest {
       AttributeKey<String> key, String value) {
     return satisfies(
         key,
-        stringAssert ->
-            stringAssert.satisfies(
+        val ->
+            val.satisfies(
                 querySource -> {
                   String normalized = normalizeQuery(querySource);
                   String valueNormalized = normalizeQuery(value);
