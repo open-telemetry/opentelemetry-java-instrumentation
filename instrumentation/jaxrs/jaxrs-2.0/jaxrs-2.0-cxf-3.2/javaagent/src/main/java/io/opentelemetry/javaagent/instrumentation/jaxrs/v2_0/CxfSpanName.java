@@ -59,7 +59,8 @@ public final class CxfSpanName implements HttpServerRouteGetter<String> {
   }
 
   @Override
-  public String get(Context context, String jaxrsName) {
+  @Nullable
+  public String get(Context context, @Nullable String jaxrsName) {
     return ServletContextPath.prepend(context, jaxrsName);
   }
 
