@@ -163,3 +163,4 @@ java-http-server:testing
 java-util-logging:shaded-stub-for-instrumenting
 iceberg-1.8:library
 javalin-5.0:javaagent
+javalin-7.0:javaagent
