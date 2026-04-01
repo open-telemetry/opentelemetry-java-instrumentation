@@ -104,89 +104,90 @@ class GwtTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   void testGwt() {
     RemoteWebDriver driver = getDriver();
+    try {
+      // fetch the test page
+      driver.get(address.resolve("greeting.html").toString());
 
-    // fetch the test page
-    driver.get(address.resolve("greeting.html").toString());
-
-    driver.findElement(By.className("greeting.button"));
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanName("GET " + getContextPath() + "/*", "GET"),
-        trace -> {
-          // /xyz/greeting.html
-          trace.hasSpansSatisfyingExactly(
-              span ->
-                  span.hasName("GET " + getContextPath() + "/*")
-                      .hasKind(SpanKind.SERVER)
-                      .hasNoParent());
-        },
-        trace -> {
-          // /xyz/greeting/greeting.nocache.js
-          trace.hasSpansSatisfyingExactly(
-              span ->
-                  span.hasName("GET " + getContextPath() + "/*")
-                      .hasKind(SpanKind.SERVER)
-                      .hasNoParent());
-        },
-        trace -> {
-          // /xyz/greeting/1B105441581A8F41E49D5DF3FB5B55BA.cache.html
-          trace.hasSpansSatisfyingExactly(
-              span ->
-                  span.hasName("GET " + getContextPath() + "/*")
-                      .hasKind(SpanKind.SERVER)
-                      .hasNoParent());
-        },
-        trace -> {
-          // /favicon.ico
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("GET").hasKind(SpanKind.SERVER).hasNoParent());
-        });
-
-    testing.clearData();
-
-    // click a button to trigger calling java code
-    driver.findElement(By.className("greeting.button")).click();
-    assertThat(driver.findElement(By.className("message.received")).getText())
-        .isEqualTo("Hello, Otel");
-
-    testing.waitAndAssertTraces(
-        trace ->
+      driver.findElement(By.className("greeting.button"));
+      testing.waitAndAssertSortedTraces(
+          orderByRootSpanName("GET " + getContextPath() + "/*", "GET"),
+          trace -> {
+            // /xyz/greeting.html
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("POST " + getContextPath() + "/greeting/greet")
+                    span.hasName("GET " + getContextPath() + "/*")
                         .hasKind(SpanKind.SERVER)
-                        .hasNoParent(),
-                span ->
-                    span.hasName("test.gwt.shared.MessageService/sendMessage")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, "gwt"),
-                            equalTo(RPC_SERVICE, "test.gwt.shared.MessageService"),
-                            equalTo(RPC_METHOD, "sendMessage"))));
-
-    testing.clearData();
-
-    // click a button to trigger calling java code
-    driver.findElement(By.className("error.button")).click();
-    assertThat(driver.findElement(By.className("error.received")).getText()).isEqualTo("Error");
-
-    testing.waitAndAssertTraces(
-        trace ->
+                        .hasNoParent());
+          },
+          trace -> {
+            // /xyz/greeting/greeting.nocache.js
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("POST " + getContextPath() + "/greeting/greet")
+                    span.hasName("GET " + getContextPath() + "/*")
                         .hasKind(SpanKind.SERVER)
-                        .hasNoParent(),
+                        .hasNoParent());
+          },
+          trace -> {
+            // /xyz/greeting/1B105441581A8F41E49D5DF3FB5B55BA.cache.html
+            trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("test.gwt.shared.MessageService/sendMessage")
+                    span.hasName("GET " + getContextPath() + "/*")
                         .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(0))
-                        .hasException(new IOException())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, "gwt"),
-                            equalTo(RPC_SERVICE, "test.gwt.shared.MessageService"),
-                            equalTo(RPC_METHOD, "sendMessage"))));
+                        .hasNoParent());
+          },
+          trace -> {
+            // /favicon.ico
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET").hasKind(SpanKind.SERVER).hasNoParent());
+          });
 
-    driver.close();
+      testing.clearData();
+
+      // click a button to trigger calling java code
+      driver.findElement(By.className("greeting.button")).click();
+      assertThat(driver.findElement(By.className("message.received")).getText())
+          .isEqualTo("Hello, Otel");
+
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("POST " + getContextPath() + "/greeting/greet")
+                          .hasKind(SpanKind.SERVER)
+                          .hasNoParent(),
+                  span ->
+                      span.hasName("test.gwt.shared.MessageService/sendMessage")
+                          .hasKind(SpanKind.SERVER)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(RPC_SYSTEM, "gwt"),
+                              equalTo(RPC_SERVICE, "test.gwt.shared.MessageService"),
+                              equalTo(RPC_METHOD, "sendMessage"))));
+
+      testing.clearData();
+
+      // click a button to trigger calling java code
+      driver.findElement(By.className("error.button")).click();
+      assertThat(driver.findElement(By.className("error.received")).getText()).isEqualTo("Error");
+
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("POST " + getContextPath() + "/greeting/greet")
+                          .hasKind(SpanKind.SERVER)
+                          .hasNoParent(),
+                  span ->
+                      span.hasName("test.gwt.shared.MessageService/sendMessage")
+                          .hasKind(SpanKind.SERVER)
+                          .hasParent(trace.getSpan(0))
+                          .hasException(new IOException())
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(RPC_SYSTEM, "gwt"),
+                              equalTo(RPC_SERVICE, "test.gwt.shared.MessageService"),
+                              equalTo(RPC_METHOD, "sendMessage"))));
+    } finally {
+      driver.quit();
+    }
   }
 }
