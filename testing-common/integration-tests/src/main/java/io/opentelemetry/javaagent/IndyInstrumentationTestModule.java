@@ -57,7 +57,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
     injector.proxyBuilder("indy.ProxyMe", "foo.bar.Proxy").inject(InjectionMode.CLASS_AND_RESOURCE);
   }
 
-  private static class Instrumentation implements TypeInstrumentation {
+  static class Instrumentation implements TypeInstrumentation {
 
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
