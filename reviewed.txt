@@ -109,3 +109,4 @@ finagle-http-23.11:javaagent
 failsafe-3.0:library
 geode-1.4:javaagent
 google-http-client-1.19:javaagent
+finatra-2.9:javaagent
