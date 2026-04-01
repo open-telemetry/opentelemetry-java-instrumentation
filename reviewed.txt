@@ -106,3 +106,4 @@ elasticsearch-transport-common:javaagent
 external-annotations:javaagent-unit-tests
 executors:bootstrap
 finagle-http-23.11:javaagent
+failsafe-3.0:library
