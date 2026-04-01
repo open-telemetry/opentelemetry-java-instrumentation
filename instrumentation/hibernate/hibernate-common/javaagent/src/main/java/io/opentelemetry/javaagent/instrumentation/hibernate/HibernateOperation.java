@@ -12,7 +12,7 @@ public class HibernateOperation {
   @Nullable private final String sessionId;
 
   public HibernateOperation(
-      String operation, @Nullable String entityName, SessionInfo sessionInfo) {
+      String operation, @Nullable String entityName, @Nullable SessionInfo sessionInfo) {
     this(spanNameForOperation(operation, entityName), sessionInfo);
   }
 
