@@ -192,3 +192,4 @@ jaxrs-common:bootstrap
 jaxws:jaxws-2.0-common-testing
 jaxws:jaxws-2.0-tomee-testing
 jaxws:jaxws-2.0-wildfly-testing
+jaxws:jaxws-2.0-arquillian-testing
