@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.mongo.v4_0;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static org.junit.jupiter.api.Assumptions.abort;
 
 import com.mongodb.MongoClientSettings;
 import com.mongodb.ServerAddress;
@@ -26,7 +27,6 @@ import org.bson.Document;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.opentest4j.TestAbortedException;
 
 class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>> {
 
@@ -66,7 +66,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
 
   @Override
   public void createCollectionWithAlreadyBuiltClientOptions(String dbName, String collectionName) {
-    throw new TestAbortedException("not tested on 4.0");
+    abort("not tested on 4.0");
   }
 
   @Override

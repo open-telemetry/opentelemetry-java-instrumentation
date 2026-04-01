@@ -4195,7 +4195,7 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
-    - when: otel.semconv-stability.opt-in=database,code
+    - when: otel.semconv-stability.opt-in=database
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -10578,7 +10578,7 @@ libraries:
           type: STRING
         - name: db.system
           type: STRING
-    - when: otel.semconv-stability.opt-in=database,service.peer
+    - when: otel.semconv-stability.opt-in=database
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.

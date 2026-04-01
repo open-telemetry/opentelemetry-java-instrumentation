@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.azurecore.v1_14;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -24,6 +25,11 @@ class AzureHttpClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("com.azure.core.http.HttpClient"));
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("com.azure.core.http.HttpClient");
   }
 
   @Override

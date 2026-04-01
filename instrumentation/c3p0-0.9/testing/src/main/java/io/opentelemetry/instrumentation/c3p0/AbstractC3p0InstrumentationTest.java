@@ -21,10 +21,7 @@ import java.util.HashSet;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
 public abstract class AbstractC3p0InstrumentationTest {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.c3p0-0.9";
 

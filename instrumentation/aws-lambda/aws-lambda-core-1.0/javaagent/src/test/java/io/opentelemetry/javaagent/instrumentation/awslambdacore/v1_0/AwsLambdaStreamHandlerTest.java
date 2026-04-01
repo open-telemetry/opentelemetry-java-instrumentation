@@ -97,7 +97,7 @@ class AwsLambdaStreamHandlerTest {
       BufferedReader reader = new BufferedReader(new InputStreamReader(input, UTF_8));
       BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(output, UTF_8));
       String line = reader.readLine();
-      if (line.equals("hello")) {
+      if ("hello".equals(line)) {
         writer.write("world");
         writer.flush();
         writer.close();

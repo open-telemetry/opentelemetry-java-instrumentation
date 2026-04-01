@@ -12,10 +12,10 @@ import org.apache.http.HttpResponse;
 public final class ApacheHttpAsyncClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpasyncclient-4.1";
 
-  private static final Instrumenter<ApacheHttpClientRequest, HttpResponse> INSTRUMENTER;
+  private static final Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         JavaagentHttpClientInstrumenters.create(
             INSTRUMENTATION_NAME,
             new ApacheHttpAsyncClientHttpAttributesGetter(),
@@ -23,7 +23,7 @@ public final class ApacheHttpAsyncClientSingletons {
   }
 
   public static Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private ApacheHttpAsyncClientSingletons() {}

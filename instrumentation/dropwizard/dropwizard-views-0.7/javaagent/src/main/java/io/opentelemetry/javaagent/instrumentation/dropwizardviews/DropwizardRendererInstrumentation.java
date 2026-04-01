@@ -75,6 +75,7 @@ class DropwizardRendererInstrumentation implements TypeInstrumentation {
       }
     }
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceScope onEnter(@Advice.Argument(0) View view) {
       return AdviceScope.start(view);

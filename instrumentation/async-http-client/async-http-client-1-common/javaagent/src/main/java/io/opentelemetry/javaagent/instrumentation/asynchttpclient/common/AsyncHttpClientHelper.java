@@ -33,6 +33,7 @@ public interface AsyncHttpClientHelper {
    * @param request the HTTP request
    * @return the server port
    */
+  @Nullable
   Integer getServerPort(Request request);
 
   /**

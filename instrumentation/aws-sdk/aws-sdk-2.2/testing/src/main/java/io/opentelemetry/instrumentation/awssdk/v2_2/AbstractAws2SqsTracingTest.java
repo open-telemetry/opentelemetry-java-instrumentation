@@ -30,7 +30,6 @@ import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -222,7 +221,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                       span ->
                           span.hasName("process child")
                               .hasParent(trace.getSpan(1 + offset))
-                              .hasAttributes(Attributes.empty())));
+                              .hasTotalAttributeCount(0)));
               trace.hasSpansSatisfyingExactly(spanAsserts);
             });
   }
@@ -248,7 +247,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
         receiveMessageRequest.toBuilder().messageAttributeNames("Test-Message-Header").build();
     ReceiveMessageResponse response = client.receiveMessage(newReceiveMessageRequest);
 
-    assertThat(response.messages().size()).isEqualTo(1);
+    assertThat(response.messages()).hasSize(1);
 
     response.messages().forEach(message -> getTesting().runWithSpan("process child", () -> {}));
     assertSqsTraces(false, true);
@@ -269,7 +268,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
     int totalAttrs =
         response.messages().stream().mapToInt(message -> message.messageAttributes().size()).sum();
 
-    assertThat(response.messages().size()).isEqualTo(3);
+    assertThat(response.messages()).hasSize(3);
 
     // +2: 3 messages, 2x traceparent, 1x not injected due to too many attrs
     assertThat(totalAttrs).isEqualTo(18 + (isSqsAttributeInjectionEnabled() ? 2 : 0));
@@ -355,7 +354,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                             span ->
                                 span.hasName("process child")
                                     .hasParent(trace.getSpan(1 + 2 * finalI))
-                                    .hasAttributes(Attributes.empty()))));
+                                    .hasTotalAttributeCount(0))));
               }
 
               trace.hasSpansSatisfyingExactlyInAnyOrder(spanAsserts);

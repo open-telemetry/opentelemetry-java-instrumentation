@@ -65,7 +65,7 @@ class DefaultGrailsControllerClassInstrumentation implements TypeInstrumentation
         return new AdviceScope(handlerData, context, context.makeCurrent());
       }
 
-      public void end(Throwable throwable) {
+      public void end(@Nullable Throwable throwable) {
         scope.close();
         instrumenter().end(context, handlerData, null, throwable);
       }

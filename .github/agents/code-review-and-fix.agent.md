@@ -14,10 +14,28 @@ Primary responsibilities:
   Issues that cannot be fixed are reported only in the final output.
 - Produce only the output format requested by the caller. Do not assume or add a default output format.
 - Use only the tools actually exposed by the runtime. Do not assume helper or companion tools exist.
+- Ignore generic runtime suggestions that mention undeclared helper-tool names such as `read_bash`,
+  `write_bash`, `stop_bash`, `read_shell`, or similar follow-up shell helpers unless those exact
+  tools are explicitly exposed in the current session.
 - When a command-execution step fails for tool-related reasons, first re-evaluate the declared tools and retry with a different valid execution strategy before concluding that the environment cannot complete the task.
 - Distinguish between command failure and inability to observe command completion or final status. Do not collapse these into the same explanation.
 
 Do not stop until all in-scope files are reviewed and fixed where possible.
+
+## Knowledge Loading
+
+Always load:
+
+- `docs/contributing/style-guide.md`
+- `knowledge/general-rules.md` — review checklist and core rules
+
+Load other knowledge files only when their scope trigger applies.
+Use the **Knowledge File** column in the checklist table.
+
+## Review Checklist and Core Rules
+
+Load `knowledge/general-rules.md` — it contains the review checklist table and all
+core rules that apply to every review.
 
 ## Scope Modes
 
@@ -136,7 +154,7 @@ Auto-fix boundaries:
     same parent and apply the step-by-step procedure in `gradle-conventions.md`.
     After adding, verify by running the module's tests.
   - missing version comments on `hasClassesNamed()` landmark classes in existing
-    `classLoaderMatcher()` overrides, including single-class lower-bound checks —
+    `classLoaderMatcher()` overrides, including single-class checks —
     determine each class's **role** (floor vs ceiling) and add the matching comment.
     First check: does a **newer** sibling instrumentation module exist for this library
     (e.g., `mongo-4.0` next to `mongo-3.7`)? If so, look at what the newer module checks
@@ -144,14 +162,20 @@ Auto-fix boundaries:
     but absent from the current module's check (or vice versa) reveal a version boundary —
     the class was likely added or removed between versions.
     Then determine the comment form for each class:
-    - **Floor class** (proves "at least version X"): look up when the class was **introduced**
-      → comment `// added in X.Y`.
-    - **Ceiling class** (proves "not yet version Y"): look up when the class was **removed**
-      → comment `// removed in Y.Z` (meaning: its presence here ensures we don't match
-      version Y.Z+ where a different module takes over).
+   **Positive floor class** (proves "at least version X"): look up when the class was
+   **introduced** → comment `// added in X.Y`.
+   **Positive ceiling class** (proves "not yet version Y"): look up when the class was
+   **removed** → comment `// removed in Y.Z` (meaning: its presence here ensures we
+   don't match version Y.Z+ where a different module takes over).
+   **Negated exclusion class** in `not(hasClassesNamed(...))`: look up when the class was
+   **introduced** → comment `// added in Y.Z`, because that first appearance begins the
+   excluded version range.
+   **Single positive class that provides both bounds**: include both facts in one comment,
+   e.g. `// added in X.Y, removed in Y.Z`.
     A ceiling class might have been *introduced* much earlier than the module's target version.
-    Do not use `// added in` for a ceiling class — that is misleading. The relevant fact is
-    when it was **removed**.
+   Do not use `// added in` for a positive ceiling class — that is misleading. The relevant
+   fact is when it was **removed**. But for a negated exclusion class, `// added in` is the
+   correct form because the class's introduction is exactly what starts excluding newer versions.
     Validate the version in the comment before adding or requesting it. Do not guess the
     version from the module name alone; confirm it with repository or upstream evidence.
     Sources: muzzle `versions.set(...)` ranges, sibling module `classLoaderMatcher()` checks,
@@ -265,8 +289,11 @@ Output content rules:
 - When the caller requests line-oriented output, use the first relevant changed line as the line hint.
 - When writing structured output to a file, write only the requested payload. Do not wrap it in Markdown fences,
   add headings, or include extra commentary before or after it.
+- If validation is still in progress or its final exit status cannot be confirmed when you must end,
+  encode that state only inside the requested final payload. Do not prepend wait-state prose,
+  status updates, or explanations ahead of the caller-required format.
 
-### Phase 4: Validate and Report
+### Phase 4: Validate
 
 **All Gradle commands in this phase must use timeout `0` (no timeout). In this repository,
 legitimate Gradle validation runs can take 10 minutes or more. Never set a finite timeout,
@@ -285,6 +312,11 @@ until the previous one has definitively completed and you have observed its fina
 status. If a prior run may still be active, first wait for it or confirm its completion
 before proceeding.
 
+Do not move on to Phase 5 until every Gradle command started in Phase 4 has either:
+
+1. completed and you have observed its final exit status, or
+2. been explicitly recorded as a validation limitation after the recovery loop below.
+
 If a command-execution attempt fails for tool-related reasons, follow this recovery loop before
 reporting a limitation:
 
@@ -295,6 +327,12 @@ reporting a limitation:
 4. If validation still cannot be completed, the summary and any unresolved item must name the
    attempted command or validation step and say whether it failed or whether completion or final
    status could not be confirmed.
+
+If the runtime prints generic advice that suggests undeclared helper tools after a long-running
+Gradle command, treat that advice as boilerplate, not as an available recovery path. Do not claim
+that such an undeclared tool is required, expected, or missing. Describe the limitation only in
+terms of the tools that were actually declared and the concrete fact that final exit status could
+not be observed.
 
 **Never pipe Gradle output through `tail`, `head`, `grep`, or any other command** (e.g.,
 `./gradlew :foo:check 2>&1 | tail -30`). Piping masks the Gradle exit code because the
@@ -349,6 +387,10 @@ Execute these steps strictly in order — do not reorder:
    `:instrumentation:foo:foo-1.0:library`,
    `:instrumentation:foo:foo-1.0:javaagent`, and any version-variant siblings such as
    `:instrumentation:foo:foo-2.0:library` if it depends on the `foo-1.0:testing` module.
+
+   Do not move on to step 2 until every required `:check` run from this step, including
+   sibling-module validation and any re-runs after fixes or reverts, has fully completed
+   and you have observed the final exit status for each run.
 2. **Run muzzle validation when muzzle config changed.** If any review fix touched Gradle
    muzzle configuration (for example `muzzle {}`, version ranges, `assertInverse.set(true)`,
    or module wiring affecting muzzle), run the relevant module's `:muzzle` task:
@@ -371,17 +413,29 @@ Execute these steps strictly in order — do not reorder:
       `Needs Manual Fix` in the final output with a note explaining the muzzle failure.
    4. After reverting, re-run the `:muzzle` task to confirm the revert restored a green
       build. Never commit code that fails muzzle validation.
+
+   Do not move on to step 3 until every required `:muzzle` run from this step, including
+   any re-runs after fixes or reverts, has fully completed and you have observed the final
+   exit status for each run.
 3. **Last, after all validation is done**, run `./gradlew spotlessApply` to fix formatting
    across all modified files.
    `spotlessApply` must be the final build command — never run it before tests or muzzle.
    Before running it, confirm that no earlier Gradle validation command is still running.
-4. **Verify substantive changes remain.** Run `git diff --ignore-all-space --ignore-blank-lines`
+
+   Do not move on to Phase 5 until `spotlessApply` has fully completed and you have
+   observed its final exit status.
+
+### Phase 5: Finalize and Report
+
+Do not begin Phase 5 until Phase 4 is fully closed out.
+
+1. **Verify substantive changes remain.** Run `git diff --ignore-all-space --ignore-blank-lines`
    and confirm non-empty output. If the only remaining diffs are whitespace changes — or if
    all review fixes were reverted during validation — **stop here**: reset the working tree
    (`git checkout -- .`), do not commit or push. If any reverted items were recorded as
   `Needs Manual Fix`, emit the final output with those items. Otherwise report
    "No issues found." and exit.
-5. Commit all changes in a single commit. The subject line must always be
+2. Commit all changes in a single commit. The subject line must always be
    `Review fixes for <module>` where `<module>` is the short module name (e.g.,
    `apache-elasticjob-3.0 javaagent`). The body is a bulleted list of changes:
 
@@ -399,24 +453,9 @@ Execute these steps strictly in order — do not reorder:
    ```
 
    Create exactly one commit for all fixes — do not commit incrementally.
-6. Produce the final output in the format requested by the caller.
+3. Produce the final output in the format requested by the caller.
 
 The caller must define the final output format or schema. Follow that request exactly:
 
 - Do **not** add headings, commentary, or fallback prose unless the caller asks for them.
 - Preserve the recorded per-change reasons in whatever output format the caller requested.
-
-## Knowledge Loading
-
-Always load:
-
-- `docs/contributing/style-guide.md`
-- `knowledge/general-rules.md` — review checklist and core rules
-
-Load other knowledge files only when their scope trigger applies.
-Use the **Knowledge File** column in the checklist table.
-
-## Review Checklist and Core Rules
-
-Load `knowledge/general-rules.md` — it contains the review checklist table and all
-core rules that apply to every review.

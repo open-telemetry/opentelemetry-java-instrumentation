@@ -100,7 +100,7 @@ public final class ClasspathUtils {
       try {
         findLoadedClassMethod.setAccessible(true);
         Class<?> loadedClass = (Class<?>) findLoadedClassMethod.invoke(classLoader, className);
-        return null != loadedClass && loadedClass.getClassLoader() == classLoader;
+        return loadedClass != null && loadedClass.getClassLoader() == classLoader;
       } catch (Exception e) {
         throw new IllegalStateException(e);
       } finally {
