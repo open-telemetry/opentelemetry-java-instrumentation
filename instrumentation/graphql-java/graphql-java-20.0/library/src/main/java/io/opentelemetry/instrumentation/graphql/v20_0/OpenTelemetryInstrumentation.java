@@ -31,6 +31,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.OpenTelemetryInstrumentationHelper;
 import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.OpenTelemetryInstrumentationState;
 import java.util.concurrent.CompletionStage;
+import javax.annotation.Nullable;
 
 final class OpenTelemetryInstrumentation extends SimplePerformantInstrumentation {
   private final OpenTelemetryInstrumentationHelper helper;
@@ -90,6 +91,7 @@ final class OpenTelemetryInstrumentation extends SimplePerformantInstrumentation
       state.setContextForPath(path, childContext);
 
       boolean isCompletionStage = false;
+      boolean spanEnded = false;
 
       Object fieldValue = null;
       try (Scope ignored = childContext.makeCurrent()) {
@@ -107,9 +109,10 @@ final class OpenTelemetryInstrumentation extends SimplePerformantInstrumentation
         return fieldValue;
       } catch (Throwable throwable) {
         dataFetcherInstrumenter.end(childContext, environment, null, throwable);
+        spanEnded = true;
         throw throwable;
       } finally {
-        if (!isCompletionStage) {
+        if (!isCompletionStage && !spanEnded) {
           handleDataFetcherResult(childContext, fieldValue);
           dataFetcherInstrumenter.end(childContext, environment, fieldValue, null);
         }
@@ -117,7 +120,7 @@ final class OpenTelemetryInstrumentation extends SimplePerformantInstrumentation
     };
   }
 
-  private static void handleDataFetcherResult(Context context, Object result) {
+  private static void handleDataFetcherResult(Context context, @Nullable Object result) {
     if (!(result instanceof DataFetcherResult)) {
       return;
     }
