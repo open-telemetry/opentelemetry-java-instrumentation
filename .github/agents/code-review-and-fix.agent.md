@@ -162,16 +162,20 @@ Auto-fix boundaries:
     but absent from the current module's check (or vice versa) reveal a version boundary —
     the class was likely added or removed between versions.
     Then determine the comment form for each class:
-    **Floor class** (proves "at least version X"): look up when the class was
-    **introduced** → comment `// added in X.Y`.
-    **Ceiling class** (proves "not yet version Y"): look up when the class was
-    **removed** → comment `// removed in Y.Z` (meaning: its presence here ensures we
-    don't match version Y.Z+ where a different module takes over).
-    **Single class that provides both bounds**: include both facts in one comment,
-    e.g. `// added in X.Y, removed in Y.Z`.
+   **Positive floor class** (proves "at least version X"): look up when the class was
+   **introduced** → comment `// added in X.Y`.
+   **Positive ceiling class** (proves "not yet version Y"): look up when the class was
+   **removed** → comment `// removed in Y.Z` (meaning: its presence here ensures we
+   don't match version Y.Z+ where a different module takes over).
+   **Negated exclusion class** in `not(hasClassesNamed(...))`: look up when the class was
+   **introduced** → comment `// added in Y.Z`, because that first appearance begins the
+   excluded version range.
+   **Single positive class that provides both bounds**: include both facts in one comment,
+   e.g. `// added in X.Y, removed in Y.Z`.
     A ceiling class might have been *introduced* much earlier than the module's target version.
-    Do not use `// added in` for a ceiling class — that is misleading. The relevant fact is
-    when it was **removed**.
+   Do not use `// added in` for a positive ceiling class — that is misleading. The relevant
+   fact is when it was **removed**. But for a negated exclusion class, `// added in` is the
+   correct form because the class's introduction is exactly what starts excluding newer versions.
     Validate the version in the comment before adding or requesting it. Do not guess the
     version from the module name alone; confirm it with repository or upstream evidence.
     Sources: muzzle `versions.set(...)` ranges, sibling module `classLoaderMatcher()` checks,

@@ -96,9 +96,11 @@ For each file in scope:
    allocated on every invocation.
 6. Flag a missing version-boundary comment on a single-class `hasClassesNamed(...)`
    check in `classLoaderMatcher()` only after validating the stated boundary from
-   repository or upstream evidence. Use `// added in X.Y` when the class only provides
-   the lower bound; if the same class also provides the upper bound because it disappears
-   in a newer sibling version, preserve or request `removed in Y.Z` too.
+   repository or upstream evidence. Use `// added in X.Y` for a pure lower bound.
+   If the same positive class also provides the upper bound because it disappears in a
+   newer sibling version, preserve or request `removed in Y.Z` too. For negated checks
+   such as `not(hasClassesNamed(...))`, use `// added in Y.Z` because the class's first
+   appearance is what starts the excluded version range.
 7. Prevent duplicates:
    - If equivalent `REVIEW:` already exists above the same line, do not add another.
 
