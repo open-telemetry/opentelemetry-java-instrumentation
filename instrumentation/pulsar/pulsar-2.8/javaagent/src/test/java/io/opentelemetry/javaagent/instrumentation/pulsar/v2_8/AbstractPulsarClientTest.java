@@ -186,7 +186,10 @@ abstract class AbstractPulsarClientTest {
                             batchReceiveAttributes(topic, null, false))));
 
     assertThat(testing.metrics())
-        .filteredOn(metric -> !metric.getName().startsWith("otel.sdk."))
+        .filteredOn(
+            metric ->
+                !metric.getName().startsWith("otel.sdk.")
+                    && !metric.getName().startsWith("pulsar.client."))
         .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
