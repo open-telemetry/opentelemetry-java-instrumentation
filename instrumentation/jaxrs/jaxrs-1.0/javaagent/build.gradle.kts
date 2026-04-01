@@ -7,6 +7,7 @@ muzzle {
     group.set("javax.ws.rs")
     module.set("jsr311-api")
     versions.set("[0.5,)")
+    assertInverse.set(true)
   }
   fail {
     group.set("javax.ws.rs")
