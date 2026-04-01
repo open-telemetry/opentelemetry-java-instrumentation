@@ -62,7 +62,7 @@ tasks {
                     val selectedVersion = dep.selected.moduleVersion?.version ?: return@forEach
                     val version = if (AcceptableVersions.isStable(selectedVersion)) selectedVersion
                       else resolveStableVersion(this@subprojects, requested.group, requested.module, reqVersion)
-                      ?: return@forEach
+                      ?: selectedVersion // Fall back to pre-release if no stable version exists in range
                     if (reqVersion == "latest.release") {
                       recordVersion("${requested.group}:${requested.module}#+", version)
                     } else if (reqVersion.contains("+")) {
@@ -109,6 +109,15 @@ tasks {
         if (versions.containsKey(key)) return@forEach
         val (group, module) = coords.split(":")
         val resolvedVersion = resolveStableVersion(project, group, module, "latest.release")
+          ?: run {
+            // Fall back to highest already-pinned version for this artifact (e.g. when latest.release
+            // resolves to a broken version like grizzly 5.0.0 which depends on a SNAPSHOT BOM)
+            versions.entries
+              .filter { it.key.startsWith("$coords#") }
+              .mapNotNull { runCatching { VersionNumber.parse(it.value) to it.value }.getOrNull() }
+              .maxByOrNull { it.first }
+              ?.second
+          }
         if (resolvedVersion != null) {
           recordVersion(key, resolvedVersion)
         }
