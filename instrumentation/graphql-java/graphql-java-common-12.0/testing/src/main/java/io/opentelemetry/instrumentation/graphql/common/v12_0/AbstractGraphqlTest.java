@@ -28,7 +28,6 @@ import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -262,7 +261,7 @@ public abstract class AbstractGraphqlTest {
                         span.hasName("GraphQL Operation")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributes(Attributes.empty())
+                            .hasTotalAttributeCount(0)
                             .hasStatus(StatusData.error())
                             .hasEventsSatisfyingExactly(
                                 event ->
@@ -302,7 +301,7 @@ public abstract class AbstractGraphqlTest {
                         span.hasName("GraphQL Operation")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributes(Attributes.empty())
+                            .hasTotalAttributeCount(0)
                             .hasStatus(StatusData.error())
                             .hasEventsSatisfyingExactly(
                                 event ->
