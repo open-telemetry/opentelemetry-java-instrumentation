@@ -21,7 +21,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.jboss.netty.channel.ChannelHandler;
 import org.jboss.netty.channel.ChannelPipeline;
 
-public class NettyChannelPipelineInstrumentation implements TypeInstrumentation {
+class NettyChannelPipelineInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

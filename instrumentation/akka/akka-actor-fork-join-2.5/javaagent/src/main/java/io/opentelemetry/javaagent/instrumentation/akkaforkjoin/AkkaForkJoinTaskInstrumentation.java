@@ -29,7 +29,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * <p>Note: There are quite a few separate implementations of {@code ForkJoinTask}/{@code
  * ForkJoinPool}: JVM, Akka, Scala, Netty to name a few. This class handles Akka version.
  */
-public class AkkaForkJoinTaskInstrumentation implements TypeInstrumentation {
+class AkkaForkJoinTaskInstrumentation implements TypeInstrumentation {
   static final String TASK_CLASS_NAME = "akka.dispatch.forkjoin.ForkJoinTask";
 
   @Override

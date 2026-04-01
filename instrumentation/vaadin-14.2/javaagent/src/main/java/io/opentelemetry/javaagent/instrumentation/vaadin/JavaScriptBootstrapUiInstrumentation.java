@@ -16,7 +16,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 // set server span name on initial page load, vaadin 15+
-public class JavaScriptBootstrapUiInstrumentation implements TypeInstrumentation {
+class JavaScriptBootstrapUiInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

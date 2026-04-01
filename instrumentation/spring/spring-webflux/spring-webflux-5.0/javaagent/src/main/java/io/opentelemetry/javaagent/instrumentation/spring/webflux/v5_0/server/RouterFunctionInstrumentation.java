@@ -24,7 +24,7 @@ import org.springframework.web.reactive.function.server.HandlerFunction;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import reactor.core.publisher.Mono;
 
-public class RouterFunctionInstrumentation implements TypeInstrumentation {
+class RouterFunctionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

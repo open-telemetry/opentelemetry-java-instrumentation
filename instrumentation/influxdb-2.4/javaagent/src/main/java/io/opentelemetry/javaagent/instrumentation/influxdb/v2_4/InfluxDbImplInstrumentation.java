@@ -27,7 +27,7 @@ import org.influxdb.dto.Query;
 import org.influxdb.impl.InfluxDBImpl;
 import retrofit2.Retrofit;
 
-public class InfluxDbImplInstrumentation implements TypeInstrumentation {
+class InfluxDbImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

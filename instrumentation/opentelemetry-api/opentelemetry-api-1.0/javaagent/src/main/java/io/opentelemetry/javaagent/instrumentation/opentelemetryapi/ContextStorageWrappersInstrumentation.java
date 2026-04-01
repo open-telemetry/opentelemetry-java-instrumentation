@@ -24,7 +24,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * dependency on a system property or possibility of a user overriding this since it's required for
  * instrumentation in the agent to work properly.
  */
-public class ContextStorageWrappersInstrumentation implements TypeInstrumentation {
+class ContextStorageWrappersInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

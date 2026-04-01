@@ -27,7 +27,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Protocol;
 
-public class JedisConnectionInstrumentation implements TypeInstrumentation {
+class JedisConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("redis.clients.jedis.Connection");

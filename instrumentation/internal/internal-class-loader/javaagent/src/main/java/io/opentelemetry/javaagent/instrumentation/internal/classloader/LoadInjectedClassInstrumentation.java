@@ -28,7 +28,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * This instrumentation inserts loading of our injected helper classes at the start of {@code
  * ClassLoader.loadClass} method.
  */
-public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
+class LoadInjectedClassInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

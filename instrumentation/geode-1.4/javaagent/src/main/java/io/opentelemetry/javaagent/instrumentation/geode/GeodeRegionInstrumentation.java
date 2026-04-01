@@ -24,7 +24,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.geode.cache.Region;
 
-public class GeodeRegionInstrumentation implements TypeInstrumentation {
+class GeodeRegionInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("org.apache.geode.cache.Region");

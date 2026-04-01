@@ -27,7 +27,7 @@ import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.ActionResponse;
 
-public class AbstractClientInstrumentation implements TypeInstrumentation {
+class AbstractClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     // If we want to be more generic, we could instrument the interface instead:

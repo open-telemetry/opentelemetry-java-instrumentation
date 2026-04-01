@@ -208,7 +208,7 @@ Each `TypeInstrumentation` class instruments a single target class.
 ### Required structure
 
 ```java
-public class MyClassInstrumentation implements TypeInstrumentation {
+class MyClassInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

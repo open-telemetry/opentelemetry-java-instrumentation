@@ -19,7 +19,7 @@ import scala.Function1;
 import scala.concurrent.Future;
 import sttp.tapir.server.ServerEndpoint;
 
-public class TapirPathInstrumentation implements TypeInstrumentation {
+class TapirPathInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class KotlinCoroutinesInstrumentation implements TypeInstrumentation {
+class KotlinCoroutinesInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("kotlinx.coroutines.CoroutineContextKt");

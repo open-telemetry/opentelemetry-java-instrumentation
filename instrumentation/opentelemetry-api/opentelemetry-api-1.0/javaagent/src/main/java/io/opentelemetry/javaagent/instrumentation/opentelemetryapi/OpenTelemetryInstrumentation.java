@@ -23,7 +23,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 // Our convention for accessing agent package
 @SuppressWarnings("UnnecessarilyFullyQualified")
-public class OpenTelemetryInstrumentation implements TypeInstrumentation {
+class OpenTelemetryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

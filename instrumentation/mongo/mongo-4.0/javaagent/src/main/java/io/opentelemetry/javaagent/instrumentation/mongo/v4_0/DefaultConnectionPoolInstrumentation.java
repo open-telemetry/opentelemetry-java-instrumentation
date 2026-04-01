@@ -18,7 +18,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class DefaultConnectionPoolInstrumentation implements TypeInstrumentation {
+class DefaultConnectionPoolInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.mongodb.internal.connection.DefaultConnectionPool");

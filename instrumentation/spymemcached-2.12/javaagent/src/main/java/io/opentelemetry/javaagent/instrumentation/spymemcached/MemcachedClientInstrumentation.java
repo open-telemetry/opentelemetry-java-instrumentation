@@ -27,7 +27,7 @@ import net.spy.memcached.internal.BulkFuture;
 import net.spy.memcached.internal.GetFuture;
 import net.spy.memcached.internal.OperationFuture;
 
-public class MemcachedClientInstrumentation implements TypeInstrumentation {
+class MemcachedClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("net.spy.memcached.MemcachedClient");

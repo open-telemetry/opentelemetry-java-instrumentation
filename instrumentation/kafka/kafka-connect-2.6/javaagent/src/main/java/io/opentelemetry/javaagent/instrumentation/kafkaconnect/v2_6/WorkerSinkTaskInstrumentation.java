@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * {@link SinkTaskInstrumentation}) and low-level kafka-clients spans would be created for the same
  * consumer operation. This ensures only the meaningful Kafka Connect spans are generated.
  */
-public class WorkerSinkTaskInstrumentation implements TypeInstrumentation {
+class WorkerSinkTaskInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

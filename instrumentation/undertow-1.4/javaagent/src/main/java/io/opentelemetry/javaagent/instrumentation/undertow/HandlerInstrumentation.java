@@ -22,7 +22,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HandlerInstrumentation implements TypeInstrumentation {
+class HandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderOptimization() {

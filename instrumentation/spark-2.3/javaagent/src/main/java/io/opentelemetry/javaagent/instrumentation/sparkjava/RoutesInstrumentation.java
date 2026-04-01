@@ -17,7 +17,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import spark.routematch.RouteMatch;
 
-public class RoutesInstrumentation implements TypeInstrumentation {
+class RoutesInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("spark.route.Routes");

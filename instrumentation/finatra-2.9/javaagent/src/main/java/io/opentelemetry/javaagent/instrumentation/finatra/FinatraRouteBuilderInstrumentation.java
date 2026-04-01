@@ -17,7 +17,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import scala.Function1;
 
-public class FinatraRouteBuilderInstrumentation implements TypeInstrumentation {
+class FinatraRouteBuilderInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.twitter.finatra.http.RouteBuilder");

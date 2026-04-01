@@ -23,7 +23,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.netty.NettyResponseFuture;
 
-public class NettyRequestSenderInstrumentation implements TypeInstrumentation {
+class NettyRequestSenderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
