@@ -168,3 +168,4 @@ jaxrs-client:jaxrs-client-1.1-testing
 java-util-logging:javaagent
 javalin:testing
 jaxrs-client:jaxrs-client-2.0-testing
+jaxrs-2.0-annotations:javaagent
