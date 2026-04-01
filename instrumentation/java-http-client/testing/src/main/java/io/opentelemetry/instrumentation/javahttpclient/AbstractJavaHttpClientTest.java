@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSIO
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes.TELEMETRY_DISTRO_NAME;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -58,10 +59,6 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
   protected abstract void configureHttpClientBuilder(HttpClient.Builder httpClientBuilder);
 
   protected abstract HttpClient configureHttpClient(HttpClient httpClient);
-
-  protected boolean hasPeerService() {
-    return false;
-  }
 
   @Override
   public HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -181,7 +178,8 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
                   attributes.add(equalTo(SERVER_ADDRESS, uri.getHost()));
                   attributes.add(equalTo(SERVER_PORT, uri.getPort()));
                   attributes.add(equalTo(HTTP_REQUEST_METHOD, method));
-                  if (hasPeerService()) {
+                  if ("opentelemetry-java-instrumentation"
+                      .equals(span.actual().getResource().getAttribute(TELEMETRY_DISTRO_NAME))) {
                     attributes.add(equalTo(maybeStablePeerService(), "test-peer-service"));
                   }
                   attributes.add(equalTo(ERROR_TYPE, CancellationException.class.getName()));
