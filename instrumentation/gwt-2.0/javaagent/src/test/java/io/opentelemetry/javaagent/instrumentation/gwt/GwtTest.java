@@ -14,6 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.File;
@@ -42,6 +43,8 @@ class GwtTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private static final Logger logger = LoggerFactory.getLogger(GwtTest.class);
   static int port;
@@ -93,7 +96,7 @@ class GwtTest {
     return "/xyz";
   }
 
-  RemoteWebDriver getDriver() {
+  private RemoteWebDriver getDriver() {
     RemoteWebDriver driver =
         new RemoteWebDriver(browser.getSeleniumAddress(), new ChromeOptions(), false);
     driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(30));
@@ -104,6 +107,7 @@ class GwtTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   void testGwt() {
     RemoteWebDriver driver = getDriver();
+    cleanup.deferCleanup(driver::close);
 
     // fetch the test page
     driver.get(address.resolve("greeting.html").toString());
@@ -186,7 +190,5 @@ class GwtTest {
                             equalTo(RPC_SYSTEM, "gwt"),
                             equalTo(RPC_SERVICE, "test.gwt.shared.MessageService"),
                             equalTo(RPC_METHOD, "sendMessage"))));
-
-    driver.close();
   }
 }
