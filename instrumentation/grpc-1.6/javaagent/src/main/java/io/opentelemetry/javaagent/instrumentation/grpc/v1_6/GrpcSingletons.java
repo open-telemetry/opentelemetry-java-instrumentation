@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.ContextStorageBridge;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.Nullable;
 
 // Holds singleton references.
 public final class GrpcSingletons {
@@ -68,6 +69,7 @@ public final class GrpcSingletons {
     SERVER_INTERCEPTOR = telemetry.createServerInterceptor();
   }
 
+  @Nullable
   public static Context.Storage getStorage() {
     return STORAGE_REFERENCE.get();
   }
