@@ -75,7 +75,7 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
   void emptyRepository() {
     Iterable<Doc> result = repository().findAll();
 
-    assertThat(result.iterator().hasNext()).isFalse();
+    assertThat(result).isEmpty();
 
     testing.waitAndAssertTraces(
         trace ->
