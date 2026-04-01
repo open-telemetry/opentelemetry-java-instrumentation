@@ -76,8 +76,8 @@ class ApplicationLoggerInstrumentationTest {
     if (!exited) {
       process.destroyForcibly();
     }
-    assertThat(exited).as("subprocess should exit within 10 seconds").isTrue();
-    assertThat(process.exitValue()).as("subprocess should exit successfully").isZero();
+    assertThat(exited).isTrue();
+    assertThat(process.exitValue()).isZero();
     return output.join();
   }
 }
