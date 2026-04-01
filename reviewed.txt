@@ -145,3 +145,4 @@ iceberg-1.8:testing
 internal-application-logger:bootstrap
 internal-class-loader:compile-stub
 internal-application-logger:javaagent
+internal-class-loader:javaagent-integration-tests
