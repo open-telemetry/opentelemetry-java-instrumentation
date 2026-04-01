@@ -28,9 +28,12 @@ tasks {
       // Results are cached to avoid repeated Maven Central lookups for the same artifact.
       fun resolveStableVersion(project: Project, group: String, module: String, version: String): String? {
         return stableVersionCache.getOrPut(Triple(group, module, version)) {
-          val detached = project.configurations.detachedConfiguration(
-            project.dependencies.create("$group:$module:$version")
-          )
+          val dep = project.dependencies.create("$group:$module:$version")
+          // Disable transitive resolution — we only need the selected version, not its deps.
+          // This avoids failures from artifacts whose transitive deps are in non-standard repos
+          // (e.g. grails-web-url-mappings depends on artifacts only in the Grails repo).
+          (dep as? ExternalDependency)?.isTransitive = false
+          val detached = project.configurations.detachedConfiguration(dep)
           detached.resolutionStrategy.componentSelection.all {
             if (!AcceptableVersions.isStable(candidate.version)) {
               reject("pre-release version")
@@ -108,7 +111,10 @@ tasks {
         val key = "$coords#+"
         if (versions.containsKey(key)) return@forEach
         val (group, module) = coords.split(":")
-        val resolvedVersion = resolveStableVersion(project, group, module, "latest.release")
+        // Use "+" to enumerate all versions and apply componentSelection filters, rather than
+        // "latest.release" which relies on the <release> tag in maven-metadata.xml (which can
+        // point to a pre-release version — e.g. grails-web-url-mappings has 7.0.0-M3 as "release").
+        val resolvedVersion = resolveStableVersion(project, group, module, "+")
           ?: run {
             // Fall back to highest already-pinned version for this artifact (e.g. when latest.release
             // resolves to a broken version like grizzly 5.0.0 which depends on a SNAPSHOT BOM)
