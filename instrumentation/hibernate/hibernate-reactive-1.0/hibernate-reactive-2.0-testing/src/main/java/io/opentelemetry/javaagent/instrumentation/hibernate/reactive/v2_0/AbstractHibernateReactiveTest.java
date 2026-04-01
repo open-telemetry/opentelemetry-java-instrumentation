@@ -106,7 +106,9 @@ public abstract class AbstractHibernateReactiveTest {
       stageSessionFactory.close();
     }
     vertx.close();
-    container.stop();
+    if (container != null) {
+      container.stop();
+    }
   }
 
   @Test
