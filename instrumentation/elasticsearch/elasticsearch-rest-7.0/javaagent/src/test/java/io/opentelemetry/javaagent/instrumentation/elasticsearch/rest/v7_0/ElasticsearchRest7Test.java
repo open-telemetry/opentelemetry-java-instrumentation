@@ -77,7 +77,8 @@ class ElasticsearchRest7Test {
   }
 
   @AfterAll
-  static void cleanUp() {
+  static void cleanUp() throws Exception {
+    client.close();
     elasticsearch.stop();
   }
 
@@ -153,8 +154,7 @@ class ElasticsearchRest7Test {
     runWithSpan(
         "parent",
         () -> client.performRequestAsync(new Request("GET", "_cluster/health"), responseListener));
-    //noinspection ResultOfMethodCallIgnored
-    countDownLatch.await(10, SECONDS);
+    assertThat(countDownLatch.await(10, SECONDS)).isTrue();
 
     if (asyncRequest.getException() != null) {
       throw asyncRequest.getException();
