@@ -14,18 +14,18 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public class OpenTelemetryInstrumentationState implements InstrumentationState {
-  private Context context;
-  private Operation operation;
-  private String operationName;
-  private String query;
+public final class OpenTelemetryInstrumentationState implements InstrumentationState {
+  @Nullable private Context context;
+  @Nullable private Operation operation;
+  @Nullable private String operationName;
+  @Nullable private String query;
 
   @Nullable
   public Context getContext() {
     return context;
   }
 
-  public void setContext(Context context) {
+  public void setContext(@Nullable Context context) {
     this.context = context;
   }
 
@@ -34,7 +34,7 @@ public class OpenTelemetryInstrumentationState implements InstrumentationState {
     return operation;
   }
 
-  public void setOperation(Operation operation) {
+  public void setOperation(@Nullable Operation operation) {
     this.operation = operation;
   }
 
@@ -43,7 +43,7 @@ public class OpenTelemetryInstrumentationState implements InstrumentationState {
     return operationName;
   }
 
-  public void setOperationName(String operationName) {
+  public void setOperationName(@Nullable String operationName) {
     this.operationName = operationName;
   }
 
@@ -52,7 +52,7 @@ public class OpenTelemetryInstrumentationState implements InstrumentationState {
     return query;
   }
 
-  public void setQuery(String query) {
+  public void setQuery(@Nullable String query) {
     this.query = query;
   }
 }
