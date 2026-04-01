@@ -104,3 +104,4 @@ external-annotations:javaagent
 executors:javaagent
 elasticsearch-transport-common:javaagent
 external-annotations:javaagent-unit-tests
+executors:bootstrap
