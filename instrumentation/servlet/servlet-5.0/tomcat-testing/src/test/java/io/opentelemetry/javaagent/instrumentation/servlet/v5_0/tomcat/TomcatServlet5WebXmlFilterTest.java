@@ -137,7 +137,7 @@ class TomcatServlet5WebXmlFilterTest {
     String classFileName = clazz.getSimpleName() + ".class";
     String classResourcePath = clazz.getName().replace('.', '/') + ".class";
     try (InputStream is = clazz.getClassLoader().getResourceAsStream(classResourcePath)) {
-      assertThat(is).as("Class file resource for " + clazz.getName()).isNotNull();
+      assertThat(is).isNotNull();
       Files.copy(
           is, new File(targetDir, classFileName).toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
