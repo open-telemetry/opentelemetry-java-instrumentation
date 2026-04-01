@@ -189,3 +189,4 @@ jaxrs-3.0-jersey-3.0:javaagent
 jaxrs-common:javaagent
 jaxrs-common:testing
 jaxrs-common:bootstrap
+jaxws:jaxws-2.0-common-testing
