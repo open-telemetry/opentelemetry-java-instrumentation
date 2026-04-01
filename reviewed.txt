@@ -107,3 +107,4 @@ external-annotations:javaagent-unit-tests
 executors:bootstrap
 finagle-http-23.11:javaagent
 failsafe-3.0:library
+geode-1.4:javaagent
