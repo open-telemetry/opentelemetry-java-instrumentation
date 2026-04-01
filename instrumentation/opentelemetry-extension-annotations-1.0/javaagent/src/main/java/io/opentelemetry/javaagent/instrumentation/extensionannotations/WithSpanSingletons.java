@@ -17,7 +17,7 @@ import java.lang.reflect.Method;
 import java.util.logging.Logger;
 
 @SuppressWarnings("deprecation") // instrumenting deprecated class for backwards compatibility
-public final class WithSpanSingletons {
+public class WithSpanSingletons {
 
   private static final String INSTRUMENTATION_NAME =
       "io.opentelemetry.opentelemetry-extension-annotations-1.0";

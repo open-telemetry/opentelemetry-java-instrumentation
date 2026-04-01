@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.lettuce.v5_1.LettuceTelemetry;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 
-public final class TracingHolder {
+public class TracingHolder {
 
   private static final boolean CAPTURE_COMMAND_ENCODING_EVENTS =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "lettuce")

@@ -14,7 +14,7 @@ import javax.annotation.Nullable;
  * <p>This class loads the versioned implementation via reflection to handle VALUE type attributes
  * introduced in SDK 1.59.0.
  */
-public final class ValueBridging {
+public class ValueBridging {
 
   private static final Function<Object, Object> BRIDGE = load();
 

@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8.util;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.NettyRequest;
 import org.jboss.netty.channel.ChannelHandler;
 
-public final class HttpSchemeUtil {
+public class HttpSchemeUtil {
 
   private static final Class<? extends ChannelHandler> sslHandlerClass = getSslHandlerClass();
 

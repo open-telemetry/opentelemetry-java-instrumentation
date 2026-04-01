@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
-public final class KafkaConnectSingletons {
+public class KafkaConnectSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-connect-2.6";
   private static final TextMapPropagator PROPAGATOR =

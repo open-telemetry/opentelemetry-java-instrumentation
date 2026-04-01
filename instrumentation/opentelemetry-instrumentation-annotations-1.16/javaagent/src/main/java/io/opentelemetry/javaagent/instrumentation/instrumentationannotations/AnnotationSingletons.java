@@ -22,7 +22,7 @@ import java.lang.reflect.Method;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
-public final class AnnotationSingletons {
+public class AnnotationSingletons {
 
   private static final String INSTRUMENTATION_NAME =
       "io.opentelemetry.opentelemetry-instrumentation-annotations-1.16";

@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.ElasticsearchRestJavaagentInstrumenterFactory;
 import org.elasticsearch.client.Response;
 
-public final class ElasticsearchRest5Singletons {
+public class ElasticsearchRest5Singletons {
 
   private static final Instrumenter<ElasticsearchRestRequest, Response> INSTRUMENTER =
       ElasticsearchRestJavaagentInstrumenterFactory.create(

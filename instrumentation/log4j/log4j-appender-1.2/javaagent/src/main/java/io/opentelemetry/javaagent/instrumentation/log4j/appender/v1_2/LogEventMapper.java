@@ -33,7 +33,7 @@ import org.apache.log4j.MDC;
 import org.apache.log4j.Priority;
 import org.apache.log4j.spi.LocationInfo;
 
-public final class LogEventMapper {
+public class LogEventMapper {
 
   private static final Logger logger = Logger.getLogger(LogEventMapper.class.getName());
 

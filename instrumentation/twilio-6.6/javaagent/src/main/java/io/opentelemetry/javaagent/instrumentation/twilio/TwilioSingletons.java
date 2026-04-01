@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.semconv.util.SpanNames;
 
-public final class TwilioSingletons {
+public class TwilioSingletons {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "twilio")

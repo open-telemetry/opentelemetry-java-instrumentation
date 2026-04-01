@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.instrumentation.hibernate.SessionInfo;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.procedure.ProcedureCall;
 
-public final class Hibernate43Singletons {
+public class Hibernate43Singletons {
 
   private static final Instrumenter<HibernateOperation, Void> INSTANCE =
       HibernateInstrumenterFactory.createInstrumenter(

@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import javax.annotation.Nullable;
 import org.apache.axis2.jaxws.core.MessageContext;
 
-public final class Axis2ServerSpanNaming {
+public class Axis2ServerSpanNaming {
   @Nullable
   private static final Class<?> JAVAX_REQUEST = loadClass("javax.servlet.http.HttpServletRequest");
 

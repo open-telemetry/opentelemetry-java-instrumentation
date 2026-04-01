@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs;
 
-public final class JaxrsPathUtil {
+public class JaxrsPathUtil {
   private JaxrsPathUtil() {}
 
   public static String normalizePath(String path) {

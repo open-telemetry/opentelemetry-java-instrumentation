@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameE
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import javax.annotation.Nullable;
 
-public final class MethodSingletons {
+public class MethodSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.methods";
 
   private static final Instrumenter<MethodAndType, Void> INSTRUMENTER;

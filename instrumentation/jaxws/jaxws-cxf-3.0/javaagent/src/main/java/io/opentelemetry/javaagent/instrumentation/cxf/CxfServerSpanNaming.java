@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 
-public final class CxfServerSpanNaming {
+public class CxfServerSpanNaming {
   private static final Class<?> JAVAX_SERVLET_REQUEST =
       loadClass("javax.servlet.http.HttpServletRequest");
   private static final Class<?> JAKARTA_SERVLET_REQUEST =

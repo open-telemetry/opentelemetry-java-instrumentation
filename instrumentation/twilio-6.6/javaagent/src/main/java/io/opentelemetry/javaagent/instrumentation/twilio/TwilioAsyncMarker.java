@@ -12,7 +12,7 @@ import io.opentelemetry.context.ContextKey;
  * Twilio async operations just simply call sync ones internally. To suppress duplicate sync
  * telemetry we add a marker entry to the context.
  */
-public final class TwilioAsyncMarker {
+public class TwilioAsyncMarker {
 
   private static final ContextKey<Boolean> MARKER_KEY =
       ContextKey.named("opentelemetry-instrumentation-twilio-async-marker");

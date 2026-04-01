@@ -15,7 +15,7 @@ import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.util.pattern.PathPattern;
 
-public final class WebfluxSingletons {
+public class WebfluxSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webflux-5.0";
 
   private static final Instrumenter<Object, Void> INSTRUMENTER;

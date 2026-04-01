@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 
 // Holds singleton references.
-public final class GrpcSingletons {
+public class GrpcSingletons {
 
   public static final VirtualField<ManagedChannelBuilder<?>, Boolean>
       MANAGED_CHANNEL_BUILDER_INSTRUMENTED =

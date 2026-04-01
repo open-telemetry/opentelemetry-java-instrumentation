@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 
-public final class SpringSchedulingSingletons {
+public class SpringSchedulingSingletons {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "spring_scheduling")

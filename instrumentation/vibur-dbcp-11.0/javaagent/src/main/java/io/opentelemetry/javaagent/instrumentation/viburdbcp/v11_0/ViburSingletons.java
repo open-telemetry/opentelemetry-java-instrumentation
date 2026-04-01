@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.viburdbcp.v11_0;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.viburdbcp.v11_0.ViburTelemetry;
 
-public final class ViburSingletons {
+public class ViburSingletons {
 
   private static final ViburTelemetry viburTelemetry =
       ViburTelemetry.create(GlobalOpenTelemetry.get());

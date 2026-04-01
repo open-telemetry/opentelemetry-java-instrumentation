@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMetho
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
-public final class MyBatisSingletons {
+public class MyBatisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.mybatis-3.2";
   private static final Instrumenter<ClassAndMethod, Void> INSTRUMENTER;
 

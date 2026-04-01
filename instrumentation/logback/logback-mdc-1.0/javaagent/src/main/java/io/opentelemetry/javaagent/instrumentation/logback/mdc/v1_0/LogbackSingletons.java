@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 
-public final class LogbackSingletons {
+public class LogbackSingletons {
   private static final boolean ADD_BAGGAGE =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "logback_mdc")
           .getBoolean("add_baggage", false);

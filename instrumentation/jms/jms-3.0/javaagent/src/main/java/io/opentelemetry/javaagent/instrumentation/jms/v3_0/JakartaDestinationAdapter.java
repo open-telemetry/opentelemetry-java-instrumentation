@@ -13,7 +13,7 @@ import jakarta.jms.TemporaryQueue;
 import jakarta.jms.TemporaryTopic;
 import jakarta.jms.Topic;
 
-public final class JakartaDestinationAdapter implements DestinationAdapter {
+public class JakartaDestinationAdapter implements DestinationAdapter {
 
   public static DestinationAdapter create(Destination destination) {
     return new JakartaDestinationAdapter(destination);

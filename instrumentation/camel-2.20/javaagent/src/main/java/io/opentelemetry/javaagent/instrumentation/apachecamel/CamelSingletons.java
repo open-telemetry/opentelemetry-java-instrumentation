@@ -19,7 +19,7 @@ import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
 import org.apache.camel.util.StringHelper;
 
-public final class CamelSingletons {
+public class CamelSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.camel-2.20";
 

@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sql;
 import io.vertx.sqlclient.SqlConnectOptions;
 import javax.annotation.Nullable;
 
-public final class VertxSqlClientRequest {
+public class VertxSqlClientRequest {
 
   private final String queryText;
   @Nullable private final SqlConnectOptions sqlConnectOptions;

@@ -11,7 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
 
-public final class RouteHolder implements ImplicitContextKeyed {
+public class RouteHolder implements ImplicitContextKeyed {
   private static final ContextKey<RouteHolder> KEY = named("opentelemetry-vertx-route");
 
   private String route;

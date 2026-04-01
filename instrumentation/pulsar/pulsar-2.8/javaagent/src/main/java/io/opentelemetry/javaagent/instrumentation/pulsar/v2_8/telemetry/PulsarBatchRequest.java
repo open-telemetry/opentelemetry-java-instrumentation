@@ -13,7 +13,7 @@ import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.Messages;
 import org.apache.pulsar.common.naming.TopicName;
 
-public final class PulsarBatchRequest extends BasePulsarRequest {
+public class PulsarBatchRequest extends BasePulsarRequest {
   private final Messages<?> messages;
 
   private PulsarBatchRequest(Messages<?> messages, String destination, @Nullable UrlData urlData) {

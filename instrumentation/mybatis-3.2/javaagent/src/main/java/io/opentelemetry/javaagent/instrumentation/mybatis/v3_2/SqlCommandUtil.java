@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.reflect.Method;
 import org.apache.ibatis.binding.MapperMethod.SqlCommand;
 
-public final class SqlCommandUtil {
+public class SqlCommandUtil {
   private static final VirtualField<SqlCommand, ClassAndMethod> field =
       VirtualField.find(SqlCommand.class, ClassAndMethod.class);
 

@@ -21,7 +21,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 
-public final class LettuceSingletons {
+public class LettuceSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.lettuce-4.0";
 
   private static final Instrumenter<RedisCommand<?, ?, ?>, Void> INSTRUMENTER;

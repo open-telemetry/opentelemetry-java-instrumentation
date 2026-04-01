@@ -9,7 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.concurrent.CompletableFuture;
 
-public final class CompletableFutureWrapper {
+public class CompletableFutureWrapper {
 
   private CompletableFutureWrapper() {}
 

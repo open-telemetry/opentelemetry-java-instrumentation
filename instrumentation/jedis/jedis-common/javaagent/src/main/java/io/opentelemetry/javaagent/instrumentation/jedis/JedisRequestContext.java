@@ -9,7 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import javax.annotation.Nullable;
 
-public final class JedisRequestContext<T> {
+public class JedisRequestContext<T> {
   private static final ThreadLocal<JedisRequestContext<?>> contextThreadLocal = new ThreadLocal<>();
 
   private Instrumenter<T, Void> instrumenter;

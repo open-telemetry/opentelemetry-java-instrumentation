@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
-public final class OperationNameUtil {
+public class OperationNameUtil {
 
   private static final String FALLBACK_SPAN_NAME = "hibernate";
 

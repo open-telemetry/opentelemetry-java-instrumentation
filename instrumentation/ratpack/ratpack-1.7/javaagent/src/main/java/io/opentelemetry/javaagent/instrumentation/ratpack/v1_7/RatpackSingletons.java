@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackClientInstr
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import ratpack.exec.Execution;
 
-public final class RatpackSingletons {
+public class RatpackSingletons {
 
   static {
     HTTP_CLIENT =

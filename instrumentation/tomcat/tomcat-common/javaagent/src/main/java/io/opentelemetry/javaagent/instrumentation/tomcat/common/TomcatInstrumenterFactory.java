@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 
-public final class TomcatInstrumenterFactory {
+public class TomcatInstrumenterFactory {
 
   private TomcatInstrumenterFactory() {}
 

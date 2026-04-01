@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameE
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
-public final class SpringDataSingletons {
+public class SpringDataSingletons {
 
   private static final Instrumenter<ClassAndMethod, Void> INSTRUMENTER;
 

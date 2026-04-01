@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0;
 import javax.annotation.Nullable;
 import org.apache.shardingsphere.elasticjob.api.ShardingContext;
 
-public final class ElasticJobProcessRequest {
+public class ElasticJobProcessRequest {
   private final String jobName;
   private final String taskId;
   private final int shardingItemIndex;

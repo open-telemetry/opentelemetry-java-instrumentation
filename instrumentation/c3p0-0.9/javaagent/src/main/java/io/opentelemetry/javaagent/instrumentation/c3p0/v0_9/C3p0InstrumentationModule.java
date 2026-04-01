@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public final class C3p0InstrumentationModule extends InstrumentationModule {
+public class C3p0InstrumentationModule extends InstrumentationModule {
 
   public C3p0InstrumentationModule() {
     super("c3p0", "c3p0-0.9");

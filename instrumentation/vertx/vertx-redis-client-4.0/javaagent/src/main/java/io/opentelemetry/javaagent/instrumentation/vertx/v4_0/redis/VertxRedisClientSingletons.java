@@ -23,7 +23,7 @@ import io.vertx.redis.client.impl.RedisURI;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 
-public final class VertxRedisClientSingletons {
+public class VertxRedisClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-redis-client-4.0";
   private static final Instrumenter<VertxRedisClientRequest, Void> INSTRUMENTER;
 

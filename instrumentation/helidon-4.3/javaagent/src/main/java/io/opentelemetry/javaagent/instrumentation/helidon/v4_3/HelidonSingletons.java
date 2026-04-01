@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.helidon.v4_3.internal.HelidonInstrumente
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.util.List;
 
-public final class HelidonSingletons {
+public class HelidonSingletons {
 
   public static final List<Filter> FILTERS;
 

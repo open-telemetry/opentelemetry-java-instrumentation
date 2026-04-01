@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import javax.annotation.Nullable;
 
-public final class SpymemcachedSingletons {
+public class SpymemcachedSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spymemcached-2.12";
 
   private static final Instrumenter<SpymemcachedRequest, Object> INSTRUMENTER;

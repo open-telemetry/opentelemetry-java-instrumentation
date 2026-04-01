@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public final class JmsInstrumenterFactory {
+public class JmsInstrumenterFactory {
 
   private final OpenTelemetry openTelemetry;
   private final String instrumentationName;

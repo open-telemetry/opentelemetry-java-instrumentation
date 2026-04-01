@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.instrumenta
 
 import io.opentelemetry.api.trace.SpanKind;
 
-public final class MethodRequest {
+public class MethodRequest {
   private final Class<?> declaringClass;
   private final String methodName;
   private final String withSpanValue;

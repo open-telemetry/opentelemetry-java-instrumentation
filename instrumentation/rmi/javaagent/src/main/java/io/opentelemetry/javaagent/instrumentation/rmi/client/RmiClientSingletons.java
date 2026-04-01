@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import java.lang.reflect.Method;
 
-public final class RmiClientSingletons {
+public class RmiClientSingletons {
 
   private static final Instrumenter<Method, Void> INSTRUMENTER;
 

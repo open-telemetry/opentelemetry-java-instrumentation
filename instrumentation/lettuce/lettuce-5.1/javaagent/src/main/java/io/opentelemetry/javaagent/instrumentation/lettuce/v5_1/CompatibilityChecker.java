@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1;
 
 import io.lettuce.core.tracing.Tracing;
 
-public final class CompatibilityChecker {
+public class CompatibilityChecker {
 
   private CompatibilityChecker() {}
 

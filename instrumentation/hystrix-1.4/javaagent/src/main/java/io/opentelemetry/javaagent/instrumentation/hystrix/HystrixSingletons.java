@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 
-public final class HystrixSingletons {
+public class HystrixSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.hystrix-1.4";
 

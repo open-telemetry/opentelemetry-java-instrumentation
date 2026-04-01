@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import redis.RedisCommand;
 
-public final class RediscalaSingletons {
+public class RediscalaSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.rediscala-1.8";
 

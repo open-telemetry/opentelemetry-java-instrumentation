@@ -13,7 +13,7 @@ import org.apache.cxf.interceptor.Fault;
 import org.apache.cxf.message.Exchange;
 import org.apache.cxf.message.Message;
 
-public final class CxfHelper {
+public class CxfHelper {
   private static final String REQUEST_KEY = CxfHelper.class.getName() + ".Request";
   private static final String CONTEXT_KEY = CxfHelper.class.getName() + ".Context";
   private static final String SCOPE_KEY = CxfHelper.class.getName() + ".Scope";

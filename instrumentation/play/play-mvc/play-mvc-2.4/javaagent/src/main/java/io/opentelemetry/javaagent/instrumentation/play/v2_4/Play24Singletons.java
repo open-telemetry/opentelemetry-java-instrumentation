@@ -16,7 +16,7 @@ import javax.annotation.Nullable;
 import play.api.mvc.Request;
 import scala.Option;
 
-public final class Play24Singletons {
+public class Play24Singletons {
 
   private static final String SPAN_NAME = "play.request";
   private static final Instrumenter<Void, Void> INSTRUMENTER =

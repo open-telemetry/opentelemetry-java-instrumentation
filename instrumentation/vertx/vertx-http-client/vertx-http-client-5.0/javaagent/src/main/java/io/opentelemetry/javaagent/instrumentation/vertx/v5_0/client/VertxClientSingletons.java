@@ -18,7 +18,7 @@ import io.vertx.core.net.HostAndPort;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 
-public final class VertxClientSingletons {
+public class VertxClientSingletons {
 
   private static final Instrumenter<HttpClientRequest, HttpClientResponse> INSTRUMENTER =
       VertxClientInstrumenterFactory.create(

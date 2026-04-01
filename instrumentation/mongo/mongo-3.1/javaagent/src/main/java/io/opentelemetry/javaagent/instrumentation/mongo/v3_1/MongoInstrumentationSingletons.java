@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrumenterFac
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.TracingCommandListener;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 
-public final class MongoInstrumentationSingletons {
+public class MongoInstrumentationSingletons {
 
   private static final Instrumenter<CommandStartedEvent, Void> INSTRUMENTER =
       MongoInstrumenterFactory.createInstrumenter(

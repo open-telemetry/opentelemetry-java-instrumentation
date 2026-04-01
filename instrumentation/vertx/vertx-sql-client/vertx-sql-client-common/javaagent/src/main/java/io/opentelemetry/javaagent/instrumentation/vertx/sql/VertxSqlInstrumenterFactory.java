@@ -16,7 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 
-public final class VertxSqlInstrumenterFactory {
+public class VertxSqlInstrumenterFactory {
 
   public static Instrumenter<VertxSqlClientRequest, Void> createInstrumenter(
       String instrumentationName) {

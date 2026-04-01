@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.dropwizardmetrics;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 
-public final class DropwizardSingletons {
+public class DropwizardSingletons {
 
   private static final DropwizardMetricsAdapter METRICS =
       new DropwizardMetricsAdapter(GlobalOpenTelemetry.get());

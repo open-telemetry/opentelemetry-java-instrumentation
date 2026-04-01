@@ -22,7 +22,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrume
 import reactor.netty.http.client.HttpClientRequest;
 import reactor.netty.http.client.HttpClientResponse;
 
-public final class ReactorNettySingletons {
+public class ReactorNettySingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.reactor-netty-1.0";
 

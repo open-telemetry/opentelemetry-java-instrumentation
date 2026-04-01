@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
 import io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpUtil;
 
-public final class AkkaHttpServerSingletons {
+public class AkkaHttpServerSingletons {
 
   private static final Instrumenter<HttpRequest, HttpResponse> INSTRUMENTER;
 

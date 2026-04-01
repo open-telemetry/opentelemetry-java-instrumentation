@@ -15,7 +15,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import javax.annotation.Nullable;
 
-public final class CouchbaseQuerySanitizer {
+public class CouchbaseQuerySanitizer {
 
   private static final SqlQueryAnalyzer analyzer =
       SqlQueryAnalyzer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());

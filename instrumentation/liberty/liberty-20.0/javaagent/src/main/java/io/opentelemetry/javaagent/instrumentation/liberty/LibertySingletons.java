@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.instrumentation.servlet.AgentServletInstrument
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public final class LibertySingletons {
+public class LibertySingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.liberty-20.0";
 
   private static final Instrumenter<

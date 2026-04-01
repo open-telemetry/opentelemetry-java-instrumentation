@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
-public final class XxlJobHelper {
+public class XxlJobHelper {
   private final Instrumenter<XxlJobProcessRequest, Void> instrumenter;
   private final Predicate<Object> failedStatusPredicate;
 

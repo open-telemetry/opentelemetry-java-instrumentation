@@ -28,7 +28,7 @@ import java.sql.Statement;
 import java.sql.Wrapper;
 import javax.sql.DataSource;
 
-public final class JdbcSingletons {
+public class JdbcSingletons {
   private static final Instrumenter<DbRequest, Void> STATEMENT_INSTRUMENTER;
   private static final Instrumenter<DbRequest, Void> TRANSACTION_INSTRUMENTER;
   public static final Instrumenter<DataSource, DbInfo> DATASOURCE_INSTRUMENTER =

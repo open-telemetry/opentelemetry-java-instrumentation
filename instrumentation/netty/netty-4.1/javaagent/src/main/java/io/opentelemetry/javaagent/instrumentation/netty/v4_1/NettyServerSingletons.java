@@ -21,7 +21,7 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerTra
 import io.opentelemetry.instrumentation.netty.v4_1.internal.server.NettyServerInstrumenterBuilderUtil;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 
-public final class NettyServerSingletons {
+public class NettyServerSingletons {
 
   private static final Instrumenter<NettyCommonRequest, HttpResponse> INSTRUMENTER;
   private static final ProtocolEventHandler PROTOCOL_EVENT_HANDLER;

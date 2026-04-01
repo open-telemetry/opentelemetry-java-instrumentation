@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import ratpack.handling.Context;
 
-public final class RatpackSingletons {
+public class RatpackSingletons {
 
   private static final Instrumenter<String, Void> INSTRUMENTER =
       Instrumenter.<String, Void>builder(

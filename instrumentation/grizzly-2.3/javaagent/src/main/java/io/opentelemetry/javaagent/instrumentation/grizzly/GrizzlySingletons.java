@@ -11,7 +11,7 @@ import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import org.glassfish.grizzly.http.HttpRequestPacket;
 import org.glassfish.grizzly.http.HttpResponsePacket;
 
-public final class GrizzlySingletons {
+public class GrizzlySingletons {
 
   private static final Instrumenter<HttpRequestPacket, HttpResponsePacket> INSTRUMENTER;
 

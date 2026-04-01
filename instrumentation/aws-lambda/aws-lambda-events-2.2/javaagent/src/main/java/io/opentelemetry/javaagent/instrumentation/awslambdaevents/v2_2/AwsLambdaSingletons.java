@@ -16,7 +16,7 @@ import io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal.Aws
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.time.Duration;
 
-public final class AwsLambdaSingletons {
+public class AwsLambdaSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-lambda-events-2.2";
   private static final AwsLambdaFunctionInstrumenter FUNCTION_INSTRUMENTER =
       AwsLambdaEventsInstrumenterFactory.createInstrumenter(
