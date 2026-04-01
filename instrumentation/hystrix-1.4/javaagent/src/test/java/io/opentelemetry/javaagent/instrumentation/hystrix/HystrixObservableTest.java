@@ -18,7 +18,6 @@ import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandProperties;
 import com.netflix.hystrix.HystrixObservableCommand;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -80,7 +79,7 @@ class HystrixObservableTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName("ExampleGroup.TestCommand.execute")
                         .hasParent(trace.getSpan(0))
@@ -91,7 +90,7 @@ class HystrixObservableTest {
                 span ->
                     span.hasName("tracedMethod")
                         .hasParent(trace.getSpan(1))
-                        .hasAttributes(Attributes.empty())));
+                        .hasTotalAttributeCount(0)));
   }
 
   private static Stream<Arguments> baseArguments() {
@@ -284,7 +283,7 @@ class HystrixObservableTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName("ExampleGroup.TestCommand.execute")
                         .hasParent(trace.getSpan(0))
