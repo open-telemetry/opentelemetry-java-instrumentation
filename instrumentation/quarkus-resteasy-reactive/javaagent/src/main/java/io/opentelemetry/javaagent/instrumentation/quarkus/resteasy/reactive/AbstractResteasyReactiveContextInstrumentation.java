@@ -15,7 +15,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext;
 import org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext;
 
-public class AbstractResteasyReactiveContextInstrumentation implements TypeInstrumentation {
+class AbstractResteasyReactiveContextInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext");

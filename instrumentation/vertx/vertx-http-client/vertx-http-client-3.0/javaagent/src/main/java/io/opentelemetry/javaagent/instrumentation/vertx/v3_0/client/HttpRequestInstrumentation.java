@@ -45,7 +45,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * the http call and the Netty Channel that will perform that operation. The main result of this
  * transfer is a suppression of Netty CLIENT span.
  */
-public class HttpRequestInstrumentation implements TypeInstrumentation {
+class HttpRequestInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

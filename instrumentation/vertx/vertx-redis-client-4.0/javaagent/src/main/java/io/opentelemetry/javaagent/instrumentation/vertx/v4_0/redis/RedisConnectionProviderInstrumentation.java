@@ -18,7 +18,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class RedisConnectionProviderInstrumentation implements TypeInstrumentation {
+class RedisConnectionProviderInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.vertx.redis.client.impl.RedisConnectionManager$RedisConnectionProvider");

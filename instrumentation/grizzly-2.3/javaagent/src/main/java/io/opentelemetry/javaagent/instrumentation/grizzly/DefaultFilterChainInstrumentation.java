@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
 import org.glassfish.grizzly.http.HttpRequestPacket;
 
-public class DefaultFilterChainInstrumentation implements TypeInstrumentation {
+class DefaultFilterChainInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

@@ -19,7 +19,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 // add spans around calls to methods with @ClientCallable annotation
-public class ClientCallableRpcInstrumentation implements TypeInstrumentation {
+class ClientCallableRpcInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

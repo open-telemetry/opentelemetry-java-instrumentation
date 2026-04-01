@@ -13,7 +13,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ResourceLevelInstrumentation implements TypeInstrumentation {
+class ResourceLevelInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.ibm.as400.resource.ResourceLevel");

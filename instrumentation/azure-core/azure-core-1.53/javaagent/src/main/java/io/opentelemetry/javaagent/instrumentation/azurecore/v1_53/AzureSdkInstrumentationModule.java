@@ -66,7 +66,7 @@ public class AzureSdkInstrumentationModule extends InstrumentationModule
     return asList(new EmptyTypeInstrumentation(), new AzureHttpClientInstrumentation());
   }
 
-  public static class EmptyTypeInstrumentation implements TypeInstrumentation {
+  private static class EmptyTypeInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return namedOneOf(

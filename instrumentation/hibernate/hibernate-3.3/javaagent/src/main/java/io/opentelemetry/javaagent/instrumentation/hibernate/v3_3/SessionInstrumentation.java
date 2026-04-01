@@ -33,7 +33,7 @@ import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Transaction;
 
-public class SessionInstrumentation implements TypeInstrumentation {
+class SessionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

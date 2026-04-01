@@ -22,7 +22,7 @@ dependencies {
   testImplementation(project(":instrumentation:hikaricp-3.0:testing"))
 }
 
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
+val collectMetadata = findProperty("collectMetadata") == "true"
 
 tasks {
   withType<Test>().configureEach {

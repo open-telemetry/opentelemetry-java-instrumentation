@@ -21,7 +21,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 
 // This is necessary because SourceNodeRecordDeserializer drops the headers.  :-(
-public class SourceNodeRecordDeserializerInstrumentation implements TypeInstrumentation {
+class SourceNodeRecordDeserializerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pekko.dispatch.Envelope;
 import org.apache.pekko.dispatch.sysmsg.SystemMessage;
 
-public class PekkoActorCellInstrumentation implements TypeInstrumentation {
+class PekkoActorCellInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

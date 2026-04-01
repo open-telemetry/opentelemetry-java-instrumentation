@@ -15,10 +15,8 @@ import javax.ws.rs.container.ContainerRequestContext;
 
 public final class Jaxrs2RequestContextHelper {
   @Nullable
-  public static Context createOrUpdateAbortSpan(
-      Instrumenter<HandlerData, Void> instrumenter,
-      ContainerRequestContext requestContext,
-      HandlerData handlerData) {
+  public static <T extends HandlerData> Context createOrUpdateAbortSpan(
+      Instrumenter<T, Void> instrumenter, ContainerRequestContext requestContext, T handlerData) {
 
     requestContext.setProperty(JaxrsConstants.ABORT_HANDLED, true);
     return RequestContextHelper.createOrUpdateAbortSpan(instrumenter, handlerData);

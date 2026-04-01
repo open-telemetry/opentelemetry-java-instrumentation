@@ -17,7 +17,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.spy.memcached.ops.Operation;
 
-public class MemcachedConnectionInstrumentation implements TypeInstrumentation {
+class MemcachedConnectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

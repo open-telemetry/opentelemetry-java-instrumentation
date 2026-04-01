@@ -24,13 +24,13 @@ public final class HelidonTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.helidon-4.3";
 
-  private final DefaultHttpServerInstrumenterBuilder<ServerRequest, ServerResponse> builder;
-
   static {
     HelidonInstrumenterBuilderUtil.setServerBuilderExtractor(builder -> builder.builder);
     Experimental.internalSetEmitExperimentalTelemetry(
         (builder, emit) -> builder.builder.setEmitExperimentalHttpServerTelemetry(emit));
   }
+
+  private final DefaultHttpServerInstrumenterBuilder<ServerRequest, ServerResponse> builder;
 
   HelidonTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder =

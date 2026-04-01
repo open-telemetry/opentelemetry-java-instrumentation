@@ -26,7 +26,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.H2;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.Attributes;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.hibernate.Criteria;
@@ -66,7 +65,7 @@ class CriteriaTest extends AbstractHibernateTest {
                     span.hasName("parent")
                         .hasKind(INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName("Criteria." + methodName + " " + Value.class.getName())
                         .hasKind(INTERNAL)

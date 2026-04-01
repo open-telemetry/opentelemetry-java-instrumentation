@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import ratpack.handling.HandlerDecorator;
 import ratpack.registry.Registry;
 
-public class ServerRegistryInstrumentation implements TypeInstrumentation {
+class ServerRegistryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

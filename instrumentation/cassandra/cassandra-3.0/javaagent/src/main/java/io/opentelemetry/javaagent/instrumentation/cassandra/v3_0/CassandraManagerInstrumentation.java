@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class CassandraManagerInstrumentation implements TypeInstrumentation {
+class CassandraManagerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     // Note: Cassandra has a large driver and we instrument single class in it.

@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.restlet.Route;
 import org.restlet.data.Request;
 
-public class RouteInstrumentation implements TypeInstrumentation {
+class RouteInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.restlet.Route");

@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ArmeriaGrpcServiceBuilderInstrumentation implements TypeInstrumentation {
+class ArmeriaGrpcServiceBuilderInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.linecorp.armeria.server.grpc.GrpcServiceBuilder");

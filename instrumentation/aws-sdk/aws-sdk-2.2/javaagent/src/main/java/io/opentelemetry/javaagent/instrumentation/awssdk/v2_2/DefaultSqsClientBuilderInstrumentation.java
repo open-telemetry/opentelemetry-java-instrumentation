@@ -15,7 +15,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import software.amazon.awssdk.services.sqs.SqsClient;
 
-public class DefaultSqsClientBuilderInstrumentation implements TypeInstrumentation {
+class DefaultSqsClientBuilderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

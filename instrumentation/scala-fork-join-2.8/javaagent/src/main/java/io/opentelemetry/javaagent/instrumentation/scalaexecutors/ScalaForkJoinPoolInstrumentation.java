@@ -22,7 +22,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import scala.concurrent.forkjoin.ForkJoinTask;
 
-public class ScalaForkJoinPoolInstrumentation implements TypeInstrumentation {
+class ScalaForkJoinPoolInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

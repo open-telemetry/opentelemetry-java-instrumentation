@@ -27,7 +27,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * {@link AmazonClientException} (for example an error thrown by another handler). In these cases
  * {@link RequestHandler2#afterError} is not called.
  */
-public class AwsHttpClientInstrumentation implements TypeInstrumentation {
+class AwsHttpClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

@@ -24,7 +24,7 @@ import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
 import scala.concurrent.Future;
 
-public class HttpExtClientInstrumentation implements TypeInstrumentation {
+class HttpExtClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.pekko.http.scaladsl.HttpExt");

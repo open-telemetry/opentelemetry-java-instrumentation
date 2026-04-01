@@ -17,7 +17,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 // update server span name to route of current view
-public class UiInstrumentation implements TypeInstrumentation {
+class UiInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

@@ -27,7 +27,7 @@ import play.api.mvc.Request;
 import play.api.mvc.Result;
 import scala.concurrent.Future;
 
-public class ActionInstrumentation implements TypeInstrumentation {
+class ActionInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("play.api.mvc.Action");

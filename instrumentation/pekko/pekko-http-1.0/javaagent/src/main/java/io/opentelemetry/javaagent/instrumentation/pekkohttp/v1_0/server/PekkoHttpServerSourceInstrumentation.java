@@ -18,7 +18,7 @@ import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
 import org.apache.pekko.stream.scaladsl.Flow;
 
-public class PekkoHttpServerSourceInstrumentation implements TypeInstrumentation {
+class PekkoHttpServerSourceInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.pekko.http.scaladsl.Http$IncomingConnection");

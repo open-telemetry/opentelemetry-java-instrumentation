@@ -20,7 +20,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 // used before reactor-netty-0.8
-public class ContextHandlerInstrumentation implements TypeInstrumentation {
+class ContextHandlerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("reactor.ipc.netty.channel.ContextHandler");

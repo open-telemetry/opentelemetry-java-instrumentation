@@ -10,7 +10,7 @@ import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.Elasti
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticsearchTransportInstrumenterFactory;
 import org.elasticsearch.action.ActionResponse;
 
-public final class Elasticsearch6TransportSingletons {
+final class Elasticsearch6TransportSingletons {
 
   private static final Instrumenter<ElasticTransportRequest, ActionResponse> INSTRUMENTER =
       ElasticsearchTransportInstrumenterFactory.create(

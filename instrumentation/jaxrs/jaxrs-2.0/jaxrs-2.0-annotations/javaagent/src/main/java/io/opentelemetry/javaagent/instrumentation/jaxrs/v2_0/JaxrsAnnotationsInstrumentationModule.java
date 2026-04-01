@@ -26,7 +26,9 @@ public class JaxrsAnnotationsInstrumentationModule extends InstrumentationModule
   // require jax-rs 2
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("javax.ws.rs.core.Configurable");
+    return hasClassesNamed(
+        // added in 2.0
+        "javax.ws.rs.core.Configurable");
   }
 
   @Override

@@ -21,7 +21,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.tapestry5.services.ComponentEventRequestParameters;
 import org.apache.tapestry5.services.PageRenderRequestParameters;
 
-public class InitializeActivePageNameInstrumentation implements TypeInstrumentation {
+class InitializeActivePageNameInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

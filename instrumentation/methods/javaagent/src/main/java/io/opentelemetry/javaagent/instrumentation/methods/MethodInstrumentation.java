@@ -32,7 +32,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class MethodInstrumentation implements TypeInstrumentation {
+class MethodInstrumentation implements TypeInstrumentation {
   private final String className;
   private final Map<SpanKind, Collection<String>> methodNames;
 
