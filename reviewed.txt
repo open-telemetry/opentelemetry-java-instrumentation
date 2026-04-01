@@ -146,3 +146,4 @@ internal-application-logger:bootstrap
 internal-class-loader:compile-stub
 internal-application-logger:javaagent
 internal-class-loader:javaagent-integration-tests
+internal-eclipse-osgi-3.6:javaagent
