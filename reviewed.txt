@@ -132,3 +132,4 @@ hibernate-6.0:javaagent
 helidon-4.3:javaagent
 hibernate-6.0:spring-testing
 hibernate-procedure-call-4.3:javaagent
+hibernate-common:javaagent
