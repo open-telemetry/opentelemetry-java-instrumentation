@@ -156,3 +156,4 @@ internal-url-class-loader:javaagent-integration-tests
 java-http-client:javaagent
 java-http-client:testing
 internal-url-class-loader:javaagent
+java-http-client:library
