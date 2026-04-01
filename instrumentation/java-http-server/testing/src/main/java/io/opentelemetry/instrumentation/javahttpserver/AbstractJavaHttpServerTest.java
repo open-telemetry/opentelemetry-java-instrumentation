@@ -150,7 +150,7 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
     contexts.add(context);
     context =
         server.createContext(
-            "/captureHeaders",
+            CAPTURE_HEADERS.getPath(),
             ctx ->
                 testing()
                     .runWithSpan(
