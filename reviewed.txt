@@ -159,3 +159,4 @@ internal-url-class-loader:javaagent
 java-http-client:library
 java-http-server:library
 java-http-server:javaagent
+java-http-server:testing
