@@ -8,7 +8,7 @@ plugins {
 
 muzzle {
   pass {
-    group.set("io.opentelemetry.instrumentation")
+    group.set("io.opentelemetry")
     module.set("opentelemetry-instrumentation-annotations")
     versions.set("(,)")
   }

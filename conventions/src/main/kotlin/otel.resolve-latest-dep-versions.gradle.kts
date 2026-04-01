@@ -130,7 +130,10 @@ tasks {
       muzzleArtifacts.forEach { coords ->
         val key = "$coords#+"
         val (group, module) = coords.split(":")
+        // Use "latest.release" first; fall back to "+" when <release> metadata points to a
+        // pre-release version (e.g. javax.servlet:servlet-api whose <release> is 3.0-alpha-1).
         val resolvedVersion = resolveStableVersion(project, group, module, "latest.release")
+          ?: resolveStableVersion(project, group, module, "+")
         if (resolvedVersion != null) {
           recordVersion(key, resolvedVersion)
         }

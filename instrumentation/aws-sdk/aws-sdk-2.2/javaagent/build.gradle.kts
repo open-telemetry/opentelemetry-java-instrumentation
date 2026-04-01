@@ -86,7 +86,7 @@ muzzle {
   }
   pass {
     group.set("software.amazon.awssdk")
-    module.set("bedrock-runtime")
+    module.set("bedrockruntime")
     versions.set("[2.25.63,)")
     // Used by all SDK services, the only case it isn't is an SDK extension such as a custom HTTP
     // client, which is not target of instrumentation anyways.
