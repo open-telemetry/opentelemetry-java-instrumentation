@@ -13,7 +13,16 @@ tasks {
         throw GradleException("Must run with -PtestLatestDeps=true -PresolveLatestDeps=true")
       }
 
+      // Seed the versions map with the existing JSON so that entries which fail to resolve
+      // (broken transitive deps, missing repos, etc.) are preserved rather than deleted.
+      val outputFile = file(".github/config/latest-dep-versions.json")
+      @Suppress("UNCHECKED_CAST")
+      val existingVersions: Map<String, String> =
+        if (outputFile.exists()) groovy.json.JsonSlurper().parse(outputFile) as Map<String, String>
+        else emptyMap()
+
       val versions = sortedMapOf<String, String>()
+      versions.putAll(existingVersions)
 
       fun recordVersion(key: String, version: String) {
         val existing = versions[key]
@@ -25,6 +34,8 @@ tasks {
       val stableVersionCache = mutableMapOf<Triple<String, String, String>, String?>()
 
       // Resolve an artifact with a stability filter, rejecting pre-release versions.
+      // Also rejects versions whose transitive dependency graph contains unresolvable deps
+      // (e.g. a release that references a non-existent transitive version).
       // Results are cached to avoid repeated Maven Central lookups for the same artifact.
       fun resolveStableVersion(project: Project, group: String, module: String, version: String): String? {
         return stableVersionCache.getOrPut(Triple(group, module, version)) {
@@ -37,7 +48,19 @@ tasks {
             }
           }
           try {
-            detached.incoming.resolutionResult.rootComponent.get()
+            val resolutionResult = detached.incoming.resolutionResult
+            val hasUnresolved = try {
+              resolutionResult.allDependencies
+                .any { it is org.gradle.api.artifacts.result.UnresolvedDependencyResult }
+            } catch (e: Exception) {
+              logger.warn("Failed to check transitive deps for $group:$module:$version: ${e.message}")
+              true
+            }
+            if (hasUnresolved) {
+              logger.warn("Skipping $group:$module latest ($version) — has unresolvable transitive dependencies")
+              return@getOrPut null
+            }
+            resolutionResult.rootComponent.get()
               .dependencies
               .filterIsInstance<org.gradle.api.artifacts.result.ResolvedDependencyResult>()
               .firstOrNull()
@@ -106,24 +129,15 @@ tasks {
       }
       muzzleArtifacts.forEach { coords ->
         val key = "$coords#+"
-        if (versions.containsKey(key)) return@forEach
         val (group, module) = coords.split(":")
         val resolvedVersion = resolveStableVersion(project, group, module, "latest.release")
-          ?: run {
-            // Fall back to highest already-pinned version for this artifact (e.g. when latest.release
-            // resolves to a broken version like grizzly 5.0.0 which depends on a SNAPSHOT BOM)
-            versions.entries
-              .filter { it.key.startsWith("$coords#") }
-              .mapNotNull { runCatching { VersionNumber.parse(it.value) to it.value }.getOrNull() }
-              .maxByOrNull { it.first }
-              ?.second
-          }
         if (resolvedVersion != null) {
           recordVersion(key, resolvedVersion)
         }
+        // If resolvedVersion is null (broken latest or unresolvable), the existing entry in
+        // versions (seeded from the existing JSON) is preserved as-is.
       }
 
-      val outputFile = file(".github/config/latest-dep-versions.json")
       outputFile.parentFile.mkdirs()
       outputFile.printWriter().use { writer ->
         writer.println("{")
