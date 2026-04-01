@@ -37,7 +37,7 @@ public class HttpHandlerInstrumentation implements TypeInstrumentation {
             .and(named("service"))
             .and(takesArgument(0, named("org.glassfish.grizzly.http.server.Request")))
             .and(takesArgument(1, named("org.glassfish.grizzly.http.server.Response"))),
-        HttpHandlerInstrumentation.class.getName() + "$ServiceAdvice");
+        getClass().getName() + "$ServiceAdvice");
   }
 
   @SuppressWarnings("unused")
