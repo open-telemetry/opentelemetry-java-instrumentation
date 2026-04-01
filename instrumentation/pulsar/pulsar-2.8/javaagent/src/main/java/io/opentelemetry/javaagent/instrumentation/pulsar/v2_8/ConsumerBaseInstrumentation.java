@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -30,7 +31,10 @@ public class ConsumerBaseInstrumentation implements TypeInstrumentation {
     // these methods receive a message and pass it on to a message listener
     // we instrument them so that the span for the receive operation could be suppressed
     transformer.applyAdviceToMethod(
-        named("triggerListener").and(takesArguments(0)).or(named("receiveMessageFromConsumer")),
+        named("triggerListener")
+            .or(nameStartsWith("lambda$triggerListener$"))
+            .and(takesArguments(0))
+            .or(named("receiveMessageFromConsumer")),
         getClass().getName() + "$TriggerListenerAdvice");
   }
 
