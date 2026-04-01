@@ -29,7 +29,7 @@ import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseListener;
 
-public class RestClientInstrumentation implements TypeInstrumentation {
+class RestClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.elasticsearch.client.RestClient");

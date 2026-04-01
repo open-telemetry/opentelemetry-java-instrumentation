@@ -25,7 +25,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
+class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     // HttpRequest is a final class.  Only need to instrument it exactly
@@ -85,6 +85,7 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
       }
     }
 
+    @Nullable
     public static AdviceScope fromVirtualFieldContext(HttpRequest request) {
       Context context = HTTP_REQUEST_CONTEXT.get(request);
       if (context == null) {

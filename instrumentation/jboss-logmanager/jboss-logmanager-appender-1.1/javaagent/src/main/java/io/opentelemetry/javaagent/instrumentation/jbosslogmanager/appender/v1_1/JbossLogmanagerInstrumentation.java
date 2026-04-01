@@ -21,7 +21,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.jboss.logmanager.ExtLogRecord;
 import org.jboss.logmanager.Logger;
 
-public class JbossLogmanagerInstrumentation implements TypeInstrumentation {
+class JbossLogmanagerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.jboss.logmanager.Logger");

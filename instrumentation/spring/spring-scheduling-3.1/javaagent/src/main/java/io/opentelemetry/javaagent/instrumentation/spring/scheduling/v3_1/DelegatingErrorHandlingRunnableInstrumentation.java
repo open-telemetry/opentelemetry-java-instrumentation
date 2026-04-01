@@ -22,7 +22,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.util.ErrorHandler;
 
-public class DelegatingErrorHandlingRunnableInstrumentation implements TypeInstrumentation {
+class DelegatingErrorHandlingRunnableInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.springframework.scheduling.support.DelegatingErrorHandlingRunnable");

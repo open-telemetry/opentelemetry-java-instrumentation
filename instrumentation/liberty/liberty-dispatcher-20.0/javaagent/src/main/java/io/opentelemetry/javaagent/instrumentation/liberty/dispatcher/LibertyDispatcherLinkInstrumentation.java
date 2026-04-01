@@ -28,7 +28,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * requested context root or something goes horribly wrong and server responds with Internal Server
  * Error
  */
-public class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation {
+class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

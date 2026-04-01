@@ -17,8 +17,6 @@ import javax.annotation.Nullable;
  * any time.
  */
 public class HelidonInstrumenterBuilderUtil {
-  private HelidonInstrumenterBuilderUtil() {}
-
   @Nullable
   private static Function<
           HelidonTelemetryBuilder,
@@ -40,4 +38,6 @@ public class HelidonInstrumenterBuilderUtil {
           serverBuilderExtractor) {
     HelidonInstrumenterBuilderUtil.serverBuilderExtractor = serverBuilderExtractor;
   }
+
+  private HelidonInstrumenterBuilderUtil() {}
 }

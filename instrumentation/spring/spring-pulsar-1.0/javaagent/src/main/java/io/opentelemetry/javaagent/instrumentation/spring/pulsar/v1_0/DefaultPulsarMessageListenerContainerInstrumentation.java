@@ -21,7 +21,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pulsar.client.api.Message;
 
-public class DefaultPulsarMessageListenerContainerInstrumentation implements TypeInstrumentation {
+class DefaultPulsarMessageListenerContainerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named(

@@ -31,7 +31,7 @@ import reactor.netty.Connection;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientResponse;
 
-public class ResponseReceiverInstrumentation implements TypeInstrumentation {
+class ResponseReceiverInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

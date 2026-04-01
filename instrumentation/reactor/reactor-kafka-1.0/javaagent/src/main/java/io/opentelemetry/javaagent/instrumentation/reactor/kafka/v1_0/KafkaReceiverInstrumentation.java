@@ -17,7 +17,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import reactor.kafka.receiver.KafkaReceiver;
 
-public class KafkaReceiverInstrumentation implements TypeInstrumentation {
+class KafkaReceiverInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

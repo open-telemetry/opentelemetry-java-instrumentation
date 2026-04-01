@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import scala.Function1;
 import scala.concurrent.Future;
 
-public class RouteConcatenationInstrumentation implements TypeInstrumentation {
+class RouteConcatenationInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("akka.http.scaladsl.server.RouteConcatenation$RouteWithConcatenation");

@@ -17,7 +17,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.ibatis.binding.MapperMethod.SqlCommand;
 
-public class SqlCommandInstrumentation implements TypeInstrumentation {
+class SqlCommandInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.ibatis.binding.MapperMethod$SqlCommand");

@@ -36,7 +36,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * <p>Note: There are quite a few separate implementations of {@code ForkJoinTask}/{@code
  * ForkJoinPool}: JVM, Akka, Scala, Netty to name a few. This class handles JVM version.
  */
-public class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
+class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

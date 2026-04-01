@@ -1598,7 +1598,7 @@ public abstract class AbstractGrpcTest {
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(0))));
 
-    assertThat(cancelCalled.get()).isEqualTo(true);
+    assertThat(cancelCalled).isTrue();
   }
 
   @Test

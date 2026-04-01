@@ -16,7 +16,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class GenStreamingServerDispatcherInstrumentation implements TypeInstrumentation {
+class GenStreamingServerDispatcherInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return hasSuperType(named("com.twitter.finagle.http.GenStreamingSerialServerDispatcher"));

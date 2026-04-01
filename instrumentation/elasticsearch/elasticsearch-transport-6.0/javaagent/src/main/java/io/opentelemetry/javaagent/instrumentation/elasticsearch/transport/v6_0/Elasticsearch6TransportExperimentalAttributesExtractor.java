@@ -12,7 +12,7 @@ import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.Elasti
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticsearchTransportExperimentalAttributesExtractor;
 import org.elasticsearch.action.DocWriteRequest;
 
-public class Elasticsearch6TransportExperimentalAttributesExtractor
+class Elasticsearch6TransportExperimentalAttributesExtractor
     extends ElasticsearchTransportExperimentalAttributesExtractor {
 
   private static final AttributeKey<String> ELASTICSEARCH_REQUEST_WRITE_TYPE =

@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import ratpack.exec.internal.Continuation;
 import ratpack.func.Action;
 
-public class DefaultExecutionInstrumentation implements TypeInstrumentation {
+class DefaultExecutionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

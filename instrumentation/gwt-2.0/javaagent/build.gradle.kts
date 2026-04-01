@@ -112,8 +112,6 @@ tasks {
 
     // add test app classes to classpath
     classpath = sourceSets.test.get().runtimeClasspath.plus(files(layout.buildDirectory.dir("testapp/classes")))
-
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 }
 
@@ -122,4 +120,5 @@ tasks.withType<Test>().configureEach {
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   systemProperty("collectMetadata", findProperty("collectMetadata"))
+  usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 }

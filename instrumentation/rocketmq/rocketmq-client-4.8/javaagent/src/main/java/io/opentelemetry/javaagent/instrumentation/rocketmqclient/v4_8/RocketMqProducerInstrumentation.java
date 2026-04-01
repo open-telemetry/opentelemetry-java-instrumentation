@@ -16,7 +16,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.rocketmq.client.impl.producer.DefaultMQProducerImpl;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 
-public class RocketMqProducerInstrumentation implements TypeInstrumentation {
+class RocketMqProducerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

@@ -28,7 +28,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import scala.Some;
 
-public class FinatraRouteInstrumentation implements TypeInstrumentation {
+class FinatraRouteInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

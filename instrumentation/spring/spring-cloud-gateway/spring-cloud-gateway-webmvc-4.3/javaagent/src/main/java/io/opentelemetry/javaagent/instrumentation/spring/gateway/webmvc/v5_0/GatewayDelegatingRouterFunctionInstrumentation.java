@@ -18,7 +18,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.web.servlet.function.ServerRequest;
 
-public class GatewayDelegatingRouterFunctionInstrumentation implements TypeInstrumentation {
+class GatewayDelegatingRouterFunctionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

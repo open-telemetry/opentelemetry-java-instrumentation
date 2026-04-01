@@ -19,7 +19,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.ibatis.binding.MapperMethod.SqlCommand;
 
-public class MapperMethodInstrumentation implements TypeInstrumentation {
+class MapperMethodInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
