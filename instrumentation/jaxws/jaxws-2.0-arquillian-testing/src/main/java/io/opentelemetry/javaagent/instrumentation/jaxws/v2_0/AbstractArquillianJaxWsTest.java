@@ -35,14 +35,14 @@ import test.HelloServiceImpl;
 @ExtendWith(ArquillianExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @RunAsClient
-public abstract class AbstractArquillianJaxWsTest {
+abstract class AbstractArquillianJaxWsTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  public final WebClient client = WebClient.of();
+  private final WebClient client = WebClient.of();
 
-  @ArquillianResource public URI url;
+  @ArquillianResource URI url;
 
   @Deployment
   static WebArchive createDeployment() {
@@ -66,12 +66,12 @@ public abstract class AbstractArquillianJaxWsTest {
   }
 
   @Test
-  public void testHelloService() {
+  void testHelloService() {
     testHelloRequest("HelloService");
   }
 
   @Test
-  public void testEjbHelloService() {
+  void testEjbHelloService() {
     testHelloRequest("EjbHelloService");
   }
 
