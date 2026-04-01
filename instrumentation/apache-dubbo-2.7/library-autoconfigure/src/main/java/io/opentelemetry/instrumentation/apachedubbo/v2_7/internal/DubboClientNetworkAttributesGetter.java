@@ -22,8 +22,7 @@ public final class DubboClientNetworkAttributesGetter
   @Nullable
   @Override
   public String getServerAddress(DubboRequest request) {
-    String registryAddress =
-        DubboRegistryUtil.extractRegistryAddress(request.invocation());
+    String registryAddress = DubboRegistryUtil.extractRegistryAddress(request.invocation());
     if (registryAddress != null) {
       return registryAddress + "/" + DubboRegistryUtil.buildServiceTarget(request.url());
     }

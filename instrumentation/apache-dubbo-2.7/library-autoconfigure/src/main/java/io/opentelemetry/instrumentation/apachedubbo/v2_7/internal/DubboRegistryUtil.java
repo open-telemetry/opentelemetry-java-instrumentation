@@ -141,8 +141,7 @@ public final class DubboRegistryUtil {
       if (registry == null) {
         return null;
       }
-      MethodHandle getUrl =
-          findAccessor(registry.getClass(), "getUrl", null, URL_ACCESSOR_CACHE);
+      MethodHandle getUrl = findAccessor(registry.getClass(), "getUrl", null, URL_ACCESSOR_CACHE);
       if (getUrl == null) {
         return null;
       }
@@ -250,6 +249,12 @@ public final class DubboRegistryUtil {
             (ConcurrentHashMap<String, Set<?>>) CONSUMER_INVOKERS_GETTER.invoke();
         Set<?> wrappers = table.get(serviceKey);
         if (wrappers == null || wrappers.isEmpty()) {
+          return null;
+        }
+        // Only return registry address when exactly one registry is registered for this service.
+        // With multiple registries we cannot determine which one handled the current invocation,
+        // so we return null and let the caller fall back to the provider IP address.
+        if (wrappers.size() != 1) {
           return null;
         }
         Object wrapper = wrappers.iterator().next();
