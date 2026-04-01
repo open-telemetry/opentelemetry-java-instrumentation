@@ -308,7 +308,7 @@
   "org.apache.tomee:openejb-cxf-rs#+": "10.1.4",
   "org.apache.wicket:wicket#+": "10.8.0",
   "org.apache.wicket:wicket#9.+": "9.22.0",
-  "org.asynchttpclient:async-http-client#+": "3.0.7",
+  "org.asynchttpclient:async-http-client#+": "2.12.4",
   "org.eclipse.jetty.ee10:jetty-ee10-servlet#+": "12.1.7",
   "org.eclipse.jetty:jetty-client#+": "12.1.7",
   "org.eclipse.jetty:jetty-client#9.+": "9.4.58.v20250814",

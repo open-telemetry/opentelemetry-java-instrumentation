@@ -4,6 +4,7 @@
  */
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import io.opentelemetry.javaagent.muzzle.AcceptableVersions
 import io.opentelemetry.javaagent.muzzle.MuzzleDirective
 import io.opentelemetry.javaagent.muzzle.MuzzleExtension
 import io.opentelemetry.javaagent.muzzle.matcher.MuzzleGradlePluginUtil
@@ -442,6 +443,7 @@ fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, sessio
 fun filterVersions(range: VersionRangeResult, skipVersions: Set<String>, upperBound: Version) = sequence {
   fun accept(version: Version?): Boolean {
     if (version == null) return false
+    if (!AcceptableVersions.isStable(version.toString())) return false
     if (skipVersions.contains(version.toString().lowercase(Locale.ROOT))) return false
     if (version > upperBound) return false
     return true
