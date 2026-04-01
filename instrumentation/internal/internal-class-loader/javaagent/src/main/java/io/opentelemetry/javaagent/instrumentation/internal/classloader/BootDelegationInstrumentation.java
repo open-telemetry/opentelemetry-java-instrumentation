@@ -37,7 +37,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * <p>This instrumentation forces all class loaders to delegate to the bootstrap class loader for
  * the classes that we have put in the bootstrap class loader.
  */
-public class BootDelegationInstrumentation implements TypeInstrumentation {
+class BootDelegationInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

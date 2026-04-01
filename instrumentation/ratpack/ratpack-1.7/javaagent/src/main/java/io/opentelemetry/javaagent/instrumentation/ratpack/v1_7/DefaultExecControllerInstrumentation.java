@@ -22,7 +22,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import ratpack.exec.ExecInitializer;
 import ratpack.exec.ExecInterceptor;
 
-public class DefaultExecControllerInstrumentation implements TypeInstrumentation {
+class DefaultExecControllerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

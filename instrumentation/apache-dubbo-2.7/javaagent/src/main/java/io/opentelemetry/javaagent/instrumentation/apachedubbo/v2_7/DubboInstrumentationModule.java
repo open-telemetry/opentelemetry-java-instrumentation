@@ -52,7 +52,7 @@ public class DubboInstrumentationModule extends InstrumentationModule
   }
 
   // A type instrumentation is needed to trigger resource injection.
-  public static class ResourceInjectingTypeInstrumentation implements TypeInstrumentation {
+  static class ResourceInjectingTypeInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return named("org.apache.dubbo.common.extension.ExtensionLoader");

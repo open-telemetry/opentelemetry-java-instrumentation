@@ -21,7 +21,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.restlet.Request;
 import org.restlet.routing.TemplateRoute;
 
-public class RouteInstrumentation implements TypeInstrumentation {
+class RouteInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return namedOneOf("org.restlet.routing.TemplateRoute", "org.restlet.routing.Route");

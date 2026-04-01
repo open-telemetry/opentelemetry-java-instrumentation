@@ -30,7 +30,7 @@ import redis.RoundRobinPoolRequest;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
 
-public class RequestInstrumentation implements TypeInstrumentation {
+class RequestInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("redis.Request");

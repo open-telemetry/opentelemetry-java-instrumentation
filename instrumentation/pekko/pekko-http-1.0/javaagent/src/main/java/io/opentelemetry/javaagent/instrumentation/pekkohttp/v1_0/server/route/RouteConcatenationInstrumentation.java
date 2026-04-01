@@ -20,7 +20,7 @@ import org.apache.pekko.http.scaladsl.server.RouteResult;
 import scala.Function1;
 import scala.concurrent.Future;
 
-public class RouteConcatenationInstrumentation implements TypeInstrumentation {
+class RouteConcatenationInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.pekko.http.scaladsl.server.RouteConcatenation$RouteWithConcatenation");

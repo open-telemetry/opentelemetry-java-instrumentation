@@ -17,7 +17,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.web.reactive.function.client.WebClient;
 
-public class WebClientBuilderInstrumentation implements TypeInstrumentation {
+class WebClientBuilderInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("org.springframework.web.reactive.function.client.WebClient");

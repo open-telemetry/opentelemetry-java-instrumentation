@@ -16,7 +16,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import scala.Option;
 
-public class ChannelTransportInstrumentation implements TypeInstrumentation {
+class ChannelTransportInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.twitter.finagle.netty4.transport.ChannelTransport");

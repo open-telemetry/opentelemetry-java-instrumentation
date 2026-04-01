@@ -23,7 +23,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * dependency on a system property or possibility of a user overriding this since it's required for
  * instrumentation in the agent to work properly.
  */
-public class ContextInstrumentation implements TypeInstrumentation {
+class ContextInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

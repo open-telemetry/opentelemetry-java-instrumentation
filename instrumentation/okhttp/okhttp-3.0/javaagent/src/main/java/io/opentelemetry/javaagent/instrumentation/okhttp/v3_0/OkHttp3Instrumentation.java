@@ -16,7 +16,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import okhttp3.OkHttpClient;
 
-public class OkHttp3Instrumentation implements TypeInstrumentation {
+class OkHttp3Instrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("okhttp3.OkHttpClient$Builder");

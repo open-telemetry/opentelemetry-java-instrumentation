@@ -20,7 +20,7 @@ import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientConfig;
 import reactor.netty.http.client.HttpClientConfigBuddy;
 
-public class HttpClientConnectInstrumentation implements TypeInstrumentation {
+class HttpClientConnectInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("reactor.netty.http.client.HttpClientConnect");

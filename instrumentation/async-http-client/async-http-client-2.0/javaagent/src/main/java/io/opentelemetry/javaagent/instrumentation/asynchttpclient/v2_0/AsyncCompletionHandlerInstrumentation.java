@@ -23,7 +23,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.asynchttpclient.AsyncCompletionHandler;
 import org.asynchttpclient.Response;
 
-public class AsyncCompletionHandlerInstrumentation implements TypeInstrumentation {
+class AsyncCompletionHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
