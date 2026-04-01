@@ -45,6 +45,18 @@ val muzzlePinnedVersions: Map<String, String> by lazy {
 
 /**
  * Resolve the pinned upper bound as an Aether Version for a muzzle-checked artifact.
+ *
+ * <p>The pinned version limits which library versions muzzle will test against, preventing CI
+ * failures when new (potentially incompatible) versions are published to Maven Central.
+ *
+ * <p>Special value "0.0": used as a sentinel for artifacts that either don't exist on any
+ * accessible Maven repository, or whose muzzle directive is intentionally a no-op (e.g. a
+ * {@code fail} directive for a never-published artifact, or a {@code pass} directive where
+ * the agent uses shaded/in-repo classes rather than the external library). With "0.0" as the
+ * upper bound, {@code filterVersions} rejects all real versions (none are <= 0.0), so no
+ * muzzle tasks are created and the directive is silently skipped. To add a sentinel entry,
+ * manually add {@code "group:module#+": "0.0"} to
+ * {@code .github/config/latest-dep-versions.json}.
  */
 fun resolveUpperBound(group: String, module: String, system: RepositorySystem, session: RepositorySystemSession, repos: List<RemoteRepository>): Version {
   val key = "$group:$module#+"

@@ -137,8 +137,12 @@ tasks {
         if (resolvedVersion != null) {
           recordVersion(key, resolvedVersion)
         }
-        // If resolvedVersion is null (broken latest or unresolvable), the existing entry in
-        // versions (seeded from the existing JSON) is preserved as-is.
+        // If resolvedVersion is null the existing entry (seeded from the JSON at startup) is
+        // preserved.  For artifacts that genuinely don't exist on any accessible Maven repo
+        // (e.g. a fail-directive artifact or an intentional no-op pass directive), add a
+        // sentinel entry manually:  "group:module#+": "0.0"
+        // The 0.0 upper bound causes filterVersions() to skip all real versions so no muzzle
+        // tasks are created.  See resolveUpperBound() in muzzle-check.gradle.kts for details.
       }
 
       outputFile.parentFile.mkdirs()
