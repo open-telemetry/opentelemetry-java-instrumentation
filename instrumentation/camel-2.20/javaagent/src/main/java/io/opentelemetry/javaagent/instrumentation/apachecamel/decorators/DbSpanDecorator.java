@@ -34,10 +34,11 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQueryAnalyzer;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import java.net.URI;
 import java.util.Map;
@@ -48,7 +49,8 @@ import org.apache.camel.Exchange;
 class DbSpanDecorator extends BaseSpanDecorator {
 
   private static final SqlQueryAnalyzer analyzer =
-      SqlQueryAnalyzer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
+      SqlQueryAnalyzer.create(
+          DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "camel"));
 
   private final String component;
   private final String system;

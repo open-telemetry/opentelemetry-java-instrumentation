@@ -27,11 +27,11 @@ public final class Jetty11Singletons {
               .propagateOperationListenersToOnEnd()
               .build(INSTRUMENTATION_NAME, Servlet5Accessor.INSTANCE);
 
-  private static final JettyHelper<HttpServletRequest, HttpServletResponse> HELPER =
+  private static final JettyHelper<HttpServletRequest, HttpServletResponse> helper =
       new JettyHelper<>(instrumenter, Servlet5Accessor.INSTANCE);
 
   public static JettyHelper<HttpServletRequest, HttpServletResponse> helper() {
-    return HELPER;
+    return helper;
   }
 
   private Jetty11Singletons() {}

@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFac
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenterBuilder;
@@ -19,7 +20,6 @@ import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcAttributesGetter;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
 import java.sql.Connection;
@@ -50,9 +50,7 @@ public final class JdbcSingletons {
             GlobalOpenTelemetry.get(),
             singletonList(servicePeerExtractor),
             true,
-            DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jdbc")
-                .get("statement_sanitizer")
-                .getBoolean("enabled", AgentCommonConfig.get().isQuerySanitizationEnabled()),
+            DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "jdbc"),
             CAPTURE_QUERY_PARAMETERS);
 
     transactionInstrumenter =
@@ -104,10 +102,7 @@ public final class JdbcSingletons {
 
   private static SqlCommenter configureSqlCommenter() {
     SqlCommenterBuilder builder = SqlCommenter.builder();
-    builder.setEnabled(
-        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jdbc")
-            .get("sqlcommenter/development")
-            .getBoolean("enabled", AgentCommonConfig.get().isSqlCommenterEnabled()));
+    builder.setEnabled(DbConfig.isSqlCommenterEnabled(GlobalOpenTelemetry.get(), "jdbc"));
     SqlCommenterCustomizerHolder.getCustomizer().customize(builder);
     return builder.build();
   }
