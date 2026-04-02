@@ -200,3 +200,4 @@ jaxws:jaxws-3.0-common-testing
 jaxws:jaxws-3.0-axis2-2.0-testing
 jaxws-cxf-3.0:javaagent-unit-tests
 jaxws-common:javaagent
+jaxws-cxf-3.0:javaagent
