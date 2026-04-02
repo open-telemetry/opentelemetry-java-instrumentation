@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -37,7 +38,7 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-tomcat:2.+") // related dependency
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 
 if (!latestDepTest) {
   configurations.configureEach {

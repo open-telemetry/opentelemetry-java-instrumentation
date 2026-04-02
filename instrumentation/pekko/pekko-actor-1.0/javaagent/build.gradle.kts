@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
@@ -34,7 +35,7 @@ dependencies {
   testImplementation(project(":instrumentation:executors:testing"))
 }
 
-if (findProperty("testLatestDeps") == "true") {
+if (testLatestDeps) {
   configurations {
     // pekko artifact name is different for regular and latest tests
     testImplementation {

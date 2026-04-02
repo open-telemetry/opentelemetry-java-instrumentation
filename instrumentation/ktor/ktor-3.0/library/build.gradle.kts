@@ -1,5 +1,6 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 
 plugins {
   id("otel.library-instrumentation")

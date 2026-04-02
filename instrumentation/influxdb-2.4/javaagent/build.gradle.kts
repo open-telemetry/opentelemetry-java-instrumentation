@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -44,7 +45,7 @@ tasks {
     systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
-  if (!(findProperty("testLatestDeps") == "true")) {
+  if (!testLatestDeps) {
     check {
       dependsOn(testing.suites)
     }

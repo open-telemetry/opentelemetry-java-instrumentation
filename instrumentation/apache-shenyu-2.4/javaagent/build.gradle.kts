@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -32,7 +33,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 
 // spring 6 (spring boot 3) requires java 17
 if (latestDepTest) {

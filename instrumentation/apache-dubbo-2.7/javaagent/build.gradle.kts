@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -17,7 +18,7 @@ dependencies {
   library("org.apache.dubbo:dubbo:2.7.0")
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 
 testing {
   suites {

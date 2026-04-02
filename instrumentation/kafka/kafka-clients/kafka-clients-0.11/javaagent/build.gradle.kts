@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -79,7 +80,7 @@ tasks {
   }
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 
 // kafka 4.1 requires java 11
 if (latestDepTest) {

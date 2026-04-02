@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -89,7 +90,7 @@ tasks {
   }
 }
 
-if (findProperty("testLatestDeps") == "true") {
+if (testLatestDeps) {
   configurations {
     // artifact name changed from 'resteasy-jaxrs' to 'resteasy-core' starting from version 4.0.0
     testImplementation {

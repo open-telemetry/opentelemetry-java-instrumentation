@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
@@ -87,7 +88,7 @@ tasks {
   }
 }
 
-if (findProperty("testLatestDeps") == "true") {
+if (testLatestDeps) {
   configurations {
     // rediscala artifact name is different for regular and latest tests
     testImplementation {

@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.library-instrumentation")
 }
@@ -28,7 +29,7 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   }
 
-  if (findProperty("testLatestDeps") == "true") {
+  if (testLatestDeps) {
     compileTestJava {
       options.release.set(11)
     }

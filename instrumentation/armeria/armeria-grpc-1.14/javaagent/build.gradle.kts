@@ -1,4 +1,5 @@
 import com.google.protobuf.gradle.*
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -29,7 +30,7 @@ tasks.named<Checkstyle>("checkstyleTest") {
   exclude("**/example/**")
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 protobuf {
   protoc {
     val protocVersion = if (latestDepTest) "3.25.5" else "3.19.2"

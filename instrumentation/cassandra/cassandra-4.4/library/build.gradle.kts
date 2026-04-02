@@ -1,8 +1,9 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.library-instrumentation")
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 dependencies {
   if (latestDepTest) {
     library("org.apache.cassandra:java-driver-core:4.18.0")

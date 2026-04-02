@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.library-instrumentation")
 }
@@ -9,7 +10,7 @@ dependencies {
   testImplementation(project(":instrumentation:graphql-java:graphql-java-common-12.0:testing"))
 }
 
-if (findProperty("testLatestDeps") == "true") {
+if (testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }

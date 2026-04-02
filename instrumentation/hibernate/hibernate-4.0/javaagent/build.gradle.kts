@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -38,7 +39,7 @@ dependencies {
   testImplementation("org.javassist:javassist:3.28.0-GA")
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 testing {
   suites {
     val version5Test by registering(JvmTestSuite::class) {

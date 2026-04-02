@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -13,7 +14,7 @@ muzzle {
   }
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 
 dependencies {
   library("org.springframework.boot:spring-boot-actuator-autoconfigure:2.0.0.RELEASE")

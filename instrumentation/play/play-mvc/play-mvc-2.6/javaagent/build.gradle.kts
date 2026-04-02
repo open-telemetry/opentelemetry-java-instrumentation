@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -60,7 +61,6 @@ testing {
   }
 }
 
-val testLatestDeps = findProperty("testLatestDeps") == "true"
 tasks {
   if (testLatestDeps) {
     // disable regular test running and compiling tasks when latest dep test task is run

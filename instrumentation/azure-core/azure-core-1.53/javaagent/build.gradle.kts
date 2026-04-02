@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -32,7 +33,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:azure-core:azure-core-1.36:javaagent"))
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 
 tasks {
   withType<Test>().configureEach {

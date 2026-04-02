@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -32,7 +33,7 @@ dependencies {
 }
 
 // Requires old Guava. Can't use enforcedPlatform since predates BOM
-if (!(findProperty("testLatestDeps") == "true")) {
+if (!testLatestDeps) {
   configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.google.guava:guava:19.0")
 }
 

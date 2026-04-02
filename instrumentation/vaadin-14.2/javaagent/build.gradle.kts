@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -90,7 +91,7 @@ tasks {
   }
 
   check {
-    if (findProperty("testLatestDeps") == "true") {
+    if (testLatestDeps) {
       dependsOn(testing.suites.named("vaadin14LatestTest"), testing.suites.named("vaadinLatestTest"))
     } else {
       dependsOn(testing.suites.named("vaadin142Test"), testing.suites.named("vaadin16Test"))

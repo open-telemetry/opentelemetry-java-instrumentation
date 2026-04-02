@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
@@ -67,7 +68,7 @@ testing {
   suites {
     val tapirTest by registering(JvmTestSuite::class) {
       dependencies {
-        if (findProperty("testLatestDeps") == "true") {
+        if (testLatestDeps) {
           implementation("com.typesafe.akka:akka-http_2.13:latest.release")
           implementation("com.typesafe.akka:akka-stream_2.13:latest.release")
           implementation("com.softwaremill.sttp.tapir:tapir-pekko-http-server_2.13:latest.release")
@@ -102,7 +103,7 @@ tasks {
   }
 }
 
-if (findProperty("testLatestDeps") == "true") {
+if (testLatestDeps) {
   configurations {
     // pekko artifact name is different for regular and latest tests
     testImplementation {

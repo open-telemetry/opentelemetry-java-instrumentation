@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -29,8 +30,6 @@ dependencies {
   testInstrumentation(project(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-5.0:javaagent"))
   testInstrumentation(project(":instrumentation:vertx:vertx-web-3.0:javaagent"))
 }
-
-val testLatestDeps = findProperty("testLatestDeps") == "true"
 
 testing {
   suites {

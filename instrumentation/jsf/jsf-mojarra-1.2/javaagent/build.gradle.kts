@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -57,7 +58,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:jsf:jsf-mojarra-3.0:javaagent"))
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 testing {
   suites {
     val mojarra12Test by registering(JvmTestSuite::class) {

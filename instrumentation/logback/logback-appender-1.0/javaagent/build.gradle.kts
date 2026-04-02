@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -27,7 +28,7 @@ dependencies {
     }
   }
 
-  if (findProperty("testLatestDeps") == "true") {
+  if (testLatestDeps) {
     testImplementation("ch.qos.logback:logback-classic:latest.release")
   } else {
     testImplementation("ch.qos.logback:logback-classic") {

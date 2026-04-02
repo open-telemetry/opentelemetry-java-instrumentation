@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -32,7 +33,7 @@ dependencies {
 }
 
 // restlet registers the first engine that is present on classpath, so we need to enforce the appropriate version
-if (findProperty("testLatestDeps") == "true") {
+if (testLatestDeps) {
   configurations.configureEach {
     resolutionStrategy {
       eachDependency {

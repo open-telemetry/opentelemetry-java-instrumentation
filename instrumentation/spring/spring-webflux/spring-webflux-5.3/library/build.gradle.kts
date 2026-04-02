@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.library-instrumentation")
   id("otel.nullaway-conventions")
@@ -17,7 +18,7 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:2.4.0")
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 
 // spring 6 (which spring-kafka 3.+ uses) requires java 17
 if (latestDepTest) {

@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -15,7 +16,7 @@ dependencies {
   library("org.jboss.logmanager:jboss-logmanager:1.1.0.GA")
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 
 if (latestDepTest) {
   otelJava {

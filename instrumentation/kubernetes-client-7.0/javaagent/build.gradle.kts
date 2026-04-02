@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -23,7 +24,7 @@ testing {
   suites {
     val version20Test by registering(JvmTestSuite::class) {
       dependencies {
-        if (findProperty("testLatestDeps") == "true") {
+        if (testLatestDeps) {
           implementation("io.kubernetes:client-java-api:latest.release")
         } else {
           implementation("io.kubernetes:client-java-api:20.0.0")

@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-testing")
 }
@@ -35,7 +36,7 @@ tasks {
 // Servlet 3.0 in latest Jetty versions requires Java 11
 // However, projects that depend on this module are still be using Java 8 in testLatestDeps mode
 // Therefore, we need a separate project for servlet 3.0 tests
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 
 if (latestDepTest) {
   otelJava {

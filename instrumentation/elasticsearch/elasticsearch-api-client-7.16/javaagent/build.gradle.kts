@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -45,7 +46,7 @@ dependencies {
   latestDepTestLibrary("co.elastic.clients:elasticsearch-java:7.17.19") // native on-by-default instrumentation after this version
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 testing {
   suites {
     val version8Test by registering(JvmTestSuite::class) {

@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -42,8 +43,6 @@ dependencies {
   testInstrumentation(project(":instrumentation:akka:akka-http-10.0:javaagent"))
   testInstrumentation(project(":instrumentation:akka:akka-actor-2.3:javaagent"))
 }
-
-val testLatestDeps = findProperty("testLatestDeps") == "true"
 
 testing {
   suites {

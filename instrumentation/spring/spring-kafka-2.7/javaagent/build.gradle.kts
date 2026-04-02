@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -33,7 +34,7 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-kafka:latest.release")
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 
 testing {
   suites {

@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.library-instrumentation")
   id("otel.nullaway-conventions")
@@ -11,7 +12,7 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 
 // spring 6 requires java 17
 if (latestDepTest) {

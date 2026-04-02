@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 /*
  * Instrumentation for Hibernate between 3.3 and 4.
  * Has the same logic as the Hibernate 4+ instrumentation, but is copied rather than sharing a codebase. This is because
@@ -40,7 +41,7 @@ dependencies {
   latestDepTestLibrary("org.hibernate:hibernate-core:3.+") // see hibernate-4.0 module
 }
 
-if (findProperty("testLatestDeps") == "true") {
+if (testLatestDeps) {
   configurations {
     // Needed for test, but for latestDepTest this would otherwise bundle a second incompatible version of hibernate-core.
     testImplementation {

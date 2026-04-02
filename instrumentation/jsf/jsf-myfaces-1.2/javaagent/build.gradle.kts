@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -24,7 +25,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:jsf:jsf-myfaces-3.0:javaagent"))
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 testing {
   suites {
     val myfaces12Test by registering(JvmTestSuite::class) {

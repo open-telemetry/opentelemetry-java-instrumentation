@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -10,8 +11,6 @@ muzzle {
     assertInverse.set(true)
   }
 }
-
-val testLatestDeps = findProperty("testLatestDeps") == "true"
 
 dependencies {
   testInstrumentation(project(":instrumentation:log4j:log4j-appender-1.2:javaagent"))

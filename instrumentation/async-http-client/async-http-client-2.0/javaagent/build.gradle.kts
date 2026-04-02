@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -20,7 +21,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:async-http-client:async-http-client-1.9:javaagent"))
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 val testJavaVersion =
   gradle.startParameter.projectProperties["testJavaVersion"]?.let(JavaVersion::toVersion)
     ?: JavaVersion.current()

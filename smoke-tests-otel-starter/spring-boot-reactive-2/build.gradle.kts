@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.java-conventions")
 }
@@ -6,8 +7,7 @@ description = "smoke-tests-otel-starter-spring-boot-reactive-2"
 
 dependencies {
   implementation(project(":instrumentation:spring:starters:spring-boot-starter"))
-  val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
-  implementation(platform("org.springframework.boot:spring-boot-dependencies:" + if (testLatestDeps) "2.+" else "2.6.15"))
+  implementation(platform("org.springframework.boot:spring-boot-dependencies:" + if (project.testLatestDeps) "2.+" else "2.6.15"))
 
   implementation(project(":smoke-tests-otel-starter:spring-boot-reactive-common"))
   implementation("org.springframework.boot:spring-boot-starter-webflux")

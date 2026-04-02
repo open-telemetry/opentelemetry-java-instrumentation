@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-testing")
 }
@@ -17,7 +18,7 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:3.+") // see spring-cloud-gateway-4.3* module
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 
 tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.spring-cloud-gateway.experimental-span-attributes=true")

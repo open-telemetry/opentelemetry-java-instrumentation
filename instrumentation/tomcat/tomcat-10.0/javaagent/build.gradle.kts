@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -35,7 +36,7 @@ tasks {
 
 // Tomcat 10 uses deprecation annotation methods `forRemoval()` and `since()`
 // in jakarta.servlet.http.HttpServlet that don't work with Java 8
-if (findProperty("testLatestDeps") == "true") {
+if (testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }

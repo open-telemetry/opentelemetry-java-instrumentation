@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -23,7 +24,7 @@ dependencies {
 }
 
 // spring 6 requires java 17
-if (findProperty("testLatestDeps") == "true") {
+if (testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_17)
   }

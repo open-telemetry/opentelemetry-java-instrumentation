@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.library-instrumentation")
   id("otel.nullaway-conventions")
@@ -33,7 +34,7 @@ tasks.withType<Test>().configureEach {
   systemProperty("testLatestDeps", findProperty("testLatestDeps"))
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 
 // spring 6 (which spring-kafka 3.+ uses) requires java 17
 if (latestDepTest) {

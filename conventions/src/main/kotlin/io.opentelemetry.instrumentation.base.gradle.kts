@@ -1,5 +1,7 @@
 /** Common setup for manual instrumentation of libraries and javaagent instrumentation. */
 
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
+
 plugins {
   `java-library`
 }
@@ -26,8 +28,6 @@ plugins {
  *   precedence. Use this to restrict the latest version dependency from the default `+`, for
  *   example to restrict to just a major version by specifying `2.+`.
  */
-
-val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 
 @CacheableRule
 abstract class TestLatestDepsRule : ComponentMetadataRule {

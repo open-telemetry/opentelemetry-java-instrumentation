@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -28,7 +29,7 @@ muzzle {
   }
 }
 
-if (findProperty("testLatestDeps") == "true") {
+if (testLatestDeps) {
   // when running on jdk 21 Elasticsearch53SpringRepositoryTest occasionally fails with timeout
   otelJava {
     maxJavaVersionForTests.set(JavaVersion.VERSION_17)

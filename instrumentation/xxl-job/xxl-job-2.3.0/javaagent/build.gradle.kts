@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -32,8 +33,6 @@ dependencies {
   // latest version is tested in a separate test suite
   latestDepTestLibrary("com.xuxueli:xxl-job-core:3.2.+") // documented limitation
 }
-
-val testLatestDeps = findProperty("testLatestDeps") == "true"
 
 testing {
   suites {

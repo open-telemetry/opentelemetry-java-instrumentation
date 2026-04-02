@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-testing")
 }
@@ -16,7 +17,7 @@ dependencies {
   latestDepTestLibrary("io.vertx:vertx-codegen:4.+") // documented limitation
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 
 testing {
   suites {

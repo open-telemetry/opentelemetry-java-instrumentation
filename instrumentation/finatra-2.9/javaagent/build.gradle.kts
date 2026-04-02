@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
@@ -67,7 +68,7 @@ configurations {
 }
 
 tasks {
-  if (findProperty("testLatestDeps") == "true") {
+  if (testLatestDeps) {
     // Separate task
     named("test") {
       enabled = false
@@ -99,7 +100,7 @@ tasks {
   }
 }
 
-if (findProperty("testLatestDeps") == "true") {
+if (testLatestDeps) {
   configurations.named("latestDepTestRuntimeClasspath") {
     resolutionStrategy {
       eachDependency {

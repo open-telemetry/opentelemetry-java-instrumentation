@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 import net.ltgt.gradle.errorprone.errorprone
 
 plugins {
@@ -10,7 +11,6 @@ dependencies {
 }
 
 val disableErrorProne = properties["disableErrorProne"]?.toString()?.toBoolean() ?: false
-val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 
 tasks {
   withType<JavaCompile>().configureEach {

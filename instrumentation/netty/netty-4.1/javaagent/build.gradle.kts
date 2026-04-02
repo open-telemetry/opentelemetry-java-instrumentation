@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -83,7 +84,7 @@ tasks {
   }
 }
 
-if (!(findProperty("testLatestDeps") == "true")) {
+if (!testLatestDeps) {
   // No BOM for 4.1.0 so we can't use enforcedPlatform to override our transitive version
   // management, so hook into the resolutionStrategy.
   configurations.configureEach {

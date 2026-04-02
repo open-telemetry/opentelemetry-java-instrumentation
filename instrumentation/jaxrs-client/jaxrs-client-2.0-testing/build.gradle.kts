@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-testing")
 }
@@ -35,7 +36,7 @@ tasks.withType<Test>().configureEach {
   jvmArgs("--add-opens=java.base/java.net=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-  val latestDepTest = findProperty("testLatestDeps") == "true"
+  val latestDepTest = testLatestDeps
   systemProperty("testLatestDeps", latestDepTest)
   // in default configuration 3.6.7 retries http request in connectionErrorUnopenedPort test
   // which creates a duplicate span

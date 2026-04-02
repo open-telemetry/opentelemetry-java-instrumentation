@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.library-instrumentation")
 }
@@ -50,8 +51,6 @@ tasks {
     dependsOn(testReceiveSpansDisabled)
   }
 }
-
-val testLatestDeps = findProperty("testLatestDeps") == "true"
 
 if (!testLatestDeps) {
   configurations.testRuntimeClasspath {

@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-testing")
 }
@@ -11,8 +12,6 @@ dependencies {
   testLibrary("org.apache.tomcat.embed:tomcat-embed-core:10.0.0")
   testLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:10.0.0")
 }
-
-val testLatestDeps = findProperty("testLatestDeps") == "true"
 
 if (testLatestDeps) {
   otelJava {

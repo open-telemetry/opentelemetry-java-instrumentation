@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -53,7 +54,7 @@ tasks {
   }
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 if (!latestDepTest) {
   // https://bugs.openjdk.org/browse/JDK-8320431
   otelJava {

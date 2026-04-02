@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -34,8 +35,6 @@ dependencies {
 
   testLibrary("io.projectreactor.kafka:reactor-kafka:1.0.0.RELEASE")
 }
-
-val testLatestDeps = findProperty("testLatestDeps") == "true"
 
 testing {
   suites {

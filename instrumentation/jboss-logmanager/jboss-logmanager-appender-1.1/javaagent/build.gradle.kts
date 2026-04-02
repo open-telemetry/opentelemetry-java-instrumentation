@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -20,7 +21,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:java-util-logging:javaagent"))
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 
 if (latestDepTest) {
   otelJava {

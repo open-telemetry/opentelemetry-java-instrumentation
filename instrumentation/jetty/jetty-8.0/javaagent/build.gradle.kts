@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -31,7 +32,7 @@ dependencies {
 }
 
 // jetty-server 10+ requires Java 11
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 if (latestDepTest) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)

@@ -1,4 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -130,7 +131,7 @@ dependencies {
   testLibrary("software.amazon.awssdk:sqs:2.2.0")
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
 
 testing {

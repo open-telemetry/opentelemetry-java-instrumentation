@@ -12,6 +12,7 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import kotlin.io.path.notExists
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 
 plugins {
   id("otel.javaagent-testing")
@@ -25,7 +26,7 @@ otelJava {
 
 // io.quarkus.platform:quarkus-bom is missing for 3.0.0.Final
 var quarkusVersion = "3.0.1.Final"
-if (findProperty("testLatestDeps") == "true") {
+if (testLatestDeps) {
   quarkusVersion = "3.5.+"
 }
 

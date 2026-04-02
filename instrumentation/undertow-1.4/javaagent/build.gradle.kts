@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -26,7 +27,7 @@ tasks.withType<Test>().configureEach {
 }
 
 // since 2.3.x, undertow is compiled by JDK 11
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 if (latestDepTest) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)

@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 
 plugins {
   id("org.jetbrains.kotlin.jvm")
@@ -28,7 +29,7 @@ dependencies {
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0")
 }
 
-if (!(findProperty("testLatestDeps") == "true")) {
+if (!testLatestDeps) {
   // run tests against an early version of opentelemetry-extension-kotlin, latest dep tests will use
   // the current version
   configurations.configureEach {

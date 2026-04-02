@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.library-instrumentation")
   id("otel.animalsniffer-conventions")
@@ -43,7 +44,7 @@ tasks {
   }
 }
 
-if (!(findProperty("testLatestDeps") == "true")) {
+if (!testLatestDeps) {
   configurations.testRuntimeClasspath {
     resolutionStrategy {
       eachDependency {

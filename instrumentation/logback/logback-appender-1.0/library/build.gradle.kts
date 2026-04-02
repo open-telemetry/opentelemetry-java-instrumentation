@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.library-instrumentation")
   id("org.graalvm.buildtools.native")
@@ -25,7 +26,7 @@ dependencies {
     }
   }
 
-  if (findProperty("testLatestDeps") == "true") {
+  if (testLatestDeps) {
     testImplementation("ch.qos.logback:logback-classic:latest.release")
   } else {
     testImplementation("ch.qos.logback:logback-classic") {
@@ -64,7 +65,7 @@ tasks.named("collectReachabilityMetadata").configure {
   enabled = false
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = testLatestDeps
 testing {
   suites {
     val slf4j2ApiTest by registering(JvmTestSuite::class) {

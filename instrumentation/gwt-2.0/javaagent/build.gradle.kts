@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -32,7 +33,7 @@ sourceSets {
 
 dependencies {
   // these are needed for compileGwt task
-  if (findProperty("testLatestDeps") == "true") {
+  if (testLatestDeps) {
     compileOnly("org.gwtproject:gwt-user:latest.release")
     compileOnly("org.gwtproject:gwt-dev:latest.release")
     compileOnly("org.gwtproject:gwt-servlet:latest.release")
@@ -90,7 +91,7 @@ tasks {
 
     argumentProviders.add(CompilerArgumentsProvider(layout.buildDirectory.get()))
 
-    if (findProperty("testLatestDeps") == "true") {
+    if (testLatestDeps) {
       javaLauncher.set(project.javaToolchains.launcherFor {
         languageVersion = JavaLanguageVersion.of(11)
       })
