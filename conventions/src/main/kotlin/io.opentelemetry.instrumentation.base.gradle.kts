@@ -1,8 +1,12 @@
 /** Common setup for manual instrumentation of libraries and javaagent instrumentation. */
 
+import io.opentelemetry.instrumentation.gradle.OtelPropsExtension
+
 plugins {
   `java-library`
 }
+
+val otelProps = extensions.create<OtelPropsExtension>("otelProps", project)
 
 /**
  * We define three dependency configurations to use when adding dependencies to libraries being
@@ -26,9 +30,6 @@ plugins {
  *   precedence. Use this to restrict the latest version dependency from the default `+`, for
  *   example to restrict to just a major version by specifying `2.+`.
  */
-
-val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
-
 @CacheableRule
 abstract class TestLatestDepsRule : ComponentMetadataRule {
   override fun execute(context: ComponentMetadataContext) {
@@ -77,7 +78,7 @@ configurations {
     // mutating the version for latest dep tests.
     configuration.dependencies.whenObjectAdded {
       val dep = copy()
-      if (testLatestDeps) {
+      if (otelProps.testLatestDeps) {
         (dep as ExternalDependency).version {
           require("latest.release")
         }
@@ -85,7 +86,7 @@ configurations {
       testImplementation.dependencies.add(dep)
     }
   }
-  if (testLatestDeps) {
+  if (otelProps.testLatestDeps) {
     dependencies {
       components {
         all<TestLatestDepsRule>()
@@ -108,7 +109,7 @@ configurations {
   }
 }
 
-if (testLatestDeps) {
+if (otelProps.testLatestDeps) {
   afterEvaluate {
     tasks {
       withType<JavaCompile>().configureEach {

@@ -10,7 +10,7 @@ dependencies {
 }
 
 val disableErrorProne = properties["disableErrorProne"]?.toString()?.toBoolean() ?: false
-val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
+val testLatestDeps = findProperty("testLatestDeps") == "true"
 
 tasks {
   withType<JavaCompile>().configureEach {
