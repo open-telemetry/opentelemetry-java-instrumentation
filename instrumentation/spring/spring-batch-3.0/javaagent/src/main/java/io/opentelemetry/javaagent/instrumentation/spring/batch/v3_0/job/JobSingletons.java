@@ -21,7 +21,7 @@ public class JobSingletons {
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "spring_batch")
           .getBoolean("experimental_span_attributes/development", false);
 
-  private static final Instrumenter<JobExecution, Void> INSTRUMENTER;
+  private static final Instrumenter<JobExecution, Void> instrumenter;
 
   static {
     InstrumenterBuilder<JobExecution, Void> instrumenter =
@@ -31,7 +31,7 @@ public class JobSingletons {
       instrumenter.addAttributesExtractor(
           AttributesExtractor.constant(AttributeKey.stringKey("job.system"), "spring_batch"));
     }
-    INSTRUMENTER = instrumenter.buildInstrumenter();
+    instrumenter = instrumenter.buildInstrumenter();
   }
 
   private static String extractSpanName(JobExecution jobExecution) {
@@ -39,7 +39,7 @@ public class JobSingletons {
   }
 
   public static Instrumenter<JobExecution, Void> jobInstrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private JobSingletons() {}

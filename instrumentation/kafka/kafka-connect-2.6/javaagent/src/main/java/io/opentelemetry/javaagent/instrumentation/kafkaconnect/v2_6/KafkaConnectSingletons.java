@@ -19,13 +19,13 @@ public final class KafkaConnectSingletons {
   private static final TextMapPropagator PROPAGATOR =
       GlobalOpenTelemetry.get().getPropagators().getTextMapPropagator();
 
-  private static final Instrumenter<KafkaConnectTask, Void> INSTRUMENTER;
+  private static final Instrumenter<KafkaConnectTask, Void> instrumenter;
 
   static {
     KafkaConnectBatchProcessSpanLinksExtractor spanLinksExtractor =
         new KafkaConnectBatchProcessSpanLinksExtractor(PROPAGATOR);
 
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<KafkaConnectTask, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
@@ -40,7 +40,7 @@ public final class KafkaConnectSingletons {
   }
 
   public static Instrumenter<KafkaConnectTask, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private KafkaConnectSingletons() {}

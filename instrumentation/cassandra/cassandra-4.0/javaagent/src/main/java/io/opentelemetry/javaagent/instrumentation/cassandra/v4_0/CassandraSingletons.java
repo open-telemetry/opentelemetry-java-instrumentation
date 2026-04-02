@@ -21,12 +21,12 @@ public final class CassandraSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.cassandra-4.0";
 
   // using ExecutionInfo because we can get that from ResultSet, AsyncResultSet and DriverException
-  private static final Instrumenter<CassandraRequest, ExecutionInfo> INSTRUMENTER;
+  private static final Instrumenter<CassandraRequest, ExecutionInfo> instrumenter;
 
   static {
     CassandraSqlAttributesGetter attributesGetter = new CassandraSqlAttributesGetter();
 
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<CassandraRequest, ExecutionInfo>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
@@ -43,7 +43,7 @@ public final class CassandraSingletons {
   }
 
   public static Instrumenter<CassandraRequest, ExecutionInfo> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private CassandraSingletons() {}

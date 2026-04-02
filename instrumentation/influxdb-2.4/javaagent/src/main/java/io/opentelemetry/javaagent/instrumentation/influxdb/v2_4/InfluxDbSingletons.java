@@ -15,12 +15,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 @SuppressWarnings("deprecation") // to support old semconv
 public final class InfluxDbSingletons {
 
-  private static final Instrumenter<InfluxDbRequest, Void> INSTRUMENTER;
+  private static final Instrumenter<InfluxDbRequest, Void> instrumenter;
 
   static {
     InfluxDbAttributesGetter dbAttributesGetter = new InfluxDbAttributesGetter();
 
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<InfluxDbRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.influxdb-2.4",
@@ -34,7 +34,7 @@ public final class InfluxDbSingletons {
   }
 
   public static Instrumenter<InfluxDbRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private InfluxDbSingletons() {}

@@ -37,7 +37,7 @@ public class InstrumenterBenchmark {
 
   private static final Object REQUEST = new Object();
 
-  private static final Instrumenter<Object, Void> INSTRUMENTER =
+  private static final Instrumenter<Object, Void> instrumenter =
       Instrumenter.<Object, Void>builder(
               OpenTelemetry.noop(),
               "benchmark",
@@ -48,13 +48,13 @@ public class InstrumenterBenchmark {
 
   @Benchmark
   public Context start() {
-    return INSTRUMENTER.start(Context.root(), REQUEST);
+    return instrumenter.start(Context.root(), REQUEST);
   }
 
   @Benchmark
   public Context startEnd() {
-    Context context = INSTRUMENTER.start(Context.root(), REQUEST);
-    INSTRUMENTER.end(context, REQUEST, null, null);
+    Context context = instrumenter.start(Context.root(), REQUEST);
+    instrumenter.end(context, REQUEST, null, null);
     return context;
   }
 

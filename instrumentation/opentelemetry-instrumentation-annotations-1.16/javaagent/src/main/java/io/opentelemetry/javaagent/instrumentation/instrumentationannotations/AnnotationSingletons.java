@@ -28,7 +28,7 @@ public final class AnnotationSingletons {
       "io.opentelemetry.opentelemetry-instrumentation-annotations-1.16";
 
   private static final Logger logger = Logger.getLogger(AnnotationSingletons.class.getName());
-  private static final Instrumenter<Method, Object> INSTRUMENTER = createInstrumenter();
+  private static final Instrumenter<Method, Object> instrumenter = createInstrumenter();
   private static final Instrumenter<MethodRequest, Object> INSTRUMENTER_WITH_ATTRIBUTES =
       createInstrumenterWithAttributes();
   private static final SpanAttributesExtractor ATTRIBUTES = createAttributesExtractor();
@@ -52,7 +52,7 @@ public final class AnnotationSingletons {
   }
 
   public static Instrumenter<Method, Object> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static Instrumenter<MethodRequest, Object> instrumenterWithAttributes() {

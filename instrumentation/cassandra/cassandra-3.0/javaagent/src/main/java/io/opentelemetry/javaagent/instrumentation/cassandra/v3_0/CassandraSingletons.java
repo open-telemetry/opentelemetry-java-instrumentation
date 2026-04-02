@@ -22,12 +22,12 @@ public final class CassandraSingletons {
 
   // could use RESPONSE "ResultSet" here, but using RESPONSE "ExecutionInfo" in cassandra-4.0
   // instrumentation (see comment over there for why), so also using here for consistency
-  private static final Instrumenter<CassandraRequest, ExecutionInfo> INSTRUMENTER;
+  private static final Instrumenter<CassandraRequest, ExecutionInfo> instrumenter;
 
   static {
     CassandraSqlAttributesGetter attributesGetter = new CassandraSqlAttributesGetter();
 
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<CassandraRequest, ExecutionInfo>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
@@ -44,7 +44,7 @@ public final class CassandraSingletons {
   }
 
   public static Instrumenter<CassandraRequest, ExecutionInfo> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private CassandraSingletons() {}
