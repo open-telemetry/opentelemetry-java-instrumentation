@@ -122,7 +122,7 @@ public final class KafkaTelemetryBuilder {
     return setMessagingReceiveTelemetryEnabled(messagingReceiveInstrumentationEnabled);
   }
 
-  /** Sets Kafka consumer configurations. */
+  /** Sets Kafka producer configurations. */
   @CanIgnoreReturnValue
   public KafkaTelemetryBuilder setProducerConfigs(Map<String, Object> producerConfigs) {
     this.producerConfigs = producerConfigs;

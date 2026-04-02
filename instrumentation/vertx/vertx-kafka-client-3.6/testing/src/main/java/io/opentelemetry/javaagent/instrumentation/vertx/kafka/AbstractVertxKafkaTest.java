@@ -184,10 +184,13 @@ public abstract class AbstractVertxKafkaTest {
                 equalTo(MESSAGING_OPERATION, "publish"),
                 satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
-                satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
-                satisfies(
-                    MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
-                    stringAssert -> stringAssert.matches("^localhost:\\d+(,localhost:\\d+)*$"))));
+                satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
+    if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
+      assertions.add(
+          satisfies(
+              MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+              stringAssert -> stringAssert.matches("^localhost:\\d+(,localhost:\\d+)*$")));
+    }
     String messageKey = record.key();
     if (messageKey != null) {
       assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));

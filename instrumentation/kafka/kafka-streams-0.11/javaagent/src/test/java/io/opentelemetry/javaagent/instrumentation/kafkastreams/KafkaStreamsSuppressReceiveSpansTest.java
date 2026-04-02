@@ -94,20 +94,31 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 // kafka-clients PRODUCER
-                span ->
-                    span.hasName(STREAM_PENDING + " publish")
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, KAFKA),
-                            equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
-                            equalTo(MESSAGING_OPERATION, "publish"),
-                            equalTo(MESSAGING_CLIENT_ID, "producer-1"),
-                            satisfies(
-                                MESSAGING_DESTINATION_PARTITION_ID,
-                                val -> val.isInstanceOf(String.class)),
-                            equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
-                            equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10")),
+                span -> {
+                  List<AttributeAssertion> assertions =
+                      new ArrayList<>(
+                          asList(
+                              equalTo(MESSAGING_SYSTEM, KAFKA),
+                              equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
+                              equalTo(MESSAGING_OPERATION, "publish"),
+                              equalTo(MESSAGING_CLIENT_ID, "producer-1"),
+                              satisfies(
+                                  MESSAGING_DESTINATION_PARTITION_ID,
+                                  val -> val.isInstanceOf(String.class)),
+                              equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
+                              equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10")));
+                  if (isExperimental) {
+                    assertions.add(
+                        satisfies(
+                            MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+                            stringAssert ->
+                                stringAssert.matches("^localhost:\\d+(,localhost:\\d+)*$")));
+                  }
+                  span.hasName(STREAM_PENDING + " publish")
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasNoParent()
+                      .hasAttributesSatisfyingExactly(assertions);
+                },
                 // kafka-stream CONSUMER
                 span -> {
                   List<AttributeAssertion> assertions =
@@ -141,21 +152,31 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                 },
                 // kafka-clients PRODUCER
                 span -> {
+                  List<AttributeAssertion> producerAssertions =
+                      new ArrayList<>(
+                          asList(
+                              equalTo(MESSAGING_SYSTEM, KAFKA),
+                              equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
+                              equalTo(MESSAGING_OPERATION, "publish"),
+                              satisfies(MESSAGING_CLIENT_ID, val -> val.isInstanceOf(String.class)),
+                              satisfies(
+                                  MESSAGING_DESTINATION_PARTITION_ID,
+                                  val -> val.isInstanceOf(String.class)),
+                              equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0)));
+                  if (isExperimental) {
+                    producerAssertions.add(
+                        satisfies(
+                            MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+                            stringAssert ->
+                                stringAssert.matches("^localhost:\\d+(,localhost:\\d+)*$")));
+                  }
                   streamSendSpanRef.set(trace.getSpan(2));
                   span.hasName(STREAM_PROCESSED + " publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(1))
                       .hasTraceId(receivedContext.getTraceId())
                       .hasSpanId(receivedContext.getSpanId())
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(MESSAGING_SYSTEM, KAFKA),
-                          equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
-                          equalTo(MESSAGING_OPERATION, "publish"),
-                          satisfies(MESSAGING_CLIENT_ID, val -> val.isInstanceOf(String.class)),
-                          satisfies(
-                              MESSAGING_DESTINATION_PARTITION_ID,
-                              val -> val.isInstanceOf(String.class)),
-                          equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0));
+                      .hasAttributesSatisfyingExactly(producerAssertions);
                 },
                 // kafka-clients CONSUMER process
                 span -> {

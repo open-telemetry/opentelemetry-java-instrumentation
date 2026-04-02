@@ -73,8 +73,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                 satisfies(
                                     MESSAGING_KAFKA_MESSAGE_OFFSET,
                                     AbstractLongAssert::isNotNegative),
-                                equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
-                                MESSAGING_KAFKA_BOOTSTRAP_SERVERS_ASSERTION),
+                                equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10")),
                     span ->
                         span.hasName("testSingleTopic process")
                             .hasKind(SpanKind.CONSUMER)
@@ -145,8 +144,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                       satisfies(
                                           MESSAGING_KAFKA_MESSAGE_OFFSET,
                                           AbstractLongAssert::isNotNegative),
-                                      equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
-                                      MESSAGING_KAFKA_BOOTSTRAP_SERVERS_ASSERTION),
+                                      equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10")),
                           span ->
                               span.hasName("testSingleTopic process")
                                   .hasKind(SpanKind.CONSUMER)
@@ -224,8 +222,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                               satisfies(
                                   MESSAGING_KAFKA_MESSAGE_OFFSET,
                                   AbstractLongAssert::isNotNegative),
-                              equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
-                              MESSAGING_KAFKA_BOOTSTRAP_SERVERS_ASSERTION),
+                              equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10")),
                   span ->
                       span.hasName("testBatchTopic publish")
                           .hasKind(SpanKind.PRODUCER)
@@ -241,8 +238,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                               satisfies(
                                   MESSAGING_KAFKA_MESSAGE_OFFSET,
                                   AbstractLongAssert::isNotNegative),
-                              equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "20"),
-                              MESSAGING_KAFKA_BOOTSTRAP_SERVERS_ASSERTION));
+                              equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "20")));
 
               producer1.set(trace.getSpan(1));
               producer2.set(trace.getSpan(2));
@@ -312,8 +308,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                               satisfies(
                                   MESSAGING_KAFKA_MESSAGE_OFFSET,
                                   AbstractLongAssert::isNotNegative),
-                              equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
-                              MESSAGING_KAFKA_BOOTSTRAP_SERVERS_ASSERTION));
+                              equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10")));
 
               producer.set(trace.getSpan(1));
             },

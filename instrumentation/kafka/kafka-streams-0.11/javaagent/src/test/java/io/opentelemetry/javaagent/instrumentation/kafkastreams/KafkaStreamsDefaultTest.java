@@ -105,20 +105,31 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
         trace -> {
           trace.hasSpansSatisfyingExactly(
               // kafka-clients PRODUCER
-              span ->
-                  span.hasName(STREAM_PENDING + " publish")
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasNoParent()
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(MESSAGING_SYSTEM, KAFKA),
-                          equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
-                          equalTo(MESSAGING_OPERATION, "publish"),
-                          satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
-                          satisfies(
-                              MESSAGING_DESTINATION_PARTITION_ID,
-                              val -> val.isInstanceOf(String.class)),
-                          equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
-                          equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10")));
+              span -> {
+                List<AttributeAssertion> assertions =
+                    new ArrayList<>(
+                        asList(
+                            equalTo(MESSAGING_SYSTEM, KAFKA),
+                            equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
+                            equalTo(MESSAGING_OPERATION, "publish"),
+                            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
+                            satisfies(
+                                MESSAGING_DESTINATION_PARTITION_ID,
+                                val -> val.isInstanceOf(String.class)),
+                            equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
+                            equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10")));
+                if (isExperimental) {
+                  assertions.add(
+                      satisfies(
+                          MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+                          stringAssert ->
+                              stringAssert.matches("^localhost:\\d+(,localhost:\\d+)*$")));
+                }
+                span.hasName(STREAM_PENDING + " publish")
+                    .hasKind(SpanKind.PRODUCER)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(assertions);
+              });
           producerPendingRef.set(trace.getSpan(0));
         },
         trace -> {
@@ -176,21 +187,32 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                     .hasAttributesSatisfyingExactly(assertions);
               },
               // kafka-clients PRODUCER
-              span ->
-                  span.hasName(STREAM_PROCESSED + " publish")
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(1))
-                      .hasTraceId(receivedContext.getTraceId())
-                      .hasSpanId(receivedContext.getSpanId())
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(MESSAGING_SYSTEM, KAFKA),
-                          equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
-                          equalTo(MESSAGING_OPERATION, "publish"),
-                          satisfies(MESSAGING_CLIENT_ID, val -> val.endsWith("producer")),
-                          satisfies(
-                              MESSAGING_DESTINATION_PARTITION_ID,
-                              val -> val.isInstanceOf(String.class)),
-                          equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0)));
+              span -> {
+                List<AttributeAssertion> assertions =
+                    new ArrayList<>(
+                        asList(
+                            equalTo(MESSAGING_SYSTEM, KAFKA),
+                            equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
+                            equalTo(MESSAGING_OPERATION, "publish"),
+                            satisfies(MESSAGING_CLIENT_ID, val -> val.endsWith("producer")),
+                            satisfies(
+                                MESSAGING_DESTINATION_PARTITION_ID,
+                                val -> val.isInstanceOf(String.class)),
+                            equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0)));
+                if (isExperimental) {
+                  assertions.add(
+                      satisfies(
+                          MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+                          stringAssert ->
+                              stringAssert.matches("^localhost:\\d+(,localhost:\\d+)*$")));
+                }
+                span.hasName(STREAM_PROCESSED + " publish")
+                    .hasKind(SpanKind.PRODUCER)
+                    .hasParent(trace.getSpan(1))
+                    .hasTraceId(receivedContext.getTraceId())
+                    .hasSpanId(receivedContext.getSpanId())
+                    .hasAttributesSatisfyingExactly(assertions);
+              });
 
           producerProcessedRef.set(trace.getSpan(2));
         },
