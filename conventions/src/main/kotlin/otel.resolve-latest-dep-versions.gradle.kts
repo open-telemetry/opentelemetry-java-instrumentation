@@ -26,8 +26,17 @@ tasks {
 
       fun recordVersion(key: String, version: String) {
         val existing = versions[key]
-        if (existing == null || VersionNumber.parse(version) > VersionNumber.parse(existing)) {
+        if (existing == null) {
           versions[key] = version
+        } else {
+          val existingStable = AcceptableVersions.isStable(existing)
+          val newStable = AcceptableVersions.isStable(version)
+          // Prefer stable over pre-release even if numerically lower, so that a pre-release
+          // already in the JSON (e.g. 5.7.0-beta1) gets replaced by the latest stable (5.6.4).
+          if ((!existingStable && newStable) ||
+            (existingStable == newStable && VersionNumber.parse(version) > VersionNumber.parse(existing))) {
+            versions[key] = version
+          }
         }
       }
 
@@ -42,6 +51,11 @@ tasks {
           val detached = project.configurations.detachedConfiguration(
             project.dependencies.create("$group:$module:$version")
           )
+          // Disable transitive resolution: we only need to know the latest stable version of
+          // this artifact itself, not its full dependency graph. Transitive resolution can fail
+          // on classifier-specific native JARs or other platform-specific artifacts, causing
+          // resolveStableVersion() to return null and fall back to a pre-release version.
+          detached.isTransitive = false
           detached.resolutionStrategy.componentSelection.all {
             if (!AcceptableVersions.isStable(candidate.version)) {
               reject("pre-release version")
@@ -49,17 +63,6 @@ tasks {
           }
           try {
             val resolutionResult = detached.incoming.resolutionResult
-            val hasUnresolved = try {
-              resolutionResult.allDependencies
-                .any { it is org.gradle.api.artifacts.result.UnresolvedDependencyResult }
-            } catch (e: Exception) {
-              logger.warn("Failed to check transitive deps for $group:$module:$version: ${e.message}")
-              true
-            }
-            if (hasUnresolved) {
-              logger.warn("Skipping $group:$module latest ($version) — has unresolvable transitive dependencies")
-              return@getOrPut null
-            }
             resolutionResult.rootComponent.get()
               .dependencies
               .filterIsInstance<org.gradle.api.artifacts.result.ResolvedDependencyResult>()
