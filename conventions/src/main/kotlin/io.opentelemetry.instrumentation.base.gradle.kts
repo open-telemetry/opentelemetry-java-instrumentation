@@ -37,7 +37,6 @@ val otelProps = the<OtelPropsExtension>()
 val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 val resolveLatestDeps = gradle.startParameter.projectProperties["resolveLatestDeps"] == "true"
 val pinLatestDeps = testLatestDeps && !resolveLatestDeps
-extra["testLatestDeps"] = testLatestDeps
 
 fun getPinnedVersions(): Map<String, String> {
   if (!pinLatestDeps) return emptyMap()
