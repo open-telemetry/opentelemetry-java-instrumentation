@@ -61,19 +61,19 @@ public abstract class DbInfo {
   @AutoValue.Builder
   public abstract static class Builder {
 
-    public abstract Builder system(@Nullable String system);
+    public abstract Builder system(String system);
 
-    public abstract Builder subtype(@Nullable String subtype);
+    public abstract Builder subtype(String subtype);
 
-    public abstract Builder shortUrl(@Nullable String shortUrl);
+    public abstract Builder shortUrl(String shortUrl);
 
-    public abstract Builder user(@Nullable String user);
+    public abstract Builder user(String user);
 
-    public abstract Builder name(@Nullable String name);
+    public abstract Builder name(String name);
 
-    public abstract Builder host(@Nullable String host);
+    public abstract Builder host(String host);
 
-    public abstract Builder port(@Nullable Integer port);
+    public abstract Builder port(Integer port);
 
     public abstract DbInfo build();
   }
