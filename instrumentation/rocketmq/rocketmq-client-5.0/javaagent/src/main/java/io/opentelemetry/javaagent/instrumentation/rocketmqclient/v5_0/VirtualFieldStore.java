@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 import org.apache.rocketmq.client.apis.message.MessageView;
 import org.apache.rocketmq.client.java.message.PublishingMessageImpl;
 
-public class VirtualFieldStore {
+public final class VirtualFieldStore {
   private static final VirtualField<PublishingMessageImpl, Context> messageContextField =
       VirtualField.find(PublishingMessageImpl.class, Context.class);
   private static final VirtualField<MessageView, Context> messageViewContextField =

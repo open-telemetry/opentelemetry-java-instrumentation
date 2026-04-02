@@ -9,7 +9,7 @@ import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
 import io.opentelemetry.javaagent.bootstrap.servlet.SnippetInjectingResponseWrapper;
 import java.io.PrintWriter;
 
-public class SnippetInjectingPrintWriter extends PrintWriter {
+public final class SnippetInjectingPrintWriter extends PrintWriter {
   private final String snippet;
   private final InjectionState state;
 

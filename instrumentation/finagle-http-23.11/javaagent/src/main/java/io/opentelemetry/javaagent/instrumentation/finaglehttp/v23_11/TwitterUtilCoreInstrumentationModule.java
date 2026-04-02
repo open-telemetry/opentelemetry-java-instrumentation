@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class TwitterUtilCoreInstrumentationModule extends InstrumentationModule
+public final class TwitterUtilCoreInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public TwitterUtilCoreInstrumentationModule() {

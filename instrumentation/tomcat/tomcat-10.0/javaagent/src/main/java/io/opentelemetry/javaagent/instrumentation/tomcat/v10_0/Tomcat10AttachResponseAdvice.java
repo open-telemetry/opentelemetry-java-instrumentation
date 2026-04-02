@@ -12,7 +12,7 @@ import net.bytebuddy.asm.Advice;
 import org.apache.coyote.Response;
 
 @SuppressWarnings("unused")
-public class Tomcat10AttachResponseAdvice {
+public final class Tomcat10AttachResponseAdvice {
 
   @Advice.OnMethodExit(suppress = Throwable.class)
   public static void attachResponse(

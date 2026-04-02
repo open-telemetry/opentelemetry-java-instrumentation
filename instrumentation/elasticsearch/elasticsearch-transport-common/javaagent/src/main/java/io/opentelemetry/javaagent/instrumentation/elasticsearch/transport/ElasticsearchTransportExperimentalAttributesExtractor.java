@@ -23,7 +23,7 @@ import org.elasticsearch.action.support.broadcast.BroadcastResponse;
 import org.elasticsearch.action.support.nodes.BaseNodesResponse;
 import org.elasticsearch.action.support.replication.ReplicationResponse;
 
-public class ElasticsearchTransportExperimentalAttributesExtractor
+public final class ElasticsearchTransportExperimentalAttributesExtractor
     implements AttributesExtractor<ElasticTransportRequest, ActionResponse> {
 
   private static final AttributeKey<String> ELASTICSEARCH_ACTION =

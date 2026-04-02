@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.tapestry;
 
-public class TapestryRequest {
+public final class TapestryRequest {
   private final String eventType;
   private final String componentId;
 

@@ -10,7 +10,7 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIn
 import java.util.HashMap;
 import java.util.Map;
 
-public class DecoratorRegistry {
+public final class DecoratorRegistry {
 
   private static final SpanDecorator DEFAULT = new BaseSpanDecorator();
   private static final Map<String, SpanDecorator> DECORATORS = loadDecorators();

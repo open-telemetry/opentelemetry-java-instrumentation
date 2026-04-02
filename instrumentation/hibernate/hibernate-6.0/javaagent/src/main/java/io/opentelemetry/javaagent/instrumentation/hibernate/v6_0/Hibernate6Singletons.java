@@ -14,7 +14,7 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
 import org.hibernate.query.CommonQueryContract;
 
-public class Hibernate6Singletons {
+public final class Hibernate6Singletons {
 
   private static final Instrumenter<HibernateOperation, Void> INSTANCE =
       HibernateInstrumenterFactory.createInstrumenter("io.opentelemetry.hibernate-6.0");

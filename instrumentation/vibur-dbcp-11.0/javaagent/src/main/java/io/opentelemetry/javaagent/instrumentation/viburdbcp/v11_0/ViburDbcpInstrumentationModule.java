@@ -15,7 +15,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class ViburDbcpInstrumentationModule extends InstrumentationModule {
+public final class ViburDbcpInstrumentationModule extends InstrumentationModule {
   public ViburDbcpInstrumentationModule() {
     super("vibur-dbcp", "vibur-dbcp-11.0");
   }

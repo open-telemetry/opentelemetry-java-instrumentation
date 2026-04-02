@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import org.apache.tapestry5.runtime.ComponentEventException;
 
-public class TapestrySingletons {
+public final class TapestrySingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.tapestry-5.4";
 
   private static final Instrumenter<TapestryRequest, Void> INSTRUMENTER;

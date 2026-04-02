@@ -16,7 +16,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class VaadinInstrumentationModule extends InstrumentationModule
+public final class VaadinInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public VaadinInstrumentationModule() {

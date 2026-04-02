@@ -12,7 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 
-public class Tomcat7ServletEntityProvider
+public final class Tomcat7ServletEntityProvider
     implements TomcatServletEntityProvider<HttpServletRequest, HttpServletResponse> {
   @Override
   @Nullable

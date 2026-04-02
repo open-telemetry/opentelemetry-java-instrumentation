@@ -16,7 +16,7 @@ import java.lang.reflect.Method;
  * system classpath.
  */
 @AutoService(AgentListener.class)
-public class OshiMetricsInstaller implements AgentListener {
+public final class OshiMetricsInstaller implements AgentListener {
 
   @Override
   public void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {

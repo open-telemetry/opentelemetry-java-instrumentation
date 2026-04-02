@@ -10,7 +10,7 @@ import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 
 @AutoService(IgnoredTypesConfigurer.class)
-public class SpringRabbitIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
+public final class SpringRabbitIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
   @Override
   public void configure(IgnoredTypesBuilder builder) {
     // contains a Runnable that serves as a worker that continuously reads messages from queue

@@ -17,7 +17,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.reactivestreams.Subscriber;
 
-public class HandlerPublisherInstrumentation implements TypeInstrumentation {
+public final class HandlerPublisherInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("play.shaded.ahc.com.typesafe.netty.HandlerPublisher");

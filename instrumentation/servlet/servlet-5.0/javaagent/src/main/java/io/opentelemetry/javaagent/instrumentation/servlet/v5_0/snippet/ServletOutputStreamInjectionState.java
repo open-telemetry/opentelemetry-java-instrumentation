@@ -10,7 +10,7 @@ import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
 import jakarta.servlet.ServletOutputStream;
 import javax.annotation.Nullable;
 
-public class ServletOutputStreamInjectionState {
+public final class ServletOutputStreamInjectionState {
   private static final VirtualField<ServletOutputStream, InjectionState> virtualField =
       VirtualField.find(ServletOutputStream.class, InjectionState.class);
 

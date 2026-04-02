@@ -13,7 +13,7 @@ import jakarta.servlet.ServletRegistration;
 import java.util.Collection;
 import javax.annotation.Nullable;
 
-public class JakartaServletFilterMappingResolverFactory
+public final class JakartaServletFilterMappingResolverFactory
     extends ServletFilterMappingResolverFactory<FilterRegistration> {
   private final FilterConfig filterConfig;
 

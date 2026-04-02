@@ -9,7 +9,7 @@ import io.opentelemetry.context.Context;
 import org.apache.pekko.http.scaladsl.model.AttributeKey;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 
-public class PekkoTracingRequest {
+public final class PekkoTracingRequest {
   static final AttributeKey<PekkoTracingRequest> ATTR_KEY =
       new AttributeKey<>("_otel_ctx", PekkoTracingRequest.class);
   static final PekkoTracingRequest EMPTY = new PekkoTracingRequest(null, null);

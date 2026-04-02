@@ -10,7 +10,7 @@ import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 
 @AutoService(IgnoredTypesConfigurer.class)
-public class SpringRmiIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
+public final class SpringRmiIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
 
   @Override
   public void configure(IgnoredTypesBuilder builder) {

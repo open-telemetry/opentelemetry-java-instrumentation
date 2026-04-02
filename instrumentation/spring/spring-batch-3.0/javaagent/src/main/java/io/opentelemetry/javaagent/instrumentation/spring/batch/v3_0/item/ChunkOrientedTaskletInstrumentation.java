@@ -23,7 +23,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.batch.core.scope.context.ChunkContext;
 
-public class ChunkOrientedTaskletInstrumentation implements TypeInstrumentation {
+public final class ChunkOrientedTaskletInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.springframework.batch.core.step.item.ChunkOrientedTasklet");

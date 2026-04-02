@@ -15,7 +15,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class Resteasy31InstrumentationModule extends InstrumentationModule {
+public final class Resteasy31InstrumentationModule extends InstrumentationModule {
   public Resteasy31InstrumentationModule() {
     super("jaxrs", "jaxrs-2.0", "resteasy", "resteasy-3.1");
   }

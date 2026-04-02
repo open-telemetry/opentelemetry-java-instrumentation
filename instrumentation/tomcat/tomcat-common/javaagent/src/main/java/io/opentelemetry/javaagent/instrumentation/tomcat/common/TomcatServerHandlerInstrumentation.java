@@ -15,7 +15,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class TomcatServerHandlerInstrumentation implements TypeInstrumentation {
+public final class TomcatServerHandlerInstrumentation implements TypeInstrumentation {
   private final String handlerAdviceClassName;
   private final String attachResponseAdviceClassName;
 

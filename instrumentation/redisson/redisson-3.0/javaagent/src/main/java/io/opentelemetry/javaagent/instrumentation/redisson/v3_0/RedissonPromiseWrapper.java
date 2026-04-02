@@ -12,7 +12,8 @@ import io.opentelemetry.javaagent.instrumentation.redisson.PromiseWrapper;
 import org.redisson.misc.RPromise;
 import org.redisson.misc.RedissonPromise;
 
-public class RedissonPromiseWrapper<T> extends RedissonPromise<T> implements PromiseWrapper<T> {
+public final class RedissonPromiseWrapper<T> extends RedissonPromise<T>
+    implements PromiseWrapper<T> {
   private volatile EndOperationListener<T> endOperationListener;
 
   private RedissonPromiseWrapper(RPromise<T> delegate) {

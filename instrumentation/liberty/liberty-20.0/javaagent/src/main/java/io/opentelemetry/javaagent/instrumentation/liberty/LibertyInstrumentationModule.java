@@ -27,7 +27,7 @@ import java.util.List;
  * </ul>
  */
 @AutoService(InstrumentationModule.class)
-public class LibertyInstrumentationModule extends InstrumentationModule
+public final class LibertyInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public LibertyInstrumentationModule() {

@@ -10,7 +10,7 @@ import io.opentelemetry.context.Context;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-public class AttributeKeys {
+public final class AttributeKeys {
 
   private static final ClassValue<ConcurrentMap<String, AttributeKey<?>>> mapSupplier =
       new ClassValue<ConcurrentMap<String, AttributeKey<?>>>() {

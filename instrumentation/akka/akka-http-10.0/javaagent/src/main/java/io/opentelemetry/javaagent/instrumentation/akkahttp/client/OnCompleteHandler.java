@@ -13,7 +13,7 @@ import io.opentelemetry.context.Context;
 import scala.runtime.AbstractFunction1;
 import scala.util.Try;
 
-public class OnCompleteHandler extends AbstractFunction1<Try<HttpResponse>, Void> {
+public final class OnCompleteHandler extends AbstractFunction1<Try<HttpResponse>, Void> {
   private final Context context;
   private final HttpRequest request;
 

@@ -15,7 +15,7 @@ import java.util.List;
 
 /** Beginning in version 5.3.0, DocumentRequest was renamed to DocWriteRequest. */
 @AutoService(InstrumentationModule.class)
-public class Elasticsearch53TransportClientInstrumentationModule extends InstrumentationModule
+public final class Elasticsearch53TransportClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public Elasticsearch53TransportClientInstrumentationModule() {
     super("elasticsearch-transport", "elasticsearch-transport-5.3", "elasticsearch");

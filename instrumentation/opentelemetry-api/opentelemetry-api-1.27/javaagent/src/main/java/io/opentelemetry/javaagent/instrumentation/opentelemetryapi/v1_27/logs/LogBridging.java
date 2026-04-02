@@ -21,7 +21,7 @@ import java.util.EnumMap;
  *
  * <p>Also see comments in this module's gradle file.
  */
-public class LogBridging {
+public final class LogBridging {
 
   private static final EnumMap<application.io.opentelemetry.api.logs.Severity, Severity>
       severityMap;

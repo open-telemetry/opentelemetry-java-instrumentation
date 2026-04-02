@@ -51,7 +51,7 @@ import org.snakeyaml.engine.v2.api.LoadSettings;
  * io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringResourceProvider
  */
 @AutoService(ResourceProvider.class)
-public class SpringBootServiceNameDetector implements ConditionalResourceProvider {
+public final class SpringBootServiceNameDetector implements ConditionalResourceProvider {
 
   private static final Logger logger =
       Logger.getLogger(SpringBootServiceNameDetector.class.getName());

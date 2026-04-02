@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionReq
 import io.opentelemetry.instrumentation.netty.common.internal.Timer;
 
 /** Container used to carry state between enter and exit advices */
-public class NettyScope {
+public final class NettyScope {
 
   private final Context parentContext;
   private final NettyConnectionRequest request;

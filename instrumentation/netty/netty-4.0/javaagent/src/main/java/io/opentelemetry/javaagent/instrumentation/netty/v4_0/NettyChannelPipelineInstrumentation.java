@@ -31,7 +31,7 @@ import io.opentelemetry.javaagent.instrumentation.netty.v4_0.server.HttpServerRe
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.server.HttpServerTracingHandler;
 import net.bytebuddy.asm.Advice;
 
-public class NettyChannelPipelineInstrumentation
+public final class NettyChannelPipelineInstrumentation
     extends AbstractNettyChannelPipelineInstrumentation {
 
   @Override

@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class AkkaActorForkJoinInstrumentationModule extends InstrumentationModule
+public final class AkkaActorForkJoinInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public AkkaActorForkJoinInstrumentationModule() {
     super("akka-actor-fork-join", "akka-actor-fork-join-2.5", "akka-actor");

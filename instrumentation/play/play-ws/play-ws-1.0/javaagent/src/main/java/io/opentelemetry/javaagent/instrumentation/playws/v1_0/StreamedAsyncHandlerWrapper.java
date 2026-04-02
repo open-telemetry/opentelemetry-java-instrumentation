@@ -12,7 +12,7 @@ import play.shaded.ahc.org.asynchttpclient.HttpResponseBodyPart;
 import play.shaded.ahc.org.asynchttpclient.Request;
 import play.shaded.ahc.org.asynchttpclient.handler.StreamedAsyncHandler;
 
-public class StreamedAsyncHandlerWrapper<T> extends AsyncHandlerWrapper<T>
+public final class StreamedAsyncHandlerWrapper<T> extends AsyncHandlerWrapper<T>
     implements StreamedAsyncHandler<T> {
   private final StreamedAsyncHandler<T> streamedDelegate;
 

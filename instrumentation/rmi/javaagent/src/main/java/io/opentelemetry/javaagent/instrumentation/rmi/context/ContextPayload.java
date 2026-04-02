@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /** ContextPayload wraps context information shared between client and server. */
-public class ContextPayload {
+public final class ContextPayload {
 
   private static final Logger logger = Logger.getLogger(ContextPayload.class.getName());
   private static final int MAX_CONTEXT_ENTRIES = 1000;

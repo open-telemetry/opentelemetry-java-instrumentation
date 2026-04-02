@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class CassandraInstrumentationModule extends InstrumentationModule
+public final class CassandraInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public CassandraInstrumentationModule() {
     super("cassandra", "cassandra-3.0");

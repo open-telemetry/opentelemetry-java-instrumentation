@@ -32,7 +32,7 @@ import org.apache.camel.support.ServiceSupport;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.ServiceHelper;
 
-public class CamelTracingService extends ServiceSupport
+public final class CamelTracingService extends ServiceSupport
     implements RoutePolicyFactory, StaticService {
 
   private final CamelContext camelContext;

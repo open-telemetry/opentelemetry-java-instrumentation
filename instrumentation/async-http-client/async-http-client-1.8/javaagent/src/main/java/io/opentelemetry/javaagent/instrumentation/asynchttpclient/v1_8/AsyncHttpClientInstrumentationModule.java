@@ -17,7 +17,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class AsyncHttpClientInstrumentationModule extends InstrumentationModule
+public final class AsyncHttpClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public AsyncHttpClientInstrumentationModule() {
     super("async-http-client", "async-http-client-1.8");

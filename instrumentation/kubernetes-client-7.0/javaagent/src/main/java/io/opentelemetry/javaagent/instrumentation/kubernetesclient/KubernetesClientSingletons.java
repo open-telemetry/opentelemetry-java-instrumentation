@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import okhttp3.Request;
 
-public class KubernetesClientSingletons {
+public final class KubernetesClientSingletons {
 
   private static final Instrumenter<Request, ApiResponse<?>> INSTRUMENTER;
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =

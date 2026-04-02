@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class KtorServerInstrumentationModule extends InstrumentationModule {
+public final class KtorServerInstrumentationModule extends InstrumentationModule {
 
   public KtorServerInstrumentationModule() {
     super("ktor", "ktor-2.0", "ktor-server", "ktor-server-2.0");

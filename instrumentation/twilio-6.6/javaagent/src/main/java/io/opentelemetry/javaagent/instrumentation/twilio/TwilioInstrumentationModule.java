@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class TwilioInstrumentationModule extends InstrumentationModule
+public final class TwilioInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public TwilioInstrumentationModule() {
     super("twilio", "twilio-6.6");

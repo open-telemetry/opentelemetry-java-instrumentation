@@ -10,7 +10,7 @@ import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.servlet.HandlerMapping;
 
-public class SpringWebMvcServerSpanNaming {
+public final class SpringWebMvcServerSpanNaming {
 
   public static final HttpServerRouteGetter<HttpServletRequest> SERVER_SPAN_NAME =
       (context, request) -> {

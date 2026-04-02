@@ -11,7 +11,7 @@ import org.apache.pekko.http.scaladsl.server.RouteResult;
 import scala.Function1;
 import scala.concurrent.Future;
 
-public class PekkoRouteWrapper implements Function1<RequestContext, Future<RouteResult>> {
+public final class PekkoRouteWrapper implements Function1<RequestContext, Future<RouteResult>> {
   private final Function1<RequestContext, Future<RouteResult>> route;
 
   public PekkoRouteWrapper(Function1<RequestContext, Future<RouteResult>> route) {

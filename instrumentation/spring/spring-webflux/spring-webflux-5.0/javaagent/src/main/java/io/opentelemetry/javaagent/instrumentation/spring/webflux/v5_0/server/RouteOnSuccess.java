@@ -14,7 +14,7 @@ import javax.annotation.Nullable;
 import org.springframework.web.reactive.function.server.HandlerFunction;
 import org.springframework.web.reactive.function.server.RouterFunction;
 
-public class RouteOnSuccess implements Consumer<HandlerFunction<?>> {
+public final class RouteOnSuccess implements Consumer<HandlerFunction<?>> {
 
   private static final Pattern SPECIAL_CHARACTERS_REGEX = Pattern.compile("[()&|]");
   private static final Pattern SPACES_REGEX = Pattern.compile("[ \\t]+");

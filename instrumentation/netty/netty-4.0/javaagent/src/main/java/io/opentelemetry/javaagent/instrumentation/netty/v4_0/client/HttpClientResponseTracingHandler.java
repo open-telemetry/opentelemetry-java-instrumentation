@@ -20,7 +20,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.AttributeKeys;
 
-public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapter {
+public final class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapter {
 
   private static final AttributeKey<HttpResponse> HTTP_CLIENT_RESPONSE =
       AttributeKeys.attributeKey(AttributeKeys.class.getName() + ".http-client-response");

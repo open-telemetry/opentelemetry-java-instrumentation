@@ -16,7 +16,7 @@ import play.shaded.ahc.org.asynchttpclient.HttpResponseStatus;
 import play.shaded.ahc.org.asynchttpclient.Request;
 import play.shaded.ahc.org.asynchttpclient.Response;
 
-public class AsyncHandlerWrapper<T> implements AsyncHandler<T> {
+public final class AsyncHandlerWrapper<T> implements AsyncHandler<T> {
   private final AsyncHandler<T> delegate;
   private final Request request;
   private final Context context;

@@ -31,7 +31,7 @@ import javax.servlet.http.HttpServletResponseWrapper;
  * not been submitted, in which case it is likely using the real length of content that has been
  * written, including the snippet length.
  */
-public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponseWrapper
+public final class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponseWrapper
     implements SnippetInjectingResponseWrapper {
 
   private static final Logger logger =

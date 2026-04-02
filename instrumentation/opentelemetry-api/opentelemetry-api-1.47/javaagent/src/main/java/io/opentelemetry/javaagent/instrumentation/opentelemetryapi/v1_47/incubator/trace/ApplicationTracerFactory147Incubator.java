@@ -10,7 +10,7 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Applica
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.ApplicationTracerFactory;
 
 // this class is used from opentelemetry-api-1.27.0 via reflection
-public class ApplicationTracerFactory147Incubator implements ApplicationTracerFactory {
+public final class ApplicationTracerFactory147Incubator implements ApplicationTracerFactory {
 
   @Override
   public ApplicationTracer newTracer(Tracer agentTracer) {

@@ -17,7 +17,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class VertxSqlClientInstrumentationModule extends InstrumentationModule
+public final class VertxSqlClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public VertxSqlClientInstrumentationModule() {

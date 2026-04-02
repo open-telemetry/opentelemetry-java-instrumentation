@@ -16,7 +16,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class MetroInstrumentationModule extends InstrumentationModule
+public final class MetroInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public MetroInstrumentationModule() {
     super("metro", "metro-2.2", "jaxws");

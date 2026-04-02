@@ -17,7 +17,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class JFinalInstrumentationModule extends InstrumentationModule
+public final class JFinalInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public JFinalInstrumentationModule() {

@@ -11,7 +11,7 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridgin
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationLongHistogramBuilder;
 import java.util.List;
 
-public class ApplicationLongHistogramBuilder137 extends ApplicationLongHistogramBuilder
+public final class ApplicationLongHistogramBuilder137 extends ApplicationLongHistogramBuilder
     implements application.io.opentelemetry.api.incubator.metrics.ExtendedLongHistogramBuilder {
 
   private final LongHistogramBuilder agentBuilder;

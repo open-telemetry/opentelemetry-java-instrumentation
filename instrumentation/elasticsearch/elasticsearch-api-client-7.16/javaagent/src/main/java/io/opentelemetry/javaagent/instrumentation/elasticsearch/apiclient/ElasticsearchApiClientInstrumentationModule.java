@@ -17,7 +17,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class ElasticsearchApiClientInstrumentationModule extends InstrumentationModule
+public final class ElasticsearchApiClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public ElasticsearchApiClientInstrumentationModule() {
     super("elasticsearch-api-client", "elasticsearch-api-client-7.16", "elasticsearch");

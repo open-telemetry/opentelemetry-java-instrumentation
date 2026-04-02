@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import javax.annotation.Nullable;
 
-public class HttpServletResponseAdviceHelper {
+public final class HttpServletResponseAdviceHelper {
 
   @Nullable
   public static StartResult startSpan(

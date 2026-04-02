@@ -23,7 +23,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class AzureSdkInstrumentationModule extends InstrumentationModule
+public final class AzureSdkInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public AzureSdkInstrumentationModule() {
     super("azure-core", "azure-core-1.36");

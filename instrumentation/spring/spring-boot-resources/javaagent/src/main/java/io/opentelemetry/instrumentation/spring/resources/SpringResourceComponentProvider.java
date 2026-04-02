@@ -17,7 +17,7 @@ import io.opentelemetry.sdk.resources.Resource;
  * at any time.
  */
 @AutoService(ComponentProvider.class)
-public class SpringResourceComponentProvider implements ComponentProvider {
+public final class SpringResourceComponentProvider implements ComponentProvider {
 
   @Override
   public Class<Resource> getType() {

@@ -18,7 +18,7 @@ import java.util.List;
  * PekkoHttpServerInstrumentationModule applies to classes in pekko-http-core.jar
  */
 @AutoService(InstrumentationModule.class)
-public class PekkoHttpServerRouteInstrumentationModule extends InstrumentationModule
+public final class PekkoHttpServerRouteInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public PekkoHttpServerRouteInstrumentationModule() {
     super("pekko-http", "pekko-http-1.0", "pekko-http-server", "pekko-http-server-route");

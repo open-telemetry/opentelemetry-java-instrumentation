@@ -15,7 +15,7 @@ import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 import org.apache.tomcat.util.buf.MessageBytes;
 
-public class TomcatHelper<REQUEST, RESPONSE> {
+public final class TomcatHelper<REQUEST, RESPONSE> {
   protected final Instrumenter<Request, Response> instrumenter;
   protected final TomcatServletEntityProvider<REQUEST, RESPONSE> servletEntityProvider;
   private final ServletHelper<REQUEST, RESPONSE> servletHelper;

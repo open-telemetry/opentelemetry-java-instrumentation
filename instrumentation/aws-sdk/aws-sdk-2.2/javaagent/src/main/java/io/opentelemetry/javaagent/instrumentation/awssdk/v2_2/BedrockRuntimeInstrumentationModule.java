@@ -19,7 +19,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class BedrockRuntimeInstrumentationModule extends AbstractAwsSdkInstrumentationModule {
+public final class BedrockRuntimeInstrumentationModule extends AbstractAwsSdkInstrumentationModule {
 
   public BedrockRuntimeInstrumentationModule() {
     super("aws-sdk-2.2-bedrock-runtime");

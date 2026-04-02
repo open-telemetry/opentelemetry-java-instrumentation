@@ -9,7 +9,7 @@ import io.opentelemetry.api.metrics.DoubleGauge;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 
-public class ApplicationDoubleGauge138
+public final class ApplicationDoubleGauge138
     implements application.io.opentelemetry.api.metrics.DoubleGauge {
 
   private final DoubleGauge agentDoubleGauge;

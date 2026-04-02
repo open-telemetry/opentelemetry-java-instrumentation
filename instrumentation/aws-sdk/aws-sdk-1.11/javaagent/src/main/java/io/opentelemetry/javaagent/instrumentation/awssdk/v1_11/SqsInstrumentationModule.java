@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 
 @AutoService(InstrumentationModule.class)
-public class SqsInstrumentationModule extends AbstractAwsSdkInstrumentationModule {
+public final class SqsInstrumentationModule extends AbstractAwsSdkInstrumentationModule {
 
   public SqsInstrumentationModule() {
     super("aws-sdk-1.11-sqs");

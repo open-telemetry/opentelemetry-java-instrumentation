@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class FinatraInstrumentationModule extends InstrumentationModule
+public final class FinatraInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public FinatraInstrumentationModule() {
     super("finatra", "finatra-2.9");

@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class RabbitMqInstrumentationModule extends InstrumentationModule
+public final class RabbitMqInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public RabbitMqInstrumentationModule() {
     super("rabbitmq", "rabbitmq-2.7");

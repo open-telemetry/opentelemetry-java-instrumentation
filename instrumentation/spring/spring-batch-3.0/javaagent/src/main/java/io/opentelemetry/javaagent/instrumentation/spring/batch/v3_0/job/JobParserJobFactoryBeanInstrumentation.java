@@ -22,7 +22,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.batch.core.configuration.xml.JobParserJobFactoryBean;
 
-public class JobParserJobFactoryBeanInstrumentation implements TypeInstrumentation {
+public final class JobParserJobFactoryBeanInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     // Spring Batch XML config

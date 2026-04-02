@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class LambdaInstrumentationModule extends InstrumentationModule
+public final class LambdaInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public LambdaInstrumentationModule() {
     super("internal-lambda");

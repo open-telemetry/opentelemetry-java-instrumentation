@@ -16,7 +16,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class CassandraClientInstrumentationModule extends InstrumentationModule
+public final class CassandraClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public CassandraClientInstrumentationModule() {

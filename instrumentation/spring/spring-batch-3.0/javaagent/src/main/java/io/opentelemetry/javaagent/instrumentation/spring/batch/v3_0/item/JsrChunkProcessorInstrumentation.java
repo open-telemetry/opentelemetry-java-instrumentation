@@ -20,7 +20,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JsrChunkProcessorInstrumentation implements TypeInstrumentation {
+public final class JsrChunkProcessorInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.springframework.batch.core.jsr.step.item.JsrChunkProcessor");

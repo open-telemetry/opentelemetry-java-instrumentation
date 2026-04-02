@@ -25,7 +25,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class SpringBatchInstrumentationModule extends InstrumentationModule
+public final class SpringBatchInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public SpringBatchInstrumentationModule() {
     super("spring-batch", "spring-batch-3.0");

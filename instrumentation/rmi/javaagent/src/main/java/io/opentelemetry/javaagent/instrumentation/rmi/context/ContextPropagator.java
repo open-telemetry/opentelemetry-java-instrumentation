@@ -18,7 +18,7 @@ import sun.rmi.transport.Connection;
 import sun.rmi.transport.StreamRemoteCall;
 import sun.rmi.transport.TransportConstants;
 
-public class ContextPropagator {
+public final class ContextPropagator {
 
   private static final Logger logger = Logger.getLogger(ContextPropagator.class.getName());
 

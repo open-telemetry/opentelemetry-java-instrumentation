@@ -25,7 +25,7 @@ import java.util.logging.Logger;
 
 /** An {@link AgentListener} that enables JMX metrics during agent startup. */
 @AutoService(AgentListener.class)
-public class JmxMetricInsightInstaller implements AgentListener {
+public final class JmxMetricInsightInstaller implements AgentListener {
 
   private static final Logger logger = Logger.getLogger(JmxMetricInsightInstaller.class.getName());
 

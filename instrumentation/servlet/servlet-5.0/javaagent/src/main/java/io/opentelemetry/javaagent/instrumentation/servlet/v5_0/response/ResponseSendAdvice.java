@@ -17,7 +17,7 @@ import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 
 @SuppressWarnings("unused")
-public class ResponseSendAdvice {
+public final class ResponseSendAdvice {
 
   public static class AdviceScope {
     private final CallDepth callDepth;

@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class OracleUcpInstrumentationModule extends InstrumentationModule
+public final class OracleUcpInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public OracleUcpInstrumentationModule() {

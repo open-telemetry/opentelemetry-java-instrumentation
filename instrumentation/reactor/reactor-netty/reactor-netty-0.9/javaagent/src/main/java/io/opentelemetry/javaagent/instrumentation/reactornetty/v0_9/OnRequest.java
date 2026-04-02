@@ -11,7 +11,7 @@ import java.util.function.BiConsumer;
 import reactor.netty.Connection;
 import reactor.netty.http.client.HttpClientRequest;
 
-public class OnRequest implements BiConsumer<HttpClientRequest, Connection> {
+public final class OnRequest implements BiConsumer<HttpClientRequest, Connection> {
   @Override
   public void accept(HttpClientRequest r, Connection c) {
     Context context = r.currentContext().get(MapConnect.CONTEXT_ATTRIBUTE);

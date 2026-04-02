@@ -15,7 +15,7 @@ import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.impl.SendCallback;
 import org.apache.pulsar.client.impl.TopicMessageImpl;
 
-public class VirtualFieldStore {
+public final class VirtualFieldStore {
   private static final VirtualField<Message<?>, Context> MSG_FIELD =
       VirtualField.find(Message.class, Context.class);
   private static final VirtualField<Producer<?>, ProducerData> PRODUCER_FIELD =

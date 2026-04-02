@@ -16,7 +16,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class OpenSearchRestInstrumentationModule extends InstrumentationModule
+public final class OpenSearchRestInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public OpenSearchRestInstrumentationModule() {
     super("opensearch-rest", "opensearch-rest-3.0", "opensearch");

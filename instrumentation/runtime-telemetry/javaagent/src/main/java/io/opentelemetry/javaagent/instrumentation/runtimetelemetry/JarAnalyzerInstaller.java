@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 
 /** Installs the {@link JarAnalyzer}. */
 @AutoService(BeforeAgentListener.class)
-public class JarAnalyzerInstaller implements BeforeAgentListener {
+public final class JarAnalyzerInstaller implements BeforeAgentListener {
 
   private static final Logger logger = Logger.getLogger(JarAnalyzerInstaller.class.getName());
   private static final int DEFAULT_JARS_PER_SECOND = 10;

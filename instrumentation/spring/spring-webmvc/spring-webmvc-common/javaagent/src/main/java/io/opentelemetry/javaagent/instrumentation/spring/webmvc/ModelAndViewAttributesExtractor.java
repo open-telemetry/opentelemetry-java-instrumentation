@@ -14,7 +14,8 @@ import javax.annotation.Nullable;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 
-public class ModelAndViewAttributesExtractor implements AttributesExtractor<ModelAndView, Void> {
+public final class ModelAndViewAttributesExtractor
+    implements AttributesExtractor<ModelAndView, Void> {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "spring_webmvc")

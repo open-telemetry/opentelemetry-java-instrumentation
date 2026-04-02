@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class HelidonInstrumentationModule extends InstrumentationModule {
+public final class HelidonInstrumentationModule extends InstrumentationModule {
   public HelidonInstrumentationModule() {
     super("helidon", "helidon-4.3");
   }

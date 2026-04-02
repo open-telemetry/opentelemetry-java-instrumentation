@@ -16,7 +16,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class LambdaInstrumentationModule extends AbstractAwsSdkInstrumentationModule {
+public final class LambdaInstrumentationModule extends AbstractAwsSdkInstrumentationModule {
 
   public LambdaInstrumentationModule() {
     super("aws-sdk-2.2-lambda");

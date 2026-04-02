@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import javax.annotation.Nullable;
 
-public class VaadinHelper {
+public final class VaadinHelper {
   private final Instrumenter<VaadinHandlerRequest, Void> requestHandlerInstrumenter;
   private final Instrumenter<VaadinServiceRequest, Void> serviceInstrumenter;
 

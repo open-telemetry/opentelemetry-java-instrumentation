@@ -28,7 +28,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 // NB: If the error-handling workarounds stop working, we should consider introducing the same
 // x-amzn-request-id header check in Apache instrumentation for suppressing spans that we have in
 // Netty instrumentation.
-public class TracingRequestHandler extends RequestHandler2 {
+public final class TracingRequestHandler extends RequestHandler2 {
 
   public static final HandlerContextKey<Scope> SCOPE =
       new HandlerContextKey<>(Scope.class.getName());

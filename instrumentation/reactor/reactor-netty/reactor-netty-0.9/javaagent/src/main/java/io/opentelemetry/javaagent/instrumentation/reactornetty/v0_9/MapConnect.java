@@ -11,7 +11,7 @@ import java.util.function.BiFunction;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 
-public class MapConnect
+public final class MapConnect
     implements BiFunction<Mono<? extends Connection>, Bootstrap, Mono<? extends Connection>> {
 
   static final String CONTEXT_ATTRIBUTE = MapConnect.class.getName() + ".Context";

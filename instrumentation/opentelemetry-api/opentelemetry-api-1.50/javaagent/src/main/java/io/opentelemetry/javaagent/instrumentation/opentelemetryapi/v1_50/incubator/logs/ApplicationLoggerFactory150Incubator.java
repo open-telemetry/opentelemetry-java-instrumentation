@@ -10,7 +10,7 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs.Ap
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs.ApplicationLoggerFactory;
 
 // this class is used from opentelemetry-api-1.27.0 via reflection
-public class ApplicationLoggerFactory150Incubator implements ApplicationLoggerFactory {
+public final class ApplicationLoggerFactory150Incubator implements ApplicationLoggerFactory {
 
   @Override
   public ApplicationLogger newLogger(Logger agentLogger) {

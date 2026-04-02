@@ -16,7 +16,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class MyFacesInstrumentationModule extends InstrumentationModule
+public final class MyFacesInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public MyFacesInstrumentationModule() {
     super("jsf-myfaces", "jsf-myfaces-1.2");

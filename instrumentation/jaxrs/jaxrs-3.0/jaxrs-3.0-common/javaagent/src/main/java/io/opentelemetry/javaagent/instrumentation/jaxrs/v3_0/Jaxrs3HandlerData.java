@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
-public class Jaxrs3HandlerData extends HandlerData {
+public final class Jaxrs3HandlerData extends HandlerData {
 
   private static final ClassValue<Map<Method, String>> serverSpanNames =
       new ClassValue<Map<Method, String>>() {

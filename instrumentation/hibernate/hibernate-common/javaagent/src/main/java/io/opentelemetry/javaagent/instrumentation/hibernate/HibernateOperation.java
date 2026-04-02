@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.hibernate;
 
 import javax.annotation.Nullable;
 
-public class HibernateOperation {
+public final class HibernateOperation {
   private final String spanName;
   @Nullable private final String sessionId;
 

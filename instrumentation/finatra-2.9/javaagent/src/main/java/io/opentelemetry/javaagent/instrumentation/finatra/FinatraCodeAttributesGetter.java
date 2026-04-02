@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.finatra;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
 import javax.annotation.Nullable;
 
-public class FinatraCodeAttributesGetter implements CodeAttributesGetter<FinatraRequest> {
+public final class FinatraCodeAttributesGetter implements CodeAttributesGetter<FinatraRequest> {
   @Nullable
   @Override
   public Class<?> getCodeClass(FinatraRequest request) {

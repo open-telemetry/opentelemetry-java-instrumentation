@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 import java.util.logging.Logger;
 import reactor.core.publisher.Mono;
 
-public class LettuceMonoDualConsumer<R, T> implements Consumer<R>, BiConsumer<T, Throwable> {
+public final class LettuceMonoDualConsumer<R, T> implements Consumer<R>, BiConsumer<T, Throwable> {
 
   private Context context;
   private final RedisCommand<?, ?, ?> command;

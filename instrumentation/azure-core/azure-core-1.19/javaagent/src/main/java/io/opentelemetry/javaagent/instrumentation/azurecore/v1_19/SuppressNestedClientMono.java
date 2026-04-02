@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
 
-public class SuppressNestedClientMono<T> extends Mono<T> {
+public final class SuppressNestedClientMono<T> extends Mono<T> {
 
   private final Mono<T> delegate;
 

@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.grails;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
 
-public class GrailsCodeAttributesGetter implements CodeAttributesGetter<HandlerData> {
+public final class GrailsCodeAttributesGetter implements CodeAttributesGetter<HandlerData> {
 
   @Override
   public Class<?> getCodeClass(HandlerData handlerData) {

@@ -19,7 +19,7 @@ import javax.ws.rs.core.UriInfo;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 
-public class JerseySpanName implements HttpServerRouteGetter<Request> {
+public final class JerseySpanName implements HttpServerRouteGetter<Request> {
 
   public static final JerseySpanName INSTANCE = new JerseySpanName();
 

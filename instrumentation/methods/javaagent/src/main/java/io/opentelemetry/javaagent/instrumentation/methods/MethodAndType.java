@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.methods;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 
-public class MethodAndType {
+public final class MethodAndType {
   private final ClassAndMethod classAndMethod;
   private final SpanKind spanKind;
 

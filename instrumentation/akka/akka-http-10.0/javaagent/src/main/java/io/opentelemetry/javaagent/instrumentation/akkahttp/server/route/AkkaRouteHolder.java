@@ -15,7 +15,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import javax.annotation.Nullable;
 
-public class AkkaRouteHolder implements ImplicitContextKeyed {
+public final class AkkaRouteHolder implements ImplicitContextKeyed {
   private static final ContextKey<AkkaRouteHolder> KEY = named("opentelemetry-akka-route");
 
   private StringBuilder route = new StringBuilder();

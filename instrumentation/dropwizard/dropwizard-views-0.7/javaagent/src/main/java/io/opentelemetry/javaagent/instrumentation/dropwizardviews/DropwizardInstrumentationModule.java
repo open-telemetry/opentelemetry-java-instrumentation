@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class DropwizardInstrumentationModule extends InstrumentationModule
+public final class DropwizardInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public DropwizardInstrumentationModule() {
     super("dropwizard-views", "dropwizard-views-0.7");

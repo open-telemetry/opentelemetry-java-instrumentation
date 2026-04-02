@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class RxJava2InstrumentationModule extends InstrumentationModule {
+public final class RxJava2InstrumentationModule extends InstrumentationModule {
 
   public RxJava2InstrumentationModule() {
     super("rxjava", "rxjava-2.0");

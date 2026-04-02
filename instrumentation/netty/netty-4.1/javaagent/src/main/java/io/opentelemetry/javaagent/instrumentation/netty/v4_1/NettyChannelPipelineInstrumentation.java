@@ -27,7 +27,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.netty.common.v4_0.AbstractNettyChannelPipelineInstrumentation;
 import net.bytebuddy.asm.Advice;
 
-public class NettyChannelPipelineInstrumentation
+public final class NettyChannelPipelineInstrumentation
     extends AbstractNettyChannelPipelineInstrumentation {
 
   @Override

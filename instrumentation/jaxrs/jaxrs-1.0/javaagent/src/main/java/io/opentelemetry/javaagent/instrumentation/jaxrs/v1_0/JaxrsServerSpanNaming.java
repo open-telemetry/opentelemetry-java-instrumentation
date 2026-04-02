@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteGetter;
 import io.opentelemetry.javaagent.bootstrap.jaxrs.JaxrsContextPath;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 
-public class JaxrsServerSpanNaming {
+public final class JaxrsServerSpanNaming {
 
   public static final HttpServerRouteGetter<HandlerData> SERVER_SPAN_NAME =
       (context, handlerData) -> {

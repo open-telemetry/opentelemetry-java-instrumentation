@@ -14,7 +14,7 @@ import javax.annotation.Nullable;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
-public class ProducerCallback implements Callback {
+public final class ProducerCallback implements Callback {
   @Nullable private final Callback callback;
   private final Context parentContext;
   private final Context context;

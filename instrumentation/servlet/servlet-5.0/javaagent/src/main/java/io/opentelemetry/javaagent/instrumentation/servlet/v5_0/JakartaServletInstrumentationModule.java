@@ -20,7 +20,7 @@ import io.opentelemetry.javaagent.instrumentation.servlet.common.service.Servlet
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class JakartaServletInstrumentationModule extends InstrumentationModule
+public final class JakartaServletInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   private static final String BASE_PACKAGE = "jakarta.servlet";
 

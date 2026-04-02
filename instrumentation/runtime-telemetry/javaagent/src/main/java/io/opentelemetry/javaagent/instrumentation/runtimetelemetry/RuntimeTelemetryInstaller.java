@@ -15,7 +15,7 @@ import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 
 /** An {@link AgentListener} that enables runtime metrics during agent startup. */
 @AutoService(AgentListener.class)
-public class RuntimeTelemetryInstaller implements AgentListener {
+public final class RuntimeTelemetryInstaller implements AgentListener {
 
   @Override
   public void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {

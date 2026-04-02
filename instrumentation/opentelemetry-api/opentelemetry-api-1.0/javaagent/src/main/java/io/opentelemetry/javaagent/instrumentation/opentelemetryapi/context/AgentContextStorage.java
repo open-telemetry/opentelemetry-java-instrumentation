@@ -31,7 +31,7 @@ import java.util.logging.Logger;
  */
 // Annotation doesn't work on some fields due to fully qualified name (no clue why it matters...)
 @SuppressWarnings("FieldMissingNullable")
-public class AgentContextStorage
+public final class AgentContextStorage
     implements application.io.opentelemetry.context.ContextStorage, AutoCloseable {
 
   private static final Logger logger = Logger.getLogger(AgentContextStorage.class.getName());

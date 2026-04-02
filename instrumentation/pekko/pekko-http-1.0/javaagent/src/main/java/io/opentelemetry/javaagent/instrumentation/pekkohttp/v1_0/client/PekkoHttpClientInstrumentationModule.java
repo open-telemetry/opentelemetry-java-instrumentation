@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class PekkoHttpClientInstrumentationModule extends InstrumentationModule
+public final class PekkoHttpClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public PekkoHttpClientInstrumentationModule() {
     super("pekko-http", "pekko-http-1.0", "pekko-http-client");

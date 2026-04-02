@@ -15,7 +15,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class SpringIntegrationInstrumentationModule extends InstrumentationModule {
+public final class SpringIntegrationInstrumentationModule extends InstrumentationModule {
   public SpringIntegrationInstrumentationModule() {
     super("spring-integration", "spring-integration-4.1");
   }

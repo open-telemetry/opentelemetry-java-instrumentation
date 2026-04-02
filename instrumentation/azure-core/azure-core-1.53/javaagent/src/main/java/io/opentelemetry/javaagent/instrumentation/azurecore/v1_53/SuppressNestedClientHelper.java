@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
 
-public class SuppressNestedClientHelper {
+public final class SuppressNestedClientHelper {
 
   @Nullable
   public static Scope disallowNestedClientSpanSync(com.azure.core.util.Context azContext) {

@@ -16,7 +16,7 @@ import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 
-public class HttpClientResponseTracingHandler extends SimpleChannelUpstreamHandler {
+public final class HttpClientResponseTracingHandler extends SimpleChannelUpstreamHandler {
 
   private static final VirtualField<Channel, NettyClientRequestAndContexts> requestContextsField =
       VirtualField.find(Channel.class, NettyClientRequestAndContexts.class);

@@ -16,7 +16,7 @@ import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 
 @SuppressWarnings("unused")
-public class Tomcat7ServerHandlerAdvice {
+public final class Tomcat7ServerHandlerAdvice {
 
   public static class AdviceScope {
     private final Context context;

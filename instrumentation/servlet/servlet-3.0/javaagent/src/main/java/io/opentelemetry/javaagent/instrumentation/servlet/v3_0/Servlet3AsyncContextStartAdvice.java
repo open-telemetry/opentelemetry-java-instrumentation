@@ -12,7 +12,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 
 @SuppressWarnings("unused")
-public class Servlet3AsyncContextStartAdvice {
+public final class Servlet3AsyncContextStartAdvice {
 
   @AssignReturned.ToArguments(@ToArgument(0))
   @Advice.OnMethodEnter(suppress = Throwable.class)

@@ -19,7 +19,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class Servlet2InstrumentationModule extends InstrumentationModule
+public final class Servlet2InstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   private static final String BASE_PACKAGE = "javax.servlet";
 

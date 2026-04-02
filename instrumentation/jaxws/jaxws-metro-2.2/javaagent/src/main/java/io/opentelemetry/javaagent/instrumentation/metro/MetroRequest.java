@@ -9,7 +9,7 @@ import com.sun.xml.ws.api.message.Packet;
 import com.sun.xml.ws.api.server.WSEndpoint;
 import javax.xml.namespace.QName;
 
-public class MetroRequest {
+public final class MetroRequest {
   private final Packet packet;
   private final String spanName;
 

@@ -15,7 +15,7 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
-public class UndertowHttpAttributesGetter
+public final class UndertowHttpAttributesGetter
     implements HttpServerAttributesGetter<HttpServerExchange, HttpServerExchange> {
 
   @Override

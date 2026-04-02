@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class InfluxDbInstrumentationModule extends InstrumentationModule {
+public final class InfluxDbInstrumentationModule extends InstrumentationModule {
 
   public InfluxDbInstrumentationModule() {
     super("influxdb", "influxdb-2.4");

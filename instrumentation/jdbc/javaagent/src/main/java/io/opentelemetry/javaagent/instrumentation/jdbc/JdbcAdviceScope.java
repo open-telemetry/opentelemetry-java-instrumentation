@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
-public class JdbcAdviceScope {
+public final class JdbcAdviceScope {
   private final CallDepth callDepth;
   private final DbRequest request;
   private final Context context;

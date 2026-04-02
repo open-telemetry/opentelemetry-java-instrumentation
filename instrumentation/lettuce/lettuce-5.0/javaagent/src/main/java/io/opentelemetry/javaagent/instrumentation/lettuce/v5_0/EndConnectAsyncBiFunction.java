@@ -24,7 +24,7 @@ import java.util.function.BiFunction;
  * @param <R> the return type, should be null since nothing else should happen from tracing
  *     standpoint after the span is closed
  */
-public class EndConnectAsyncBiFunction<T, U extends Throwable, R>
+public final class EndConnectAsyncBiFunction<T, U extends Throwable, R>
     implements BiFunction<T, Throwable, R> {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =

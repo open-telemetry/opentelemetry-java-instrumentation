@@ -16,7 +16,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class TapestryInstrumentationModule extends InstrumentationModule
+public final class TapestryInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public TapestryInstrumentationModule() {

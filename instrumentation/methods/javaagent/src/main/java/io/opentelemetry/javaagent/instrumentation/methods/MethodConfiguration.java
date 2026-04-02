@@ -26,7 +26,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
-public class MethodConfiguration {
+public final class MethodConfiguration {
 
   private static final Logger logger = Logger.getLogger(MethodConfiguration.class.getName());
 

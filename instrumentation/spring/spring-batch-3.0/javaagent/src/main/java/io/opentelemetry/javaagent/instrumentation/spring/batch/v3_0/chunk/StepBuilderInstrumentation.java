@@ -17,7 +17,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.batch.core.step.builder.AbstractTaskletStepBuilder;
 
-public class StepBuilderInstrumentation implements TypeInstrumentation {
+public final class StepBuilderInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     // Spring Batch Java DSL and XML config

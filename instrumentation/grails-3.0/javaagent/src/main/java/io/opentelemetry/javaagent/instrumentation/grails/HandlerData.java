@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.grails;
 
-public class HandlerData {
+public final class HandlerData {
 
   private final Object controller;
   private final String action;

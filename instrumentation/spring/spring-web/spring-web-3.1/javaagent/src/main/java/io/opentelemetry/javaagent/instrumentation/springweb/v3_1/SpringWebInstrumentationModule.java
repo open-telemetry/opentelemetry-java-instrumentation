@@ -18,7 +18,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class SpringWebInstrumentationModule extends InstrumentationModule
+public final class SpringWebInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public SpringWebInstrumentationModule() {
     super("spring-web", "spring-web-3.1");

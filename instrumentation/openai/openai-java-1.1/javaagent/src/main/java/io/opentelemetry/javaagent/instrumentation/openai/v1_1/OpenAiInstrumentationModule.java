@@ -15,7 +15,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class OpenAiInstrumentationModule extends InstrumentationModule {
+public final class OpenAiInstrumentationModule extends InstrumentationModule {
   public OpenAiInstrumentationModule() {
     super("openai-java", "openai-java-1.1", "openai");
   }

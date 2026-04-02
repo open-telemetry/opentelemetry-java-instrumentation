@@ -21,7 +21,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class DubboInstrumentationModule extends InstrumentationModule
+public final class DubboInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public DubboInstrumentationModule() {
     super("apache-dubbo", "apache-dubbo-2.7");

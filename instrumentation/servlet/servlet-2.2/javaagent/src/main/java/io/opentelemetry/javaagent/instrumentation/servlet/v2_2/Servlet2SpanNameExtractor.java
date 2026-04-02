@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.util.Set;
 
-public class Servlet2SpanNameExtractor<REQUEST, RESPONSE>
+public final class Servlet2SpanNameExtractor<REQUEST, RESPONSE>
     implements SpanNameExtractor<ServletRequestContext<REQUEST>> {
 
   private final ServletAccessor<REQUEST, RESPONSE> accessor;

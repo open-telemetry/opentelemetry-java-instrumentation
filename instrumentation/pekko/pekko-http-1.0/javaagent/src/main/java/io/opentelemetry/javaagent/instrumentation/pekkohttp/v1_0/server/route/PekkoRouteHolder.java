@@ -14,7 +14,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import org.apache.pekko.http.scaladsl.model.Uri;
 
-public class PekkoRouteHolder implements ImplicitContextKeyed {
+public final class PekkoRouteHolder implements ImplicitContextKeyed {
   private static final ContextKey<PekkoRouteHolder> KEY = named("opentelemetry-pekko-route");
 
   private StringBuilder route = new StringBuilder();

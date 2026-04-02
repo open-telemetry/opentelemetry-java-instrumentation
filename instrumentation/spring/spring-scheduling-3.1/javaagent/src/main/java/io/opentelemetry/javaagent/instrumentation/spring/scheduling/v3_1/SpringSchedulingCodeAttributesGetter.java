@@ -10,7 +10,7 @@ import java.lang.reflect.Field;
 import javax.annotation.Nullable;
 import org.springframework.scheduling.support.ScheduledMethodRunnable;
 
-public class SpringSchedulingCodeAttributesGetter implements CodeAttributesGetter<Runnable> {
+public final class SpringSchedulingCodeAttributesGetter implements CodeAttributesGetter<Runnable> {
   @Nullable
   private static final Class<?> OUTCOME_TRACKING_RUNNABLE_CLASS = getOutcomeTrackingRunnableClass();
 

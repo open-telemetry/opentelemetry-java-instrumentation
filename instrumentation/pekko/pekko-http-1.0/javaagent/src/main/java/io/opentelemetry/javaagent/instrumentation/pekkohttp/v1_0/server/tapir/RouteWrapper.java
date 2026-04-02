@@ -21,7 +21,7 @@ import scala.util.Try;
 import sttp.tapir.EndpointInput;
 import sttp.tapir.server.ServerEndpoint;
 
-public class RouteWrapper implements Function1<RequestContext, Future<RouteResult>> {
+public final class RouteWrapper implements Function1<RequestContext, Future<RouteResult>> {
   private static final Uri.Path EMPTY = Uri.Path$.MODULE$.apply("", Charset.defaultCharset());
   private final Function1<RequestContext, Future<RouteResult>> route;
   private final ServerEndpoint<?, ?> serverEndpoint;

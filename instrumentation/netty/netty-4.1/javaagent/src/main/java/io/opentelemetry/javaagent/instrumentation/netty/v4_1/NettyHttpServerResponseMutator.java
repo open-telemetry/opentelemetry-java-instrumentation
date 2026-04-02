@@ -8,7 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
 
-public class NettyHttpServerResponseMutator implements HttpServerResponseMutator<HttpResponse> {
+public final class NettyHttpServerResponseMutator
+    implements HttpServerResponseMutator<HttpResponse> {
 
   @Override
   public void appendHeader(HttpResponse response, String name, String value) {

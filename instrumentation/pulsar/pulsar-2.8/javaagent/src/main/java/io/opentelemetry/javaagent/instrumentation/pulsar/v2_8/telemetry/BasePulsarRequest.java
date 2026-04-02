@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.UrlParser.UrlData;
 import javax.annotation.Nullable;
 
-public class BasePulsarRequest {
+public final class BasePulsarRequest {
 
   private final String destination;
   @Nullable private final UrlData urlData;

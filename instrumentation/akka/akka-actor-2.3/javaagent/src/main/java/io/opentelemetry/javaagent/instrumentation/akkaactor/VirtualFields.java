@@ -10,7 +10,7 @@ import akka.dispatch.sysmsg.SystemMessage;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 
-public class VirtualFields {
+public final class VirtualFields {
 
   public static final VirtualField<Envelope, PropagatedContext> ENVELOPE_PROPAGATED_CONTEXT =
       VirtualField.find(Envelope.class, PropagatedContext.class);

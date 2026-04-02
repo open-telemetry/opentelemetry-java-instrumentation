@@ -11,7 +11,7 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletRegistration;
 
-public class Servlet3MappingResolverFactory extends ServletMappingResolverFactory {
+public final class Servlet3MappingResolverFactory extends ServletMappingResolverFactory {
   private final ServletConfig servletConfig;
 
   public Servlet3MappingResolverFactory(ServletConfig servletConfig) {

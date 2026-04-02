@@ -12,7 +12,7 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
 import javax.annotation.Nullable;
 
-public class GrizzlyErrorHolder implements ImplicitContextKeyed {
+public final class GrizzlyErrorHolder implements ImplicitContextKeyed {
 
   private static final ContextKey<GrizzlyErrorHolder> KEY = named("opentelemetry-grizzly-error");
 

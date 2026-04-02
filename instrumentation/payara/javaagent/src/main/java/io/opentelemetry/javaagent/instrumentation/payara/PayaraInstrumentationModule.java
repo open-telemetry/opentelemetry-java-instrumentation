@@ -15,7 +15,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class PayaraInstrumentationModule extends InstrumentationModule {
+public final class PayaraInstrumentationModule extends InstrumentationModule {
 
   public PayaraInstrumentationModule() {
     super("payara");

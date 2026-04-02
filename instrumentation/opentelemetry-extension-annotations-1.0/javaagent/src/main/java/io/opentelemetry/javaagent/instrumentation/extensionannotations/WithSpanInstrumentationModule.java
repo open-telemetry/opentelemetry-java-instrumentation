@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class WithSpanInstrumentationModule extends InstrumentationModule {
+public final class WithSpanInstrumentationModule extends InstrumentationModule {
 
   public WithSpanInstrumentationModule() {
     super("opentelemetry-extension-annotations", "opentelemetry-extension-annotations-1.0");

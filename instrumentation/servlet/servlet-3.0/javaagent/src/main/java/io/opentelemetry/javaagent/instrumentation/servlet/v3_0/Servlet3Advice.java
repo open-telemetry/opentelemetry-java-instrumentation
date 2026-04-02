@@ -28,7 +28,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 
 @SuppressWarnings("unused")
-public class Servlet3Advice {
+public final class Servlet3Advice {
 
   public static class AdviceScope {
     private final CallDepth callDepth;

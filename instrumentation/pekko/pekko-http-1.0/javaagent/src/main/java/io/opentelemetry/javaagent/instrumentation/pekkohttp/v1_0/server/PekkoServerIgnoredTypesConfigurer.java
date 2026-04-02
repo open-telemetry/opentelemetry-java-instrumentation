@@ -10,7 +10,7 @@ import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 
 @AutoService(IgnoredTypesConfigurer.class)
-public class PekkoServerIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
+public final class PekkoServerIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
 
   @Override
   public void configure(IgnoredTypesBuilder builder) {

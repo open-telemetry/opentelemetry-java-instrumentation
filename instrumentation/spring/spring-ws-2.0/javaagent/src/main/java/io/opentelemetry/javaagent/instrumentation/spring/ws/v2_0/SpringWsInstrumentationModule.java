@@ -15,7 +15,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class SpringWsInstrumentationModule extends InstrumentationModule
+public final class SpringWsInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public SpringWsInstrumentationModule() {
     super("spring-ws", "spring-ws-2.0");

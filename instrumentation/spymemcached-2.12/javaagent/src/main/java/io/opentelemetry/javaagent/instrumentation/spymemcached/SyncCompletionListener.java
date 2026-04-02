@@ -13,7 +13,7 @@ import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.spy.memcached.MemcachedConnection;
 
-public class SyncCompletionListener extends CompletionListener<Void> {
+public final class SyncCompletionListener extends CompletionListener<Void> {
 
   private static final Logger logger = Logger.getLogger(SyncCompletionListener.class.getName());
 

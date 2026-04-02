@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.util.CombinedSimpleChannelHandler;
 
-public class HttpClientTracingHandler
+public final class HttpClientTracingHandler
     extends CombinedSimpleChannelHandler<
         HttpClientResponseTracingHandler, HttpClientRequestTracingHandler> {
 

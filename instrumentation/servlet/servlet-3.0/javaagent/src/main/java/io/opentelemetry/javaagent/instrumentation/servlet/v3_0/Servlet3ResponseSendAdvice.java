@@ -17,7 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
 
 @SuppressWarnings("unused")
-public class Servlet3ResponseSendAdvice {
+public final class Servlet3ResponseSendAdvice {
 
   public static class AdviceScope {
     private final CallDepth callDepth;

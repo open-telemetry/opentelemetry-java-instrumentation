@@ -23,7 +23,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 
 @SuppressWarnings("unused")
-public class Servlet2Advice {
+public final class Servlet2Advice {
 
   public static class AdviceScope {
 

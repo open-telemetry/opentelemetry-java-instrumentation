@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class Servlet2HttpAttributesGetter
+public final class Servlet2HttpAttributesGetter
     extends ServletHttpAttributesGetter<HttpServletRequest, HttpServletResponse> {
 
   public Servlet2HttpAttributesGetter(

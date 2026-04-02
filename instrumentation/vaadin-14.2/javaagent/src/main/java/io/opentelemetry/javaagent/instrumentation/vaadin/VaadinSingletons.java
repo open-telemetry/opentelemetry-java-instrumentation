@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.util.SpanNames;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
-public class VaadinSingletons {
+public final class VaadinSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vaadin-14.2";
 
   static final ContextKey<VaadinServiceContext> SERVICE_CONTEXT_KEY =

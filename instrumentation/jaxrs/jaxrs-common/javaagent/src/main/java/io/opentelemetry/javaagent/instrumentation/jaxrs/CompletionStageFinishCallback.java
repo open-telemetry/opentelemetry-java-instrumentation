@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.function.BiFunction;
 import javax.annotation.Nullable;
 
-public class CompletionStageFinishCallback<T> implements BiFunction<T, Throwable, T> {
+public final class CompletionStageFinishCallback<T> implements BiFunction<T, Throwable, T> {
   private final Instrumenter<HandlerData, Void> instrumenter;
   private final Context context;
   private final HandlerData handlerData;

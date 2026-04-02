@@ -13,7 +13,7 @@ import org.apache.rocketmq.shaded.com.google.common.util.concurrent.MoreExecutor
 import org.apache.rocketmq.shaded.com.google.common.util.concurrent.SettableFuture;
 
 /** Future converter, which covert future of list into list of future. */
-public class FutureConverter {
+public final class FutureConverter {
   private FutureConverter() {}
 
   public static <T> List<SettableFuture<T>> convert(SettableFuture<List<T>> future, int num) {

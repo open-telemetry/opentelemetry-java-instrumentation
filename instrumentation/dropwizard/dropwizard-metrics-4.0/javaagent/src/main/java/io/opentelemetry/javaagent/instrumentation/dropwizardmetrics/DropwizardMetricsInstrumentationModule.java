@@ -17,7 +17,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class DropwizardMetricsInstrumentationModule extends InstrumentationModule
+public final class DropwizardMetricsInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public DropwizardMetricsInstrumentationModule() {

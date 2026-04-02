@@ -15,7 +15,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class WicketInstrumentationModule extends InstrumentationModule {
+public final class WicketInstrumentationModule extends InstrumentationModule {
 
   public WicketInstrumentationModule() {
     super("wicket", "wicket-8.0");

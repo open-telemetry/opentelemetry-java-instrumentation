@@ -9,7 +9,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
-public class MetroSingletons {
+public final class MetroSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jaxws-metro-2.2";
 
   private static final Instrumenter<MetroRequest, Void> INSTRUMENTER;

@@ -25,7 +25,8 @@ import org.jboss.resteasy.core.interception.jaxrs.PostMatchContainerRequestConte
  * PostMatchContainerRequestContext</code>. This class provides a way to get the matched resource
  * method through <code>getResourceMethod()</code>.
  */
-public class ResteasyRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
+public final class ResteasyRequestContextInstrumentation
+    extends AbstractRequestContextInstrumentation {
   @Override
   protected String abortAdviceName() {
     return getClass().getName() + "$ContainerRequestContextAdvice";

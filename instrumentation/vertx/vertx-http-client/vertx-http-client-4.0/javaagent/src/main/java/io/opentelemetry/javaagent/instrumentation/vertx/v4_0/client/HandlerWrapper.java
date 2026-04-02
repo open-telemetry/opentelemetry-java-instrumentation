@@ -10,7 +10,7 @@ import io.opentelemetry.context.Scope;
 import io.vertx.core.Handler;
 import javax.annotation.Nullable;
 
-public class HandlerWrapper<T> implements Handler<T> {
+public final class HandlerWrapper<T> implements Handler<T> {
   private final Handler<T> delegate;
   private final Context context;
 

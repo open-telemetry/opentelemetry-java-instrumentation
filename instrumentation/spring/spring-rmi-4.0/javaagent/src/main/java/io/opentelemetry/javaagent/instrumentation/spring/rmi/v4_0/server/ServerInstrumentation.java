@@ -24,7 +24,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.remoting.rmi.RmiBasedExporter;
 import org.springframework.remoting.support.RemoteInvocation;
 
-public class ServerInstrumentation implements TypeInstrumentation {
+public final class ServerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

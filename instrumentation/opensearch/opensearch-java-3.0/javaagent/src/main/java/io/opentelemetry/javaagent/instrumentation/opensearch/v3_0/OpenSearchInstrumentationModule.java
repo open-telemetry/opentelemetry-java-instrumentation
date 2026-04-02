@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class OpenSearchInstrumentationModule extends InstrumentationModule
+public final class OpenSearchInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public OpenSearchInstrumentationModule() {
     super("opensearch-java", "opensearch-java-3.0", "opensearch");

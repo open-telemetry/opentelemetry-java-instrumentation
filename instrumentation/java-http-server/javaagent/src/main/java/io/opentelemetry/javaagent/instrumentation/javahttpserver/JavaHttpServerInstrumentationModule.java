@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class JavaHttpServerInstrumentationModule extends InstrumentationModule {
+public final class JavaHttpServerInstrumentationModule extends InstrumentationModule {
   public JavaHttpServerInstrumentationModule() {
     super("java-http-server");
   }

@@ -22,7 +22,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class Log4j2InstrumentationModule extends InstrumentationModule
+public final class Log4j2InstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public Log4j2InstrumentationModule() {
     super("log4j-context-data", "log4j-context-data-2.17");

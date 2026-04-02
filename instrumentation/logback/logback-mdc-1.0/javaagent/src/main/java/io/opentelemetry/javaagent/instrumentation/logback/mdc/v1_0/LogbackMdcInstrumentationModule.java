@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class LogbackMdcInstrumentationModule extends InstrumentationModule
+public final class LogbackMdcInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public LogbackMdcInstrumentationModule() {
     super("logback-mdc", "logback-mdc-1.0");

@@ -10,7 +10,7 @@ import io.opentelemetry.context.Scope;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
-public class SubscriberWrapper<T> implements Subscriber<T> {
+public final class SubscriberWrapper<T> implements Subscriber<T> {
   private static final Class<?> abortingSubscriberClass = getAbortingSubscriberClass();
   private static final Class<?> noopSubscriberClass = getNoopSubscriberClass();
 

@@ -16,7 +16,7 @@ import javax.servlet.ServletRequest;
 import net.bytebuddy.asm.Advice;
 
 @SuppressWarnings("unused")
-public class AsyncDispatchAdvice {
+public final class AsyncDispatchAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static CallDepth enter(

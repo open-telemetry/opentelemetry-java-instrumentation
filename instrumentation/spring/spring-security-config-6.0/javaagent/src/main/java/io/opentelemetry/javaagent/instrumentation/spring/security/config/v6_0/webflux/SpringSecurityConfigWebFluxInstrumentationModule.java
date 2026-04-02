@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 /** Instrumentation module for webflux-based applications that use spring-security-config. */
 @AutoService(InstrumentationModule.class)
-public class SpringSecurityConfigWebFluxInstrumentationModule extends InstrumentationModule {
+public final class SpringSecurityConfigWebFluxInstrumentationModule extends InstrumentationModule {
 
   public SpringSecurityConfigWebFluxInstrumentationModule() {
     super(

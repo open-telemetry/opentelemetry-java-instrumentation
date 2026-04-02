@@ -10,7 +10,7 @@ import io.opentelemetry.context.Scope;
 import io.vertx.core.Completable;
 import javax.annotation.Nullable;
 
-public class CompletableWrapper<T> implements Completable<T> {
+public final class CompletableWrapper<T> implements Completable<T> {
   private final Completable<T> delegate;
   private final Context context;
 

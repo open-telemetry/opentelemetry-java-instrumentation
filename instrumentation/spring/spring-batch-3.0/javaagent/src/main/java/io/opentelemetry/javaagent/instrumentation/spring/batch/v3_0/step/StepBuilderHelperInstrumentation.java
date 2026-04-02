@@ -17,7 +17,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.batch.core.step.builder.StepBuilderHelper;
 
-public class StepBuilderHelperInstrumentation implements TypeInstrumentation {
+public final class StepBuilderHelperInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.springframework.batch.core.step.builder.StepBuilderHelper");

@@ -18,7 +18,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.AttributeKeys;
 
-public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapter {
+public final class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapter {
 
   public static final AttributeKey<NettyCommonRequest> HTTP_CLIENT_REQUEST =
       AttributeKeys.attributeKey(AttributeKeys.class.getName() + ".http-client-request");

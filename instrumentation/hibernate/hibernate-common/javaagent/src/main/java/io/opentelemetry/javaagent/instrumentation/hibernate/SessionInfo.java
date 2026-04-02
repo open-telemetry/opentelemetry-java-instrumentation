@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateInst
 import java.util.UUID;
 import javax.annotation.Nullable;
 
-public class SessionInfo {
+public final class SessionInfo {
   @Nullable private final String sessionId;
 
   public SessionInfo() {

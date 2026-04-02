@@ -34,7 +34,7 @@ import java.util.logging.Logger;
  *
  * <p>Also see comments in this module's gradle file.
  */
-public class Bridging {
+public final class Bridging {
 
   private static final Logger logger = Logger.getLogger(Bridging.class.getName());
 

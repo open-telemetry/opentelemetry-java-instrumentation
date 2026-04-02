@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_0.client;
 
 import io.netty.channel.CombinedChannelDuplexHandler;
 
-public class HttpClientTracingHandler
+public final class HttpClientTracingHandler
     extends CombinedChannelDuplexHandler<
         HttpClientResponseTracingHandler, HttpClientRequestTracingHandler> {
 

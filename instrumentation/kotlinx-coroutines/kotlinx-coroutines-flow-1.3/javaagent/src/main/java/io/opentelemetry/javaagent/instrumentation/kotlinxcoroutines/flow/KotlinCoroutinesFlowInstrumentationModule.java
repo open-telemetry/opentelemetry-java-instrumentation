@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class KotlinCoroutinesFlowInstrumentationModule extends InstrumentationModule {
+public final class KotlinCoroutinesFlowInstrumentationModule extends InstrumentationModule {
 
   public KotlinCoroutinesFlowInstrumentationModule() {
     super("kotlinx-coroutines-flow", "kotlinx-coroutines-flow-1.3", "kotlinx-coroutines");

@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8;
 import io.opentelemetry.context.Context;
 import javax.annotation.Nullable;
 
-public class NettyConnectionContext {
+public final class NettyConnectionContext {
   private Context connectionContext;
 
   public NettyConnectionContext(Context connectionContext) {

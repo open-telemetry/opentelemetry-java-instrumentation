@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs;
 
 import io.opentelemetry.api.logs.Logger;
 
-public class ApplicationLoggerFactory127 implements ApplicationLoggerFactory {
+public final class ApplicationLoggerFactory127 implements ApplicationLoggerFactory {
 
   @Override
   public ApplicationLogger newLogger(Logger agentLogger) {

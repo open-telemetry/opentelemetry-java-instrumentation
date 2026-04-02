@@ -9,7 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import ratpack.func.Block;
 
-public class BlockWrapper implements Block {
+public final class BlockWrapper implements Block {
 
   private final Block delegate;
   private final Context parentContext;

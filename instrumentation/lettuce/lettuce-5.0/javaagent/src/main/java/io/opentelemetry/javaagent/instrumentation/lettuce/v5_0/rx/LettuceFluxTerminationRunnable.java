@@ -19,7 +19,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Signal;
 import reactor.core.publisher.SignalType;
 
-public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runnable {
+public final class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runnable {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "lettuce")

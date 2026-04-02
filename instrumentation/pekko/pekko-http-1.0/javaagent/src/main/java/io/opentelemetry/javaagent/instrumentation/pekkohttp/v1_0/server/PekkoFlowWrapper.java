@@ -21,7 +21,7 @@ import org.apache.pekko.stream.stage.GraphStage;
 import org.apache.pekko.stream.stage.GraphStageLogic;
 import org.apache.pekko.stream.stage.OutHandler;
 
-public class PekkoFlowWrapper
+public final class PekkoFlowWrapper
     extends GraphStage<BidiShape<HttpResponse, HttpResponse, HttpRequest, HttpRequest>> {
   private final Inlet<HttpRequest> requestIn = Inlet.create("otel.requestIn");
   private final Outlet<HttpRequest> requestOut = Outlet.create("otel.requestOut");

@@ -31,7 +31,7 @@ import java.util.Deque;
 import java.util.List;
 import javax.annotation.Nullable;
 
-public class AkkaFlowWrapper
+public final class AkkaFlowWrapper
     extends GraphStage<BidiShape<HttpResponse, HttpResponse, HttpRequest, HttpRequest>> {
   private final Inlet<HttpRequest> requestIn = Inlet.create("otel.requestIn");
   private final Outlet<HttpRequest> requestOut = Outlet.create("otel.requestOut");

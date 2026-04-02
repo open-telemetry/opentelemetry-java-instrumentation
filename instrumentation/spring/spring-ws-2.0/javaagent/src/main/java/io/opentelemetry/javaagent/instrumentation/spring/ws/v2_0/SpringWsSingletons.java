@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameE
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
-public class SpringWsSingletons {
+public final class SpringWsSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-ws-2.0";
 
   private static final Instrumenter<SpringWsRequest, Void> INSTRUMENTER;

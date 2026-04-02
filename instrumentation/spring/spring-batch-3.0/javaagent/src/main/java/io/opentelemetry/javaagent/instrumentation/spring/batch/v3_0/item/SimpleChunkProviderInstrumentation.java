@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 // item read instrumentation *cannot* use ItemReadListener: sometimes afterRead() is not called
 // after beforeRead(), using listener here would cause unfinished spans/scopes
-public class SimpleChunkProviderInstrumentation implements TypeInstrumentation {
+public final class SimpleChunkProviderInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.springframework.batch.core.step.item.SimpleChunkProvider");

@@ -30,7 +30,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 
 @SuppressWarnings("unused")
-public class JakartaServletServiceAdvice {
+public final class JakartaServletServiceAdvice {
 
   public static class AdviceScope {
     private final CallDepth callDepth;

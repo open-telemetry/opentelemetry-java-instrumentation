@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGet
 import java.util.List;
 import javax.annotation.Nullable;
 
-public class LibertyDispatcherHttpAttributesGetter
+public final class LibertyDispatcherHttpAttributesGetter
     implements HttpServerAttributesGetter<LibertyRequest, LibertyResponse> {
 
   @Override

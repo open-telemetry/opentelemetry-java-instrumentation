@@ -13,7 +13,7 @@ import javax.servlet.FilterRegistration;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletRegistration;
 
-public class Servlet3FilterMappingResolverFactory
+public final class Servlet3FilterMappingResolverFactory
     extends ServletFilterMappingResolverFactory<FilterRegistration> {
   private final FilterConfig filterConfig;
 

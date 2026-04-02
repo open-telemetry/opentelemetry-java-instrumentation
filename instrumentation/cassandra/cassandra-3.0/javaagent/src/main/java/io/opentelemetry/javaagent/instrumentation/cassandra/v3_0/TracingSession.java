@@ -23,7 +23,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.Map;
 
-public class TracingSession implements Session {
+public final class TracingSession implements Session {
 
   private final Session session;
 

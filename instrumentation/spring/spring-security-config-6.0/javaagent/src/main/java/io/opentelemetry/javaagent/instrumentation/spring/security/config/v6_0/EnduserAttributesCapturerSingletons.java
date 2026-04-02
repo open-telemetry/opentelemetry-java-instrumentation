@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.spring.security.config.v6_0.EnduserAttributesCapturer;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 
-public class EnduserAttributesCapturerSingletons {
+public final class EnduserAttributesCapturerSingletons {
 
   private static final EnduserAttributesCapturer ENDUSER_ATTRIBUTES_CAPTURER =
       createEndUserAttributesCapturerFromConfig();

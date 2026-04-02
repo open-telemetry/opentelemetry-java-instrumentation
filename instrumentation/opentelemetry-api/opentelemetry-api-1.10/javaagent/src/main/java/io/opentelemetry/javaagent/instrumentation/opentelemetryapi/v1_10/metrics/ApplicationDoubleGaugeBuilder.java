@@ -10,7 +10,7 @@ import io.opentelemetry.api.metrics.DoubleGaugeBuilder;
 import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
 import java.util.function.Consumer;
 
-public class ApplicationDoubleGaugeBuilder
+public final class ApplicationDoubleGaugeBuilder
     implements application.io.opentelemetry.api.metrics.DoubleGaugeBuilder {
 
   private final DoubleGaugeBuilder agentBuilder;

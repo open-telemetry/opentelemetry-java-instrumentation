@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
 import org.apache.coyote.Response;
 
-public class Tomcat7ResponseMutator implements HttpServerResponseMutator<Response> {
+public final class Tomcat7ResponseMutator implements HttpServerResponseMutator<Response> {
   public static final Tomcat7ResponseMutator INSTANCE = new Tomcat7ResponseMutator();
 
   private Tomcat7ResponseMutator() {}

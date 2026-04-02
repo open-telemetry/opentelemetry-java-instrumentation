@@ -18,7 +18,7 @@ import java.util.List;
  * an abstract class, so the bytecode isn't directly compatible.
  */
 @AutoService(InstrumentationModule.class)
-public class Elasticsearch6TransportClientInstrumentationModule extends InstrumentationModule
+public final class Elasticsearch6TransportClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public Elasticsearch6TransportClientInstrumentationModule() {
     super("elasticsearch-transport", "elasticsearch-transport-6.0", "elasticsearch");

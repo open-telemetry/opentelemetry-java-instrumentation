@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.Connec
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyConnectionInstrumenter;
 
 /** Container used to carry state between enter and exit advices */
-public class NettyScope {
+public final class NettyScope {
 
   private final Context context;
   private final NettyConnectionRequest request;

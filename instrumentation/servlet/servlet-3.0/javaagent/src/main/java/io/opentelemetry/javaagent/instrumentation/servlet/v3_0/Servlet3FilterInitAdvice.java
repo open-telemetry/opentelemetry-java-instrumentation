@@ -12,7 +12,7 @@ import javax.servlet.FilterConfig;
 import net.bytebuddy.asm.Advice;
 
 @SuppressWarnings("unused")
-public class Servlet3FilterInitAdvice {
+public final class Servlet3FilterInitAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void filterInit(

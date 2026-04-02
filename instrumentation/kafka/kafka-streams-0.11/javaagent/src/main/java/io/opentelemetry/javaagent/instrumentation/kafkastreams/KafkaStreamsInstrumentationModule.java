@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class KafkaStreamsInstrumentationModule extends InstrumentationModule
+public final class KafkaStreamsInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public KafkaStreamsInstrumentationModule() {
     super("kafka-streams", "kafka-streams-0.11", "kafka");

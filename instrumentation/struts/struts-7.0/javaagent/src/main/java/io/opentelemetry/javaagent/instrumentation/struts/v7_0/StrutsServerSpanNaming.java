@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteGetter;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import org.apache.struts2.ActionProxy;
 
-public class StrutsServerSpanNaming {
+public final class StrutsServerSpanNaming {
 
   public static final HttpServerRouteGetter<ActionProxy> SERVER_SPAN_NAME =
       (context, actionProxy) -> {

@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.instrumentation.jsf.jakarta.JsfRequest;
 
-public class MyFacesSingletons {
+public final class MyFacesSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jsf-myfaces-3.0";
 
   private static final Instrumenter<JsfRequest, Void> INSTRUMENTER;

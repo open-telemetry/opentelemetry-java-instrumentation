@@ -17,7 +17,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class JaxrsAnnotationsInstrumentationModule extends InstrumentationModule
+public final class JaxrsAnnotationsInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public JaxrsAnnotationsInstrumentationModule() {
     super("jaxrs", "jaxrs-2.0", "jaxrs-annotations", "jaxrs-2.0-annotations");

@@ -14,7 +14,7 @@ import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Transaction;
 
-public class Hibernate3Singletons {
+public final class Hibernate3Singletons {
 
   private static final Instrumenter<HibernateOperation, Void> INSTANCE =
       HibernateInstrumenterFactory.createInstrumenter("io.opentelemetry.hibernate-3.3");

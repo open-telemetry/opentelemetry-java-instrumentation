@@ -19,7 +19,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.builder.SimpleStepBuilder;
 
-public class ChunkSingletons {
+public final class ChunkSingletons {
 
   private static final Instrumenter<ChunkContextAndBuilder, Void> INSTRUMENTER;
 

@@ -21,7 +21,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
 
-public class SimpleChunkProcessorInstrumentation implements TypeInstrumentation {
+public final class SimpleChunkProcessorInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.springframework.batch.core.step.item.SimpleChunkProcessor");

@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ApacheDbcpInstrumentationModule extends InstrumentationModule {
+public final class ApacheDbcpInstrumentationModule extends InstrumentationModule {
   public ApacheDbcpInstrumentationModule() {
     super("apache-dbcp", "apache-dbcp-2.0");
   }

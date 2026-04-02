@@ -19,7 +19,7 @@ import java.net.HttpURLConnection;
 import java.util.Set;
 import javax.annotation.Nullable;
 
-public class HttpMethodAttributeExtractor<
+public final class HttpMethodAttributeExtractor<
         REQUEST extends HttpURLConnection, RESPONSE extends Integer>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 

@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 
-public class AsyncRunnableWrapper<REQUEST> implements Runnable {
+public final class AsyncRunnableWrapper<REQUEST> implements Runnable {
   private final ServletHelper<REQUEST, ?> helper;
   private final Runnable runnable;
   private final Context context;

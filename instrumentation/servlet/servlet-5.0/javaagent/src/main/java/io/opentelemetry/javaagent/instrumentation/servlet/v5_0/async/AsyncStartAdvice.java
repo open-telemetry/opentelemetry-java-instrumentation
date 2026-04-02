@@ -15,7 +15,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 
 @SuppressWarnings("unused")
-public class AsyncStartAdvice {
+public final class AsyncStartAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static CallDepth startAsyncEnter() {

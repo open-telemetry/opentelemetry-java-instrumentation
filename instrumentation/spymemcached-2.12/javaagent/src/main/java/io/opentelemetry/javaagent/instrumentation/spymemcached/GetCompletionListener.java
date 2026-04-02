@@ -14,7 +14,7 @@ import javax.annotation.Nullable;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.internal.GetFuture;
 
-public class GetCompletionListener extends CompletionListener<GetFuture<?>>
+public final class GetCompletionListener extends CompletionListener<GetFuture<?>>
     implements net.spy.memcached.internal.GetCompletionListener {
 
   private GetCompletionListener(Context parentContext, SpymemcachedRequest request) {

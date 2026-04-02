@@ -9,7 +9,7 @@ import io.opentelemetry.api.metrics.DoubleGauge;
 import io.opentelemetry.api.metrics.DoubleGaugeBuilder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationDoubleGaugeBuilder;
 
-public class ApplicationDoubleGaugeBuilder138 extends ApplicationDoubleGaugeBuilder {
+public final class ApplicationDoubleGaugeBuilder138 extends ApplicationDoubleGaugeBuilder {
 
   private final DoubleGaugeBuilder agentBuilder;
 

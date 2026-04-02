@@ -16,7 +16,7 @@ import javax.annotation.Nullable;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 
-public class Jaxrs2HandlerData extends HandlerData {
+public final class Jaxrs2HandlerData extends HandlerData {
 
   private static final ClassValue<Map<Method, String>> serverSpanNames =
       new ClassValue<Map<Method, String>>() {

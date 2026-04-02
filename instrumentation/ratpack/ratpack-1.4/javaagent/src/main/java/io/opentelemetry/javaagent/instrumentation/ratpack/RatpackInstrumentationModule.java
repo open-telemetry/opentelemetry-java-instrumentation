@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class RatpackInstrumentationModule extends InstrumentationModule
+public final class RatpackInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public RatpackInstrumentationModule() {
     super("ratpack", "ratpack-1.4");

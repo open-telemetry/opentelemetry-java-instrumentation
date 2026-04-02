@@ -9,7 +9,8 @@ import io.opentelemetry.api.metrics.LongGauge;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 
-public class ApplicationLongGauge138 implements application.io.opentelemetry.api.metrics.LongGauge {
+public final class ApplicationLongGauge138
+    implements application.io.opentelemetry.api.metrics.LongGauge {
 
   private final LongGauge agentLongGauge;
 

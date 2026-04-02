@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class GrailsInstrumentationModule extends InstrumentationModule
+public final class GrailsInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public GrailsInstrumentationModule() {
     super("grails", "grails-3.0");

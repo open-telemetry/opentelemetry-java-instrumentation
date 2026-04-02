@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import javax.annotation.Nullable;
 import org.springframework.batch.core.scope.context.ChunkContext;
 
-public class ItemSingletons {
+public final class ItemSingletons {
 
   static final String ITEM_OPERATION_READ = "ItemRead";
   static final String ITEM_OPERATION_WRITE = "ItemWrite";

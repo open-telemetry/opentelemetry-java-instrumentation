@@ -16,7 +16,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class MongoClientInstrumentationModule extends InstrumentationModule
+public final class MongoClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public MongoClientInstrumentationModule() {

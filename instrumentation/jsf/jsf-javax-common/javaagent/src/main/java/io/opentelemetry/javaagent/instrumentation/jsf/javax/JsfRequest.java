@@ -11,7 +11,7 @@ import javax.annotation.Nullable;
 import javax.faces.component.ActionSource2;
 import javax.faces.event.ActionEvent;
 
-public class JsfRequest {
+public final class JsfRequest {
   @Nullable private final String spanName;
 
   public JsfRequest(ActionEvent event) {

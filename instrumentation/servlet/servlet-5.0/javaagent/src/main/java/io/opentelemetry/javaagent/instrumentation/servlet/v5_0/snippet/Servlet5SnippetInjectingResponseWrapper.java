@@ -28,7 +28,7 @@ import javax.annotation.Nullable;
  * not been submitted, in which case it is likely using the real length of content that has been
  * written, including the snippet length.
  */
-public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponseWrapper
+public final class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponseWrapper
     implements SnippetInjectingResponseWrapper {
 
   private static final Logger logger =

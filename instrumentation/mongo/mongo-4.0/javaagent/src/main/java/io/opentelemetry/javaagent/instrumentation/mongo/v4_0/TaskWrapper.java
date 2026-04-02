@@ -9,7 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.function.Consumer;
 
-public class TaskWrapper implements Consumer<Object> {
+public final class TaskWrapper implements Consumer<Object> {
   private final Context context;
   private final Consumer<Object> delegate;
 

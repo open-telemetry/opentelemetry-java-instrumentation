@@ -13,7 +13,7 @@ import akka.http.scaladsl.model.HttpResponse;
 import java.util.List;
 import javax.annotation.Nullable;
 
-public class AkkaHttpUtil {
+public final class AkkaHttpUtil {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.akka-http-10.0";
 

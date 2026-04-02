@@ -19,7 +19,8 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.trace.A
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_4.trace.ApplicationTracerProvider14;
 import java.lang.reflect.InvocationTargetException;
 
-public class ApplicationOpenTelemetry127 implements application.io.opentelemetry.api.OpenTelemetry {
+public final class ApplicationOpenTelemetry127
+    implements application.io.opentelemetry.api.OpenTelemetry {
 
   // Accessed with reflection
   @SuppressWarnings("unused")

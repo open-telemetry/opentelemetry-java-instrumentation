@@ -18,7 +18,7 @@ import java.util.List;
  * AkkaHttpServerInstrumentationModule applies to classes in akka-http-core.jar
  */
 @AutoService(InstrumentationModule.class)
-public class AkkaHttpServerRouteInstrumentationModule extends InstrumentationModule
+public final class AkkaHttpServerRouteInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public AkkaHttpServerRouteInstrumentationModule() {
     super("akka-http", "akka-http-10.0", "akka-http-server", "akka-http-server-route");

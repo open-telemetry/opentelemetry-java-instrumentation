@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
-public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecordBuilder150
+public final class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecordBuilder150
     implements application.io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder {
   private static final Logger logger =
       Logger.getLogger(ApplicationLogRecordBuilder150Incubator.class.getName());

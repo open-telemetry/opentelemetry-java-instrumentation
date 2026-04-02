@@ -24,7 +24,7 @@ import java.util.logging.Logger;
  * io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringResourceProvider
  */
 @AutoService(ResourceProvider.class)
-public class SpringBootServiceVersionDetector implements ResourceProvider {
+public final class SpringBootServiceVersionDetector implements ResourceProvider {
 
   private static final Logger logger =
       Logger.getLogger(SpringBootServiceVersionDetector.class.getName());

@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class TapirPekkoHttpServerRouteInstrumentationModule extends InstrumentationModule
+public final class TapirPekkoHttpServerRouteInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public TapirPekkoHttpServerRouteInstrumentationModule() {
     super(

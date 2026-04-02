@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class DataSourceInstrumentationModule extends InstrumentationModule
+public final class DataSourceInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public DataSourceInstrumentationModule() {
     super("jdbc-datasource");

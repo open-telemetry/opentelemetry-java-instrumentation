@@ -20,7 +20,7 @@ import java.io.IOException;
  * Wrapping the consumer instead of instrumenting it directly because it doesn't get access to the
  * queue name when the message is consumed.
  */
-public class TracedDelegatingConsumer implements Consumer {
+public final class TracedDelegatingConsumer implements Consumer {
 
   private final String queue;
   private final Consumer delegate;

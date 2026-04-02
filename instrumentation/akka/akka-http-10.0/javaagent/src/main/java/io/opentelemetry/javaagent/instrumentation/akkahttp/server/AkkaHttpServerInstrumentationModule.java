@@ -16,7 +16,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class AkkaHttpServerInstrumentationModule extends InstrumentationModule
+public final class AkkaHttpServerInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public AkkaHttpServerInstrumentationModule() {
     super("akka-http", "akka-http-10.0", "akka-http-server");

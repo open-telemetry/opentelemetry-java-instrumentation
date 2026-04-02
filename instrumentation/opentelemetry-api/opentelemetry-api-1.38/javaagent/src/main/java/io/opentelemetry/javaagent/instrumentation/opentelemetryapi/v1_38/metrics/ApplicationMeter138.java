@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_38.metric
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_32.metrics.ApplicationMeter132;
 
-public class ApplicationMeter138 extends ApplicationMeter132 {
+public final class ApplicationMeter138 extends ApplicationMeter132 {
 
   private final Meter agentMeter;
 

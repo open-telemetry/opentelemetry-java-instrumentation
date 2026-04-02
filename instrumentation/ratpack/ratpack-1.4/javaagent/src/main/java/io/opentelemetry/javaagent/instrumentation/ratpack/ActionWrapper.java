@@ -9,7 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import ratpack.func.Action;
 
-public class ActionWrapper<T> implements Action<T> {
+public final class ActionWrapper<T> implements Action<T> {
 
   private final Action<T> delegate;
   private final Context parentContext;

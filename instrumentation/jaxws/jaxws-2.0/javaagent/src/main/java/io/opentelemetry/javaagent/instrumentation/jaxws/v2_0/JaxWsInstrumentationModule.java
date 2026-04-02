@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class JaxWsInstrumentationModule extends InstrumentationModule
+public final class JaxWsInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public JaxWsInstrumentationModule() {

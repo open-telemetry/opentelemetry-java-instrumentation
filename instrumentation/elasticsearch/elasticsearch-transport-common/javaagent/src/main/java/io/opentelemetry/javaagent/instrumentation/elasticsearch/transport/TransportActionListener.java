@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ActionResponse;
 
-public class TransportActionListener<T extends ActionResponse> implements ActionListener<T> {
+public final class TransportActionListener<T extends ActionResponse> implements ActionListener<T> {
 
   private final Instrumenter<ElasticTransportRequest, ActionResponse> instrumenter;
   private final ElasticTransportRequest actionRequest;

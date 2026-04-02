@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ScalaConcurrentInstrumentationModule extends InstrumentationModule
+public final class ScalaConcurrentInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public ScalaConcurrentInstrumentationModule() {
     super("scala-fork-join", "scala-fork-join-2.8");

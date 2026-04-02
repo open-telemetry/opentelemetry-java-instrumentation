@@ -12,7 +12,7 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
 import java.net.HttpURLConnection;
 
-public class GetOutputStreamContext implements ImplicitContextKeyed {
+public final class GetOutputStreamContext implements ImplicitContextKeyed {
   private static final ContextKey<GetOutputStreamContext> KEY =
       named("opentelemetry-http-url-connection-get-output-stream");
 

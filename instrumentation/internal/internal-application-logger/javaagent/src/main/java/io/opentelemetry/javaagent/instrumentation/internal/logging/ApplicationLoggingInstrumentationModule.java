@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ApplicationLoggingInstrumentationModule extends InstrumentationModule {
+public final class ApplicationLoggingInstrumentationModule extends InstrumentationModule {
 
   public ApplicationLoggingInstrumentationModule() {
     super("internal-application-logger");

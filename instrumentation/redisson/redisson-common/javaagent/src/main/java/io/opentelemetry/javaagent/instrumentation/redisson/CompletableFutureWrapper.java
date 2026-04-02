@@ -9,7 +9,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.concurrent.CompletableFuture;
 
-public class CompletableFutureWrapper<T> extends CompletableFuture<T> implements PromiseWrapper<T> {
+public final class CompletableFutureWrapper<T> extends CompletableFuture<T>
+    implements PromiseWrapper<T> {
   private static final Class<?> batchPromiseClass = getBatchPromiseClass();
   private volatile EndOperationListener<T> endOperationListener;
 

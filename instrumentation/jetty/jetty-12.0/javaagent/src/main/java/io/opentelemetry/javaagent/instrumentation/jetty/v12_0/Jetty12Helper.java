@@ -14,7 +14,7 @@ import org.eclipse.jetty.server.HttpStream;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 
-public class Jetty12Helper {
+public final class Jetty12Helper {
   private final Instrumenter<Request, Response> instrumenter;
 
   Jetty12Helper(Instrumenter<Request, Response> instrumenter) {

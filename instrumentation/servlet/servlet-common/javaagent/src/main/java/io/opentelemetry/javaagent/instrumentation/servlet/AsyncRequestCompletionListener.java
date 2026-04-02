@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class AsyncRequestCompletionListener<REQUEST, RESPONSE>
+public final class AsyncRequestCompletionListener<REQUEST, RESPONSE>
     implements ServletAsyncListener<RESPONSE> {
   private final ServletHelper<REQUEST, RESPONSE> servletHelper;
   private final Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>

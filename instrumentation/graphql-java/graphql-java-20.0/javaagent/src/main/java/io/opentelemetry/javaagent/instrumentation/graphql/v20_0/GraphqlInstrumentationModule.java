@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 @SuppressWarnings("unused")
 @AutoService(InstrumentationModule.class)
-public class GraphqlInstrumentationModule extends InstrumentationModule
+public final class GraphqlInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public GraphqlInstrumentationModule() {

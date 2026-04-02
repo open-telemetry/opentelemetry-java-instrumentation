@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class HibernateReactiveStageInstrumentationModule extends InstrumentationModule {
+public final class HibernateReactiveStageInstrumentationModule extends InstrumentationModule {
 
   public HibernateReactiveStageInstrumentationModule() {
     super("hibernate-reactive", "hibernate-reactive-1.0", "hibernate-reactive-stage");

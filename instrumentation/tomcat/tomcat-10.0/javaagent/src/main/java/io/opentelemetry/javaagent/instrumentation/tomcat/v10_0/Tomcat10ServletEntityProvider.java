@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 
-public class Tomcat10ServletEntityProvider
+public final class Tomcat10ServletEntityProvider
     implements TomcatServletEntityProvider<HttpServletRequest, HttpServletResponse> {
   @Override
   @Nullable

@@ -20,7 +20,7 @@ import java.util.Map;
 import net.bytebuddy.utility.JavaModule;
 
 @AutoService(InstrumentationModule.class)
-public class RmiContextPropagationInstrumentationModule extends InstrumentationModule
+public final class RmiContextPropagationInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public RmiContextPropagationInstrumentationModule() {
     super("rmi", "rmi-context-propagation");

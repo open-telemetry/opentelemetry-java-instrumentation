@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class Elasticsearch5TransportClientInstrumentationModule extends InstrumentationModule
+public final class Elasticsearch5TransportClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public Elasticsearch5TransportClientInstrumentationModule() {
     super("elasticsearch-transport", "elasticsearch-transport-5.0", "elasticsearch");

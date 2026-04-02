@@ -9,7 +9,7 @@ import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 
-public class ApplicationDoubleHistogram
+public final class ApplicationDoubleHistogram
     implements application.io.opentelemetry.api.metrics.DoubleHistogram {
 
   private final DoubleHistogram agentHistogram;

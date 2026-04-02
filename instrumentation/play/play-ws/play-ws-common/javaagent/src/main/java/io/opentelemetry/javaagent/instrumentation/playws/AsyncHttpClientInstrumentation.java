@@ -18,7 +18,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AsyncHttpClientInstrumentation implements TypeInstrumentation {
+public final class AsyncHttpClientInstrumentation implements TypeInstrumentation {
   private final String adviceName;
 
   public AsyncHttpClientInstrumentation(String adviceName) {

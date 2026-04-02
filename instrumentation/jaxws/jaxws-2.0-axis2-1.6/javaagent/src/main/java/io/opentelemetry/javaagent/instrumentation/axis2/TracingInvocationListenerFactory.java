@@ -10,7 +10,7 @@ import org.apache.axis2.jaxws.server.InvocationListener;
 import org.apache.axis2.jaxws.server.InvocationListenerBean;
 import org.apache.axis2.jaxws.server.InvocationListenerFactory;
 
-public class TracingInvocationListenerFactory implements InvocationListenerFactory {
+public final class TracingInvocationListenerFactory implements InvocationListenerFactory {
   @Override
   public InvocationListener createInvocationListener(MessageContext messageContext) {
     return new TracingInvocationListener(messageContext);

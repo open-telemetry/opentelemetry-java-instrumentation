@@ -18,7 +18,7 @@ import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelDownstreamHandler;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 
-public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHandler {
+public final class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHandler {
 
   private static final VirtualField<Channel, NettyConnectionContext> connectionContextField =
       VirtualField.find(Channel.class, NettyConnectionContext.class);

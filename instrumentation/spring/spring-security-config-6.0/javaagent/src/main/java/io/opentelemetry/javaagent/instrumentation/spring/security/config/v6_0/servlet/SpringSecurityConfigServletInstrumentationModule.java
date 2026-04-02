@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 /** Instrumentation module for servlet-based applications that use spring-security-config. */
 @AutoService(InstrumentationModule.class)
-public class SpringSecurityConfigServletInstrumentationModule extends InstrumentationModule
+public final class SpringSecurityConfigServletInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public SpringSecurityConfigServletInstrumentationModule() {
     super(

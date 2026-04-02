@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import javax.annotation.Nullable;
 
-public class HibernateOperationScope {
+public final class HibernateOperationScope {
 
   private final HibernateOperation hibernateOperation;
   private final Context context;

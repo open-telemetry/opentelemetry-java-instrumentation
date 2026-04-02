@@ -14,7 +14,8 @@ import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class Servlet2Helper extends BaseServletHelper<HttpServletRequest, HttpServletResponse> {
+public final class Servlet2Helper
+    extends BaseServletHelper<HttpServletRequest, HttpServletResponse> {
 
   Servlet2Helper(
       Instrumenter<

@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class AkkaHttpClientInstrumentationModule extends InstrumentationModule
+public final class AkkaHttpClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public AkkaHttpClientInstrumentationModule() {
     super("akka-http", "akka-http-10.0", "akka-http-client");

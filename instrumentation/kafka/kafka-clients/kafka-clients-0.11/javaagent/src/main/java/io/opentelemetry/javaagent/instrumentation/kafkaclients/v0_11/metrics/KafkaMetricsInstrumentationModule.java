@@ -16,7 +16,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.I
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class KafkaMetricsInstrumentationModule extends InstrumentationModule
+public final class KafkaMetricsInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public KafkaMetricsInstrumentationModule() {
     super(

@@ -16,7 +16,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class GatewayWebMvcInstrumentationModule extends InstrumentationModule
+public final class GatewayWebMvcInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public GatewayWebMvcInstrumentationModule() {

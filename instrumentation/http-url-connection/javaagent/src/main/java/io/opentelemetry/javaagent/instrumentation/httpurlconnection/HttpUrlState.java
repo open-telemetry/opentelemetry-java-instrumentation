@@ -10,7 +10,7 @@ import javax.annotation.Nullable;
 
 // everything is public since called directly from advice code
 // (which is inlined into other packages)
-public class HttpUrlState {
+public final class HttpUrlState {
   @Nullable public Context context;
   public boolean finished;
   // by default 0 is ignored

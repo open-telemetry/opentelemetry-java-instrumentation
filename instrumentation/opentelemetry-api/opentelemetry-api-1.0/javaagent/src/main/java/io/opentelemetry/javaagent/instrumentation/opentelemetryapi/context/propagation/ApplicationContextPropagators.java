@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.prop
 
 import io.opentelemetry.context.propagation.ContextPropagators;
 
-public class ApplicationContextPropagators
+public final class ApplicationContextPropagators
     implements application.io.opentelemetry.context.propagation.ContextPropagators {
 
   private final ApplicationTextMapPropagator applicationTextMapPropagator;

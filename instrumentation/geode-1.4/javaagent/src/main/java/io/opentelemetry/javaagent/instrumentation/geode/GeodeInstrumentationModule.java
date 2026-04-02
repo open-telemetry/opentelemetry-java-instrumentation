@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class GeodeInstrumentationModule extends InstrumentationModule {
+public final class GeodeInstrumentationModule extends InstrumentationModule {
   public GeodeInstrumentationModule() {
     super("geode", "geode-1.4");
   }

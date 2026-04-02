@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class SpringKafkaInstrumentationModule extends InstrumentationModule
+public final class SpringKafkaInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public SpringKafkaInstrumentationModule() {
     super("spring-kafka", "spring-kafka-2.7");

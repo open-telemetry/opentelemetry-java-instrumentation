@@ -11,7 +11,7 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Applica
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.ApplicationTracerProvider;
 
 // this class is used from opentelemetry-api-1.0 via reflection
-public class ApplicationTracerProvider14 extends ApplicationTracerProvider {
+public final class ApplicationTracerProvider14 extends ApplicationTracerProvider {
   public ApplicationTracerProvider14(TracerProvider agentTracerProvider) {
     this(ApplicationTracer::new, agentTracerProvider);
   }

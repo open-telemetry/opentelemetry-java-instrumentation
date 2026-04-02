@@ -33,7 +33,7 @@ import org.springframework.data.repository.core.support.RepositoryFactorySupport
 import org.springframework.data.repository.core.support.RepositoryProxyPostProcessor;
 
 @AutoService(InstrumentationModule.class)
-public class SpringDataInstrumentationModule extends InstrumentationModule {
+public final class SpringDataInstrumentationModule extends InstrumentationModule {
 
   public SpringDataInstrumentationModule() {
     super("spring-data", "spring-data-1.8");

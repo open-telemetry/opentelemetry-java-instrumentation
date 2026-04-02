@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 /** Instrumentation for methods annotated with {@code WithSpan} annotation. */
 @AutoService(InstrumentationModule.class)
-public class AnnotationInstrumentationModule extends InstrumentationModule
+public final class AnnotationInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public AnnotationInstrumentationModule() {

@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class PulsarInstrumentationModule extends InstrumentationModule
+public final class PulsarInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public PulsarInstrumentationModule() {
     super("pulsar", "pulsar-2.8");

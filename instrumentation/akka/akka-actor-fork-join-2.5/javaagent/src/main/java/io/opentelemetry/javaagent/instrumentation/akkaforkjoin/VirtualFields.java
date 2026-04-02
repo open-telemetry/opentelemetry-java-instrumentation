@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import java.util.concurrent.Callable;
 
-public class VirtualFields {
+public final class VirtualFields {
 
   public static final VirtualField<ForkJoinTask<?>, PropagatedContext>
       FORK_JOIN_TASK_PROPAGATED_CONTEXT =

@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ApacheCamelInstrumentationModule extends InstrumentationModule {
+public final class ApacheCamelInstrumentationModule extends InstrumentationModule {
 
   public ApacheCamelInstrumentationModule() {
     super("camel", "camel-2.20");

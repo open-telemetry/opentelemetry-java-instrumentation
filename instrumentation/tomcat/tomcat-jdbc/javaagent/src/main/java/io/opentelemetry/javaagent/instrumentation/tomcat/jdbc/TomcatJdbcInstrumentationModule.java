@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class TomcatJdbcInstrumentationModule extends InstrumentationModule
+public final class TomcatJdbcInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public TomcatJdbcInstrumentationModule() {
     super("tomcat-jdbc");

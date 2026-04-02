@@ -14,7 +14,7 @@ import java.util.List;
 
 @SuppressWarnings("unused")
 @AutoService(InstrumentationModule.class)
-public class JexInstrumentationModule extends InstrumentationModule {
+public final class JexInstrumentationModule extends InstrumentationModule {
 
   public JexInstrumentationModule() {
     super("avaje-jex", "avaje-jex-3.0");

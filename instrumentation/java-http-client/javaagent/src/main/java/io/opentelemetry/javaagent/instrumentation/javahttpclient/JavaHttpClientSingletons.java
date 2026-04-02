@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrume
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-public class JavaHttpClientSingletons {
+public final class JavaHttpClientSingletons {
 
   private static final HttpHeadersSetter setter;
   private static final Instrumenter<HttpRequest, HttpResponse<?>> instrumenter;

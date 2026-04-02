@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ClickHouseClientV2InstrumentationModule extends InstrumentationModule
+public final class ClickHouseClientV2InstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public ClickHouseClientV2InstrumentationModule() {

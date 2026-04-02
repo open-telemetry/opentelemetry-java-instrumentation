@@ -12,7 +12,7 @@ import org.springframework.web.HttpRequestHandler;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.Controller;
 
-public class HandlerCodeAttributesGetter implements CodeAttributesGetter<Object> {
+public final class HandlerCodeAttributesGetter implements CodeAttributesGetter<Object> {
 
   @Nullable private static final Class<?> JAVAX_SERVLET = loadOrNull("javax.servlet.Servlet");
   @Nullable private static final Class<?> JAKARTA_SERVLET = loadOrNull("jakarta.servlet.Servlet");

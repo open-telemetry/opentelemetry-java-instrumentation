@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class CxfInstrumentationModule extends InstrumentationModule
+public final class CxfInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public CxfInstrumentationModule() {
     super("jaxrs", "jaxrs-2.0", "cxf", "cxf-3.2");

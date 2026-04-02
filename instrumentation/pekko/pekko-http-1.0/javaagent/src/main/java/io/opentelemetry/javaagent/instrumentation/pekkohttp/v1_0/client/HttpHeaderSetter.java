@@ -11,7 +11,7 @@ import io.opentelemetry.context.propagation.TextMapSetter;
 import org.apache.pekko.http.javadsl.model.headers.RawHeader;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 
-public class HttpHeaderSetter implements TextMapSetter<HttpHeaderSetter.PekkoHttpHeaders> {
+public final class HttpHeaderSetter implements TextMapSetter<HttpHeaderSetter.PekkoHttpHeaders> {
 
   private final ContextPropagators contextPropagators;
 

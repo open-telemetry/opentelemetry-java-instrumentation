@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameE
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
-public class StrutsSingletons {
+public final class StrutsSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.struts-2.3";
 
   private static final Instrumenter<ActionInvocation, Void> INSTRUMENTER;

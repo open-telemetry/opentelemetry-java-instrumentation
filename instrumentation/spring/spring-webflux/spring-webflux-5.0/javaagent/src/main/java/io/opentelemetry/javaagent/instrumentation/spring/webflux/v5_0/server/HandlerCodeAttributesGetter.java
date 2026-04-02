@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
 import org.springframework.web.method.HandlerMethod;
 
-public class HandlerCodeAttributesGetter implements CodeAttributesGetter<Object> {
+public final class HandlerCodeAttributesGetter implements CodeAttributesGetter<Object> {
   @Override
   public Class<?> getCodeClass(Object handler) {
     if (handler instanceof HandlerMethod) {

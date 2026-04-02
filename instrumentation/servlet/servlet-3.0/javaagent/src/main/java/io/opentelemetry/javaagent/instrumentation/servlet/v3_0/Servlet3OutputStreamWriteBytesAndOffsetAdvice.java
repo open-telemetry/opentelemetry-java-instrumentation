@@ -14,7 +14,7 @@ import javax.servlet.ServletOutputStream;
 import net.bytebuddy.asm.Advice;
 
 @SuppressWarnings("unused")
-public class Servlet3OutputStreamWriteBytesAndOffsetAdvice {
+public final class Servlet3OutputStreamWriteBytesAndOffsetAdvice {
   @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class, suppress = Throwable.class)
   public static boolean methodEnter(
       @Advice.This ServletOutputStream servletOutputStream,

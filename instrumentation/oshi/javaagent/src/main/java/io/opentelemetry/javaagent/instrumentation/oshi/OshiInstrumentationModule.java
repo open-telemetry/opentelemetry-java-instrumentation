@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class OshiInstrumentationModule extends InstrumentationModule {
+public final class OshiInstrumentationModule extends InstrumentationModule {
 
   public OshiInstrumentationModule() {
     super("oshi");

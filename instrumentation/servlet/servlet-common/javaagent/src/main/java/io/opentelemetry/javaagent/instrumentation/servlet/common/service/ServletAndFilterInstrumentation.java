@@ -17,7 +17,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ServletAndFilterInstrumentation implements TypeInstrumentation {
+public final class ServletAndFilterInstrumentation implements TypeInstrumentation {
   private final String basePackageName;
   private final String adviceClassName;
   private final String servletInitAdviceClassName;

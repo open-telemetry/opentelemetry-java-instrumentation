@@ -25,7 +25,7 @@ import reactor.netty.http.client.HttpClient;
  * HttpClient#doOnRequest(BiConsumer)} to pass context from the caller to Reactor to Netty.
  */
 @AutoService(InstrumentationModule.class)
-public class ReactorNettyInstrumentationModule extends InstrumentationModule
+public final class ReactorNettyInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public ReactorNettyInstrumentationModule() {

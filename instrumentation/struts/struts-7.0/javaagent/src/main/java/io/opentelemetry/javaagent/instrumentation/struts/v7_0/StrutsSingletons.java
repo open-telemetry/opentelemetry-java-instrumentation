@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import org.apache.struts2.ActionInvocation;
 
-public class StrutsSingletons {
+public final class StrutsSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.struts-7.0";
 
   private static final Instrumenter<ActionInvocation, Void> INSTRUMENTER;

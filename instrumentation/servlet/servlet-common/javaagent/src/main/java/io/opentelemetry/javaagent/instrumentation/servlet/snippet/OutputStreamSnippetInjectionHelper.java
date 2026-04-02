@@ -14,7 +14,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
-public class OutputStreamSnippetInjectionHelper {
+public final class OutputStreamSnippetInjectionHelper {
 
   private static final Logger logger =
       Logger.getLogger(OutputStreamSnippetInjectionHelper.class.getName());

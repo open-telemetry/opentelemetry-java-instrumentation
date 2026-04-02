@@ -11,7 +11,7 @@ import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletRegistration;
 import javax.annotation.Nullable;
 
-public class JakartaServletMappingResolverFactory extends ServletMappingResolverFactory {
+public final class JakartaServletMappingResolverFactory extends ServletMappingResolverFactory {
   private final ServletConfig servletConfig;
 
   public JakartaServletMappingResolverFactory(ServletConfig servletConfig) {

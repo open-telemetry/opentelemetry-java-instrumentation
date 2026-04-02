@@ -16,7 +16,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class UndertowInstrumentationModule extends InstrumentationModule
+public final class UndertowInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public UndertowInstrumentationModule() {

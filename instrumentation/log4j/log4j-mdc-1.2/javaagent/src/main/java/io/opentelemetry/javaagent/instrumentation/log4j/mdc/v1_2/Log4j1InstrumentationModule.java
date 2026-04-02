@@ -16,7 +16,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class Log4j1InstrumentationModule extends InstrumentationModule
+public final class Log4j1InstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public Log4j1InstrumentationModule() {
     super("log4j-mdc", "log4j-mdc-1.2");

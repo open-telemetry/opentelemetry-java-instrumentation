@@ -16,7 +16,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class RestletInstrumentationModule extends InstrumentationModule
+public final class RestletInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public RestletInstrumentationModule() {

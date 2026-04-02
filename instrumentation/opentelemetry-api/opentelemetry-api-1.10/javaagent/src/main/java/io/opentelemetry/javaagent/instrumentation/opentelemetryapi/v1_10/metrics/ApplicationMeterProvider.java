@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metric
 
 import io.opentelemetry.api.metrics.MeterProvider;
 
-public class ApplicationMeterProvider
+public final class ApplicationMeterProvider
     implements application.io.opentelemetry.api.metrics.MeterProvider {
 
   private final ApplicationMeterFactory meterFactory;

@@ -21,7 +21,7 @@ import play.shaded.ahc.org.asynchttpclient.Request;
 import play.shaded.ahc.org.asynchttpclient.Response;
 import play.shaded.ahc.org.asynchttpclient.netty.request.NettyRequest;
 
-public class AsyncHandlerWrapper<T> implements AsyncHandler<T> {
+public final class AsyncHandlerWrapper<T> implements AsyncHandler<T> {
   private final AsyncHandler<T> delegate;
   private final Request request;
   private final Context context;

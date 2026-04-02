@@ -17,7 +17,7 @@ import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 
 @SuppressWarnings("unused")
-public class Jetty11HandlerAdvice {
+public final class Jetty11HandlerAdvice {
 
   public static class AdviceScope {
     private final ServletRequestContext<HttpServletRequest> requestContext;

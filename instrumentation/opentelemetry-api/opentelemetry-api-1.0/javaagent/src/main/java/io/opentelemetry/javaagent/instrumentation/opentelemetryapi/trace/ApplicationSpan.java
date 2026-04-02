@@ -12,7 +12,7 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.ValueBridging
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
-public class ApplicationSpan implements application.io.opentelemetry.api.trace.Span {
+public final class ApplicationSpan implements application.io.opentelemetry.api.trace.Span {
 
   private final Span agentSpan;
 

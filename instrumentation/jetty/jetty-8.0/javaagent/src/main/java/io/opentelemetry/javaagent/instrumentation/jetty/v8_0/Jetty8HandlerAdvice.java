@@ -17,7 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
 
 @SuppressWarnings("unused")
-public class Jetty8HandlerAdvice {
+public final class Jetty8HandlerAdvice {
 
   public static class AdviceScope {
     private final ServletRequestContext<HttpServletRequest> requestContext;

@@ -16,7 +16,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class JettyHttpClient9InstrumentationModule extends InstrumentationModule
+public final class JettyHttpClient9InstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public JettyHttpClient9InstrumentationModule() {

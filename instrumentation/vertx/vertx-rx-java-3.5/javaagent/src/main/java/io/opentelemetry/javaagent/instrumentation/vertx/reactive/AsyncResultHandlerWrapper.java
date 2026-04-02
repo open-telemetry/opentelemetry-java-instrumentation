@@ -13,7 +13,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import java.util.logging.Logger;
 
-public class AsyncResultHandlerWrapper implements Handler<Handler<AsyncResult<?>>> {
+public final class AsyncResultHandlerWrapper implements Handler<Handler<AsyncResult<?>>> {
 
   private static final Logger logger = Logger.getLogger(AsyncResultHandlerWrapper.class.getName());
 

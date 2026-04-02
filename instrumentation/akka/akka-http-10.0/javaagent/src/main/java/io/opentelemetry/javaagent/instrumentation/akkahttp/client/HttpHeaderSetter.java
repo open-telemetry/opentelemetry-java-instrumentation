@@ -12,7 +12,7 @@ import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import javax.annotation.Nullable;
 
-public class HttpHeaderSetter implements TextMapSetter<HttpHeaderSetter.AkkaHttpHeaders> {
+public final class HttpHeaderSetter implements TextMapSetter<HttpHeaderSetter.AkkaHttpHeaders> {
 
   private final ContextPropagators contextPropagators;
 

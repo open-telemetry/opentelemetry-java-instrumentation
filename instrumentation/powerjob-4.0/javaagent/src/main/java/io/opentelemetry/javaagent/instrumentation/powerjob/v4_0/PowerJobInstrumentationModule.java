@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class PowerJobInstrumentationModule extends InstrumentationModule
+public final class PowerJobInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public PowerJobInstrumentationModule() {
     super("powerjob", "powerjob-4.0");

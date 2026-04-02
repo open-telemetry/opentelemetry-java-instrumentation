@@ -16,7 +16,7 @@ import io.undertow.server.HttpServerExchange;
 import io.undertow.util.AttachmentKey;
 import javax.annotation.Nullable;
 
-public class UndertowHelper {
+public final class UndertowHelper {
   private final Instrumenter<HttpServerExchange, HttpServerExchange> instrumenter;
 
   UndertowHelper(Instrumenter<HttpServerExchange, HttpServerExchange> instrumenter) {

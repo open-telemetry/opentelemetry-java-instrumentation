@@ -14,7 +14,7 @@ import io.vertx.core.Handler;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
-public class AsyncResultConsumerWrapper implements Consumer<Handler<AsyncResult<?>>> {
+public final class AsyncResultConsumerWrapper implements Consumer<Handler<AsyncResult<?>>> {
 
   private static final Logger logger = Logger.getLogger(AsyncResultConsumerWrapper.class.getName());
 

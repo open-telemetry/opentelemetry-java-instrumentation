@@ -15,7 +15,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class RxJava3InstrumentationModule extends InstrumentationModule {
+public final class RxJava3InstrumentationModule extends InstrumentationModule {
 
   public RxJava3InstrumentationModule() {
     super("rxjava", "rxjava-3.0");

@@ -9,7 +9,7 @@ import com.mongodb.internal.async.SingleResultCallback;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 
-public class SingleResultCallbackWrapper implements SingleResultCallback<Object> {
+public final class SingleResultCallbackWrapper implements SingleResultCallback<Object> {
   private final Context context;
   private final SingleResultCallback<Object> delegate;
 

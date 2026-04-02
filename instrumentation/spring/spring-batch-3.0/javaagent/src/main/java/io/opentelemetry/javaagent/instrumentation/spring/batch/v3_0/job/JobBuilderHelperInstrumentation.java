@@ -17,7 +17,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.batch.core.job.builder.JobBuilderHelper;
 
-public class JobBuilderHelperInstrumentation implements TypeInstrumentation {
+public final class JobBuilderHelperInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     // Java DSL Job config

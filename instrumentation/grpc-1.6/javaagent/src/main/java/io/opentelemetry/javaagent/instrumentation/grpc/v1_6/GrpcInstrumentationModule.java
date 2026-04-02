@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class GrpcInstrumentationModule extends InstrumentationModule
+public final class GrpcInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public GrpcInstrumentationModule() {
     super("grpc", "grpc-1.6");

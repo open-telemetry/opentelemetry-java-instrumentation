@@ -12,7 +12,7 @@ import java.util.List;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
 
-public class PekkoHttpUtil {
+public final class PekkoHttpUtil {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.pekko-http-1.0";
 

@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ArmeriaGrpcInstrumentationModule extends InstrumentationModule {
+public final class ArmeriaGrpcInstrumentationModule extends InstrumentationModule {
   public ArmeriaGrpcInstrumentationModule() {
     super("armeria-grpc", "armeria-grpc-1.14", "armeria", "armeria-1.14");
   }

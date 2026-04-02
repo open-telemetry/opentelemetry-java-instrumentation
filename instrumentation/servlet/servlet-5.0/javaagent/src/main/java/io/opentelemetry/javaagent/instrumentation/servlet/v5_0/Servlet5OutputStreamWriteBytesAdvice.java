@@ -14,7 +14,7 @@ import java.io.IOException;
 import net.bytebuddy.asm.Advice;
 
 @SuppressWarnings("unused")
-public class Servlet5OutputStreamWriteBytesAdvice {
+public final class Servlet5OutputStreamWriteBytesAdvice {
 
   @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class, suppress = Throwable.class)
   public static boolean methodEnter(

@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class WebfluxClientInstrumentationModule extends InstrumentationModule {
+public final class WebfluxClientInstrumentationModule extends InstrumentationModule {
 
   public WebfluxClientInstrumentationModule() {
     super("spring-webflux", "spring-webflux-5.0", "spring-webflux-client");

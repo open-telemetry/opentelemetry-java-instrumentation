@@ -12,7 +12,7 @@ import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.PekkoHttpUtil;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
 
-public class PekkoHttpClientSingletons {
+public final class PekkoHttpClientSingletons {
 
   private static final HttpHeaderSetter SETTER;
   private static final Instrumenter<HttpRequest, HttpResponse> INSTRUMENTER;

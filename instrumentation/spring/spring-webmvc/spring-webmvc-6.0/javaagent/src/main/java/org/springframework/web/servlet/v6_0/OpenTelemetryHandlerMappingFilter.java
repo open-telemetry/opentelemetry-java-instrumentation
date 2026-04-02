@@ -35,7 +35,7 @@ import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 import org.springframework.web.util.ServletRequestPathUtils;
 
-public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
+public final class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
   private static final Logger logger =
       Logger.getLogger(OpenTelemetryHandlerMappingFilter.class.getName());
 

@@ -11,7 +11,8 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridgin
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationDoubleUpDownCounterBuilder;
 import java.util.List;
 
-public class ApplicationDoubleUpDownCounterBuilder137 extends ApplicationDoubleUpDownCounterBuilder
+public final class ApplicationDoubleUpDownCounterBuilder137
+    extends ApplicationDoubleUpDownCounterBuilder
     implements application.io.opentelemetry.api.incubator.metrics
         .ExtendedDoubleUpDownCounterBuilder {
 

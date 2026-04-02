@@ -12,7 +12,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import javax.annotation.Nullable;
 
-public class SpringSchedulingRunnableWrapper implements Runnable {
+public final class SpringSchedulingRunnableWrapper implements Runnable {
   private final Runnable runnable;
 
   private SpringSchedulingRunnableWrapper(Runnable runnable) {

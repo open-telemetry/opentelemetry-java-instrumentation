@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class EclipseOsgiInstrumentationModule extends InstrumentationModule
+public final class EclipseOsgiInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public EclipseOsgiInstrumentationModule() {
     super("internal-eclipse-osgi", "internal-eclipse-osgi-3.6");

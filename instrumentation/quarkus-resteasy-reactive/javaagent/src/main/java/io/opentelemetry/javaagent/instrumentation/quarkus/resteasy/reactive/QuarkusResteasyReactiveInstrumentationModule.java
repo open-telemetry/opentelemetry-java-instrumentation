@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class QuarkusResteasyReactiveInstrumentationModule extends InstrumentationModule {
+public final class QuarkusResteasyReactiveInstrumentationModule extends InstrumentationModule {
 
   public QuarkusResteasyReactiveInstrumentationModule() {
     super("quarkus", "jaxrs", "quarkus-resteasy-reactive", "quarkus-resteasy-reactive-3.0");

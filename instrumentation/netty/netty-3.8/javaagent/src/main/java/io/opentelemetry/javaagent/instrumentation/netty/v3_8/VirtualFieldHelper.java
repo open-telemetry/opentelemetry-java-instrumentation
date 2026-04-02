@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import org.jboss.netty.channel.Channel;
 
-public class VirtualFieldHelper {
+public final class VirtualFieldHelper {
 
   public static final VirtualField<Channel, NettyConnectionContext> CONNECTION_CONTEXT =
       VirtualField.find(Channel.class, NettyConnectionContext.class);

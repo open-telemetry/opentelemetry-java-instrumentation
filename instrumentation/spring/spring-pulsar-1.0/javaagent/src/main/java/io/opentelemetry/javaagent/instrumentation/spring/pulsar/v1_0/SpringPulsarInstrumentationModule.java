@@ -16,7 +16,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class SpringPulsarInstrumentationModule extends InstrumentationModule
+public final class SpringPulsarInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public SpringPulsarInstrumentationModule() {
     super("spring-pulsar", "spring-pulsar-1.0");

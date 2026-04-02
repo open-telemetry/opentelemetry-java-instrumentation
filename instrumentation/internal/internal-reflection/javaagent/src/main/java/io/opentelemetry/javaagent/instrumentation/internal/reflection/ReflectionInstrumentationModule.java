@@ -16,7 +16,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.I
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ReflectionInstrumentationModule extends InstrumentationModule
+public final class ReflectionInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public ReflectionInstrumentationModule() {
     super("internal-reflection");

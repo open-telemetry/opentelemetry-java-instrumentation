@@ -11,7 +11,7 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridgin
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationLongCounterBuilder;
 import java.util.List;
 
-public class ApplicationLongCounterBuilder137 extends ApplicationLongCounterBuilder
+public final class ApplicationLongCounterBuilder137 extends ApplicationLongCounterBuilder
     implements application.io.opentelemetry.api.incubator.metrics.ExtendedLongCounterBuilder {
 
   private final LongCounterBuilder agentBuilder;

@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class QuartzInstrumentationModule extends InstrumentationModule
+public final class QuartzInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public QuartzInstrumentationModule() {

@@ -9,7 +9,7 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.ApplicationTracer;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.ApplicationTracerFactory;
 
-public class ApplicationTracerFactory127 implements ApplicationTracerFactory {
+public final class ApplicationTracerFactory127 implements ApplicationTracerFactory {
 
   @Override
   public ApplicationTracer newTracer(Tracer agentTracer) {

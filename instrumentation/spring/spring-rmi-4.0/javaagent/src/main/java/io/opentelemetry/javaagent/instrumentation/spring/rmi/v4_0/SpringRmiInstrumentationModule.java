@@ -18,7 +18,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class SpringRmiInstrumentationModule extends InstrumentationModule
+public final class SpringRmiInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public SpringRmiInstrumentationModule() {

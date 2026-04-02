@@ -28,7 +28,7 @@ import org.apache.pekko.stream.stage.AbstractOutHandler;
 import org.apache.pekko.stream.stage.GraphStage;
 import org.apache.pekko.stream.stage.GraphStageLogic;
 
-public class PekkoHttpServerTracer
+public final class PekkoHttpServerTracer
     extends GraphStage<BidiShape<HttpResponse, HttpResponse, HttpRequest, HttpRequest>> {
   private final Inlet<HttpRequest> requestIn = Inlet.create("otel.requestIn");
   private final Outlet<HttpRequest> requestOut = Outlet.create("otel.requestOut");

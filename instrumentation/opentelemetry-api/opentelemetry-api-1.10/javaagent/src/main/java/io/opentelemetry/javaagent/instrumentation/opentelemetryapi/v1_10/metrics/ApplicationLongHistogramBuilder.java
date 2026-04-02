@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metric
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.metrics.LongHistogramBuilder;
 
-public class ApplicationLongHistogramBuilder
+public final class ApplicationLongHistogramBuilder
     implements application.io.opentelemetry.api.metrics.LongHistogramBuilder {
 
   private final LongHistogramBuilder agentBuilder;

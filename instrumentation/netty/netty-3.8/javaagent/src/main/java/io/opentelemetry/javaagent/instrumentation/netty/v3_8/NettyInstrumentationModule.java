@@ -16,7 +16,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class NettyInstrumentationModule extends InstrumentationModule
+public final class NettyInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public NettyInstrumentationModule() {
     super("netty", "netty-3.8");

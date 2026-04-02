@@ -9,7 +9,7 @@ import io.lettuce.core.protocol.AsyncCommand;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 
-public class LettuceSingletons {
+public final class LettuceSingletons {
 
   public static final VirtualField<AsyncCommand<?, ?, ?>, Context> CONTEXT =
       VirtualField.find(AsyncCommand.class, Context.class);

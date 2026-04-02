@@ -12,7 +12,7 @@ import scala.Function1;
 import scala.concurrent.Future;
 import scala.runtime.AbstractFunction1;
 
-public class AkkaRouteWrapper extends AbstractFunction1<RequestContext, Future<RouteResult>> {
+public final class AkkaRouteWrapper extends AbstractFunction1<RequestContext, Future<RouteResult>> {
   private final Function1<RequestContext, Future<RouteResult>> route;
 
   public AkkaRouteWrapper(Function1<RequestContext, Future<RouteResult>> route) {

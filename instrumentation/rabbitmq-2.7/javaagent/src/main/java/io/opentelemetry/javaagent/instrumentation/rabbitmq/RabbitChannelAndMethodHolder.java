@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
 import javax.annotation.Nullable;
 
-public class RabbitChannelAndMethodHolder {
+public final class RabbitChannelAndMethodHolder {
   @Nullable private ChannelAndMethod channelAndMethod;
 
   @Nullable

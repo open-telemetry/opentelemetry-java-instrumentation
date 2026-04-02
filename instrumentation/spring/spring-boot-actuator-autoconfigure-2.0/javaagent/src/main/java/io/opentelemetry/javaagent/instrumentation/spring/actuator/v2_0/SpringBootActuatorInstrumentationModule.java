@@ -19,7 +19,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class SpringBootActuatorInstrumentationModule extends InstrumentationModule
+public final class SpringBootActuatorInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public SpringBootActuatorInstrumentationModule() {

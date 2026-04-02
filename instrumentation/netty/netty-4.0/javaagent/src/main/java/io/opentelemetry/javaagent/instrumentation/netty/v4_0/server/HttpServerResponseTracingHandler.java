@@ -21,7 +21,7 @@ import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHol
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.AttributeKeys;
 import javax.annotation.Nullable;
 
-public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdapter {
+public final class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdapter {
 
   @Override
   public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise prm) {

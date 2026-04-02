@@ -15,7 +15,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class KtorClientInstrumentationModule extends InstrumentationModule {
+public final class KtorClientInstrumentationModule extends InstrumentationModule {
 
   public KtorClientInstrumentationModule() {
     super("ktor", "ktor-3.0", "ktor-client", "ktor-client-3.0");

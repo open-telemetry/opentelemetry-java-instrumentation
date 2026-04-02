@@ -12,7 +12,7 @@ import javax.servlet.ServletConfig;
 import net.bytebuddy.asm.Advice;
 
 @SuppressWarnings("unused")
-public class Servlet3InitAdvice {
+public final class Servlet3InitAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void servletInit(

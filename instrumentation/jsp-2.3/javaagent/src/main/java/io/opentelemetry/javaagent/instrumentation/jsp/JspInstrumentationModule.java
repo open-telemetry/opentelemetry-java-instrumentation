@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class JspInstrumentationModule extends InstrumentationModule
+public final class JspInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public JspInstrumentationModule() {
     super("jsp", "jsp-2.3");

@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class UrlClassLoaderInstrumentationModule extends InstrumentationModule {
+public final class UrlClassLoaderInstrumentationModule extends InstrumentationModule {
   public UrlClassLoaderInstrumentationModule() {
     super("internal-url-class-loader");
   }

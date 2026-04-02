@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 import org.springframework.web.method.HandlerMethod;
 
-public class ExperimentalAttributesExtractor implements AttributesExtractor<Object, Void> {
+public final class ExperimentalAttributesExtractor implements AttributesExtractor<Object, Void> {
 
   private static final AttributeKey<String> HANDLER_TYPE =
       AttributeKey.stringKey("spring-webflux.handler.type");

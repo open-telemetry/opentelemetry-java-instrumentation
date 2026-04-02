@@ -16,7 +16,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class GrizzlyInstrumentationModule extends InstrumentationModule
+public final class GrizzlyInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public GrizzlyInstrumentationModule() {
     super("grizzly", "grizzly-2.3");

@@ -10,7 +10,7 @@ import io.opentelemetry.api.metrics.LongCounterBuilder;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import java.util.function.Consumer;
 
-public class ApplicationLongCounterBuilder
+public final class ApplicationLongCounterBuilder
     implements application.io.opentelemetry.api.metrics.LongCounterBuilder {
 
   private final LongCounterBuilder agentBuilder;

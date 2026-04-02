@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace;
 
 import io.opentelemetry.api.trace.Tracer;
 
-public class ApplicationTracer implements application.io.opentelemetry.api.trace.Tracer {
+public final class ApplicationTracer implements application.io.opentelemetry.api.trace.Tracer {
 
   private final Tracer agentTracer;
 
