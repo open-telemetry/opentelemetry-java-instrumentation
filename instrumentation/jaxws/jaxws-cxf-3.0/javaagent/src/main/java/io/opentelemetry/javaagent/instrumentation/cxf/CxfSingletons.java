@@ -9,13 +9,13 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
-public class CxfSingletons {
+public final class CxfSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jaxws-cxf-3.0";
 
-  private static final Instrumenter<CxfRequest, Void> INSTRUMENTER;
+  private static final Instrumenter<CxfRequest, Void> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<CxfRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, CxfRequest::spanName)
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
@@ -23,7 +23,7 @@ public class CxfSingletons {
   }
 
   public static Instrumenter<CxfRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private CxfSingletons() {}
