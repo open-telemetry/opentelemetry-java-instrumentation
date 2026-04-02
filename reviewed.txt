@@ -195,3 +195,4 @@ jaxws:jaxws-2.0-wildfly-testing
 jaxws:jaxws-2.0-arquillian-testing
 jaxws-2.0-axis2-1.6:javaagent
 jaxws-2.0:javaagent
+jaxws:jaxws-3.0-cxf-4.0-testing
