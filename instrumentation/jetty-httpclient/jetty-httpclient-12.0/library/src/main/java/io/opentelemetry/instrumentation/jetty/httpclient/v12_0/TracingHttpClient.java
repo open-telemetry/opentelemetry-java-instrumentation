@@ -46,16 +46,16 @@ class TracingHttpClient extends HttpClient {
       Instrumenter<Request, Response> instrumenter,
       SslContextFactory.Client sslContextFactory,
       HttpClientTransport httpClientTransport) {
-    TracingHttpClient tracingHttpClient;
     if (sslContextFactory != null && httpClientTransport != null) {
-      tracingHttpClient =
-          new TracingHttpClient(instrumenter, httpClientTransport, sslContextFactory);
-    } else if (sslContextFactory != null) {
-      tracingHttpClient = new TracingHttpClient(instrumenter, sslContextFactory);
-    } else {
-      tracingHttpClient = new TracingHttpClient(instrumenter);
+      return new TracingHttpClient(instrumenter, httpClientTransport, sslContextFactory);
     }
-    return tracingHttpClient;
+    if (sslContextFactory != null) {
+      return new TracingHttpClient(instrumenter, sslContextFactory);
+    }
+    if (httpClientTransport != null) {
+      return new TracingHttpClient(instrumenter, httpClientTransport);
+    }
+    return new TracingHttpClient(instrumenter);
   }
 
   @Override

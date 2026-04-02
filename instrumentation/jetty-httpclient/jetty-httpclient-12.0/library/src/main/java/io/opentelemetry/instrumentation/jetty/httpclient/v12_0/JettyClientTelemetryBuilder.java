@@ -49,9 +49,19 @@ public final class JettyClientTelemetryBuilder {
    * @param requestHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
-  public JettyClientTelemetryBuilder setCapturedRequestHeaders(Collection<String> requestHeaders) {
+  public JettyClientTelemetryBuilder setCaptureRequestHeaders(Collection<String> requestHeaders) {
     builder.setCapturedRequestHeaders(requestHeaders);
     return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setCaptureRequestHeaders(Collection)} instead. Will be removed in a
+   *     future release.
+   */
+  @Deprecated // will be removed in a future release
+  @CanIgnoreReturnValue
+  public JettyClientTelemetryBuilder setCapturedRequestHeaders(Collection<String> requestHeaders) {
+    return setCaptureRequestHeaders(requestHeaders);
   }
 
   /**
@@ -60,10 +70,20 @@ public final class JettyClientTelemetryBuilder {
    * @param responseHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
-  public JettyClientTelemetryBuilder setCapturedResponseHeaders(
-      Collection<String> responseHeaders) {
+  public JettyClientTelemetryBuilder setCaptureResponseHeaders(Collection<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
     return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setCaptureResponseHeaders(Collection)} instead. Will be removed in a
+   *     future release.
+   */
+  @Deprecated // will be removed in a future release
+  @CanIgnoreReturnValue
+  public JettyClientTelemetryBuilder setCapturedResponseHeaders(
+      Collection<String> responseHeaders) {
+    return setCaptureResponseHeaders(responseHeaders);
   }
 
   /**
