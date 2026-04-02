@@ -24,21 +24,23 @@ import net.bytebuddy.pool.TypePool;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Pool strategy that sets "inline" attribute to false on {@link Advice.OnMethodEnter} and {@link
+ * Pool strategy that sets "inline" attribute on {@link Advice.OnMethodEnter} and {@link
  * Advice.OnMethodExit} annotations.
  */
-class AdviceUninliningPoolStrategy implements AgentBuilder.PoolStrategy {
+public class AdviceInliningPoolStrategy implements AgentBuilder.PoolStrategy {
   private final AgentBuilder.PoolStrategy poolStrategy;
+  private final boolean inline;
 
-  public AdviceUninliningPoolStrategy(AgentBuilder.PoolStrategy poolStrategy) {
+  public AdviceInliningPoolStrategy(AgentBuilder.PoolStrategy poolStrategy, boolean inline) {
     this.poolStrategy = poolStrategy;
+    this.inline = inline;
   }
 
   @NotNull
   @Override
   public TypePool typePool(@NotNull ClassFileLocator classFileLocator, ClassLoader classLoader) {
     TypePool typePool = poolStrategy.typePool(classFileLocator, classLoader);
-    return new TypePoolWrapper(typePool);
+    return new TypePoolWrapper(typePool, inline);
   }
 
   @NotNull
@@ -46,14 +48,16 @@ class AdviceUninliningPoolStrategy implements AgentBuilder.PoolStrategy {
   public TypePool typePool(
       @NotNull ClassFileLocator classFileLocator, ClassLoader classLoader, @NotNull String name) {
     TypePool typePool = poolStrategy.typePool(classFileLocator, classLoader, name);
-    return new TypePoolWrapper(typePool);
+    return new TypePoolWrapper(typePool, inline);
   }
 
   private static class TypePoolWrapper implements TypePool {
     private final TypePool typePool;
+    private final boolean inline;
 
-    TypePoolWrapper(TypePool typePool) {
+    TypePoolWrapper(TypePool typePool, boolean inline) {
       this.typePool = typePool;
+      this.inline = inline;
     }
 
     @NotNull
@@ -96,7 +100,7 @@ class AdviceUninliningPoolStrategy implements AgentBuilder.PoolStrategy {
 
                 @Override
                 public MethodDescription.InDefinedShape get(int index) {
-                  return new MethodDescriptionWrapper(methods.get(index));
+                  return new MethodDescriptionWrapper(methods.get(index), inline);
                 }
 
                 @Override
@@ -119,9 +123,11 @@ class AdviceUninliningPoolStrategy implements AgentBuilder.PoolStrategy {
   }
 
   private static class MethodDescriptionWrapper extends DelegatingMethodDescription {
+    private final boolean inline;
 
-    MethodDescriptionWrapper(MethodDescription.InDefinedShape method) {
+    MethodDescriptionWrapper(MethodDescription.InDefinedShape method, boolean inline) {
       super(method);
+      this.inline = inline;
     }
 
     @NotNull
@@ -141,9 +147,9 @@ class AdviceUninliningPoolStrategy implements AgentBuilder.PoolStrategy {
             return annotation;
           }
 
-          // replace value for "inline" attribute with false
+          // replace value for "inline" attribute
           return replaceAnnotationValue(
-              annotation, "inline", oldVal -> AnnotationValue.ForConstant.of(false));
+              annotation, "inline", oldVal -> AnnotationValue.ForConstant.of(inline));
         }
 
         @Override
