@@ -226,3 +226,4 @@ jetty-12.0:javaagent
 jetty-common:javaagent
 jetty-8.0:javaagent
 jfinal-3.2:javaagent
+jms-1.1:javaagent
