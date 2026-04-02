@@ -40,12 +40,15 @@ class InvocationInstrumentation implements TypeInstrumentation {
 
     public static class AdviceScope {
       private final CallDepth callDepth;
-      private final ClassAndMethod request;
-      private final Context context;
-      private final Scope scope;
+      @Nullable private final ClassAndMethod request;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
 
       public AdviceScope(
-          CallDepth callDepth, ClassAndMethod request, Context context, Scope scope) {
+          CallDepth callDepth,
+          @Nullable ClassAndMethod request,
+          @Nullable Context context,
+          @Nullable Scope scope) {
         this.callDepth = callDepth;
         this.request = request;
         this.context = context;
@@ -69,7 +72,10 @@ class InvocationInstrumentation implements TypeInstrumentation {
       }
 
       public void end(@Nullable Throwable throwable) {
-        if (callDepth.decrementAndGet() > 0 || scope == null) {
+        if (callDepth.decrementAndGet() > 0
+            || request == null
+            || context == null
+            || scope == null) {
           return;
         }
         scope.close();

@@ -21,27 +21,27 @@ import javax.annotation.Nullable;
 
 public final class JFinalSingletons {
 
-  private static final Instrumenter<ClassAndMethod, Void> INSTRUMENTER;
+  private static final Instrumenter<ClassAndMethod, Void> jfinalInstrumenter;
 
   static {
     // see
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/11465#issuecomment-2137294837
     excludeOtAttrs();
 
-    CodeAttributesGetter<ClassAndMethod> codedAttributesGetter =
+    CodeAttributesGetter<ClassAndMethod> codeAttributesGetter =
         ClassAndMethod.codeAttributesGetter();
-    INSTRUMENTER =
+    jfinalInstrumenter =
         Instrumenter.<ClassAndMethod, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.jfinal-3.2",
-                CodeSpanNameExtractor.create(codedAttributesGetter))
+                CodeSpanNameExtractor.create(codeAttributesGetter))
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
-            .addAttributesExtractor(CodeAttributesExtractor.create(codedAttributesGetter))
+            .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
             .buildInstrumenter();
   }
 
   public static Instrumenter<ClassAndMethod, Void> instrumenter() {
-    return INSTRUMENTER;
+    return jfinalInstrumenter;
   }
 
   public static void updateRoute(@Nullable Action action) {
