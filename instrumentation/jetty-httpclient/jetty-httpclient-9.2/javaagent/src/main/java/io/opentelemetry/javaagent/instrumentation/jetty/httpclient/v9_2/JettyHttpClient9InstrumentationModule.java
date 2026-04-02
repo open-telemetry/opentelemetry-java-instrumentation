@@ -30,8 +30,9 @@ public class JettyHttpClient9InstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // AbstractTypedContentProvider  showed up in version Jetty Client 9.2 on to 10.x
-    return hasClassesNamed("org.eclipse.jetty.client.util.AbstractTypedContentProvider");
+    return hasClassesNamed(
+        // added in 9.2
+        "org.eclipse.jetty.client.util.AbstractTypedContentProvider");
   }
 
   @Override
