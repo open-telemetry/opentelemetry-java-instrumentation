@@ -9,12 +9,12 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASS
 
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 public final class CassandraSingletons {
@@ -35,7 +35,7 @@ public final class CassandraSingletons {
                 SqlClientAttributesExtractor.builder(attributesGetter)
                     .setTableAttribute(DB_CASSANDRA_TABLE)
                     .setQuerySanitizationEnabled(
-                        AgentCommonConfig.get().isQuerySanitizationEnabled())
+                        DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "cassandra"))
                     .build())
             .addAttributesExtractor(new CassandraAttributesExtractor())
             .addOperationMetrics(DbClientMetrics.get())

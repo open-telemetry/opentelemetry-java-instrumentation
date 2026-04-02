@@ -8,11 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.mongo.v4_0;
 import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrumenterFactory;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.TracingCommandListener;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 
 public final class MongoInstrumentationSingletons {
 
@@ -20,9 +19,7 @@ public final class MongoInstrumentationSingletons {
       MongoInstrumenterFactory.createInstrumenter(
           GlobalOpenTelemetry.get(),
           "io.opentelemetry.mongo-4.0",
-          DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "mongo")
-              .get("statement_sanitizer")
-              .getBoolean("enabled", AgentCommonConfig.get().isQuerySanitizationEnabled()));
+          DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "mongo"));
 
   public static final CommandListener LISTENER = new TracingCommandListener(INSTRUMENTER);
 
