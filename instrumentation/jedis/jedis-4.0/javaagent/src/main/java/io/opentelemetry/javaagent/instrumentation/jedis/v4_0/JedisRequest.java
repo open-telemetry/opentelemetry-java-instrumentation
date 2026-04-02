@@ -14,6 +14,7 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 import redis.clients.jedis.CommandArguments;
 import redis.clients.jedis.Protocol;
 import redis.clients.jedis.args.Rawable;
@@ -62,14 +63,15 @@ public abstract class JedisRequest {
     return sanitizer.sanitize(getOperationName(), getArgs());
   }
 
-  private SocketAddress remoteSocketAddress;
+  @Nullable private SocketAddress remoteSocketAddress;
 
-  public void setSocket(Socket socket) {
+  public void setSocket(@Nullable Socket socket) {
     if (socket != null) {
       remoteSocketAddress = socket.getRemoteSocketAddress();
     }
   }
 
+  @Nullable
   public SocketAddress getRemoteSocketAddress() {
     return remoteSocketAddress;
   }
