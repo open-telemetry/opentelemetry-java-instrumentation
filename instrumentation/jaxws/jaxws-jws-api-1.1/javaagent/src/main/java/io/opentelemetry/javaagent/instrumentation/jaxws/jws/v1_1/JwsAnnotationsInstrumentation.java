@@ -65,11 +65,15 @@ class JwsAnnotationsInstrumentation implements TypeInstrumentation {
 
     public static class AdviceScope {
       private final CallDepth callDepth;
-      private final JaxWsRequest request;
-      private final Context context;
-      private final Scope scope;
+      @Nullable private final JaxWsRequest request;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
 
-      private AdviceScope(CallDepth callDepth, JaxWsRequest request, Context context, Scope scope) {
+      private AdviceScope(
+          CallDepth callDepth,
+          @Nullable JaxWsRequest request,
+          @Nullable Context context,
+          @Nullable Scope scope) {
         this.callDepth = callDepth;
         this.request = request;
         this.context = context;
