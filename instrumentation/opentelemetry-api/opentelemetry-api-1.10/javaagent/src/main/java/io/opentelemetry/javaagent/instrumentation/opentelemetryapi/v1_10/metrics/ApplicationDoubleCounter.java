@@ -9,7 +9,7 @@ import io.opentelemetry.api.metrics.DoubleCounter;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 
-public final class ApplicationDoubleCounter
+public class ApplicationDoubleCounter
     implements application.io.opentelemetry.api.metrics.DoubleCounter {
 
   private final DoubleCounter agentCounter;

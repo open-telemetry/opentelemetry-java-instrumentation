@@ -9,7 +9,7 @@ import io.opentelemetry.api.metrics.LongUpDownCounter;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 
-public final class ApplicationLongUpDownCounter
+public class ApplicationLongUpDownCounter
     implements application.io.opentelemetry.api.metrics.LongUpDownCounter {
 
   private final LongUpDownCounter agentCounter;

@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jsf.javax;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import javax.faces.FacesException;
 
-public final class JsfErrorCauseExtractor implements ErrorCauseExtractor {
+public class JsfErrorCauseExtractor implements ErrorCauseExtractor {
 
   @Override
   public Throwable extract(Throwable error) {

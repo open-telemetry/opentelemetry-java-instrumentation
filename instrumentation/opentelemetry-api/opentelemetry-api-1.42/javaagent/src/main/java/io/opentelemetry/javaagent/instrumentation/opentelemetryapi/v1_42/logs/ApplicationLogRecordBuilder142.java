@@ -13,7 +13,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class ApplicationLogRecordBuilder142 extends ApplicationLogRecordBuilder
+public class ApplicationLogRecordBuilder142 extends ApplicationLogRecordBuilder
     implements application.io.opentelemetry.api.logs.LogRecordBuilder {
 
   private final LogRecordBuilder agentLogRecordBuilder;

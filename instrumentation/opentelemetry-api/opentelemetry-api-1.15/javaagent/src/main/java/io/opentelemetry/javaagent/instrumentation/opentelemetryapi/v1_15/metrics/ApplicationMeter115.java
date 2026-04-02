@@ -11,7 +11,7 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.CallbackAnchor;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ObservableMeasurementWrapper;
 
-public final class ApplicationMeter115 extends ApplicationMeter {
+public class ApplicationMeter115 extends ApplicationMeter {
 
   private final Meter agentMeter;
 

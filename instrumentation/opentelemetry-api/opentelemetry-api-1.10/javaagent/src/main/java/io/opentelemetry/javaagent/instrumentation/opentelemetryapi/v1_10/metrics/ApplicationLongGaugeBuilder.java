@@ -10,7 +10,7 @@ import io.opentelemetry.api.metrics.LongGaugeBuilder;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import java.util.function.Consumer;
 
-public final class ApplicationLongGaugeBuilder
+public class ApplicationLongGaugeBuilder
     implements application.io.opentelemetry.api.metrics.LongGaugeBuilder {
 
   private final LongGaugeBuilder agentBuilder;

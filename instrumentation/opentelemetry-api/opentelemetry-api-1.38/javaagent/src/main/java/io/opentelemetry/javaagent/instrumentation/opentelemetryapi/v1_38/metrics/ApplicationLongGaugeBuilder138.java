@@ -9,7 +9,7 @@ import io.opentelemetry.api.metrics.LongGauge;
 import io.opentelemetry.api.metrics.LongGaugeBuilder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationLongGaugeBuilder;
 
-public final class ApplicationLongGaugeBuilder138 extends ApplicationLongGaugeBuilder {
+public class ApplicationLongGaugeBuilder138 extends ApplicationLongGaugeBuilder {
 
   private final LongGaugeBuilder agentBuilder;
 

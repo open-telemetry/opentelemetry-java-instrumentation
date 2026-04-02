@@ -9,7 +9,7 @@ import io.opentelemetry.api.metrics.DoubleUpDownCounter;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 
-public final class ApplicationDoubleUpDownCounter
+public class ApplicationDoubleUpDownCounter
     implements application.io.opentelemetry.api.metrics.DoubleUpDownCounter {
 
   private final DoubleUpDownCounter agentCounter;

@@ -20,12 +20,10 @@ import java.util.function.BiFunction;
  * the lettuce async API.
  *
  * @param <T> the normal completion result
- * @param <U> the error
  * @param <R> the return type, should be null since nothing else should happen from tracing
  *     standpoint after the span is closed
  */
-public final class EndCommandAsyncBiFunction<T, U extends Throwable, R>
-    implements BiFunction<T, Throwable, R> {
+public final class EndCommandAsyncBiFunction<T, R> implements BiFunction<T, Throwable, R> {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "lettuce")

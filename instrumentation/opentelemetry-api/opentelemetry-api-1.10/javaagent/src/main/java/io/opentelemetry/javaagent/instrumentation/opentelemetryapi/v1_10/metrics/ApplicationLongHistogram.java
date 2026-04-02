@@ -9,7 +9,7 @@ import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 
-public final class ApplicationLongHistogram
+public class ApplicationLongHistogram
     implements application.io.opentelemetry.api.metrics.LongHistogram {
 
   private final LongHistogram agentHistogram;

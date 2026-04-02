@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metric
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 
-public final class ApplicationDoubleHistogramBuilder
+public class ApplicationDoubleHistogramBuilder
     implements application.io.opentelemetry.api.metrics.DoubleHistogramBuilder {
 
   private final DoubleHistogramBuilder agentBuilder;

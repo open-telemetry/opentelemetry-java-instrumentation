@@ -10,7 +10,7 @@ import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs.ApplicationLogger;
 
-public final class ApplicationLogger140Incubator extends ApplicationLogger
+public class ApplicationLogger140Incubator extends ApplicationLogger
     implements application.io.opentelemetry.api.incubator.logs.ExtendedLogger {
 
   private final Logger agentLogger;

@@ -10,7 +10,7 @@ import io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder;
 import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
 import java.util.function.Consumer;
 
-public final class ApplicationDoubleUpDownCounterBuilder
+public class ApplicationDoubleUpDownCounterBuilder
     implements application.io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder {
 
   private final DoubleUpDownCounterBuilder agentBuilder;

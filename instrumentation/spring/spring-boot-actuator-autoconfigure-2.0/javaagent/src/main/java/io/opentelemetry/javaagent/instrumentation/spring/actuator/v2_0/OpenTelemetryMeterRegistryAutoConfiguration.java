@@ -41,7 +41,7 @@ import org.springframework.context.annotation.Configuration;
     })
 @ConditionalOnBean(Clock.class)
 @ConditionalOnClass(MeterRegistry.class)
-public final class OpenTelemetryMeterRegistryAutoConfiguration {
+public class OpenTelemetryMeterRegistryAutoConfiguration {
 
   @Bean
   public MeterRegistry otelMeterRegistry() {

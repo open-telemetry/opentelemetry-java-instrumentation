@@ -12,7 +12,7 @@ public final class ApplicationMeter138 extends ApplicationMeter132 {
 
   private final Meter agentMeter;
 
-  protected ApplicationMeter138(Meter agentMeter) {
+  ApplicationMeter138(Meter agentMeter) {
     super(agentMeter);
     this.agentMeter = agentMeter;
   }

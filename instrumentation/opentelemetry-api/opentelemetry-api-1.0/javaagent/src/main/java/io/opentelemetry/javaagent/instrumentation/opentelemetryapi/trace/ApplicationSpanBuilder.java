@@ -15,8 +15,7 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.ValueBridging
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import java.util.concurrent.TimeUnit;
 
-public final class ApplicationSpanBuilder
-    implements application.io.opentelemetry.api.trace.SpanBuilder {
+public class ApplicationSpanBuilder implements application.io.opentelemetry.api.trace.SpanBuilder {
 
   private final SpanBuilder agentBuilder;
 

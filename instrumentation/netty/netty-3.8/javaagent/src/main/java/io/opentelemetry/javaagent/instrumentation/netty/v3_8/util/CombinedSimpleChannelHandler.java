@@ -16,7 +16,7 @@ import org.jboss.netty.channel.SimpleChannelHandler;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.jboss.netty.channel.WriteCompletionEvent;
 
-public final class CombinedSimpleChannelHandler<
+public class CombinedSimpleChannelHandler<
         UPSTREAM extends SimpleChannelUpstreamHandler,
         DOWNSTREAM extends SimpleChannelDownstreamHandler>
     extends SimpleChannelHandler {

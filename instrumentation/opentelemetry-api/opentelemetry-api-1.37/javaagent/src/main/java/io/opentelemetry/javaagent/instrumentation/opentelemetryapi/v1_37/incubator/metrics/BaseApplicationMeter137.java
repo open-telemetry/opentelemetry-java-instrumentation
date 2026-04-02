@@ -9,7 +9,7 @@ import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_15.metrics.ApplicationMeter115;
 
 // used by both 1.37 and 1.38
-public final class BaseApplicationMeter137 extends ApplicationMeter115 {
+public class BaseApplicationMeter137 extends ApplicationMeter115 {
 
   private final Meter agentMeter;
 

@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletAsyncContext;
 import javax.annotation.Nullable;
 
-public final class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST, RESPONSE> {
+public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST, RESPONSE> {
   public static final String CONTEXT_ATTRIBUTE = ServletHelper.class.getName() + ".Context";
 
   public ServletHelper(

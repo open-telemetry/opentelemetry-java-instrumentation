@@ -10,7 +10,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 
-public final class ApplicationTracerProvider
+public class ApplicationTracerProvider
     implements application.io.opentelemetry.api.trace.TracerProvider {
 
   private static final MethodHandle TRACE_PROVIDER_14 = getApplicationTracerProvider14();
