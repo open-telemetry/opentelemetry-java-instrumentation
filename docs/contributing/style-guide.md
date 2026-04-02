@@ -80,8 +80,7 @@ methods.
 ### `final` keyword usage
 
 Public non-internal non-test classes should be declared `final` where possible.
-"Internal" here includes `.internal` packages **and** `javaagent/src/main/` classes — javaagent
-instrumentation code is not public API.
+"Internal" here means classes nested anywhere under a `.internal` package.
 "Test" here includes `src/test/` directories and any module whose directory name starts or ends
 with `testing` or `tests` (e.g., `testing/`, `testing-common/`, `testing-apps/`,
 `quarkus-2.0-testing/`, `smoke-tests/`).
