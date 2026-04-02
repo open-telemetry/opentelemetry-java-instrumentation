@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.testLatestDeps
 import io.quarkus.bootstrap.model.ApplicationModel
 import io.quarkus.bootstrap.model.gradle.impl.ModelParameterImpl
 import io.quarkus.bootstrap.util.BootstrapUtils
@@ -12,7 +13,6 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import kotlin.io.path.notExists
-import io.opentelemetry.instrumentation.gradle.testLatestDeps
 
 plugins {
   id("otel.javaagent-testing")

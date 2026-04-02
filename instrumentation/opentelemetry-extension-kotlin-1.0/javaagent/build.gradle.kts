@@ -1,5 +1,5 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import io.opentelemetry.instrumentation.gradle.testLatestDeps
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
   id("org.jetbrains.kotlin.jvm")
