@@ -18,7 +18,7 @@ muzzle {
   }
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 dependencies {
   bootstrap(project(":instrumentation:internal:internal-application-logger:bootstrap"))
 

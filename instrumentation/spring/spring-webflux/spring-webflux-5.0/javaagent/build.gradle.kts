@@ -67,7 +67,7 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:3.+") // see testing-webflux7 module
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 
 tasks {
   withType<Test>().configureEach {

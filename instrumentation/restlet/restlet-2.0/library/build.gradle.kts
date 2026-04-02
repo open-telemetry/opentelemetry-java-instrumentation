@@ -16,7 +16,7 @@ dependencies {
 }
 
 // restlet registers the first engine that is present on classpath, so we need to enforce the appropriate version
-if (findProperty("testLatestDeps") == "true") {
+if (gradle.startParameter.projectProperties["testLatestDeps"] == "true") {
   configurations.configureEach {
     resolutionStrategy {
       eachDependency {

@@ -36,7 +36,7 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 
 testing {
   suites {

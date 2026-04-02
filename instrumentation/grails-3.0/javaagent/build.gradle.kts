@@ -37,7 +37,7 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-tomcat:2.+") // related dependency
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 
 if (!latestDepTest) {
   configurations.configureEach {

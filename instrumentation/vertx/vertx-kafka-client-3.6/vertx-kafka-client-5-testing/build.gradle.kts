@@ -17,7 +17,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:vertx:vertx-kafka-client-3.6:javaagent"))
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 
 testing {
   suites {

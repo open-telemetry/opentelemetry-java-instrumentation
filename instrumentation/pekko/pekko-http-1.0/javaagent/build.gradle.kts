@@ -67,7 +67,7 @@ testing {
   suites {
     val tapirTest by registering(JvmTestSuite::class) {
       dependencies {
-        if (findProperty("testLatestDeps") == "true") {
+        if (gradle.startParameter.projectProperties["testLatestDeps"] == "true") {
           implementation("com.typesafe.akka:akka-http_2.13:latest.release")
           implementation("com.typesafe.akka:akka-stream_2.13:latest.release")
           implementation("com.softwaremill.sttp.tapir:tapir-pekko-http-server_2.13:latest.release")
@@ -102,7 +102,7 @@ tasks {
   }
 }
 
-if (findProperty("testLatestDeps") == "true") {
+if (gradle.startParameter.projectProperties["testLatestDeps"] == "true") {
   configurations {
     // pekko artifact name is different for regular and latest tests
     testImplementation {

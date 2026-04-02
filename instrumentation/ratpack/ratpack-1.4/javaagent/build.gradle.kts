@@ -32,7 +32,7 @@ dependencies {
 }
 
 // Requires old Guava. Can't use enforcedPlatform since predates BOM
-if (!(findProperty("testLatestDeps") == "true")) {
+if (!(gradle.startParameter.projectProperties["testLatestDeps"] == "true")) {
   configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.google.guava:guava:19.0")
 }
 

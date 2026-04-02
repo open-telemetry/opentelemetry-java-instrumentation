@@ -51,7 +51,7 @@ tasks {
   }
 }
 
-val testLatestDeps = findProperty("testLatestDeps") == "true"
+val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 
 if (!testLatestDeps) {
   configurations.testRuntimeClasspath {

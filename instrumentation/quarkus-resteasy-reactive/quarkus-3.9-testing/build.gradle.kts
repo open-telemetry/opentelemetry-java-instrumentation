@@ -24,7 +24,7 @@ otelJava {
 }
 
 var quarkusVersion = "3.9.1"
-if (findProperty("testLatestDeps") == "true") {
+if (gradle.startParameter.projectProperties["testLatestDeps"] == "true") {
   quarkusVersion = "3.9.+"
 }
 

@@ -46,7 +46,7 @@ testing {
   suites {
     val javaRouteTest by registering(JvmTestSuite::class) {
       dependencies {
-        if (findProperty("testLatestDeps") == "true") {
+        if (gradle.startParameter.projectProperties["testLatestDeps"] == "true") {
           implementation("com.typesafe.akka:akka-http_2.13:latest.release")
           implementation("com.typesafe.akka:akka-stream_2.13:latest.release")
         } else {
@@ -86,7 +86,7 @@ tasks {
   }
 }
 
-if (findProperty("testLatestDeps") == "true") {
+if (gradle.startParameter.projectProperties["testLatestDeps"] == "true") {
   configurations {
     // akka artifact name is different for regular and latest tests
     testImplementation {

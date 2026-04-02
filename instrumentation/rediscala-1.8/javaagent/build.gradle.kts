@@ -87,7 +87,7 @@ tasks {
   }
 }
 
-if (findProperty("testLatestDeps") == "true") {
+if (gradle.startParameter.projectProperties["testLatestDeps"] == "true") {
   configurations {
     // rediscala artifact name is different for regular and latest tests
     testImplementation {

@@ -28,7 +28,7 @@ muzzle {
   }
 }
 
-if (findProperty("testLatestDeps") == "true") {
+if (gradle.startParameter.projectProperties["testLatestDeps"] == "true") {
   // when running on jdk 21 Elasticsearch53SpringRepositoryTest occasionally fails with timeout
   otelJava {
     maxJavaVersionForTests.set(JavaVersion.VERSION_17)

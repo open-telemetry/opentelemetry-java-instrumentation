@@ -89,7 +89,7 @@ tasks {
   }
 }
 
-if (findProperty("testLatestDeps") == "true") {
+if (gradle.startParameter.projectProperties["testLatestDeps"] == "true") {
   configurations {
     // artifact name changed from 'resteasy-jaxrs' to 'resteasy-core' starting from version 4.0.0
     testImplementation {

@@ -130,7 +130,7 @@ dependencies {
   testLibrary("software.amazon.awssdk:sqs:2.2.0")
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
 
 testing {

@@ -16,7 +16,7 @@ dependencies {
   latestDepTestLibrary("io.vertx:vertx-codegen:3.+") // documented limitation
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 
 testing {
   suites {

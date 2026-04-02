@@ -27,7 +27,7 @@ dependencies {
     }
   }
 
-  if (findProperty("testLatestDeps") == "true") {
+  if (gradle.startParameter.projectProperties["testLatestDeps"] == "true") {
     testImplementation("ch.qos.logback:logback-classic:latest.release")
   } else {
     testImplementation("ch.qos.logback:logback-classic") {

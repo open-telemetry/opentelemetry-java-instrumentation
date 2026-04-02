@@ -33,7 +33,7 @@ dependencies {
   latestDepTestLibrary("com.xuxueli:xxl-job-core:3.2.+") // documented limitation
 }
 
-val testLatestDeps = findProperty("testLatestDeps") == "true"
+val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 
 testing {
   suites {

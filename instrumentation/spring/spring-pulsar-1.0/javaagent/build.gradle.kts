@@ -13,7 +13,7 @@ muzzle {
   }
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 
 dependencies {
   library("org.springframework.pulsar:spring-pulsar:1.0.0")

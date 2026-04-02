@@ -23,7 +23,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:okhttp:okhttp-2.2:javaagent"))
 }
 
-val testLatestDeps = findProperty("testLatestDeps") == "true"
+val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 
 testing {
   suites {

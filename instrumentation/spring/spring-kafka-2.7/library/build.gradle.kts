@@ -33,7 +33,7 @@ tasks.withType<Test>().configureEach {
   systemProperty("testLatestDeps", findProperty("testLatestDeps"))
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 
 // spring 6 (which spring-kafka 3.+ uses) requires java 17
 if (latestDepTest) {

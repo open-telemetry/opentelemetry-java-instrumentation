@@ -60,7 +60,7 @@ testing {
   }
 }
 
-val testLatestDeps = findProperty("testLatestDeps") == "true"
+val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 tasks {
   if (testLatestDeps) {
     // disable regular test running and compiling tasks when latest dep test task is run

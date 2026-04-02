@@ -44,7 +44,7 @@ tasks {
     systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 
-  if (!(findProperty("testLatestDeps") == "true")) {
+  if (!(gradle.startParameter.projectProperties["testLatestDeps"] == "true")) {
     check {
       dependsOn(testing.suites)
     }

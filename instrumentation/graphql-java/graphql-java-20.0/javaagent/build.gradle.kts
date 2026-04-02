@@ -42,7 +42,7 @@ tasks {
   }
 }
 
-if (findProperty("testLatestDeps") == "true") {
+if (gradle.startParameter.projectProperties["testLatestDeps"] == "true") {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }

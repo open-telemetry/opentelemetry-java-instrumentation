@@ -33,7 +33,7 @@ dependencies {
   latestDepTestLibrary("com.typesafe.akka:akka-actor_2.13:latest.release")
 }
 
-if (findProperty("testLatestDeps") == "true") {
+if (gradle.startParameter.projectProperties["testLatestDeps"] == "true") {
   configurations {
     // akka artifact name is different for regular and latest tests
     testImplementation {

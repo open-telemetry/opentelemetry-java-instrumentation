@@ -36,7 +36,7 @@ dependencies {
 }
 
 // We need to force the dependency to the earliest supported version because other libraries declare newer versions.
-if (!(findProperty("testLatestDeps") == "true")) {
+if (!(gradle.startParameter.projectProperties["testLatestDeps"] == "true")) {
   configurations.configureEach {
     if (!name.contains("muzzle")) {
       resolutionStrategy {

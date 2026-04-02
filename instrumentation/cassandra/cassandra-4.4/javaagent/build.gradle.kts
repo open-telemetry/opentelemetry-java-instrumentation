@@ -16,7 +16,7 @@ muzzle {
   }
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 dependencies {
   implementation(project(":instrumentation:cassandra:cassandra-4.4:library"))
 

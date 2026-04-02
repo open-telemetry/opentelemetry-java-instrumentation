@@ -35,7 +35,7 @@ dependencies {
   testLibrary("io.projectreactor.kafka:reactor-kafka:1.0.0.RELEASE")
 }
 
-val testLatestDeps = findProperty("testLatestDeps") == "true"
+val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 
 testing {
   suites {

@@ -23,7 +23,7 @@ dependencies {
 }
 
 // spring 6 requires java 17
-if (findProperty("testLatestDeps") == "true") {
+if (gradle.startParameter.projectProperties["testLatestDeps"] == "true") {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_17)
   }

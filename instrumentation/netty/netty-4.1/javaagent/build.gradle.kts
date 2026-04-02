@@ -83,7 +83,7 @@ tasks {
   }
 }
 
-if (!(findProperty("testLatestDeps") == "true")) {
+if (!(gradle.startParameter.projectProperties["testLatestDeps"] == "true")) {
   // No BOM for 4.1.0 so we can't use enforcedPlatform to override our transitive version
   // management, so hook into the resolutionStrategy.
   configurations.configureEach {

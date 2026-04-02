@@ -79,7 +79,7 @@ tasks {
   }
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 
 // kafka 4.1 requires java 11
 if (latestDepTest) {

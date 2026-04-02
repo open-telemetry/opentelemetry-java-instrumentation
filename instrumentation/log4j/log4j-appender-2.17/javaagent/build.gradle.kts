@@ -11,7 +11,7 @@ muzzle {
   }
 }
 
-val testLatestDeps = findProperty("testLatestDeps") == "true"
+val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 
 dependencies {
   testInstrumentation(project(":instrumentation:log4j:log4j-appender-1.2:javaagent"))

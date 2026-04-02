@@ -46,7 +46,7 @@ dependencies {
   testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 
 testing {
   suites {

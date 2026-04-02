@@ -24,7 +24,7 @@ dependencies {
   latestDepTestLibrary("com.amazonaws:aws-java-sdk-sqs:1.12.583") // documented limitation
 }
 
-val testLatestDeps = findProperty("testLatestDeps") == "true"
+val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 if (!testLatestDeps) {
   configurations.testRuntimeClasspath {
     resolutionStrategy {

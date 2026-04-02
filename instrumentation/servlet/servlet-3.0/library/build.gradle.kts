@@ -28,7 +28,7 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   }
 
-  if (findProperty("testLatestDeps") == "true") {
+  if (gradle.startParameter.projectProperties["testLatestDeps"] == "true") {
     compileTestJava {
       options.release.set(11)
     }

@@ -20,7 +20,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
 }
 
-val testLatestDeps = findProperty("testLatestDeps") == "true"
+val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 
 testing {
   suites {

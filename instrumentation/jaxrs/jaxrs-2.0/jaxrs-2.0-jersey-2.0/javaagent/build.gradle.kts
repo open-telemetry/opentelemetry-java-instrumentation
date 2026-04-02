@@ -46,7 +46,7 @@ dependencies {
   latestDepTestLibrary("org.glassfish.jersey.inject:jersey-hk2:2.+") // see jaxrs-3.0-jersey-3.0 module
 }
 
-if (!(findProperty("testLatestDeps") == "true")) {
+if (!(gradle.startParameter.projectProperties["testLatestDeps"] == "true")) {
   // early jersey versions require old guava
   configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.google.guava:guava:14.0.1")
 

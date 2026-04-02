@@ -17,7 +17,7 @@ dependencies {
   library("org.apache.dubbo:dubbo:2.7.0")
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 
 testing {
   suites {

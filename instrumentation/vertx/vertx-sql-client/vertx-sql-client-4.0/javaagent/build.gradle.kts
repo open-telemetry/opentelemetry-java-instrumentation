@@ -53,7 +53,7 @@ tasks {
   }
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 if (!latestDepTest) {
   // https://bugs.openjdk.org/browse/JDK-8320431
   otelJava {

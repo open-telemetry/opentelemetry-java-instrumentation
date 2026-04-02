@@ -32,7 +32,7 @@ dependencies {
   testLibrary("software.amazon.awssdk:sfn:2.2.0")
 }
 
-val testLatestDeps = findProperty("testLatestDeps") == "true"
+val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 
 testing {
   suites {

@@ -12,7 +12,7 @@ dependencies {
   testLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:10.0.0")
 }
 
-val testLatestDeps = findProperty("testLatestDeps") == "true"
+val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 
 if (testLatestDeps) {
   otelJava {

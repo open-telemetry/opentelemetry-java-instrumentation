@@ -24,7 +24,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:jsf:jsf-myfaces-3.0:javaagent"))
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 testing {
   suites {
     val myfaces12Test by registering(JvmTestSuite::class) {

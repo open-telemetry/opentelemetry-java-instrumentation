@@ -34,7 +34,7 @@ dependencies {
   testImplementation(project(":instrumentation:executors:testing"))
 }
 
-if (findProperty("testLatestDeps") == "true") {
+if (gradle.startParameter.projectProperties["testLatestDeps"] == "true") {
   configurations {
     // pekko artifact name is different for regular and latest tests
     testImplementation {

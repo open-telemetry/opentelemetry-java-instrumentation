@@ -43,7 +43,7 @@ tasks {
   }
 }
 
-if (!(findProperty("testLatestDeps") == "true")) {
+if (!(gradle.startParameter.projectProperties["testLatestDeps"] == "true")) {
   configurations.testRuntimeClasspath {
     resolutionStrategy {
       eachDependency {

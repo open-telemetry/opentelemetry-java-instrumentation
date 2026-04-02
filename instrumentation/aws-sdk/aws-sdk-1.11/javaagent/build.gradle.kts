@@ -101,7 +101,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
 
-        if (findProperty("testLatestDeps") == "true") {
+        if (gradle.startParameter.projectProperties["testLatestDeps"] == "true") {
           // last version that does not use json protocol
           implementation("com.amazonaws:aws-java-sdk-sqs:1.12.583")
         } else {
@@ -122,7 +122,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
 
-        if (findProperty("testLatestDeps") == "true") {
+        if (gradle.startParameter.projectProperties["testLatestDeps"] == "true") {
           // last version that does not use json protocol
           implementation("com.amazonaws:aws-java-sdk-sqs:1.12.583")
         } else {
@@ -136,7 +136,7 @@ testing {
 val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
 
 tasks {
-  if (!(findProperty("testLatestDeps") == "true")) {
+  if (!(gradle.startParameter.projectProperties["testLatestDeps"] == "true")) {
     check {
       dependsOn(testing.suites)
     }
@@ -177,7 +177,7 @@ tasks {
   }
 }
 
-if (!(findProperty("testLatestDeps") == "true")) {
+if (!(gradle.startParameter.projectProperties["testLatestDeps"] == "true")) {
   configurations.testRuntimeClasspath {
     resolutionStrategy {
       eachDependency {
