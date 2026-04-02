@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxws.common;
 
-public class JaxWsRequest {
+public final class JaxWsRequest {
   private final Class<?> codeClass;
   private final String methodName;
 
