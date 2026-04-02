@@ -397,9 +397,9 @@ public abstract class AbstractDubboTest {
                                             val,
                                             v ->
                                                 v.satisfiesAnyOf(
-                                                    v -> assertThat(v).isNull(),
-                                                    v -> assertThat(v).isEqualTo("ipv4"),
-                                                    v -> assertThat(v).isEqualTo("ipv6")))))));
+                                                    a -> assertThat(a).isNull(),
+                                                    a -> assertThat(a).isEqualTo("ipv4"),
+                                                    a -> assertThat(a).isEqualTo("ipv6")))))));
 
     if (emitOldRpcSemconv()) {
       testing()
