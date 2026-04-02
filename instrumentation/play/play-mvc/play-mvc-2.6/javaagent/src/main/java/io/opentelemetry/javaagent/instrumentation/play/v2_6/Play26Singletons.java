@@ -24,7 +24,7 @@ import scala.Option;
 public final class Play26Singletons {
 
   private static final String SPAN_NAME = "play.request";
-  private static final Instrumenter<Void, Void> INSTRUMENTER =
+  private static final Instrumenter<Void, Void> instrumenter =
       Instrumenter.<Void, Void>builder(
               GlobalOpenTelemetry.get(), "io.opentelemetry.play-mvc-2.6", s -> SPAN_NAME)
           .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
@@ -52,7 +52,7 @@ public final class Play26Singletons {
   }
 
   public static Instrumenter<Void, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static void updateSpan(Context context, Request<?> request) {

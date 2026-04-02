@@ -13,16 +13,16 @@ import jodd.http.HttpResponse;
 public final class JoddHttpSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jodd-http-4.2";
 
-  private static final Instrumenter<HttpRequest, HttpResponse> INSTRUMENTER;
+  private static final Instrumenter<HttpRequest, HttpResponse> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         JavaagentHttpClientInstrumenters.create(
             INSTRUMENTATION_NAME, new JoddHttpHttpAttributesGetter(), new HttpHeaderSetter());
   }
 
   public static Instrumenter<HttpRequest, HttpResponse> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private JoddHttpSingletons() {}

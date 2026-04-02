@@ -17,12 +17,12 @@ public final class RediscalaSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.rediscala-1.8";
 
-  private static final Instrumenter<RedisCommand<?, ?>, Void> INSTRUMENTER;
+  private static final Instrumenter<RedisCommand<?, ?>, Void> instrumenter;
 
   static {
     RediscalaAttributesGetter dbAttributesGetter = new RediscalaAttributesGetter();
 
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<RedisCommand<?, ?>, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
@@ -33,7 +33,7 @@ public final class RediscalaSingletons {
   }
 
   public static Instrumenter<RedisCommand<?, ?>, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private RediscalaSingletons() {}
