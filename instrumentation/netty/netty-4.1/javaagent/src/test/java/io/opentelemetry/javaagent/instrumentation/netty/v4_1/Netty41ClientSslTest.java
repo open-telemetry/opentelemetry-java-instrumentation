@@ -170,16 +170,16 @@ class Netty41ClientSslTest {
                             equalTo(NETWORK_TYPE, "ipv4"),
                             satisfies(
                                 SERVER_ADDRESS,
-                                v ->
-                                    v.satisfiesAnyOf(
-                                        k -> assertThat(k).isNull(),
-                                        k -> assertThat(k).isEqualTo(uri.getHost()))),
+                                val ->
+                                    val.satisfiesAnyOf(
+                                        v -> assertThat(v).isNull(),
+                                        v -> assertThat(v).isEqualTo(uri.getHost()))),
                             satisfies(
                                 SERVER_PORT,
-                                v ->
-                                    v.satisfiesAnyOf(
-                                        k -> assertThat(k).isNull(),
-                                        k -> assertThat(k).isEqualTo(uri.getPort()))),
+                                val ->
+                                    val.satisfiesAnyOf(
+                                        v -> assertThat(v).isNull(),
+                                        v -> assertThat(v).isEqualTo(uri.getPort()))),
                             equalTo(NETWORK_PEER_PORT, uri.getPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"))));
   }

@@ -100,8 +100,8 @@ class AwsSqsTest {
                             equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
                             satisfies(
                                 URL_FULL,
-                                v ->
-                                    v.startsWith(
+                                val ->
+                                    val.startsWith(
                                         "http://localhost:" + AwsSqsTestApplication.sqsPort)),
                             satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class))),
                 span ->
@@ -118,8 +118,8 @@ class AwsSqsTest {
                             equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
                             satisfies(
                                 URL_FULL,
-                                v ->
-                                    v.startsWith(
+                                val ->
+                                    val.startsWith(
                                         "http://localhost:" + AwsSqsTestApplication.sqsPort)),
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
                             satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
@@ -145,8 +145,8 @@ class AwsSqsTest {
                             equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
                             satisfies(
                                 URL_FULL,
-                                v ->
-                                    v.startsWith(
+                                val ->
+                                    val.startsWith(
                                         "http://localhost:" + AwsSqsTestApplication.sqsPort)),
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
                             satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
@@ -168,8 +168,8 @@ class AwsSqsTest {
                             equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
                             satisfies(
                                 URL_FULL,
-                                v ->
-                                    v.startsWith(
+                                val ->
+                                    val.startsWith(
                                         "http://localhost:" + AwsSqsTestApplication.sqsPort)),
                             equalTo(
                                 AWS_SQS_QUEUE_URL,

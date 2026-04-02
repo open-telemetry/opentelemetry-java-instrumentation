@@ -158,7 +158,7 @@ class JbossLogmanagerTest {
                       equalTo(EXCEPTION_MESSAGE, "hello"),
                       satisfies(
                           EXCEPTION_STACKTRACE,
-                          v -> v.contains(JbossLogmanagerTest.class.getName()))));
+                          val -> val.contains(JbossLogmanagerTest.class.getName()))));
             }
             logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
 

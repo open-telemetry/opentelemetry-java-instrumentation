@@ -112,11 +112,10 @@ class ChatTest extends AbstractChatTest {
                             equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                             equalTo(GEN_AI_OPERATION_NAME, CHAT),
                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                            satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                            satisfies(GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                             equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                             satisfies(
-                                GEN_AI_RESPONSE_FINISH_REASONS,
-                                reasons -> reasons.containsExactly("stop")),
+                                GEN_AI_RESPONSE_FINISH_REASONS, val -> val.containsExactly("stop")),
                             equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
                             equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L))));
 
@@ -212,11 +211,11 @@ class ChatTest extends AbstractChatTest {
                             equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                             equalTo(GEN_AI_OPERATION_NAME, CHAT),
                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                            satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                            satisfies(GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                             equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                             satisfies(
                                 GEN_AI_RESPONSE_FINISH_REASONS,
-                                reasons -> reasons.containsExactly("stop", "stop")),
+                                val -> val.containsExactly("stop", "stop")),
                             equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
                             equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 7L))));
 
@@ -341,11 +340,11 @@ class ChatTest extends AbstractChatTest {
                             equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                             equalTo(GEN_AI_OPERATION_NAME, CHAT),
                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                            satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                            satisfies(GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                             equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                             satisfies(
                                 GEN_AI_RESPONSE_FINISH_REASONS,
-                                reasons -> reasons.containsExactly("tool_calls")),
+                                val -> val.containsExactly("tool_calls")),
                             equalTo(GEN_AI_USAGE_INPUT_TOKENS, 67L),
                             equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 46L))));
 
@@ -463,11 +462,10 @@ class ChatTest extends AbstractChatTest {
                             equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                             equalTo(GEN_AI_OPERATION_NAME, CHAT),
                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                            satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                            satisfies(GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                             equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                             satisfies(
-                                GEN_AI_RESPONSE_FINISH_REASONS,
-                                reasons -> reasons.containsExactly("stop")),
+                                GEN_AI_RESPONSE_FINISH_REASONS, val -> val.containsExactly("stop")),
                             equalTo(GEN_AI_USAGE_INPUT_TOKENS, 99L),
                             equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 25L))));
 
@@ -614,11 +612,11 @@ class ChatTest extends AbstractChatTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                                satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                                satisfies(GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                                 satisfies(
                                     GEN_AI_RESPONSE_FINISH_REASONS,
-                                    reasons -> reasons.containsExactly("stop"))))));
+                                    val -> val.containsExactly("stop"))))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -708,11 +706,11 @@ class ChatTest extends AbstractChatTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                                satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                                satisfies(GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                                 satisfies(
                                     GEN_AI_RESPONSE_FINISH_REASONS,
-                                    reasons -> reasons.containsExactly("stop", "stop"))))));
+                                    val -> val.containsExactly("stop", "stop"))))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -808,11 +806,11 @@ class ChatTest extends AbstractChatTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                                satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                                satisfies(GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                                 satisfies(
                                     GEN_AI_RESPONSE_FINISH_REASONS,
-                                    reasons -> reasons.containsExactly("tool_calls"))))));
+                                    val -> val.containsExactly("tool_calls"))))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -908,11 +906,11 @@ class ChatTest extends AbstractChatTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                                satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                                satisfies(GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                                 satisfies(
                                     GEN_AI_RESPONSE_FINISH_REASONS,
-                                    reasons -> reasons.containsExactly("stop"))))));
+                                    val -> val.containsExactly("stop"))))));
 
     getTesting()
         .waitAndAssertMetrics(

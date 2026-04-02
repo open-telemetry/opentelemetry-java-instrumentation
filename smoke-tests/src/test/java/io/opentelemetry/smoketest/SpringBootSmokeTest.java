@@ -44,13 +44,13 @@ class SpringBootSmokeTest extends AbstractSmokeTest<Integer> {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("GET /greeting")
-                        .hasAttribute(satisfies(THREAD_ID, a -> a.isNotNull()))
-                        .hasAttribute(satisfies(THREAD_NAME, a -> a.isNotBlank()))
+                        .hasAttribute(satisfies(THREAD_ID, val -> val.isNotNull()))
+                        .hasAttribute(satisfies(THREAD_NAME, val -> val.isNotBlank()))
                         .hasResourceSatisfying(
                             resource ->
                                 resource
                                     .hasAttribute(TELEMETRY_DISTRO_VERSION, getAgentVersion())
-                                    .hasAttribute(satisfies(OS_TYPE, a -> a.isNotNull()))
+                                    .hasAttribute(satisfies(OS_TYPE, val -> val.isNotNull()))
                                     .hasAttribute(stringKey("foo"), "bar")
                                     .hasAttribute(SERVICE_NAME, "otel-spring-test-app")
                                     .hasAttribute(SERVICE_VERSION, "1.2.3")),

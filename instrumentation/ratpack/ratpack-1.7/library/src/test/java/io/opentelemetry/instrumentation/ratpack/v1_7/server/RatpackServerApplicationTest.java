@@ -59,7 +59,7 @@ class RatpackServerApplicationTest {
                             equalTo(HTTP_ROUTE, "/foo"),
                             equalTo(URL_PATH, "/foo"),
                             equalTo(URL_SCHEME, "http"),
-                            satisfies(SERVER_PORT, v -> v.isInstanceOf(Long.class)),
+                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(URL_QUERY, ""),
@@ -84,7 +84,7 @@ class RatpackServerApplicationTest {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
                             equalTo(URL_PATH, "/bar"),
                             equalTo(URL_SCHEME, "http"),
-                            satisfies(SERVER_PORT, v -> v.isInstanceOf(Long.class)),
+                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(URL_QUERY, "")),
@@ -97,7 +97,7 @@ class RatpackServerApplicationTest {
                             equalTo(URL_FULL, "http://localhost:" + app.getAppPort() + "/other"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                            satisfies(SERVER_PORT, v -> v.isInstanceOf(Long.class)),
+                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"))));
   }
 

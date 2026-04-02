@@ -126,7 +126,7 @@ public abstract class AbstractLog4j2Test {
                           equalTo(EXCEPTION_MESSAGE, "hello"),
                           satisfies(
                               EXCEPTION_STACKTRACE,
-                              v -> v.contains(AbstractLog4j2Test.class.getName()))));
+                              val -> val.contains(AbstractLog4j2Test.class.getName()))));
                 }
                 logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
 
