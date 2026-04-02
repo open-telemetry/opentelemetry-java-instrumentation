@@ -29,11 +29,11 @@ import java.sql.Wrapper;
 import javax.sql.DataSource;
 
 public final class JdbcSingletons {
-  private static final Instrumenter<DbRequest, Void> STATEMENT_INSTRUMENTER;
-  private static final Instrumenter<DbRequest, Void> TRANSACTION_INSTRUMENTER;
-  public static final Instrumenter<DataSource, DbInfo> DATASOURCE_INSTRUMENTER =
+  private static final Instrumenter<DbRequest, Void> statementInstrumenter;
+  private static final Instrumenter<DbRequest, Void> transactionInstrumenter;
+  private static final Instrumenter<DataSource, DbInfo> dataSourceInstrumenter =
       createDataSourceInstrumenter(GlobalOpenTelemetry.get(), true);
-  private static final SqlCommenter SQL_COMMENTER = configureSqlCommenter();
+  private static final SqlCommenter sqlCommenter = configureSqlCommenter();
   public static final boolean CAPTURE_QUERY_PARAMETERS;
 
   static {
@@ -45,7 +45,7 @@ public final class JdbcSingletons {
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jdbc")
             .getBoolean("capture_query_parameters/development", false);
 
-    STATEMENT_INSTRUMENTER =
+    statementInstrumenter =
         JdbcInstrumenterFactory.createStatementInstrumenter(
             GlobalOpenTelemetry.get(),
             singletonList(servicePeerExtractor),
@@ -55,7 +55,7 @@ public final class JdbcSingletons {
                 .getBoolean("enabled", AgentCommonConfig.get().isQuerySanitizationEnabled()),
             CAPTURE_QUERY_PARAMETERS);
 
-    TRANSACTION_INSTRUMENTER =
+    transactionInstrumenter =
         JdbcInstrumenterFactory.createTransactionInstrumenter(
             GlobalOpenTelemetry.get(),
             singletonList(servicePeerExtractor),
@@ -65,15 +65,15 @@ public final class JdbcSingletons {
   }
 
   public static Instrumenter<DbRequest, Void> transactionInstrumenter() {
-    return TRANSACTION_INSTRUMENTER;
+    return transactionInstrumenter;
   }
 
   public static Instrumenter<DbRequest, Void> statementInstrumenter() {
-    return STATEMENT_INSTRUMENTER;
+    return statementInstrumenter;
   }
 
   public static Instrumenter<DataSource, DbInfo> dataSourceInstrumenter() {
-    return DATASOURCE_INSTRUMENTER;
+    return dataSourceInstrumenter;
   }
 
   private static final Cache<Class<?>, Boolean> wrapperClassCache = Cache.weak();
@@ -124,7 +124,7 @@ public final class JdbcSingletons {
   }
 
   public static String processSql(Connection connection, String sql, boolean executed) {
-    return SQL_COMMENTER.processQuery(connection, sql, executed);
+    return sqlCommenter.processQuery(connection, sql, executed);
   }
 
   private JdbcSingletons() {}
