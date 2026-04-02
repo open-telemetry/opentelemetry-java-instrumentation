@@ -177,6 +177,8 @@
   "io.projectreactor.rabbitmq:reactor-rabbitmq#+": "1.5.6",
   "io.projectreactor:reactor-core#+": "3.8.4",
   "io.projectreactor:reactor-test#+": "3.8.4",
+  "io.quarkus.platform:quarkus-bom#3.5.+": "3.5.3",
+  "io.quarkus.platform:quarkus-bom#3.9.+": "3.9.5",
   "io.quarkus:quarkus-rest#+": "3.34.1",
   "io.quarkus:quarkus-resteasy-reactive#+": "3.15.7",
   "io.r2dbc:r2dbc-spi#+": "1.0.0.RELEASE",
