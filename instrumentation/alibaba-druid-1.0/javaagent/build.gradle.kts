@@ -19,7 +19,7 @@ dependencies {
   testImplementation(project(":instrumentation:alibaba-druid-1.0:testing"))
 }
 
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
+val collectMetadata = otelProps.collectMetadata
 
 tasks {
   withType<Test>().configureEach {

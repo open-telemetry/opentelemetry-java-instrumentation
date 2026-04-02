@@ -31,7 +31,7 @@ dependencies {
 }
 
 // jetty-server 10+ requires Java 11
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = otelProps.testLatestDeps
 if (latestDepTest) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
@@ -39,5 +39,5 @@ if (latestDepTest) {
 }
 
 tasks.test {
-  systemProperty("collectMetadata", findProperty("collectMetadata"))
+  systemProperty("collectMetadata", otelProps.collectMetadata)
 }

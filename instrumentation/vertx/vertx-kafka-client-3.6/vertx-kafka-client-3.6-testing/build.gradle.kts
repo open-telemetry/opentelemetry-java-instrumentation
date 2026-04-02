@@ -16,7 +16,7 @@ dependencies {
   latestDepTestLibrary("io.vertx:vertx-codegen:3.+") // documented limitation
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = otelProps.testLatestDeps
 
 testing {
   suites {
@@ -50,7 +50,7 @@ testing {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty("testLatestDeps", latestDepTest)
   }
 

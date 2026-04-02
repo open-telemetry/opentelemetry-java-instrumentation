@@ -21,7 +21,7 @@ dependencies {
   testImplementation(project(":instrumentation:c3p0-0.9:testing"))
 }
 
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
+val collectMetadata = otelProps.collectMetadata
 
 tasks {
   withType<Test>().configureEach {

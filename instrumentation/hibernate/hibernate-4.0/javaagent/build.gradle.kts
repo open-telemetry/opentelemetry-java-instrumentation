@@ -38,7 +38,7 @@ dependencies {
   testImplementation("org.javassist:javassist:3.28.0-GA")
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = otelProps.testLatestDeps
 testing {
   suites {
     val version5Test by registering(JvmTestSuite::class) {
@@ -86,7 +86,7 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testExperimental by registering(Test::class) {

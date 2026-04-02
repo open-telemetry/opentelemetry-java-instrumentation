@@ -19,7 +19,7 @@ dependencies {
   annotationProcessor("com.google.auto.value:auto-value")
 }
 
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
+val collectMetadata = otelProps.collectMetadata
 
 tasks {
   withType<Test>().configureEach {

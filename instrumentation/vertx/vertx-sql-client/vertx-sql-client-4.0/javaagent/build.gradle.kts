@@ -33,7 +33,7 @@ dependencies {
   latestDepTestLibrary("io.vertx:vertx-codegen:4.+") // see vertx-sql-client-5.0 module
 }
 
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
+val collectMetadata = otelProps.collectMetadata
 
 tasks {
   withType<Test>().configureEach {
@@ -53,7 +53,7 @@ tasks {
   }
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = otelProps.testLatestDeps
 if (!latestDepTest) {
   // https://bugs.openjdk.org/browse/JDK-8320431
   otelJava {

@@ -51,7 +51,7 @@ tasks {
   }
 }
 
-val testLatestDeps = findProperty("testLatestDeps") == "true"
+val testLatestDeps = otelProps.testLatestDeps
 
 if (!testLatestDeps) {
   configurations.testRuntimeClasspath {

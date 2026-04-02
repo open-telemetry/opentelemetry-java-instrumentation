@@ -30,7 +30,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:vertx:vertx-web-3.0:javaagent"))
 }
 
-val testLatestDeps = findProperty("testLatestDeps") == "true"
+val testLatestDeps = otelProps.testLatestDeps
 
 testing {
   suites {

@@ -20,7 +20,7 @@ dependencies {
   testImplementation(project(":instrumentation:oracle-ucp-11.2:testing"))
 }
 
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
+val collectMetadata = otelProps.collectMetadata
 
 tasks {
   withType<Test>().configureEach {

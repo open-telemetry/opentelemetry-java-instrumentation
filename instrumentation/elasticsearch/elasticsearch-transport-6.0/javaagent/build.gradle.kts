@@ -46,7 +46,7 @@ dependencies {
   testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = otelProps.testLatestDeps
 
 testing {
   suites {
@@ -96,9 +96,9 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
 
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testSuites = testing.suites.withType(JvmTestSuite::class)
@@ -127,7 +127,7 @@ tasks {
     dependsOn(testing.suites, stableSemconvSuites, experimentalSuites)
   }
 
-  if (findProperty("denyUnsafe") == "true") {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

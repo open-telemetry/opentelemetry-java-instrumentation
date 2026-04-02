@@ -6,7 +6,7 @@ description = "smoke-tests-otel-starter-spring-boot-reactive-2"
 
 dependencies {
   implementation(project(":instrumentation:spring:starters:spring-boot-starter"))
-  val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
+  val testLatestDeps = otelProps.testLatestDeps
   implementation(platform("org.springframework.boot:spring-boot-dependencies:" + if (testLatestDeps) "2.+" else "2.6.15"))
 
   implementation(project(":smoke-tests-otel-starter:spring-boot-reactive-common"))

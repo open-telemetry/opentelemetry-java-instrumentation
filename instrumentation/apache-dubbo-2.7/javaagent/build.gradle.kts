@@ -17,7 +17,7 @@ dependencies {
   library("org.apache.dubbo:dubbo:2.7.0")
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = otelProps.testLatestDeps
 
 testing {
   suites {
@@ -40,14 +40,14 @@ testing {
 }
 
 tasks.withType<Test>().configureEach {
-  systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+  systemProperty("testLatestDeps", otelProps.testLatestDeps)
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   // to suppress non-fatal errors on jdk17
   jvmArgs("--add-opens=java.base/java.math=ALL-UNNAMED")
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
 
-  systemProperty("collectMetadata", findProperty("collectMetadata"))
+  systemProperty("collectMetadata", otelProps.collectMetadata)
 }
 
 val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->

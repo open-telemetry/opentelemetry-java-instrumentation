@@ -19,7 +19,7 @@ dependencies {
   testImplementation(project(":instrumentation:vibur-dbcp-11.0:testing"))
 }
 
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
+val collectMetadata = otelProps.collectMetadata
 
 tasks {
   withType<Test>().configureEach {

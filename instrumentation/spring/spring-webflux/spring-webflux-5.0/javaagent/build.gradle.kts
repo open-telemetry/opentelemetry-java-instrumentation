@@ -67,7 +67,7 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:3.+") // see testing-webflux7 module
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = otelProps.testLatestDeps
 
 tasks {
   withType<Test>().configureEach {
@@ -78,7 +78,7 @@ tasks {
 
     systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled")
     systemProperty("testLatestDeps", latestDepTest)
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {

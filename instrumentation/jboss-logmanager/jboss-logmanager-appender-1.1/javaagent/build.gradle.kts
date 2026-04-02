@@ -20,7 +20,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:java-util-logging:javaagent"))
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = otelProps.testLatestDeps
 
 if (latestDepTest) {
   otelJava {

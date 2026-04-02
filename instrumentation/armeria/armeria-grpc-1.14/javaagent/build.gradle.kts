@@ -29,7 +29,7 @@ tasks.named<Checkstyle>("checkstyleTest") {
   exclude("**/example/**")
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = otelProps.testLatestDeps
 protobuf {
   protoc {
     val protocVersion = if (latestDepTest) "3.25.5" else "3.19.2"
@@ -61,7 +61,7 @@ afterEvaluate {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {
@@ -83,7 +83,7 @@ tasks {
   }
 }
 
-if (findProperty("denyUnsafe") == "true") {
+if (otelProps.denyUnsafe) {
   tasks.withType<Test>().configureEach {
     enabled = false
   }

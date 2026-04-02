@@ -32,7 +32,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:azure-core:azure-core-1.53:javaagent"))
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = otelProps.testLatestDeps
 
 testing {
   suites {

@@ -13,7 +13,7 @@ muzzle {
   }
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = otelProps.testLatestDeps
 
 dependencies {
   library("org.springframework.pulsar:spring-pulsar:1.0.0")
@@ -31,7 +31,7 @@ dependencies {
   }
 }
 
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
+val collectMetadata = otelProps.collectMetadata
 
 testing {
   suites {
@@ -77,7 +77,7 @@ tasks {
     dependsOn(testing.suites)
   }
 
-  if (findProperty("denyUnsafe") == "true") {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

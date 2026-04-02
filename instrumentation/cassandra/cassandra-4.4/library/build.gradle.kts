@@ -2,7 +2,7 @@ plugins {
   id("otel.library-instrumentation")
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = otelProps.testLatestDeps
 dependencies {
   if (latestDepTest) {
     library("org.apache.cassandra:java-driver-core:4.18.0")

@@ -20,7 +20,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
 }
 
-val testLatestDeps = findProperty("testLatestDeps") == "true"
+val testLatestDeps = otelProps.testLatestDeps
 
 testing {
   suites {

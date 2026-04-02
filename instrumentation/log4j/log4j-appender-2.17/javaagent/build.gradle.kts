@@ -11,7 +11,7 @@ muzzle {
   }
 }
 
-val testLatestDeps = findProperty("testLatestDeps") == "true"
+val testLatestDeps = otelProps.testLatestDeps
 
 dependencies {
   testInstrumentation(project(":instrumentation:log4j:log4j-appender-1.2:javaagent"))
@@ -58,7 +58,7 @@ tasks {
     dependsOn(testAsync)
   }
 
-  if (findProperty("denyUnsafe") == "true") {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

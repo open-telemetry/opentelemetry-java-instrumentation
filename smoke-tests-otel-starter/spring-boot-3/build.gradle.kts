@@ -30,7 +30,7 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-starter-test")
   testImplementation(project(":instrumentation:spring:spring-boot-autoconfigure"))
 
-  val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
+  val testLatestDeps = otelProps.testLatestDeps
   if (testLatestDeps) {
     // with spring boot 3.5.0 versions of org.mongodb:mongodb-driver-sync and org.mongodb:mongodb-driver-core
     // are not in sync

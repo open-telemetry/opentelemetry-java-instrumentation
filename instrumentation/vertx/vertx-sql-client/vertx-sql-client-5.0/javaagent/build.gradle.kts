@@ -32,7 +32,7 @@ dependencies {
   testImplementation("org.hsqldb:hsqldb:2.3.4")
 }
 
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
+val collectMetadata = otelProps.collectMetadata
 
 tasks {
   withType<Test>().configureEach {

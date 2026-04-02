@@ -16,7 +16,7 @@ dependencies {
   testImplementation("org.apache.tomcat:tomcat-jdbc:8.5.0")
 }
 
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
+val collectMetadata = otelProps.collectMetadata
 
 tasks {
   withType<Test>().configureEach {

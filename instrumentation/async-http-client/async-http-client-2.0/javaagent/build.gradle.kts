@@ -20,7 +20,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:async-http-client:async-http-client-1.9:javaagent"))
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = otelProps.testLatestDeps
 val testJavaVersion =
   gradle.startParameter.projectProperties["testJavaVersion"]?.let(JavaVersion::toVersion)
     ?: JavaVersion.current()
@@ -43,7 +43,7 @@ tasks {
       enabled = false
     }
 
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {

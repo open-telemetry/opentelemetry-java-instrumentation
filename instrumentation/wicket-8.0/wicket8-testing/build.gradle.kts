@@ -16,7 +16,7 @@ dependencies {
   latestDepTestLibrary("org.apache.wicket:wicket:9.+") // see wicket10-testing module
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = otelProps.testLatestDeps
 
 // Wicket 9 requires Java 11
 if (latestDepTest) {

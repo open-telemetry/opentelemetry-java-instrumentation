@@ -4,9 +4,10 @@ import io.opentelemetry.instrumentation.gradle.OtelPropsExtension
 
 plugins {
   `java-library`
+  id("otel.props-conventions")
 }
 
-val otelProps = extensions.create<OtelPropsExtension>("otelProps", project)
+val otelProps = the<OtelPropsExtension>()
 
 /**
  * We define three dependency configurations to use when adding dependencies to libraries being

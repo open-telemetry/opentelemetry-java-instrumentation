@@ -32,7 +32,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
+val latestDepTest = otelProps.testLatestDeps
 
 // spring 6 (spring boot 3) requires java 17
 if (latestDepTest) {
@@ -45,7 +45,7 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.apache-shenyu.experimental-span-attributes=true")
 
   systemProperty("metadataConfig", "otel.instrumentation.apache-shenyu.experimental-span-attributes=true")
-  systemProperty("collectMetadata", findProperty("collectMetadata"))
+  systemProperty("collectMetadata", otelProps.collectMetadata)
 
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
