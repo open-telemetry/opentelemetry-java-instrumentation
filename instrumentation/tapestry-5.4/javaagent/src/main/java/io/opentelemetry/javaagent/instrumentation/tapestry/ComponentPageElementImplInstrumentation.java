@@ -20,7 +20,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.tapestry5.internal.structure.ComponentPageElementImpl;
 
-public class ComponentPageElementImplInstrumentation implements TypeInstrumentation {
+class ComponentPageElementImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

@@ -21,7 +21,7 @@ import org.apache.pekko.http.scaladsl.model.Uri;
 import org.apache.pekko.http.scaladsl.server.PathMatcher;
 import org.apache.pekko.http.scaladsl.server.PathMatchers;
 
-public class PathMatcherStaticInstrumentation implements TypeInstrumentation {
+class PathMatcherStaticInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return extendsClass(named("org.apache.pekko.http.scaladsl.server.PathMatcher"));

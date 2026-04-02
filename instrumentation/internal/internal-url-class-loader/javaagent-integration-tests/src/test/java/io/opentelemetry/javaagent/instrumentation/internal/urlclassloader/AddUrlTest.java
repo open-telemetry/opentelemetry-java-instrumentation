@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.internal.urlclassloader;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -20,15 +20,10 @@ class AddUrlTest {
   void testShouldInstrumentClassAfterItIsLoadedViaAddUrl() throws Exception {
     TestUrlClassLoader loader = new TestUrlClassLoader();
 
-    // this is just to verify the assumption that TestURLClassLoader is not finding SystemUtils via
-    // the test class path (in which case the verification below would not be very meaningful)
-    Throwable thrown =
-        catchThrowable(
-            () -> {
-              loader.loadClass(SystemUtils.class.getName());
-            });
-
-    assertThat(thrown).isInstanceOf(ClassNotFoundException.class);
+    // this is just to verify the assumption that TestUrlClassLoader is not finding SystemUtils via
+    // the test classpath (in which case the verification below would not be very meaningful)
+    assertThatThrownBy(() -> loader.loadClass(SystemUtils.class.getName()))
+        .isInstanceOf(ClassNotFoundException.class);
 
     // loading a class in the URLClassLoader in order to trigger
     // a negative cache hit on org.apache.commons.lang3.SystemUtils
@@ -42,7 +37,7 @@ class AddUrlTest {
     assertThat(clazz.getMethod("getHostName").invoke(null)).isEqualTo("not-the-host-name");
   }
 
-  static class TestUrlClassLoader extends URLClassLoader {
+  private static final class TestUrlClassLoader extends URLClassLoader {
 
     TestUrlClassLoader() {
       super(new URL[0], null);

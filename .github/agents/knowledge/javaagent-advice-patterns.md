@@ -12,7 +12,7 @@ be **static nested classes** inside the instrumentation class, not standalone to
 
 ```java
 // ✅ Correct: nested inside instrumentation class
-public class MyInstrumentation implements TypeInstrumentation {
+class MyInstrumentation implements TypeInstrumentation {
   // ...
 
   @SuppressWarnings("unused")

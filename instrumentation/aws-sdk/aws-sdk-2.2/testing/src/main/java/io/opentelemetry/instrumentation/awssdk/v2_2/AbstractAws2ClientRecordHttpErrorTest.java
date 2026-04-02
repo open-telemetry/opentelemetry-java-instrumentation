@@ -209,7 +209,7 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
                                             stringKey("aws.http.error_message"),
                                             "DynamoDB is currently unavailable")));
                       } else {
-                        span.hasEventsSatisfying(events -> assertThat(events.size()).isEqualTo(0));
+                        span.hasEventsSatisfying(events -> assertThat(events).isEmpty());
                       }
                     }));
 

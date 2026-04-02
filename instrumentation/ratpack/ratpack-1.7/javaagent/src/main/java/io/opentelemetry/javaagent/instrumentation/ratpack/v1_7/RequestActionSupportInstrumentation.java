@@ -24,7 +24,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import ratpack.exec.Downstream;
 import ratpack.exec.Execution;
 
-public class RequestActionSupportInstrumentation implements TypeInstrumentation {
+class RequestActionSupportInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

@@ -36,7 +36,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * <p>Note: There are quite a few separate implementations of {@code ForkJoinTask}/{@code
  * ForkJoinPool}: JVM, Akka, Scala, Netty to name a few. This class handles JVM version.
  */
-public class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
+class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -62,6 +62,7 @@ public class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
      * directly. This means state is still stored in {@code Runnable} or {@code Callable} and we
      * need to use that state.
      */
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope enter(@Advice.This ForkJoinTask<?> task) {
       Scope scope =
@@ -70,8 +71,8 @@ public class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
         Scope newScope =
             TaskAdviceHelper.makePropagatedContextCurrent(
                 RUNNABLE_PROPAGATED_CONTEXT, (Runnable) task);
-        if (null != newScope) {
-          if (null != scope) {
+        if (newScope != null) {
+          if (scope != null) {
             newScope.close();
           } else {
             scope = newScope;
@@ -82,8 +83,8 @@ public class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
         Scope newScope =
             TaskAdviceHelper.makePropagatedContextCurrent(
                 CALLABLE_PROPAGATED_CONTEXT, (Callable<?>) task);
-        if (null != newScope) {
-          if (null != scope) {
+        if (newScope != null) {
+          if (scope != null) {
             newScope.close();
           } else {
             scope = newScope;
@@ -104,6 +105,7 @@ public class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ForkAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static PropagatedContext enterFork(@Advice.This ForkJoinTask<?> task) {
       Context context = Java8BytecodeBridge.currentContext();

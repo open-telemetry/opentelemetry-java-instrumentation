@@ -31,7 +31,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JwsAnnotationsInstrumentation implements TypeInstrumentation {
+class JwsAnnotationsInstrumentation implements TypeInstrumentation {
 
   public static final String JWS_WEB_SERVICE_ANNOTATION = "javax.jws.WebService";
 

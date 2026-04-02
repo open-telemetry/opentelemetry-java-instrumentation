@@ -13,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.clickhouse.client.api.Client;
-import com.clickhouse.client.api.query.QuerySettings;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPort;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
@@ -26,7 +25,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
+class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.clickhouse.client.api.Client");
@@ -47,10 +46,7 @@ public class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
   public static class QueryAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static ClickHouseScope onEnter(
-        @Advice.This Client client,
-        @Advice.Argument(0) String sqlQuery,
-        @Advice.Argument(1) Map<String, Object> queryParams,
-        @Advice.Argument(2) QuerySettings querySettings) {
+        @Advice.This Client client, @Advice.Argument(0) String sqlQuery) {
       CallDepth callDepth = CallDepth.forClass(Client.class);
       if (callDepth.getAndIncrement() > 0 || sqlQuery == null) {
         return null;

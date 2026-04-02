@@ -20,7 +20,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class StageSessionFactoryInstrumentation implements TypeInstrumentation {
+class StageSessionFactoryInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.hibernate.reactive.stage.impl.StageSessionFactoryImpl");

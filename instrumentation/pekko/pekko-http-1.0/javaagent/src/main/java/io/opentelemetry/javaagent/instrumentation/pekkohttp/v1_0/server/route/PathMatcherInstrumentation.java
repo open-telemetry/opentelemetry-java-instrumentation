@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pekko.http.scaladsl.model.Uri;
 import org.apache.pekko.http.scaladsl.server.PathMatcher;
 
-public class PathMatcherInstrumentation implements TypeInstrumentation {
+class PathMatcherInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.pekko.http.scaladsl.server.PathMatcher$");

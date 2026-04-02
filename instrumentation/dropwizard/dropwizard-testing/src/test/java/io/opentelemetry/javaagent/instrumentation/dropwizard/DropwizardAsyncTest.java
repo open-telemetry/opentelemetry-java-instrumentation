@@ -23,6 +23,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import javax.annotation.PreDestroy;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
@@ -63,7 +64,12 @@ class DropwizardAsyncTest extends DropwizardTest {
 
   @Path("/")
   public static class AsyncServiceResource {
-    final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    @PreDestroy
+    public void stop() {
+      executor.shutdown();
+    }
 
     @GET
     @Path("success")

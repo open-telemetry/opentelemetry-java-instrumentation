@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import zio.http.Handler;
 import zio.http.RoutePattern;
 
-public class RoutePatternInstrumentation implements TypeInstrumentation {
+class RoutePatternInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

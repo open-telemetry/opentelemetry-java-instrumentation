@@ -25,7 +25,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.asynchttpclient.AsyncHandler;
 import org.asynchttpclient.Request;
 
-public class AsyncHttpClientInstrumentation implements TypeInstrumentation {
+class AsyncHttpClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

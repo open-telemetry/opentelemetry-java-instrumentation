@@ -16,13 +16,14 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.asynchttpclient.AsyncCompletionHandler;
 import org.asynchttpclient.Response;
 
-public class AsyncCompletionHandlerInstrumentation implements TypeInstrumentation {
+class AsyncCompletionHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -49,6 +50,7 @@ public class AsyncCompletionHandlerInstrumentation implements TypeInstrumentatio
   @SuppressWarnings("unused")
   public static class OnCompletedAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope onEnter(
         @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Response response) {
@@ -63,8 +65,8 @@ public class AsyncCompletionHandlerInstrumentation implements TypeInstrumentatio
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Enter Scope scope) {
-      if (null != scope) {
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
         scope.close();
       }
     }
@@ -73,6 +75,7 @@ public class AsyncCompletionHandlerInstrumentation implements TypeInstrumentatio
   @SuppressWarnings("unused")
   public static class OnThrowableAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope onEnter(
         @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Throwable throwable) {
@@ -87,8 +90,8 @@ public class AsyncCompletionHandlerInstrumentation implements TypeInstrumentatio
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Enter Scope scope) {
-      if (null != scope) {
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
         scope.close();
       }
     }
