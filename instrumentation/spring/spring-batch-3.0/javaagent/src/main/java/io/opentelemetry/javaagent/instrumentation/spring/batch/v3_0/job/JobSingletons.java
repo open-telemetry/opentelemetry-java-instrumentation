@@ -24,14 +24,14 @@ public class JobSingletons {
   private static final Instrumenter<JobExecution, Void> instrumenter;
 
   static {
-    InstrumenterBuilder<JobExecution, Void> instrumenter =
+    InstrumenterBuilder<JobExecution, Void> instrumenterBuilder =
         Instrumenter.builder(
             GlobalOpenTelemetry.get(), instrumentationName(), JobSingletons::extractSpanName);
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
-      instrumenter.addAttributesExtractor(
+      instrumenterBuilder.addAttributesExtractor(
           AttributesExtractor.constant(AttributeKey.stringKey("job.system"), "spring_batch"));
     }
-    instrumenter = instrumenter.buildInstrumenter();
+    instrumenter = instrumenterBuilder.buildInstrumenter();
   }
 
   private static String extractSpanName(JobExecution jobExecution) {
