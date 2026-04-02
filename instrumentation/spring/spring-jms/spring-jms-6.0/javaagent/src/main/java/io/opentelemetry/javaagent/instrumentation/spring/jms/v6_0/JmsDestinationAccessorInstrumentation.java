@@ -22,7 +22,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JmsDestinationAccessorInstrumentation implements TypeInstrumentation {
+class JmsDestinationAccessorInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.springframework.jms.support.destination.JmsDestinationAccessor");
@@ -32,7 +32,7 @@ public class JmsDestinationAccessorInstrumentation implements TypeInstrumentatio
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("receiveFromConsumer").and(returns(named("jakarta.jms.Message"))),
-        this.getClass().getName() + "$ReceiveAdvice");
+        getClass().getName() + "$ReceiveAdvice");
   }
 
   @SuppressWarnings("unused")

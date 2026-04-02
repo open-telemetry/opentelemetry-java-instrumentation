@@ -22,7 +22,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class SqlClientBaseInstrumentation implements TypeInstrumentation {
+class SqlClientBaseInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -31,11 +31,9 @@ public class SqlClientBaseInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
-        isConstructor(), SqlClientBaseInstrumentation.class.getName() + "$ConstructorAdvice");
-    transformer.applyAdviceToMethod(
-        namedOneOf("query", "preparedQuery"),
-        SqlClientBaseInstrumentation.class.getName() + "$QueryAdvice");
+        namedOneOf("query", "preparedQuery"), getClass().getName() + "$QueryAdvice");
   }
 
   @SuppressWarnings("unused")

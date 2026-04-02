@@ -27,7 +27,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import scala.concurrent.Future;
 
-public class HttpExtClientInstrumentation implements TypeInstrumentation {
+class HttpExtClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("akka.http.scaladsl.HttpExt");
@@ -39,7 +39,7 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         namedOneOf("singleRequest", "singleRequestImpl")
             .and(takesArgument(0, named("akka.http.scaladsl.model.HttpRequest"))),
-        this.getClass().getName() + "$SingleRequestAdvice");
+        getClass().getName() + "$SingleRequestAdvice");
   }
 
   @SuppressWarnings("unused")

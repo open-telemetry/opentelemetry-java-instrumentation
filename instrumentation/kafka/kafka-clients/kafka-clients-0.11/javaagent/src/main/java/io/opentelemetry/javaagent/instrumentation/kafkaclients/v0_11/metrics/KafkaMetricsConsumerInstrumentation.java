@@ -21,7 +21,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class KafkaMetricsConsumerInstrumentation implements TypeInstrumentation {
+class KafkaMetricsConsumerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -32,10 +32,10 @@ public class KafkaMetricsConsumerInstrumentation implements TypeInstrumentation 
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(0, Map.class)),
-        this.getClass().getName() + "$ConstructorMapAdvice");
+        getClass().getName() + "$ConstructorMapAdvice");
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(0, Properties.class)),
-        this.getClass().getName() + "$ConstructorPropertiesAdvice");
+        getClass().getName() + "$ConstructorPropertiesAdvice");
   }
 
   @SuppressWarnings("unused")

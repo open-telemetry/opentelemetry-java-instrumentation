@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.azurecore.v1_53;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.azurecore.v1_53.SuppressNestedClientHelper.disallowNestedClientSpanMono;
 import static io.opentelemetry.javaagent.instrumentation.azurecore.v1_53.SuppressNestedClientHelper.disallowNestedClientSpanSync;
@@ -25,7 +26,12 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import reactor.core.publisher.Mono;
 
-public class AzureHttpClientInstrumentation implements TypeInstrumentation {
+class AzureHttpClientInstrumentation implements TypeInstrumentation {
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("com.azure.core.http.HttpClient");
+  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -39,13 +45,13 @@ public class AzureHttpClientInstrumentation implements TypeInstrumentation {
             .and(named("send"))
             .and(takesArgument(1, named("com.azure.core.util.Context")))
             .and(returns(named("reactor.core.publisher.Mono"))),
-        this.getClass().getName() + "$SuppressNestedClientMonoAdvice");
+        getClass().getName() + "$SuppressNestedClientMonoAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("sendSync"))
             .and(takesArgument(1, named("com.azure.core.util.Context")))
             .and(returns(named("com.azure.core.http.HttpResponse"))),
-        this.getClass().getName() + "$SuppressNestedClientSyncAdvice");
+        getClass().getName() + "$SuppressNestedClientSyncAdvice");
   }
 
   @SuppressWarnings("unused")

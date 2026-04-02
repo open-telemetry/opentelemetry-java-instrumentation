@@ -15,7 +15,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 
-public class DefaultSqsAsyncClientBuilderInstrumentation implements TypeInstrumentation {
+class DefaultSqsAsyncClientBuilderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -25,7 +25,7 @@ public class DefaultSqsAsyncClientBuilderInstrumentation implements TypeInstrume
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("buildClient"), this.getClass().getName() + "$BuildClientAdvice");
+        named("buildClient"), getClass().getName() + "$BuildClientAdvice");
   }
 
   @SuppressWarnings("unused")

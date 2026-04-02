@@ -29,7 +29,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Named.named;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.function.BiConsumer;
@@ -95,7 +94,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                     span.hasName("parent")
                         .hasKind(INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName("Session." + action + " " + Value.class.getName())
                         .hasKind(INTERNAL)
@@ -153,7 +152,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                     span.hasName("parent")
                         .hasKind(INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName("Session." + action + " " + Value.class.getName())
                         .hasKind(INTERNAL)
@@ -257,7 +256,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                     span.hasName("parent")
                         .hasKind(INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName("Session.persist " + Value.class.getName())
                         .hasKind(INTERNAL)
@@ -363,7 +362,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                     span.hasName("parent")
                         .hasKind(INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName("SELECT Value")
                         .hasKind(INTERNAL)

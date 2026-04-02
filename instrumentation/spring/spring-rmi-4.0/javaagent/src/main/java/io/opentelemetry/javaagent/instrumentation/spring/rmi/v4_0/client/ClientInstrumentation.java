@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.client;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.SpringRmiSingletons.clientInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -31,10 +32,15 @@ public class ClientInstrumentation implements TypeInstrumentation {
   }
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("org.springframework.ejb.access.AbstractSlsbInvokerInterceptor");
+  }
+
+  @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("invoke").and(takesArgument(0, named("org.aopalliance.intercept.MethodInvocation"))),
-        this.getClass().getName() + "$InvokeMethodAdvice");
+        getClass().getName() + "$InvokeMethodAdvice");
   }
 
   @SuppressWarnings("unused")

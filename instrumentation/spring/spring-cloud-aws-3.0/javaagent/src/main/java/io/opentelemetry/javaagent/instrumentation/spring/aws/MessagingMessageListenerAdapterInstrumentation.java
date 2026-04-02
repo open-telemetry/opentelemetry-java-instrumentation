@@ -16,7 +16,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.messaging.Message;
 
-public class MessagingMessageListenerAdapterInstrumentation implements TypeInstrumentation {
+class MessagingMessageListenerAdapterInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -27,7 +27,7 @@ public class MessagingMessageListenerAdapterInstrumentation implements TypeInstr
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("onMessage").and(takesArgument(0, named("org.springframework.messaging.Message"))),
-        this.getClass().getName() + "$OnMessageAdvice");
+        getClass().getName() + "$OnMessageAdvice");
     // TODO: onMessage(Collection<Message<T>> messages) not instrumented
   }
 

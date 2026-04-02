@@ -22,7 +22,7 @@ import org.glassfish.grizzly.filterchain.FilterChainContext;
 import org.glassfish.grizzly.http.HttpRequestPacket;
 import org.glassfish.grizzly.http.HttpResponsePacket;
 
-public class HttpServerFilterInstrumentation implements TypeInstrumentation {
+class HttpServerFilterInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -38,7 +38,7 @@ public class HttpServerFilterInstrumentation implements TypeInstrumentation {
             .and(takesArgument(2, named("org.glassfish.grizzly.http.HttpResponsePacket")))
             .and(takesArgument(3, named("org.glassfish.grizzly.http.HttpContent")))
             .and(isPrivate()),
-        HttpServerFilterInstrumentation.class.getName() + "$PrepareResponseAdvice");
+        getClass().getName() + "$PrepareResponseAdvice");
   }
 
   @SuppressWarnings("unused")

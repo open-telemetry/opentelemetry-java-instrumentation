@@ -18,13 +18,13 @@ public final class GraphqlSingletons {
 
   private static final Logger logger = Logger.getLogger(GraphqlSingletons.class.getName());
 
-  private static final GraphQLTelemetry TELEMETRY;
+  private static final GraphQLTelemetry telemetry;
 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     Configuration config = new Configuration(openTelemetry);
 
-    TELEMETRY =
+    telemetry =
         GraphQLTelemetry.builder(openTelemetry)
             .setCaptureQuery(config.captureQuery)
             .setQuerySanitizationEnabled(config.querySanitizationEnabled)
@@ -33,7 +33,7 @@ public final class GraphqlSingletons {
   }
 
   public static Instrumentation addInstrumentation(Instrumentation instrumentation) {
-    Instrumentation ourInstrumentation = TELEMETRY.createInstrumentation();
+    Instrumentation ourInstrumentation = telemetry.createInstrumentation();
     return InstrumentationUtil.addInstrumentation(instrumentation, ourInstrumentation);
   }
 

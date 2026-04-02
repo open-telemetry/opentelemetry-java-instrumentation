@@ -37,7 +37,7 @@ public class PlayWsInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
-        new AsyncHttpClientInstrumentation(this.getClass().getName() + "$ClientAdvice"),
+        new AsyncHttpClientInstrumentation(getClass().getName() + "$ClientAdvice"),
         new HandlerPublisherInstrumentation(),
         new AbstractBootstrapInstrumentation());
   }

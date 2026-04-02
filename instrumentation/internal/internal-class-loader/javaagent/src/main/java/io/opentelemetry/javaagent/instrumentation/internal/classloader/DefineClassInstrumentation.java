@@ -19,7 +19,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class DefineClassInstrumentation implements TypeInstrumentation {
+class DefineClassInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -34,12 +34,12 @@ public class DefineClassInstrumentation implements TypeInstrumentation {
             .and(
                 takesArguments(
                     String.class, byte[].class, int.class, int.class, ProtectionDomain.class)),
-        this.getClass().getName() + "$DefineClassAdvice");
+        getClass().getName() + "$DefineClassAdvice");
     applyInlineAdvice(
         transformer,
         named("defineClass")
             .and(takesArguments(String.class, ByteBuffer.class, ProtectionDomain.class)),
-        this.getClass().getName() + "$DefineClassWithThreeArgsAdvice");
+        getClass().getName() + "$DefineClassWithThreeArgsAdvice");
   }
 
   @SuppressWarnings("unused")

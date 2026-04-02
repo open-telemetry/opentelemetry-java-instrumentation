@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.oshi;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -30,8 +29,10 @@ class ProcessMetricsTest extends AbstractProcessMetricsTest {
   }
 
   @AfterAll
-  static void tearDown() {
-    assertAll(observables.stream().map(observable -> observable::close));
+  static void tearDown() throws Exception {
+    for (AutoCloseable observable : observables) {
+      observable.close();
+    }
   }
 
   @Override

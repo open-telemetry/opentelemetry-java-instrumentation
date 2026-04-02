@@ -178,7 +178,7 @@ public abstract class AbstractLogbackTest {
                           equalTo(EXCEPTION_MESSAGE, "hello"),
                           satisfies(
                               EXCEPTION_STACKTRACE,
-                              v -> v.contains(AbstractLogbackTest.class.getName()))));
+                              val -> val.contains(AbstractLogbackTest.class.getName()))));
                 }
                 logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
               });

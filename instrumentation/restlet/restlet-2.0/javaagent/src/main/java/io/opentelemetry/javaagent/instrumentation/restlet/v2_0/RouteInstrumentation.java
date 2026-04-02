@@ -21,7 +21,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.restlet.Request;
 import org.restlet.routing.TemplateRoute;
 
-public class RouteInstrumentation implements TypeInstrumentation {
+class RouteInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return namedOneOf("org.restlet.routing.TemplateRoute", "org.restlet.routing.Route");
@@ -33,7 +33,7 @@ public class RouteInstrumentation implements TypeInstrumentation {
         named("beforeHandle")
             .and(takesArgument(0, named("org.restlet.Request")))
             .and(takesArgument(1, named("org.restlet.Response"))),
-        this.getClass().getName() + "$RouteBeforeHandleAdvice");
+        getClass().getName() + "$RouteBeforeHandleAdvice");
   }
 
   @SuppressWarnings("unused")

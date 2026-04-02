@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import reactor.kafka.receiver.ReceiverRecord;
 
-public class ReceiverRecordInstrumentation implements TypeInstrumentation {
+class ReceiverRecordInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("reactor.kafka.receiver.ReceiverRecord");
@@ -29,7 +29,7 @@ public class ReceiverRecordInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor()
             .and(takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecord"))),
-        this.getClass().getName() + "$ConstructorAdvice");
+        getClass().getName() + "$ConstructorAdvice");
   }
 
   @SuppressWarnings("unused")

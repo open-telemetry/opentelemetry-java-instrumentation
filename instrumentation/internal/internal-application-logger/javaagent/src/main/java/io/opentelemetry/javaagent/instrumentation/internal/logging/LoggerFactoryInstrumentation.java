@@ -15,7 +15,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class LoggerFactoryInstrumentation implements TypeInstrumentation {
+class LoggerFactoryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -27,7 +27,7 @@ public class LoggerFactoryInstrumentation implements TypeInstrumentation {
     // once a call to getILoggerFactory() exits we can be certain that slf4j is properly initialized
     transformer.applyAdviceToMethod(
         named("getILoggerFactory").and(takesArguments(0)),
-        this.getClass().getName() + "$GetLoggerFactoryAdvice");
+        getClass().getName() + "$GetLoggerFactoryAdvice");
   }
 
   @SuppressWarnings("unused")

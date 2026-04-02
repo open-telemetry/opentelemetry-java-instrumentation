@@ -24,7 +24,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.redisson.client.RedisConnection;
 
-public class RedisConnectionInstrumentation implements TypeInstrumentation {
+class RedisConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.redisson.client.RedisConnection");
@@ -33,7 +33,7 @@ public class RedisConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("send")), this.getClass().getName() + "$SendAdvice");
+        isMethod().and(named("send")), getClass().getName() + "$SendAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-public class DispatcherHandlerInstrumentation implements TypeInstrumentation {
+class DispatcherHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

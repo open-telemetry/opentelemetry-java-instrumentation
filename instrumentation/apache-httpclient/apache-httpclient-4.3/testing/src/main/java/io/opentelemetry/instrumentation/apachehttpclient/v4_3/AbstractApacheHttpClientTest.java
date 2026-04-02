@@ -10,9 +10,11 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.net.URI;
 import java.util.Map;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
@@ -63,8 +65,12 @@ public abstract class AbstractApacheHttpClientTest {
 
   static int getResponseCode(HttpResponse response) {
     try {
-      if (response.getEntity() != null && response.getEntity().getContent() != null) {
-        response.getEntity().getContent().close();
+      HttpEntity entity = response.getEntity();
+      if (entity != null) {
+        InputStream content = entity.getContent();
+        if (content != null) {
+          content.close();
+        }
       }
     } catch (IOException e) {
       throw new UncheckedIOException(e);

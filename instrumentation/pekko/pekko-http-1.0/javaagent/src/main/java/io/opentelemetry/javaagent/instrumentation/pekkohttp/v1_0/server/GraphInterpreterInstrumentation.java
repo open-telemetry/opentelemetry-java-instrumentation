@@ -16,7 +16,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pekko.stream.impl.fusing.GraphInterpreter;
 
-public class GraphInterpreterInstrumentation implements TypeInstrumentation {
+class GraphInterpreterInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.pekko.stream.impl.fusing.GraphInterpreter");

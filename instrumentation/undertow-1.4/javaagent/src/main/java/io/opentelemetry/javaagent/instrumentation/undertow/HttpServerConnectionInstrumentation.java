@@ -22,7 +22,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HttpServerConnectionInstrumentation implements TypeInstrumentation {
+class HttpServerConnectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -39,7 +39,7 @@ public class HttpServerConnectionInstrumentation implements TypeInstrumentation 
     transformer.applyAdviceToMethod(
         named("getSinkConduit")
             .and(takesArgument(0, named("io.undertow.server.HttpServerExchange"))),
-        this.getClass().getName() + "$ResponseAdvice");
+        getClass().getName() + "$ResponseAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -22,7 +22,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class InvocationInstrumentation implements TypeInstrumentation {
+class InvocationInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -32,7 +32,7 @@ public class InvocationInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("invoke").and(takesNoArguments()), this.getClass().getName() + "$InvokeAdvice");
+        named("invoke").and(takesNoArguments()), getClass().getName() + "$InvokeAdvice");
   }
 
   @SuppressWarnings("unused")

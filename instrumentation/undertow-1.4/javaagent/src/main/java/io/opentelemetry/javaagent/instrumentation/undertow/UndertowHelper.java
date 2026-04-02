@@ -47,7 +47,8 @@ public class UndertowHelper {
     UndertowActiveHandlers.increment(context);
   }
 
-  public void handlerCompleted(Context context, Throwable throwable, HttpServerExchange exchange) {
+  public void handlerCompleted(
+      Context context, @Nullable Throwable throwable, HttpServerExchange exchange) {
     // end the span when this is the last handler to complete and exchange has
     // been completed
     if (UndertowActiveHandlers.decrementAndGet(context) == 0) {

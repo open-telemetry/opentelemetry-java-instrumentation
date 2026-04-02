@@ -6,17 +6,18 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.sql;
 
 import io.vertx.sqlclient.SqlConnectOptions;
+import javax.annotation.Nullable;
 
 public final class VertxSqlClientRequest {
 
   private final String queryText;
-  private final SqlConnectOptions sqlConnectOptions;
+  @Nullable private final SqlConnectOptions sqlConnectOptions;
   private final boolean parameterizedQuery;
   private final String dbSystemName;
 
   public VertxSqlClientRequest(
       String queryText,
-      SqlConnectOptions sqlConnectOptions,
+      @Nullable SqlConnectOptions sqlConnectOptions,
       boolean parameterizedQuery,
       String dbSystemName) {
     this.queryText = queryText;
@@ -29,18 +30,22 @@ public final class VertxSqlClientRequest {
     return queryText;
   }
 
+  @Nullable
   public String getUser() {
     return sqlConnectOptions != null ? sqlConnectOptions.getUser() : null;
   }
 
+  @Nullable
   public String getDatabase() {
     return sqlConnectOptions != null ? sqlConnectOptions.getDatabase() : null;
   }
 
+  @Nullable
   public String getHost() {
     return sqlConnectOptions != null ? sqlConnectOptions.getHost() : null;
   }
 
+  @Nullable
   public Integer getPort() {
     return sqlConnectOptions != null ? sqlConnectOptions.getPort() : null;
   }

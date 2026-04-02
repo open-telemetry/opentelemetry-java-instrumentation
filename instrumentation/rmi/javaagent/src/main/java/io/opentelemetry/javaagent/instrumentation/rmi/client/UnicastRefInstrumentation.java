@@ -19,7 +19,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class UnicastRefInstrumentation implements TypeInstrumentation {
+class UnicastRefInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -32,7 +32,7 @@ public class UnicastRefInstrumentation implements TypeInstrumentation {
         named("invoke")
             .and(takesArgument(0, named("java.rmi.Remote")))
             .and(takesArgument(1, Method.class)),
-        this.getClass().getName() + "$InvokeAdvice");
+        getClass().getName() + "$InvokeAdvice");
   }
 
   @SuppressWarnings("unused")

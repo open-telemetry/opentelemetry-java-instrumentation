@@ -158,7 +158,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
   private void addReference(ClassRef ref) {
     if (!ref.getClassName().startsWith("java.")) {
       ClassRef reference = references.get(ref.getClassName());
-      if (null == reference) {
+      if (reference == null) {
         references.put(ref.getClassName(), ref);
       } else {
         references.put(ref.getClassName(), reference.merge(ref));

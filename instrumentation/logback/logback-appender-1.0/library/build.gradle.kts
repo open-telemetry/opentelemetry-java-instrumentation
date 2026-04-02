@@ -192,7 +192,3 @@ tasks {
     dependsOn(testing.suites, testStableSemconv, testBothSemconv)
   }
 }
-
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-}

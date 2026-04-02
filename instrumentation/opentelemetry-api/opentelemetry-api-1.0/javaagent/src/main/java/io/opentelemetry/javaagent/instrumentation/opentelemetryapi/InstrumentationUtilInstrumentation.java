@@ -18,7 +18,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class InstrumentationUtilInstrumentation implements TypeInstrumentation {
+class InstrumentationUtilInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("application.io.opentelemetry.api.internal.InstrumentationUtil");
@@ -30,10 +30,10 @@ public class InstrumentationUtilInstrumentation implements TypeInstrumentation {
         named("shouldSuppressInstrumentation")
             .and(takesArgument(0, named("application.io.opentelemetry.context.Context")))
             .and(returns(boolean.class)),
-        this.getClass().getName() + "$ShouldSuppressAdvice");
+        getClass().getName() + "$ShouldSuppressAdvice");
     transformer.applyAdviceToMethod(
         named("suppressInstrumentation").and(takesArgument(0, Runnable.class)),
-        this.getClass().getName() + "$SuppressAdvice");
+        getClass().getName() + "$SuppressAdvice");
   }
 
   @SuppressWarnings("unused")

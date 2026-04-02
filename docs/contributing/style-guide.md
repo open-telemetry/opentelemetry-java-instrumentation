@@ -84,13 +84,46 @@ Public non-internal non-test classes should be declared `final` where possible.
 instrumentation code is not public API.
 "Test" here includes `src/test/` directories and any module whose directory name starts or ends
 with `testing` or `tests` (e.g., `testing/`, `testing-common/`, `testing-apps/`,
-`quarkus2-testing/`, `smoke-tests/`).
+`quarkus-2.0-testing/`, `smoke-tests/`).
 
 Methods should only be declared `final` if they are in public non-internal non-test non-final classes.
 
 Fields should be declared `final` where possible.
 
 Method parameters and local variables should never be declared `final`.
+
+### Null comparisons
+
+Prefer `value == null` and `value != null` over left-hand null comparisons such as
+`null == value` and `null != value`.
+
+This applies throughout the codebase, including Java, Kotlin, and Scala sources.
+
+### Uppercase field names
+
+Use uppercase (`SCREAMING_SNAKE_CASE`) for constant-like fields whose value is treated as a stable
+identifier, immutable descriptor, or immutable value constant.
+
+Examples that may remain uppercase include:
+
+- literal strings, numbers, and booleans that behave like module constants
+- immutable value objects that are treated as fixed constants after initialization, such as
+  `Duration` timeouts, intervals, or deadlines
+- semantic keys and handles such as `AttributeKey`, `ContextKey`, `VirtualField`,
+  `MethodHandle`, and `Pattern`
+- canonical singleton or sentinel fields named `INSTANCE`, `EMPTY`, or `NOOP`
+
+Do not use uppercase solely because a field is `static final`.
+
+Use lower camel case for runtime-created collaborator objects even when they are `static final`,
+for example loggers, instrumenters, helpers, sanitizers, mappers, caches, and similar service
+objects.
+
+When deciding between uppercase and lower camel case, distinguish immutable value constants from
+collaborators. A `private static final Duration FLUSH_TIMEOUT = ...;` field may remain uppercase
+when it is used as a fixed timeout constant, even if its value is computed from configuration at
+startup. In contrast, runtime-created service objects such as instrumenters, tracers, loggers, or
+helpers should use lower camel case.
 
 ### `@Nullable` annotation usage
 

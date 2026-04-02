@@ -105,7 +105,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                             equalTo(MESSAGING_CLIENT_ID, "producer-1"),
                             satisfies(
                                 MESSAGING_DESTINATION_PARTITION_ID,
-                                k -> k.isInstanceOf(String.class)),
+                                val -> val.isInstanceOf(String.class)),
                             equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
                             equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10")),
                 // kafka-stream CONSUMER
@@ -116,12 +116,12 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                               equalTo(MESSAGING_SYSTEM, KAFKA),
                               equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
                               equalTo(MESSAGING_OPERATION, "process"),
-                              satisfies(MESSAGING_CLIENT_ID, k -> k.endsWith("consumer")),
+                              satisfies(MESSAGING_CLIENT_ID, val -> val.endsWith("consumer")),
                               satisfies(
-                                  MESSAGING_MESSAGE_BODY_SIZE, k -> k.isInstanceOf(Long.class)),
+                                  MESSAGING_MESSAGE_BODY_SIZE, val -> val.isInstanceOf(Long.class)),
                               satisfies(
                                   MESSAGING_DESTINATION_PARTITION_ID,
-                                  k -> k.isInstanceOf(String.class)),
+                                  val -> val.isInstanceOf(String.class)),
                               equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
                               equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
                               equalTo(stringKey("asdf"), "testing")));
@@ -129,7 +129,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                     assertions.add(
                         satisfies(
                             longKey("kafka.record.queue_time_ms"),
-                            k -> k.isGreaterThanOrEqualTo(0)));
+                            val -> val.isGreaterThanOrEqualTo(0)));
                   }
                   if (Boolean.getBoolean("testLatestDeps")) {
                     assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test-application"));
@@ -151,10 +151,10 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                           equalTo(MESSAGING_SYSTEM, KAFKA),
                           equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
                           equalTo(MESSAGING_OPERATION, "publish"),
-                          satisfies(MESSAGING_CLIENT_ID, k -> k.isInstanceOf(String.class)),
+                          satisfies(MESSAGING_CLIENT_ID, val -> val.isInstanceOf(String.class)),
                           satisfies(
                               MESSAGING_DESTINATION_PARTITION_ID,
-                              k -> k.isInstanceOf(String.class)),
+                              val -> val.isInstanceOf(String.class)),
                           equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0));
                 },
                 // kafka-clients CONSUMER process
@@ -165,12 +165,12 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                               equalTo(MESSAGING_SYSTEM, KAFKA),
                               equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
                               equalTo(MESSAGING_OPERATION, "process"),
-                              satisfies(MESSAGING_CLIENT_ID, k -> k.startsWith("consumer")),
+                              satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
                               satisfies(
-                                  MESSAGING_MESSAGE_BODY_SIZE, k -> k.isInstanceOf(Long.class)),
+                                  MESSAGING_MESSAGE_BODY_SIZE, val -> val.isInstanceOf(Long.class)),
                               satisfies(
                                   MESSAGING_DESTINATION_PARTITION_ID,
-                                  k -> k.isInstanceOf(String.class)),
+                                  val -> val.isInstanceOf(String.class)),
                               equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
                               equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
                               equalTo(longKey("testing"), 123)));
@@ -178,7 +178,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                     assertions.add(
                         satisfies(
                             longKey("kafka.record.queue_time_ms"),
-                            k -> k.isGreaterThanOrEqualTo(0)));
+                            val -> val.isGreaterThanOrEqualTo(0)));
                   }
                   if (Boolean.getBoolean("testLatestDeps")) {
                     assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));

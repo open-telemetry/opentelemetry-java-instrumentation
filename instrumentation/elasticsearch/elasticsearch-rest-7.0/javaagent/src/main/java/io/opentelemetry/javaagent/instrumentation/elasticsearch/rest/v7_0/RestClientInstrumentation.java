@@ -29,7 +29,7 @@ import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseListener;
 
-public class RestClientInstrumentation implements TypeInstrumentation {
+class RestClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.elasticsearch.client.RestClient");
@@ -42,14 +42,14 @@ public class RestClientInstrumentation implements TypeInstrumentation {
             .and(named("performRequest"))
             .and(takesArguments(1))
             .and(takesArgument(0, named("org.elasticsearch.client.Request"))),
-        this.getClass().getName() + "$PerformRequestAdvice");
+        getClass().getName() + "$PerformRequestAdvice");
     transformer.applyAdviceToMethod(
         isMethod()
             .and(named("performRequestAsync"))
             .and(takesArguments(2))
             .and(takesArgument(0, named("org.elasticsearch.client.Request")))
             .and(takesArgument(1, named("org.elasticsearch.client.ResponseListener"))),
-        this.getClass().getName() + "$PerformRequestAsyncAdvice");
+        getClass().getName() + "$PerformRequestAsyncAdvice");
   }
 
   public static class AdviceScope {

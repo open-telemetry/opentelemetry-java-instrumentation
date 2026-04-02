@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.procedure.ProcedureCall;
 
-public class SessionInstrumentation implements TypeInstrumentation {
+class SessionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

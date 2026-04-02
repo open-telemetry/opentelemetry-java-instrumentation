@@ -19,7 +19,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AkkaHttpServerSourceInstrumentation implements TypeInstrumentation {
+class AkkaHttpServerSourceInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("akka.http.scaladsl.Http$IncomingConnection");
@@ -29,7 +29,7 @@ public class AkkaHttpServerSourceInstrumentation implements TypeInstrumentation 
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("handleWith").and(takesArgument(0, named("akka.stream.scaladsl.Flow"))),
-        this.getClass().getName() + "$AkkaBindAndHandleAdvice");
+        getClass().getName() + "$AkkaBindAndHandleAdvice");
   }
 
   @SuppressWarnings("unused")

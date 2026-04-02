@@ -6,11 +6,11 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 
 // this line is managed by .github/scripts/update-sdk-version.sh
 val otelSdkVersion = "1.60.1"
-val otelContribVersion = "1.54.0-alpha"
+val otelContribVersion = "1.55.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.30"
+val groovyVersion = "4.0.31"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new

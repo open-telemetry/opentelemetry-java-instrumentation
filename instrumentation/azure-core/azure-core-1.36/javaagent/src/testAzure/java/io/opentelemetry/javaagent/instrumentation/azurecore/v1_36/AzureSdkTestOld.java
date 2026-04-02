@@ -9,7 +9,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.azure.core.util.Context;
 import com.azure.core.util.tracing.Tracer;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -50,12 +49,13 @@ class AzureSdkTestOld {
                     span.hasName("hello")
                         .hasKind(SpanKind.INTERNAL)
                         .hasStatus(StatusData.unset())
-                        .hasAttributes(Attributes.empty())));
+                        .hasTotalAttributeCount(0)));
   }
 
   private static Tracer createAzTracer() {
     Iterable<Tracer> tracers = ServiceLoader.load(Tracer.class);
     Iterator<Tracer> it = tracers.iterator();
-    return it.hasNext() ? it.next() : null;
+    assertThat(it).hasNext();
+    return it.next();
   }
 }

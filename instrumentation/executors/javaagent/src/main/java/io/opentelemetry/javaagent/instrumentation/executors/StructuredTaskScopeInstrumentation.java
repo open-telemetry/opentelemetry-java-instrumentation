@@ -22,7 +22,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class StructuredTaskScopeInstrumentation implements TypeInstrumentation {
+class StructuredTaskScopeInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -36,12 +36,13 @@ public class StructuredTaskScopeInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("fork").and(takesArgument(0, Callable.class)),
-        this.getClass().getName() + "$ForkCallableAdvice");
+        getClass().getName() + "$ForkCallableAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ForkCallableAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static PropagatedContext enterCallableFork(@Advice.Argument(0) Callable<?> task) {
       Context context = Java8BytecodeBridge.currentContext();

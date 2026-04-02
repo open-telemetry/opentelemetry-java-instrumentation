@@ -20,7 +20,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class DefaultGrailsControllerClassInstrumentation implements TypeInstrumentation {
+class DefaultGrailsControllerClassInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.grails.core.DefaultGrailsControllerClass");
@@ -65,7 +65,7 @@ public class DefaultGrailsControllerClassInstrumentation implements TypeInstrume
         return new AdviceScope(handlerData, context, context.makeCurrent());
       }
 
-      public void end(Throwable throwable) {
+      public void end(@Nullable Throwable throwable) {
         scope.close();
         instrumenter().end(context, handlerData, null, throwable);
       }

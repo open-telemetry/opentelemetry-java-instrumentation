@@ -27,8 +27,6 @@ public class Hibernate4Singletons {
   public static final VirtualField<SharedSessionContract, SessionInfo>
       SHARED_SESSION_CONTRACT_SESSION_INFO =
           VirtualField.find(SharedSessionContract.class, SessionInfo.class);
-  public static final VirtualField<SharedSessionContract, SessionInfo> SESSION_SESSION_INFO =
-      VirtualField.find(SharedSessionContract.class, SessionInfo.class);
   public static final VirtualField<Transaction, SessionInfo> TRANSACTION_SESSION_INFO =
       VirtualField.find(Transaction.class, SessionInfo.class);
 

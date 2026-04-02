@@ -17,7 +17,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.messaging.Message;
 
-public class AbstractMessageConvertingMessageSourceInstrumentation implements TypeInstrumentation {
+class AbstractMessageConvertingMessageSourceInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -30,12 +30,12 @@ public class AbstractMessageConvertingMessageSourceInstrumentation implements Ty
         named("convertMessages")
             .and(takesArgument(0, Collection.class))
             .and(returns(Collection.class)),
-        this.getClass().getName() + "$ConvertMessagesAdvice");
+        getClass().getName() + "$ConvertMessagesAdvice");
     transformer.applyAdviceToMethod(
         named("convertMessage")
             .and(takesArgument(0, Object.class))
             .and(returns(named("org.springframework.messaging.Message"))),
-        this.getClass().getName() + "$ConvertAdvice");
+        getClass().getName() + "$ConvertAdvice");
   }
 
   @SuppressWarnings("unused")

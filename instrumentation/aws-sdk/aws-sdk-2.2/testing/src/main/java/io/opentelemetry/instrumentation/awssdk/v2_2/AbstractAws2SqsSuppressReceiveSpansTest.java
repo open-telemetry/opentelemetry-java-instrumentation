@@ -27,7 +27,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -56,7 +55,7 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
                         span ->
                             span.hasName("process child")
                                 .hasParent(trace.getSpan(1))
-                                .hasAttributes(Attributes.empty()))));
+                                .hasTotalAttributeCount(0))));
 
     if (withParent) {
       /*
@@ -86,7 +85,8 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
                               equalTo(RPC_METHOD, "ReceiveMessage"),
                               equalTo(HTTP_REQUEST_METHOD, "POST"),
                               equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                              satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
+                              satisfies(
+                                  URL_FULL, val -> val.startsWith("http://localhost:" + sqsPort)),
                               equalTo(SERVER_ADDRESS, "localhost"),
                               equalTo(SERVER_PORT, sqsPort))));
     }
@@ -112,7 +112,7 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
     // generates the process spans
     response.messages().forEach(message -> {});
 
-    assertThat(response.messages().size()).isEqualTo(3);
+    assertThat(response.messages()).hasSize(3);
 
     // +2: 3 messages, 2x traceparent, 1x not injected due to too many attrs
     assertThat(totalAttrs).isEqualTo(18 + (isSqsAttributeInjectionEnabled() ? 2 : 0));
@@ -150,13 +150,15 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
                               equalTo(RPC_METHOD, "ReceiveMessage"),
                               equalTo(HTTP_REQUEST_METHOD, "POST"),
                               equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                              satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
+                              satisfies(
+                                  URL_FULL, val -> val.startsWith("http://localhost:" + sqsPort)),
                               equalTo(SERVER_ADDRESS, "localhost"),
                               equalTo(SERVER_PORT, sqsPort),
                               equalTo(MESSAGING_SYSTEM, AWS_SQS),
                               equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                               equalTo(MESSAGING_OPERATION, "process"),
-                              satisfies(MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class)))));
+                              satisfies(
+                                  MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)))));
     }
     getTesting().waitAndAssertTraces(traceAsserts);
   }

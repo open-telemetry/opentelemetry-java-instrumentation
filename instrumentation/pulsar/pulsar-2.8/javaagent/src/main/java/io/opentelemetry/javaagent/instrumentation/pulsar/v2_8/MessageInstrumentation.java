@@ -16,7 +16,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pulsar.client.api.Message;
 
-public class MessageInstrumentation implements TypeInstrumentation {
+class MessageInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.pulsar.client.impl.MessageImpl");

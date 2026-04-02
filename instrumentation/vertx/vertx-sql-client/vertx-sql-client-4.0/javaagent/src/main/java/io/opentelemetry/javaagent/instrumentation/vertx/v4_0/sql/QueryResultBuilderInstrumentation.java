@@ -18,7 +18,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class QueryResultBuilderInstrumentation implements TypeInstrumentation {
+class QueryResultBuilderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -27,12 +27,10 @@ public class QueryResultBuilderInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("tryComplete"),
-        QueryResultBuilderInstrumentation.class.getName() + "$CompleteAdvice");
+    transformer.applyAdviceToMethod(named("tryComplete"), getClass().getName() + "$CompleteAdvice");
     transformer.applyAdviceToMethod(
         named("tryFail").and(takesArguments(Throwable.class)),
-        QueryResultBuilderInstrumentation.class.getName() + "$FailAdvice");
+        getClass().getName() + "$FailAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -16,7 +16,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class TransactionImplInstrumentation implements TypeInstrumentation {
+class TransactionImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -27,7 +27,7 @@ public class TransactionImplInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("wrap").and(returns(named("io.vertx.core.Completable"))),
-        TransactionImplInstrumentation.class.getName() + "$WrapHandlerAdvice");
+        getClass().getName() + "$WrapHandlerAdvice");
   }
 
   @SuppressWarnings("unused")

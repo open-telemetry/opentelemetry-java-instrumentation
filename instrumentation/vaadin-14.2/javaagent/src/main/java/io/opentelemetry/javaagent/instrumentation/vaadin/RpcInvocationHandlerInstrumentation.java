@@ -23,7 +23,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 // add span around rpc calls from javascript
-public class RpcInvocationHandlerInstrumentation implements TypeInstrumentation {
+class RpcInvocationHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -42,7 +42,7 @@ public class RpcInvocationHandlerInstrumentation implements TypeInstrumentation 
         named("handle")
             .and(takesArgument(0, named("com.vaadin.flow.component.UI")))
             .and(takesArgument(1, named("elemental.json.JsonObject"))),
-        this.getClass().getName() + "$HandleAdvice");
+        getClass().getName() + "$HandleAdvice");
   }
 
   @SuppressWarnings("unused")

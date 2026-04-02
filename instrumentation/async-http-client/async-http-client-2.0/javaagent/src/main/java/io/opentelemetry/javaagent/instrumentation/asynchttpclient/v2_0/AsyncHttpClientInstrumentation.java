@@ -25,7 +25,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.asynchttpclient.AsyncHandler;
 import org.asynchttpclient.Request;
 
-public class AsyncHttpClientInstrumentation implements TypeInstrumentation {
+class AsyncHttpClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -44,7 +44,7 @@ public class AsyncHttpClientInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("org.asynchttpclient.Request")))
             .and(takesArgument(1, named("org.asynchttpclient.AsyncHandler")))
             .and(isPublic()),
-        this.getClass().getName() + "$ExecuteRequestAdvice");
+        getClass().getName() + "$ExecuteRequestAdvice");
   }
 
   @SuppressWarnings("unused")

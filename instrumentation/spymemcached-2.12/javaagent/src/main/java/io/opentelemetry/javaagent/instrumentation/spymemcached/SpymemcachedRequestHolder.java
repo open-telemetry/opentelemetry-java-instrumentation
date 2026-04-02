@@ -12,6 +12,7 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import javax.annotation.Nullable;
 import net.spy.memcached.MemcachedNode;
 
 public final class SpymemcachedRequestHolder implements ImplicitContextKeyed {
@@ -32,7 +33,7 @@ public final class SpymemcachedRequestHolder implements ImplicitContextKeyed {
     return context.with(new SpymemcachedRequestHolder(request));
   }
 
-  public static void setHandlingNode(Context context, MemcachedNode node) {
+  public static void setHandlingNode(Context context, @Nullable MemcachedNode node) {
     if (node == null) {
       return;
     }

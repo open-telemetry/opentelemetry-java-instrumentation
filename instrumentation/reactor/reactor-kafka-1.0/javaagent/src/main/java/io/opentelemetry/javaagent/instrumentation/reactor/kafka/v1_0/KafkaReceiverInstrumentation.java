@@ -17,7 +17,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import reactor.kafka.receiver.KafkaReceiver;
 
-public class KafkaReceiverInstrumentation implements TypeInstrumentation {
+class KafkaReceiverInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -28,7 +28,7 @@ public class KafkaReceiverInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("create").and(isStatic()).and(returns(named("reactor.kafka.receiver.KafkaReceiver"))),
-        this.getClass().getName() + "$CreateAdvice");
+        getClass().getName() + "$CreateAdvice");
   }
 
   @SuppressWarnings("unused")

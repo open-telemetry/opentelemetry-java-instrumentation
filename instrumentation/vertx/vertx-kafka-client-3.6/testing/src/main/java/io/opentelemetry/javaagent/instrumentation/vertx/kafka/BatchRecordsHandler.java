@@ -20,7 +20,7 @@ public final class BatchRecordsHandler implements Handler<KafkaConsumerRecords<S
   public static final BatchRecordsHandler INSTANCE = new BatchRecordsHandler();
 
   private static final AtomicInteger lastBatchSize = new AtomicInteger();
-  private static volatile CountDownLatch messageReceived = new CountDownLatch(2);
+  private static volatile CountDownLatch messageReceived = new CountDownLatch(0);
 
   private BatchRecordsHandler() {}
 
@@ -38,8 +38,8 @@ public final class BatchRecordsHandler implements Handler<KafkaConsumerRecords<S
     }
   }
 
-  public static void reset() {
-    messageReceived = new CountDownLatch(2);
+  public static void reset(int expectedBatchSize) {
+    messageReceived = new CountDownLatch(expectedBatchSize);
     lastBatchSize.set(0);
   }
 

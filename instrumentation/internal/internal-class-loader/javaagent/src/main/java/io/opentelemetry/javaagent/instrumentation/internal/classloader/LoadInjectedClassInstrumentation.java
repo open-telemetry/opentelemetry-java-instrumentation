@@ -28,7 +28,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * This instrumentation inserts loading of our injected helper classes at the start of {@code
  * ClassLoader.loadClass} method.
  */
-public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
+class LoadInjectedClassInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -49,7 +49,7 @@ public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
             .and(isPublic().or(isProtected()))
             .and(not(isStatic()));
     // Inline instrumentation to prevent problems with invokedynamic-recursion
-    applyInlineAdvice(transformer, methodMatcher, this.getClass().getName() + "$LoadClassAdvice");
+    applyInlineAdvice(transformer, methodMatcher, getClass().getName() + "$LoadClassAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -89,7 +89,7 @@ public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    @Advice.OnMethodExit
     public static Class<?> onExit(
         @Advice.Return Class<?> originalResult, @Advice.Enter Class<?> loadedClass) {
       return loadedClass != null ? loadedClass : originalResult;

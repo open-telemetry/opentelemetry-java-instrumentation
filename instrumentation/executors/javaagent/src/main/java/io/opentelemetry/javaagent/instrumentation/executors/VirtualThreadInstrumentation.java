@@ -15,7 +15,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class VirtualThreadInstrumentation implements TypeInstrumentation {
+class VirtualThreadInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -30,11 +30,11 @@ public class VirtualThreadInstrumentation implements TypeInstrumentation {
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/10747
     transformer.applyAdviceToMethod(
         named("switchToCarrierThread").and(takesArguments(0)),
-        this.getClass().getName() + "$SwitchToCarrierAdvice");
+        getClass().getName() + "$SwitchToCarrierAdvice");
     transformer.applyAdviceToMethod(
         // takes an extra argument in jdk 21 ea versions
         named("switchToVirtualThread").and(takesArguments(1).or(takesArguments(2))),
-        this.getClass().getName() + "$SwitchToVirtualAdvice");
+        getClass().getName() + "$SwitchToVirtualAdvice");
   }
 
   @SuppressWarnings("unused")

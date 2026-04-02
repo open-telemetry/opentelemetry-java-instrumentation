@@ -99,7 +99,7 @@ public final class ClassRef {
       throw new IllegalStateException("illegal merge " + this + " != " + anotherReference);
     }
     String superName =
-        null == this.superClassName ? anotherReference.superClassName : this.superClassName;
+        this.superClassName == null ? anotherReference.superClassName : this.superClassName;
 
     return new ClassRef(
         mergeSet(sources, anotherReference.sources),

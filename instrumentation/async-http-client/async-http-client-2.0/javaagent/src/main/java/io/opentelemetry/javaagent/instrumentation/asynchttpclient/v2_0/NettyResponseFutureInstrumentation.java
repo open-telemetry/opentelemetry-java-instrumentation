@@ -18,7 +18,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class NettyResponseFutureInstrumentation implements TypeInstrumentation {
+class NettyResponseFutureInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -29,7 +29,7 @@ public class NettyResponseFutureInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("toCompletableFuture").and(takesNoArguments()).and(returns(CompletableFuture.class)),
-        this.getClass().getName() + "$WrapFutureAdvice");
+        getClass().getName() + "$WrapFutureAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -15,7 +15,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandProperties;
 import com.netflix.hystrix.HystrixObservableCommand;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
@@ -90,7 +89,7 @@ class HystrixObservableChainTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName("ExampleGroup.TestCommand.execute")
                         .hasParent(trace.getSpan(0))
@@ -101,7 +100,7 @@ class HystrixObservableChainTest {
                 span ->
                     span.hasName("tracedMethod")
                         .hasParent(trace.getSpan(1))
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName("OtherGroup.AnotherTestCommand.execute")
                         .hasParent(trace.getSpan(1))
@@ -112,7 +111,7 @@ class HystrixObservableChainTest {
                 span ->
                     span.hasName("anotherTracedMethod")
                         .hasParent(trace.getSpan(3))
-                        .hasAttributes(Attributes.empty())));
+                        .hasTotalAttributeCount(0)));
   }
 
   private static HystrixObservableCommand.Setter setter(String key) {

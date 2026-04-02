@@ -104,10 +104,9 @@ public abstract class AbstractElasticsearchTransportClientTest
       result.add(
           satisfies(
               NETWORK_TYPE,
-              k ->
-                  k.satisfiesAnyOf(
-                      val -> assertThat(val).isEqualTo("ipv4"),
-                      val -> assertThat(val).isEqualTo("ipv6"))));
+              val ->
+                  val.satisfiesAnyOf(
+                      v -> assertThat(v).isEqualTo("ipv4"), v -> assertThat(v).isEqualTo("ipv6"))));
     }
     return result;
   }

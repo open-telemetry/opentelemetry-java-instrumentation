@@ -21,7 +21,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class CallableInstrumentation implements TypeInstrumentation {
+class CallableInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -38,6 +38,7 @@ public class CallableInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CallableAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope enter(@Advice.This Callable<?> task) {
       return TaskAdviceHelper.makePropagatedContextCurrent(CALLABLE_PROPAGATED_CONTEXT, task);

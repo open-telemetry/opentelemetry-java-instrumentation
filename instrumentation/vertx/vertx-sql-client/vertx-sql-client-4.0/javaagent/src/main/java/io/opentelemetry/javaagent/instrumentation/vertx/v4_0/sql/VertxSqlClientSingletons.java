@@ -32,19 +32,14 @@ public final class VertxSqlClientSingletons {
 
   public static void storeConnectOptionsDbSystem(
       SqlConnectOptions connectOptions, String dbSystem) {
-    if (connectOptions != null) {
-      connectOptionsDbSystem.set(connectOptions, dbSystem);
-    }
+    connectOptionsDbSystem.set(connectOptions, dbSystem);
   }
 
   @Nullable
   public static String getConnectOptionsDbSystem(SqlConnectOptions connectOptions) {
-    if (connectOptions != null) {
-      return connectOptionsDbSystem.get(connectOptions);
-    }
     // null when db system was not captured at pool creation time; callers should fall back
     // to getDbSystemNameFromClassName() on the connect options instance
-    return null;
+    return connectOptionsDbSystem.get(connectOptions);
   }
 
   public static SqlConnectOptions getSqlConnectOptions(SqlClientBase<?> sqlClientBase) {

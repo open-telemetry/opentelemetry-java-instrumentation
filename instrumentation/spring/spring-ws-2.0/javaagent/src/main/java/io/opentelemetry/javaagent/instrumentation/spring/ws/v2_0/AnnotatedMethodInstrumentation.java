@@ -24,7 +24,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
 
-public class AnnotatedMethodInstrumentation implements TypeInstrumentation {
+class AnnotatedMethodInstrumentation implements TypeInstrumentation {
   private static final String[] ANNOTATION_CLASSES =
       new String[] {
         "org.springframework.ws.server.endpoint.annotation.PayloadRoot",
@@ -46,7 +46,7 @@ public class AnnotatedMethodInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isMethod().and(isAnnotatedWith(namedOneOf(ANNOTATION_CLASSES))),
-        AnnotatedMethodInstrumentation.class.getName() + "$AnnotatedMethodAdvice");
+        getClass().getName() + "$AnnotatedMethodAdvice");
   }
 
   @SuppressWarnings("unused")

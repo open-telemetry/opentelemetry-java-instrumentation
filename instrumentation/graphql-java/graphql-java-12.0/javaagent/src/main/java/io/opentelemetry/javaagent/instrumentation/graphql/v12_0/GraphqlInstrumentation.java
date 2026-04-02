@@ -30,7 +30,7 @@ class GraphqlInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         namedOneOf("checkInstrumentationDefaultState", "checkInstrumentation")
             .and(returns(named("graphql.execution.instrumentation.Instrumentation"))),
-        this.getClass().getName() + "$AddInstrumentationAdvice");
+        getClass().getName() + "$AddInstrumentationAdvice");
   }
 
   @SuppressWarnings("unused")

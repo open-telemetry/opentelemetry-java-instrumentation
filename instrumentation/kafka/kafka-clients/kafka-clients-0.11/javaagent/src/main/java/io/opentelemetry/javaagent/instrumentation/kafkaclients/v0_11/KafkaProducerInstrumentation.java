@@ -27,7 +27,7 @@ import org.apache.kafka.clients.ApiVersions;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
-public class KafkaProducerInstrumentation implements TypeInstrumentation {
+class KafkaProducerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

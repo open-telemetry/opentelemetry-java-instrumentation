@@ -11,14 +11,17 @@ public final class ApplicationObservableDoubleGauge
     implements application.io.opentelemetry.api.metrics.ObservableDoubleGauge {
 
   private final ObservableDoubleGauge agentGauge;
+  private final Runnable onClose;
 
-  public ApplicationObservableDoubleGauge(ObservableDoubleGauge agentGauge) {
+  public ApplicationObservableDoubleGauge(ObservableDoubleGauge agentGauge, Runnable onClose) {
     this.agentGauge = agentGauge;
+    this.onClose = onClose;
   }
 
   // not adding @Override because this method was introduced in 1.12
   @SuppressWarnings("unused")
   public void close() {
     agentGauge.close();
+    onClose.run();
   }
 }

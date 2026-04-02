@@ -22,7 +22,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HandlerInstrumentation implements TypeInstrumentation {
+class HandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderOptimization() {
@@ -40,7 +40,7 @@ public class HandlerInstrumentation implements TypeInstrumentation {
         named("handleRequest")
             .and(takesArgument(0, named("io.undertow.server.HttpServerExchange")))
             .and(isPublic()),
-        this.getClass().getName() + "$HandleRequestAdvice");
+        getClass().getName() + "$HandleRequestAdvice");
   }
 
   @SuppressWarnings("unused")

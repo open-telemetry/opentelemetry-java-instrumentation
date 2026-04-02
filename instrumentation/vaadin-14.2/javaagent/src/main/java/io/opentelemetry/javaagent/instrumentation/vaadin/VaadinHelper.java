@@ -98,7 +98,7 @@ public class VaadinHelper {
     }
   }
 
-  public void updateServerSpanName(UI ui) {
+  public void updateServerSpanName(@Nullable UI ui) {
     if (ui != null) {
       Location location = ui.getInternals().getActiveViewLocation();
       updateServerSpanName(location);

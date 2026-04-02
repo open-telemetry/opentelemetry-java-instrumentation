@@ -19,7 +19,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class DefaultConnectionPoolTaskInstrumentation implements TypeInstrumentation {
+class DefaultConnectionPoolTaskInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.mongodb.internal.connection.DefaultConnectionPool$Task");
@@ -31,15 +31,15 @@ public class DefaultConnectionPoolTaskInstrumentation implements TypeInstrumenta
     // before 5.2.0
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(2, Consumer.class)),
-        this.getClass().getName() + "$TaskArg2Advice");
+        getClass().getName() + "$TaskArg2Advice");
     // since 5.2.0
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(3, Consumer.class)),
-        this.getClass().getName() + "$TaskArg3Advice");
+        getClass().getName() + "$TaskArg3Advice");
     // since 5.6.0
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(4, Consumer.class)),
-        this.getClass().getName() + "$TaskArg4Advice");
+        getClass().getName() + "$TaskArg4Advice");
   }
 
   @SuppressWarnings("unused")

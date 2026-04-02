@@ -29,7 +29,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import okhttp3.Call;
 import okhttp3.Request;
 
-public class ApiClientInstrumentation implements TypeInstrumentation {
+class ApiClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.kubernetes.client.openapi.ApiClient");
@@ -39,20 +39,20 @@ public class ApiClientInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isPublic().and(named("buildRequest")).and(takesArguments(10).or(takesArguments(11))),
-        this.getClass().getName() + "$BuildRequestAdvice");
+        getClass().getName() + "$BuildRequestAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("execute"))
             .and(takesArguments(2))
             .and(takesArgument(0, named("okhttp3.Call"))),
-        this.getClass().getName() + "$ExecuteAdvice");
+        getClass().getName() + "$ExecuteAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("executeAsync"))
             .and(takesArguments(3))
             .and(takesArgument(0, named("okhttp3.Call")))
             .and(takesArgument(2, named("io.kubernetes.client.openapi.ApiCallback"))),
-        this.getClass().getName() + "$ExecuteAsyncAdvice");
+        getClass().getName() + "$ExecuteAsyncAdvice");
   }
 
   @SuppressWarnings("unused")
