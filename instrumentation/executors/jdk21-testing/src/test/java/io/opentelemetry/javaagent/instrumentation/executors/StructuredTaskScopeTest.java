@@ -24,9 +24,24 @@ class StructuredTaskScopeTest {
 
   @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
+  @SuppressWarnings({
+    "unchecked",
+    "rawtypes"
+  }) // type arguments for StructuredTaskScope change between jdk 21 and 25
   @Test
   void multipleForkJoin() throws Exception {
-    StructuredTaskScope<Object> taskScope = createTaskScope();
+    StructuredTaskScope tmp;
+    try {
+      // since jdk 25-ea+24
+      tmp = (StructuredTaskScope) StructuredTaskScope.class.getMethod("open").invoke(null);
+    } catch (NoSuchMethodException exception) {
+      tmp =
+          Class.forName("java.util.concurrent.StructuredTaskScope$ShutdownOnFailure")
+              .asSubclass(StructuredTaskScope.class)
+              .getConstructor()
+              .newInstance();
+    }
+    StructuredTaskScope taskScope = tmp;
     cleanup.deferCleanup(taskScope);
 
     Callable<String> callable1 =
@@ -61,19 +76,5 @@ class StructuredTaskScopeTest {
                     span.hasName("task1").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("task2").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
-  }
-
-  @SuppressWarnings("unchecked") // reflective casts bridge jdk 21 and 25 StructuredTaskScope APIs
-  private static StructuredTaskScope<Object> createTaskScope() throws Exception {
-    try {
-      // since jdk 25-ea+24
-      return (StructuredTaskScope<Object>) StructuredTaskScope.class.getMethod("open").invoke(null);
-    } catch (NoSuchMethodException e) {
-      return (StructuredTaskScope<Object>)
-          Class.forName("java.util.concurrent.StructuredTaskScope$ShutdownOnFailure")
-              .asSubclass(StructuredTaskScope.class)
-              .getConstructor()
-              .newInstance();
-    }
   }
 }
