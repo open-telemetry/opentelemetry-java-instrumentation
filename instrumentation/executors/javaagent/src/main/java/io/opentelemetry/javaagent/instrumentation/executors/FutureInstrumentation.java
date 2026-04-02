@@ -24,7 +24,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class FutureInstrumentation implements TypeInstrumentation {
+class FutureInstrumentation implements TypeInstrumentation {
   private static final Logger logger = Logger.getLogger(FutureInstrumentation.class.getName());
 
   /**

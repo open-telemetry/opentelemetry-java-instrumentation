@@ -28,7 +28,7 @@ final class JavaHttpServerExchangeGetter implements TextMapGetter<HttpExchange> 
     }
 
     List<String> list = carrier.getRequestHeaders().get(key);
-    return list != null ? list.get(0) : null;
+    return list != null && !list.isEmpty() ? list.get(0) : null;
   }
 
   @Override

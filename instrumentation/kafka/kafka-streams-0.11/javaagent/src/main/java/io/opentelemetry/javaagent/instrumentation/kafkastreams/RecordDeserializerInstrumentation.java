@@ -23,7 +23,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 
 // in 1.0.0 SourceNodeRecordDeserializer was refactored into RecordDeserializer
-public class RecordDeserializerInstrumentation implements TypeInstrumentation {
+class RecordDeserializerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

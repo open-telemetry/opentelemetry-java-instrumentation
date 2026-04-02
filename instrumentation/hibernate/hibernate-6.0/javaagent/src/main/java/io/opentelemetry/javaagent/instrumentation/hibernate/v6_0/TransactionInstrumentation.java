@@ -24,7 +24,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.Transaction;
 
-public class TransactionInstrumentation implements TypeInstrumentation {
+class TransactionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

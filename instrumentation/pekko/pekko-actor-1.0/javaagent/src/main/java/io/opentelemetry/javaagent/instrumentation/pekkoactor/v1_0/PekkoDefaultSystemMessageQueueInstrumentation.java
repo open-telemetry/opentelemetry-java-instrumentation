@@ -22,7 +22,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pekko.dispatch.sysmsg.SystemMessage;
 
-public class PekkoDefaultSystemMessageQueueInstrumentation implements TypeInstrumentation {
+class PekkoDefaultSystemMessageQueueInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("org.apache.pekko.dispatch.DefaultSystemMessageQueue"));

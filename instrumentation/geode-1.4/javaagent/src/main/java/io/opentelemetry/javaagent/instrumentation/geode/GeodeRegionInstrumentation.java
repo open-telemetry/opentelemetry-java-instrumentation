@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.geode;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.geode.GeodeSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -24,7 +23,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.geode.cache.Region;
 
-public class GeodeRegionInstrumentation implements TypeInstrumentation {
+class GeodeRegionInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("org.apache.geode.cache.Region");
@@ -38,26 +37,15 @@ public class GeodeRegionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(
-                namedOneOf(
-                        "clear",
-                        "create",
-                        "destroy",
-                        "entrySet",
-                        "get",
-                        "getAll",
-                        "invalidate",
-                        "replace")
-                    .or(nameStartsWith("contains"))
-                    .or(nameStartsWith("keySet"))
-                    .or(nameStartsWith("put"))
-                    .or(nameStartsWith("remove"))),
+        namedOneOf(
+                "clear", "create", "destroy", "entrySet", "get", "getAll", "invalidate", "replace")
+            .or(nameStartsWith("contains"))
+            .or(nameStartsWith("keySet"))
+            .or(nameStartsWith("put"))
+            .or(nameStartsWith("remove")),
         getClass().getName() + "$SimpleAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(namedOneOf("existsValue", "query", "selectValue"))
-            .and(takesArgument(0, String.class)),
+        namedOneOf("existsValue", "query", "selectValue").and(takesArgument(0, String.class)),
         getClass().getName() + "$QueryAdvice");
   }
 

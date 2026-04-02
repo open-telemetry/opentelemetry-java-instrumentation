@@ -39,7 +39,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
+class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

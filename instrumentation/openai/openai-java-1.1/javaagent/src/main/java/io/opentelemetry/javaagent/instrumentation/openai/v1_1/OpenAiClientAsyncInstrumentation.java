@@ -16,7 +16,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class OpenAiClientAsyncInstrumentation implements TypeInstrumentation {
+class OpenAiClientAsyncInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.openai.client.okhttp.OpenAIOkHttpClientAsync$Builder");

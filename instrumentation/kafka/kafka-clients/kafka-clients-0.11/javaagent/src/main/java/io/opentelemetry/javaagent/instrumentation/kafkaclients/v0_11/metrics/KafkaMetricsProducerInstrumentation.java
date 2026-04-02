@@ -21,7 +21,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class KafkaMetricsProducerInstrumentation implements TypeInstrumentation {
+class KafkaMetricsProducerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

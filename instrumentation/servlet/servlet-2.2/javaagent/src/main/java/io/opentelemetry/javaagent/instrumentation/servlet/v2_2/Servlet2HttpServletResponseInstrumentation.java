@@ -31,7 +31,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * ServletResponse, Throwable, Servlet2Advice.AdviceScope)} can get it from context and set required
  * span attribute.
  */
-public class Servlet2HttpServletResponseInstrumentation implements TypeInstrumentation {
+class Servlet2HttpServletResponseInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("javax.servlet.http.HttpServletResponse");

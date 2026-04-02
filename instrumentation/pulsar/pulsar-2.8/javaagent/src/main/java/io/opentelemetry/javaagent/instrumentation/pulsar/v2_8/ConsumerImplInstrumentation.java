@@ -30,7 +30,7 @@ import org.apache.pulsar.client.api.Messages;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.impl.PulsarClientImpl;
 
-public class ConsumerImplInstrumentation implements TypeInstrumentation {
+class ConsumerImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

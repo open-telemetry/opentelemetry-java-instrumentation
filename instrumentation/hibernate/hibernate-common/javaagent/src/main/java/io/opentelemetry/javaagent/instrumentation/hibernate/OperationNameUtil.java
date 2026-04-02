@@ -64,7 +64,10 @@ public final class OperationNameUtil {
 
   @Nullable
   public static String getEntityName(
-      String descriptor, Object arg0, Object arg1, Function<Object, String> nameFromEntity) {
+      String descriptor,
+      @Nullable Object arg0,
+      @Nullable Object arg1,
+      Function<Object, String> nameFromEntity) {
     String entityName = null;
     // methods like save(String entityName, Object object)
     // that take entity name as first argument and entity as second

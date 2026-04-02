@@ -26,7 +26,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class RedisStandaloneConnectionInstrumentation implements TypeInstrumentation {
+class RedisStandaloneConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.vertx.redis.client.impl.RedisStandaloneConnection");

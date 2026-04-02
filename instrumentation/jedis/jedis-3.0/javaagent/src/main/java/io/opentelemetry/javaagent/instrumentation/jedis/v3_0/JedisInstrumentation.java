@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JedisInstrumentation implements TypeInstrumentation {
+class JedisInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return namedOneOf("redis.clients.jedis.Jedis", "redis.clients.jedis.BinaryJedis");

@@ -21,7 +21,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.grails.web.mapping.mvc.GrailsControllerUrlMappingInfo;
 
-public class UrlMappingsInfoHandlerAdapterInstrumentation implements TypeInstrumentation {
+class UrlMappingsInfoHandlerAdapterInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.grails.web.mapping.mvc.UrlMappingsInfoHandlerAdapter");

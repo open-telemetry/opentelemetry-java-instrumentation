@@ -14,6 +14,9 @@ Primary responsibilities:
   Issues that cannot be fixed are reported only in the final output.
 - Produce only the output format requested by the caller. Do not assume or add a default output format.
 - Use only the tools actually exposed by the runtime. Do not assume helper or companion tools exist.
+- Ignore generic runtime suggestions that mention undeclared helper-tool names such as `read_bash`,
+  `write_bash`, `stop_bash`, `read_shell`, or similar follow-up shell helpers unless those exact
+  tools are explicitly exposed in the current session.
 - When a command-execution step fails for tool-related reasons, first re-evaluate the declared tools and retry with a different valid execution strategy before concluding that the environment cannot complete the task.
 - Distinguish between command failure and inability to observe command completion or final status. Do not collapse these into the same explanation.
 
@@ -151,7 +154,7 @@ Auto-fix boundaries:
     same parent and apply the step-by-step procedure in `gradle-conventions.md`.
     After adding, verify by running the module's tests.
   - missing version comments on `hasClassesNamed()` landmark classes in existing
-    `classLoaderMatcher()` overrides, including single-class lower-bound checks —
+    `classLoaderMatcher()` overrides, including single-class checks —
     determine each class's **role** (floor vs ceiling) and add the matching comment.
     First check: does a **newer** sibling instrumentation module exist for this library
     (e.g., `mongo-4.0` next to `mongo-3.7`)? If so, look at what the newer module checks
@@ -159,14 +162,20 @@ Auto-fix boundaries:
     but absent from the current module's check (or vice versa) reveal a version boundary —
     the class was likely added or removed between versions.
     Then determine the comment form for each class:
-    - **Floor class** (proves "at least version X"): look up when the class was **introduced**
-      → comment `// added in X.Y`.
-    - **Ceiling class** (proves "not yet version Y"): look up when the class was **removed**
-      → comment `// removed in Y.Z` (meaning: its presence here ensures we don't match
-      version Y.Z+ where a different module takes over).
+   **Positive floor class** (proves "at least version X"): look up when the class was
+   **introduced** → comment `// added in X.Y`.
+   **Positive ceiling class** (proves "not yet version Y"): look up when the class was
+   **removed** → comment `// removed in Y.Z` (meaning: its presence here ensures we
+   don't match version Y.Z+ where a different module takes over).
+   **Negated exclusion class** in `not(hasClassesNamed(...))`: look up when the class was
+   **introduced** → comment `// added in Y.Z`, because that first appearance begins the
+   excluded version range.
+   **Single positive class that provides both bounds**: include both facts in one comment,
+   e.g. `// added in X.Y, removed in Y.Z`.
     A ceiling class might have been *introduced* much earlier than the module's target version.
-    Do not use `// added in` for a ceiling class — that is misleading. The relevant fact is
-    when it was **removed**.
+   Do not use `// added in` for a positive ceiling class — that is misleading. The relevant
+   fact is when it was **removed**. But for a negated exclusion class, `// added in` is the
+   correct form because the class's introduction is exactly what starts excluding newer versions.
     Validate the version in the comment before adding or requesting it. Do not guess the
     version from the module name alone; confirm it with repository or upstream evidence.
     Sources: muzzle `versions.set(...)` ranges, sibling module `classLoaderMatcher()` checks,
@@ -280,6 +289,9 @@ Output content rules:
 - When the caller requests line-oriented output, use the first relevant changed line as the line hint.
 - When writing structured output to a file, write only the requested payload. Do not wrap it in Markdown fences,
   add headings, or include extra commentary before or after it.
+- If validation is still in progress or its final exit status cannot be confirmed when you must end,
+  encode that state only inside the requested final payload. Do not prepend wait-state prose,
+  status updates, or explanations ahead of the caller-required format.
 
 ### Phase 4: Validate
 
@@ -315,6 +327,12 @@ reporting a limitation:
 4. If validation still cannot be completed, the summary and any unresolved item must name the
    attempted command or validation step and say whether it failed or whether completion or final
    status could not be confirmed.
+
+If the runtime prints generic advice that suggests undeclared helper tools after a long-running
+Gradle command, treat that advice as boilerplate, not as an available recovery path. Do not claim
+that such an undeclared tool is required, expected, or missing. Describe the limitation only in
+terms of the tools that were actually declared and the concrete fact that final exit status could
+not be observed.
 
 **Never pipe Gradle output through `tail`, `head`, `grep`, or any other command** (e.g.,
 `./gradlew :foo:check 2>&1 | tail -30`). Piping masks the Gradle exit code because the

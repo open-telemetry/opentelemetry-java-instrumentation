@@ -23,7 +23,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 // add span around rpc calls from javascript
-public class RpcInvocationHandlerInstrumentation implements TypeInstrumentation {
+class RpcInvocationHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

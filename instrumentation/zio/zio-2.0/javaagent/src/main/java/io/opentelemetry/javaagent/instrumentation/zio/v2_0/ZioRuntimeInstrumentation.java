@@ -14,7 +14,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import zio.Supervisor;
 
-public class ZioRuntimeInstrumentation implements TypeInstrumentation {
+class ZioRuntimeInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

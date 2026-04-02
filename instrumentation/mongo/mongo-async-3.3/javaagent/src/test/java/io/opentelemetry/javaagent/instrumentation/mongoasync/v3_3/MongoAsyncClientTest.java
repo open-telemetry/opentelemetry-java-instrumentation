@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.mongoasync.v3_3;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.junit.jupiter.api.Assumptions.abort;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.async.SingleResultCallback;
@@ -29,7 +30,6 @@ import org.bson.Document;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.opentest4j.TestAbortedException;
 
 class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Document>> {
 
@@ -210,12 +210,12 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
 
   @Override
   public MongoCollection<Document> setupGetMore(String dbName, String collectionName) {
-    throw new TestAbortedException("not tested on async");
+    return abort("not tested on async");
   }
 
   @Override
   public void getMore(MongoCollection<Document> collection) {
-    throw new TestAbortedException("not tested on async");
+    abort("not tested on async");
   }
 
   @Override

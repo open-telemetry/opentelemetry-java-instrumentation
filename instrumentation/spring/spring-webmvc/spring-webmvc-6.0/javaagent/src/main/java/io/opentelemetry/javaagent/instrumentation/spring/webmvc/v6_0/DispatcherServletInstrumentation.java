@@ -26,7 +26,7 @@ import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.v6_0.OpenTelemetryHandlerMappingFilter;
 
-public class DispatcherServletInstrumentation implements TypeInstrumentation {
+class DispatcherServletInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

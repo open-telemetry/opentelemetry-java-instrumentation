@@ -29,7 +29,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import okhttp3.Call;
 import okhttp3.Request;
 
-public class ApiClientInstrumentation implements TypeInstrumentation {
+class ApiClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.kubernetes.client.openapi.ApiClient");

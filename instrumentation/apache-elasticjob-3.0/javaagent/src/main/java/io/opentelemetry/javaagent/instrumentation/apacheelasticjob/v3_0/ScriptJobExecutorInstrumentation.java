@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.shardingsphere.elasticjob.api.ShardingContext;
 import org.apache.shardingsphere.elasticjob.script.executor.ScriptJobExecutor;
 
-public class ScriptJobExecutorInstrumentation implements TypeInstrumentation {
+class ScriptJobExecutorInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.shardingsphere.elasticjob.script.executor.ScriptJobExecutor");

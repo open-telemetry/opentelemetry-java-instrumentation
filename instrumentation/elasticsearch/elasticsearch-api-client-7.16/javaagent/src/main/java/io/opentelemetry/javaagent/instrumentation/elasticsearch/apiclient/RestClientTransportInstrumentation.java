@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.elasticsearch.client.Request;
 
 // up to 8.8 (included)
-public class RestClientTransportInstrumentation implements TypeInstrumentation {
+class RestClientTransportInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

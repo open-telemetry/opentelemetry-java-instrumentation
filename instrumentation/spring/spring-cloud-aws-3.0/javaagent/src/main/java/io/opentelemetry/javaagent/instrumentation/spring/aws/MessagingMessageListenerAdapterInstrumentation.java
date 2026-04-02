@@ -16,7 +16,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.messaging.Message;
 
-public class MessagingMessageListenerAdapterInstrumentation implements TypeInstrumentation {
+class MessagingMessageListenerAdapterInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

@@ -36,7 +36,7 @@ import org.apache.cxf.message.Message;
  * </code> which contains <code>MethodInvocationInfo</code>. The matched resource method can be
  * retrieved from that object
  */
-public class CxfRequestContextInstrumentation implements TypeInstrumentation {
+class CxfRequestContextInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

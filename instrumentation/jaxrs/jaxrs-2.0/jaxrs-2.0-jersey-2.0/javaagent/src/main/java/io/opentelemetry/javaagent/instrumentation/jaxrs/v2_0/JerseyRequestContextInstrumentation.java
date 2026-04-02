@@ -40,19 +40,26 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
       private final Context context;
       private final Scope scope;
 
-      public AdviceScope(
+      private AdviceScope(Jaxrs2HandlerData handlerData, Context context) {
+        this.handlerData = handlerData;
+        this.context = context;
+        scope = context.makeCurrent();
+      }
+
+      @Nullable
+      public static AdviceScope start(
           Class<?> resourceClass, Method method, ContainerRequestContext requestContext) {
-        handlerData = new Jaxrs2HandlerData(resourceClass, method);
-        context =
+        Jaxrs2HandlerData handlerData = new Jaxrs2HandlerData(resourceClass, method);
+        Context context =
             Jaxrs2RequestContextHelper.createOrUpdateAbortSpan(
                 instrumenter(), requestContext, handlerData);
-        scope = context != null ? context.makeCurrent() : null;
+        if (context == null) {
+          return null;
+        }
+        return new AdviceScope(handlerData, context);
       }
 
       public void exit(@Nullable Throwable throwable) {
-        if (scope == null) {
-          return;
-        }
         scope.close();
         instrumenter().end(context, handlerData, null, throwable);
       }
@@ -78,12 +85,13 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
         return null;
       }
 
-      return new AdviceScope(resourceClass, method, requestContext);
+      return AdviceScope.start(resourceClass, method, requestContext);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
         adviceScope.exit(throwable);
       }

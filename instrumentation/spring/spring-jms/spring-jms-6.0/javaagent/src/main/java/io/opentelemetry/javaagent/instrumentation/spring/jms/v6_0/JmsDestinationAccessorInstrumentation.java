@@ -22,7 +22,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JmsDestinationAccessorInstrumentation implements TypeInstrumentation {
+class JmsDestinationAccessorInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.springframework.jms.support.destination.JmsDestinationAccessor");

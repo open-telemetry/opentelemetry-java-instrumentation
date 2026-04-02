@@ -19,7 +19,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AbstractPollingMessageListenerContainerInstrumentation implements TypeInstrumentation {
+class AbstractPollingMessageListenerContainerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.springframework.jms.listener.AbstractPollingMessageListenerContainer");

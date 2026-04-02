@@ -27,7 +27,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -56,7 +55,7 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
                         span ->
                             span.hasName("process child")
                                 .hasParent(trace.getSpan(1))
-                                .hasAttributes(Attributes.empty()))));
+                                .hasTotalAttributeCount(0))));
 
     if (withParent) {
       /*
@@ -112,7 +111,7 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
     // generates the process spans
     response.messages().forEach(message -> {});
 
-    assertThat(response.messages().size()).isEqualTo(3);
+    assertThat(response.messages()).hasSize(3);
 
     // +2: 3 messages, 2x traceparent, 1x not injected due to too many attrs
     assertThat(totalAttrs).isEqualTo(18 + (isSqsAttributeInjectionEnabled() ? 2 : 0));

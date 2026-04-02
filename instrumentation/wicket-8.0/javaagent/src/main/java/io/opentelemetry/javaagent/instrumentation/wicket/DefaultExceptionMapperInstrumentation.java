@@ -19,7 +19,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.wicket.WicketRuntimeException;
 
-public class DefaultExceptionMapperInstrumentation implements TypeInstrumentation {
+class DefaultExceptionMapperInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

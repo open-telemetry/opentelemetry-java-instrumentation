@@ -82,10 +82,20 @@ class suffices for a simple version boundary — use multiple classes only when:
   present (e.g., Jersey checks both the JAX-RS spec API and the Jersey implementation class;
   AWS SDK Lambda checks both the Lambda module and JSON protocol core).
 
-Place a comment **above each class name string** stating its version role:
+Place a comment **above each class name string** stating its version role and matcher shape:
 
-- **Floor class** (proves "at least version X"): use `// added in X.Y`.
-- **Ceiling class** (proves "not yet version Y"): use `// removed in Y.Z`.
+- **Positive floor class** in `hasClassesNamed(...)` (proves "at least version X"):
+  use `// added in X.Y`.
+- **Positive ceiling class** in `hasClassesNamed(...)` (proves "not yet version Y"):
+  use `// removed in Y.Z`.
+- **Negated exclusion class** in `not(hasClassesNamed(...))` or
+  `.and(not(hasClassesNamed(...)))`: use `// added in Y.Z`, because the class's presence
+  starts excluding `Y.Z+`.
+
+A single **positive** landmark class can sometimes provide **both** bounds: its presence
+proves the module is at least version `X.Y`, and the same class disappears in `Y.Z`, so
+its presence also excludes `Y.Z+`. In that case, a combined comment such as
+`// added in X.Y, removed in Y.Z` is appropriate.
 
 **How to identify ceiling classes**: check whether a **newer sibling module** exists for
 the same library (e.g., `mongo-4.0` next to `mongo-3.7`). If the newer module's
@@ -147,9 +157,9 @@ OpenTelemetry instrumentation:
 ```java
 @Override
 public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-  // InternalRequest was introduced in 7.0.0
+  // added in 7.0.0
   return hasClassesNamed("org.elasticsearch.client.RestClient$InternalRequest")
-      // Instrumentation class was introduced in 8.10 (native OTel support)
+      // added in 8.10 (native OTel support)
       .and(not(hasClassesNamed(
           "co.elastic.clients.transport.instrumentation.Instrumentation")));
 }
@@ -160,9 +170,9 @@ public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
 ```java
 @Override
 public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-  // LibraryTelemetryOptions was introduced in azure-core 1.53
+  // added in azure-core 1.53
   return hasClassesNamed("com.azure.core.util.LibraryTelemetryOptions")
-      // OpenTelemetryTracer was introduced in azure-core-tracing-opentelemetry 1.0.0-beta.47
+      // added in azure-core-tracing-opentelemetry 1.0.0-beta.47
       .and(not(hasClassesNamed("com.azure.core.tracing.opentelemetry.OpenTelemetryTracer")));
 }
 ```
@@ -180,20 +190,27 @@ public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
 - **Version comments on landmark classes.** For multi-class checks, `.and(not(...))`
   chains, or cases where the landmark version differs from the module's base version,
   each `hasClassesNamed()` call must have a `//` comment stating the class's **role**:
-  - Floor class → `// added in X.Y` (class introduced in version X.Y).
-  - Ceiling class → `// removed in Y.Z` (class removed in version Y.Z, ensuring the
-    module does not activate on Y.Z+).
-  Do not use `// added in` for a ceiling class — that states when the class first appeared,
-  which is irrelevant and misleading; the purpose is the upper bound.
+  - Positive floor class → `// added in X.Y` (class introduced in version X.Y).
+  - Positive ceiling class → `// removed in Y.Z` (class removed in version Y.Z, ensuring
+    the module does not activate on Y.Z+).
+  - Negated exclusion class in `not(hasClassesNamed(...))` → `// added in Y.Z` (class
+    introduced in version Y.Z, so its presence excludes Y.Z+).
+  - Single positive class that serves as both floor and ceiling → include both boundaries,
+    e.g. `// added in X.Y, removed in Y.Z`.
+  Do not use `// added in` for a **positive** ceiling class — that states when the class
+  first appeared, which is irrelevant and misleading; the purpose is the upper bound.
+  Conversely, do use `// added in` for a **negated** exclusion class, because the class's
+  first appearance is exactly what begins the excluded version range.
   To identify ceiling classes, check if a newer sibling module's `classLoaderMatcher()`
   checks a different variant or replacement class.
-- **Single-class lower-bound comments are required.** When a single-class
-  `hasClassesNamed(...)` check exists solely to establish the module's lower bound, add an
-  inline `// added in X.Y` comment. The comment explains why the matcher exists and which
-  version boundary it enforces. First validate that `X.Y` is factually correct from
-  repository or upstream evidence; do not infer it from the module name alone. Flag a
-  missing comment in this case, and do not flag an existing one for removal unless the
-  comment is demonstrably wrong.
+- **Single-class landmark comments are required.** When a single-class
+  `hasClassesNamed(...)` check establishes the module's lower bound, add an inline
+  `// added in X.Y` comment. If that same class also establishes the upper bound because
+  it is removed or replaced in a newer sibling version, include that fact too, e.g.
+  `// added in X.Y, removed in Y.Z`. First validate each stated boundary from repository
+  or upstream evidence; do not infer versions from the module name alone. Flag a missing
+  boundary comment in this case, and do not flag an existing dual-role comment for removal
+  unless it is demonstrably wrong.
 - Prefer **one landmark class** per version boundary — choose the most stable/specific class.
 - Pair with **muzzle config** (`assertInverse.set(true)`) for full coverage.
 - Use `hasClassesNamed(...)` (from `AgentElementMatchers`) — not raw ByteBuddy matchers.
@@ -208,7 +225,7 @@ Each `TypeInstrumentation` class instruments a single target class.
 ### Required structure
 
 ```java
-public class MyClassInstrumentation implements TypeInstrumentation {
+class MyClassInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

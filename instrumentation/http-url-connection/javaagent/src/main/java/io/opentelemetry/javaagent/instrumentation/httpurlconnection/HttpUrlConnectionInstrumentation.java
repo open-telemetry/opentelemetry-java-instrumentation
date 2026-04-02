@@ -26,7 +26,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
+class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return nameStartsWith("java.net.")

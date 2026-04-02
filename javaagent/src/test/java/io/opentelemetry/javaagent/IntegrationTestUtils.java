@@ -55,7 +55,7 @@ public class IntegrationTestUtils {
     } catch (Exception e) {
       throw new IllegalStateException(e);
     } finally {
-      if (null != classloaderField) {
+      if (classloaderField != null) {
         classloaderField.setAccessible(false);
       }
     }
@@ -107,7 +107,7 @@ public class IntegrationTestUtils {
   private static void addToJar(Class<?> clazz, JarOutputStream jarOutputStream) throws IOException {
     InputStream inputStream = null;
     ClassLoader loader = clazz.getClassLoader();
-    if (null == loader) {
+    if (loader == null) {
       // bootstrap resources can be fetched through the system loader
       loader = ClassLoader.getSystemClassLoader();
     }

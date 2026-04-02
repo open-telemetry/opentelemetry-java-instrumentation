@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -131,9 +132,10 @@ abstract class AbstractElasticsearchClientTest {
 
     RESPONSE get() {
       try {
-        latch.await(1, MINUTES);
+        assertThat(latch.await(1, MINUTES)).isTrue();
       } catch (InterruptedException exception) {
         Thread.currentThread().interrupt();
+        throw new IllegalStateException("Interrupted while waiting for response", exception);
       }
       if (response != null) {
         return response;
@@ -146,7 +148,7 @@ abstract class AbstractElasticsearchClientTest {
   }
 
   static class ResultListener<T> implements ActionListener<T> {
-    final Result<T> result;
+    private final Result<T> result;
 
     ResultListener(Result<T> result) {
       this.result = result;

@@ -25,7 +25,7 @@ import tech.powerjob.worker.core.processor.ProcessResult;
 import tech.powerjob.worker.core.processor.TaskContext;
 import tech.powerjob.worker.core.processor.sdk.BasicProcessor;
 
-public class BasicProcessorInstrumentation implements TypeInstrumentation {
+class BasicProcessorInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("tech.powerjob.worker.core.processor.sdk.BasicProcessor");

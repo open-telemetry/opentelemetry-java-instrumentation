@@ -21,7 +21,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pulsar.client.impl.SendCallback;
 
-public class SendCallbackInstrumentation implements TypeInstrumentation {
+class SendCallbackInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

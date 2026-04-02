@@ -9,10 +9,11 @@ import javax.annotation.Nullable;
 
 public final class FinatraRequest {
   private final Class<?> controllerClass;
-  private final Class<?> declaringClass;
-  private final String methodName;
+  @Nullable private final Class<?> declaringClass;
+  @Nullable private final String methodName;
 
-  private FinatraRequest(Class<?> controllerClass, Class<?> declaringClass, String methodName) {
+  private FinatraRequest(
+      Class<?> controllerClass, @Nullable Class<?> declaringClass, @Nullable String methodName) {
     this.controllerClass = controllerClass;
     this.declaringClass = declaringClass;
     this.methodName = methodName;

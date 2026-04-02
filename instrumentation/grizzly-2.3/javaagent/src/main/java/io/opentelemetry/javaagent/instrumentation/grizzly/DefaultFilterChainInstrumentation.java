@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
 import org.glassfish.grizzly.http.HttpRequestPacket;
 
-public class DefaultFilterChainInstrumentation implements TypeInstrumentation {
+class DefaultFilterChainInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -34,7 +34,7 @@ public class DefaultFilterChainInstrumentation implements TypeInstrumentation {
             .and(named("notifyFailure"))
             .and(takesArgument(0, named("org.glassfish.grizzly.filterchain.FilterChainContext")))
             .and(takesArgument(1, Throwable.class)),
-        DefaultFilterChainInstrumentation.class.getName() + "$NotifyFailureAdvice");
+        getClass().getName() + "$NotifyFailureAdvice");
   }
 
   @SuppressWarnings("unused")

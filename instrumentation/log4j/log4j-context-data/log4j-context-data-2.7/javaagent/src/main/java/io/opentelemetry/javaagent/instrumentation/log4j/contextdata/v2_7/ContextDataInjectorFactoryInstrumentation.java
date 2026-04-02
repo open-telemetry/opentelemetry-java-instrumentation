@@ -18,7 +18,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.logging.log4j.core.ContextDataInjector;
 
-public class ContextDataInjectorFactoryInstrumentation implements TypeInstrumentation {
+class ContextDataInjectorFactoryInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.logging.log4j.core.impl.ContextDataInjectorFactory");

@@ -181,7 +181,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
                     clientSpan
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
-                            satisfies(URL_FULL, stringAssert -> stringAssert.endsWith("/ping")),
+                            satisfies(URL_FULL, val -> val.endsWith("/ping")),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isNotZero())),
                 serverSpan ->

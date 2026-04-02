@@ -65,7 +65,7 @@ public class ResponseInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
-      if (null != scope) {
+      if (scope != null) {
         scope.close();
       }
     }
@@ -90,7 +90,7 @@ public class ResponseInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
-      if (null != scope) {
+      if (scope != null) {
         scope.close();
       }
     }

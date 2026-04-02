@@ -115,8 +115,10 @@ class HttpSpanDecorator extends BaseSpanDecorator {
 
   @Nullable
   protected String getPath(Exchange exchange, Endpoint endpoint) {
-
     String httpUrl = getHttpUrl(exchange, endpoint);
+    if (httpUrl == null) {
+      return null;
+    }
     try {
       URL url = new URL(httpUrl);
       return url.getPath();

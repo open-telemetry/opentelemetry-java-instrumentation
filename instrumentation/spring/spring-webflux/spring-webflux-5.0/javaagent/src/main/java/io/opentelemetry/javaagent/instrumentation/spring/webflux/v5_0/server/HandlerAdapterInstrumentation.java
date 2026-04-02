@@ -31,7 +31,7 @@ import org.springframework.web.reactive.HandlerResult;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-public class HandlerAdapterInstrumentation implements TypeInstrumentation {
+class HandlerAdapterInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

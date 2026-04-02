@@ -12,12 +12,13 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import io.grpc.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class GrpcContextInstrumentation implements TypeInstrumentation {
+class GrpcContextInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.grpc.Context");
@@ -34,6 +35,7 @@ public class GrpcContextInstrumentation implements TypeInstrumentation {
   public static class ContextBridgeAdvice {
 
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, suppress = Throwable.class)
+    @Nullable
     public static Context.Storage onEnter() {
       return GrpcSingletons.getStorage();
     }

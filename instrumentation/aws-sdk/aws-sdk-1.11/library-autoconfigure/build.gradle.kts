@@ -51,7 +51,9 @@ tasks {
   }
 }
 
-if (!(findProperty("testLatestDeps") == "true")) {
+val testLatestDeps = findProperty("testLatestDeps") == "true"
+
+if (!testLatestDeps) {
   configurations.testRuntimeClasspath {
     resolutionStrategy {
       eachDependency {

@@ -21,7 +21,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.elasticsearch.client.Request;
 
 // starting from 8.9
-public class RestClientHttpClientInstrumentation implements TypeInstrumentation {
+class RestClientHttpClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

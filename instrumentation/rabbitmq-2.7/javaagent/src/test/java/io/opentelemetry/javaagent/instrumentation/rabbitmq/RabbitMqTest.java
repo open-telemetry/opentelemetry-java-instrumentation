@@ -86,10 +86,10 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   @AfterEach
   void cleanup() throws IOException, TimeoutException {
     try {
-      if (null != channel) {
+      if (channel != null) {
         channel.close();
       }
-      if (null != conn) {
+      if (conn != null) {
         conn.close();
       }
     } catch (ShutdownSignalException ignored) {
@@ -627,7 +627,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
 
     verifyParentAndLink(span, parentSpan, linkSpan);
 
-    if (null != exception) {
+    if (exception != null) {
       verifyException(span, exception, errorMsg);
     }
 
@@ -756,13 +756,13 @@ class RabbitMqTest extends AbstractRabbitMqTest {
 
   private static void verifyParentAndLink(
       SpanDataAssert span, SpanData parentSpan, SpanData linkSpan) {
-    if (null != parentSpan) {
+    if (parentSpan != null) {
       span.hasParent(parentSpan);
     } else {
       span.hasNoParent();
     }
 
-    if (null != linkSpan) {
+    if (linkSpan != null) {
       span.hasLinks(LinkData.create(linkSpan.getSpanContext()));
     } else {
       span.hasTotalRecordedLinks(0);

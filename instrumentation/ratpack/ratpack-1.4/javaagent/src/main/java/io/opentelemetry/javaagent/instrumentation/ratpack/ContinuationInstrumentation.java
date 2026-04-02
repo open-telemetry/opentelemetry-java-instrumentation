@@ -20,7 +20,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import ratpack.func.Block;
 
-public class ContinuationInstrumentation implements TypeInstrumentation {
+class ContinuationInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

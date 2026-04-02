@@ -44,3 +44,32 @@ public final class MyLibraryTelemetry {
 - Builder setter methods return `this` and are annotated `@CanIgnoreReturnValue`.
 - The builder's constructor is package-private — only `Telemetry.builder()` creates it.
 - `build()` returns the `{Library}Telemetry` instance.
+
+## Boolean and Collection Option Naming
+
+Builder methods on `TelemetryBuilder` and `Experimental` classes must follow these
+naming patterns. Flag any new method that deviates.
+
+### Canonical patterns
+
+| Semantic | Pattern | Examples |
+| --- | --- | --- |
+| Feature on/off toggle | `set*Enabled(boolean)` | `setSqlCommenterEnabled`, `setQuerySanitizationEnabled`, `setDataSourceInstrumenterEnabled` |
+| Emit experimental signals | `setEmitExperimental*(boolean)` | `setEmitExperimentalTelemetry`, `setEmitExperimentalMetrics` |
+| Capture data (boolean) | `setCapture*(boolean)` | `setCaptureExperimentalSpanAttributes`, `setCaptureEnduserId`, `setCaptureQuery` |
+| Capture data (collection) | `setCapture*(Collection)` | `setCaptureRequestHeaders`, `setCaptureResponseHeaders`, `setCaptureRequestParameters` |
+
+### Rules
+
+- **`set*Enabled`** is for features that are turned on or off (sanitization, SQL commenter,
+  instrumenter toggles). The thing being named is a feature or processing step.
+- **`setCapture*`** is for options that control whether a piece of data is collected or
+  emitted (attributes, headers, query text, message content). Use the verb form for both
+  boolean and collection variants.
+- **`setEmitExperimental*`** is reserved for the `Experimental` class toggle that enables
+  all experimental telemetry for an instrumentation. Do not use on `TelemetryBuilder`.
+
+### Known exceptions
+
+- `setPreferJfrMetrics(boolean)` — selects JFR over JMX for overlapping metrics; it is a
+  strategy selector, not a feature toggle or data capture flag.

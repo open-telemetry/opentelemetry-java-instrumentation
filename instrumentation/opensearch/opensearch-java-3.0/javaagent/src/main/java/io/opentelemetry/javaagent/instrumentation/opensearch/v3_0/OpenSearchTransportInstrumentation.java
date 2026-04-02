@@ -26,7 +26,7 @@ import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.transport.Endpoint;
 import org.opensearch.client.transport.OpenSearchTransport;
 
-public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
+class OpenSearchTransportInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("org.opensearch.client.transport.OpenSearchTransport"));

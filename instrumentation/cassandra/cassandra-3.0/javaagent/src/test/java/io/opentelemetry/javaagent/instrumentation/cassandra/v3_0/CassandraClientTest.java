@@ -34,7 +34,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
@@ -55,17 +55,16 @@ class CassandraClientTest {
 
   private static final Logger logger = LoggerFactory.getLogger(CassandraClientTest.class);
 
-  private static final Executor executor = Executors.newCachedThreadPool();
+  private static final ExecutorService executor = Executors.newCachedThreadPool();
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @SuppressWarnings("rawtypes")
-  private static GenericContainer cassandra;
+  private static GenericContainer<?> cassandra;
 
-  protected static String cassandraHost;
+  private static String cassandraHost;
 
-  protected static String cassandraIp;
+  private static String cassandraIp;
   private static int cassandraPort;
   private static Cluster cluster;
 
@@ -92,6 +91,7 @@ class CassandraClientTest {
   static void afterAll() {
     cluster.close();
     cassandra.stop();
+    executor.shutdownNow();
   }
 
   @ParameterizedTest(name = "{index}: {0}")

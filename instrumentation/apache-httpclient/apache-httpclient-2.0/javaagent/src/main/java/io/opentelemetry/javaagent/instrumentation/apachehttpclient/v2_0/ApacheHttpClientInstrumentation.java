@@ -23,7 +23,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.commons.httpclient.HttpMethod;
 
-public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
+class ApacheHttpClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("org.apache.commons.httpclient.HttpClient");
