@@ -11,7 +11,7 @@ semantic_conventions:
 library_link: https://docs.oracle.com/javase/8/docs/api/java/sql/package-summary.html
 configurations:
   - name: otel.instrumentation.jdbc.query-sanitization.enabled
-    description: Enables query sanitization for database queries. Takes precedent to 
+    description: Enables query sanitization for database queries. Takes precedence over
       otel.instrumentation.common.db.query-sanitization.enabled.
     type: boolean
     default: true
