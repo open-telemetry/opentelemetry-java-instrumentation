@@ -9,6 +9,8 @@
 
 - JUnit 5, AssertJ assertions (not JUnit `assertEquals`/`assertTrue`).
 - Test classes and methods should be package-private (no `public`).
+- Do not use AssertJ `.as(...)` descriptions or `.withFailMessage(...)` in tests.
+  Prefer direct assertions whose failure output shows the unexpected values.
 
 ## Test Resource Cleanup
 

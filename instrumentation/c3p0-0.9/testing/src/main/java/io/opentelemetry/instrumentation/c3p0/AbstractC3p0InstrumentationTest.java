@@ -80,9 +80,7 @@ public abstract class AbstractC3p0InstrumentationTest {
   private void assertDataSourceMetrics(PooledDataSource dataSource) {
     String dataSourceName = dataSource.getDataSourceName();
 
-    assertThat(dataSourceName)
-        .as("c3p0 generates a unique pool name if it's not explicitly provided")
-        .isNotEmpty();
+    assertThat(dataSourceName).isNotEmpty();
 
     DbConnectionPoolMetricsAssertions.create(
             testing(), INSTRUMENTATION_NAME, dataSource.getDataSourceName())

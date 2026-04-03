@@ -142,6 +142,8 @@ Auto-fix boundaries:
     lambdas where the lambda parameter is already an `AbstractAssert` (e.g.,
     `AbstractStringAssert`). Calls like `taskId.contains(jobName)` on the assert object are
     already valid AssertJ assertions; do not wrap them in `assertThat(...).isTrue()`
+  - AssertJ `.as(...)` descriptions and `.withFailMessage(...)` in tests — remove them
+    and prefer direct assertions whose failure output already exposes the unexpected values
   - deterministic semconv constant handling aligned with repository rules
   - missing test-task wiring patterns with clear canonical form
   - missing `testInstrumentation` cross-version references — when a javaagent module belongs
