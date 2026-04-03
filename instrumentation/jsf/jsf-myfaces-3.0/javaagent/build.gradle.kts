@@ -17,7 +17,7 @@ otelJava {
 }
 
 dependencies {
-  // can't use library for now because 6.1.0-M1 is latest and its POM referes to a missing parent POM
+  // can't use library for now because 6.1.0-M1 is latest and its POM refers to a missing parent POM
   // switch back to library when a new version is released
   // library("jakarta.el:jakarta.el-api:4.0.0")
   compileOnly("jakarta.el:jakarta.el-api:4.0.0")
