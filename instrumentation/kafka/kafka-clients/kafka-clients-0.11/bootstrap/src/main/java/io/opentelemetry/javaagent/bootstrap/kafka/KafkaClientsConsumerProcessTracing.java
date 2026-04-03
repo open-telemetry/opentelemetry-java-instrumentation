@@ -20,12 +20,20 @@ public final class KafkaClientsConsumerProcessTracing {
     return previous;
   }
 
-  public static boolean wrappingEnabled() {
+  public static boolean isWrappingEnabled() {
     return wrappingEnabled.get();
   }
 
+  /**
+   * @deprecated Use {@link #isWrappingEnabled()} instead. Will be removed in a future release.
+   */
+  @Deprecated
+  public static boolean wrappingEnabled() {
+    return isWrappingEnabled();
+  }
+
   public static BooleanSupplier wrappingEnabledSupplier() {
-    return KafkaClientsConsumerProcessTracing::wrappingEnabled;
+    return KafkaClientsConsumerProcessTracing::isWrappingEnabled;
   }
 
   private KafkaClientsConsumerProcessTracing() {}
