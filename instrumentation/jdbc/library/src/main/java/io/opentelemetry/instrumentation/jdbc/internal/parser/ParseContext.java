@@ -249,7 +249,8 @@ public final class ParseContext {
    * Parse a URL-style JDBC connection string that uses semicolons for properties. Updates this
    * context with extracted values (user, host, port, path).
    *
-   * <p>Database path acts as fallback and does not override an existing database name.
+   * <p>If the URL contains a database path, it is applied to this context and overrides any
+   * previously set database name.
    *
    * @param jdbcUrl the JDBC URL to parse
    */
