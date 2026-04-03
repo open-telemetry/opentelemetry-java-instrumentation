@@ -50,11 +50,11 @@ public final class JtdsUrlParser implements JdbcUrlParser {
     ctx.subtype("sqlserver");
 
     // Use ParseContext.parseUrl() to handle URL structure parsing (user, host, port, path)
-    // Note: parseUrl() sets URL path to ctx.name, but for jTDS the path is the database
+    // Note: for jTDS, parseUrl() maps the URL path to the database name
     ctx.parseUrl(jdbcUrl);
 
     // Handle jTDS/SQL Server-specific parameters
-    // For jTDS, URL path (already in ctx.name from parseUrl) represents database name
+    // For jTDS, the URL path parsed above represents the database name
     // Extract instance and database parameters
     String[] split = jdbcUrl.split(";", 2);
     String instanceName = null;
