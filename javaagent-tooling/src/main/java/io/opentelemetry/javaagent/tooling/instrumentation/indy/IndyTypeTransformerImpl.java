@@ -59,7 +59,7 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
                 .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler()));
   }
 
-  private ClassFileLocator getAdviceLocator(ClassLoader classLoader) {
+  private static ClassFileLocator getAdviceLocator(ClassLoader classLoader) {
     ClassFileLocator classFileLocator = ClassFileLocator.ForClassLoader.of(classLoader);
     return new AdviceLocator(
         classFileLocator,
