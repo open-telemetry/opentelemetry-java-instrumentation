@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -34,9 +33,12 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
       AgentBuilder.Identified.Extendable agentBuilder, InstrumentationModule module) {
     this.agentBuilder = agentBuilder;
     this.instrumentationModule = module;
+    this.transformAdvice = false;
+    /*
     this.transformAdvice =
         !(instrumentationModule instanceof ExperimentalInstrumentationModule)
             || !((ExperimentalInstrumentationModule) instrumentationModule).isIndyReady();
+     */
     this.adviceMapping =
         Advice.withCustomMapping()
             .with(
