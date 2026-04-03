@@ -28,7 +28,11 @@ public abstract class KafkaClientPropagationBaseTest extends KafkaClientBaseTest
     ConsumerRecords<?, ?> records = poll(Duration.ofSeconds(5));
     assertThat(records.count()).isEqualTo(1);
     for (ConsumerRecord<?, ?> record : records) {
-      assertThat(record.headers().iterator().hasNext()).isEqualTo(producerPropagationEnabled);
+      if (producerPropagationEnabled) {
+        assertThat(record.headers().toArray()).isNotEmpty();
+      } else {
+        assertThat(record.headers().toArray()).isEmpty();
+      }
     }
   }
 }

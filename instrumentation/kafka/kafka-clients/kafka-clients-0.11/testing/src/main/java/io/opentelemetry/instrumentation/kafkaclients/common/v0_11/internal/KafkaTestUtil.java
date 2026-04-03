@@ -27,7 +27,7 @@ public class KafkaTestUtil {
     if (consumerPollDurationMethod != null) {
       try {
         return (ConsumerRecords<K, V>) consumerPollDurationMethod.invoke(consumer, duration);
-      } catch (Exception exception) {
+      } catch (ReflectiveOperationException exception) {
         throw new IllegalStateException(exception);
       }
     }

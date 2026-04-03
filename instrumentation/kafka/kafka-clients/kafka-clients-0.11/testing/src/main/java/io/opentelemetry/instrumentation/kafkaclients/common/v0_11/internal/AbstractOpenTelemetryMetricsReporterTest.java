@@ -173,15 +173,21 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
       Field field = clazz.getDeclaredField("metrics");
       field.setAccessible(true);
       return (Metrics) field.get(producerOrConsumer);
-    } catch (Exception ignored) {
-      // Ignore
+    } catch (NoSuchFieldException ignored) {
+      // fall through to older accessor name
+    } catch (ReflectiveOperationException exception) {
+      throw new IllegalStateException(
+          "Failed to read metrics field from " + clazz.getName(), exception);
     }
     try {
       Method method = clazz.getDeclaredMethod("metricsRegistry");
       method.setAccessible(true);
       return (Metrics) method.invoke(producerOrConsumer);
-    } catch (Exception ignored) {
-      // Ignore
+    } catch (NoSuchMethodException ignored) {
+      // fall through to final error below
+    } catch (ReflectiveOperationException exception) {
+      throw new IllegalStateException(
+          "Failed to invoke metricsRegistry() on " + clazz.getName(), exception);
     }
     throw new IllegalStateException(
         "Failed to get metrics registry from " + producerOrConsumer.getClass().getName());
