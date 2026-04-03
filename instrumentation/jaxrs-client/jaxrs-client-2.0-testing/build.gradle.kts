@@ -35,11 +35,10 @@ tasks.withType<Test>().configureEach {
   jvmArgs("--add-opens=java.base/java.net=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-  val latestDepTest = otelProps.testLatestDeps
-  systemProperty("testLatestDeps", latestDepTest)
+  systemProperty("testLatestDeps", otelProps.testLatestDeps)
   // in default configuration 3.6.7 retries http request in connectionErrorUnopenedPort test
   // which creates a duplicate span
-  if (latestDepTest) {
+  if (otelProps.testLatestDeps) {
     systemProperty("org.apache.cxf.transport.http.forceURLConnection", true)
   }
 }

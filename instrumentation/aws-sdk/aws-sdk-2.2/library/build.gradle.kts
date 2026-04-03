@@ -32,8 +32,6 @@ dependencies {
   testLibrary("software.amazon.awssdk:sfn:2.2.0")
 }
 
-val testLatestDeps = otelProps.testLatestDeps
-
 testing {
   suites {
     val testCoreOnly by registering(JvmTestSuite::class) {
@@ -41,7 +39,7 @@ testing {
         implementation(project())
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
         compileOnly("software.amazon.awssdk:sqs:2.2.0")
-        val version = if (testLatestDeps) "latest.release" else "2.2.0"
+        val version = if (otelProps.testLatestDeps) "latest.release" else "2.2.0"
         implementation("software.amazon.awssdk:aws-core:$version")
         implementation("software.amazon.awssdk:aws-json-protocol:$version")
         implementation("software.amazon.awssdk:dynamodb:$version")
@@ -53,7 +51,7 @@ testing {
       dependencies {
         implementation(project())
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
-        val version = if (testLatestDeps) "latest.release" else "2.17.0"
+        val version = if (otelProps.testLatestDeps) "latest.release" else "2.17.0"
         implementation("software.amazon.awssdk:lambda:$version")
       }
     }
@@ -62,7 +60,7 @@ testing {
       dependencies {
         implementation(project())
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
-        val version = if (testLatestDeps) "latest.release" else "2.25.63"
+        val version = if (otelProps.testLatestDeps) "latest.release" else "2.25.63"
         implementation("software.amazon.awssdk:bedrockruntime:$version")
       }
     }

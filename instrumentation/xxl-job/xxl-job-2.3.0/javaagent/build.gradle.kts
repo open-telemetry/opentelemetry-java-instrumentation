@@ -33,13 +33,11 @@ dependencies {
   latestDepTestLibrary("com.xuxueli:xxl-job-core:3.2.+") // documented limitation
 }
 
-val testLatestDeps = otelProps.testLatestDeps
-
 testing {
   suites {
     val xxlJob33Test by registering(JvmTestSuite::class) {
       dependencies {
-        val version = if (testLatestDeps) "latest.release" else "3.3.0"
+        val version = if (otelProps.testLatestDeps) "latest.release" else "3.3.0"
         implementation("com.xuxueli:xxl-job-core:$version")
         implementation(project(":instrumentation:xxl-job:xxl-job-common:testing"))
       }

@@ -130,13 +130,11 @@ dependencies {
   testLibrary("software.amazon.awssdk:sqs:2.2.0")
 }
 
-val latestDepTest = otelProps.testLatestDeps
-
 testing {
   suites {
     val s3PresignerTest by registering(JvmTestSuite::class) {
       dependencies {
-        val version = if (latestDepTest) "latest.release" else "2.10.12"
+        val version = if (otelProps.testLatestDeps) "latest.release" else "2.10.12"
         implementation("software.amazon.awssdk:s3:$version")
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
       }
@@ -144,8 +142,8 @@ testing {
 
     val s3CrtTest by registering(JvmTestSuite::class) {
       dependencies {
-        implementation("software.amazon.awssdk:s3:" + if (latestDepTest) "latest.release" else "2.27.21")
-        implementation("software.amazon.awssdk.crt:aws-crt:" + if (latestDepTest) "latest.release" else "0.30.11")
+        implementation("software.amazon.awssdk:s3:" + if (otelProps.testLatestDeps) "latest.release" else "2.27.21")
+        implementation("software.amazon.awssdk.crt:aws-crt:" + if (otelProps.testLatestDeps) "latest.release" else "0.30.11")
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
         implementation("org.testcontainers:testcontainers-localstack")
       }
@@ -163,7 +161,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
         // 2.25.63 is the first release with Converse API
-        val version = if (latestDepTest) "latest.release" else "2.25.63"
+        val version = if (otelProps.testLatestDeps) "latest.release" else "2.25.63"
         implementation("software.amazon.awssdk:bedrockruntime:$version")
       }
 

@@ -64,7 +64,6 @@ tasks.named("collectReachabilityMetadata").configure {
   enabled = false
 }
 
-val latestDepTest = otelProps.testLatestDeps
 testing {
   suites {
     val slf4j2ApiTest by registering(JvmTestSuite::class) {
@@ -72,7 +71,7 @@ testing {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
 
-        if (latestDepTest) {
+        if (otelProps.testLatestDeps) {
           implementation("ch.qos.logback:logback-classic:latest.release")
           implementation("org.slf4j:slf4j-api:latest.release")
         } else {
@@ -95,7 +94,7 @@ testing {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
 
-        if (latestDepTest) {
+        if (otelProps.testLatestDeps) {
           implementation("ch.qos.logback:logback-classic:latest.release")
           implementation("org.slf4j:slf4j-api:latest.release")
           implementation("net.logstash.logback:logstash-logback-encoder:latest.release")
@@ -124,7 +123,7 @@ testing {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
 
-        if (latestDepTest) {
+        if (otelProps.testLatestDeps) {
           implementation("ch.qos.logback:logback-classic:latest.release")
           implementation("org.slf4j:slf4j-api:latest.release")
           implementation("net.logstash.logback:logstash-logback-encoder:latest.release")
@@ -153,7 +152,7 @@ testing {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
 
-        if (latestDepTest) {
+        if (otelProps.testLatestDeps) {
           implementation("ch.qos.logback:logback-classic:latest.release")
         } else {
           implementation("ch.qos.logback:logback-classic") {

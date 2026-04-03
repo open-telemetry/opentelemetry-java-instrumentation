@@ -16,15 +16,13 @@ dependencies {
   latestDepTestLibrary("io.vertx:vertx-codegen:4.+") // documented limitation
 }
 
-val latestDepTest = otelProps.testLatestDeps
-
 testing {
   suites {
     val testNoReceiveTelemetry by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project(":instrumentation:vertx:vertx-kafka-client-3.6:testing"))
 
-        val version = if (latestDepTest) "4.+" else "4.0.0"
+        val version = if (otelProps.testLatestDeps) "4.+" else "4.0.0"
         implementation("io.vertx:vertx-kafka-client:$version")
         implementation("io.vertx:vertx-codegen:$version")
       }
@@ -44,7 +42,7 @@ testing {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("testLatestDeps", latestDepTest)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
   test {

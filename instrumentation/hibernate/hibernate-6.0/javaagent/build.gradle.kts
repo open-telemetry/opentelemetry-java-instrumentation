@@ -36,8 +36,6 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
 }
 
-val latestDepTest = otelProps.testLatestDeps
-
 testing {
   suites {
     val hibernate6Test by registering(JvmTestSuite::class) {
@@ -50,7 +48,7 @@ testing {
         implementation("com.h2database:h2:1.4.197")
         implementation("org.hsqldb:hsqldb:2.0.0")
         implementation(project(":instrumentation:hibernate:testing"))
-        if (latestDepTest) {
+        if (otelProps.testLatestDeps) {
           implementation("org.hibernate:hibernate-core:6.+")
         } else {
           implementation("org.hibernate:hibernate-core:6.0.0.Final")
@@ -68,7 +66,7 @@ testing {
         implementation("com.h2database:h2:1.4.197")
         implementation("org.hsqldb:hsqldb:2.0.0")
         implementation(project(":instrumentation:hibernate:testing"))
-        if (latestDepTest) {
+        if (otelProps.testLatestDeps) {
           implementation("org.hibernate:hibernate-core:7.+")
         } else {
           implementation("org.hibernate:hibernate-core:7.0.0.Final")

@@ -51,9 +51,7 @@ tasks {
   }
 }
 
-val testLatestDeps = otelProps.testLatestDeps
-
-if (!testLatestDeps) {
+if (!otelProps.testLatestDeps) {
   configurations.testRuntimeClasspath {
     resolutionStrategy {
       eachDependency {

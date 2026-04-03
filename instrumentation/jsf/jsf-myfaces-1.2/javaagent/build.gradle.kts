@@ -24,7 +24,6 @@ dependencies {
   testInstrumentation(project(":instrumentation:jsf:jsf-myfaces-3.0:javaagent"))
 }
 
-val latestDepTest = otelProps.testLatestDeps
 testing {
   suites {
     val myfaces12Test by registering(JvmTestSuite::class) {
@@ -32,7 +31,7 @@ testing {
         implementation(project(":instrumentation:jsf:jsf-javax-common:testing"))
         implementation("com.sun.facelets:jsf-facelets:1.1.14")
 
-        val version = if (latestDepTest) "1.2.+" else "1.2.2"
+        val version = if (otelProps.testLatestDeps) "1.2.+" else "1.2.2"
         implementation("org.apache.myfaces.core:myfaces-impl:$version")
       }
     }
@@ -43,7 +42,7 @@ testing {
         implementation("javax.xml.bind:jaxb-api:2.2.11")
         implementation("com.sun.xml.bind:jaxb-impl:2.2.11")
 
-        val version = if (latestDepTest) "2.+" else "2.2.0"
+        val version = if (otelProps.testLatestDeps) "2.+" else "2.2.0"
         implementation("org.apache.myfaces.core:myfaces-impl:$version")
       }
     }

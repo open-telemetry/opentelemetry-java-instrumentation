@@ -13,8 +13,6 @@ muzzle {
   }
 }
 
-val latestDepTest = otelProps.testLatestDeps
-
 dependencies {
   library("org.springframework.pulsar:spring-pulsar:1.0.0")
   implementation(project(":instrumentation:pulsar:pulsar-2.8:javaagent"))
@@ -26,7 +24,7 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-test:3.2.4")
   testLibrary("org.springframework.boot:spring-boot-starter:3.2.4")
 
-  if (latestDepTest) {
+  if (otelProps.testLatestDeps) {
     testLibrary("org.springframework.boot:spring-boot-starter-pulsar:latest.release")
   }
 }
@@ -37,7 +35,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:spring:spring-pulsar-1.0:testing"))
 
-        if (latestDepTest) {
+        if (otelProps.testLatestDeps) {
           implementation("org.springframework.boot:spring-boot-starter-pulsar:latest.release")
           implementation("org.springframework.boot:spring-boot-starter-test:latest.release")
           implementation("org.springframework.boot:spring-boot-starter:latest.release")

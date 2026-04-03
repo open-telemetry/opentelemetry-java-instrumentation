@@ -37,9 +37,7 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-tomcat:2.+") // related dependency
 }
 
-val latestDepTest = otelProps.testLatestDeps
-
-if (!latestDepTest) {
+if (!otelProps.testLatestDeps) {
   configurations.configureEach {
     if (!name.contains("muzzle")) {
       resolutionStrategy {
@@ -74,7 +72,7 @@ spotless {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", latestDepTest)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
 
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")

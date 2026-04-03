@@ -43,8 +43,6 @@ dependencies {
   testInstrumentation(project(":instrumentation:akka:akka-actor-2.3:javaagent"))
 }
 
-val testLatestDeps = otelProps.testLatestDeps
-
 testing {
   suites {
     val latestDepTest by registering(JvmTestSuite::class) {
@@ -56,7 +54,7 @@ testing {
 }
 
 tasks {
-  if (testLatestDeps) {
+  if (otelProps.testLatestDeps) {
     // disable regular test running and compiling tasks when latest dep test task is run
     named("test") {
       enabled = false
@@ -64,7 +62,7 @@ tasks {
   }
 
   named("latestDepTest") {
-    enabled = testLatestDeps
+    enabled = otelProps.testLatestDeps
   }
 
   withType<Test>().configureEach {
