@@ -241,3 +241,4 @@ jodd-http-4.2:javaagent
 jsf-javax-common:javaagent
 jodd-http-4.2:javaagent-unit-tests
 jsf-mojarra-1.2:javaagent
+jsf-mojarra-3.0:javaagent
