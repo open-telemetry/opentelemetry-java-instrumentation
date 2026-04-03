@@ -12,6 +12,36 @@
 - Do not use AssertJ `.as(...)` descriptions or `.withFailMessage(...)` in tests.
   Prefer direct assertions whose failure output shows the unexpected values.
 
+## Parameterized Tests
+
+- Prefer `@ParameterizedTest` when multiple tests in the same file exercise the same behavior
+  with small input or expectation changes. This is a good fit when setup, action, and assertion
+  shape are identical or nearly identical.
+- Do **not** force unrelated scenarios into a parameterized test when the setup diverges
+  materially, the assertion logic branches heavily, or separate test names document distinct
+  behavior more clearly.
+- Prefer the narrowest parameter source that keeps the test readable:
+  `@ValueSource` / `@EnumSource` for a single simple input, `@CsvSource` for a few scalar input
+  and expectation tuples, and `@MethodSource` for richer inputs such as objects, lambdas,
+  callbacks, or larger expectation structures.
+- Prefer readable invocation names. When the default argument rendering would be noisy or
+  unhelpful, use `Named` values in the method source and reference them from
+  `@ParameterizedTest(name = "{0}")` instead of threading a separate display-name `String`
+  through the test method signature.
+- If the raw argument values are already concise and readable — for example simple strings,
+  enums, or small scalar tuples — prefer plain arguments over `Named`, and prefer the default
+  parameterized-test invocation rendering unless a custom `name = ...` materially improves
+  readability.
+- In mixed cases within the same file, apply that rule per source: keep `Named` for opaque
+  values such as lambdas or method references, and use plain arguments for readable enums,
+  strings, or other self-describing values.
+- Keep the parameterized test body focused on the shared behavior. Push case-specific data into
+  the method source or a small helper instead of branching inside the test body.
+- When a method source is only used by one adjacent test or test cluster, place it immediately
+  after that test cluster. When the same source is reused by several separated tests, or when a
+  file has several sources that would interrupt the main test flow, keep the sources together at
+  the bottom of the file.
+
 ## Test Resource Cleanup
 
 - In JUnit tests, when an `AutoCloseable` is intended to remain live for most or all of the test

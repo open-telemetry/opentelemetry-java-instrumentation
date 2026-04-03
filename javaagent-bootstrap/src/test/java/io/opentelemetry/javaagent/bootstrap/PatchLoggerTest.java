@@ -14,8 +14,10 @@ import static java.util.logging.Level.OFF;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Named.named;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
@@ -27,9 +29,15 @@ import java.util.List;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
 
@@ -83,161 +91,85 @@ class PatchLoggerTest {
     assertThat(logger.getName()).isEqualTo("xyz");
   }
 
-  @Test
-  void testNormalMethods() {
-    // given
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("normalMethodArgs")
+  void testNormalMethods(
+      BiConsumer<PatchLogger, String> invocation,
+      String message,
+      InternalLogger.Level expectedLevel) {
     InternalLogger internalLogger = mock(InternalLogger.class);
     PatchLogger logger = new PatchLogger(internalLogger);
 
-    // when
-    logger.severe("ereves");
-    logger.warning("gninraw");
-    logger.info("ofni");
-    logger.config("gifnoc");
-    logger.fine("enif");
-    logger.finer("renif");
-    logger.finest("tsenif");
+    invocation.accept(logger, message);
 
-    // then
-    InOrder inOrder = Mockito.inOrder(internalLogger);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif", null);
+    verify(internalLogger).log(expectedLevel, message, null);
     verifyNoMoreInteractions(internalLogger);
   }
 
-  @Test
-  void testParameterizedLevelMethodsWithNoParams() {
-    // given
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("simpleLevelArgs")
+  void testParameterizedLevelMethodsWithNoParams(
+      Level level, String message, InternalLogger.Level expectedLevel) {
     InternalLogger internalLogger = mock(InternalLogger.class);
     PatchLogger logger = new PatchLogger(internalLogger);
 
-    // when
-    logger.log(SEVERE, "ereves");
-    logger.log(WARNING, "gninraw");
-    logger.log(INFO, "ofni");
-    logger.log(CONFIG, "gifnoc");
-    logger.log(FINE, "enif");
-    logger.log(FINER, "renif");
-    logger.log(FINEST, "tsenif");
+    logger.log(level, message);
 
-    // then
-    InOrder inOrder = Mockito.inOrder(internalLogger);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif", null);
+    verify(internalLogger).log(expectedLevel, message, null);
     verifyNoMoreInteractions(internalLogger);
   }
 
-  @Test
-  void testParameterizedLevelMethodsWithSingleParam() {
-    // given
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("formattedLevelArgs")
+  void testParameterizedLevelMethodsWithSingleParam(
+      Level level,
+      String template,
+      String arg,
+      String expectedMessage,
+      InternalLogger.Level expectedLevel) {
     InternalLogger internalLogger = mock(InternalLogger.class);
     when(internalLogger.isLoggable(any())).thenReturn(true);
     PatchLogger logger = new PatchLogger(internalLogger);
 
-    // when
-    logger.log(SEVERE, "ereves: {0}", "a");
-    logger.log(WARNING, "gninraw: {0}", "b");
-    logger.log(INFO, "ofni: {0}", "c");
-    logger.log(CONFIG, "gifnoc: {0}", "d");
-    logger.log(FINE, "enif: {0}", "e");
-    logger.log(FINER, "renif: {0}", "f");
-    logger.log(FINEST, "tsenif: {0}", "g");
+    logger.log(level, template, arg);
 
-    // then
     InOrder inOrder = Mockito.inOrder(internalLogger);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.ERROR);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves: a", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.WARN);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw: b", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni: c", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc: d", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif: e", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif: f", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif: g", null);
+    inOrder.verify(internalLogger).isLoggable(expectedLevel);
+    inOrder.verify(internalLogger).log(expectedLevel, expectedMessage, null);
     verifyNoMoreInteractions(internalLogger);
   }
 
-  @Test
-  void testParameterizedLevelMethodsWithArrayOfParams() {
-    // given
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("formattedArrayLevelArgs")
+  void testParameterizedLevelMethodsWithArrayOfParams(
+      Level level,
+      String template,
+      Object[] args,
+      String expectedMessage,
+      InternalLogger.Level expectedLevel) {
     InternalLogger internalLogger = mock(InternalLogger.class);
     when(internalLogger.isLoggable(any())).thenReturn(true);
     PatchLogger logger = new PatchLogger(internalLogger);
 
-    // when
-    logger.log(SEVERE, "ereves: {0},{1}", new Object[] {"a", "b"});
-    logger.log(WARNING, "gninraw: {0},{1}", new Object[] {"b", "c"});
-    logger.log(INFO, "ofni: {0},{1}", new Object[] {"c", "d"});
-    logger.log(CONFIG, "gifnoc: {0},{1}", new Object[] {"d", "e"});
-    logger.log(FINE, "enif: {0},{1}", new Object[] {"e", "f"});
-    logger.log(FINER, "renif: {0},{1}", new Object[] {"f", "g"});
-    logger.log(FINEST, "tsenif: {0},{1}", new Object[] {"g", "h"});
+    logger.log(level, template, args);
 
-    // then
     InOrder inOrder = Mockito.inOrder(internalLogger);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.ERROR);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves: a,b", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.WARN);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw: b,c", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni: c,d", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc: d,e", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif: e,f", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif: f,g", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif: g,h", null);
+    inOrder.verify(internalLogger).isLoggable(expectedLevel);
+    inOrder.verify(internalLogger).log(expectedLevel, expectedMessage, null);
     verifyNoMoreInteractions(internalLogger);
   }
 
-  @Test
-  void testParameterizedLevelMethodsWithThrowable() {
-    // given
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("simpleLevelArgs")
+  void testParameterizedLevelMethodsWithThrowable(
+      Level level, String message, InternalLogger.Level expectedLevel) {
     InternalLogger internalLogger = mock(InternalLogger.class);
     PatchLogger logger = new PatchLogger(internalLogger);
-    Throwable a = new Throwable();
-    Throwable b = new Throwable();
-    Throwable c = new Throwable();
-    Throwable d = new Throwable();
-    Throwable e = new Throwable();
-    Throwable f = new Throwable();
-    Throwable g = new Throwable();
+    Throwable t = new Throwable(message);
 
-    // when
-    logger.log(SEVERE, "ereves", a);
-    logger.log(WARNING, "gninraw", b);
-    logger.log(INFO, "ofni", c);
-    logger.log(CONFIG, "gifnoc", d);
-    logger.log(FINE, "enif", e);
-    logger.log(FINER, "renif", f);
-    logger.log(FINEST, "tsenif", g);
+    logger.log(level, message, t);
 
-    // then
-    InOrder inOrder = Mockito.inOrder(internalLogger);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves", a);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw", b);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni", c);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc", d);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif", e);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif", f);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif", g);
+    verify(internalLogger).log(expectedLevel, message, t);
     verifyNoMoreInteractions(internalLogger);
   }
 
@@ -298,59 +230,15 @@ class PatchLoggerTest {
     assertThat(logger.isLoggable(FINEST)).isFalse();
   }
 
-  @Test
-  void testGetLevelSevere() {
-    // given
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("getLevelArgs")
+  void testGetLevel(InternalLogger.Level enabledLevel, Level expectedLevel) {
     InternalLogger internalLogger = mock(InternalLogger.class);
-    when(internalLogger.isLoggable(InternalLogger.Level.ERROR)).thenReturn(true);
-    // when
-    PatchLogger logger = new PatchLogger(internalLogger);
-    // then
-    assertThat(logger.getLevel()).isEqualTo(SEVERE);
-  }
+    when(internalLogger.isLoggable(enabledLevel)).thenReturn(true);
 
-  @Test
-  void testGetLevelWarning() {
-    // given
-    InternalLogger internalLogger = mock(InternalLogger.class);
-    when(internalLogger.isLoggable(InternalLogger.Level.WARN)).thenReturn(true);
-    // when
     PatchLogger logger = new PatchLogger(internalLogger);
-    // then
-    assertThat(logger.getLevel()).isEqualTo(WARNING);
-  }
 
-  @Test
-  void testGetLevelConfig() {
-    // given
-    InternalLogger internalLogger = mock(InternalLogger.class);
-    when(internalLogger.isLoggable(InternalLogger.Level.INFO)).thenReturn(true);
-    // when
-    PatchLogger logger = new PatchLogger(internalLogger);
-    // then
-    assertThat(logger.getLevel()).isEqualTo(CONFIG);
-  }
-
-  @Test
-  void testGetLevelFine() {
-    // given
-    InternalLogger internalLogger = mock(InternalLogger.class);
-    when(internalLogger.isLoggable(InternalLogger.Level.DEBUG)).thenReturn(true);
-    // when
-    PatchLogger logger = new PatchLogger(internalLogger);
-    // then
-    assertThat(logger.getLevel()).isEqualTo(FINE);
-  }
-
-  @Test
-  void testGetLevelFinest() {
-    // given
-    InternalLogger internalLogger = mock(InternalLogger.class);
-    when(internalLogger.isLoggable(InternalLogger.Level.TRACE)).thenReturn(true);
-    // when
-    PatchLogger logger = new PatchLogger(internalLogger);
-    // then
-    assertThat(logger.getLevel()).isEqualTo(FINEST);
+    assertThat(logger.getLevel()).isEqualTo(expectedLevel);
   }
 
   @Test
@@ -363,231 +251,123 @@ class PatchLoggerTest {
     assertThat(logger.getLevel()).isEqualTo(OFF);
   }
 
-  @Test
-  void testLogpParameterizedLevelMethodsWithNoParams() {
-    // given
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("simpleLevelArgs")
+  void testLogpParameterizedLevelMethodsWithNoParams(
+      Level level, String message, InternalLogger.Level expectedLevel) {
     InternalLogger internalLogger = mock(InternalLogger.class);
     PatchLogger logger = new PatchLogger(internalLogger);
 
-    // when
-    logger.logp(SEVERE, null, null, "ereves");
-    logger.logp(WARNING, null, null, "gninraw");
-    logger.logp(INFO, null, null, "ofni");
-    logger.logp(CONFIG, null, null, "gifnoc");
-    logger.logp(FINE, null, null, "enif");
-    logger.logp(FINER, null, null, "renif");
-    logger.logp(FINEST, null, null, "tsenif");
+    logger.logp(level, null, null, message);
 
-    // then
-    InOrder inOrder = Mockito.inOrder(internalLogger);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif", null);
+    verify(internalLogger).log(expectedLevel, message, null);
     verifyNoMoreInteractions(internalLogger);
   }
 
-  @Test
-  void testLogpParameterizedLevelMethodsWithSingleParam() {
-    // given
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("formattedLevelArgs")
+  void testLogpParameterizedLevelMethodsWithSingleParam(
+      Level level,
+      String template,
+      String arg,
+      String expectedMessage,
+      InternalLogger.Level expectedLevel) {
     InternalLogger internalLogger = mock(InternalLogger.class);
     when(internalLogger.isLoggable(any())).thenReturn(true);
     PatchLogger logger = new PatchLogger(internalLogger);
 
-    // when
-    logger.logp(SEVERE, null, null, "ereves: {0}", "a");
-    logger.logp(WARNING, null, null, "gninraw: {0}", "b");
-    logger.logp(INFO, null, null, "ofni: {0}", "c");
-    logger.logp(CONFIG, null, null, "gifnoc: {0}", "d");
-    logger.logp(FINE, null, null, "enif: {0}", "e");
-    logger.logp(FINER, null, null, "renif: {0}", "f");
-    logger.logp(FINEST, null, null, "tsenif: {0}", "g");
+    logger.logp(level, null, null, template, arg);
 
-    // then
     InOrder inOrder = Mockito.inOrder(internalLogger);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.ERROR);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves: a", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.WARN);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw: b", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni: c", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc: d", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif: e", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif: f", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif: g", null);
+    inOrder.verify(internalLogger).isLoggable(expectedLevel);
+    inOrder.verify(internalLogger).log(expectedLevel, expectedMessage, null);
     verifyNoMoreInteractions(internalLogger);
   }
 
-  @Test
-  void testLogpParameterizedLevelMethodsWithArrayOfParams() {
-    // given
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("formattedArrayLevelArgs")
+  void testLogpParameterizedLevelMethodsWithArrayOfParams(
+      Level level,
+      String template,
+      Object[] args,
+      String expectedMessage,
+      InternalLogger.Level expectedLevel) {
     InternalLogger internalLogger = mock(InternalLogger.class);
     when(internalLogger.isLoggable(any())).thenReturn(true);
     PatchLogger logger = new PatchLogger(internalLogger);
 
-    // when
-    logger.logp(SEVERE, null, null, "ereves: {0},{1}", new Object[] {"a", "b"});
-    logger.logp(WARNING, null, null, "gninraw: {0},{1}", new Object[] {"b", "c"});
-    logger.logp(INFO, null, null, "ofni: {0},{1}", new Object[] {"c", "d"});
-    logger.logp(CONFIG, null, null, "gifnoc: {0},{1}", new Object[] {"d", "e"});
-    logger.logp(FINE, null, null, "enif: {0},{1}", new Object[] {"e", "f"});
-    logger.logp(FINER, null, null, "renif: {0},{1}", new Object[] {"f", "g"});
-    logger.logp(FINEST, null, null, "tsenif: {0},{1}", new Object[] {"g", "h"});
+    logger.logp(level, null, null, template, args);
 
-    // then
     InOrder inOrder = Mockito.inOrder(internalLogger);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.ERROR);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves: a,b", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.WARN);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw: b,c", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni: c,d", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc: d,e", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif: e,f", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif: f,g", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif: g,h", null);
+    inOrder.verify(internalLogger).isLoggable(expectedLevel);
+    inOrder.verify(internalLogger).log(expectedLevel, expectedMessage, null);
     verifyNoMoreInteractions(internalLogger);
   }
 
-  @Test
-  void testLogpParameterizedLevelMethodsWithThrowable() {
-    // given
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("simpleLevelArgs")
+  void testLogpParameterizedLevelMethodsWithThrowable(
+      Level level, String message, InternalLogger.Level expectedLevel) {
     InternalLogger internalLogger = mock(InternalLogger.class);
     PatchLogger logger = new PatchLogger(internalLogger);
-    Throwable a = new Throwable();
-    Throwable b = new Throwable();
-    Throwable c = new Throwable();
-    Throwable d = new Throwable();
-    Throwable e = new Throwable();
-    Throwable f = new Throwable();
-    Throwable g = new Throwable();
+    Throwable t = new Throwable(message);
 
-    // when
-    logger.logp(SEVERE, null, null, "ereves", a);
-    logger.logp(WARNING, null, null, "gninraw", b);
-    logger.logp(INFO, null, null, "ofni", c);
-    logger.logp(CONFIG, null, null, "gifnoc", d);
-    logger.logp(FINE, null, null, "enif", e);
-    logger.logp(FINER, null, null, "renif", f);
-    logger.logp(FINEST, null, null, "tsenif", g);
+    logger.logp(level, null, null, message, t);
 
-    // then
-    InOrder inOrder = Mockito.inOrder(internalLogger);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves", a);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw", b);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni", c);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc", d);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif", e);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif", f);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif", g);
+    verify(internalLogger).log(expectedLevel, message, t);
     verifyNoMoreInteractions(internalLogger);
   }
 
-  @Test
-  void testLogrbParameterizedLevelMethodsWithNoParams() {
-    // given
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("simpleLevelArgs")
+  void testLogrbParameterizedLevelMethodsWithNoParams(
+      Level level, String message, InternalLogger.Level expectedLevel) {
     InternalLogger internalLogger = mock(InternalLogger.class);
     PatchLogger logger = new PatchLogger(internalLogger);
 
-    // when
-    logger.logrb(SEVERE, null, null, null, "ereves");
-    logger.logrb(WARNING, null, null, null, "gninraw");
-    logger.logrb(INFO, null, null, null, "ofni");
-    logger.logrb(CONFIG, null, null, null, "gifnoc");
-    logger.logrb(FINE, null, null, null, "enif");
-    logger.logrb(FINER, null, null, null, "renif");
-    logger.logrb(FINEST, null, null, null, "tsenif");
+    logger.logrb(level, null, null, null, message);
 
-    // then
-    InOrder inOrder = Mockito.inOrder(internalLogger);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif", null);
+    verify(internalLogger).log(expectedLevel, message, null);
     verifyNoMoreInteractions(internalLogger);
   }
 
-  @Test
-  void testLogrbParameterizedLevelMethodsWithSingleParam() {
-    // given
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("formattedLevelArgs")
+  void testLogrbParameterizedLevelMethodsWithSingleParam(
+      Level level,
+      String template,
+      String arg,
+      String expectedMessage,
+      InternalLogger.Level expectedLevel) {
     InternalLogger internalLogger = mock(InternalLogger.class);
     when(internalLogger.isLoggable(any())).thenReturn(true);
     PatchLogger logger = new PatchLogger(internalLogger);
 
-    // when
-    logger.logrb(SEVERE, null, null, null, "ereves: {0}", "a");
-    logger.logrb(WARNING, null, null, null, "gninraw: {0}", "b");
-    logger.logrb(INFO, null, null, null, "ofni: {0}", "c");
-    logger.logrb(CONFIG, null, null, null, "gifnoc: {0}", "d");
-    logger.logrb(FINE, null, null, null, "enif: {0}", "e");
-    logger.logrb(FINER, null, null, null, "renif: {0}", "f");
-    logger.logrb(FINEST, null, null, null, "tsenif: {0}", "g");
+    logger.logrb(level, null, null, null, template, arg);
 
-    // then
     InOrder inOrder = Mockito.inOrder(internalLogger);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.ERROR);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves: a", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.WARN);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw: b", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni: c", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc: d", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif: e", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif: f", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif: g", null);
+    inOrder.verify(internalLogger).isLoggable(expectedLevel);
+    inOrder.verify(internalLogger).log(expectedLevel, expectedMessage, null);
     verifyNoMoreInteractions(internalLogger);
   }
 
-  @Test
-  void testLogrbParameterizedLevelMethodsWithArrayOfParams() {
-    // given
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("formattedArrayLevelArgs")
+  void testLogrbParameterizedLevelMethodsWithArrayOfParams(
+      Level level,
+      String template,
+      Object[] args,
+      String expectedMessage,
+      InternalLogger.Level expectedLevel) {
     InternalLogger internalLogger = mock(InternalLogger.class);
     when(internalLogger.isLoggable(any())).thenReturn(true);
     PatchLogger logger = new PatchLogger(internalLogger);
 
-    // when
-    logger.logrb(SEVERE, null, null, (String) null, "ereves: {0},{1}", new Object[] {"a", "b"});
-    logger.logrb(WARNING, null, null, (String) null, "gninraw: {0},{1}", new Object[] {"b", "c"});
-    logger.logrb(INFO, null, null, (String) null, "ofni: {0},{1}", new Object[] {"c", "d"});
-    logger.logrb(CONFIG, null, null, (String) null, "gifnoc: {0},{1}", new Object[] {"d", "e"});
-    logger.logrb(FINE, null, null, (String) null, "enif: {0},{1}", new Object[] {"e", "f"});
-    logger.logrb(FINER, null, null, (String) null, "renif: {0},{1}", new Object[] {"f", "g"});
-    logger.logrb(FINEST, null, null, (String) null, "tsenif: {0},{1}", new Object[] {"g", "h"});
+    logger.logrb(level, null, null, (String) null, template, args);
 
-    // then
     InOrder inOrder = Mockito.inOrder(internalLogger);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.ERROR);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves: a,b", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.WARN);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw: b,c", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni: c,d", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc: d,e", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif: e,f", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif: f,g", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif: g,h", null);
+    inOrder.verify(internalLogger).isLoggable(expectedLevel);
+    inOrder.verify(internalLogger).log(expectedLevel, expectedMessage, null);
     verifyNoMoreInteractions(internalLogger);
   }
 
@@ -661,105 +441,45 @@ class PatchLoggerTest {
     verifyNoMoreInteractions(internalLogger);
   }
 
-  @Test
-  void testLogrbParameterizedLevelMethodsWithThrowable() {
-    // given
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("simpleLevelArgs")
+  void testLogrbParameterizedLevelMethodsWithThrowable(
+      Level level, String message, InternalLogger.Level expectedLevel) {
     InternalLogger internalLogger = mock(InternalLogger.class);
     PatchLogger logger = new PatchLogger(internalLogger);
-    Throwable a = new Throwable();
-    Throwable b = new Throwable();
-    Throwable c = new Throwable();
-    Throwable d = new Throwable();
-    Throwable e = new Throwable();
-    Throwable f = new Throwable();
-    Throwable g = new Throwable();
+    Throwable t = new Throwable(message);
 
-    // when
-    logger.logrb(SEVERE, null, null, (String) null, "ereves", a);
-    logger.logrb(WARNING, null, null, (String) null, "gninraw", b);
-    logger.logrb(INFO, null, null, (String) null, "ofni", c);
-    logger.logrb(CONFIG, null, null, (String) null, "gifnoc", d);
-    logger.logrb(FINE, null, null, (String) null, "enif", e);
-    logger.logrb(FINER, null, null, (String) null, "renif", f);
-    logger.logrb(FINEST, null, null, (String) null, "tsenif", g);
+    logger.logrb(level, null, null, (String) null, message, t);
 
-    // then
-    InOrder inOrder = Mockito.inOrder(internalLogger);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves", a);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw", b);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni", c);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc", d);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif", e);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif", f);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif", g);
+    verify(internalLogger).log(expectedLevel, message, t);
     verifyNoMoreInteractions(internalLogger);
   }
 
-  @Test
-  void testLogrbParameterizedLevelMethodsWithThrowable2() {
-    // given
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("simpleLevelArgs")
+  void testLogrbParameterizedLevelMethodsWithThrowable2(
+      Level level, String message, InternalLogger.Level expectedLevel) {
     InternalLogger internalLogger = mock(InternalLogger.class);
     PatchLogger logger = new PatchLogger(internalLogger);
-    Throwable a = new Throwable();
-    Throwable b = new Throwable();
-    Throwable c = new Throwable();
-    Throwable d = new Throwable();
-    Throwable e = new Throwable();
-    Throwable f = new Throwable();
-    Throwable g = new Throwable();
+    Throwable t = new Throwable(message);
 
-    // when
-    logger.logrb(SEVERE, null, null, (ResourceBundle) null, "ereves", a);
-    logger.logrb(WARNING, null, null, (ResourceBundle) null, "gninraw", b);
-    logger.logrb(INFO, null, null, (ResourceBundle) null, "ofni", c);
-    logger.logrb(CONFIG, null, null, (ResourceBundle) null, "gifnoc", d);
-    logger.logrb(FINE, null, null, (ResourceBundle) null, "enif", e);
-    logger.logrb(FINER, null, null, (ResourceBundle) null, "renif", f);
-    logger.logrb(FINEST, null, null, (ResourceBundle) null, "tsenif", g);
+    logger.logrb(level, null, null, (ResourceBundle) null, message, t);
 
-    // then
-    InOrder inOrder = Mockito.inOrder(internalLogger);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves", a);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw", b);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni", c);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc", d);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif", e);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif", f);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif", g);
+    verify(internalLogger).log(expectedLevel, message, t);
     verifyNoMoreInteractions(internalLogger);
   }
 
-  @Test
-  void testLogrbParameterizedLevelMethodsWithResourceBundleObjectAndThrowable() {
-    // given
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("simpleLevelArgs")
+  void testLogrbParameterizedLevelMethodsWithResourceBundleObjectAndThrowable(
+      Level level, String message, InternalLogger.Level expectedLevel) {
     InternalLogger internalLogger = mock(InternalLogger.class);
     PatchLogger logger = new PatchLogger(internalLogger);
-    Throwable a = new Throwable();
-    Throwable b = new Throwable();
-    Throwable c = new Throwable();
-    Throwable d = new Throwable();
-    Throwable e = new Throwable();
-    Throwable f = new Throwable();
-    Throwable g = new Throwable();
+    Throwable t = new Throwable(message);
 
-    // when
-    logger.logrb(SEVERE, null, null, (ResourceBundle) null, "ereves", a);
-    logger.logrb(WARNING, null, null, (ResourceBundle) null, "gninraw", b);
-    logger.logrb(INFO, null, null, (ResourceBundle) null, "ofni", c);
-    logger.logrb(CONFIG, null, null, (ResourceBundle) null, "gifnoc", d);
-    logger.logrb(FINE, null, null, (ResourceBundle) null, "enif", e);
-    logger.logrb(FINER, null, null, (ResourceBundle) null, "renif", f);
-    logger.logrb(FINEST, null, null, (ResourceBundle) null, "tsenif", g);
+    logger.logrb(level, null, null, (ResourceBundle) null, message, t);
 
-    // then
-    InOrder inOrder = Mockito.inOrder(internalLogger);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves", a);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw", b);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni", c);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc", d);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif", e);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif", f);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif", g);
+    verify(internalLogger).log(expectedLevel, message, t);
     verifyNoMoreInteractions(internalLogger);
   }
 
@@ -793,6 +513,111 @@ class PatchLoggerTest {
     assertThat(logger.getResourceBundle()).isNull();
     assertThat(logger.getResourceBundleName()).isNull();
     verifyNoMoreInteractions(internalLogger);
+  }
+
+  private static Stream<Arguments> normalMethodArgs() {
+    return Stream.of(
+        Arguments.of(
+            named("severe()", (BiConsumer<PatchLogger, String>) PatchLogger::severe),
+            "ereves",
+            InternalLogger.Level.ERROR),
+        Arguments.of(
+            named("warning()", (BiConsumer<PatchLogger, String>) PatchLogger::warning),
+            "gninraw",
+            InternalLogger.Level.WARN),
+        Arguments.of(
+            named("info()", (BiConsumer<PatchLogger, String>) PatchLogger::info),
+            "ofni",
+            InternalLogger.Level.INFO),
+        Arguments.of(
+            named("config()", (BiConsumer<PatchLogger, String>) PatchLogger::config),
+            "gifnoc",
+            InternalLogger.Level.INFO),
+        Arguments.of(
+            named("fine()", (BiConsumer<PatchLogger, String>) PatchLogger::fine),
+            "enif",
+            InternalLogger.Level.DEBUG),
+        Arguments.of(
+            named("finer()", (BiConsumer<PatchLogger, String>) PatchLogger::finer),
+            "renif",
+            InternalLogger.Level.TRACE),
+        Arguments.of(
+            named("finest()", (BiConsumer<PatchLogger, String>) PatchLogger::finest),
+            "tsenif",
+            InternalLogger.Level.TRACE));
+  }
+
+  private static Stream<Arguments> simpleLevelArgs() {
+    return Stream.of(
+        Arguments.of(SEVERE, "ereves", InternalLogger.Level.ERROR),
+        Arguments.of(WARNING, "gninraw", InternalLogger.Level.WARN),
+        Arguments.of(INFO, "ofni", InternalLogger.Level.INFO),
+        Arguments.of(CONFIG, "gifnoc", InternalLogger.Level.DEBUG),
+        Arguments.of(FINE, "enif", InternalLogger.Level.DEBUG),
+        Arguments.of(FINER, "renif", InternalLogger.Level.TRACE),
+        Arguments.of(FINEST, "tsenif", InternalLogger.Level.TRACE));
+  }
+
+  private static Stream<Arguments> formattedLevelArgs() {
+    return Stream.of(
+        Arguments.of(SEVERE, "ereves: {0}", "a", "ereves: a", InternalLogger.Level.ERROR),
+        Arguments.of(WARNING, "gninraw: {0}", "b", "gninraw: b", InternalLogger.Level.WARN),
+        Arguments.of(INFO, "ofni: {0}", "c", "ofni: c", InternalLogger.Level.INFO),
+        Arguments.of(CONFIG, "gifnoc: {0}", "d", "gifnoc: d", InternalLogger.Level.DEBUG),
+        Arguments.of(FINE, "enif: {0}", "e", "enif: e", InternalLogger.Level.DEBUG),
+        Arguments.of(FINER, "renif: {0}", "f", "renif: f", InternalLogger.Level.TRACE),
+        Arguments.of(FINEST, "tsenif: {0}", "g", "tsenif: g", InternalLogger.Level.TRACE));
+  }
+
+  private static Stream<Arguments> formattedArrayLevelArgs() {
+    return Stream.of(
+        Arguments.of(
+            SEVERE,
+            "ereves: {0},{1}",
+            new Object[] {"a", "b"},
+            "ereves: a,b",
+            InternalLogger.Level.ERROR),
+        Arguments.of(
+            WARNING,
+            "gninraw: {0},{1}",
+            new Object[] {"b", "c"},
+            "gninraw: b,c",
+            InternalLogger.Level.WARN),
+        Arguments.of(
+            INFO, "ofni: {0},{1}", new Object[] {"c", "d"}, "ofni: c,d", InternalLogger.Level.INFO),
+        Arguments.of(
+            CONFIG,
+            "gifnoc: {0},{1}",
+            new Object[] {"d", "e"},
+            "gifnoc: d,e",
+            InternalLogger.Level.DEBUG),
+        Arguments.of(
+            FINE,
+            "enif: {0},{1}",
+            new Object[] {"e", "f"},
+            "enif: e,f",
+            InternalLogger.Level.DEBUG),
+        Arguments.of(
+            FINER,
+            "renif: {0},{1}",
+            new Object[] {"f", "g"},
+            "renif: f,g",
+            InternalLogger.Level.TRACE),
+        Arguments.of(
+            FINEST,
+            "tsenif: {0},{1}",
+            new Object[] {"g", "h"},
+            "tsenif: g,h",
+            InternalLogger.Level.TRACE));
+  }
+
+  private static Stream<Arguments> getLevelArgs() {
+    return Stream.of(
+        Arguments.of(InternalLogger.Level.ERROR, SEVERE),
+        Arguments.of(InternalLogger.Level.WARN, WARNING),
+        Arguments.of(InternalLogger.Level.INFO, CONFIG),
+        Arguments.of(InternalLogger.Level.DEBUG, FINE),
+        Arguments.of(InternalLogger.Level.TRACE, FINEST));
   }
 
   static class MethodSignature {
