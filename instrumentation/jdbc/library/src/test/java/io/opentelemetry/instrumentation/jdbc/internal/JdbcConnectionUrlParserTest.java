@@ -62,6 +62,23 @@ class JdbcConnectionUrlParserTest {
     assertThat(JdbcConnectionUrlParser.parse(null, null)).isEqualTo(DEFAULT);
   }
 
+  @Test
+  void testParserExceptionReturnsBestEffortInfo() {
+    // Intentionally malformed Oracle URL: missing subtype/connect info, which triggers the
+    // Oracle parser's substring-based failure path after it has already applied defaults/props.
+    testVerifySystemSubtypeParsingOfUrl(
+        arg("jdbc:oracle:")
+            .setProperties(stdProps())
+            .setShortUrl("oracle://stdServerName:9999")
+            .setSystem("oracle.db")
+            .setOldSystem("oracle")
+            .setUser("stdUserName")
+            .setHost("stdServerName")
+            .setPort(9999)
+            .setName("stdDatabaseName")
+            .build());
+  }
+
   private static Stream<Arguments> mySqlArguments() {
     return args(
         // https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-jdbc-url-format.html

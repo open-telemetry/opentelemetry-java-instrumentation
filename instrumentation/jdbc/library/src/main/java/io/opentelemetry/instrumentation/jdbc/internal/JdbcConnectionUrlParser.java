@@ -107,7 +107,8 @@ public final class JdbcConnectionUrlParser {
    *
    * @param connectionUrl the JDBC connection URL
    * @param props optional connection properties
-   * @return the parsed DbInfo, or DbInfo.DEFAULT if parsing fails
+   * @return the parsed DbInfo, or DbInfo.DEFAULT for null/invalid non-JDBC inputs; parser failures
+   *     return the best-effort result accumulated before the failure
    */
   public static DbInfo parse(String connectionUrl, Properties props) {
     if (connectionUrl == null) {
@@ -129,13 +130,11 @@ public final class JdbcConnectionUrlParser {
     }
 
     String type = jdbcUrl.substring(0, typeLoc);
+    JdbcUrlParser parser = TYPE_PARSERS.get(type);
+    ParseContext ctx = ParseContext.of(type, props);
 
     try {
-      JdbcUrlParser parser = TYPE_PARSERS.get(type);
-
-      ParseContext ctx = ParseContext.of(type, props);
       if (parser == null) {
-        // Unknown JDBC type: apply all standard DataSource properties and use generic parser
         ctx.applyDataSourceProperties();
         GenericUrlParser.INSTANCE.parse(jdbcUrl, ctx);
       } else {
@@ -145,7 +144,7 @@ public final class JdbcConnectionUrlParser {
       return ctx.toDbInfo();
     } catch (RuntimeException e) {
       logger.log(FINE, "Error parsing URL", e);
-      return DEFAULT;
+      return ctx.toDbInfo();
     }
   }
 
