@@ -83,9 +83,7 @@ tasks {
   named("compileHibernateReactive4TestJava", JavaCompile::class).configure {
     options.release.set(17)
   }
-  val testJavaVersion =
-    gradle.startParameter.projectProperties.get("testJavaVersion")?.let(JavaVersion::toVersion)
-      ?: JavaVersion.current()
+  val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
   if (testJavaVersion.isJava8) {
     named("hibernateReactive2Test", Test::class).configure {
       enabled = false

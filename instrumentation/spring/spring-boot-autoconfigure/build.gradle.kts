@@ -165,10 +165,8 @@ if (otelProps.testLatestDeps) {
   }
 }
 
-val testJavaVersion =
-  gradle.startParameter.projectProperties["testJavaVersion"]?.let(JavaVersion::toVersion)
 val testSpring3 =
-  (testJavaVersion == null || testJavaVersion.compareTo(JavaVersion.VERSION_17) >= 0)
+  (otelProps.testJavaVersion == null || otelProps.testJavaVersion.compareTo(JavaVersion.VERSION_17) >= 0)
 
 testing {
   suites {

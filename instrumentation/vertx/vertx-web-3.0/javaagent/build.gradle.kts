@@ -62,9 +62,7 @@ tasks {
   named("compileVersion5TestJava", JavaCompile::class).configure {
     options.release.set(11)
   }
-  val testJavaVersion =
-    gradle.startParameter.projectProperties.get("testJavaVersion")?.let(JavaVersion::toVersion)
-      ?: JavaVersion.current()
+  val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
   if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_11)) {
     named("version5Test", Test::class).configure {
       enabled = false

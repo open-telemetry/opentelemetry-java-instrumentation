@@ -20,9 +20,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:async-http-client:async-http-client-1.9:javaagent"))
 }
 
-val testJavaVersion =
-  gradle.startParameter.projectProperties["testJavaVersion"]?.let(JavaVersion::toVersion)
-    ?: JavaVersion.current()
+val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
 
 if (!otelProps.testLatestDeps) {
   otelJava {
