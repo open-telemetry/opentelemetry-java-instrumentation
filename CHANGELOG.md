@@ -16,6 +16,9 @@
   `*.query-sanitization.enabled` names, and deprecated the declarative config name
   `statement_sanitizer` in favor of `query_sanitization`
 - Deprecated the declarative config group `common.database` in favor of `common.db`
+- Deprecated the common DB sqlcommenter system property name
+  `otel.instrumentation.common.experimental.db-sqlcommenter.enabled` in favor of
+  `otel.instrumentation.common.db.experimental.sqlcommenter.enabled`
 - Deprecated the GraphQL system property name
   `otel.instrumentation.graphql.query-sanitizer.enabled` and declarative config name
   `query_sanitizer` in favor of `otel.instrumentation.graphql.query-sanitization.enabled` and
