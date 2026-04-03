@@ -18,7 +18,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ClientResourcesInstrumentation implements TypeInstrumentation {
+class ClientResourcesInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("io.lettuce.core.resource.ClientResources"));
@@ -32,8 +32,7 @@ public class ClientResourcesInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPublic().and(isStatic()).and(named("builder")),
-        this.getClass().getName() + "$BuilderAdvice");
+        isPublic().and(isStatic()).and(named("builder")), getClass().getName() + "$BuilderAdvice");
   }
 
   @SuppressWarnings("unused")

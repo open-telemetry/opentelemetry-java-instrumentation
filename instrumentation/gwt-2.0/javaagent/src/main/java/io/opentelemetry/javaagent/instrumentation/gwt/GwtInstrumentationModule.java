@@ -25,7 +25,7 @@ public class GwtInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // class added in gwt 2.0
+    // added in 2.0
     return hasClassesNamed("com.google.gwt.uibinder.client.UiBinder");
   }
 

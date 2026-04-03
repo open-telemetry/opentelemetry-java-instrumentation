@@ -29,7 +29,7 @@ import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
-public class KafkaConsumerInstrumentation implements TypeInstrumentation {
+class KafkaConsumerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -44,7 +44,7 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
             .and(takesArguments(1))
             .and(takesArgument(0, long.class).or(takesArgument(0, Duration.class)))
             .and(returns(named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
-        this.getClass().getName() + "$PollAdvice");
+        getClass().getName() + "$PollAdvice");
   }
 
   @SuppressWarnings("unused")

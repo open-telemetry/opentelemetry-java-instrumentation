@@ -14,18 +14,17 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.Timer;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jms.MessageWithDestination;
 import jakarta.jms.Message;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
+class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -64,14 +63,13 @@ public class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Enter Timer timer,
-        @Advice.Return Message message,
-        @Advice.Thrown Throwable throwable) {
+        @Advice.Return @Nullable Message message,
+        @Advice.Thrown @Nullable Throwable throwable) {
       if (message == null) {
         // Do not create span when no message is received
         return;
       }
 
-      Context parentContext = Java8BytecodeBridge.currentContext();
       MessageWithDestination request =
           MessageWithDestination.create(JakartaMessageAdapter.create(message), null);
 

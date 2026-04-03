@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * {@link SinkTaskInstrumentation}) and low-level kafka-clients spans would be created for the same
  * consumer operation. This ensures only the meaningful Kafka Connect spans are generated.
  */
-public class WorkerSinkTaskInstrumentation implements TypeInstrumentation {
+class WorkerSinkTaskInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -30,7 +30,7 @@ public class WorkerSinkTaskInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     // Instrument the execute method which contains the main polling loop
-    transformer.applyAdviceToMethod(named("execute"), this.getClass().getName() + "$ExecuteAdvice");
+    transformer.applyAdviceToMethod(named("execute"), getClass().getName() + "$ExecuteAdvice");
   }
 
   // This advice suppresses the CONSUMER spans created by the kafka-clients instrumentation

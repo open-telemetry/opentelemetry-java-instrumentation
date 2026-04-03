@@ -16,7 +16,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class SystemInfoInstrumentation implements TypeInstrumentation {
+class SystemInfoInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("oshi.SystemInfo");
@@ -26,7 +26,7 @@ public class SystemInfoInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isPublic().and(isStatic()).and(namedOneOf("getCurrentPlatformEnum", "getCurrentPlatform")),
-        this.getClass().getName() + "$GetCurrentPlatformEnumAdvice");
+        getClass().getName() + "$GetCurrentPlatformEnumAdvice");
   }
 
   @SuppressWarnings("unused")

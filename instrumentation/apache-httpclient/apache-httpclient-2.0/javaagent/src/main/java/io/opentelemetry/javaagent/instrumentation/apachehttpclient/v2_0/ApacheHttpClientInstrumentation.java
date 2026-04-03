@@ -23,7 +23,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.commons.httpclient.HttpMethod;
 
-public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
+class ApacheHttpClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("org.apache.commons.httpclient.HttpClient");
@@ -40,7 +40,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         named("executeMethod")
             .and(takesArguments(3))
             .and(takesArgument(1, named("org.apache.commons.httpclient.HttpMethod"))),
-        this.getClass().getName() + "$ExecuteMethodAdvice");
+        getClass().getName() + "$ExecuteMethodAdvice");
   }
 
   @SuppressWarnings("unused")

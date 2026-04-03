@@ -16,7 +16,7 @@ public final class KafkaStreamsSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-streams-0.11";
 
-  private static final Instrumenter<KafkaProcessRequest, Void> INSTRUMENTER =
+  private static final Instrumenter<KafkaProcessRequest, Void> instrumenter =
       new KafkaInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
           .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
           .setCaptureExperimentalSpanAttributes(
@@ -27,7 +27,7 @@ public final class KafkaStreamsSingletons {
           .createConsumerProcessInstrumenter();
 
   public static Instrumenter<KafkaProcessRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private KafkaStreamsSingletons() {}

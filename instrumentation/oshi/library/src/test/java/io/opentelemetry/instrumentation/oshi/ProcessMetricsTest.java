@@ -29,13 +29,9 @@ class ProcessMetricsTest extends AbstractProcessMetricsTest {
   }
 
   @AfterAll
-  static void tearDown() {
+  static void tearDown() throws Exception {
     for (AutoCloseable observable : observables) {
-      try {
-        observable.close();
-      } catch (Exception e) {
-        // ignore
-      }
+      observable.close();
     }
   }
 

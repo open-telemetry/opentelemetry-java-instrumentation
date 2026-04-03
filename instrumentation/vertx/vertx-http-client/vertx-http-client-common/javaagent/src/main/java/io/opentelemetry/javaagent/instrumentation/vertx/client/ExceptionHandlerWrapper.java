@@ -12,7 +12,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 
-public class ExceptionHandlerWrapper implements Handler<Throwable> {
+public final class ExceptionHandlerWrapper implements Handler<Throwable> {
   private final Instrumenter<HttpClientRequest, HttpClientResponse> instrumenter;
   private final HttpClientRequest request;
   private final VirtualField<HttpClientRequest, Contexts> virtualField;

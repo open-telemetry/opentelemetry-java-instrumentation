@@ -28,7 +28,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 public abstract class AbstractLambdaClientTest extends AbstractBaseAwsClientTest {
-  private static final String lambdaCreateEventSourceMappingResponseBody =
+  private static final String LAMBDA_CREATE_EVENT_SOURCE_MAPPING_RESPONSE_BODY =
       "{"
           + "\"UUID\": \"e31def54-5e5d-4c1b-8e0f-bf1b11c137b7\","
           + "\"BatchSize\": 10,"
@@ -42,7 +42,7 @@ public abstract class AbstractLambdaClientTest extends AbstractBaseAwsClientTest
           + "\"EventSourceMappingArn\": \"arn:aws:lambda:us-west-2:123456789012:event-source-mapping:e31def54-5e5d-4c1b-8e0f-bf1b11c137b7\""
           + "}";
 
-  private static final String lambdaGetEventSourceMappingResponseBody =
+  private static final String LAMBDA_GET_EVENT_SOURCE_MAPPING_RESPONSE_BODY =
       "{"
           + "\"UUID\": \"e31def54-5e5d-4c1b-8e0f-bf1b11c138c8\","
           + "\"BatchSize\": 10,"
@@ -56,7 +56,7 @@ public abstract class AbstractLambdaClientTest extends AbstractBaseAwsClientTest
           + "\"EventSourceMappingArn\": \"arn:aws:lambda:us-west-2:123456789012:event-source-mapping:e31def54-5e5d-4c1b-8e0f-bf1b11c138c8\""
           + "}";
 
-  private static final String lambdaGetFunctionResponseBody =
+  private static final String LAMBDA_GET_FUNCTION_RESPONSE_BODY =
       "{"
           + "\"Configuration\": {"
           + "   \"FunctionName\": \"lambda-function-name-foo\","
@@ -125,7 +125,7 @@ public abstract class AbstractLambdaClientTest extends AbstractBaseAwsClientTest
         Arguments.of(
             "CreateEventSourceMapping",
             "POST",
-            lambdaCreateEventSourceMappingResponseBody,
+            LAMBDA_CREATE_EVENT_SOURCE_MAPPING_RESPONSE_BODY,
             asList(
                 equalTo(stringKey("aws.lambda.function.name"), "myFn01-Temp"),
                 equalTo(AWS_LAMBDA_RESOURCE_MAPPING_ID, "e31def54-5e5d-4c1b-8e0f-bf1b11c137b7")),
@@ -141,7 +141,7 @@ public abstract class AbstractLambdaClientTest extends AbstractBaseAwsClientTest
         Arguments.of(
             "GetEventSourceMapping",
             "GET",
-            lambdaGetEventSourceMappingResponseBody,
+            LAMBDA_GET_EVENT_SOURCE_MAPPING_RESPONSE_BODY,
             singletonList(
                 equalTo(AWS_LAMBDA_RESOURCE_MAPPING_ID, "e31def54-5e5d-4c1b-8e0f-bf1b11c138c8")),
             (Function<AWSLambda, Object>)
@@ -152,7 +152,7 @@ public abstract class AbstractLambdaClientTest extends AbstractBaseAwsClientTest
         Arguments.of(
             "GetFunction",
             "GET",
-            lambdaGetFunctionResponseBody,
+            LAMBDA_GET_FUNCTION_RESPONSE_BODY,
             asList(
                 equalTo(stringKey("aws.lambda.function.name"), "lambda-function-name-foo"),
                 equalTo(

@@ -20,7 +20,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /** Propagate context to connection established callback. */
-public class ConnectionManagerInstrumentation implements TypeInstrumentation {
+class ConnectionManagerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -33,14 +33,14 @@ public class ConnectionManagerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("getConnection").and(takesArgument(2, named("io.vertx.core.Handler"))),
-        ConnectionManagerInstrumentation.class.getName() + "$GetConnectionArg2Advice");
+        getClass().getName() + "$GetConnectionArg2Advice");
     transformer.applyAdviceToMethod(
         named("getConnection").and(takesArgument(3, named("io.vertx.core.Handler"))),
-        ConnectionManagerInstrumentation.class.getName() + "$GetConnectionArg3Advice");
+        getClass().getName() + "$GetConnectionArg3Advice");
     // since 4.3.4
     transformer.applyAdviceToMethod(
         named("getConnection").and(takesArgument(4, named("io.vertx.core.Handler"))),
-        ConnectionManagerInstrumentation.class.getName() + "$GetConnectionArg4Advice");
+        getClass().getName() + "$GetConnectionArg4Advice");
   }
 
   @SuppressWarnings("unused")

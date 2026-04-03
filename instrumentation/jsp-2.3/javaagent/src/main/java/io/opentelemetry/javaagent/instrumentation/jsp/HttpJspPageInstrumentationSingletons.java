@@ -28,10 +28,10 @@ public class HttpJspPageInstrumentationSingletons {
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jsp")
           .getBoolean("experimental_span_attributes/development", false);
 
-  private static final Instrumenter<HttpServletRequest, Void> INSTRUMENTER;
+  private static final Instrumenter<HttpServletRequest, Void> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<HttpServletRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.jsp-2.3",
@@ -52,7 +52,7 @@ public class HttpJspPageInstrumentationSingletons {
   }
 
   public static Instrumenter<HttpServletRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private HttpJspPageInstrumentationSingletons() {}

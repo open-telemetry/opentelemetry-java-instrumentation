@@ -54,7 +54,7 @@ abstract class AbstractAwsSdkInstrumentationModule extends InstrumentationModule
   abstract void doTransform(TypeTransformer transformer);
 
   // A type instrumentation is needed to trigger resource injection.
-  public class ResourceInjectingTypeInstrumentation implements TypeInstrumentation {
+  class ResourceInjectingTypeInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       // This is essentially the entry point of the AWS SDK, all clients implement it. We can ensure

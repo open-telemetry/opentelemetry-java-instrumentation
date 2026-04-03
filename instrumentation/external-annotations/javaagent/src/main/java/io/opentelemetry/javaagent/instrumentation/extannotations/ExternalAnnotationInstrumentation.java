@@ -41,7 +41,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
+class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
   private static final Logger logger =
       Logger.getLogger(ExternalAnnotationInstrumentationModule.class.getName());

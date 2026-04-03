@@ -36,8 +36,8 @@ public final class SpringWebMvcTelemetryBuilder {
         DefaultHttpServerInstrumenterBuilder.create(
             INSTRUMENTATION_NAME,
             openTelemetry,
-            SpringWebMvcHttpAttributesGetter.INSTANCE,
-            JakartaHttpServletRequestGetter.INSTANCE);
+            new SpringWebMvcHttpAttributesGetter(),
+            new JakartaHttpServletRequestGetter());
   }
 
   /**

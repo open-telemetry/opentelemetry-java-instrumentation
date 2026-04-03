@@ -37,7 +37,7 @@ public final class ElasticsearchRest7Telemetry {
   }
 
   /**
-   * Construct a new tracing-enable {@link RestClient} using the provided {@link RestClient}
+   * Construct a new tracing-enabled {@link RestClient} using the provided {@link RestClient}
    * instance.
    */
   public RestClient wrap(RestClient restClient) {

@@ -52,7 +52,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
             .and(not(isAbstract()))
             .and(takesArguments(1))
             .and(takesArgument(0, named("org.apache.hc.core5.http.ClassicHttpRequest"))),
-        this.getClass().getName() + "$RequestAdvice");
+        getClass().getName() + "$RequestAdvice");
 
     transformer.applyAdviceToMethod(
         named("execute")
@@ -60,7 +60,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
             .and(takesArguments(2))
             .and(takesArgument(0, named("org.apache.hc.core5.http.ClassicHttpRequest")))
             .and(takesArgument(1, named("org.apache.hc.core5.http.protocol.HttpContext"))),
-        this.getClass().getName() + "$RequestAdvice");
+        getClass().getName() + "$RequestAdvice");
 
     transformer.applyAdviceToMethod(
         named("execute")
@@ -68,7 +68,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
             .and(takesArguments(2))
             .and(takesArgument(0, named("org.apache.hc.core5.http.HttpHost")))
             .and(takesArgument(1, named("org.apache.hc.core5.http.ClassicHttpRequest"))),
-        this.getClass().getName() + "$RequestWithHostAdvice");
+        getClass().getName() + "$RequestWithHostAdvice");
 
     transformer.applyAdviceToMethod(
         named("execute")
@@ -77,7 +77,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("org.apache.hc.core5.http.HttpHost")))
             .and(takesArgument(1, named("org.apache.hc.core5.http.ClassicHttpRequest")))
             .and(takesArgument(2, named("org.apache.hc.core5.http.protocol.HttpContext"))),
-        this.getClass().getName() + "$RequestWithHostAdvice");
+        getClass().getName() + "$RequestWithHostAdvice");
 
     transformer.applyAdviceToMethod(
         named("execute")
@@ -85,7 +85,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
             .and(takesArguments(2))
             .and(takesArgument(0, named("org.apache.hc.core5.http.ClassicHttpRequest")))
             .and(takesArgument(1, named("org.apache.hc.core5.http.io.HttpClientResponseHandler"))),
-        this.getClass().getName() + "$RequestWithHandlerAdvice");
+        getClass().getName() + "$RequestWithHandlerAdvice");
 
     transformer.applyAdviceToMethod(
         named("execute")
@@ -94,7 +94,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("org.apache.hc.core5.http.ClassicHttpRequest")))
             .and(takesArgument(1, named("org.apache.hc.core5.http.protocol.HttpContext")))
             .and(takesArgument(2, named("org.apache.hc.core5.http.io.HttpClientResponseHandler"))),
-        this.getClass().getName() + "$RequestWithContextAndHandlerAdvice");
+        getClass().getName() + "$RequestWithContextAndHandlerAdvice");
 
     transformer.applyAdviceToMethod(
         named("execute")
@@ -103,7 +103,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("org.apache.hc.core5.http.HttpHost")))
             .and(takesArgument(1, named("org.apache.hc.core5.http.ClassicHttpRequest")))
             .and(takesArgument(2, named("org.apache.hc.core5.http.io.HttpClientResponseHandler"))),
-        this.getClass().getName() + "$RequestWithHostAndHandlerAdvice");
+        getClass().getName() + "$RequestWithHostAndHandlerAdvice");
 
     transformer.applyAdviceToMethod(
         named("execute")
@@ -113,7 +113,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, named("org.apache.hc.core5.http.ClassicHttpRequest")))
             .and(takesArgument(2, named("org.apache.hc.core5.http.protocol.HttpContext")))
             .and(takesArgument(3, named("org.apache.hc.core5.http.io.HttpClientResponseHandler"))),
-        this.getClass().getName() + "$RequestWithHostAndContextAndHandlerAdvice");
+        getClass().getName() + "$RequestWithHostAndContextAndHandlerAdvice");
   }
 
   public static class AdviceScope {

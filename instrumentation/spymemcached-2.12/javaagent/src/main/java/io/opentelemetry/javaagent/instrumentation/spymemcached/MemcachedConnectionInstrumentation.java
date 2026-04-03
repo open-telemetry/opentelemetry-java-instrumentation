@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -18,7 +17,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.spy.memcached.ops.Operation;
 
-public class MemcachedConnectionInstrumentation implements TypeInstrumentation {
+class MemcachedConnectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -28,12 +27,11 @@ public class MemcachedConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("addOperation"))
+        named("addOperation")
             .and(takesArguments(2))
             .and(takesArgument(0, named("net.spy.memcached.MemcachedNode")))
             .and(takesArgument(1, named("net.spy.memcached.ops.Operation"))),
-        this.getClass().getName() + "$AddOperationAdvice");
+        getClass().getName() + "$AddOperationAdvice");
   }
 
   @SuppressWarnings("unused")

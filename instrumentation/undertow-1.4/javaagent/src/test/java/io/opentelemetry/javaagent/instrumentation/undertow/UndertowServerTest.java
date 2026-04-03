@@ -225,7 +225,7 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
                             equalTo(SERVER_ADDRESS, uri.getHost()),
                             equalTo(SERVER_PORT, uri.getPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class))),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class))),
                 span ->
                     span.hasName("sendResponse")
                         .hasKind(SpanKind.INTERNAL)
@@ -272,7 +272,7 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
                             equalTo(SERVER_ADDRESS, uri.getHost()),
                             equalTo(SERVER_PORT, uri.getPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class))),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class))),
                 span ->
                     span.hasName("sendResponseWithException")
                         .hasKind(SpanKind.INTERNAL)

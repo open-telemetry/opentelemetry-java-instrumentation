@@ -60,10 +60,9 @@ final class ElasticsearchDbAttributesGetter
         && httpEntity.isRepeatable()) {
       // Retrieve HTTP body for search-type Elasticsearch requests when CAPTURE_SEARCH_QUERY is
       // enabled.
-      try {
-        return new BufferedReader(new InputStreamReader(httpEntity.getContent(), UTF_8))
-            .lines()
-            .collect(joining());
+      try (BufferedReader reader =
+          new BufferedReader(new InputStreamReader(httpEntity.getContent(), UTF_8))) {
+        return reader.lines().collect(joining());
       } catch (IOException e) {
         logger.log(FINE, "Failed reading HTTP body content.", e);
       }

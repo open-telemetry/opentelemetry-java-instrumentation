@@ -26,7 +26,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class LibertyWebAppInstrumentation implements TypeInstrumentation {
+class LibertyWebAppInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -40,12 +40,12 @@ public class LibertyWebAppInstrumentation implements TypeInstrumentation {
         named("handleRequest")
             .and(takesArgument(0, named("javax.servlet.ServletRequest")))
             .and(takesArgument(1, named("javax.servlet.ServletResponse"))),
-        this.getClass().getName() + "$HandleRequestAdvice");
+        getClass().getName() + "$HandleRequestAdvice");
 
     // isForbidden is called from handleRequest
     transformer.applyAdviceToMethod(
         named("isForbidden").and(takesArgument(0, named(String.class.getName()))),
-        this.getClass().getName() + "$IsForbiddenAdvice");
+        getClass().getName() + "$IsForbiddenAdvice");
   }
 
   @SuppressWarnings("unused")

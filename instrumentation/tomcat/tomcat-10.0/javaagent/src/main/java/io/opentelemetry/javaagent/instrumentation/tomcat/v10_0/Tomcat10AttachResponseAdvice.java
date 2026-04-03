@@ -14,7 +14,7 @@ import org.apache.coyote.Response;
 @SuppressWarnings("unused")
 public class Tomcat10AttachResponseAdvice {
 
-  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+  @Advice.OnMethodExit(suppress = Throwable.class)
   public static void attachResponse(
       @Advice.Argument(2) Response response, @Advice.Return boolean success) {
 

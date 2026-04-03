@@ -21,7 +21,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JexInstrumentation implements TypeInstrumentation {
+class JexInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -37,7 +37,7 @@ public class JexInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("handle").and(takesArgument(0, named("io.avaje.jex.http.Context"))),
-        this.getClass().getName() + "$HandlerAdapterAdvice");
+        getClass().getName() + "$HandlerAdapterAdvice");
   }
 
   @SuppressWarnings("unused")

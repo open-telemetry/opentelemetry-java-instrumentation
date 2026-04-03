@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HttpClientRequestBaseInstrumentation implements TypeInstrumentation {
+class HttpClientRequestBaseInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -26,12 +26,11 @@ public class HttpClientRequestBaseInstrumentation implements TypeInstrumentation
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isConstructor(), this.getClass().getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
 
     transformer.applyAdviceToMethod(
         named("authority").and(takesArgument(0, named("io.vertx.core.net.HostAndPort"))),
-        this.getClass().getName() + "$SetAuthorityAdvice");
+        getClass().getName() + "$SetAuthorityAdvice");
   }
 
   @SuppressWarnings("unused")

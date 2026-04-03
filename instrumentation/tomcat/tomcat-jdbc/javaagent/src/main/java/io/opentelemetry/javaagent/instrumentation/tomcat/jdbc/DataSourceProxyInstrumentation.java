@@ -28,11 +28,11 @@ class DataSourceProxyInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isPublic().and(named("createPool")).and(takesNoArguments()),
-        this.getClass().getName() + "$CreatePoolAdvice");
+        getClass().getName() + "$CreatePoolAdvice");
 
     transformer.applyAdviceToMethod(
         isPublic().and(named("close")).and(takesArguments(1)),
-        this.getClass().getName() + "$CloseAdvice");
+        getClass().getName() + "$CloseAdvice");
   }
 
   @SuppressWarnings("unused")

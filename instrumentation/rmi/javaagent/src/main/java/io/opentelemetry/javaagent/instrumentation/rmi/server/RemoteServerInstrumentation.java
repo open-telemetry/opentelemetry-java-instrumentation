@@ -27,7 +27,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class RemoteServerInstrumentation implements TypeInstrumentation {
+class RemoteServerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("java.rmi.Remote"))
@@ -38,7 +38,7 @@ public class RemoteServerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isMethod().and(isPublic()).and(not(isStatic())),
-        this.getClass().getName() + "$PublicMethodAdvice");
+        getClass().getName() + "$PublicMethodAdvice");
   }
 
   @SuppressWarnings("unused")

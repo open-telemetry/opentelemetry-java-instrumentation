@@ -18,7 +18,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HooksInstrumentation implements TypeInstrumentation {
+class HooksInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return namedOneOf(
@@ -32,7 +32,7 @@ public class HooksInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isTypeInitializer().or(named("resetOnEachOperator")),
-        this.getClass().getName() + "$ResetOnEachOperatorAdvice");
+        getClass().getName() + "$ResetOnEachOperatorAdvice");
   }
 
   @SuppressWarnings("unused")

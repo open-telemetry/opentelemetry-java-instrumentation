@@ -15,7 +15,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class SingleThreadEventExecutorInstrumentation implements TypeInstrumentation {
+class SingleThreadEventExecutorInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.netty.util.concurrent.SingleThreadEventExecutor");
@@ -26,7 +26,7 @@ public class SingleThreadEventExecutorInstrumentation implements TypeInstrumenta
     // this method submits a task that runs for forever to an executor, propagating context there
     // would result in a context leak
     transformer.applyAdviceToMethod(
-        named("startThread"), this.getClass().getName() + "$DisablePropagationAdvice");
+        named("startThread"), getClass().getName() + "$DisablePropagationAdvice");
   }
 
   @SuppressWarnings("unused")

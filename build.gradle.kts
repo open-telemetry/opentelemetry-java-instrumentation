@@ -26,6 +26,7 @@ plugins {
 buildscript {
   dependencies {
     classpath("com.squareup.okhttp3:okhttp:5.3.2")
+    classpath("org.apache.commons:commons-lang3:3.20.0")
   }
 }
 

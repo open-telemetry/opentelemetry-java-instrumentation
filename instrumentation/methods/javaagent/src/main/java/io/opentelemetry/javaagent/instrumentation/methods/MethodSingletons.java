@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 public final class MethodSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.methods";
 
-  private static final Instrumenter<MethodAndType, Void> INSTRUMENTER;
+  private static final Instrumenter<MethodAndType, Void> instrumenter;
   private static final ClassLoader bootstrapLoader = new BootstrapLoader();
 
   static {
@@ -34,7 +34,7 @@ public final class MethodSingletons {
           }
         };
 
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<MethodAndType, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
@@ -44,7 +44,7 @@ public final class MethodSingletons {
   }
 
   public static Instrumenter<MethodAndType, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static ClassLoader getBootstrapLoader() {

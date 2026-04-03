@@ -15,7 +15,6 @@ val testIndyProperty = providers.gradleProperty("testIndy")
   .orElse(false)
 
 val denyUnsafe = gradle.startParameter.projectProperties["denyUnsafe"] == "true"
-extra["denyUnsafe"] = denyUnsafe
 
 dependencies {
   /*

@@ -28,7 +28,6 @@ import com.twilio.http.TwilioRestClient;
 import com.twilio.rest.api.v2010.account.Call;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -162,7 +161,7 @@ class TwilioClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("test").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName("MessageCreator.create")
                         .hasKind(CLIENT)
@@ -202,7 +201,7 @@ class TwilioClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("test").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName("CallCreator.create")
                         .hasKind(CLIENT)
@@ -250,7 +249,7 @@ class TwilioClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("test").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName("MessageCreator.create")
                         .hasKind(CLIENT)
@@ -306,7 +305,7 @@ class TwilioClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("test").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName("MessageCreator.create")
                         .hasParent(trace.getSpan(0))
@@ -363,7 +362,7 @@ class TwilioClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("test").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName("MessageCreator.createAsync")
                         .hasKind(CLIENT)
@@ -413,6 +412,7 @@ class TwilioClientTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
+                        .hasTotalAttributeCount(0)
                         .hasException(new ApiException("Testing Failure"))));
   }
 
@@ -482,7 +482,7 @@ class TwilioClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("test").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName("MessageCreator.createAsync")
                         .hasKind(CLIENT)
@@ -540,6 +540,7 @@ class TwilioClientTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
+                        .hasTotalAttributeCount(0)
                         .hasException(new ApiException("Testing Failure"))));
   }
 

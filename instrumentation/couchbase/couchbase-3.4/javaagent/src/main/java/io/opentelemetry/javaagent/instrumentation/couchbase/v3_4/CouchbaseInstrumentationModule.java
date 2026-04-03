@@ -24,8 +24,8 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // introduced in java-client 3.4.0 (core-io 2.4.0)
     return hasClassesNamed(
+        // added in java-client 3.4.0 (core-io 2.4.0)
         "com.couchbase.client.core.transaction.components.CoreTransactionRequest");
   }
 

@@ -15,12 +15,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 public final class GeodeSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.geode-1.4";
 
-  private static final Instrumenter<GeodeRequest, Void> INSTRUMENTER;
+  private static final Instrumenter<GeodeRequest, Void> instrumenter;
 
   static {
     GeodeDbAttributesGetter dbClientAttributesGetter = new GeodeDbAttributesGetter();
 
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<GeodeRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
@@ -31,7 +31,7 @@ public final class GeodeSingletons {
   }
 
   public static Instrumenter<GeodeRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private GeodeSingletons() {}

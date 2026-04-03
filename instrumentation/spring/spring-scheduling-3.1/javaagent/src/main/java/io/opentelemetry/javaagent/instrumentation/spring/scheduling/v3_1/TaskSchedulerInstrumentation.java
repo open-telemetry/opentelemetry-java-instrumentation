@@ -12,13 +12,14 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.javaagent.bootstrap.spring.SpringSchedulingTaskTracing;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class TaskSchedulerInstrumentation implements TypeInstrumentation {
+class TaskSchedulerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     // we're only instrumenting the "real" scheduler implementations, and skipping all the decorator
@@ -45,7 +46,7 @@ public class TaskSchedulerInstrumentation implements TypeInstrumentation {
                                 takesArgument(
                                     // Trigger represents a repeating job
                                     1, named("org.springframework.scheduling.Trigger"))))),
-        this.getClass().getName() + "$ScheduleMethodAdvice");
+        getClass().getName() + "$ScheduleMethodAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -53,7 +54,8 @@ public class TaskSchedulerInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Runnable onSchedule(@Advice.Argument(0) Runnable originalRunnable) {
+    @Nullable
+    public static Runnable onSchedule(@Advice.Argument(0) @Nullable Runnable originalRunnable) {
       Runnable runnable = originalRunnable;
       if (SpringSchedulingTaskTracing.isWrappingEnabled()) {
         runnable = SpringSchedulingRunnableWrapper.wrapIfNeeded(runnable);

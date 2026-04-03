@@ -34,7 +34,10 @@ testing {
           testTask.configure {
             usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
-            systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+            systemProperty(
+              "metadataConfig",
+              "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=false",
+            )
             jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
             jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
           }

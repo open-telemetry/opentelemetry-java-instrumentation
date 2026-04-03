@@ -19,7 +19,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 // TomEE specific instrumentation
-public class CxfRsHttpListenerInstrumentation implements TypeInstrumentation {
+class CxfRsHttpListenerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

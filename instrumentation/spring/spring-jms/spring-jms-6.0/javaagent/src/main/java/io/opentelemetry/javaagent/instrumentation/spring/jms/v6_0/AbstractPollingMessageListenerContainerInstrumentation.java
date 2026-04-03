@@ -19,7 +19,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AbstractPollingMessageListenerContainerInstrumentation implements TypeInstrumentation {
+class AbstractPollingMessageListenerContainerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.springframework.jms.listener.AbstractPollingMessageListenerContainer");
@@ -28,7 +28,7 @@ public class AbstractPollingMessageListenerContainerInstrumentation implements T
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("receiveAndExecute"), this.getClass().getName() + "$ReceiveAndExecuteAdvice");
+        named("receiveAndExecute"), getClass().getName() + "$ReceiveAndExecuteAdvice");
   }
 
   @SuppressWarnings("unused")

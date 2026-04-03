@@ -20,7 +20,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import oracle.ucp.UniversalConnectionPool;
 
-public class UniversalConnectionPoolInstrumentation implements TypeInstrumentation {
+class UniversalConnectionPoolInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -35,9 +35,9 @@ public class UniversalConnectionPoolInstrumentation implements TypeInstrumentati
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("start").and(isPublic()), this.getClass().getName() + "$StartAdvice");
+        named("start").and(isPublic()), getClass().getName() + "$StartAdvice");
     transformer.applyAdviceToMethod(
-        named("stop").and(takesArguments(0)), this.getClass().getName() + "$StopAdvice");
+        named("stop").and(takesArguments(0)), getClass().getName() + "$StopAdvice");
   }
 
   @SuppressWarnings("unused")

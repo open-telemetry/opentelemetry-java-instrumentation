@@ -127,7 +127,7 @@ tasks {
     dependsOn(testing.suites, stableSemconvSuites, experimentalSuites)
   }
 
-  if (findProperty("denyUnsafe") as Boolean) {
+  if (findProperty("denyUnsafe") == "true") {
     withType<Test>().configureEach {
       enabled = false
     }

@@ -114,7 +114,7 @@ class PutGetTest {
           region.put(key, value);
           region.remove(key);
         });
-    assertThat(region.size()).isEqualTo(0);
+    assertThat(region).isEmpty();
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -153,7 +153,7 @@ class PutGetTest {
               region.put(key, value);
               return region.query("SELECT * FROM /test-region");
             });
-    assertThat(cacheValue.size()).isEqualTo(1);
+    assertThat(cacheValue).hasSize(1);
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(

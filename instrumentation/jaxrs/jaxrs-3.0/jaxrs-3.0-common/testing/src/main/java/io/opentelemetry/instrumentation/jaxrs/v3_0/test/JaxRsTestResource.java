@@ -29,9 +29,11 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.TimeoutException;
 
 @SuppressWarnings("IdentifierName")
 @Path("")
@@ -121,7 +123,7 @@ public class JaxRsTestResource {
             BARRIER.await(10, SECONDS);
           } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-          } catch (Exception exception) {
+          } catch (BrokenBarrierException | TimeoutException exception) {
             throw new IllegalStateException(exception);
           }
 
@@ -153,7 +155,7 @@ public class JaxRsTestResource {
             BARRIER.await(10, SECONDS);
           } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-          } catch (Exception exception) {
+          } catch (BrokenBarrierException | TimeoutException exception) {
             throw new IllegalStateException(exception);
           }
 

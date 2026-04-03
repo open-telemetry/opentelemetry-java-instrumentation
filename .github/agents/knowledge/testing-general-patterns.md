@@ -30,14 +30,24 @@
   `equalTo(AttributeKey<Long>, int)` overload, so `equalTo(longKey("iteration"), iteration)` is
   preferred over `equalTo(longKey("iteration"), (long) iteration)`.
 
-## `satisfies()` Lambda Parameters
+## Attribute Assertion `satisfies()` Lambda Parameters
 
-**`satisfies()` lambda parameters are `AbstractAssert` instances, not raw values.**
-Inside a `satisfies(AttributeKey, Consumer)` lambda the parameter (e.g., `taskId`) is an
-`AbstractStringAssert<?>` (for string keys), `AbstractLongAssert<?>` (for long keys), etc.
+**Attribute-assertion `satisfies()` lambda parameters are `AbstractAssert` instances, not raw
+values.** Inside a `satisfies(AttributeKey, Consumer)` lambda the parameter (e.g., `taskId`) is
+an `AbstractStringAssert<?>` (for string keys), `AbstractLongAssert<?>` (for long keys), etc.
 Fluent assertion calls like `taskId.contains(jobName)` or `taskId.startsWith(prefix)` are
 already proper AssertJ assertions — they throw on failure. Do **not** wrap them in
 `assertThat(value.contains(x)).isTrue()`, which degrades the failure message.
+
+- For `satisfies(AttributeKey, lambda)` outer parameters, use `val`.
+  Do not use short generic alternatives like `k` or `v` for the outer parameter.
+- If an attribute-assertion `satisfies(...)` lambda contains a nested inner lambda and a second
+  parameter name is required, keep the outer parameter as `val` and use `v` for the nested
+  parameter.
+- This naming guidance does **not** apply to non-attribute `satisfies(...)` usages such as
+  `span.satisfies(...)`, `point.satisfies(...)`, or `assertThat(result).satisfies(...)`.
+  In those cases, prefer a descriptive subject name like `spanData`, `pointData`, `resource`,
+  or `result` instead of generic names like `val`.
 
 ## AssertJ Idiomatic Simplifications
 

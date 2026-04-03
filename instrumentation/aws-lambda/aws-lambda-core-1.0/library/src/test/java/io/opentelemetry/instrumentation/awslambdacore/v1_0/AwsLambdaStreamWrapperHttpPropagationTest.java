@@ -147,7 +147,7 @@ class AwsLambdaStreamWrapperHttpPropagationTest {
         parser.nextToken();
         while (parser.nextToken() != JsonToken.END_OBJECT) {
           parser.nextToken();
-          if (!parser.currentName().equals("body")) {
+          if (!"body".equals(parser.currentName())) {
             parser.skipChildren();
             continue;
           }
@@ -156,7 +156,7 @@ class AwsLambdaStreamWrapperHttpPropagationTest {
         }
       }
       BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(output, UTF_8));
-      if (body.equals("hello")) {
+      if ("hello".equals(body)) {
         writer.write("world");
         writer.flush();
         writer.close();

@@ -170,14 +170,14 @@ class SpringSchedulingTest {
                               event ->
                                   event
                                       .hasName("exception")
-                                      .hasAttributesSatisfying(
+                                      .hasAttributesSatisfyingExactly(
                                           equalTo(
                                               EXCEPTION_TYPE,
                                               IllegalStateException.class.getName()),
                                           equalTo(EXCEPTION_MESSAGE, "failure"),
                                           satisfies(
                                               EXCEPTION_STACKTRACE,
-                                              value -> value.isInstanceOf(String.class)))),
+                                              val -> val.isInstanceOf(String.class)))),
                   span -> span.hasName("error-handler").hasParent(trace.getSpan(0))));
     }
   }

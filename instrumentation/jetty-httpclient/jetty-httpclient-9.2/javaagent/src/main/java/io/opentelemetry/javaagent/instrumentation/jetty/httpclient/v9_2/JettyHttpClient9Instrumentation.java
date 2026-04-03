@@ -25,7 +25,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.eclipse.jetty.client.HttpRequest;
 import org.eclipse.jetty.client.api.Response;
 
-public class JettyHttpClient9Instrumentation implements TypeInstrumentation {
+class JettyHttpClient9Instrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.eclipse.jetty.client.HttpClient");

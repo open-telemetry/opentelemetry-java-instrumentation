@@ -41,13 +41,11 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<ExecutionAttrib
       attributes.put(DB_SYSTEM, DYNAMODB);
     }
     String operation = executionAttributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
-    if (operation != null) {
-      if (emitStableDatabaseSemconv()) {
-        attributes.put(DB_OPERATION_NAME, operation);
-      }
-      if (emitOldDatabaseSemconv()) {
-        attributes.put(DB_OPERATION, operation);
-      }
+    if (emitStableDatabaseSemconv()) {
+      attributes.put(DB_OPERATION_NAME, operation);
+    }
+    if (emitOldDatabaseSemconv()) {
+      attributes.put(DB_OPERATION, operation);
     }
   }
 

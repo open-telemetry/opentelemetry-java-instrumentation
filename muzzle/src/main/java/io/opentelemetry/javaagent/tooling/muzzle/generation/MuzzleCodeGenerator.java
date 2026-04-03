@@ -319,7 +319,7 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
                   /* isInterface= */ false);
             }
             // stack: map, className, builder
-            if (null != reference.getSuperClassName()) {
+            if (reference.getSuperClassName() != null) {
               mv.visitLdcInsn(reference.getSuperClassName());
               mv.visitMethodInsn(
                   Opcodes.INVOKEVIRTUAL,

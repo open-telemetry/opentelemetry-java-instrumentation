@@ -22,7 +22,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import reactor.util.context.ContextView;
 
-public class ContextPropagationOperator34Instrumentation implements TypeInstrumentation {
+class ContextPropagationOperator34Instrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named(

@@ -21,7 +21,7 @@ if (latestDepTest) {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     systemProperty("collectMetadata", findProperty("collectMetadata"))
   }
 

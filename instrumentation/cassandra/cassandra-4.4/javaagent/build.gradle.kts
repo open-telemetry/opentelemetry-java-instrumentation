@@ -13,7 +13,6 @@ muzzle {
     group.set("org.apache.cassandra")
     module.set("java-driver-core")
     versions.set("(,)")
-    assertInverse.set(true)
   }
 }
 

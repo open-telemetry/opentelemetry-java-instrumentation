@@ -19,7 +19,7 @@ import org.apache.pulsar.client.api.Message;
 
 public final class SpringPulsarSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-pulsar-1.0";
-  private static final Instrumenter<Message<?>, Void> INSTRUMENTER;
+  private static final Instrumenter<Message<?>, Void> instrumenter;
 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
@@ -41,14 +41,14 @@ public final class SpringPulsarSingletons {
       builder.addSpanLinksExtractor(
           new PropagatorBasedSpanLinksExtractor<>(
               openTelemetry.getPropagators().getTextMapPropagator(), new MessageHeaderGetter()));
-      INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+      instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
     } else {
-      INSTRUMENTER = builder.buildConsumerInstrumenter(new MessageHeaderGetter());
+      instrumenter = builder.buildConsumerInstrumenter(new MessageHeaderGetter());
     }
   }
 
   public static Instrumenter<Message<?>, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private SpringPulsarSingletons() {}

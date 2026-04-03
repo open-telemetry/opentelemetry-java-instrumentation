@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -24,7 +23,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /** Instrument the Twilio SDK to identify calls as a separate service. */
-public class TwilioSyncInstrumentation implements TypeInstrumentation {
+class TwilioSyncInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -52,11 +51,10 @@ public class TwilioSyncInstrumentation implements TypeInstrumentation {
        which we weren't interested in annotating.
     */
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(not(isAbstract()))
             .and(namedOneOf("create", "delete", "read", "fetch", "update")),
-        TwilioSyncInstrumentation.class.getName() + "$TwilioClientAdvice");
+        getClass().getName() + "$TwilioClientAdvice");
   }
 
   /** Advice for instrumenting Twilio service classes. */

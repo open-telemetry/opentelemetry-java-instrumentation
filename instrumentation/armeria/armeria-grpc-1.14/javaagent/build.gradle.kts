@@ -83,7 +83,7 @@ tasks {
   }
 }
 
-if (findProperty("denyUnsafe") as Boolean) {
+if (findProperty("denyUnsafe") == "true") {
   tasks.withType<Test>().configureEach {
     enabled = false
   }

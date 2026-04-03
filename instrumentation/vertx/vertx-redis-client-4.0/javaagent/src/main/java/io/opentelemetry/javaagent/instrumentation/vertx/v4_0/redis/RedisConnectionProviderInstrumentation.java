@@ -18,7 +18,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class RedisConnectionProviderInstrumentation implements TypeInstrumentation {
+class RedisConnectionProviderInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.vertx.redis.client.impl.RedisConnectionManager$RedisConnectionProvider");
@@ -29,11 +29,11 @@ public class RedisConnectionProviderInstrumentation implements TypeInstrumentati
     // 4.1.0
     transformer.applyAdviceToMethod(
         named("init").and(not(takesArgument(0, named("io.vertx.redis.client.RedisConnection")))),
-        this.getClass().getName() + "$InitAdvice");
+        getClass().getName() + "$InitAdvice");
     // 4.0.0
     transformer.applyAdviceToMethod(
         named("init").and(takesArgument(0, named("io.vertx.redis.client.RedisConnection"))),
-        this.getClass().getName() + "$InitWithConnectionAdvice");
+        getClass().getName() + "$InitWithConnectionAdvice");
   }
 
   @SuppressWarnings("unused")

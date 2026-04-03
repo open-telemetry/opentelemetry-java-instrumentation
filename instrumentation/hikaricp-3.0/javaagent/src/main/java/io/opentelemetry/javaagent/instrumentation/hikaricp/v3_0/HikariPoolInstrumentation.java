@@ -18,7 +18,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HikariPoolInstrumentation implements TypeInstrumentation {
+class HikariPoolInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -33,7 +33,7 @@ public class HikariPoolInstrumentation implements TypeInstrumentation {
         named("setMetricsTrackerFactory")
             .and(takesArguments(1))
             .and(takesArgument(0, named("com.zaxxer.hikari.metrics.MetricsTrackerFactory"))),
-        this.getClass().getName() + "$SetMetricsTrackerFactoryAdvice");
+        getClass().getName() + "$SetMetricsTrackerFactoryAdvice");
   }
 
   @SuppressWarnings("unused")

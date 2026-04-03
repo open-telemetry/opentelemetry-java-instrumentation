@@ -10,13 +10,16 @@ import io.opentelemetry.api.metrics.BatchCallback;
 final class ApplicationBatchCallback
     implements application.io.opentelemetry.api.metrics.BatchCallback {
   private final BatchCallback agentCallback;
+  private final Runnable onClose;
 
-  ApplicationBatchCallback(BatchCallback agentCallback) {
+  ApplicationBatchCallback(BatchCallback agentCallback, Runnable onClose) {
     this.agentCallback = agentCallback;
+    this.onClose = onClose;
   }
 
   @Override
   public void close() {
     agentCallback.close();
+    onClose.run();
   }
 }

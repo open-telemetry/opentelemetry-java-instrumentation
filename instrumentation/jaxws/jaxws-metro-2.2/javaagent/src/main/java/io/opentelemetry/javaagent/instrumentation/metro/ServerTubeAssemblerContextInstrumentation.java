@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ServerTubeAssemblerContextInstrumentation implements TypeInstrumentation {
+class ServerTubeAssemblerContextInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.sun.xml.ws.api.pipe.ServerTubeAssemblerContext");
