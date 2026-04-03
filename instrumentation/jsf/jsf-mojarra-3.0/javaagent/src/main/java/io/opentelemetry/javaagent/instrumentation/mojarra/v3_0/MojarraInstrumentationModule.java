@@ -16,7 +16,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class MojarraInstrumentationModule extends InstrumentationModule
+public final class MojarraInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public MojarraInstrumentationModule() {
     super("jsf-mojarra", "jsf-mojarra-3.0");
@@ -24,8 +24,9 @@ public class MojarraInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // jakarta.faces was introduced in JSF 3.0, replacing javax.faces
-    return hasClassesNamed("jakarta.faces.context.FacesContext");
+    return hasClassesNamed(
+        // added in 3.0
+        "jakarta.faces.context.FacesContext");
   }
 
   @Override
