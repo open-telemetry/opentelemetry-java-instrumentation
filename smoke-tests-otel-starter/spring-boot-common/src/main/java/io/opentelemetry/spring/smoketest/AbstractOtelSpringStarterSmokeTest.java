@@ -333,7 +333,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
               "select name from customer where id = 1", (rs, rowNum) -> rs.getString("name"));
         });
 
-    // 1 is not replaced by ?, otel.instrumentation.common.db-statement-sanitizer.enabled=false
+    // 1 is not replaced by ?, otel.instrumentation.common.db.query-sanitization.enabled=false
     testing.waitAndAssertTraces(
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(

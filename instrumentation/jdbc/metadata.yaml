@@ -10,13 +10,13 @@ semantic_conventions:
   - DATABASE_CLIENT_METRICS
 library_link: https://docs.oracle.com/javase/8/docs/api/java/sql/package-summary.html
 configurations:
-  - name: otel.instrumentation.jdbc.statement-sanitizer.enabled
-    description: Enables statement sanitization for database queries. Takes precedent to 
-      otel.instrumentation.common.db-statement-sanitizer.enabled.
+  - name: otel.instrumentation.jdbc.query-sanitization.enabled
+    description: Enables query sanitization for database queries. Takes precedent to 
+      otel.instrumentation.common.db.query-sanitization.enabled.
     type: boolean
     default: true
-  - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-    description: Enables statement sanitization for database queries.
+  - name: otel.instrumentation.common.db.query-sanitization.enabled
+    description: Enables query sanitization for database queries.
     type: boolean
     default: true
   - name: otel.instrumentation.jdbc.experimental.transaction.enabled

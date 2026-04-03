@@ -100,9 +100,9 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
-  void testQuerySanitizationMapping() {
+  void testCommonDbQuerySanitizationMapping() {
     DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.common.db-statement-sanitizer.enabled", "false");
+        createConfig("otel.instrumentation.common.db.query-sanitization.enabled", "false");
 
     assertThat(
             config
@@ -112,6 +112,64 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
                 .getStructured("query_sanitization")
                 .getBoolean("enabled"))
         .isFalse();
+  }
+
+  @Test
+  void testDeprecatedCommonDbStatementSanitizerMapping() {
+    DeclarativeConfigProperties config =
+        createConfig("otel.instrumentation.common.db-statement-sanitizer.enabled", "false");
+
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured("database")
+                .getStructured("statement_sanitizer")
+                .getBoolean("enabled"))
+        .isFalse();
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured("db")
+                .getStructured("query_sanitization")
+                .getBoolean("enabled"))
+        .isNull();
+  }
+
+  @Test
+  void testGraphqlQuerySanitizationMapping() {
+    DeclarativeConfigProperties config =
+        createConfig("otel.instrumentation.graphql.query-sanitization.enabled", "false");
+
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("graphql")
+                .getStructured("query_sanitization")
+                .getBoolean("enabled"))
+        .isFalse();
+  }
+
+  @Test
+  void testDeprecatedGraphqlQuerySanitizerMapping() {
+    DeclarativeConfigProperties config =
+        createConfig("otel.instrumentation.graphql.query-sanitizer.enabled", "false");
+
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("graphql")
+                .getStructured("query_sanitizer")
+                .getBoolean("enabled"))
+        .isFalse();
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("graphql")
+                .getStructured("query_sanitization")
+                .getBoolean("enabled"))
+        .isNull();
   }
 
   @Test
