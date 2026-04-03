@@ -708,7 +708,7 @@ public abstract class AbstractSpringWebfluxTest {
     try {
       client.get("/slow").aggregate().get();
     } catch (ExecutionException ignored) {
-      // this is expected when cancelation occurs
+      // this is expected when cancellation occurs
     }
 
     testing.waitAndAssertTraces(
