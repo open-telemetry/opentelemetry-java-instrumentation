@@ -32,11 +32,11 @@ public final class MessageAttributesAccessor {
     MethodHandles.Lookup lookup = MethodHandles.lookup();
     try {
       return lookup.findVirtual(Message.class, "getAttributes", methodType(Map.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
       // changed the return type to ConcurrentMap in version 2.1
       try {
         return lookup.findVirtual(Message.class, "getAttributes", methodType(ConcurrentMap.class));
-      } catch (NoSuchMethodException | IllegalAccessException f) {
+      } catch (NoSuchMethodException | IllegalAccessException ignore) {
         return null;
       }
     }
@@ -48,10 +48,10 @@ public final class MessageAttributesAccessor {
     try {
       // changed the generic bound to NamedValue in version 2.1; earlier than that it's Parameter
       setValueReturnType = Class.forName("org.restlet.util.NamedValue");
-    } catch (ClassNotFoundException e) {
+    } catch (ClassNotFoundException ignored) {
       try {
         setValueReturnType = Class.forName("org.restlet.data.Parameter");
-      } catch (ClassNotFoundException f) {
+      } catch (ClassNotFoundException ignore) {
         return null;
       }
     }
@@ -60,7 +60,7 @@ public final class MessageAttributesAccessor {
       return MethodHandles.lookup()
           .findVirtual(
               Series.class, "set", methodType(setValueReturnType, String.class, String.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
       return null;
     }
   }
@@ -70,11 +70,11 @@ public final class MessageAttributesAccessor {
     try {
       // restlet 2.3+
       return Class.forName("org.restlet.data.Header");
-    } catch (ClassNotFoundException e) {
+    } catch (ClassNotFoundException ignored) {
       try {
         // restlet 2.1-2.2
         return Class.forName("org.restlet.engine.header.Header");
-      } catch (ClassNotFoundException f) {
+      } catch (ClassNotFoundException ignore) {
         // restlet 2.0 does not have Header
         return null;
       }
@@ -90,7 +90,7 @@ public final class MessageAttributesAccessor {
       // restlet 2.1+ Series has different constructor
       return MethodHandles.lookup()
           .findConstructor(Series.class, methodType(void.class, Class.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
       return null;
     }
   }

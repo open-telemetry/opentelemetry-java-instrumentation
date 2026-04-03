@@ -23,11 +23,11 @@ final class ServerCallAccess {
   private static Class<?> findHttpRequestClass() {
     try {
       return Class.forName("org.restlet.engine.http.HttpRequest");
-    } catch (ClassNotFoundException e) {
+    } catch (ClassNotFoundException ignored) {
       // moved to another package in version 2.4
       try {
         return Class.forName("org.restlet.engine.adapter.HttpRequest");
-      } catch (ClassNotFoundException f) {
+      } catch (ClassNotFoundException ignore) {
         return null;
       }
     }
@@ -37,11 +37,11 @@ final class ServerCallAccess {
   private static Class<?> findServerCallClass() {
     try {
       return Class.forName("org.restlet.engine.http.ServerCall");
-    } catch (ClassNotFoundException e) {
+    } catch (ClassNotFoundException ignored) {
       // moved to another package in version 2.4
       try {
         return Class.forName("org.restlet.engine.adapter.ServerCall");
-      } catch (ClassNotFoundException f) {
+      } catch (ClassNotFoundException ignore) {
         return null;
       }
     }
@@ -55,7 +55,7 @@ final class ServerCallAccess {
     try {
       return MethodHandles.publicLookup()
           .findVirtual(HTTP_REQUEST_CLASS, "getHttpCall", methodType(SERVER_CALL_CLASS));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
       return null;
     }
   }
@@ -68,7 +68,7 @@ final class ServerCallAccess {
     try {
       return MethodHandles.publicLookup()
           .findVirtual(SERVER_CALL_CLASS, "getServerAddress", methodType(String.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
       return null;
     }
   }
@@ -84,7 +84,7 @@ final class ServerCallAccess {
     }
     try {
       return (String) GET_SERVER_ADDRESS.invoke(call);
-    } catch (Throwable e) {
+    } catch (Throwable ignored) {
       return null;
     }
   }
@@ -97,7 +97,7 @@ final class ServerCallAccess {
     if (HTTP_REQUEST_CLASS.isInstance(request)) {
       try {
         return GET_HTTP_CALL.invoke(request);
-      } catch (Throwable e) {
+      } catch (Throwable ignored) {
         return null;
       }
     }

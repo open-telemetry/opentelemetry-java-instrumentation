@@ -48,7 +48,7 @@ public final class AnnotationSingletons {
               application.io.opentelemetry.instrumentation.annotations.WithSpan.class,
               "inheritContext",
               MethodType.methodType(boolean.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
       return null;
     }
   }
@@ -146,7 +146,7 @@ public final class AnnotationSingletons {
             application.io.opentelemetry.instrumentation.annotations.WithSpan.class);
     try {
       return (boolean) INHERIT_CONTEXT_METHOD_HANDLE.invoke(annotation);
-    } catch (Throwable e) {
+    } catch (Throwable ignored) {
       return true;
     }
   }

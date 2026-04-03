@@ -30,12 +30,12 @@ final class RestletHeadersGetter implements TextMapGetter<Request> {
     MethodHandles.Lookup lookup = MethodHandles.lookup();
     try {
       return lookup.findVirtual(Message.class, "getAttributes", MethodType.methodType(Map.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
       // changed the return type to ConcurrentMap in version 2.1
       try {
         return lookup.findVirtual(
             Message.class, "getAttributes", MethodType.methodType(ConcurrentMap.class));
-      } catch (NoSuchMethodException | IllegalAccessException f) {
+      } catch (NoSuchMethodException | IllegalAccessException ignore) {
         return null;
       }
     }

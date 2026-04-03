@@ -17,7 +17,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Style | Style guide | Always | — |
 | Style | Uppercase field names should reflect semantic constants, not simply `static final` | Always | — |
 | Naming | Getter naming (`get` / `is`) | Always | — |
-| Style | Prefer `e` for used exceptions, prefer `f` for used exceptions in nested catch clauses when an outer catch already uses `e`, allow `error` for specific `*Error` catch types, prefer `t` for used `Throwable` values, and `ignored` for intentionally unused catch parameters | Catch clauses, `Throwable` params | — |
+| Style | Prefer `e` for used exceptions, prefer `f` for used exceptions in nested catch clauses when an outer catch already uses `e`, allow `error` for specific `*Error` catch types, prefer `t` for used `Throwable` values, prefer `ignored` for intentionally unused catch parameters, and use `ignore` for nested intentionally unused catch parameters when `ignored` would shadow an outer catch variable | Catch clauses, `Throwable` params | — |
 | Naming | Module/package naming | New or renamed modules/packages | `module-naming.md` |
 | Javaagent | Advice patterns | `@Advice` classes | `javaagent-advice-patterns.md` |
 | Javaagent | Module structure patterns | `InstrumentationModule`, `TypeInstrumentation`, `Singletons` | `javaagent-module-patterns.md` |
@@ -106,6 +106,13 @@ Prefer `t` for used `Throwable` values, including `catch (Throwable t)` and
 `Throwable` callback parameters.
 
 If a catch parameter is intentionally unused, prefer `ignored` over `ignore`.
+
+For nested catch clauses, if `ignored` would shadow an outer catch variable,
+prefer `ignore` for the inner intentionally unused catch parameter.
+
+Both `ignored` and `ignore` are recognized by IntelliJ's `CatchMayIgnoreException`
+inspection as intentional unused-catch names. In test sources, IntelliJ also
+recognizes `expected` and `ok`.
 
 ## [Style] Prefer Instance Creation Over Singletons
 
