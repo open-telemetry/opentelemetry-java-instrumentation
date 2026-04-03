@@ -12,7 +12,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrume
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 
-public class JettyHttpClientSingletons {
+public final class JettyHttpClientSingletons {
 
   private static final Instrumenter<Request, Response> instrumenter =
       JavaagentHttpClientInstrumenters.create(
