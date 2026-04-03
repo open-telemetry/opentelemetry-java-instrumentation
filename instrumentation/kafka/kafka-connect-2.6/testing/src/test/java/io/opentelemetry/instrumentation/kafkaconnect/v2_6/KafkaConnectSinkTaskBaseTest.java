@@ -53,8 +53,7 @@ import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
-// Suppressing warnings for test dependencies and deprecated Testcontainers API
-@SuppressWarnings({"deprecation"})
+@SuppressWarnings("deprecation")
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvider {
@@ -84,7 +83,7 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
 
   // Other constants
   protected static final String PLUGIN_PATH_CONTAINER = "/usr/share/java";
-  protected static final ObjectMapper MAPPER =
+  protected static final ObjectMapper mapper =
       new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
 
   // Docker network / containers

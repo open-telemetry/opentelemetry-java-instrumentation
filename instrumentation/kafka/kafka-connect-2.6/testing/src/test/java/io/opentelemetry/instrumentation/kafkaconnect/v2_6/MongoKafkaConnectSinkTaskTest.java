@@ -51,7 +51,7 @@ import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 import org.testcontainers.utility.DockerImageName;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
+@SuppressWarnings("deprecation")
 class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   // MongoDB-specific constants
   private static final String MONGO_NETWORK_ALIAS = "mongodb";
@@ -304,7 +304,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
         "com.mongodb.kafka.connect.sink.processor.id.strategy.BsonOidStrategy");
 
     String payload =
-        MAPPER.writeValueAsString(ImmutableMap.of("name", CONNECTOR_NAME, "config", configMap));
+        mapper.writeValueAsString(ImmutableMap.of("name", CONNECTOR_NAME, "config", configMap));
     given()
         .log()
         .headers()
@@ -336,7 +336,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
         "com.mongodb.kafka.connect.sink.processor.id.strategy.BsonOidStrategy");
 
     String payload =
-        MAPPER.writeValueAsString(
+        mapper.writeValueAsString(
             ImmutableMap.of("name", CONNECTOR_NAME + "-multi", "config", configMap));
     given()
         .log()

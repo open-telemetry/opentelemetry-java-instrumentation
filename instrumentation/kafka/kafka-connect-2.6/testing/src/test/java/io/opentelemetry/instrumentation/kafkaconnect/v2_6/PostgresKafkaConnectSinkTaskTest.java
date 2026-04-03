@@ -54,7 +54,7 @@ import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 import org.testcontainers.utility.DockerImageName;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
+@SuppressWarnings("deprecation")
 class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
 
   private static final Logger logger =
@@ -346,7 +346,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
     configMap.put("pk.mode", "none");
 
     String payload =
-        MAPPER.writeValueAsString(ImmutableMap.of("name", CONNECTOR_NAME, "config", configMap));
+        mapper.writeValueAsString(ImmutableMap.of("name", CONNECTOR_NAME, "config", configMap));
     given()
         .log()
         .headers()
@@ -388,7 +388,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
     configMap.put("pk.mode", "none");
 
     String payload =
-        MAPPER.writeValueAsString(
+        mapper.writeValueAsString(
             ImmutableMap.of("name", CONNECTOR_NAME + "-multi", "config", configMap));
     given()
         .log()
