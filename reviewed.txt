@@ -250,3 +250,4 @@ jsf-myfaces-1.2:javaagent
 kafka-clients-0.11:javaagent
 kafka-clients-2.6:library
 kafka-clients-0.11:testing
+kafka-connect-2.6:javaagent
