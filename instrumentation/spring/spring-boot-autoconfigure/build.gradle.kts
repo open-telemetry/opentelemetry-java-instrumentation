@@ -165,8 +165,9 @@ if (otelProps.testLatestDeps) {
   }
 }
 
+val testJavaVersion = otelProps.testJavaVersion
 val testSpring3 =
-  (otelProps.testJavaVersion == null || otelProps.testJavaVersion.compareTo(JavaVersion.VERSION_17) >= 0)
+  (testJavaVersion == null || testJavaVersion.compareTo(JavaVersion.VERSION_17) >= 0)
 
 testing {
   suites {
