@@ -30,7 +30,7 @@ public final class NettyClientSingletons {
           .get("ssl_telemetry")
           .getBoolean("enabled", false);
 
-  private static final Instrumenter<NettyCommonRequest, HttpResponse> INSTRUMENTER;
+  private static final Instrumenter<NettyCommonRequest, HttpResponse> instrumenter;
   private static final NettyConnectionInstrumenter CONNECTION_INSTRUMENTER;
   private static final NettySslInstrumenter SSL_INSTRUMENTER;
 
@@ -45,13 +45,13 @@ public final class NettyClientSingletons {
             builder,
             enabledOrErrorOnly(connectionTelemetryEnabled),
             enabledOrErrorOnly(sslTelemetryEnabled));
-    INSTRUMENTER = factory.instrumenter();
+    instrumenter = factory.instrumenter();
     CONNECTION_INSTRUMENTER = factory.createConnectionInstrumenter(GlobalOpenTelemetry.get());
     SSL_INSTRUMENTER = factory.createSslInstrumenter();
   }
 
   public static Instrumenter<NettyCommonRequest, HttpResponse> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static NettyConnectionInstrumenter connectionInstrumenter() {

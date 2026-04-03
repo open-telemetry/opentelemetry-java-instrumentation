@@ -18,7 +18,7 @@ import java.util.List;
 
 public final class JavaHttpServerSingletons {
 
-  public static final List<Filter> FILTERS;
+  public static final List<Filter> filters;
 
   static {
     CommonConfig config = AgentCommonConfig.get();
@@ -30,7 +30,7 @@ public final class JavaHttpServerSingletons {
         .configure(config);
     JavaHttpServerTelemetry serverTelemetry = serverBuilder.build();
 
-    FILTERS = asList(serverTelemetry.createFilter(), new ResponseCustomizingFilter());
+    filters = asList(serverTelemetry.createFilter(), new ResponseCustomizingFilter());
   }
 
   private JavaHttpServerSingletons() {}

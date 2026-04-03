@@ -17,6 +17,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Logger;
+import javax.xml.namespace.QName;
 
 final class MetroServerSpanNameUpdater {
 
@@ -98,8 +99,12 @@ final class MetroServerSpanNameUpdater {
             } else {
               // when pathInfo is null then there is a servlet that is mapped to this exact service
               // servletPath already contains the service name
-              String operationName = packet.getWSDLOperation().getLocalPart();
-              spanName = servletPath + "/" + operationName;
+              QName wsdlOperation = packet.getWSDLOperation();
+              if (wsdlOperation == null) {
+                spanName = servletPath;
+              } else {
+                spanName = servletPath + "/" + wsdlOperation.getLocalPart();
+              }
             }
             break;
           }

@@ -22,10 +22,10 @@ public class JspCompilationContextInstrumentationSingletons {
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jsp")
           .getBoolean("experimental_span_attributes/development", false);
 
-  private static final Instrumenter<JspCompilationContext, Void> INSTRUMENTER;
+  private static final Instrumenter<JspCompilationContext, Void> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<JspCompilationContext, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.jsp-2.3",
@@ -40,7 +40,7 @@ public class JspCompilationContextInstrumentationSingletons {
   }
 
   public static Instrumenter<JspCompilationContext, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private JspCompilationContextInstrumentationSingletons() {}

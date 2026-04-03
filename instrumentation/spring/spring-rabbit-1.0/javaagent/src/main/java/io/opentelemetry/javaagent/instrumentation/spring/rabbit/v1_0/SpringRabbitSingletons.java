@@ -17,13 +17,13 @@ public final class SpringRabbitSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-rabbit-1.0";
 
-  private static final Instrumenter<Message, Void> INSTRUMENTER;
+  private static final Instrumenter<Message, Void> instrumenter;
 
   static {
     SpringRabbitMessageAttributesGetter getter = new SpringRabbitMessageAttributesGetter();
     MessageOperation operation = MessageOperation.PROCESS;
 
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<Message, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
@@ -36,7 +36,7 @@ public final class SpringRabbitSingletons {
   }
 
   public static Instrumenter<Message, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private SpringRabbitSingletons() {}

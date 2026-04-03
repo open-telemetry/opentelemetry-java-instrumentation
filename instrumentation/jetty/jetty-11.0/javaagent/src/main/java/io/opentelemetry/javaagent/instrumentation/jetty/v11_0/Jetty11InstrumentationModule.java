@@ -26,6 +26,7 @@ public class Jetty11InstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in Servlet 5.0
     return hasClassesNamed("jakarta.servlet.Servlet");
   }
 

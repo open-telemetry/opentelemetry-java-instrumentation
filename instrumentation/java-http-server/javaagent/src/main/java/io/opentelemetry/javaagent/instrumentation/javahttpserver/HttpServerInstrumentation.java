@@ -34,7 +34,7 @@ class HttpServerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.Return HttpContext httpContext) {
-      httpContext.getFilters().addAll(JavaHttpServerSingletons.FILTERS);
+      httpContext.getFilters().addAll(JavaHttpServerSingletons.filters);
     }
   }
 }

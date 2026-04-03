@@ -312,7 +312,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"),
                             satisfies(
-                                maybeStable(DB_STATEMENT), s -> s.startsWith("SELECT mockrow")),
+                                maybeStable(DB_STATEMENT), val -> val.startsWith("SELECT mockrow")),
                             equalTo(
                                 DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "SELECT" : null),
                             equalTo(NETWORK_TYPE, networkType()),

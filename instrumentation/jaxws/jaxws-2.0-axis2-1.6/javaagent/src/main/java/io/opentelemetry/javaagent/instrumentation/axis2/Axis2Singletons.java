@@ -12,10 +12,10 @@ import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 public class Axis2Singletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jaxws-2.0-axis2-1.6";
 
-  private static final Instrumenter<Axis2Request, Void> INSTRUMENTER;
+  private static final Instrumenter<Axis2Request, Void> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<Axis2Request, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, Axis2Request::spanName)
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
@@ -23,7 +23,7 @@ public class Axis2Singletons {
   }
 
   public static Instrumenter<Axis2Request, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private Axis2Singletons() {}

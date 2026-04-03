@@ -24,7 +24,7 @@ public final class OkHttp3Singletons {
 
   public static final VirtualField<Runnable, PropagatedContext> PROPAGATED_CONTEXT =
       VirtualField.find(Runnable.class, PropagatedContext.class);
-  private static final Instrumenter<Interceptor.Chain, Response> INSTRUMENTER =
+  private static final Instrumenter<Interceptor.Chain, Response> instrumenter =
       JavaagentHttpClientInstrumenters.create(
           OkHttpClientInstrumenterBuilderFactory.create(GlobalOpenTelemetry.get()));
 
@@ -37,10 +37,10 @@ public final class OkHttp3Singletons {
       };
 
   public static final Interceptor CONNECTION_ERROR_INTERCEPTOR =
-      new ConnectionErrorSpanInterceptor(INSTRUMENTER);
+      new ConnectionErrorSpanInterceptor(instrumenter);
 
   public static final Interceptor TRACING_INTERCEPTOR =
-      new TracingInterceptor(INSTRUMENTER, GlobalOpenTelemetry.getPropagators());
+      new TracingInterceptor(instrumenter, GlobalOpenTelemetry.getPropagators());
 
   private OkHttp3Singletons() {}
 }

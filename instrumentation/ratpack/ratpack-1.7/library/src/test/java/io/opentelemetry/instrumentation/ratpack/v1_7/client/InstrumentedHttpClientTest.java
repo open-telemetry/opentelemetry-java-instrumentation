@@ -121,7 +121,7 @@ class InstrumentedHttpClientTest {
                             equalTo(HTTP_ROUTE, "/bar"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                            satisfies(SERVER_PORT, v -> v.isInstanceOf(Long.class)),
+                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(URL_FULL, otherApp.getAddress() + "bar")),
                 span ->
@@ -210,7 +210,7 @@ class InstrumentedHttpClientTest {
                             equalTo(HTTP_ROUTE, "/foo"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                            satisfies(SERVER_PORT, v -> v.isInstanceOf(Long.class)),
+                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(URL_FULL, otherApp.getAddress() + "foo")),
                 span ->
@@ -221,7 +221,7 @@ class InstrumentedHttpClientTest {
                             equalTo(HTTP_ROUTE, "/bar"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                            satisfies(SERVER_PORT, v -> v.isInstanceOf(Long.class)),
+                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(URL_FULL, otherApp.getAddress() + "bar"))));
   }
@@ -296,7 +296,7 @@ class InstrumentedHttpClientTest {
                             equalTo(HTTP_ROUTE, "/foo"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(ERROR_TYPE, HttpClientReadTimeoutException.class.getName()),
-                            satisfies(SERVER_PORT, v -> v.isInstanceOf(Long.class)),
+                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(URL_FULL, otherApp.getAddress() + "foo"))));
   }
@@ -349,7 +349,7 @@ class InstrumentedHttpClientTest {
                             equalTo(HTTP_ROUTE, "/foo"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                            satisfies(SERVER_PORT, v -> v.isInstanceOf(Long.class)),
+                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(URL_FULL, otherApp.getAddress() + "foo")),
                 span ->
@@ -360,7 +360,7 @@ class InstrumentedHttpClientTest {
                             equalTo(HTTP_ROUTE, "/foo"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                            satisfies(SERVER_PORT, v -> v.isInstanceOf(Long.class)),
+                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(URL_FULL, otherApp.getAddress() + "foo"))));
   }

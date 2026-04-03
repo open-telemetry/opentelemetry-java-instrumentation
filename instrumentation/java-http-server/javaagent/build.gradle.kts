@@ -14,5 +14,5 @@ dependencies {
 }
 
 tasks.test {
-  systemProperty("collectMetadata", findProperty("collectMetadata"))
+  systemProperty("collectMetadata", otelProps.collectMetadata)
 }

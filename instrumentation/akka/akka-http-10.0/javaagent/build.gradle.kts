@@ -46,7 +46,7 @@ testing {
   suites {
     val javaRouteTest by registering(JvmTestSuite::class) {
       dependencies {
-        if (findProperty("testLatestDeps") == "true") {
+        if (otelProps.testLatestDeps) {
           implementation("com.typesafe.akka:akka-http_2.13:latest.release")
           implementation("com.typesafe.akka:akka-stream_2.13:latest.release")
         } else {
@@ -64,8 +64,8 @@ tasks {
     jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {
@@ -79,14 +79,14 @@ tasks {
     dependsOn(testing.suites, testStableSemconv)
   }
 
-  if (findProperty("denyUnsafe") == "true") {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }
   }
 }
 
-if (findProperty("testLatestDeps") == "true") {
+if (otelProps.testLatestDeps) {
   configurations {
     // akka artifact name is different for regular and latest tests
     testImplementation {
