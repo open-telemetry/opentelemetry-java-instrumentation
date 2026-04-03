@@ -20,12 +20,10 @@ dependencies {
   testImplementation(project(":instrumentation:oracle-ucp-11.2:testing"))
 }
 
-val collectMetadata = otelProps.collectMetadata
-
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {

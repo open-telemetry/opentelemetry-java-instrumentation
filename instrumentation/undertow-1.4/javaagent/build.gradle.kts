@@ -26,8 +26,7 @@ tasks.withType<Test>().configureEach {
 }
 
 // since 2.3.x, undertow is compiled by JDK 11
-val latestDepTest = otelProps.testLatestDeps
-if (latestDepTest) {
+if (otelProps.testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }

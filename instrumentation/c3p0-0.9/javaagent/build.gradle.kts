@@ -21,11 +21,9 @@ dependencies {
   testImplementation(project(":instrumentation:c3p0-0.9:testing"))
 }
 
-val collectMetadata = otelProps.collectMetadata
-
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {

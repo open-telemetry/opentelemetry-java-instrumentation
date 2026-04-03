@@ -19,11 +19,9 @@ dependencies {
   annotationProcessor("com.google.auto.value:auto-value")
 }
 
-val collectMetadata = otelProps.collectMetadata
-
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {

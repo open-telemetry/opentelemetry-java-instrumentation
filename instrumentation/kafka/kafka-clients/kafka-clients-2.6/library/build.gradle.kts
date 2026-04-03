@@ -24,10 +24,8 @@ tasks {
   }
 }
 
-val latestDepTest = otelProps.testLatestDeps
-
 // kafka 4.1 requires java 11
-if (latestDepTest) {
+if (otelProps.testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }

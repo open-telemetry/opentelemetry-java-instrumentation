@@ -32,15 +32,13 @@ dependencies {
   testInstrumentation(project(":instrumentation:azure-core:azure-core-1.53:javaagent"))
 }
 
-val latestDepTest = otelProps.testLatestDeps
-
 testing {
   suites {
     // using a test suite to ensure that classes from library-instrumentation-shaded that were
     // extracted to the output directory are not available during tests
     val testAzure by registering(JvmTestSuite::class) {
       dependencies {
-        val version = if (latestDepTest) "1.35.0" else "1.19.0"
+        val version = if (otelProps.testLatestDeps) "1.35.0" else "1.19.0"
         implementation("com.azure:azure-core:$version")
       }
     }

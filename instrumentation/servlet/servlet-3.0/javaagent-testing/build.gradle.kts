@@ -35,9 +35,7 @@ tasks {
 // Servlet 3.0 in latest Jetty versions requires Java 11
 // However, projects that depend on this module are still be using Java 8 in testLatestDeps mode
 // Therefore, we need a separate project for servlet 3.0 tests
-val latestDepTest = otelProps.testLatestDeps
-
-if (latestDepTest) {
+if (otelProps.testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }

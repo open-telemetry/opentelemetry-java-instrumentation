@@ -33,12 +33,10 @@ dependencies {
   latestDepTestLibrary("io.vertx:vertx-codegen:4.+") // see vertx-sql-client-5.0 module
 }
 
-val collectMetadata = otelProps.collectMetadata
-
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {
@@ -53,8 +51,7 @@ tasks {
   }
 }
 
-val latestDepTest = otelProps.testLatestDeps
-if (!latestDepTest) {
+if (!otelProps.testLatestDeps) {
   // https://bugs.openjdk.org/browse/JDK-8320431
   otelJava {
     maxJavaVersionForTests.set(JavaVersion.VERSION_21)

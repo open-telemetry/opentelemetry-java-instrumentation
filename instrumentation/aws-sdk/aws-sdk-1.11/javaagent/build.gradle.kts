@@ -133,8 +133,6 @@ testing {
   }
 }
 
-val collectMetadata = otelProps.collectMetadata
-
 tasks {
   if (!otelProps.testLatestDeps) {
     check {
@@ -154,7 +152,7 @@ tasks {
     // TODO run tests both with and without experimental span attributes
     jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {

@@ -16,11 +16,10 @@ muzzle {
   }
 }
 
-val latestDepTest = otelProps.testLatestDeps
 dependencies {
   implementation(project(":instrumentation:cassandra:cassandra-4.4:library"))
 
-  if (latestDepTest) {
+  if (otelProps.testLatestDeps) {
     library("org.apache.cassandra:java-driver-core:4.18.0")
   } else {
     library("com.datastax.oss:java-driver-core:4.4.0")

@@ -31,8 +31,7 @@ dependencies {
 }
 
 // jetty-server 10+ requires Java 11
-val latestDepTest = otelProps.testLatestDeps
-if (latestDepTest) {
+if (otelProps.testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }

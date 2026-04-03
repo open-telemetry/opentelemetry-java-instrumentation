@@ -28,8 +28,6 @@ dependencies {
   testImplementation(project(":instrumentation:grpc-1.6:testing"))
 }
 
-val collectMetadata = otelProps.collectMetadata
-
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
@@ -48,7 +46,7 @@ tasks {
       !it.absolutePath.contains("opentelemetry-grpc-1.6")
     }
 
-    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testExperimental by registering(Test::class) {

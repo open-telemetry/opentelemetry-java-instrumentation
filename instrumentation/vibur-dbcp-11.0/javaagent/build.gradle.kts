@@ -19,11 +19,9 @@ dependencies {
   testImplementation(project(":instrumentation:vibur-dbcp-11.0:testing"))
 }
 
-val collectMetadata = otelProps.collectMetadata
-
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {

@@ -17,8 +17,6 @@ dependencies {
   library("org.apache.dubbo:dubbo:2.7.0")
 }
 
-val latestDepTest = otelProps.testLatestDeps
-
 testing {
   suites {
     // using a test suite to ensure that project(":instrumentation:apache-dubbo-2.7:library-autoconfigure")
@@ -27,7 +25,7 @@ testing {
     val testDubbo by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project(":instrumentation:apache-dubbo-2.7:testing"))
-        if (latestDepTest) {
+        if (otelProps.testLatestDeps) {
           implementation("org.apache.dubbo:dubbo:latest.release")
           implementation("org.apache.dubbo:dubbo-config-api:latest.release")
         } else {
