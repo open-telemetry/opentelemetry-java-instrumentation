@@ -82,20 +82,44 @@ class suffices for a simple version boundary — use multiple classes only when:
   present (e.g., Jersey checks both the JAX-RS spec API and the Jersey implementation class;
   AWS SDK Lambda checks both the Lambda module and JSON protocol core).
 
-Place a comment **above each class name string** stating its version role and matcher shape:
+For multi-class checks or negated exclusions, place a comment **above each class name string**
+stating its version role and matcher shape:
 
 - **Positive floor class** in `hasClassesNamed(...)` (proves "at least version X"):
-  use `// added in X.Y`.
+  use `// added in X.Y`, optionally followed by brief parenthetical context only when it adds
+  interesting, non-duplicative signal.
 - **Positive ceiling class** in `hasClassesNamed(...)` (proves "not yet version Y"):
-  use `// removed in Y.Z`.
+  use `// removed in Y.Z`, optionally followed by brief parenthetical context only when it
+  adds interesting, non-duplicative signal.
 - **Negated exclusion class** in `not(hasClassesNamed(...))` or
-  `.and(not(hasClassesNamed(...)))`: use `// added in Y.Z`, because the class's presence
-  starts excluding `Y.Z+`.
+  `.and(not(hasClassesNamed(...)))`: use `// added in Y.Z`, optionally followed by brief
+  parenthetical context only when it adds interesting, non-duplicative signal, because the
+  class's presence starts excluding `Y.Z+`.
+
+Short parenthetical details are allowed only when they add interesting, non-duplicative
+signal beyond the version role itself, for example native instrumentation notes, backport
+context, or namespace rename notes.
 
 A single **positive** landmark class can sometimes provide **both** bounds: its presence
 proves the module is at least version `X.Y`, and the same class disappears in `Y.Z`, so
 its presence also excludes `Y.Z+`. In that case, a combined comment such as
 `// added in X.Y, removed in Y.Z` is appropriate.
+
+For a single-item `hasClassesNamed(...)` check, prefer the compact form with the version
+comment above the statement or expression that uses it, instead of splitting the sole string
+onto its own line. For example:
+
+```java
+// added in 3.0
+return hasClassesNamed("jakarta.faces.context.FacesContext");
+```
+
+And for a single negated exclusion:
+
+```java
+// added in 8.10 (native OTel support)
+.and(not(hasClassesNamed("co.elastic.clients.transport.instrumentation.Instrumentation")));
+```
 
 **How to identify ceiling classes**: check whether a **newer sibling module** exists for
 the same library (e.g., `mongo-4.0` next to `mongo-3.7`). If the newer module's
@@ -140,7 +164,7 @@ public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
   return hasClassesNamed(
       // added in 3.7
       "com.mongodb.MongoClientSettings$Builder",
-      // removed in 4.0 — excludes driver 4.0+ where the 4.0 module takes over
+      // removed in 4.0 — replaced by com.mongodb.internal.async.SingleResultCallback
       "com.mongodb.async.SingleResultCallback");
 }
 ```
@@ -187,14 +211,19 @@ public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
   is correct when muzzle can detect version boundaries on its own (the common case). Only
   flag a *missing* override when the module targets a specific version range and the
   versioning signal (added/removed landmark class) is not part of the classes muzzle inspects.
-- **Version comments on landmark classes.** For multi-class checks, `.and(not(...))`
-  chains, or cases where the landmark version differs from the module's base version,
-  each `hasClassesNamed()` call must have a `//` comment stating the class's **role**:
-  - Positive floor class → `// added in X.Y` (class introduced in version X.Y).
-  - Positive ceiling class → `// removed in Y.Z` (class removed in version Y.Z, ensuring
-    the module does not activate on Y.Z+).
-  - Negated exclusion class in `not(hasClassesNamed(...))` → `// added in Y.Z` (class
-    introduced in version Y.Z, so its presence excludes Y.Z+).
+- **Version comments on landmark classes.** For multi-class checks or cases where the
+  landmark version differs from the module's base version, each `hasClassesNamed()` call
+  must have a `//` comment stating the class's **role**. For a single-item
+  `hasClassesNamed(...)` check, including a negated exclusion in `.and(not(...))`, prefer
+  the compact form with the comment above the statement or expression instead of splitting
+  the sole string onto its own line:
+  - Positive floor class → `// added in X.Y` (optionally with brief, non-duplicative
+    parenthetical context such as `renamed from javax` or `backported to 2.12.3`).
+  - Positive ceiling class → `// removed in Y.Z` (optionally with brief, non-duplicative
+    parenthetical context such as `replaced by jakarta variant` or `moved to internal.async`).
+  - Negated exclusion class in `not(hasClassesNamed(...))` → `// added in Y.Z`
+    (optionally with brief, non-duplicative parenthetical context such as `native OTel
+    support` or `shaded into core module`).
   - Single positive class that serves as both floor and ceiling → include both boundaries,
     e.g. `// added in X.Y, removed in Y.Z`.
   Do not use `// added in` for a **positive** ceiling class — that states when the class
@@ -204,13 +233,15 @@ public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
   To identify ceiling classes, check if a newer sibling module's `classLoaderMatcher()`
   checks a different variant or replacement class.
 - **Single-class landmark comments are required.** When a single-class
-  `hasClassesNamed(...)` check establishes the module's lower bound, add an inline
-  `// added in X.Y` comment. If that same class also establishes the upper bound because
-  it is removed or replaced in a newer sibling version, include that fact too, e.g.
-  `// added in X.Y, removed in Y.Z`. First validate each stated boundary from repository
-  or upstream evidence; do not infer versions from the module name alone. Flag a missing
-  boundary comment in this case, and do not flag an existing dual-role comment for removal
-  unless it is demonstrably wrong.
+  `hasClassesNamed(...)` check establishes the module's lower bound, or when a single-class
+  negated check establishes an excluded upper range, prefer the compact form with the
+  version comment immediately above the statement or expression that uses the matcher.
+  Parenthetical context is fine only when it adds interesting, non-duplicative signal. If
+  the same positive class also establishes the upper bound because it is removed or replaced
+  in a newer sibling version, include that fact too, e.g. `// added in X.Y, removed in Y.Z`.
+  First validate each stated boundary from repository or upstream evidence; do not infer
+  versions from the module name alone. Flag a missing boundary comment in this case, and do
+  not flag an existing dual-role comment for removal unless it is demonstrably wrong.
 - Prefer **one landmark class** per version boundary — choose the most stable/specific class.
 - Pair with **muzzle config** (`assertInverse.set(true)`) for full coverage.
 - Use `hasClassesNamed(...)` (from `AgentElementMatchers`) — not raw ByteBuddy matchers.
