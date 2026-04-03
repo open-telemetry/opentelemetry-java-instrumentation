@@ -236,3 +236,4 @@ jmx-metrics:javaagent
 jmx-metrics:library
 testing-apps:testing-webapp
 jsf-jakarta-common:javaagent
+jsf-jakarta-common:testing
