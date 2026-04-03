@@ -246,3 +246,4 @@ jsf-javax-common:testing
 jsf-myfaces-3.0:javaagent
 jsp-2.3:javaagent
 kafka-clients-0.11:bootstrap
+jsf-myfaces-1.2:javaagent
