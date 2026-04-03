@@ -32,11 +32,13 @@ public final class DbConfig {
 
   public static boolean isQuerySanitizationEnabled(
       OpenTelemetry openTelemetry, String instrumentationName) {
+    DeclarativeConfigProperties instrumentationConfig =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, instrumentationName);
     Boolean querySanitizationEnabled =
         getQuerySanitizationEnabled(
-            DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, instrumentationName),
-            getDeprecatedQuerySanitizationProperty(instrumentationName),
-            getQuerySanitizationProperty(instrumentationName));
+            instrumentationConfig,
+            "otel.instrumentation." + instrumentationName + ".statement-sanitizer.enabled",
+            "otel.instrumentation." + instrumentationName + ".query-sanitization.enabled");
     if (querySanitizationEnabled != null) {
       return querySanitizationEnabled;
     }
@@ -72,13 +74,22 @@ public final class DbConfig {
       return value;
     }
 
+    // this variant was never a regular (non-declarative) configuration property name
     Boolean deprecatedValue =
         commonConfig.get("database").get("sqlcommenter/development").getBoolean("enabled");
     if (deprecatedValue != null) {
       warnIfDeprecatedDeclarativeConfigurationUsed(
-          "common.database.sqlcommenter/development.enabled",
-          "common.db.sqlcommenter/development.enabled");
+          ".instrumentation/development.java.common.database.sqlcommenter/development.enabled",
+          ".instrumentation/development.java.common.db.sqlcommenter/development.enabled");
       return deprecatedValue;
+    }
+
+    Boolean deprecatedPropertyValue =
+        commonConfig.get("db_sqlcommenter/development").getBoolean("enabled");
+    if (deprecatedPropertyValue != null) {
+      warnIfDeprecatedSystemPropertyUsed(
+          "otel.instrumentation.common.experimental.db-sqlcommenter.enabled");
+      return deprecatedPropertyValue;
     }
 
     return null;
@@ -89,24 +100,29 @@ public final class DbConfig {
     DeclarativeConfigProperties commonConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
 
-    Boolean value =
-        getQuerySanitizationEnabled(
-            commonConfig.get("db"),
-            "otel.instrumentation.common.db-statement-sanitizer.enabled",
-            "otel.instrumentation.common.db.query-sanitization.enabled");
+    Boolean value = commonConfig.get("db").get("query_sanitization").getBoolean("enabled");
     if (value != null) {
       return value;
     }
 
-    Boolean deprecatedValue =
-        getQuerySanitizationEnabled(
-            commonConfig.get("database"),
-            "otel.instrumentation.common.db-statement-sanitizer.enabled",
-            "otel.instrumentation.common.db.query-sanitization.enabled");
-    if (deprecatedValue != null) {
+    // this variant was never a regular (non-declarative) configuration property name
+    Boolean deprecatedStatementSanitizerValue =
+        commonConfig.get("database").get("statement_sanitizer").getBoolean("enabled");
+    if (deprecatedStatementSanitizerValue != null) {
       warnIfDeprecatedDeclarativeConfigurationUsed(
-          "common.database.statement_sanitizer.enabled", "common.db.query_sanitization.enabled");
-      return deprecatedValue;
+          ".instrumentation/development.java.common.database.statement_sanitizer.enabled",
+          ".instrumentation/development.java.common.db.query_sanitization.enabled");
+      return deprecatedStatementSanitizerValue;
+    }
+
+    // this variant was never a declarative configuration property name
+    Boolean deprecatedStatementSanitizerPropertyValue =
+        commonConfig.get("db_statement_sanitizer").getBoolean("enabled");
+    if (deprecatedStatementSanitizerPropertyValue != null) {
+      warnIfDeprecatedSystemPropertyUsed(
+          "otel.instrumentation.common.db-statement-sanitizer.enabled",
+          "otel.instrumentation.common.db.query-sanitization.enabled");
+      return deprecatedStatementSanitizerPropertyValue;
     }
 
     return null;
@@ -122,7 +138,7 @@ public final class DbConfig {
 
     Boolean deprecatedValue = config.get("statement_sanitizer").getBoolean("enabled");
     if (deprecatedValue != null) {
-      warnIfDeprecatedConfigurationUsed(deprecatedProperty, replacementProperty);
+      warnIfDeprecatedSettingOrEquivalentUsed(deprecatedProperty, replacementProperty);
       return deprecatedValue;
     }
 
@@ -135,31 +151,46 @@ public final class DbConfig {
       logger.warning(
           "The "
               + deprecatedProperty
-              + " declarative configuration is deprecated and will be removed in 3.0. Use "
+              + " declarative configuration is deprecated"
+              + " and will be removed in a future version. Use "
               + replacementProperty
               + " instead.");
     }
   }
 
-  private static void warnIfDeprecatedConfigurationUsed(
+  private static void warnIfDeprecatedSystemPropertyUsed(
       String deprecatedProperty, String replacementProperty) {
     if (warnedDeprecatedProperties.add(deprecatedProperty)) {
       logger.warning(
           "The "
               + deprecatedProperty
-              + " setting or equivalent declarative configuration is deprecated and will be"
-              + " removed in 3.0. Use "
+              + " system property is deprecated and will be removed in 3.0. Use "
               + replacementProperty
-              + " or equivalent declarative configuration instead.");
+              + " instead.");
     }
   }
 
-  private static String getQuerySanitizationProperty(String instrumentationName) {
-    return "otel.instrumentation." + instrumentationName + ".query-sanitization.enabled";
+  private static void warnIfDeprecatedSystemPropertyUsed(String deprecatedProperty) {
+    if (warnedDeprecatedProperties.add(deprecatedProperty)) {
+      logger.warning(
+          "The "
+              + deprecatedProperty
+              + " system property is deprecated and will be removed in a future version. Use"
+              + " equivalent declarative configuration instead.");
+    }
   }
 
-  private static String getDeprecatedQuerySanitizationProperty(String instrumentationName) {
-    return "otel.instrumentation." + instrumentationName + ".statement-sanitizer.enabled";
+  private static void warnIfDeprecatedSettingOrEquivalentUsed(
+      String deprecatedProperty, String replacementProperty) {
+    if (warnedDeprecatedProperties.add(deprecatedProperty)) {
+      logger.warning(
+          "The "
+              + deprecatedProperty
+              + " setting and the equivalent declarative configuration property"
+              + " are deprecated and will be removed in 3.0. Use "
+              + replacementProperty
+              + " or equivalent declarative configuration instead.");
+    }
   }
 
   private DbConfig() {}

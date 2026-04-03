@@ -64,12 +64,6 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
         "java.common.http.server.emit_experimental_telemetry/development",
         "otel.instrumentation.http.server.emit-experimental-telemetry");
     SPECIAL_MAPPINGS.put(
-        "java.common.database.statement_sanitizer.enabled",
-        "otel.instrumentation.common.db-statement-sanitizer.enabled");
-    SPECIAL_MAPPINGS.put(
-        "java.common.db.sqlcommenter/development.enabled",
-        "otel.instrumentation.common.experimental.db-sqlcommenter.enabled");
-    SPECIAL_MAPPINGS.put(
         "java.common.messaging.receive_telemetry/development.enabled",
         "otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
     SPECIAL_MAPPINGS.put(

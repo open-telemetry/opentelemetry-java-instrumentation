@@ -123,8 +123,37 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
             config
                 .getStructured("java")
                 .getStructured("common")
+                .getStructured("db_statement_sanitizer")
+                .getBoolean("enabled"))
+        .isFalse();
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
                 .getStructured("database")
                 .getStructured("statement_sanitizer")
+                .getBoolean("enabled"))
+        .isNull();
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured("db")
+                .getStructured("query_sanitization")
+                .getBoolean("enabled"))
+        .isNull();
+  }
+
+  @Test
+  void testCommonDbSqlcommenterPropertyMapping() {
+    DeclarativeConfigProperties config =
+        createConfig("otel.instrumentation.common.experimental.db-sqlcommenter.enabled", "false");
+
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured("db_sqlcommenter/development")
                 .getBoolean("enabled"))
         .isFalse();
     assertThat(
@@ -132,7 +161,7 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
                 .getStructured("java")
                 .getStructured("common")
                 .getStructured("db")
-                .getStructured("query_sanitization")
+                .getStructured("sqlcommenter/development")
                 .getBoolean("enabled"))
         .isNull();
   }
