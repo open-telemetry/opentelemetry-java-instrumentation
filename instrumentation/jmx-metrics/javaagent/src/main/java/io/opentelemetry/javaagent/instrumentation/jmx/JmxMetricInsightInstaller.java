@@ -67,6 +67,10 @@ public class JmxMetricInsightInstaller implements AgentListener {
     ClassLoader classLoader = JmxTelemetryBuilder.class.getClassLoader();
     String resource = String.format("jmx/rules/%s.yaml", target);
     try (InputStream input = classLoader.getResourceAsStream(resource)) {
+      if (input == null) {
+        logger.log(SEVERE, "JMX configuration not found on classpath " + resource);
+        return;
+      }
       builder.addRules(input);
     } catch (IOException | RuntimeException e) {
       // for now only log JMX metric configuration errors as they do not prevent agent startup

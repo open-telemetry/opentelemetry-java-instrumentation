@@ -43,7 +43,7 @@ class Axis2JaxWs2Test extends AbstractJaxWs3Test {
     configuration = configuration.replace("<module ref=\"addressing\"/>", "");
 
     File configurationDirectory = new File("build/axis-conf/");
-    configurationDirectory.mkdirs();
+    FileUtils.forceMkdir(configurationDirectory);
     FileUtils.writeStringToFile(
         new File(configurationDirectory, "axis2.xml"), configuration, UTF_8);
   }

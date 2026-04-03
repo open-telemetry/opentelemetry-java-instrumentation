@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.OtelPropsExtension
+
 plugins {
   `java-library`
 
@@ -14,7 +16,7 @@ val testIndyProperty = providers.gradleProperty("testIndy")
   .map { it == "true" }
   .orElse(false)
 
-val denyUnsafe = gradle.startParameter.projectProperties["denyUnsafe"] == "true"
+val otelProps = the<OtelPropsExtension>()
 
 dependencies {
   /*
@@ -148,7 +150,7 @@ afterEvaluate {
         shadowJar.archiveFile.get().asFile,
         failOnContextLeakOverride,
         testIndyEnabled,
-        denyUnsafe
+        otelProps.denyUnsafe
       )
     )
 

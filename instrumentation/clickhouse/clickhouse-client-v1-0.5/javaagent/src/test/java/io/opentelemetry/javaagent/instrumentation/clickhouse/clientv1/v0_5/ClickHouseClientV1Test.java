@@ -33,6 +33,7 @@ import com.clickhouse.client.ClickHouseResponseSummary;
 import com.clickhouse.data.ClickHouseFormat;
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -50,6 +51,8 @@ class ClickHouseClientV1Test {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private static final GenericContainer<?> clickhouseServer =
       new GenericContainer<>("clickhouse/clickhouse-server:24.4.2").withExposedPorts(8123);
@@ -93,15 +96,16 @@ class ClickHouseClientV1Test {
   void testConnectionStringWithoutDatabaseSpecifiedStillGeneratesSpans()
       throws ClickHouseException {
     ClickHouseNode server = ClickHouseNode.of("http://" + host + ":" + port + "?compress=0");
-    try (ClickHouseClient client = ClickHouseClient.builder().build()) {
-      ClickHouseResponse response =
-          client
-              .read(server)
-              .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
-              .query("select * from " + tableName)
-              .executeAndWait();
-      response.close();
-    }
+    ClickHouseClient client = ClickHouseClient.builder().build();
+    cleanup.deferCleanup(client);
+
+    ClickHouseResponse response =
+        client
+            .read(server)
+            .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
+            .query("select * from " + tableName)
+            .executeAndWait();
+    response.close();
 
     testing.waitAndAssertTraces(
         trace ->

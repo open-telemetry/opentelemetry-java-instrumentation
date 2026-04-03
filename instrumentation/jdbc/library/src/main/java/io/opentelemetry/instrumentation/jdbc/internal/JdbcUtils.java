@@ -26,6 +26,7 @@ public final class JdbcUtils {
 
   @Nullable private static Field c3poField = null;
 
+  @Nullable
   public static Connection connectionFromStatement(Statement statement) {
     try {
       return unwrapConnection(statement.getConnection());
@@ -37,6 +38,7 @@ public final class JdbcUtils {
   }
 
   /** Returns the unwrapped connection or null if exception was thrown. */
+  @Nullable
   public static Connection unwrapConnection(Connection connection) {
     try {
       if (c3poField != null) {
@@ -90,7 +92,7 @@ public final class JdbcUtils {
     return dbInfo;
   }
 
-  public static DbInfo computeDbInfo(Connection connection) {
+  public static DbInfo computeDbInfo(@Nullable Connection connection) {
     /*
      * Logic to get the DBInfo from a JDBC Connection, if the connection was not created via
      * Driver.connect, or it has never seen before, the connectionInfo map will return null and will

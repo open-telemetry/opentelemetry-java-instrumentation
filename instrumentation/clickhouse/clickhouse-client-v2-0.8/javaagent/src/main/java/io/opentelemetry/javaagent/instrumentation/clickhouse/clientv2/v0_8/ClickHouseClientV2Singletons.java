@@ -17,12 +17,12 @@ import io.opentelemetry.javaagent.instrumentation.clickhouse.common.ClickHouseIn
 public final class ClickHouseClientV2Singletons {
 
   private static final String INSTRUMENTER_NAME = "io.opentelemetry.clickhouse-client-v2-0.8";
-  private static final Instrumenter<ClickHouseDbRequest, Void> INSTRUMENTER;
+  private static final Instrumenter<ClickHouseDbRequest, Void> instrumenter;
   private static final VirtualField<Client, AddressAndPort> ADDRESS_AND_PORT =
       VirtualField.find(Client.class, AddressAndPort.class);
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         ClickHouseInstrumenterFactory.createInstrumenter(
             INSTRUMENTER_NAME,
             error -> {
@@ -34,7 +34,7 @@ public final class ClickHouseClientV2Singletons {
   }
 
   public static Instrumenter<ClickHouseDbRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static AddressAndPort getAddressAndPort(Client client) {

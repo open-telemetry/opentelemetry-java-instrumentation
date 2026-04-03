@@ -23,12 +23,12 @@ public final class WithSpanSingletons {
       "io.opentelemetry.opentelemetry-extension-annotations-1.0";
 
   private static final Logger logger = Logger.getLogger(WithSpanSingletons.class.getName());
-  private static final Instrumenter<Method, Object> INSTRUMENTER = createInstrumenter();
+  private static final Instrumenter<Method, Object> instrumenter = createInstrumenter();
   private static final Instrumenter<MethodRequest, Object> INSTRUMENTER_WITH_ATTRIBUTES =
       createInstrumenterWithAttributes();
 
   public static Instrumenter<Method, Object> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static Instrumenter<MethodRequest, Object> instrumenterWithAttributes() {

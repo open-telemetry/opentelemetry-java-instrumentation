@@ -20,11 +20,11 @@ public final class GwtSingletons {
   public static final ContextKey<Boolean> RPC_CONTEXT_KEY =
       ContextKey.named("opentelemetry-gwt-rpc-context-key");
 
-  private static final Instrumenter<Method, Void> INSTRUMENTER;
+  private static final Instrumenter<Method, Void> instrumenter;
 
   static {
     GwtRpcAttributesGetter rpcAttributesGetter = new GwtRpcAttributesGetter();
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<Method, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
@@ -34,7 +34,7 @@ public final class GwtSingletons {
   }
 
   public static Instrumenter<Method, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private GwtSingletons() {}

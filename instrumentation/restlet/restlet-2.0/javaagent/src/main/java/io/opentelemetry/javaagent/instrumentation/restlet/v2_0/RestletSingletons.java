@@ -16,12 +16,12 @@ import org.restlet.Response;
 
 public final class RestletSingletons {
 
-  private static final Instrumenter<Request, Response> INSTRUMENTER =
+  private static final Instrumenter<Request, Response> instrumenter =
       JavaagentHttpServerInstrumenters.create(
           RestletTelemetryBuilderFactory.create(GlobalOpenTelemetry.get()));
 
   public static Instrumenter<Request, Response> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static HttpServerRouteGetter<String> serverSpanName() {

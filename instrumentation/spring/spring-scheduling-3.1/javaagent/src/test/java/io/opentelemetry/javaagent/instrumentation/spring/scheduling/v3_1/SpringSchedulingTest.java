@@ -17,6 +17,7 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.component.IntervalTask;
@@ -46,16 +47,19 @@ class SpringSchedulingTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   @Test
   void scheduleOneTimeTest() throws InterruptedException {
-    try (AnnotationConfigApplicationContext context =
-        new AnnotationConfigApplicationContext(OneTimeTaskConfig.class)) {
-      OneTimeTask task = context.getBean(OneTimeTask.class);
-      task.blockUntilExecute();
+    AnnotationConfigApplicationContext context =
+        new AnnotationConfigApplicationContext(OneTimeTaskConfig.class);
+    cleanup.deferCleanup(context);
 
-      assertThat(task).isNotNull();
-      assertThat(testing.waitForTraces(0)).isEmpty();
-    }
+    OneTimeTask task = context.getBean(OneTimeTask.class);
+    task.blockUntilExecute();
+
+    assertThat(task).isNotNull();
+    assertThat(testing.waitForTraces(0)).isEmpty();
   }
 
   private static final String JOB_SYSTEM =
@@ -63,122 +67,126 @@ class SpringSchedulingTest {
 
   @Test
   void scheduleCronExpressionTest() throws InterruptedException {
-    try (AnnotationConfigApplicationContext context =
-        new AnnotationConfigApplicationContext(TriggerTaskConfig.class)) {
-      TriggerTask task = context.getBean(TriggerTask.class);
-      task.blockUntilExecute();
+    AnnotationConfigApplicationContext context =
+        new AnnotationConfigApplicationContext(TriggerTaskConfig.class);
+    cleanup.deferCleanup(context);
 
-      List<AttributeAssertion> assertions = codeFunctionAssertions(TriggerTask.class, "run");
-      assertions.add(equalTo(stringKey("job.system"), JOB_SYSTEM));
+    TriggerTask task = context.getBean(TriggerTask.class);
+    task.blockUntilExecute();
 
-      assertThat(task).isNotNull();
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("TriggerTask.run")
-                          .hasNoParent()
-                          .hasAttributesSatisfyingExactly(assertions)));
-    }
+    List<AttributeAssertion> assertions = codeFunctionAssertions(TriggerTask.class, "run");
+    assertions.add(equalTo(stringKey("job.system"), JOB_SYSTEM));
+
+    assertThat(task).isNotNull();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TriggerTask.run")
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(assertions)));
   }
 
   @Test
   void scheduleIntervalTest() throws InterruptedException {
-    try (AnnotationConfigApplicationContext context =
-        new AnnotationConfigApplicationContext(IntervalTaskConfig.class)) {
-      IntervalTask task = context.getBean(IntervalTask.class);
-      task.blockUntilExecute();
+    AnnotationConfigApplicationContext context =
+        new AnnotationConfigApplicationContext(IntervalTaskConfig.class);
+    cleanup.deferCleanup(context);
 
-      List<AttributeAssertion> assertions = codeFunctionAssertions(IntervalTask.class, "run");
-      assertions.add(equalTo(stringKey("job.system"), JOB_SYSTEM));
+    IntervalTask task = context.getBean(IntervalTask.class);
+    task.blockUntilExecute();
 
-      assertThat(task).isNotNull();
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("IntervalTask.run")
-                          .hasNoParent()
-                          .hasAttributesSatisfyingExactly(assertions)));
-    }
+    List<AttributeAssertion> assertions = codeFunctionAssertions(IntervalTask.class, "run");
+    assertions.add(equalTo(stringKey("job.system"), JOB_SYSTEM));
+
+    assertThat(task).isNotNull();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("IntervalTask.run")
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(assertions)));
   }
 
   @Test
   void scheduleLambdaTest() throws InterruptedException {
-    try (AnnotationConfigApplicationContext context =
-        new AnnotationConfigApplicationContext(LambdaTaskConfig.class)) {
-      LambdaTaskConfigurer configurer = context.getBean(LambdaTaskConfigurer.class);
-      configurer.singleUseLatch.await(2000, MILLISECONDS);
+    AnnotationConfigApplicationContext context =
+        new AnnotationConfigApplicationContext(LambdaTaskConfig.class);
+    cleanup.deferCleanup(context);
 
-      List<AttributeAssertion> assertions =
-          codeFunctionPrefixAssertions(LambdaTaskConfigurer.class.getName() + "$$Lambda", "run");
-      assertions.add(equalTo(stringKey("job.system"), JOB_SYSTEM));
+    LambdaTaskConfigurer configurer = context.getBean(LambdaTaskConfigurer.class);
+    configurer.singleUseLatch.await(2000, MILLISECONDS);
 
-      assertThat(configurer).isNotNull();
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("LambdaTaskConfigurer$$Lambda.run")
-                          .hasNoParent()
-                          .hasAttributesSatisfyingExactly(assertions)));
-    }
+    List<AttributeAssertion> assertions =
+        codeFunctionPrefixAssertions(LambdaTaskConfigurer.class.getName() + "$$Lambda", "run");
+    assertions.add(equalTo(stringKey("job.system"), JOB_SYSTEM));
+
+    assertThat(configurer).isNotNull();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("LambdaTaskConfigurer$$Lambda.run")
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(assertions)));
   }
 
   @Test
   void scheduleEnhancedClassTest() throws InterruptedException {
-    try (AnnotationConfigApplicationContext context =
-        new AnnotationConfigApplicationContext(EnhancedClassTaskConfig.class)) {
-      CountDownLatch latch = context.getBean(CountDownLatch.class);
-      latch.await(5, SECONDS);
+    AnnotationConfigApplicationContext context =
+        new AnnotationConfigApplicationContext(EnhancedClassTaskConfig.class);
+    cleanup.deferCleanup(context);
 
-      List<AttributeAssertion> assertions =
-          codeFunctionAssertions(EnhancedClassTaskConfig.class, "run");
-      assertions.add(equalTo(stringKey("job.system"), JOB_SYSTEM));
+    CountDownLatch latch = context.getBean(CountDownLatch.class);
+    latch.await(5, SECONDS);
 
-      assertThat(latch).isNotNull();
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("EnhancedClassTaskConfig.run")
-                          .hasNoParent()
-                          .hasAttributesSatisfyingExactly(assertions)));
-    }
+    List<AttributeAssertion> assertions =
+        codeFunctionAssertions(EnhancedClassTaskConfig.class, "run");
+    assertions.add(equalTo(stringKey("job.system"), JOB_SYSTEM));
+
+    assertThat(latch).isNotNull();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("EnhancedClassTaskConfig.run")
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(assertions)));
   }
 
   @Test
   void taskWithErrorTest() throws InterruptedException {
-    try (AnnotationConfigApplicationContext context =
-        new AnnotationConfigApplicationContext(TaskWithErrorConfig.class)) {
-      TaskWithError task = context.getBean(TaskWithError.class);
-      task.blockUntilExecute();
+    AnnotationConfigApplicationContext context =
+        new AnnotationConfigApplicationContext(TaskWithErrorConfig.class);
+    cleanup.deferCleanup(context);
 
-      List<AttributeAssertion> assertions = codeFunctionAssertions(TaskWithError.class, "run");
-      assertions.add(equalTo(stringKey("job.system"), JOB_SYSTEM));
+    TaskWithError task = context.getBean(TaskWithError.class);
+    task.blockUntilExecute();
 
-      assertThat(task).isNotNull();
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("TaskWithError.run")
-                          .hasNoParent()
-                          .hasStatus(StatusData.error())
-                          .hasAttributesSatisfyingExactly(assertions)
-                          .hasEventsSatisfyingExactly(
-                              event ->
-                                  event
-                                      .hasName("exception")
-                                      .hasAttributesSatisfyingExactly(
-                                          equalTo(
-                                              EXCEPTION_TYPE,
-                                              IllegalStateException.class.getName()),
-                                          equalTo(EXCEPTION_MESSAGE, "failure"),
-                                          satisfies(
-                                              EXCEPTION_STACKTRACE,
-                                              value -> value.isInstanceOf(String.class)))),
-                  span -> span.hasName("error-handler").hasParent(trace.getSpan(0))));
-    }
+    List<AttributeAssertion> assertions = codeFunctionAssertions(TaskWithError.class, "run");
+    assertions.add(equalTo(stringKey("job.system"), JOB_SYSTEM));
+
+    assertThat(task).isNotNull();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TaskWithError.run")
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfyingExactly(assertions)
+                        .hasEventsSatisfyingExactly(
+                            event ->
+                                event
+                                    .hasName("exception")
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(
+                                            EXCEPTION_TYPE, IllegalStateException.class.getName()),
+                                        equalTo(EXCEPTION_MESSAGE, "failure"),
+                                        satisfies(
+                                            EXCEPTION_STACKTRACE,
+                                            val -> val.isInstanceOf(String.class)))),
+                span -> span.hasName("error-handler").hasParent(trace.getSpan(0))));
   }
 }

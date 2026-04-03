@@ -17,14 +17,14 @@ import okhttp3.Request;
 
 public class KubernetesClientSingletons {
 
-  private static final Instrumenter<Request, ApiResponse<?>> INSTRUMENTER;
+  private static final Instrumenter<Request, ApiResponse<?>> instrumenter;
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "kubernetes_client")
           .getBoolean("experimental_span_attributes/development", false);
   private static final ContextPropagators CONTEXT_PROPAGATORS;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         DefaultHttpClientInstrumenterBuilder.create(
                 "io.opentelemetry.kubernetes-client-7.0",
                 GlobalOpenTelemetry.get(),
@@ -46,7 +46,7 @@ public class KubernetesClientSingletons {
   }
 
   public static Instrumenter<Request, ApiResponse<?>> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static void inject(Context context, Request.Builder requestBuilder) {

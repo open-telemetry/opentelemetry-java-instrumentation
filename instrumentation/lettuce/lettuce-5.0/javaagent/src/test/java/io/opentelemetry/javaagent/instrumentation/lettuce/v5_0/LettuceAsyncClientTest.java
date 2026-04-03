@@ -488,10 +488,11 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   @Test
   void testDebugSegfaultCommandWithNoArgumentShouldProduceSpan() {
     // Test Causes redis to crash therefore it needs its own container
-    try (StatefulRedisConnection<String, String> statefulConnection = newContainerConnection()) {
-      RedisAsyncCommands<String, String> commands = statefulConnection.async();
-      commands.debugSegfault();
-    }
+    StatefulRedisConnection<String, String> statefulConnection = newContainerConnection();
+    cleanup.deferCleanup(statefulConnection);
+
+    RedisAsyncCommands<String, String> commands = statefulConnection.async();
+    commands.debugSegfault();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -508,10 +509,11 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   @Test
   void testShutdownCommandShouldProduceSpan() {
     // Test Causes redis to crash therefore it needs its own container
-    try (StatefulRedisConnection<String, String> statefulConnection = newContainerConnection()) {
-      RedisAsyncCommands<String, String> commands = statefulConnection.async();
-      commands.shutdown(false);
-    }
+    StatefulRedisConnection<String, String> statefulConnection = newContainerConnection();
+    cleanup.deferCleanup(statefulConnection);
+
+    RedisAsyncCommands<String, String> commands = statefulConnection.async();
+    commands.shutdown(false);
 
     testing.waitAndAssertTraces(
         trace ->

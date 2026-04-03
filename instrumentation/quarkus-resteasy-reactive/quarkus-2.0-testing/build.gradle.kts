@@ -69,7 +69,7 @@ tasks {
     systemProperty("quarkus-internal-test.serialized-app-model.path", testModelPath.get().asFile.toString())
   }
 
-  if (findProperty("denyUnsafe") == "true") {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

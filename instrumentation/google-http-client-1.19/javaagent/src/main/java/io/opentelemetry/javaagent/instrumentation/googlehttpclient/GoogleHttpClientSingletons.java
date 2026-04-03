@@ -13,10 +13,10 @@ import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrume
 final class GoogleHttpClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.google-http-client-1.19";
 
-  private static final Instrumenter<HttpRequest, HttpResponse> INSTRUMENTER;
+  private static final Instrumenter<HttpRequest, HttpResponse> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         JavaagentHttpClientInstrumenters.create(
             INSTRUMENTATION_NAME,
             new GoogleHttpClientHttpAttributesGetter(),
@@ -24,7 +24,7 @@ final class GoogleHttpClientSingletons {
   }
 
   public static Instrumenter<HttpRequest, HttpResponse> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private GoogleHttpClientSingletons() {}

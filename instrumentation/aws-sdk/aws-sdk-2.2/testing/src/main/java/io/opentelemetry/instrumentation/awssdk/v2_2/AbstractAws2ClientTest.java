@@ -320,7 +320,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                 // we are using an endpoint override. Previously the sdk was only doing that if
                 // endpoint had "s3" as label in the FQDN. Our test assert both cases so that we
                 // don't need to know what version is being tested.
-                satisfies(SERVER_ADDRESS, v -> v.matches("somebucket.localhost|localhost")),
+                satisfies(SERVER_ADDRESS, val -> val.matches("somebucket.localhost|localhost")),
                 equalTo(SERVER_PORT, server.httpPort()),
                 equalTo(HTTP_REQUEST_METHOD, method),
                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
@@ -909,7 +909,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                                 // don't need to know what version is being tested.
                                 satisfies(
                                     SERVER_ADDRESS,
-                                    v -> v.matches("somebucket.localhost|localhost")),
+                                    val -> val.matches("somebucket.localhost|localhost")),
                                 satisfies(
                                     URL_FULL,
                                     val ->
