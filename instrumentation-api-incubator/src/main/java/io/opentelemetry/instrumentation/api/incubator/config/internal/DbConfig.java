@@ -79,8 +79,9 @@ public final class DbConfig {
         commonConfig.get("database").get("sqlcommenter/development").getBoolean("enabled");
     if (deprecatedValue != null) {
       warnIfDeprecatedDeclarativeConfigurationUsed(
-          ".instrumentation/development.java.common.database.sqlcommenter/development.enabled",
-          ".instrumentation/development.java.common.db.sqlcommenter/development.enabled");
+          "instrumentation/development: java: common: database:"
+              + " sqlcommenter/development: enabled",
+          "instrumentation/development: java: common: db: sqlcommenter/development: enabled");
       return deprecatedValue;
     }
 
@@ -111,8 +112,8 @@ public final class DbConfig {
         commonConfig.get("database").get("statement_sanitizer").getBoolean("enabled");
     if (deprecatedStatementSanitizerValue != null) {
       warnIfDeprecatedDeclarativeConfigurationUsed(
-          ".instrumentation/development.java.common.database.statement_sanitizer.enabled",
-          ".instrumentation/development.java.common.db.query_sanitization.enabled");
+          "instrumentation/development: java: common: database: statement_sanitizer: enabled",
+          "instrumentation/development: java: common: db: query_sanitization: enabled");
       return deprecatedStatementSanitizerValue;
     }
 
@@ -150,12 +151,12 @@ public final class DbConfig {
       String deprecatedProperty, String replacementProperty) {
     if (warnedDeprecatedProperties.add(deprecatedProperty)) {
       logger.warning(
-          "The "
+          "The '"
               + deprecatedProperty
-              + " declarative configuration is deprecated"
-              + " and will be removed in a future version. Use "
+              + "' declarative configuration is deprecated"
+              + " and will be removed in a future version. Use '"
               + replacementProperty
-              + " instead.");
+              + "' instead.");
     }
   }
 
