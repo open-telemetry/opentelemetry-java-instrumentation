@@ -45,6 +45,6 @@ class ProcessMetricsTest extends AbstractProcessMetricsTest {
 
   @Test
   void verifyObservablesAreNotEmpty() {
-    assertThat(observables).as("List of observables").isNotEmpty();
+    assertThat(observables).isNotEmpty();
   }
 }
