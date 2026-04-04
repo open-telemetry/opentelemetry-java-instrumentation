@@ -32,12 +32,12 @@ class LogEventToReplay implements LogEvent {
   private final Message message;
   private final Level level;
   private final Instant instant;
-  private final Throwable thrown;
-  private final Marker marker;
+  @Nullable private final Throwable thrown;
+  @Nullable private final Marker marker;
   private final ReadOnlyStringMap contextData;
   private final String threadName;
   private final long threadId;
-  private final StackTraceElement source;
+  @Nullable private final StackTraceElement source;
 
   LogEventToReplay(LogEvent logEvent, boolean captureCodeAttributes) {
     this.loggerName = logEvent.getLoggerName();
@@ -70,6 +70,7 @@ class LogEventToReplay implements LogEvent {
   }
 
   @Override
+  @Nullable
   public LogEvent toImmutable() {
     return null;
   }
@@ -92,6 +93,7 @@ class LogEventToReplay implements LogEvent {
   }
 
   @Override
+  @Nullable
   public String getLoggerFqcn() {
     return null;
   }
@@ -107,6 +109,7 @@ class LogEventToReplay implements LogEvent {
   }
 
   @Override
+  @Nullable
   public Marker getMarker() {
     return marker;
   }
@@ -127,6 +130,7 @@ class LogEventToReplay implements LogEvent {
   }
 
   @Override
+  @Nullable
   public StackTraceElement getSource() {
     return source;
   }
@@ -147,11 +151,13 @@ class LogEventToReplay implements LogEvent {
   }
 
   @Override
+  @Nullable
   public Throwable getThrown() {
     return thrown;
   }
 
   @Override
+  @Nullable
   public ThrowableProxy getThrownProxy() {
     return null;
   }

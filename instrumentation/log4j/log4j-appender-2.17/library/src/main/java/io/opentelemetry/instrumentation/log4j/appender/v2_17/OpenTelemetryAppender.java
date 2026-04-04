@@ -60,7 +60,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
   static final String PLUGIN_NAME = "OpenTelemetry";
 
   private final LogEventMapper<ReadOnlyStringMap> mapper;
-  private volatile OpenTelemetry openTelemetry;
+  @Nullable private volatile OpenTelemetry openTelemetry;
 
   private final BlockingQueue<LogEventToReplay> eventsToReplay;
   private final AtomicBoolean replayLimitWarningLogged = new AtomicBoolean();
@@ -71,7 +71,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
    * Installs the {@code openTelemetry} instance on any {@link OpenTelemetryAppender}s identified in
    * the {@link LoggerContext}.
    */
-  public static void install(OpenTelemetry openTelemetry) {
+  public static void install(@Nullable OpenTelemetry openTelemetry) {
     org.apache.logging.log4j.spi.LoggerContext loggerContextSpi = LogManager.getContext(false);
     if (!(loggerContextSpi instanceof LoggerContext)) {
       return;
@@ -240,10 +240,10 @@ public class OpenTelemetryAppender extends AbstractAppender {
       boolean captureCodeAttributes,
       boolean captureMapMessageAttributes,
       boolean captureMarkerAttribute,
-      String captureContextDataAttributes,
+      @Nullable String captureContextDataAttributes,
       boolean captureEventName,
       int numLogsCapturedBeforeOtelInstall,
-      OpenTelemetry openTelemetry) {
+      @Nullable OpenTelemetry openTelemetry) {
 
     super(name, filter, layout, ignoreExceptions, properties);
     this.mapper =
@@ -264,7 +264,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     }
   }
 
-  private static List<String> splitAndFilterBlanksAndNulls(String value) {
+  private static List<String> splitAndFilterBlanksAndNulls(@Nullable String value) {
     if (value == null) {
       return emptyList();
     }
@@ -278,7 +278,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
    * Configures the {@link OpenTelemetry} used to append logs. This MUST be called for the appender
    * to function. See {@link #install(OpenTelemetry)} for simple installation option.
    */
-  public void setOpenTelemetry(OpenTelemetry openTelemetry) {
+  public void setOpenTelemetry(@Nullable OpenTelemetry openTelemetry) {
     List<LogEventToReplay> eventsToReplay = new ArrayList<>();
     Lock writeLock = lock.writeLock();
     writeLock.lock();
@@ -288,6 +288,9 @@ public class OpenTelemetryAppender extends AbstractAppender {
       this.eventsToReplay.drainTo(eventsToReplay);
     } finally {
       writeLock.unlock();
+    }
+    if (openTelemetry == null) {
+      return;
     }
     // now emit
     for (LogEventToReplay eventToReplay : eventsToReplay) {
