@@ -16,10 +16,10 @@ class KtorHttpServerTest : AbstractKtorHttpServerTest() {
   companion object {
     @JvmStatic
     @RegisterExtension
-    val testingExtension: InstrumentationExtension = HttpServerInstrumentationExtension.forAgent()
+    val testing InstrumentationExtension = HttpServerInstrumentationExtension.forAgent()
   }
 
-  override fun getTesting(): InstrumentationExtension = testingExtension
+  override fun getTesting(): InstrumentationExtension = testing
 
   override fun installOpenTelemetry(application: Application) {
   }
