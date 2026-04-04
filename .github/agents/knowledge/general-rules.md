@@ -72,6 +72,15 @@ Do not flag the following patterns (common false positives):
   The project disables javac's `-Xlint:deprecation` globally and uses a custom Error Prone
   check (`OtelDeprecatedApiUsage`) instead. Only add the annotation when it is actually
   required to fix an Error Prone error — not speculatively.
+- Preserve concise explanatory comments attached to existing `@SuppressWarnings` annotations
+  when they explain why the suppression exists (for example `// using deprecated semconv`
+  or `// using deprecated config property`). This repository has established precedent for
+  such comments, and test code disables Error Prone's `SuppressWarningsWithoutExplanation`
+  check only because enforcing it everywhere causes too many failures, not because these
+  comments are undesirable.
+- When normalizing or moving an existing `@SuppressWarnings`, keep any accurate explanatory
+  comment with it. Remove the comment only if it is incorrect, obsolete, or contradicted by
+  the code after your change.
 
 ## [Naming] Getter Naming
 

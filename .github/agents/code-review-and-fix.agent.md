@@ -134,6 +134,9 @@ Auto-fix boundaries:
 
 - Safe to fix:
   - import cleanup or direct style-guide conformance
+  - normalization of existing `@SuppressWarnings` syntax or placement, but preserve any
+    accurate explanatory comment attached to the suppression instead of deleting it as
+    style noise
   - obvious assertion API migrations (e.g., AssertJ preference) and idiomatic
     simplifications listed in `testing-general-patterns.md` § AssertJ Idiomatic
     Simplifications (e.g., `assertThat(list.size()).isEqualTo(N)` →
