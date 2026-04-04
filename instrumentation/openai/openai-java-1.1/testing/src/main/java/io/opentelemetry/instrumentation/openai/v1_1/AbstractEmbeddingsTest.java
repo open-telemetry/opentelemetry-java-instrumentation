@@ -101,12 +101,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                     // the user.
                                     satisfies(
                                         GEN_AI_REQUEST_ENCODING_FORMATS,
-                                        val ->
-                                            val.satisfiesAnyOf(
-                                                v -> assertThat(v).isNull(),
-                                                v ->
-                                                    assertThat(v)
-                                                        .isEqualTo(singletonList("base64"))))))));
+                                        val -> val.isIn(singletonList("base64"), null))))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -250,12 +245,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                     // the user.
                                     satisfies(
                                         GEN_AI_REQUEST_ENCODING_FORMATS,
-                                        val ->
-                                            val.satisfiesAnyOf(
-                                                v -> assertThat(v).isNull(),
-                                                v ->
-                                                    assertThat(v)
-                                                        .isEqualTo(singletonList("base64"))))))));
+                                        val -> val.isIn(singletonList("base64"), null))))));
 
     getTesting()
         .waitAndAssertMetrics(
