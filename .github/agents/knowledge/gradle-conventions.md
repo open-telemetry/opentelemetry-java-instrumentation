@@ -194,6 +194,9 @@ When a module has custom test tasks (e.g., `testStableSemconv`), system properti
 args that apply to **all** test tasks should be set once in a `withType<Test>().configureEach`
 block, not repeated on each individual task.
 
+If a property or JVM arg is moved into `withType<Test>().configureEach`, remove any now-redundant
+copies from individual tasks unless a task intentionally overrides the shared value.
+
 When there is only one test task, `tasks.test { ... }` is fine — do not convert it to
 `withType<Test>().configureEach` and do not flag it.
 
