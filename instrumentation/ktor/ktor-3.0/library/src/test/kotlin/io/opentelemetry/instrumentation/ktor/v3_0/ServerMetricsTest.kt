@@ -21,12 +21,12 @@ class ServerMetricsTest : AbstractKtorServerMetricsTest() {
   companion object {
     @JvmStatic
     @RegisterExtension
-    private val serverTesting: InstrumentationExtension = HttpServerInstrumentationExtension.forLibrary()
+    private val testing: InstrumentationExtension = HttpServerInstrumentationExtension.forLibrary()
   }
 
   override fun serverInstall(application: io.ktor.server.application.Application) {
     application.install(KtorServerTelemetry) {
-      setOpenTelemetry(serverTesting.openTelemetry)
+      setOpenTelemetry(testing.openTelemetry)
       Experimental.emitExperimentalTelemetry(this)
     }
   }

@@ -19,15 +19,15 @@ class KtorHttpServerTest : AbstractKtorHttpServerTest() {
   companion object {
     @JvmStatic
     @RegisterExtension
-    private val serverTesting: InstrumentationExtension = HttpServerInstrumentationExtension.forLibrary()
+    private val testing: InstrumentationExtension = HttpServerInstrumentationExtension.forLibrary()
   }
 
-  override fun getTesting(): InstrumentationExtension = serverTesting
+  override fun getTesting(): InstrumentationExtension = testing
 
   override fun installOpenTelemetry(application: Application) {
     application.apply {
       install(KtorServerTelemetry) {
-        setOpenTelemetry(serverTesting.openTelemetry)
+        setOpenTelemetry(testing.openTelemetry)
         capturedRequestHeaders(TEST_REQUEST_HEADER)
         capturedResponseHeaders(TEST_RESPONSE_HEADER)
       }

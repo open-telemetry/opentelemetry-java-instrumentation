@@ -14,12 +14,12 @@ class KtorHttpClientTest : AbstractKtorHttpClientTest() {
   companion object {
     @JvmStatic
     @RegisterExtension
-    private val clientTesting = HttpClientInstrumentationExtension.forLibrary()
+    private val testing = HttpClientInstrumentationExtension.forLibrary()
   }
 
   override fun HttpClientConfig<*>.installTracing() {
     install(KtorClientTelemetry) {
-      setOpenTelemetry(clientTesting.openTelemetry)
+      setOpenTelemetry(testing.openTelemetry)
       capturedRequestHeaders(TEST_REQUEST_HEADER)
       capturedResponseHeaders(TEST_RESPONSE_HEADER)
     }
