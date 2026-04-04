@@ -26,8 +26,9 @@ public class Log4j27InstrumentationModule extends InstrumentationModule
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // want to cover 2.7 up to (but not including) 2.17.0
-    // added in 2.7
-    return hasClassesNamed("org.apache.logging.log4j.core.impl.ContextDataInjectorFactory")
+    return hasClassesNamed(
+            // added in 2.7
+            "org.apache.logging.log4j.core.impl.ContextDataInjectorFactory")
         .and(
             not(
                 hasClassesNamed(
