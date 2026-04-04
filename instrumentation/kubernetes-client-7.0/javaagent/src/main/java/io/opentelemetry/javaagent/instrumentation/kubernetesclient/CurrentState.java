@@ -14,7 +14,7 @@ import okhttp3.Request;
  * Kubernetes instrumentation starts and ends spans in two different methods - the only way to pass
  * state between them is to use a thread local.
  */
-final class CurrentState {
+public final class CurrentState {
   private static final ThreadLocal<CurrentState> CURRENT = new ThreadLocal<>();
 
   private final Context parentContext;

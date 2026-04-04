@@ -17,7 +17,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import okhttp3.Request;
 
-final class TracingApiCallback<T> implements ApiCallback<T> {
+public final class TracingApiCallback<T> implements ApiCallback<T> {
   @Nullable private final ApiCallback<T> delegate;
   private final Context parentContext;
   private final Context context;
