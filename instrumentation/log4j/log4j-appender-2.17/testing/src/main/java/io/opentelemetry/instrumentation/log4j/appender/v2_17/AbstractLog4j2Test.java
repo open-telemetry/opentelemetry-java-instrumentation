@@ -41,7 +41,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-public abstract class AbstractLog4j2Test {
+abstract class AbstractLog4j2Test {
 
   private static final Logger logger = LogManager.getLogger("abc");
 
@@ -331,12 +331,12 @@ public abstract class AbstractLog4j2Test {
   }
 
   @FunctionalInterface
-  public interface OneArgLoggerMethod {
+  private interface OneArgLoggerMethod {
     void call(Logger logger, String msg, Object arg);
   }
 
   @FunctionalInterface
-  public interface TwoArgLoggerMethod {
+  private interface TwoArgLoggerMethod {
     void call(Logger logger, String msg, Object arg1, Object arg2);
   }
 }
