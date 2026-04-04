@@ -26,15 +26,14 @@ public class Log4j27InstrumentationModule extends InstrumentationModule
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // want to cover 2.7 up to (but not including) 2.17.0
-    return hasClassesNamed(
-            // class added in 2.7
-            "org.apache.logging.log4j.core.impl.ContextDataInjectorFactory")
+    // added in 2.7
+    return hasClassesNamed("org.apache.logging.log4j.core.impl.ContextDataInjectorFactory")
         .and(
             not(
                 hasClassesNamed(
-                    // class added in 2.17.0 and backported to 2.12.3
+                    // added in 2.17.0 and backported to 2.12.3
                     "org.apache.logging.log4j.core.lookup.ConfigurationStrSubstitutor",
-                    // class added in 2.15.0
+                    // added in 2.15.0
                     "org.apache.logging.log4j.core.config.arbiters.DefaultArbiter")));
   }
 
