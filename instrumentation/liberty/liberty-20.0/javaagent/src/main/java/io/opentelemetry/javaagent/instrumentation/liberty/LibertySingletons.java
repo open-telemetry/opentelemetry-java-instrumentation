@@ -27,11 +27,11 @@ public final class LibertySingletons {
               .propagateOperationListenersToOnEnd()
               .build(INSTRUMENTATION_NAME, Servlet3Accessor.INSTANCE);
 
-  private static final LibertyHelper<HttpServletRequest, HttpServletResponse> HELPER =
+  private static final LibertyHelper<HttpServletRequest, HttpServletResponse> helper =
       new LibertyHelper<>(instrumenter, Servlet3Accessor.INSTANCE);
 
   public static LibertyHelper<HttpServletRequest, HttpServletResponse> helper() {
-    return HELPER;
+    return helper;
   }
 
   private LibertySingletons() {}
