@@ -15,13 +15,13 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import okhttp3.Request;
 
-public class KubernetesClientSingletons {
+final class KubernetesClientSingletons {
 
   private static final Instrumenter<Request, ApiResponse<?>> instrumenter;
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "kubernetes_client")
           .getBoolean("experimental_span_attributes/development", false);
-  private static final ContextPropagators CONTEXT_PROPAGATORS;
+  private static final ContextPropagators contextPropagators;
 
   static {
     instrumenter =
@@ -42,7 +42,7 @@ public class KubernetesClientSingletons {
                     request -> KubernetesRequestDigest.parse(request).toString())
             .build();
 
-    CONTEXT_PROPAGATORS = GlobalOpenTelemetry.getPropagators();
+    contextPropagators = GlobalOpenTelemetry.getPropagators();
   }
 
   public static Instrumenter<Request, ApiResponse<?>> instrumenter() {
@@ -50,7 +50,7 @@ public class KubernetesClientSingletons {
   }
 
   public static void inject(Context context, Request.Builder requestBuilder) {
-    CONTEXT_PROPAGATORS
+    contextPropagators
         .getTextMapPropagator()
         .inject(context, requestBuilder, RequestBuilderHeaderSetter.INSTANCE);
   }
