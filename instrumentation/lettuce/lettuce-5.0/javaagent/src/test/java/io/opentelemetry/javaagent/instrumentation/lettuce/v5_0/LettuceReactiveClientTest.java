@@ -23,7 +23,6 @@ import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.reactive.RedisReactiveCommands;
 import io.lettuce.core.api.sync.RedisCommands;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -309,7 +308,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test-parent").hasAttributes(Attributes.empty()),
+                span -> span.hasName("test-parent").hasTotalAttributeCount(0),
                 span ->
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
@@ -337,7 +336,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test-parent").hasAttributes(Attributes.empty()),
+                span -> span.hasName("test-parent").hasTotalAttributeCount(0),
                 span ->
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
@@ -370,7 +369,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test-parent").hasAttributes(Attributes.empty()),
+                span -> span.hasName("test-parent").hasTotalAttributeCount(0),
                 span ->
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
