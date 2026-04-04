@@ -149,5 +149,5 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
   }
 
   /** `setOpenTelemetry()` initializes `builder`. */
-  internal fun isOpenTelemetryInitialized(): Boolean = this::builder.isInitialized
+  protected open fun isOpenTelemetryInitialized(): Boolean = this::builder.isInitialized
 }
