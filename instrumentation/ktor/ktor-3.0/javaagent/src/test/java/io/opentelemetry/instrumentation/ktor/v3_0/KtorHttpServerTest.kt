@@ -16,7 +16,7 @@ class KtorHttpServerTest : AbstractKtorHttpServerTest() {
   companion object {
     @JvmStatic
     @RegisterExtension
-    val testing InstrumentationExtension = HttpServerInstrumentationExtension.forAgent()
+    private val testing: InstrumentationExtension = HttpServerInstrumentationExtension.forAgent()
   }
 
   override fun getTesting(): InstrumentationExtension = testing
