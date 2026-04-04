@@ -93,7 +93,12 @@ public class KafkaProducerTelemetry {
 
     Context context = producerInstrumenter.start(parentContext, request);
     if (producerPropagationEnabled) {
-      propagator.inject(context, record.headers(), SETTER);
+      try {
+        propagator.inject(context, record.headers(), SETTER);
+      } catch (Throwable t) {
+        // it can happen if headers are read only (when record is sent second time)
+        logger.log(WARNING, "failed to inject span context. sending record second time?", t);
+      }
     }
 
     try (Scope ignored = context.makeCurrent()) {
