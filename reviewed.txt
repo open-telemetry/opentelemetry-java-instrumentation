@@ -293,3 +293,4 @@ logback-mdc-1.0:library
 logback-mdc-1.0:testing
 micrometer-1.5:javaagent
 methods:javaagent
+micrometer-1.5:library
