@@ -148,8 +148,6 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
     }
   }
 
-  /**
-   * {@link #setOpenTelemetry(OpenTelemetry)} sets the serverBuilder to a non-null value.
-   */
+  /** `setOpenTelemetry()` initializes `builder`. */
   fun isOpenTelemetryInitialized(): Boolean = this::builder.isInitialized
 }
