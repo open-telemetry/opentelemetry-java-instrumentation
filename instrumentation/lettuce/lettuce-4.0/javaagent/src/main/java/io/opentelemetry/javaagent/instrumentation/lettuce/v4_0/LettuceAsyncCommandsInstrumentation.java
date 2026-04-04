@@ -58,6 +58,7 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Nullable
     public static AdviceScope onEnter(@Advice.Argument(0) RedisCommand<?, ?, ?> command) {
 
       Context parentContext = currentContext();
