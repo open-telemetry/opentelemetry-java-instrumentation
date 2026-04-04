@@ -18,9 +18,9 @@ class KtorHttpServerTest : AbstractKtorHttpServerTest() {
     private val testing: InstrumentationExtension = HttpServerInstrumentationExtension.forLibrary()
   }
 
-  override fun getTesting(): InstrumentationExtension = TESTING
+  override fun getTesting(): InstrumentationExtension = testing
 
   override fun installOpenTelemetry(application: Application) {
-    KtorTestUtil.installOpenTelemetry(application, TESTING.openTelemetry)
+    KtorTestUtil.installOpenTelemetry(application, testing.openTelemetry)
   }
 }
