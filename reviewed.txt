@@ -276,3 +276,4 @@ liberty:compile-stub
 liberty-20.0:javaagent
 lettuce-common:library
 log4j-appender-2.17:javaagent
+log4j-appender-1.2:javaagent
