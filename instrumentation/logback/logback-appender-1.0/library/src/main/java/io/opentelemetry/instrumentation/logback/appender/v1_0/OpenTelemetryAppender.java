@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import javax.annotation.Nullable;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -43,7 +44,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private List<String> captureMdcAttributes = emptyList();
   private boolean captureEventName = false;
 
-  private volatile OpenTelemetry openTelemetry;
+  @Nullable private volatile OpenTelemetry openTelemetry;
   private LoggingEventMapper mapper;
 
   private int numLogsCapturedBeforeOtelInstall = 1000;
@@ -59,7 +60,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    * Installs the {@code openTelemetry} instance on any {@link OpenTelemetryAppender}s identified in
    * the {@link LoggerContext}.
    */
-  public static void install(OpenTelemetry openTelemetry) {
+  public static void install(@Nullable OpenTelemetry openTelemetry) {
     ILoggerFactory loggerFactorySpi = LoggerFactory.getILoggerFactory();
     if (!(loggerFactorySpi instanceof LoggerContext)) {
       return;
@@ -70,7 +71,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     }
   }
 
-  private static void install(OpenTelemetry openTelemetry, Appender<?> appender) {
+  private static void install(@Nullable OpenTelemetry openTelemetry, Appender<?> appender) {
     if (appender instanceof OpenTelemetryAppender) {
       ((OpenTelemetryAppender) appender).setOpenTelemetry(openTelemetry);
     } else if (appender instanceof AppenderAttachable) {
@@ -251,7 +252,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    * Configures the {@link OpenTelemetry} used to append logs. This MUST be called for the appender
    * to function. See {@link #install(OpenTelemetry)} for simple installation option.
    */
-  public void setOpenTelemetry(OpenTelemetry openTelemetry) {
+  public void setOpenTelemetry(@Nullable OpenTelemetry openTelemetry) {
     List<LoggingEventToReplay> eventsToReplay = new ArrayList<>();
     Lock writeLock = lock.writeLock();
     writeLock.lock();
@@ -264,6 +265,9 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
       }
     } finally {
       writeLock.unlock();
+    }
+    if (openTelemetry == null) {
+      return;
     }
     // now emit
     for (LoggingEventToReplay eventToReplay : eventsToReplay) {

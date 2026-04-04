@@ -80,7 +80,7 @@ class LoggingEventToReplay implements ILoggingEvent {
 
   @Override
   public boolean hasCallerData() {
-    return loggingEvent.hasCallerData();
+    return callerData != null && callerData.length > 0;
   }
 
   @SuppressWarnings("deprecation") // Delegate
