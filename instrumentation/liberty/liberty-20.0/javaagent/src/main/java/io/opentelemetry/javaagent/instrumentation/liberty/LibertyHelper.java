@@ -15,15 +15,15 @@ import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
 import javax.annotation.Nullable;
 
-final class LibertyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RESPONSE> {
+public final class LibertyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RESPONSE> {
 
-  LibertyHelper(
+  public LibertyHelper(
       Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> instrumenter,
       ServletAccessor<REQUEST, RESPONSE> accessor) {
     super(instrumenter, accessor);
   }
 
-  void end(
+  public void end(
       ServletRequestContext<REQUEST> requestContext,
       REQUEST request,
       RESPONSE response,

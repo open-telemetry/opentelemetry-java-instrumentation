@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-final class ThreadLocalContext {
+public final class ThreadLocalContext {
 
   private static final ThreadLocal<ThreadLocalContext> local = new ThreadLocal<>();
 
@@ -28,32 +28,32 @@ final class ThreadLocalContext {
   }
 
   @Nullable
-  Context getContext() {
+  public Context getContext() {
     return context;
   }
 
-  void setContext(Context context) {
+  public void setContext(Context context) {
     this.context = context;
   }
 
   @Nullable
-  Scope getScope() {
+  public Scope getScope() {
     return scope;
   }
 
-  void setScope(Scope scope) {
+  public void setScope(Scope scope) {
     this.scope = scope;
   }
 
-  HttpServletRequest getRequest() {
+  public HttpServletRequest getRequest() {
     return requestContext.request();
   }
 
-  ServletRequestContext<HttpServletRequest> getRequestContext() {
+  public ServletRequestContext<HttpServletRequest> getRequestContext() {
     return requestContext;
   }
 
-  HttpServletResponse getResponse() {
+  public HttpServletResponse getResponse() {
     return response;
   }
 
@@ -62,22 +62,22 @@ final class ThreadLocalContext {
    *
    * @return true when span should be started, false when span was already started
    */
-  boolean startSpan() {
+  public boolean startSpan() {
     boolean alreadyStarted = started;
     started = true;
     return !alreadyStarted;
   }
 
-  static void startRequest(HttpServletRequest request, HttpServletResponse response) {
+  public static void startRequest(HttpServletRequest request, HttpServletResponse response) {
     ThreadLocalContext ctx = new ThreadLocalContext(request, response);
     local.set(ctx);
   }
 
-  static ThreadLocalContext get() {
+  public static ThreadLocalContext get() {
     return local.get();
   }
 
-  static ThreadLocalContext endRequest() {
+  public static ThreadLocalContext endRequest() {
     ThreadLocalContext ctx = local.get();
     if (ctx != null) {
       local.remove();
