@@ -41,7 +41,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-abstract class AbstractLog4j2Test {
+public abstract class AbstractLog4j2Test {
 
   private static final Logger logger = LogManager.getLogger("abc");
 
