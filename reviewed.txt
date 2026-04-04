@@ -274,3 +274,4 @@ lettuce-5.1:javaagent
 lettuce-5.1:testing
 liberty:compile-stub
 liberty-20.0:javaagent
+lettuce-common:library
