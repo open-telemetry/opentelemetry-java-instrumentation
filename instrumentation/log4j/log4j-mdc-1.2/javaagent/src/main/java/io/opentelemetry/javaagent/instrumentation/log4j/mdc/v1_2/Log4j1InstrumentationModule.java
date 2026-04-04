@@ -24,6 +24,7 @@ public class Log4j1InstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 1.2
     return hasClassesNamed("org.apache.log4j.MDC");
   }
 
