@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
-public class LibertyRequest {
+final class LibertyRequest {
   private final HttpRequestMessage httpRequestMessage;
   @Nullable private final String serverSocketAddress;
   private final int serverSocketPort;
