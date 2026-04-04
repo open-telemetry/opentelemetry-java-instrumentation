@@ -83,10 +83,13 @@ testing {
 }
 
 tasks {
+  withType<Test>().configureEach {
+    jvmArgs("-Dlog4j2.is.webapp=false")
+  }
+
   // Threadlocals are always false if is.webapp is true, so we make sure to override it because as of
   // now testing-common includes jetty / servlet.
   test {
-    jvmArgs("-Dlog4j2.is.webapp=false")
     jvmArgs("-Dlog4j2.enable.threadlocals=true")
     jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
   }
