@@ -36,7 +36,7 @@ class AbstractFlowInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void enter() {
       FlowInstrumentationHelper.initialize();
     }
