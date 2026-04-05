@@ -21,10 +21,10 @@ public final class MongoInstrumentationSingletons {
           "io.opentelemetry.mongo-3.7",
           DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "mongo"));
 
-  public static final CommandListener LISTENER = new TracingCommandListener(instrumenter);
+  public static final CommandListener listener = new TracingCommandListener(instrumenter);
 
-  public static boolean isTracingListener(CommandListener listener) {
-    return listener.getClass().getName().equals(LISTENER.getClass().getName());
+  public static boolean isTracingListener(CommandListener commandListener) {
+    return commandListener.getClass().getName().equals(listener.getClass().getName());
   }
 
   private MongoInstrumentationSingletons() {}
