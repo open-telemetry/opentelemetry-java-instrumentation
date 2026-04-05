@@ -161,8 +161,7 @@ public abstract class Log4j2Test {
     List<ListAppender.LoggedEvent> events = ListAppender.get().getEvents();
     ThreadContext.clearAll();
     assertThat(events)
-        .singleElement()
-        .satisfies(
+        .satisfiesExactly(
             event -> {
               assertThat(event.getMessage()).isEqualTo("log span parent");
               assertThat(event.getContextData().get(getLoggingKey("trace_id")))
