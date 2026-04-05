@@ -52,7 +52,7 @@ final class MongoClientSettingsBuilderInstrumentation implements TypeInstrumenta
           return;
         }
       }
-      builder.addCommandListener(MongoInstrumentationSingletons.listener);
+      builder.addCommandListener(MongoInstrumentationSingletons.getListener());
     }
   }
 }
