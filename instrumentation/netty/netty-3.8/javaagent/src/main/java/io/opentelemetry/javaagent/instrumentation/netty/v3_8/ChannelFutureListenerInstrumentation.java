@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.VirtualFieldHelper.CONNECTION_CONTEXT;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -16,6 +15,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -36,16 +36,16 @@ class ChannelFutureListenerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("operationComplete"))
+        named("operationComplete")
             .and(takesArgument(0, named("org.jboss.netty.channel.ChannelFuture"))),
-        ChannelFutureListenerInstrumentation.class.getName() + "$OperationCompleteAdvice");
+        getClass().getName() + "$OperationCompleteAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class OperationCompleteAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Nullable
     public static Scope activateScope(@Advice.Argument(0) ChannelFuture future) {
       /*
       Idea here is:
