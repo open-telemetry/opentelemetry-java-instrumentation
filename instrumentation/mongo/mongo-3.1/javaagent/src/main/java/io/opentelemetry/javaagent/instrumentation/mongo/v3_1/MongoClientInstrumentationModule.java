@@ -69,7 +69,7 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
           return;
         }
       }
-      builder.addCommandListener(MongoInstrumentationSingletons.listener);
+      builder.addCommandListener(MongoInstrumentationSingletons.getListener());
     }
   }
 }
