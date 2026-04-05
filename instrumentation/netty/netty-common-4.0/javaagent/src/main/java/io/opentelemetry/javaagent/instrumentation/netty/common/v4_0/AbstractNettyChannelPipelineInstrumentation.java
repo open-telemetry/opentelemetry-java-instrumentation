@@ -106,7 +106,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void removeHandler(
         @Advice.This ChannelPipeline pipeline,
-        @Advice.Argument(0) Class<ChannelHandler> handlerClass) {
+        @Advice.Argument(0) Class<? extends ChannelHandler> handlerClass) {
       ChannelHandler handler = pipeline.get(handlerClass);
       if (handler == null) {
         return;
