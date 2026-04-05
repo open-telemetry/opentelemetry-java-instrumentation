@@ -28,21 +28,31 @@ public final class UndertowActiveHandlers {
   }
 
   /**
-   * Increment counter.
+   * Increment counter. No-op if the counter was never initialized via {@link #init}.
    *
    * @param context server context
    */
   public static void increment(Context context) {
-    context.get(CONTEXT_KEY).incrementAndGet();
+    AtomicInteger counter = context.get(CONTEXT_KEY);
+    if (counter != null) {
+      counter.incrementAndGet();
+    }
   }
 
   /**
    * Decrement counter.
    *
+   * <p>Returns {@code 1} if the counter was never initialized via {@link #init}, so callers that
+   * check {@code decrementAndGet() == 0} to end a span will safely no-op.
+   *
    * @param context server context
-   * @return value of counter after decrementing it
+   * @return value of counter after decrementing it, or {@code 1} if counter is absent
    */
   public static int decrementAndGet(Context context) {
-    return context.get(CONTEXT_KEY).decrementAndGet();
+    AtomicInteger counter = context.get(CONTEXT_KEY);
+    if (counter == null) {
+      return 1;
+    }
+    return counter.decrementAndGet();
   }
 }
