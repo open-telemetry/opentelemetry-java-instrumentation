@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_42.logs;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.KeyValue;
 import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.logs.LogRecordBuilder;
@@ -24,6 +25,7 @@ public class ApplicationLogRecordBuilder142 extends ApplicationLogRecordBuilder
   }
 
   @Override
+  @CanIgnoreReturnValue
   public application.io.opentelemetry.api.logs.LogRecordBuilder setBody(
       application.io.opentelemetry.api.common.Value<?> body) {
     agentLogRecordBuilder.setBody(convertValue(body));
