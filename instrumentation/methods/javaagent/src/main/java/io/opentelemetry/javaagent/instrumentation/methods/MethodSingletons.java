@@ -10,9 +10,8 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttribute
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import javax.annotation.Nullable;
 
-public final class MethodSingletons {
+final class MethodSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.methods";
 
   private static final Instrumenter<MethodAndType, Void> instrumenter;
@@ -21,13 +20,11 @@ public final class MethodSingletons {
   static {
     CodeAttributesGetter<MethodAndType> codeAttributesGetter =
         new CodeAttributesGetter<MethodAndType>() {
-          @Nullable
           @Override
           public Class<?> getCodeClass(MethodAndType methodAndType) {
             return methodAndType.getClassAndMethod().declaringClass();
           }
 
-          @Nullable
           @Override
           public String getMethodName(MethodAndType methodAndType) {
             return methodAndType.getClassAndMethod().methodName();
@@ -43,11 +40,11 @@ public final class MethodSingletons {
             .buildInstrumenter(MethodAndType::getSpanKind);
   }
 
-  public static Instrumenter<MethodAndType, Void> instrumenter() {
+  static Instrumenter<MethodAndType, Void> instrumenter() {
     return instrumenter;
   }
 
-  public static ClassLoader getBootstrapLoader() {
+  static ClassLoader getBootstrapLoader() {
     return bootstrapLoader;
   }
 
