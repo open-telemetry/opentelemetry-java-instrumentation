@@ -117,7 +117,6 @@ public final class LogEventMapper {
     }
 
     // level
-    builder.setSeverity(levelToSeverity(level));
     if (level != null) {
       builder.setSeverity(levelToSeverity(level));
       builder.setSeverityText(level.toString());
