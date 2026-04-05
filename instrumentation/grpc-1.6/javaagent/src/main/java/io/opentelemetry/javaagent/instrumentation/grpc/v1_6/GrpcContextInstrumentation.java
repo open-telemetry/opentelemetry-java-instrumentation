@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.grpc.v1_6;
 
+import static io.opentelemetry.javaagent.instrumentation.grpc.v1_6.GrpcSingletons.storage;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -37,7 +38,7 @@ class GrpcContextInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, suppress = Throwable.class)
     @Nullable
     public static Context.Storage onEnter() {
-      return GrpcSingletons.getStorage();
+      return storage();
     }
 
     @AssignReturned.ToReturned
