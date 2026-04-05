@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
 
 import static java.util.logging.Level.WARNING;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -33,21 +32,19 @@ class OpenTelemetryInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isStatic())
+        isStatic()
             .and(named("get"))
             .and(takesArguments(0))
             .and(returns(named("application.io.opentelemetry.api.OpenTelemetry"))),
         OpenTelemetryInstrumentation.class.getName() + "$GetAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isStatic())
+        isStatic()
             .and(named("set"))
             .and(takesArguments(1))
             .and(takesArgument(0, named("application.io.opentelemetry.api.OpenTelemetry"))),
         OpenTelemetryInstrumentation.class.getName() + "$SetAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(isStatic()).and(named("resetForTest")).and(takesArguments(0)),
+        isStatic().and(named("resetForTest")).and(takesArguments(0)),
         OpenTelemetryInstrumentation.class.getName() + "$ResetForTestAdvice");
   }
 
