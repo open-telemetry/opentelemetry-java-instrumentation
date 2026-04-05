@@ -29,7 +29,9 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("application.io.opentelemetry.api.logs.LoggerBuilder");
+    return hasClassesNamed(
+        // added in 1.27
+        "application.io.opentelemetry.api.logs.LoggerBuilder");
   }
 
   @Override
