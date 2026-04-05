@@ -212,6 +212,16 @@ Auto-fix boundaries:
     to avoid allocating on every invocation. Only convert singletons used at
     registration/initialization time (e.g., `Instrumenter` builder chains, `Singletons`
     setup)
+  - try-with-resources wrapping most of a test body for an `AutoCloseable` that only
+    needs cleanup at test end — convert to `AutoCleanupExtension` with `deferCleanup(...)`.
+    Add a `@RegisterExtension static final AutoCleanupExtension cleanup =
+    AutoCleanupExtension.create();` field if one does not already exist, then replace
+    the try-with-resources with `cleanup.deferCleanup(resource);` and un-indent the body.
+    Keep try-with-resources for semantically scoped resources whose lifetime must end
+    mid-test (e.g., `Scope` / `Context.makeCurrent()`, `MockedStatic`, short-lived
+    readers/writers/streams/response bodies).
+    Do not apply this conversion in non-JUnit helper methods, `@BeforeAll`, or shared
+    setup code.
   - `hasAttributesSatisfying(...)` calls in test assertions — replace with
     `hasAttributesSatisfyingExactly(...)` because it is more precise (the non-exact
     variant silently ignores unexpected attributes)
