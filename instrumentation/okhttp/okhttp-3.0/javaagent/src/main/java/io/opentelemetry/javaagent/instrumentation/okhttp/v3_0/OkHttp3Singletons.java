@@ -28,7 +28,7 @@ public final class OkHttp3Singletons {
       JavaagentHttpClientInstrumenters.create(
           OkHttpClientInstrumenterBuilderFactory.create(GlobalOpenTelemetry.get()));
 
-  public static final Interceptor CONTEXT_INTERCEPTOR =
+  public static final Interceptor contextInterceptor =
       chain -> {
         try (Scope ignored =
             HttpClientRequestResendCount.initialize(Context.current()).makeCurrent()) {
@@ -36,10 +36,10 @@ public final class OkHttp3Singletons {
         }
       };
 
-  public static final Interceptor CONNECTION_ERROR_INTERCEPTOR =
+  public static final Interceptor connectionErrorInterceptor =
       new ConnectionErrorSpanInterceptor(instrumenter);
 
-  public static final Interceptor TRACING_INTERCEPTOR =
+  public static final Interceptor tracingInterceptor =
       new TracingInterceptor(instrumenter, GlobalOpenTelemetry.getPropagators());
 
   private OkHttp3Singletons() {}
