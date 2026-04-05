@@ -180,7 +180,6 @@ class JavaagentInstrumentationTest {
   void testStartingWithOtelSpan() {
     io.opencensus.trace.Tracer ocTracer = Tracing.getTracer();
     Tracer otelTracer = testing.getOpenTelemetry().getTracer("test");
-
     cleanup.deferCleanup(() -> Tracing.getExportComponent().shutdown());
 
     Span otelSpan =
@@ -219,7 +218,6 @@ class JavaagentInstrumentationTest {
   void testStartingWithOpenCensusSpan() {
     io.opencensus.trace.Tracer ocTracer = Tracing.getTracer();
     Tracer otelTracer = testing.getOpenTelemetry().getTracer("test");
-
     cleanup.deferCleanup(() -> Tracing.getExportComponent().shutdown());
 
     io.opencensus.trace.Span ocSpan = ocTracer.spanBuilder("oc-span").startSpan();
@@ -252,7 +250,6 @@ class JavaagentInstrumentationTest {
   @Test
   void testNestedOpenCensusSpans() {
     io.opencensus.trace.Tracer ocTracer = Tracing.getTracer();
-
     cleanup.deferCleanup(() -> Tracing.getExportComponent().shutdown());
 
     io.opencensus.trace.Span outerSpan = ocTracer.spanBuilder("outer-span").startSpan();
