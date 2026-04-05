@@ -314,3 +314,4 @@ netty-common-4.0:javaagent
 netty-common:library
 netty-common-4.0:library
 netty-4.1:testing
+okhttp-2.2:javaagent
