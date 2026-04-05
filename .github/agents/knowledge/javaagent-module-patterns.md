@@ -2,8 +2,8 @@
 
 ## Quick Reference
 
-- Use when: reviewing `InstrumentationModule`, `TypeInstrumentation`, `Singletons`, `VirtualField`, or `CallDepth` code
-- Review focus: registration and naming, matcher performance, safe advice wiring, singleton and hot-path patterns
+- Use when: reviewing `InstrumentationModule`, `TypeInstrumentation`, `VirtualField`, or `CallDepth` code
+- Review focus: registration and naming, matcher performance, safe advice wiring
 
 ## InstrumentationModule
 
@@ -317,20 +317,6 @@ sufficient for optimization.
   `getClass().getName()` avoids this because it is a virtual call on the already-loaded
   instance, not a class literal. Omit the redundant `this.` qualifier and use the shorter
   repository convention.
-
-## Singletons Pattern
-
-Javaagent modules hold their `Instrumenter` instances and shared resources in a dedicated
-`Singletons` holder class (e.g., `MyLibrarySingletons`).
-
-### Rules
-
-- `Instrumenter` instances must be initialized at class-load time — either as a `static final`
-  field initializer or in a `static {}` block.
-- Use `GlobalOpenTelemetry.get()` to obtain the `OpenTelemetry` instance.
-- The instrumentation name string (second argument to `builder()`) should match the Gradle
-  module path: `"io.opentelemetry.<module-name>"` (e.g., `"io.opentelemetry.jedis-4.0"`).
-- Provide a static accessor method (typically named `instrumenter()`).
 
 ## CallDepth (Preventing Recursive Instrumentation)
 
