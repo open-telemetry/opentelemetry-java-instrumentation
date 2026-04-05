@@ -22,8 +22,9 @@ Javaagent modules keep shared `Instrumenter` instances and related collaborators
   - `helper` -> `helper()`
   - `setter` -> `setter()`
 - For exported uppercase constant-like fields that represent stable identifiers, immutable
-  descriptors, or semantic keys/handles such as `VirtualField` and `ContextKey`, it is acceptable
-  to expose them as `public static final` fields with no accessor.
+  descriptors, semantic keys/handles such as `VirtualField` and `ContextKey`, or immutable value
+  constants such as strings, booleans, and fixed timeout/interval values, it is acceptable to
+  expose them as `public static final` fields with no accessor.
   - `CONTEXT` stays `CONTEXT`
   - `REQUEST_INFO` stays `REQUEST_INFO`
   - `RESPONSE_STATUS` stays `RESPONSE_STATUS`
@@ -35,7 +36,7 @@ Javaagent modules keep shared `Instrumenter` instances and related collaborators
 ## Preferred Pattern
 
 ```java
-public final class MyLibrarySingletons {
+public class MyLibrarySingletons {
 
   private static final Instrumenter<Request, Response> instrumenter =
       JavaagentHttpServerInstrumenters.create(...);
@@ -57,7 +58,7 @@ public final class MyLibrarySingletons {
 Uppercase field exception:
 
 ```java
-public final class MyLibrarySingletons {
+public class MyLibrarySingletons {
 
   public static final VirtualField<Request, Context> REQUEST_CONTEXT =
       VirtualField.find(Request.class, Context.class);
@@ -96,8 +97,9 @@ class MyInstrumentation implements TypeInstrumentation {
 ## What to Flag in Review
 
 - Exposed lower camel collaborator fields such as `public static final Instrumenter ...`.
-- Private + accessor wrappers around uppercase semantic keys/handles when a direct `public static
-  final` field would be clearer and matches the naming guidance.
+- Private + accessor wrappers around uppercase constant-like fields when a direct `public static
+  final` field would be clearer and matches the naming guidance, including semantic keys/handles
+  and immutable value constants.
 - Accessor methods named `getInstrumenter()`, `getHelper()`, `getSetter()`, and similar when they
   simply return a backing field.
 - Call sites that qualify singleton member usage with the holder class instead of static importing
