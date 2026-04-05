@@ -19,7 +19,10 @@ final class ApplicationBatchCallback
 
   @Override
   public void close() {
-    agentCallback.close();
-    onClose.run();
+    try {
+      agentCallback.close();
+    } finally {
+      onClose.run();
+    }
   }
 }
