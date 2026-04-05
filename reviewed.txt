@@ -308,3 +308,4 @@ nats-2.17:library
 nats-2.17:testing
 netty-3.8:javaagent
 netty-4.1:javaagent
+netty-4.0:javaagent
