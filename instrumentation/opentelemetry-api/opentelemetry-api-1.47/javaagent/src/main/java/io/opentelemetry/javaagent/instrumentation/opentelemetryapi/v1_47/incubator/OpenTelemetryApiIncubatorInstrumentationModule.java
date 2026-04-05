@@ -30,10 +30,10 @@ public class OpenTelemetryApiIncubatorInstrumentationModule extends Instrumentat
             "application.io.opentelemetry.api.common.Value",
             // added in 1.42
             "application.io.opentelemetry.api.incubator.logs.ExtendedLogger")
+        // added in 1.50
         .and(
             not(
                 hasClassesNamed(
-                    // added in 1.50
                     "application.io.opentelemetry.api.incubator.common.ExtendedAttributes")));
   }
 
