@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.nats.v2_17;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.nats.v2_17.NatsSingletons.PRODUCER_INSTRUMENTER;
+import static io.opentelemetry.javaagent.instrumentation.nats.v2_17.NatsSingletons.producerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -137,10 +137,10 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
     @Nullable
     public static MessageFutureAdviceScope start(NatsRequest request) {
       Context parentContext = Context.current();
-      if (!PRODUCER_INSTRUMENTER.shouldStart(parentContext, request)) {
+      if (!producerInstrumenter.shouldStart(parentContext, request)) {
         return null;
       }
-      Context context = PRODUCER_INSTRUMENTER.start(parentContext, request);
+      Context context = producerInstrumenter.start(parentContext, request);
       return new MessageFutureAdviceScope(request, parentContext, context, context.makeCurrent());
     }
 
@@ -150,13 +150,13 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
         @Nullable Throwable throwable) {
       scope.close();
       if (throwable != null || messageFuture == null) {
-        PRODUCER_INSTRUMENTER.end(context, request, null, throwable);
+        producerInstrumenter.end(context, request, null, throwable);
         return messageFuture;
       }
 
       messageFuture =
           messageFuture.whenComplete(
-              new SpanFinisher(PRODUCER_INSTRUMENTER, context, connection, request));
+              new SpanFinisher(producerInstrumenter, context, connection, request));
       return CompletableFutureWrapper.wrap(messageFuture, parentContext);
     }
   }
@@ -199,10 +199,10 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
       @Nullable
       public static AdviceScope start(NatsRequest request) {
         Context parentContext = Context.current();
-        if (!PRODUCER_INSTRUMENTER.shouldStart(parentContext, request)) {
+        if (!producerInstrumenter.shouldStart(parentContext, request)) {
           return null;
         }
-        Context context = PRODUCER_INSTRUMENTER.start(parentContext, request);
+        Context context = producerInstrumenter.start(parentContext, request);
         return new AdviceScope(request, context, context.makeCurrent());
       }
 
@@ -215,7 +215,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
           response = NatsRequest.create(connection, message);
         }
 
-        PRODUCER_INSTRUMENTER.end(context, request, response, throwable);
+        producerInstrumenter.end(context, request, response, throwable);
       }
     }
 

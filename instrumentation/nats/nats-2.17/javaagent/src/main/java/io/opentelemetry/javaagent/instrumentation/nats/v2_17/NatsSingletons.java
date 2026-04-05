@@ -19,10 +19,10 @@ public final class NatsSingletons {
   private static final List<String> capturedHeaders =
       ExperimentalConfig.get().getMessagingHeaders();
 
-  public static final Instrumenter<NatsRequest, NatsRequest> PRODUCER_INSTRUMENTER =
+  static final Instrumenter<NatsRequest, NatsRequest> producerInstrumenter =
       createProducerInstrumenter(GlobalOpenTelemetry.get(), capturedHeaders);
 
-  public static final Instrumenter<NatsRequest, Void> CONSUMER_PROCESS_INSTRUMENTER =
+  static final Instrumenter<NatsRequest, Void> consumerProcessInstrumenter =
       createConsumerProcessInstrumenter(GlobalOpenTelemetry.get(), capturedHeaders);
 
   private NatsSingletons() {}
