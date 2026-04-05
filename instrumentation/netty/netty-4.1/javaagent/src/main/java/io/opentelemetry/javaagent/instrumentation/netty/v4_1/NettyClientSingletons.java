@@ -32,9 +32,9 @@ public final class NettyClientSingletons {
           .getBoolean("enabled", false);
 
   private static final Instrumenter<NettyCommonRequest, HttpResponse> instrumenter;
-  private static final NettyConnectionInstrumenter CONNECTION_INSTRUMENTER;
-  private static final NettySslInstrumenter SSL_INSTRUMENTER;
-  private static final NettyClientHandlerFactory CLIENT_HANDLER_FACTORY;
+  private static final NettyConnectionInstrumenter connectionInstrumenter;
+  private static final NettySslInstrumenter sslInstrumenter;
+  private static final NettyClientHandlerFactory clientHandlerFactory;
 
   static {
     DefaultHttpClientInstrumenterBuilder<NettyCommonRequest, HttpResponse> builder =
@@ -47,9 +47,9 @@ public final class NettyClientSingletons {
             enabledOrErrorOnly(connectionTelemetryEnabled),
             enabledOrErrorOnly(sslTelemetryEnabled));
     instrumenter = factory.instrumenter();
-    CONNECTION_INSTRUMENTER = factory.createConnectionInstrumenter(GlobalOpenTelemetry.get());
-    SSL_INSTRUMENTER = factory.createSslInstrumenter();
-    CLIENT_HANDLER_FACTORY =
+    connectionInstrumenter = factory.createConnectionInstrumenter(GlobalOpenTelemetry.get());
+    sslInstrumenter = factory.createSslInstrumenter();
+    clientHandlerFactory =
         new NettyClientHandlerFactory(
             instrumenter, AgentCommonConfig.get().shouldEmitExperimentalHttpClientTelemetry());
   }
@@ -59,15 +59,15 @@ public final class NettyClientSingletons {
   }
 
   public static NettyConnectionInstrumenter connectionInstrumenter() {
-    return CONNECTION_INSTRUMENTER;
+    return connectionInstrumenter;
   }
 
   public static NettySslInstrumenter sslInstrumenter() {
-    return SSL_INSTRUMENTER;
+    return sslInstrumenter;
   }
 
   public static NettyClientHandlerFactory clientHandlerFactory() {
-    return CLIENT_HANDLER_FACTORY;
+    return clientHandlerFactory;
   }
 
   private NettyClientSingletons() {}

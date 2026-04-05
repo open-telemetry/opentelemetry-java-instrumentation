@@ -24,7 +24,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 public final class NettyServerSingletons {
 
   private static final Instrumenter<NettyCommonRequest, HttpResponse> instrumenter;
-  private static final ProtocolEventHandler PROTOCOL_EVENT_HANDLER;
+  private static final ProtocolEventHandler protocolEventHandler;
 
   static {
     NettyServerTelemetryBuilder builder = NettyServerTelemetry.builder(GlobalOpenTelemetry.get());
@@ -38,7 +38,7 @@ public final class NettyServerSingletons {
           .setEmitExperimentalHttpServerTelemetry(true);
     }
     instrumenter = NettyServerInstrumenterBuilderUtil.getBuilderExtractor().apply(builder).build();
-    PROTOCOL_EVENT_HANDLER =
+    protocolEventHandler =
         emitExperimental
             ? ProtocolEventHandler.Enabled.INSTANCE
             : ProtocolEventHandler.Noop.INSTANCE;
@@ -50,13 +50,13 @@ public final class NettyServerSingletons {
 
   public static ChannelOutboundHandler createResponseHandler() {
     return new HttpServerResponseTracingHandler(
-        instrumenter, NettyHttpServerResponseBeforeCommitHandler.INSTANCE, PROTOCOL_EVENT_HANDLER);
+        instrumenter, NettyHttpServerResponseBeforeCommitHandler.INSTANCE, protocolEventHandler);
   }
 
   public static CombinedChannelDuplexHandler<ChannelInboundHandler, ChannelOutboundHandler>
       createCombinedHandler() {
     return new HttpServerTracingHandler(
-        instrumenter, NettyHttpServerResponseBeforeCommitHandler.INSTANCE, PROTOCOL_EVENT_HANDLER);
+        instrumenter, NettyHttpServerResponseBeforeCommitHandler.INSTANCE, protocolEventHandler);
   }
 
   private NettyServerSingletons() {}
