@@ -49,7 +49,7 @@ class RestClientInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$PerformRequestAsyncAdvice");
   }
 
-  public static class AdviceScope {
+  public static final class AdviceScope {
     private final OpenSearchRestRequest otelRequest;
     private final Context parentContext;
     private final Context context;

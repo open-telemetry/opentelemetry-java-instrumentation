@@ -35,6 +35,7 @@ public final class OpenSearchRestSingletons {
       }
 
       @Override
+      @Nullable
       public InetAddress getAddress() {
         return response.getHost().getAddress();
       }
