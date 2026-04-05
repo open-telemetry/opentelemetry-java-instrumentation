@@ -25,6 +25,7 @@ public class MongoClientInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 4.0 (moved from com.mongodb.async.SingleResultCallback)
     return hasClassesNamed("com.mongodb.internal.async.SingleResultCallback");
   }
 
