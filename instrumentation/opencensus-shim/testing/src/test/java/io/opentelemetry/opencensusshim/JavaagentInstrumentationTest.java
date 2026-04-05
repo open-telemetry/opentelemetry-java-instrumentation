@@ -16,6 +16,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.assertj.core.api.AbstractBooleanAssert;
@@ -27,6 +28,8 @@ class JavaagentInstrumentationTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @BeforeEach
   void setup() {
@@ -44,37 +47,34 @@ class JavaagentInstrumentationTest {
   void testInterleavedSpansOcFirst() {
     io.opencensus.trace.Tracer ocTracer = Tracing.getTracer();
     Tracer otelTracer = testing.getOpenTelemetry().getTracer("test");
+    cleanup.deferCleanup(() -> Tracing.getExportComponent().shutdown());
 
-    try {
-      io.opencensus.trace.Span outerSpan = ocTracer.spanBuilder("outer-span").startSpan();
-      Span midSpan;
-      io.opencensus.trace.Span innerSpan;
+    io.opencensus.trace.Span outerSpan = ocTracer.spanBuilder("outer-span").startSpan();
+    Span midSpan;
+    io.opencensus.trace.Span innerSpan;
 
-      outerSpan.putAttribute("outer", AttributeValue.booleanAttributeValue(true));
+    outerSpan.putAttribute("outer", AttributeValue.booleanAttributeValue(true));
 
-      try (io.opencensus.common.Scope outerScope = ocTracer.withSpan(outerSpan)) {
-        midSpan =
-            otelTracer
-                .spanBuilder("mid-span")
-                .setSpanKind(SpanKind.INTERNAL)
-                .setAttribute("middle", true)
-                .startSpan();
-        try (Scope midScope = midSpan.makeCurrent()) {
-          innerSpan = ocTracer.spanBuilder("inner-span").startSpan();
-          innerSpan.putAttribute("inner", AttributeValue.booleanAttributeValue(true));
+    try (io.opencensus.common.Scope outerScope = ocTracer.withSpan(outerSpan)) {
+      midSpan =
+          otelTracer
+              .spanBuilder("mid-span")
+              .setSpanKind(SpanKind.INTERNAL)
+              .setAttribute("middle", true)
+              .startSpan();
+      try (Scope midScope = midSpan.makeCurrent()) {
+        innerSpan = ocTracer.spanBuilder("inner-span").startSpan();
+        innerSpan.putAttribute("inner", AttributeValue.booleanAttributeValue(true));
 
-          // make current and immediately close -- avoid empty try block
-          ocTracer.withSpan(innerSpan).close();
+        // make current and immediately close -- avoid empty try block
+        ocTracer.withSpan(innerSpan).close();
 
-          innerSpan.end();
-        } finally {
-          midSpan.end();
-        }
+        innerSpan.end();
       } finally {
-        outerSpan.end();
+        midSpan.end();
       }
     } finally {
-      Tracing.getExportComponent().shutdown();
+      outerSpan.end();
     }
 
     // expecting 1 trace with 3 spans
@@ -112,40 +112,37 @@ class JavaagentInstrumentationTest {
   void testInterleavedSpansOtelFirst() {
     io.opencensus.trace.Tracer ocTracer = Tracing.getTracer();
     Tracer otelTracer = testing.getOpenTelemetry().getTracer("test");
+    cleanup.deferCleanup(() -> Tracing.getExportComponent().shutdown());
 
-    try {
-      Span outerSpan =
-          otelTracer
-              .spanBuilder("outer-span")
-              .setSpanKind(SpanKind.INTERNAL)
-              .setAttribute("outer", true)
-              .startSpan();
-      io.opencensus.trace.Span midSpan;
-      Span innerSpan;
+    Span outerSpan =
+        otelTracer
+            .spanBuilder("outer-span")
+            .setSpanKind(SpanKind.INTERNAL)
+            .setAttribute("outer", true)
+            .startSpan();
+    io.opencensus.trace.Span midSpan;
+    Span innerSpan;
 
-      try (Scope outerScope = outerSpan.makeCurrent()) {
-        midSpan = ocTracer.spanBuilder("mid-span").startSpan();
-        midSpan.putAttribute("middle", AttributeValue.booleanAttributeValue(true));
-        try (io.opencensus.common.Scope midScope = ocTracer.withSpan(midSpan)) {
-          innerSpan =
-              otelTracer
-                  .spanBuilder("inner-span")
-                  .setSpanKind(SpanKind.INTERNAL)
-                  .setAttribute("inner", true)
-                  .startSpan();
+    try (Scope outerScope = outerSpan.makeCurrent()) {
+      midSpan = ocTracer.spanBuilder("mid-span").startSpan();
+      midSpan.putAttribute("middle", AttributeValue.booleanAttributeValue(true));
+      try (io.opencensus.common.Scope midScope = ocTracer.withSpan(midSpan)) {
+        innerSpan =
+            otelTracer
+                .spanBuilder("inner-span")
+                .setSpanKind(SpanKind.INTERNAL)
+                .setAttribute("inner", true)
+                .startSpan();
 
-          // make current and immediately close -- avoid empty try block
-          innerSpan.makeCurrent().close();
+        // make current and immediately close -- avoid empty try block
+        innerSpan.makeCurrent().close();
 
-          innerSpan.end();
-        } finally {
-          midSpan.end();
-        }
+        innerSpan.end();
       } finally {
-        outerSpan.end();
+        midSpan.end();
       }
     } finally {
-      Tracing.getExportComponent().shutdown();
+      outerSpan.end();
     }
 
     // expecting 1 trace with 3 spans
@@ -184,28 +181,26 @@ class JavaagentInstrumentationTest {
     io.opencensus.trace.Tracer ocTracer = Tracing.getTracer();
     Tracer otelTracer = testing.getOpenTelemetry().getTracer("test");
 
-    try {
-      Span otelSpan =
-          otelTracer
-              .spanBuilder("otel-span")
-              .setSpanKind(SpanKind.INTERNAL)
-              .setAttribute("present-on-otel", true)
-              .startSpan();
+    cleanup.deferCleanup(() -> Tracing.getExportComponent().shutdown());
 
-      io.opencensus.trace.Span ocSpan;
-      try (Scope scope = otelSpan.makeCurrent()) {
-        ocSpan = ocTracer.spanBuilder("oc-span").startSpan();
-        try (io.opencensus.common.Scope ocScope = ocTracer.withSpan(ocSpan)) {
-          ocTracer
-              .getCurrentSpan()
-              .putAttribute("present-on-oc", AttributeValue.booleanAttributeValue(true));
-        }
-        ocSpan.end();
+    Span otelSpan =
+        otelTracer
+            .spanBuilder("otel-span")
+            .setSpanKind(SpanKind.INTERNAL)
+            .setAttribute("present-on-otel", true)
+            .startSpan();
+
+    io.opencensus.trace.Span ocSpan;
+    try (Scope scope = otelSpan.makeCurrent()) {
+      ocSpan = ocTracer.spanBuilder("oc-span").startSpan();
+      try (io.opencensus.common.Scope ocScope = ocTracer.withSpan(ocSpan)) {
+        ocTracer
+            .getCurrentSpan()
+            .putAttribute("present-on-oc", AttributeValue.booleanAttributeValue(true));
       }
-      otelSpan.end();
-    } finally {
-      Tracing.getExportComponent().shutdown();
+      ocSpan.end();
     }
+    otelSpan.end();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -225,23 +220,21 @@ class JavaagentInstrumentationTest {
     io.opencensus.trace.Tracer ocTracer = Tracing.getTracer();
     Tracer otelTracer = testing.getOpenTelemetry().getTracer("test");
 
-    try {
-      io.opencensus.trace.Span ocSpan = ocTracer.spanBuilder("oc-span").startSpan();
+    cleanup.deferCleanup(() -> Tracing.getExportComponent().shutdown());
 
-      ocSpan.putAttribute("present-on-oc", AttributeValue.booleanAttributeValue(true));
+    io.opencensus.trace.Span ocSpan = ocTracer.spanBuilder("oc-span").startSpan();
 
-      Span otelSpan;
-      try (io.opencensus.common.Scope ocScope = ocTracer.withSpan(ocSpan)) {
-        otelSpan = otelTracer.spanBuilder("otel-span").setSpanKind(SpanKind.INTERNAL).startSpan();
-        try (Scope scope = otelSpan.makeCurrent()) {
-          Span.current().setAttribute("present-on-otel", true);
-        }
-        otelSpan.end();
+    ocSpan.putAttribute("present-on-oc", AttributeValue.booleanAttributeValue(true));
+
+    Span otelSpan;
+    try (io.opencensus.common.Scope ocScope = ocTracer.withSpan(ocSpan)) {
+      otelSpan = otelTracer.spanBuilder("otel-span").setSpanKind(SpanKind.INTERNAL).startSpan();
+      try (Scope scope = otelSpan.makeCurrent()) {
+        Span.current().setAttribute("present-on-otel", true);
       }
-      ocSpan.end();
-    } finally {
-      Tracing.getExportComponent().shutdown();
+      otelSpan.end();
     }
+    ocSpan.end();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -260,32 +253,30 @@ class JavaagentInstrumentationTest {
   void testNestedOpenCensusSpans() {
     io.opencensus.trace.Tracer ocTracer = Tracing.getTracer();
 
-    try {
-      io.opencensus.trace.Span outerSpan = ocTracer.spanBuilder("outer-span").startSpan();
-      io.opencensus.trace.Span midSpan;
-      io.opencensus.trace.Span innerSpan;
+    cleanup.deferCleanup(() -> Tracing.getExportComponent().shutdown());
 
-      outerSpan.putAttribute("outer", AttributeValue.booleanAttributeValue(true));
+    io.opencensus.trace.Span outerSpan = ocTracer.spanBuilder("outer-span").startSpan();
+    io.opencensus.trace.Span midSpan;
+    io.opencensus.trace.Span innerSpan;
 
-      try (io.opencensus.common.Scope outerScope = ocTracer.withSpan(outerSpan)) {
-        midSpan = ocTracer.spanBuilder("mid-span").startSpan();
-        midSpan.putAttribute("middle", AttributeValue.booleanAttributeValue(true));
-        try (io.opencensus.common.Scope midScope = ocTracer.withSpan(midSpan)) {
-          innerSpan = ocTracer.spanBuilder("inner-span").startSpan();
-          innerSpan.putAttribute("inner", AttributeValue.booleanAttributeValue(true));
+    outerSpan.putAttribute("outer", AttributeValue.booleanAttributeValue(true));
 
-          // make current and immediately close -- avoid empty try block
-          ocTracer.withSpan(innerSpan).close();
+    try (io.opencensus.common.Scope outerScope = ocTracer.withSpan(outerSpan)) {
+      midSpan = ocTracer.spanBuilder("mid-span").startSpan();
+      midSpan.putAttribute("middle", AttributeValue.booleanAttributeValue(true));
+      try (io.opencensus.common.Scope midScope = ocTracer.withSpan(midSpan)) {
+        innerSpan = ocTracer.spanBuilder("inner-span").startSpan();
+        innerSpan.putAttribute("inner", AttributeValue.booleanAttributeValue(true));
 
-          innerSpan.end();
-        } finally {
-          midSpan.end();
-        }
+        // make current and immediately close -- avoid empty try block
+        ocTracer.withSpan(innerSpan).close();
+
+        innerSpan.end();
       } finally {
-        outerSpan.end();
+        midSpan.end();
       }
     } finally {
-      Tracing.getExportComponent().shutdown();
+      outerSpan.end();
     }
 
     // expecting 1 trace with 3 spans
