@@ -31,11 +31,15 @@ import com.openai.models.embeddings.EmbeddingCreateParams;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import java.util.concurrent.CompletionException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
   private static final String MODEL = "text-embedding-3-small";
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected final CreateEmbeddingResponse doEmbeddings(EmbeddingCreateParams request) {
     return doEmbeddings(request, getClient(), getClientAsync());
@@ -218,6 +222,8 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                 .apiKey("testing")
                 .maxRetries(0)
                 .build());
+    cleanup.deferCleanup(client::close);
+    cleanup.deferCleanup(clientAsync::close);
 
     EmbeddingCreateParams request =
         EmbeddingCreateParams.builder()
