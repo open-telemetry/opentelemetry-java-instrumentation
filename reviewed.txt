@@ -295,3 +295,4 @@ micrometer-1.5:javaagent
 methods:javaagent
 micrometer-1.5:library
 micrometer-1.5:testing
+mongo-3.1:javaagent
