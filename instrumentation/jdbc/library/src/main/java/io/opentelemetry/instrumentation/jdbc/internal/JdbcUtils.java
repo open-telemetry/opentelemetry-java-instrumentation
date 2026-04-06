@@ -109,7 +109,7 @@ public final class JdbcUtils {
       if (url != null) {
         try {
           return JdbcConnectionUrlParser.parse(url, connection.getClientInfo());
-        } catch (Throwable ex) {
+        } catch (Throwable ignored) {
           // getClientInfo is likely not allowed.
           return JdbcConnectionUrlParser.parse(url, null);
         }

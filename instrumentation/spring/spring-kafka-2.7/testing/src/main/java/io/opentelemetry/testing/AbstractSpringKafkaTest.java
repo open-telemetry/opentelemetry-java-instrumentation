@@ -116,8 +116,8 @@ public abstract class AbstractSpringKafkaTest {
                     "send",
                     MethodType.methodType(
                         CompletableFuture.class, String.class, Object.class, Object.class));
-      } catch (NoSuchMethodException | IllegalAccessException ex) {
-        failure = ex;
+      } catch (NoSuchMethodException | IllegalAccessException f) {
+        failure = f;
       }
     } catch (IllegalAccessException e) {
       failure = e;
