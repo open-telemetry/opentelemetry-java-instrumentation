@@ -147,6 +147,5 @@ public abstract class AbstractHelidonTest extends AbstractHttpServerTest<WebServ
     // filter isn't called for non-standard method
     options.disableTestNonStandardHttpMethod();
     options.setTestException(false);
-    options.setTestHttpPipelining(true);
   }
 }

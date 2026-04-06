@@ -20,7 +20,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 
 import io.lettuce.core.RedisClient;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.lettuce.v5_1.AbstractLettuceClientTest;
 import io.opentelemetry.instrumentation.lettuce.v5_1.AbstractLettuceReactiveClientTest;
@@ -57,7 +56,7 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("test-parent").hasAttributes(Attributes.empty()),
+                    span -> span.hasName("test-parent").hasTotalAttributeCount(0),
                     span ->
                         span.hasName(spanName("SET"))
                             .hasKind(SpanKind.CLIENT)

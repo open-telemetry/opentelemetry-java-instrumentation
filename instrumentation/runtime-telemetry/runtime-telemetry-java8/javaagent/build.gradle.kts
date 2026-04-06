@@ -6,6 +6,8 @@ plugins {
 // Tests are kept to verify backward compatibility with legacy property names
 
 dependencies {
+  // used to verify jar analyzer package events
+  testImplementation("commons-io:commons-io")
   testInstrumentation(project(":instrumentation:runtime-telemetry:javaagent"))
 }
 

@@ -28,7 +28,7 @@ abstract class SpringBatchTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  public SpringBatchTest(JobRunner runner) {
+  SpringBatchTest(JobRunner runner) {
     this.runner = runner;
   }
 

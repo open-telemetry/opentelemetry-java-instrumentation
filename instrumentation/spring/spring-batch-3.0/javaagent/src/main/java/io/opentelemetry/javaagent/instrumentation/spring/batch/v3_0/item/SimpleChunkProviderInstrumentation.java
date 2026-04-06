@@ -30,7 +30,7 @@ public class SimpleChunkProviderInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isProtected().and(named("doRead")).and(takesArguments(0)),
-        this.getClass().getName() + "$ReadAdvice");
+        getClass().getName() + "$ReadAdvice");
   }
 
   @SuppressWarnings("unused")

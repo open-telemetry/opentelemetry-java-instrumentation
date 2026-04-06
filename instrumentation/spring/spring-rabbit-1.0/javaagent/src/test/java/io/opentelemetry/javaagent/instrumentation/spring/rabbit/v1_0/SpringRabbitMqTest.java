@@ -135,7 +135,7 @@ class SpringRabbitMqTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
-  public void testContextPropagation(boolean testHeaders) throws Exception {
+  void testContextPropagation(boolean testHeaders) throws Exception {
     try (Connection connection = connectionFactory.newConnection()) {
       try (Channel ignored = connection.createChannel()) {
         testing.runWithSpan(
@@ -222,7 +222,7 @@ class SpringRabbitMqTest {
   }
 
   @Test
-  public void testAnonymousQueueSpanName() throws Exception {
+  void testAnonymousQueueSpanName() throws Exception {
     try (Connection connection = connectionFactory.newConnection()) {
       try (Channel ignored = connection.createChannel()) {
         String anonymousQueueName = applicationContext.getBean(AnonymousQueue.class).getName();

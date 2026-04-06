@@ -16,7 +16,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HistogramInstrumentation implements TypeInstrumentation {
+class HistogramInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -26,8 +26,7 @@ public class HistogramInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("update").and(takesArguments(long.class)),
-        this.getClass().getName() + "$UpdateAdvice");
+        named("update").and(takesArguments(long.class)), getClass().getName() + "$UpdateAdvice");
   }
 
   @SuppressWarnings("unused")

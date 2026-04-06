@@ -1,8 +1,9 @@
 otel:
   instrumentation:
     common:
-      db-statement-sanitizer:
-        enabled: false
+      db:
+        query-sanitization:
+          enabled: false
     kafka:
       experimental-span-attributes: true
     logback-appender:

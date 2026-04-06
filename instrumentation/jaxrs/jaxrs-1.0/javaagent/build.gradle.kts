@@ -7,6 +7,7 @@ muzzle {
     group.set("javax.ws.rs")
     module.set("jsr311-api")
     versions.set("[0.5,)")
+    assertInverse.set(true)
   }
   fail {
     group.set("javax.ws.rs")
@@ -36,5 +37,5 @@ tasks.withType<Test>().configureEach {
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  systemProperty("collectMetadata", otelProps.collectMetadata)
 }

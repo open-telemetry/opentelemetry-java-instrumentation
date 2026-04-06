@@ -15,7 +15,7 @@ class XmlConfigBatchJobTest extends SpringBatchTest {
   static final ApplicationConfigRunner runner =
       new ApplicationConfigRunner(() -> new ClassPathXmlApplicationContext("spring-batch.xml"));
 
-  public XmlConfigBatchJobTest() {
+  XmlConfigBatchJobTest() {
     super(runner);
   }
 }

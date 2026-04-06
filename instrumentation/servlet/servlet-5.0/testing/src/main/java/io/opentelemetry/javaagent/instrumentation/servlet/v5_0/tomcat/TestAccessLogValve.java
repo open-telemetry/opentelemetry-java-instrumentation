@@ -56,6 +56,7 @@ public class TestAccessLogValve extends ValveBase implements AccessLog {
         try {
           loggedIds.wait(toWait);
         } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
           throw new IllegalStateException(e);
         }
         toWait = endTime - System.currentTimeMillis();

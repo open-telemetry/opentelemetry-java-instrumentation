@@ -13,8 +13,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.springframework.amqp.core.Message;
 
-enum SpringRabbitMessageAttributesGetter implements MessagingAttributesGetter<Message, Void> {
-  INSTANCE;
+class SpringRabbitMessageAttributesGetter implements MessagingAttributesGetter<Message, Void> {
 
   @Override
   public String getSystem(Message message) {

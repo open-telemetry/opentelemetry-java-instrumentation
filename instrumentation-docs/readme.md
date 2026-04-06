@@ -17,7 +17,7 @@ will enable metric and span collection:
 ```kotlin
 tasks {
   test {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", findProperty("collectMetadata"))
     ...
   }
 }
@@ -195,8 +195,8 @@ disabled_by_default: true                         # Defaults to `false`
 classification: internal                          # instrumentation classification: library | internal | custom
 library_link: https://...                         # URL to the library or framework's main website or documentation
 configurations:
-  - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-    description: Enables statement sanitization for database queries.
+  - name: otel.instrumentation.common.db.query-sanitization.enabled
+    description: Enables query sanitization for database queries.
     type: boolean               # boolean | string | list | map
     default: true
 override_telemetry: false                         # Set to true to ignore auto-generated .telemetry files

@@ -34,11 +34,11 @@ final class SpanKeyInstrumentation implements TypeInstrumentation {
         named("storeInContext")
             .and(takesArgument(0, named("application.io.opentelemetry.context.Context")))
             .and(takesArgument(1, named("application.io.opentelemetry.api.trace.Span"))),
-        this.getClass().getName() + "$StoreInContextAdvice");
+        getClass().getName() + "$StoreInContextAdvice");
     transformer.applyAdviceToMethod(
         named("fromContextOrNull")
             .and(takesArgument(0, named("application.io.opentelemetry.context.Context"))),
-        this.getClass().getName() + "$FromContextOrNullAdvice");
+        getClass().getName() + "$FromContextOrNullAdvice");
   }
 
   @SuppressWarnings("unused")

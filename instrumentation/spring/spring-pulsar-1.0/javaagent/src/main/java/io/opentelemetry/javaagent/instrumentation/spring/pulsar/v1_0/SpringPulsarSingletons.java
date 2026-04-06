@@ -19,11 +19,11 @@ import org.apache.pulsar.client.api.Message;
 
 public final class SpringPulsarSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-pulsar-1.0";
-  private static final Instrumenter<Message<?>, Void> INSTRUMENTER;
+  private static final Instrumenter<Message<?>, Void> instrumenter;
 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
-    SpringPulsarMessageAttributesGetter getter = SpringPulsarMessageAttributesGetter.INSTANCE;
+    SpringPulsarMessageAttributesGetter getter = new SpringPulsarMessageAttributesGetter();
     MessageOperation operation = MessageOperation.PROCESS;
     boolean messagingReceiveInstrumentationEnabled =
         ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
@@ -40,15 +40,15 @@ public final class SpringPulsarSingletons {
     if (messagingReceiveInstrumentationEnabled) {
       builder.addSpanLinksExtractor(
           new PropagatorBasedSpanLinksExtractor<>(
-              openTelemetry.getPropagators().getTextMapPropagator(), MessageHeaderGetter.INSTANCE));
-      INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+              openTelemetry.getPropagators().getTextMapPropagator(), new MessageHeaderGetter()));
+      instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
     } else {
-      INSTRUMENTER = builder.buildConsumerInstrumenter(MessageHeaderGetter.INSTANCE);
+      instrumenter = builder.buildConsumerInstrumenter(new MessageHeaderGetter());
     }
   }
 
   public static Instrumenter<Message<?>, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private SpringPulsarSingletons() {}

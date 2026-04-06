@@ -20,7 +20,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class DemoServlet3Instrumentation implements TypeInstrumentation {
+class DemoServlet3Instrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return hasSuperType(namedOneOf("javax.servlet.Filter", "javax.servlet.http.HttpServlet"));
@@ -33,7 +33,7 @@ public class DemoServlet3Instrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("javax.servlet.ServletRequest")))
             .and(takesArgument(1, named("javax.servlet.ServletResponse")))
             .and(isPublic()),
-        this.getClass().getName() + "$DemoServlet3Advice");
+        getClass().getName() + "$DemoServlet3Advice");
   }
 
   @SuppressWarnings("unused")

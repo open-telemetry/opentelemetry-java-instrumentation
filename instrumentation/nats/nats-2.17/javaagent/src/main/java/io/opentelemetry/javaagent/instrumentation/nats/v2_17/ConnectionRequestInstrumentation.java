@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.nats.v2_17;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.nats.v2_17.NatsSingletons.PRODUCER_INSTRUMENTER;
+import static io.opentelemetry.javaagent.instrumentation.nats.v2_17.NatsSingletons.getProducerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -31,7 +31,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ConnectionRequestInstrumentation implements TypeInstrumentation {
+class ConnectionRequestInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -137,10 +137,10 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
     @Nullable
     public static MessageFutureAdviceScope start(NatsRequest request) {
       Context parentContext = Context.current();
-      if (!PRODUCER_INSTRUMENTER.shouldStart(parentContext, request)) {
+      if (!getProducerInstrumenter().shouldStart(parentContext, request)) {
         return null;
       }
-      Context context = PRODUCER_INSTRUMENTER.start(parentContext, request);
+      Context context = getProducerInstrumenter().start(parentContext, request);
       return new MessageFutureAdviceScope(request, parentContext, context, context.makeCurrent());
     }
 
@@ -150,13 +150,13 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
         @Nullable Throwable throwable) {
       scope.close();
       if (throwable != null || messageFuture == null) {
-        PRODUCER_INSTRUMENTER.end(context, request, null, throwable);
+        getProducerInstrumenter().end(context, request, null, throwable);
         return messageFuture;
       }
 
       messageFuture =
           messageFuture.whenComplete(
-              new SpanFinisher(PRODUCER_INSTRUMENTER, context, connection, request));
+              new SpanFinisher(getProducerInstrumenter(), context, connection, request));
       return CompletableFutureWrapper.wrap(messageFuture, parentContext);
     }
   }
@@ -199,10 +199,10 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
       @Nullable
       public static AdviceScope start(NatsRequest request) {
         Context parentContext = Context.current();
-        if (!PRODUCER_INSTRUMENTER.shouldStart(parentContext, request)) {
+        if (!getProducerInstrumenter().shouldStart(parentContext, request)) {
           return null;
         }
-        Context context = PRODUCER_INSTRUMENTER.start(parentContext, request);
+        Context context = getProducerInstrumenter().start(parentContext, request);
         return new AdviceScope(request, context, context.makeCurrent());
       }
 
@@ -215,7 +215,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
           response = NatsRequest.create(connection, message);
         }
 
-        PRODUCER_INSTRUMENTER.end(context, request, response, throwable);
+        getProducerInstrumenter().end(context, request, response, throwable);
       }
     }
 

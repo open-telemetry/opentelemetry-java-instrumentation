@@ -8,8 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.server;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 
-public enum ServerAttributesGetter implements RpcAttributesGetter<ClassAndMethod, Void> {
-  INSTANCE;
+public final class ServerAttributesGetter implements RpcAttributesGetter<ClassAndMethod, Void> {
 
   @Override
   public String getSystem(ClassAndMethod classAndMethod) {

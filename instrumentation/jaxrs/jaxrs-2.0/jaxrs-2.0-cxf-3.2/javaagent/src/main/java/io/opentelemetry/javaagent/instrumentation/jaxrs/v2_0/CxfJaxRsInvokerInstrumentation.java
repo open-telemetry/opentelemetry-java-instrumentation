@@ -18,7 +18,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.cxf.message.Exchange;
 
-public class CxfJaxRsInvokerInstrumentation implements TypeInstrumentation {
+class CxfJaxRsInvokerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

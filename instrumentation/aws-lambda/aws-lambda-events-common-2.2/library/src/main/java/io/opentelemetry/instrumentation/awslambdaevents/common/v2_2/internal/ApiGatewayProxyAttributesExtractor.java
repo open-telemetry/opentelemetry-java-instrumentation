@@ -67,6 +67,7 @@ final class ApiGatewayProxyAttributesExtractor
     attributes.put(URL_FULL, getHttpUrl(request, headers));
   }
 
+  @Nullable
   private static String getHttpUrl(
       APIGatewayProxyRequestEvent request, Map<String, String> headers) {
     StringBuilder str = new StringBuilder();

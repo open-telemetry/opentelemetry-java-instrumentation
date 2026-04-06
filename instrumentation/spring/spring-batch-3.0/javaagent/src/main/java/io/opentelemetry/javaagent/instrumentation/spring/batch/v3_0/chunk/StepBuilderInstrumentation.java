@@ -32,7 +32,7 @@ public class StepBuilderInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("build").and(isPublic()).and(takesArguments(0)),
-        this.getClass().getName() + "$BuildAdvice");
+        getClass().getName() + "$BuildAdvice");
   }
 
   @SuppressWarnings("unused")

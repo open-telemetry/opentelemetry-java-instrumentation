@@ -31,10 +31,10 @@ public class SimpleChunkProcessorInstrumentation implements TypeInstrumentation 
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isProtected().and(named("doProcess")).and(takesArguments(1)),
-        this.getClass().getName() + "$ProcessAdvice");
+        getClass().getName() + "$ProcessAdvice");
     transformer.applyAdviceToMethod(
         isProtected().and(named("doWrite")).and(takesArguments(1)),
-        this.getClass().getName() + "$WriteAdvice");
+        getClass().getName() + "$WriteAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -75,7 +75,7 @@ public final class SpringAwsUtil {
   // restore context from the first message of the batch
   @Nullable
   public static Scope handleBatch(Collection<Message<?>> messages) {
-    if (messages == null || messages.isEmpty()) {
+    if (messages.isEmpty()) {
       return null;
     }
     Message<?> message = messages.iterator().next();

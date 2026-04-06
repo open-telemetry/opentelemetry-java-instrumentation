@@ -26,7 +26,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class SpringJmsMessageListenerInstrumentation implements TypeInstrumentation {
+class SpringJmsMessageListenerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -46,7 +46,7 @@ public class SpringJmsMessageListenerInstrumentation implements TypeInstrumentat
             .and(isPublic())
             .and(takesArguments(2))
             .and(takesArgument(0, named("javax.jms.Message"))),
-        SpringJmsMessageListenerInstrumentation.class.getName() + "$MessageListenerAdvice");
+        getClass().getName() + "$MessageListenerAdvice");
   }
 
   @SuppressWarnings("unused")

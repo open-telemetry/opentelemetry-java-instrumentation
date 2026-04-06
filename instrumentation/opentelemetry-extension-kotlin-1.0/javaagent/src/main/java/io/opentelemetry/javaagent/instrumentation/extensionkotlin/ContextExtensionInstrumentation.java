@@ -20,7 +20,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ContextExtensionInstrumentation implements TypeInstrumentation {
+class ContextExtensionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -32,19 +32,19 @@ public class ContextExtensionInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("asContextElement")
             .and(takesArgument(0, named("application.io.opentelemetry.context.Context"))),
-        this.getClass().getName() + "$ContextAdvice");
+        getClass().getName() + "$ContextAdvice");
 
     transformer.applyAdviceToMethod(
         named("asContextElement")
             .and(
                 takesArgument(
                     0, named("application.io.opentelemetry.context.ImplicitContextKeyed"))),
-        this.getClass().getName() + "$ImplicitContextKeyedAdvice");
+        getClass().getName() + "$ImplicitContextKeyedAdvice");
 
     transformer.applyAdviceToMethod(
         named("getOpenTelemetryContext")
             .and(takesArgument(0, named("kotlin.coroutines.CoroutineContext"))),
-        this.getClass().getName() + "$GetOpenTelemetryContextAdvice");
+        getClass().getName() + "$GetOpenTelemetryContextAdvice");
   }
 
   @SuppressWarnings("unused")

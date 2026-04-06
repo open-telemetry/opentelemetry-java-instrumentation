@@ -26,7 +26,7 @@ public class Tomcat10InstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // only matches tomcat 10.0+
+    // added in Servlet 5.0 (renamed from javax.servlet)
     return hasClassesNamed("jakarta.servlet.http.HttpServletRequest")
         .and(
             // tomcat 10 has at least one of these two classes. Cache$EvictionOrder is present in

@@ -37,7 +37,7 @@ final class MongoClientSettingsBuilderInstrumentation implements TypeInstrumenta
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isPublic().and(named("build")).and(takesArguments(0)),
-        this.getClass().getName() + "$BuildAdvice");
+        getClass().getName() + "$BuildAdvice");
   }
 
   @SuppressWarnings("unused")

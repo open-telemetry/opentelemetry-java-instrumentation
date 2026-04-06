@@ -69,7 +69,7 @@ class JspSpanAssertions {
                               EXCEPTION_MESSAGE,
                               val ->
                                   val.satisfiesAnyOf(
-                                      v -> assertThat(spanData.getErrorMessageOptional()).isTrue(),
+                                      v -> assertThat(spanData.isErrorMessageOptional()).isTrue(),
                                       v -> val.isInstanceOf(String.class))),
                           satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
     }
@@ -146,7 +146,7 @@ class JspSpanAssertions {
                               EXCEPTION_MESSAGE,
                               val ->
                                   val.satisfiesAnyOf(
-                                      v -> assertThat(spanData.getErrorMessageOptional()).isTrue(),
+                                      v -> assertThat(spanData.isErrorMessageOptional()).isTrue(),
                                       v -> val.isInstanceOf(String.class))),
                           satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
     }

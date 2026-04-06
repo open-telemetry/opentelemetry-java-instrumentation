@@ -32,7 +32,7 @@ dependencies {
 }
 
 // restlet registers the first engine that is present on classpath, so we need to enforce the appropriate version
-if (findProperty("testLatestDeps") as Boolean) {
+if (otelProps.testLatestDeps) {
   configurations.configureEach {
     resolutionStrategy {
       eachDependency {

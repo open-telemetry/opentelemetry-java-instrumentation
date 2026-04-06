@@ -27,7 +27,10 @@ public class JaxrsInstrumentationModule extends InstrumentationModule
   // this is required to make sure instrumentation won't apply to jax-rs 2
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return not(hasClassesNamed("javax.ws.rs.container.AsyncResponse"));
+    return not(
+        hasClassesNamed(
+            // added in 2.0
+            "javax.ws.rs.container.AsyncResponse"));
   }
 
   @Override

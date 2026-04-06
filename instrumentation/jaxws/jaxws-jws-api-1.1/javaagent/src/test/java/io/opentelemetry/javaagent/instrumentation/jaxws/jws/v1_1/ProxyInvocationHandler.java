@@ -12,7 +12,7 @@ class ProxyInvocationHandler implements InvocationHandler {
 
   private final WebServiceDefinitionInterface target;
 
-  public ProxyInvocationHandler(WebServiceFromInterface webServiceFromInterface) {
+  ProxyInvocationHandler(WebServiceFromInterface webServiceFromInterface) {
     target = webServiceFromInterface;
   }
 

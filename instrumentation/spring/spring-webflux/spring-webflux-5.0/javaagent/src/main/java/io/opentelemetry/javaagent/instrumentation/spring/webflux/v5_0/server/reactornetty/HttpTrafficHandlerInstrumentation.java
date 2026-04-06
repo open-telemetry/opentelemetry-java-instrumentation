@@ -20,7 +20,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 // used since reactor-netty-0.8
-public class HttpTrafficHandlerInstrumentation implements TypeInstrumentation {
+class HttpTrafficHandlerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("reactor.netty.http.server.HttpTrafficHandler");
@@ -29,8 +29,7 @@ public class HttpTrafficHandlerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("run").and(takesNoArguments()),
-        HttpTrafficHandlerInstrumentation.class.getName() + "$RunAdvice");
+        named("run").and(takesNoArguments()), getClass().getName() + "$RunAdvice");
   }
 
   @SuppressWarnings("unused")

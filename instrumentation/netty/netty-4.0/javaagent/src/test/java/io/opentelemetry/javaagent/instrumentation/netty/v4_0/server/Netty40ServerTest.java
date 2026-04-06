@@ -13,6 +13,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD_FROM_REQUEST_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
@@ -31,8 +32,10 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
@@ -78,6 +81,7 @@ class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
                     pipeline.addFirst("logger", LOGGING_HANDLER);
                     pipeline.addLast(new HttpRequestDecoder());
                     pipeline.addLast(new HttpResponseEncoder());
+                    pipeline.addLast(new HttpObjectAggregator(65536));
                     pipeline.addLast(
                         new SimpleChannelInboundHandler<Object>() {
 
@@ -115,6 +119,18 @@ class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
                                                     .parameters()
                                                     .get(it)
                                                     .get(0));
+                                        response =
+                                            new DefaultFullHttpResponse(
+                                                HTTP_1_1,
+                                                HttpResponseStatus.valueOf(endpoint.getStatus()),
+                                                content);
+                                      } else if (endpoint.equals(INDEXED_CHILD_FROM_REQUEST_BODY)) {
+                                        String body =
+                                            ((FullHttpRequest) request)
+                                                .content()
+                                                .toString(CharsetUtil.UTF_8);
+                                        content = Unpooled.copiedBuffer(body, CharsetUtil.UTF_8);
+                                        bodyConsumer(endpoint, body);
                                         response =
                                             new DefaultFullHttpResponse(
                                                 HTTP_1_1,
@@ -220,5 +236,6 @@ class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
 
     options.setExpectedException(new IllegalArgumentException(EXCEPTION.getBody()));
     options.setHasResponseCustomizer(serverEndpoint -> true);
+    options.setTestHttpBodyPipelining(true);
   }
 }

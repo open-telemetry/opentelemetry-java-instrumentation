@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.client;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -18,7 +17,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.web.reactive.function.client.WebClient;
 
-public class WebClientBuilderInstrumentation implements TypeInstrumentation {
+class WebClientBuilderInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("org.springframework.web.reactive.function.client.WebClient");
@@ -33,7 +32,7 @@ public class WebClientBuilderInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(named("build")), this.getClass().getName() + "$BuildAdvice");
+        isPublic().and(named("build")), getClass().getName() + "$BuildAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -25,7 +25,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class LettuceClientInstrumentation implements TypeInstrumentation {
+class LettuceClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -40,7 +40,7 @@ public class LettuceClientInstrumentation implements TypeInstrumentation {
             .and(nameStartsWith("connect"))
             .and(nameEndsWith("Async"))
             .and(takesArgument(1, named("io.lettuce.core.RedisURI"))),
-        this.getClass().getName() + "$ConnectAdvice");
+        getClass().getName() + "$ConnectAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -47,17 +47,14 @@ public abstract class AbstractRestClientInstrumentationAutoConfigurationTest {
                   .getBean(RestClient.class)
                   .mutate()
                   .requestInterceptors(
-                      interceptors -> {
-                        long count =
-                            interceptors.stream()
-                                .filter(
-                                    rti ->
-                                        rti.getClass()
-                                            .getName()
-                                            .startsWith("io.opentelemetry.instrumentation"))
-                                .count();
-                        assertThat(count).isEqualTo(1);
-                      });
+                      interceptors ->
+                          assertThat(interceptors)
+                              .filteredOn(
+                                  rti ->
+                                      rti.getClass()
+                                          .getName()
+                                          .startsWith("io.opentelemetry.instrumentation"))
+                              .hasSize(1));
             });
   }
 

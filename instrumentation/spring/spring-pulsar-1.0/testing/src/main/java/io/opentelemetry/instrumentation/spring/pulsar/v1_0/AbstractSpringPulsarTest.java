@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.pulsar.v1_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -17,8 +18,8 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -51,16 +52,16 @@ public abstract class AbstractSpringPulsarTest {
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  static final String EXPERIMENTAL_FLAG =
-      "otel.instrumentation.pulsar.experimental-span-attributes";
-  static final DockerImageName DEFAULT_IMAGE_NAME =
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
+      Boolean.getBoolean("otel.instrumentation.pulsar.experimental-span-attributes");
+  private static final DockerImageName DEFAULT_IMAGE_NAME =
       DockerImageName.parse("apachepulsar/pulsar:4.0.2");
-  static PulsarContainer pulsarContainer;
-  static ConfigurableApplicationContext applicationContext;
-  static PulsarTemplate<String> pulsarTemplate;
-  static PulsarClient client;
-  static CountDownLatch latch = new CountDownLatch(1);
-  static final String OTEL_SUBSCRIPTION = "otel-subscription";
+  private static PulsarContainer pulsarContainer;
+  private static ConfigurableApplicationContext applicationContext;
+  private static PulsarTemplate<String> pulsarTemplate;
+  private static PulsarClient client;
+  private static CountDownLatch latch;
+  private static final String OTEL_SUBSCRIPTION = "otel-subscription";
   protected static String brokerHost;
   protected static int brokerPort;
   protected static final String OTEL_TOPIC = "persistent://public/default/otel-topic";
@@ -68,6 +69,7 @@ public abstract class AbstractSpringPulsarTest {
   @BeforeAll
   @SuppressWarnings("unchecked")
   static void setUp() throws PulsarClientException {
+    latch = new CountDownLatch(1);
     pulsarContainer =
         new PulsarContainer(DEFAULT_IMAGE_NAME)
             .withEnv("PULSAR_MEM", "-Xmx128m")
@@ -95,24 +97,27 @@ public abstract class AbstractSpringPulsarTest {
         () -> {
           pulsarTemplate.send(OTEL_TOPIC, "test");
         });
-    latch.await(10, SECONDS);
+    assertThat(latch.await(10, SECONDS)).isTrue();
     assertSpringPulsar();
   }
 
   @AfterAll
-  static void teardown() {
+  static void teardown() throws PulsarClientException {
     if (applicationContext != null) {
       applicationContext.close();
     }
-    if (pulsarContainer != null) {
-      pulsarContainer.stop();
+    try {
+      if (client != null) {
+        client.close();
+      }
+    } finally {
+      if (pulsarContainer != null) {
+        pulsarContainer.stop();
+      }
     }
   }
 
   protected abstract void assertSpringPulsar();
-
-  static final AttributeKey<String> MESSAGE_TYPE =
-      AttributeKey.stringKey("messaging.pulsar.message.type");
 
   protected List<AttributeAssertion> publishAttributes() {
     return asList(
@@ -123,14 +128,11 @@ public abstract class AbstractSpringPulsarTest {
         satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotEmpty),
         equalTo(SERVER_ADDRESS, brokerHost),
         equalTo(SERVER_PORT, brokerPort),
-        equalTo(MESSAGE_TYPE, experimental("normal")));
+        equalTo(stringKey("messaging.pulsar.message.type"), experimental("normal")));
   }
 
-  protected static String experimental(String value) {
-    if (!Boolean.getBoolean(EXPERIMENTAL_FLAG)) {
-      return null;
-    }
-    return value;
+  private static <T> T experimental(T value) {
+    return EXPERIMENTAL_ATTRIBUTES ? value : null;
   }
 
   protected List<AttributeAssertion> processAttributes() {

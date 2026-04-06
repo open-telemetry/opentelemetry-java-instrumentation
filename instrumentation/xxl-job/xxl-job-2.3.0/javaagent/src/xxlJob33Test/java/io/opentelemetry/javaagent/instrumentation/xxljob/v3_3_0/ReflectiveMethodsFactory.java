@@ -34,29 +34,22 @@ class ReflectiveMethodsFactory {
   }
 
   static Method getMethod() {
-    try {
-      return SINGLETON_OBJECT.getClass().getMethod("echo", String.class);
-    } catch (Throwable t) {
-      // Ignore
-    }
-    return null;
+    return getRequiredMethod("echo", String.class);
   }
 
   static Method getInitMethod() {
-    try {
-      return SINGLETON_OBJECT.getClass().getMethod("initMethod");
-    } catch (Throwable t) {
-      // Ignore
-    }
-    return null;
+    return getRequiredMethod("initMethod");
   }
 
   static Method getDestroyMethod() {
+    return getRequiredMethod("destroyMethod");
+  }
+
+  private static Method getRequiredMethod(String name, Class<?>... parameterTypes) {
     try {
-      return SINGLETON_OBJECT.getClass().getMethod("destroyMethod");
-    } catch (Throwable t) {
-      // Ignore
+      return SINGLETON_OBJECT.getClass().getMethod(name, parameterTypes);
+    } catch (ReflectiveOperationException exception) {
+      throw new IllegalStateException("Failed to resolve reflective method: " + name, exception);
     }
-    return null;
   }
 }

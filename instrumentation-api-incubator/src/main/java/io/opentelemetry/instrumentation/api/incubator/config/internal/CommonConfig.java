@@ -31,8 +31,6 @@ public final class CommonConfig {
   private final List<String> serverResponseHeaders;
   private final Set<String> knownHttpRequestMethods;
   private final EnduserConfig enduserConfig;
-  private final boolean querySanitizationEnabled;
-  private final boolean sqlCommenterEnabled;
   private final boolean emitExperimentalHttpClientTelemetry;
   private final boolean emitExperimentalHttpServerTelemetry;
   private final Set<String> sensitiveQueryParameters;
@@ -73,10 +71,6 @@ public final class CommonConfig {
                 .get("http")
                 .getScalarList(
                     "known_methods", String.class, new ArrayList<>(HttpConstants.KNOWN_METHODS)));
-    querySanitizationEnabled =
-        commonConfig.get("database").get("statement_sanitizer").getBoolean("enabled", true);
-    sqlCommenterEnabled =
-        commonConfig.get("database").get("sqlcommenter/development").getBoolean("enabled", false);
     emitExperimentalHttpClientTelemetry =
         commonConfig
             .get("http")
@@ -141,14 +135,6 @@ public final class CommonConfig {
 
   public EnduserConfig getEnduserConfig() {
     return enduserConfig;
-  }
-
-  public boolean isQuerySanitizationEnabled() {
-    return querySanitizationEnabled;
-  }
-
-  public boolean isSqlCommenterEnabled() {
-    return sqlCommenterEnabled;
   }
 
   public boolean shouldEmitExperimentalHttpClientTelemetry() {

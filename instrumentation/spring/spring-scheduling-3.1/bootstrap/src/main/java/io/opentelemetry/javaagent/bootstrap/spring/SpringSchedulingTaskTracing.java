@@ -17,7 +17,7 @@ public final class SpringSchedulingTaskTracing {
     return previous;
   }
 
-  public static boolean wrappingEnabled() {
+  public static boolean isWrappingEnabled() {
     return wrappingEnabled.get();
   }
 }

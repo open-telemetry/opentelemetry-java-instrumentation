@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.gateway.webmvc.v5_0;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -19,7 +18,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.web.servlet.function.ServerRequest;
 
-public class GatewayDelegatingRouterFunctionInstrumentation implements TypeInstrumentation {
+class GatewayDelegatingRouterFunctionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -30,12 +29,11 @@ public class GatewayDelegatingRouterFunctionInstrumentation implements TypeInstr
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("route"))
             .and(takesArgument(0, named("org.springframework.web.servlet.function.ServerRequest")))
             .and(takesArguments(1)),
-        this.getClass().getName() + "$RouteAdvice");
+        getClass().getName() + "$RouteAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -28,7 +28,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
+class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -45,7 +45,7 @@ public class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("serve")
             .and(takesArguments(1).and(takesArgument(0, named("io.activej.http.HttpRequest")))),
-        this.getClass().getName() + "$ServeAdvice");
+        getClass().getName() + "$ServeAdvice");
   }
 
   @SuppressWarnings("unused")

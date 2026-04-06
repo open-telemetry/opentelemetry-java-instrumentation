@@ -327,7 +327,7 @@ public class AgentClassLoader extends URLClassLoader {
   @Override
   public URL getResource(String resourceName) {
     URL bootstrapResource = bootstrapProxy.getResource(resourceName);
-    if (null == bootstrapResource) {
+    if (bootstrapResource == null) {
       return super.getResource(resourceName);
     } else {
       return bootstrapResource;

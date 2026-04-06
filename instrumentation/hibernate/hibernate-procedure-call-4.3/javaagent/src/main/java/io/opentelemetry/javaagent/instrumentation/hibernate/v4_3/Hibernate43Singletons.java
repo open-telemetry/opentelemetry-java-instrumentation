@@ -21,7 +21,6 @@ public final class Hibernate43Singletons {
 
   public static final VirtualField<ProcedureCall, SessionInfo> PROCEDURE_CALL_SESSION_INFO =
       VirtualField.find(ProcedureCall.class, SessionInfo.class);
-
   public static final VirtualField<SharedSessionContract, SessionInfo>
       SHARED_SESSION_CONTRACT_SESSION_INFO =
           VirtualField.find(SharedSessionContract.class, SessionInfo.class);

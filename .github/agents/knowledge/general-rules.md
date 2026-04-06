@@ -15,6 +15,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | --- | --- | --- | --- |
 | General | Logic, correctness, reliability, safety, copy/paste mistakes, incorrect comments | Always | — |
 | Style | Style guide | Always | — |
+| Style | Uppercase field names should reflect semantic constants or immutable value constants such as `Duration` timeouts/intervals, not simply `static final` | Always | — |
 | Naming | Getter naming (`get` / `is`) | Always | — |
 | Naming | Module/package naming | New or renamed modules/packages | `module-naming.md` |
 | Javaagent | Advice patterns | `@Advice` classes | `javaagent-advice-patterns.md` |
@@ -30,6 +31,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Build | Gradle conventions, muzzle, test tasks, plugins | `build.gradle.kts`, `settings.gradle.kts` | `gradle-conventions.md` |
 | Build | `testcontainersBuildService` declaration | Testcontainers dependency without `usesService` | `gradle-conventions.md` |
 | Style | Prefer instance creation over singletons for stateless interface impls (except on hot paths or Kotlin `object` declarations) | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`, enum/static singletons | — |
+| Style | Prefer `value == null` / `value != null` over `null == value` / `null != value` | Null comparisons | — |
 | Style | No unnecessary explicit type witnesses on generic method calls (`Collections.<String>emptyList()`) | Java generic method calls with explicit type parameters | — |
 | Style | Remove redundant null guards on attribute puts | `AttributesBuilder.put`, `onStart`, `onEnd`, attribute extraction methods | — |
 | General | No redundant `ByteBuffer.duplicate()` on `Value.getValue()` | `Value.getValue()` with `BYTES` type, `ByteBuffer` handling | — |
@@ -70,6 +72,15 @@ Do not flag the following patterns (common false positives):
   The project disables javac's `-Xlint:deprecation` globally and uses a custom Error Prone
   check (`OtelDeprecatedApiUsage`) instead. Only add the annotation when it is actually
   required to fix an Error Prone error — not speculatively.
+- Preserve concise explanatory comments attached to existing `@SuppressWarnings` annotations
+  when they explain why the suppression exists (for example `// using deprecated semconv`
+  or `// using deprecated config property`). This repository has established precedent for
+  such comments, and test code disables Error Prone's `SuppressWarningsWithoutExplanation`
+  check only because enforcing it everywhere causes too many failures, not because these
+  comments are undesirable.
+- When normalizing or moving an existing `@SuppressWarnings`, keep any accurate explanatory
+  comment with it. Remove the comment only if it is incorrect, obsolete, or contradicted by
+  the code after your change.
 
 ## [Naming] Getter Naming
 
@@ -174,6 +185,9 @@ Use `@Nullable` annotations accurately throughout the codebase:
   explicitly, or left uninitialized). If the field is always non-null after the
   constructor completes, do not annotate it.
 - **Parameters**: annotate `@Nullable` if and only if `null` is actually passed by callers.
+  When justifying `@Nullable` on a parameter, cite the concrete caller behavior or
+  upstream contract that allows `null`; do **not** justify it merely because the method
+  guards against null.
 - **Return types**: annotate `@Nullable` if and only if the method actually returns `null`.
   Even when an interface or superclass declares a return type as `@Nullable`, do **not** add
   `@Nullable` to the overriding method if the implementation never returns `null`. The

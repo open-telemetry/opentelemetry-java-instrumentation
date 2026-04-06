@@ -20,7 +20,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
+class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -29,11 +29,10 @@ public class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isConstructor(), this.getClass().getName() + "$SaveContextAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$SaveContextAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("complete", "completeExceptionally", "cancel"),
-        this.getClass().getName() + "$RestoreContextAdvice");
+        getClass().getName() + "$RestoreContextAdvice");
   }
 
   @SuppressWarnings("unused")

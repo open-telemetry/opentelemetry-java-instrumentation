@@ -106,6 +106,10 @@ public class JfrConfig {
     return this;
   }
 
+  public boolean isJfrAvailable() {
+    return JfrRuntimeMetrics.isJfrAvailable();
+  }
+
   /**
    * Build JFR telemetry based on the current configuration.
    *

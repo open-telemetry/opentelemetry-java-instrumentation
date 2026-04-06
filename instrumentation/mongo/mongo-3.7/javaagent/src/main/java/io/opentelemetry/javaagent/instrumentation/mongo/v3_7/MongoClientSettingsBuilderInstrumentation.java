@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.mongo.v3_7;
 
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -37,8 +36,8 @@ final class MongoClientSettingsBuilderInstrumentation implements TypeInstrumenta
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(named("build")).and(takesArguments(0)),
-        this.getClass().getName() + "$AddCommandListenerAdvice");
+        isPublic().and(named("build")).and(takesArguments(0)),
+        getClass().getName() + "$AddCommandListenerAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -53,7 +52,7 @@ final class MongoClientSettingsBuilderInstrumentation implements TypeInstrumenta
           return;
         }
       }
-      builder.addCommandListener(MongoInstrumentationSingletons.LISTENER);
+      builder.addCommandListener(MongoInstrumentationSingletons.getListener());
     }
   }
 }

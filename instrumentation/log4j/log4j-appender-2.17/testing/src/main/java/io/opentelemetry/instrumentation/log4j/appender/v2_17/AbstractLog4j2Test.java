@@ -126,7 +126,7 @@ public abstract class AbstractLog4j2Test {
                           equalTo(EXCEPTION_MESSAGE, "hello"),
                           satisfies(
                               EXCEPTION_STACKTRACE,
-                              v -> v.contains(AbstractLog4j2Test.class.getName()))));
+                              val -> val.contains(AbstractLog4j2Test.class.getName()))));
                 }
                 logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
 
@@ -331,12 +331,12 @@ public abstract class AbstractLog4j2Test {
   }
 
   @FunctionalInterface
-  public interface OneArgLoggerMethod {
+  private interface OneArgLoggerMethod {
     void call(Logger logger, String msg, Object arg);
   }
 
   @FunctionalInterface
-  public interface TwoArgLoggerMethod {
+  private interface TwoArgLoggerMethod {
     void call(Logger logger, String msg, Object arg1, Object arg2);
   }
 }

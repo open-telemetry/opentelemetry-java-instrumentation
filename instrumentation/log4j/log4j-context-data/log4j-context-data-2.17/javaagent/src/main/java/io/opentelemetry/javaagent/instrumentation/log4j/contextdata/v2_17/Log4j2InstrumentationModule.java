@@ -57,7 +57,7 @@ public class Log4j2InstrumentationModule extends InstrumentationModule
   }
 
   // A type instrumentation is needed to trigger resource injection.
-  public static class ResourceInjectingTypeInstrumentation implements TypeInstrumentation {
+  private static class ResourceInjectingTypeInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return named("org.apache.logging.log4j.core.util.ContextDataProvider");

@@ -25,7 +25,7 @@ class VertxSingleConnection implements SingleConnection {
   private final String host;
   private final int port;
 
-  public VertxSingleConnection(String host, int port) {
+  VertxSingleConnection(String host, int port) {
     this.host = host;
     this.port = port;
     HttpClientOptions clientOptions =

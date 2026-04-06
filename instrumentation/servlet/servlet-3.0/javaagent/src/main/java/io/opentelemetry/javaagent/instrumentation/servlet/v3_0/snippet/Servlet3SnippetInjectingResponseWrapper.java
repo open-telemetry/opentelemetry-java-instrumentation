@@ -50,7 +50,7 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
 
   private long contentLength = UNSET;
 
-  private SnippetInjectingPrintWriter snippetInjectingPrintWriter = null;
+  @Nullable private SnippetInjectingPrintWriter snippetInjectingPrintWriter = null;
 
   public Servlet3SnippetInjectingResponseWrapper(HttpServletResponse response, String snippet) {
     super(response);
@@ -127,7 +127,7 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
           .findSpecial(
               HttpServletResponseWrapper.class,
               "setContentLengthLong",
-              MethodType.methodType(void.class),
+              MethodType.methodType(void.class, long.class),
               SnippetInjectingResponseWrapper.class);
     } catch (NoSuchMethodException | IllegalAccessException e) {
       return null;

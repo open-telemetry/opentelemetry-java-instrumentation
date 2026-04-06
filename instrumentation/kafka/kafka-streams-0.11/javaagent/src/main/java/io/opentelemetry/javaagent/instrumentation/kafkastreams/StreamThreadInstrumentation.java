@@ -14,7 +14,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class StreamThreadInstrumentation implements TypeInstrumentation {
+class StreamThreadInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -23,7 +23,7 @@ public class StreamThreadInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("runLoop"), this.getClass().getName() + "$RunLoopAdvice");
+    transformer.applyAdviceToMethod(named("runLoop"), getClass().getName() + "$RunLoopAdvice");
   }
 
   // this advice suppresses the CONSUMER spans created by the kafka-clients instrumentation

@@ -19,7 +19,7 @@ public final class LibertySingletons {
 
   private static final Instrumenter<
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
-      INSTRUMENTER =
+      instrumenter =
           AgentServletInstrumenterBuilder.<HttpServletRequest, HttpServletResponse>create()
               .addContextCustomizer(
                   (context, request, attributes) ->
@@ -27,11 +27,11 @@ public final class LibertySingletons {
               .propagateOperationListenersToOnEnd()
               .build(INSTRUMENTATION_NAME, Servlet3Accessor.INSTANCE);
 
-  private static final LibertyHelper<HttpServletRequest, HttpServletResponse> HELPER =
-      new LibertyHelper<>(INSTRUMENTER, Servlet3Accessor.INSTANCE);
+  private static final LibertyHelper<HttpServletRequest, HttpServletResponse> helper =
+      new LibertyHelper<>(instrumenter, Servlet3Accessor.INSTANCE);
 
   public static LibertyHelper<HttpServletRequest, HttpServletResponse> helper() {
-    return HELPER;
+    return helper;
   }
 
   private LibertySingletons() {}

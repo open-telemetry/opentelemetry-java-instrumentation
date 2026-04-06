@@ -8,16 +8,18 @@ package io.opentelemetry.javaagent.instrumentation.geode;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQueryAnalyzer;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 
 final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeRequest, Void> {
 
   private static final SqlQueryAnalyzer analyzer =
-      SqlQueryAnalyzer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
+      SqlQueryAnalyzer.create(
+          DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "geode"));
 
   @Override
   public String getDbSystemName(GeodeRequest request) {

@@ -25,7 +25,7 @@ import org.restlet.data.Request;
 import org.restlet.data.Response;
 import org.restlet.data.Status;
 
-public class ServerInstrumentation implements TypeInstrumentation {
+class ServerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.restlet.Server");
@@ -37,7 +37,7 @@ public class ServerInstrumentation implements TypeInstrumentation {
         named("handle")
             .and(takesArgument(0, named("org.restlet.data.Request")))
             .and(takesArgument(1, named("org.restlet.data.Response"))),
-        this.getClass().getName() + "$ServerHandleAdvice");
+        getClass().getName() + "$ServerHandleAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -34,7 +34,6 @@ testing {
     val reactiveTest by registering(JvmTestSuite::class) {
       dependencies {
         implementation("org.springframework.data:spring-data-r2dbc:3.0.0")
-        implementation("org.testcontainers:testcontainers")
         implementation("io.r2dbc:r2dbc-h2:1.0.0.RELEASE")
         implementation("com.h2database:h2:1.4.197")
       }
@@ -47,7 +46,6 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   }
 
   val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->

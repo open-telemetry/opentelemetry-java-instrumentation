@@ -30,20 +30,18 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
   usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  systemProperty("testLatestDeps", otelProps.testLatestDeps)
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
-
 // spring 6 (which spring-kafka 3.+ uses) requires java 17
-if (latestDepTest) {
+if (otelProps.testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_17)
   }
 }
 
 // spring 6 uses slf4j 2.0
-if (!latestDepTest) {
+if (!otelProps.testLatestDeps) {
   configurations.testRuntimeClasspath {
     resolutionStrategy {
       // requires old logback (and therefore also old slf4j)

@@ -18,7 +18,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
 
-public class FilterChainContextInstrumentation implements TypeInstrumentation {
+class FilterChainContextInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.glassfish.grizzly.filterchain.FilterChainContext");
@@ -27,10 +27,8 @@ public class FilterChainContextInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("resume").and(takesArguments(0)),
-        FilterChainContextInstrumentation.class.getName() + "$ResumeAdvice");
-    transformer.applyAdviceToMethod(
-        named("write"), FilterChainContextInstrumentation.class.getName() + "$WriteAdvice");
+        named("resume").and(takesArguments(0)), getClass().getName() + "$ResumeAdvice");
+    transformer.applyAdviceToMethod(named("write"), getClass().getName() + "$WriteAdvice");
   }
 
   @SuppressWarnings("unused")

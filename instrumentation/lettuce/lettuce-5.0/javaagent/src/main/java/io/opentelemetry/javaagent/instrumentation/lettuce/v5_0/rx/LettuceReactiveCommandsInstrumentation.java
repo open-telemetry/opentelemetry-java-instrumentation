@@ -38,14 +38,14 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
         named("createMono")
             .and(takesArgument(0, Supplier.class))
             .and(returns(named("reactor.core.publisher.Mono"))),
-        this.getClass().getName() + "$CreateMonoAdvice");
+        getClass().getName() + "$CreateMonoAdvice");
     transformer.applyAdviceToMethod(
         nameStartsWith("create")
             .and(nameEndsWith("Flux"))
             .and(isPublic())
             .and(takesArgument(0, Supplier.class))
             .and(returns(named("reactor.core.publisher.Flux"))),
-        this.getClass().getName() + "$CreateFluxAdvice");
+        getClass().getName() + "$CreateFluxAdvice");
   }
 
   @SuppressWarnings("unused")

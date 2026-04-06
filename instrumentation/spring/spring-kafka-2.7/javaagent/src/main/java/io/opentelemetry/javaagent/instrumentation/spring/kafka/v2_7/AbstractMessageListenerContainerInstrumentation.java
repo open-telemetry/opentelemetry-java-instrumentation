@@ -18,7 +18,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.kafka.listener.RecordInterceptor;
 
-public class AbstractMessageListenerContainerInstrumentation implements TypeInstrumentation {
+class AbstractMessageListenerContainerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -36,7 +36,7 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
         named("getRecordInterceptor")
             .and(takesArguments(0))
             .and(returns(named("org.springframework.kafka.listener.RecordInterceptor"))),
-        this.getClass().getName() + "$GetRecordInterceptorAdvice");
+        getClass().getName() + "$GetRecordInterceptorAdvice");
   }
 
   @SuppressWarnings("unused")

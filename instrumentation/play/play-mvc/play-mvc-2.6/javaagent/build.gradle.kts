@@ -60,9 +60,8 @@ testing {
   }
 }
 
-val testLatestDeps = findProperty("testLatestDeps") as Boolean
 tasks {
-  if (testLatestDeps) {
+  if (otelProps.testLatestDeps) {
     // disable regular test running and compiling tasks when latest dep test task is run
     named("test") {
       enabled = false
@@ -82,6 +81,6 @@ configurations.configureEach {
   exclude("org.eclipse.jetty.websocket", "websocket-client")
 }
 tasks.withType<Test>().configureEach {
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  systemProperty("collectMetadata", otelProps.collectMetadata)
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

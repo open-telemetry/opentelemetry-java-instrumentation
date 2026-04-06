@@ -14,7 +14,7 @@ class RxJava2SubscriptionTest extends AbstractRxJava2SubscriptionTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  static TracingAssembly tracingAssembly = TracingAssembly.create();
+  static final TracingAssembly tracingAssembly = TracingAssembly.create();
 
   @Override
   protected InstrumentationExtension testing() {
@@ -22,7 +22,7 @@ class RxJava2SubscriptionTest extends AbstractRxJava2SubscriptionTest {
   }
 
   @BeforeAll
-  public static void setup() {
+  static void setup() {
     tracingAssembly.enable();
   }
 }

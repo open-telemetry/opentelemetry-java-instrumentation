@@ -6,26 +6,28 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Objects.requireNonNull;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class TestUtil {
+final class TestUtil {
 
-  protected static byte[] readFileAsBytes(String resourceName) throws IOException {
-    InputStream in =
-        SnippetPrintWriterTest.class.getClassLoader().getResourceAsStream(resourceName);
-    ByteArrayOutputStream result = new ByteArrayOutputStream();
-    byte[] buffer = new byte[1024];
-    int length;
-    while ((length = in.read(buffer)) != -1) {
-      result.write(buffer, 0, length);
+  static byte[] readFileAsBytes(String resourceName) throws IOException {
+    try (InputStream in =
+        requireNonNull(TestUtil.class.getClassLoader().getResourceAsStream(resourceName))) {
+      ByteArrayOutputStream result = new ByteArrayOutputStream();
+      byte[] buffer = new byte[1024];
+      int length;
+      while ((length = in.read(buffer)) != -1) {
+        result.write(buffer, 0, length);
+      }
+      return result.toByteArray();
     }
-    return result.toByteArray();
   }
 
-  protected static String readFileAsString(String resourceName) throws IOException {
+  static String readFileAsString(String resourceName) throws IOException {
     return new String(readFileAsBytes(resourceName), UTF_8);
   }
 

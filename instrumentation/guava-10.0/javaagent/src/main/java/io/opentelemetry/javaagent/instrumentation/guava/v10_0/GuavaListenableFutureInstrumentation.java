@@ -21,7 +21,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class GuavaListenableFutureInstrumentation implements TypeInstrumentation {
+class GuavaListenableFutureInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.google.common.util.concurrent.AbstractFuture");
@@ -30,10 +30,10 @@ public class GuavaListenableFutureInstrumentation implements TypeInstrumentation
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor(), this.getClass().getName() + "$AbstractFutureAdvice");
+        isConstructor(), getClass().getName() + "$AbstractFutureAdvice");
     transformer.applyAdviceToMethod(
         named("addListener").and(takesArguments(Runnable.class, Executor.class)),
-        this.getClass().getName() + "$AddListenerAdvice");
+        getClass().getName() + "$AddListenerAdvice");
   }
 
   @SuppressWarnings("unused")

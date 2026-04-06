@@ -19,7 +19,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class RedisCommandDataInstrumentation implements TypeInstrumentation {
+class RedisCommandDataInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -31,7 +31,7 @@ public class RedisCommandDataInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(0, CompletableFuture.class)),
-        this.getClass().getName() + "$WrapCompletableFutureAdvice");
+        getClass().getName() + "$WrapCompletableFutureAdvice");
   }
 
   @SuppressWarnings("unused")

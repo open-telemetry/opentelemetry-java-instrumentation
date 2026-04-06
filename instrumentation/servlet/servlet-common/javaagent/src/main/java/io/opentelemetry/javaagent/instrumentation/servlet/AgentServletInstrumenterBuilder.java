@@ -33,12 +33,12 @@ public final class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
           .getBoolean("experimental_span_attributes/development", false);
 
-  private AgentServletInstrumenterBuilder() {}
-
   private final List<ContextCustomizer<? super ServletRequestContext<REQUEST>>> contextCustomizers =
       new ArrayList<>();
 
   private boolean propagateOperationListenersToOnEnd;
+
+  private AgentServletInstrumenterBuilder() {}
 
   public static <REQUEST, RESPONSE> AgentServletInstrumenterBuilder<REQUEST, RESPONSE> create() {
     return new AgentServletInstrumenterBuilder<>();

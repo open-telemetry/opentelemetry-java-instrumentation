@@ -21,7 +21,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
+class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -58,6 +58,7 @@ public class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation 
     }
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Nullable
     public static AdviceScope onEnter(@Advice.Argument(0) RedisCommand<?, ?, ?> command) {
 
       Context parentContext = currentContext();

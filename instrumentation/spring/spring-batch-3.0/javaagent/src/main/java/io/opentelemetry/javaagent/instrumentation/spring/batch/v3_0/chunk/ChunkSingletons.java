@@ -21,7 +21,7 @@ import org.springframework.batch.core.step.builder.SimpleStepBuilder;
 
 public class ChunkSingletons {
 
-  private static final Instrumenter<ChunkContextAndBuilder, Void> INSTRUMENTER;
+  private static final Instrumenter<ChunkContextAndBuilder, Void> instrumenter;
 
   static {
     InstrumenterBuilder<ChunkContextAndBuilder, Void> instrumenterBuilder =
@@ -32,11 +32,11 @@ public class ChunkSingletons {
       instrumenterBuilder.addSpanLinksExtractor(ChunkSingletons::extractSpanLinks);
     }
 
-    INSTRUMENTER = instrumenterBuilder.buildInstrumenter();
+    instrumenter = instrumenterBuilder.buildInstrumenter();
   }
 
   public static Instrumenter<ChunkContextAndBuilder, Void> chunkInstrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private static void extractSpanLinks(

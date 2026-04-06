@@ -23,7 +23,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import rx.Observable;
 
-public class HystrixCommandInstrumentation implements TypeInstrumentation {
+class HystrixCommandInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed(
@@ -41,10 +41,10 @@ public class HystrixCommandInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("getExecutionObservable").and(returns(named("rx.Observable"))),
-        this.getClass().getName() + "$ExecuteAdvice");
+        getClass().getName() + "$ExecuteAdvice");
     transformer.applyAdviceToMethod(
         named("getFallbackObservable").and(returns(named("rx.Observable"))),
-        this.getClass().getName() + "$FallbackAdvice");
+        getClass().getName() + "$FallbackAdvice");
   }
 
   @SuppressWarnings("unused")

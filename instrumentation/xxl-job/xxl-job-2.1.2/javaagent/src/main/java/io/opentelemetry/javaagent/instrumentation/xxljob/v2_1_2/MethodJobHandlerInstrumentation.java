@@ -20,7 +20,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class MethodJobHandlerInstrumentation implements TypeInstrumentation {
+class MethodJobHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -30,8 +30,7 @@ public class MethodJobHandlerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("execute").and(isPublic()),
-        MethodJobHandlerInstrumentation.class.getName() + "$ScheduleAdvice");
+        named("execute").and(isPublic()), getClass().getName() + "$ScheduleAdvice");
   }
 
   @SuppressWarnings("unused")

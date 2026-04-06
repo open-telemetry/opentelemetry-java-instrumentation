@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -32,12 +31,7 @@ public class DubboInstrumentationModule extends InstrumentationModule
   public void registerHelperResources(HelperResourceBuilder helperResourceBuilder) {
     helperResourceBuilder.register(
         "META-INF/services/org.apache.dubbo.rpc.Filter",
-        "apache-dubbo-2.7/META-INF/org.apache.dubbo.rpc.Filter");
-  }
-
-  @Override
-  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("org.apache.dubbo.rpc.Filter");
+        "apache-dubbo-2.7/META-INF/services/org.apache.dubbo.rpc.Filter");
   }
 
   @Override
@@ -58,7 +52,7 @@ public class DubboInstrumentationModule extends InstrumentationModule
   }
 
   // A type instrumentation is needed to trigger resource injection.
-  public static class ResourceInjectingTypeInstrumentation implements TypeInstrumentation {
+  static class ResourceInjectingTypeInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return named("org.apache.dubbo.common.extension.ExtensionLoader");

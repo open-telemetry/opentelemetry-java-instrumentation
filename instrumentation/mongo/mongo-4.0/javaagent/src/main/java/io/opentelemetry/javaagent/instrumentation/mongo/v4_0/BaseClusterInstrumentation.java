@@ -33,14 +33,14 @@ final class BaseClusterInstrumentation implements TypeInstrumentation {
             .and(named("selectServerAsync"))
             .and(takesArgument(0, named("com.mongodb.selector.ServerSelector")))
             .and(takesArgument(1, named("com.mongodb.internal.async.SingleResultCallback"))),
-        this.getClass().getName() + "$SingleResultCallbackArg1Advice");
+        getClass().getName() + "$SingleResultCallbackArg1Advice");
 
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("selectServerAsync"))
             .and(takesArgument(0, named("com.mongodb.selector.ServerSelector")))
             .and(takesArgument(2, named("com.mongodb.internal.async.SingleResultCallback"))),
-        this.getClass().getName() + "$SingleResultCallbackArg2Advice");
+        getClass().getName() + "$SingleResultCallbackArg2Advice");
   }
 
   @SuppressWarnings("unused")

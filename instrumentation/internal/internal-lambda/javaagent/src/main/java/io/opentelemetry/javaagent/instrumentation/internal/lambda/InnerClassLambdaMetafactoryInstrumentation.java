@@ -28,7 +28,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-public class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumentation {
+class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

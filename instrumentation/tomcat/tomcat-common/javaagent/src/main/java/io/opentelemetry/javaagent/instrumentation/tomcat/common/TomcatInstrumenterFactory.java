@@ -23,7 +23,7 @@ public final class TomcatInstrumenterFactory {
     return JavaagentHttpServerInstrumenters.create(
         instrumentationName,
         new TomcatHttpAttributesGetter(),
-        TomcatRequestGetter.INSTANCE,
+        new TomcatRequestGetter(),
         builder ->
             InstrumenterUtil.propagateOperationListenersToOnEnd(
                 builder

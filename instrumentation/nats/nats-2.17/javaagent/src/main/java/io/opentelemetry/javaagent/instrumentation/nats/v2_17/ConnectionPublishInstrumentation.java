@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.nats.v2_17;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.nats.v2_17.NatsSingletons.PRODUCER_INSTRUMENTER;
+import static io.opentelemetry.javaagent.instrumentation.nats.v2_17.NatsSingletons.getProducerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -28,7 +28,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ConnectionPublishInstrumentation implements TypeInstrumentation {
+class ConnectionPublishInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -135,16 +135,16 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
       @Nullable
       public static AdviceScope start(NatsRequest natsRequest) {
         Context parentContext = Context.current();
-        if (!PRODUCER_INSTRUMENTER.shouldStart(parentContext, natsRequest)) {
+        if (!getProducerInstrumenter().shouldStart(parentContext, natsRequest)) {
           return null;
         }
-        Context context = PRODUCER_INSTRUMENTER.start(parentContext, natsRequest);
+        Context context = getProducerInstrumenter().start(parentContext, natsRequest);
         return new AdviceScope(natsRequest, context, context.makeCurrent());
       }
 
       public void end(@Nullable Throwable throwable) {
         scope.close();
-        PRODUCER_INSTRUMENTER.end(context, request, null, throwable);
+        getProducerInstrumenter().end(context, request, null, throwable);
       }
     }
 

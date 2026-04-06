@@ -39,7 +39,7 @@ class SimpleAsyncTaskExecutorInstrumentationTest {
   private static Method findMethod(String name, Class<?>... parameterTypes) {
     try {
       return SimpleAsyncTaskExecutor.class.getMethod(name, parameterTypes);
-    } catch (Exception e) {
+    } catch (NoSuchMethodException e) {
       return null;
     }
   }
@@ -103,7 +103,7 @@ class SimpleAsyncTaskExecutorInstrumentationTest {
     private final boolean startSpan;
     private final CountDownLatch latch = new CountDownLatch(1);
 
-    public AsyncTask(boolean startSpan) {
+    AsyncTask(boolean startSpan) {
       this.startSpan = startSpan;
     }
 

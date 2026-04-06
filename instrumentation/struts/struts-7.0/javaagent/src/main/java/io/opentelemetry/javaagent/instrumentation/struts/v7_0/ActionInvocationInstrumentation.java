@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteS
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.struts.v7_0.StrutsSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -24,7 +23,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.struts2.ActionInvocation;
 
-public class ActionInvocationInstrumentation implements TypeInstrumentation {
+class ActionInvocationInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -39,8 +38,8 @@ public class ActionInvocationInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(named("invokeActionOnly")),
-        this.getClass().getName() + "$InvokeActionOnlyAdvice");
+        isPublic().and(named("invokeActionOnly")),
+        getClass().getName() + "$InvokeActionOnlyAdvice");
   }
 
   @SuppressWarnings("unused")

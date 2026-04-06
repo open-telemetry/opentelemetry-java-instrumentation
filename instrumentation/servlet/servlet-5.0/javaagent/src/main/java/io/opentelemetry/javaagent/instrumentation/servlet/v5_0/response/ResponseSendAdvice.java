@@ -20,10 +20,10 @@ import net.bytebuddy.asm.Advice;
 public class ResponseSendAdvice {
 
   public static class AdviceScope {
-    private final ClassAndMethod classAndMethod;
     private final CallDepth callDepth;
-    private final Context context;
-    private final Scope scope;
+    @Nullable private final ClassAndMethod classAndMethod;
+    @Nullable private final Context context;
+    @Nullable private final Scope scope;
 
     public AdviceScope(CallDepth callDepth, Class<?> declaringClass, String methodName) {
       this.callDepth = callDepth;
@@ -64,7 +64,6 @@ public class ResponseSendAdvice {
     }
   }
 
-  @Nullable
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static AdviceScope start(
       @Advice.This Object response,

@@ -25,7 +25,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.web.server.ServerWebExchange;
 
-public class HandlerAdapterInstrumentation implements TypeInstrumentation {
+class HandlerAdapterInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -47,7 +47,7 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("org.springframework.web.server.ServerWebExchange")))
             .and(takesArgument(1, Object.class))
             .and(takesArguments(2)),
-        this.getClass().getName() + "$HandleAdvice");
+        getClass().getName() + "$HandleAdvice");
   }
 
   @SuppressWarnings("unused")

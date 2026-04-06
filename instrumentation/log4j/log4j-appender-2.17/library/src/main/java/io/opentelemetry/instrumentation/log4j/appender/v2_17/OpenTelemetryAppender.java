@@ -32,6 +32,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.ThreadContext;
@@ -72,6 +73,14 @@ public class OpenTelemetryAppender extends AbstractAppender {
    * the {@link LoggerContext}.
    */
   public static void install(OpenTelemetry openTelemetry) {
+    forEachAppender(appender -> appender.setOpenTelemetry(openTelemetry));
+  }
+
+  static void resetForTest() {
+    forEachAppender(OpenTelemetryAppender::resetAppenderForTest);
+  }
+
+  private static void forEachAppender(Consumer<OpenTelemetryAppender> consumer) {
     org.apache.logging.log4j.spi.LoggerContext loggerContextSpi = LogManager.getContext(false);
     if (!(loggerContextSpi instanceof LoggerContext)) {
       return;
@@ -84,7 +93,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
         .forEach(
             appender -> {
               if (appender instanceof OpenTelemetryAppender) {
-                ((OpenTelemetryAppender) appender).setOpenTelemetry(openTelemetry);
+                consumer.accept((OpenTelemetryAppender) appender);
               }
             });
   }
@@ -292,6 +301,18 @@ public class OpenTelemetryAppender extends AbstractAppender {
     // now emit
     for (LogEventToReplay eventToReplay : eventsToReplay) {
       emit(openTelemetry, eventToReplay);
+    }
+  }
+
+  private void resetAppenderForTest() {
+    Lock writeLock = lock.writeLock();
+    writeLock.lock();
+    try {
+      openTelemetry = null;
+      eventsToReplay.clear();
+      replayLimitWarningLogged.set(false);
+    } finally {
+      writeLock.unlock();
     }
   }
 

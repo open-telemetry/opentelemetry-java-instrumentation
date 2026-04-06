@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.vertx;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -21,7 +20,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class RouteInstrumentation implements TypeInstrumentation {
+class RouteInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("io.vertx.ext.web.Route");
@@ -35,8 +34,8 @@ public class RouteInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("handler")).and(takesArgument(0, named("io.vertx.core.Handler"))),
-        this.getClass().getName() + "$HandlerAdvice");
+        named("handler").and(takesArgument(0, named("io.vertx.core.Handler"))),
+        getClass().getName() + "$HandlerAdvice");
   }
 
   @SuppressWarnings("unused")

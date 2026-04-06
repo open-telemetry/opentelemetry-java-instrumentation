@@ -28,16 +28,14 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 }
 
 // Servlet 3.0 in latest Jetty versions requires Java 11
 // However, projects that depend on this module are still be using Java 8 in testLatestDeps mode
 // Therefore, we need a separate project for servlet 3.0 tests
-val latestDepTest = findProperty("testLatestDeps") as Boolean
-
-if (latestDepTest) {
+if (otelProps.testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }

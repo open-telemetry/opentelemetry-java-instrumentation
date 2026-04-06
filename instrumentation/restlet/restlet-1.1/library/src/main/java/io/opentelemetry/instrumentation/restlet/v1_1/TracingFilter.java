@@ -20,44 +20,33 @@ final class TracingFilter extends Filter {
   private final Instrumenter<Request, Response> instrumenter;
   private final String path;
 
-  public TracingFilter(Instrumenter<Request, Response> instrumenter, String path) {
+  TracingFilter(Instrumenter<Request, Response> instrumenter, String path) {
     this.instrumenter = instrumenter;
     this.path = path;
   }
 
   @Override
   public int doHandle(Request request, Response response) {
-
     Context parentContext = Context.current();
-    Context context = parentContext;
-
-    Scope scope = null;
-
-    if (instrumenter.shouldStart(parentContext, request)) {
-      context = instrumenter.start(parentContext, request);
-      scope = context.makeCurrent();
-    }
-
-    HttpServerRoute.update(context, CONTROLLER, path);
-
-    Throwable statusThrowable = null;
-    try {
+    if (!instrumenter.shouldStart(parentContext, request)) {
       super.doHandle(request, response);
-    } catch (Throwable t) {
-      statusThrowable = t;
-    }
-
-    if (scope == null) {
       return CONTINUE;
     }
 
-    scope.close();
-
-    if (response.getStatus() != null && response.getStatus().isError()) {
-      statusThrowable = response.getStatus().getThrowable();
+    Throwable error = null;
+    Context context = instrumenter.start(parentContext, request);
+    try (Scope ignored = context.makeCurrent()) {
+      HttpServerRoute.update(context, CONTROLLER, path);
+      super.doHandle(request, response);
+    } catch (Throwable t) {
+      error = t;
+      throw t;
+    } finally {
+      if (response.getStatus() != null && response.getStatus().isError()) {
+        error = response.getStatus().getThrowable();
+      }
+      instrumenter.end(context, request, response, error);
     }
-
-    instrumenter.end(context, request, response, statusThrowable);
 
     return CONTINUE;
   }

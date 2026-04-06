@@ -19,6 +19,7 @@ import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import io.opentelemetry.instrumentation.mongo.testing.AbstractMongoClientTest;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import java.util.ArrayList;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
@@ -26,9 +27,12 @@ import org.bson.Document;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class AbstractMongo31ClientTest
     extends AbstractMongoClientTest<MongoCollection<Document>> {
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected abstract void configureMongoClientOptions(MongoClientOptions.Builder options);
 
@@ -210,6 +214,7 @@ public abstract class AbstractMongo31ClientTest
   void testClientFailure() {
     MongoClientOptions options = MongoClientOptions.builder().serverSelectionTimeout(10).build();
     MongoClient client = new MongoClient(new ServerAddress(host, PortUtils.UNUSABLE_PORT), options);
+    cleanup.deferCleanup(client);
 
     assertThatExceptionOfType(MongoTimeoutException.class)
         .isThrownBy(

@@ -30,7 +30,7 @@ public abstract class AbstractMicrometerBridgeAutoConfigurationTest {
   void metricsEnabled() {
     contextRunner
         .withConfiguration(AutoConfigurations.of(getMetricsAutoConfigurationClass()))
-        .withPropertyValues("otel.instrumentation.micrometer.enabled = true")
+        .withPropertyValues("otel.instrumentation.micrometer.enabled=true")
         .run(
             context ->
                 assertThat(context.getBean("otelMeterRegistry", getMeterRegistryClass()))
@@ -49,14 +49,14 @@ public abstract class AbstractMicrometerBridgeAutoConfigurationTest {
   void metricsDisabled() {
     contextRunner
         .withConfiguration(AutoConfigurations.of(getMetricsAutoConfigurationClass()))
-        .withPropertyValues("otel.instrumentation.micrometer.enabled = false")
+        .withPropertyValues("otel.instrumentation.micrometer.enabled=false")
         .run(context -> assertThat(context.containsBean("otelMeterRegistry")).isFalse());
   }
 
   @Test
   void noActuatorAutoConfiguration() {
     contextRunner
-        .withPropertyValues("otel.instrumentation.micrometer.enabled = true")
+        .withPropertyValues("otel.instrumentation.micrometer.enabled=true")
         .run(context -> assertThat(context.containsBean("otelMeterRegistry")).isFalse());
   }
 }

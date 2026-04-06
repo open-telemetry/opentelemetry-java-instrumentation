@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class ThreadLocalContext {
+public final class ThreadLocalContext {
 
   private static final ThreadLocal<ThreadLocalContext> local = new ThreadLocal<>();
 
@@ -63,9 +63,9 @@ public class ThreadLocalContext {
    * @return true when span should be started, false when span was already started
    */
   public boolean startSpan() {
-    boolean b = started;
+    boolean alreadyStarted = started;
     started = true;
-    return !b;
+    return !alreadyStarted;
   }
 
   public static void startRequest(HttpServletRequest request, HttpServletResponse response) {

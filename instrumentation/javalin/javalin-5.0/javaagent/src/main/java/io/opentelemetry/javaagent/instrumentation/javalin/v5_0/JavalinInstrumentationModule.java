@@ -31,7 +31,7 @@ public class JavalinInstrumentationModule extends InstrumentationModule {
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return hasClassesNamed("io.javalin.http.Handler")
-        // io.javalin.config.JavalinState was introduced in Javalin 7
+        // added in 7.0.0
         .and(not(hasClassesNamed("io.javalin.config.JavalinState")));
   }
 }

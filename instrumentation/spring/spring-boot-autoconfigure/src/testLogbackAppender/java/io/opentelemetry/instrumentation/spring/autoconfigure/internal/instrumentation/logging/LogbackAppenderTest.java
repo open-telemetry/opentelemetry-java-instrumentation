@@ -112,8 +112,8 @@ class LogbackAppenderTest {
               Attributes attributes = logRecord.getAttributes();
               // key1 and key2, the code attributes should not be present because they are enabled
               // in the logback.xml file but are disabled with a property
-              assertThat(attributes.size()).isEqualTo(3);
               assertThat(attributes.asMap())
+                  .hasSize(3)
                   .containsEntry(stringKey("key1"), "val1")
                   .containsEntry(stringKey("key2"), "val2")
                   .containsEntry(stringKey("log.body.template"), "test log message: {}");

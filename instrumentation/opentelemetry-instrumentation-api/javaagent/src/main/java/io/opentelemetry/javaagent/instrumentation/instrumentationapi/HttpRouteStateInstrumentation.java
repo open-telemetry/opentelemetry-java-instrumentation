@@ -32,12 +32,12 @@ final class HttpRouteStateInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("application.io.opentelemetry.context.Context")))
             .and(takesArgument(1, int.class))
             .and(takesArgument(2, String.class)),
-        this.getClass().getName() + "$UpdateAdvice");
+        getClass().getName() + "$UpdateAdvice");
     transformer.applyAdviceToMethod(
         named("updateSpan")
             .and(takesArgument(0, named("application.io.opentelemetry.context.Context")))
             .and(takesArgument(1, named("application.io.opentelemetry.api.trace.Span"))),
-        this.getClass().getName() + "$UpdateSpanAdvice");
+        getClass().getName() + "$UpdateSpanAdvice");
   }
 
   @SuppressWarnings("unused")

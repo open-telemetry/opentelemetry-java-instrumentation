@@ -15,13 +15,13 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
 public final class MyBatisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.mybatis-3.2";
-  private static final Instrumenter<ClassAndMethod, Void> INSTRUMENTER;
+  private static final Instrumenter<ClassAndMethod, Void> instrumenter;
 
   static {
     CodeAttributesGetter<ClassAndMethod> codeAttributesGetter =
         ClassAndMethod.codeAttributesGetter();
 
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<ClassAndMethod, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
@@ -31,7 +31,7 @@ public final class MyBatisSingletons {
   }
 
   public static Instrumenter<ClassAndMethod, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private MyBatisSingletons() {}
