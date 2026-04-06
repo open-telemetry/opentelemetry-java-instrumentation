@@ -396,3 +396,4 @@ reactor-kafka-1.0:javaagent
 reactor-kafka-1.0:testing
 reactor-netty-1.0:javaagent
 reactor-netty-1.0:javaagent-unit-tests
+rediscala-1.8:javaagent
