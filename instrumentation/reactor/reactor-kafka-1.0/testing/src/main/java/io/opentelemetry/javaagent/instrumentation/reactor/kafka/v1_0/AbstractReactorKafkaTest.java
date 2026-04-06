@@ -88,16 +88,26 @@ public abstract class AbstractReactorKafkaTest {
             .withStartupTimeout(Duration.ofMinutes(1));
     kafka.start();
 
-    sender = KafkaSender.create(senderOptions());
-    receiver = KafkaReceiver.create(receiverOptions());
+    try {
+      sender = KafkaSender.create(senderOptions());
+      receiver = KafkaReceiver.create(receiverOptions());
+    } catch (RuntimeException | Error e) {
+      kafka.stop();
+      throw e;
+    }
   }
 
   @AfterAll
   static void tearDownAll() {
-    if (sender != null) {
-      sender.close();
+    try {
+      if (sender != null) {
+        sender.close();
+      }
+    } finally {
+      if (kafka != null) {
+        kafka.stop();
+      }
     }
-    kafka.stop();
   }
 
   @SuppressWarnings("unchecked")
