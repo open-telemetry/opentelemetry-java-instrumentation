@@ -17,6 +17,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.ContextHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
@@ -78,6 +79,7 @@ class RequestActionSupportInstrumentation implements TypeInstrumentation {
   public static class ContextAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Nullable
     public static Scope injectChannelAttribute(
         @Advice.FieldValue("execution") Execution execution) {
 
@@ -90,7 +92,7 @@ class RequestActionSupportInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exit(@Advice.Enter Scope scope) {
+    public static void exit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }
