@@ -403,3 +403,4 @@ redisson-common:javaagent
 resources:library
 redisson-common:testing
 restlet-1.1:testing
+restlet-1.1:library
