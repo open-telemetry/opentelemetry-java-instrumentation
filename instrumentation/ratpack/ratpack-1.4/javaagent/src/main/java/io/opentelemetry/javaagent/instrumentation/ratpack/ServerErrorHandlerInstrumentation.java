@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.ratpack;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.ratpack.RatpackSingletons.onError;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -50,7 +51,7 @@ class ServerErrorHandlerInstrumentation implements TypeInstrumentation {
       Optional<io.opentelemetry.context.Context> otelContext =
           ctx.maybeGet(io.opentelemetry.context.Context.class);
       if (otelContext.isPresent()) {
-        RatpackSingletons.onError(otelContext.get(), throwable);
+        onError(otelContext.get(), throwable);
       }
     }
   }
