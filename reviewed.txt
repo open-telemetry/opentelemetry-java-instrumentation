@@ -349,3 +349,4 @@ opentelemetry-extension-kotlin-1.0:javaagent
 opentelemetry-api-1.59:javaagent
 opentelemetry-extension-annotations-1.0:javaagent
 opentelemetry-instrumentation-annotations-1.16:javaagent
+opentelemetry-instrumentation-api:testing
