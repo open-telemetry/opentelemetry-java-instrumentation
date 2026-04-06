@@ -371,3 +371,4 @@ play-ws-common:testing
 pulsar-2.8:javaagent-unit-tests
 quarkus-resteasy-reactive:quarkus-2.0-testing
 pulsar-2.8:javaagent
+quarkus-resteasy-reactive:javaagent
