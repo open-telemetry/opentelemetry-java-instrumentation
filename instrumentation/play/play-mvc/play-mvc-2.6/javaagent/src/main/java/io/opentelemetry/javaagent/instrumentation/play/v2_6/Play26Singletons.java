@@ -65,6 +65,7 @@ public final class Play26Singletons {
     HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, route);
   }
 
+  @Nullable
   private static String getRoute(Request<?> request) {
     // more about routes here:
     // https://github.com/playframework/playframework/blob/master/documentation/manual/releases/release26/migration26/Migration26.md
