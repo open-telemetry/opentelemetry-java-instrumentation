@@ -24,7 +24,7 @@ sourceSets {
 }
 
 dependencies {
-  library("io.r2dbc:r2dbc-spi:1.0.0.RELEASE")
+  library("io.r2dbc:r2dbc-spi:0.9.0.RELEASE")
   compileOnly(project(path = ":instrumentation:r2dbc-1.0:library-instrumentation-shaded", configuration = "shadow"))
 
   testImplementation(project(":instrumentation:r2dbc-1.0:testing"))
