@@ -7,7 +7,8 @@ muzzle {
   pass {
     group.set("io.r2dbc")
     module.set("r2dbc-spi")
-    versions.set("[1.0.0.RELEASE,)")
+    versions.set("[0.9.0.RELEASE,)")
+    assertInverse.set(true)
     extraDependency("io.projectreactor:reactor-core:3.4.12")
   }
 }
