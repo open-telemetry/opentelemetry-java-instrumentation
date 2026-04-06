@@ -386,3 +386,4 @@ ratpack-1.4:javaagent
 rabbitmq-2.7:javaagent
 ratpack-1.4:testing
 ratpack-1.7:javaagent
+reactor-3.1:library
