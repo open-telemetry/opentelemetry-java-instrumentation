@@ -32,7 +32,7 @@ public final class ReactorNettySingletons {
           .getBoolean("enabled", false);
 
   private static final Instrumenter<HttpClientRequest, HttpClientResponse> instrumenter;
-  private static final NettyConnectionInstrumenter CONNECTION_INSTRUMENTER;
+  private static final NettyConnectionInstrumenter connectionInstrumenter;
 
   public static final VirtualField<ChannelPromise, ConnectionRequestAndContext>
       CONNECTION_REQUEST_AND_CONTEXT =
@@ -56,7 +56,7 @@ public final class ReactorNettySingletons {
                 ? NettyConnectionInstrumentationFlag.ENABLED
                 : NettyConnectionInstrumentationFlag.DISABLED,
             NettyConnectionInstrumentationFlag.DISABLED);
-    CONNECTION_INSTRUMENTER =
+    connectionInstrumenter =
         instrumenterFactory.createConnectionInstrumenter(GlobalOpenTelemetry.get());
   }
 
@@ -65,7 +65,7 @@ public final class ReactorNettySingletons {
   }
 
   public static NettyConnectionInstrumenter connectionInstrumenter() {
-    return CONNECTION_INSTRUMENTER;
+    return connectionInstrumenter;
   }
 
   private ReactorNettySingletons() {}

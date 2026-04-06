@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.mongo.v3_7;
 
+import static io.opentelemetry.javaagent.instrumentation.mongo.v3_7.MongoInstrumentationSingletons.tracingListener;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -52,7 +53,7 @@ final class MongoClientSettingsBuilderInstrumentation implements TypeInstrumenta
           return;
         }
       }
-      builder.addCommandListener(MongoInstrumentationSingletons.getListener());
+      builder.addCommandListener(tracingListener());
     }
   }
 }

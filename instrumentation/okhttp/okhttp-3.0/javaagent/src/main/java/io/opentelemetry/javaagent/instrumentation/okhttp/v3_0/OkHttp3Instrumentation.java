@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.okhttp.v3_0;
 
+import static io.opentelemetry.javaagent.instrumentation.okhttp.v3_0.OkHttp3Singletons.connectionErrorInterceptor;
+import static io.opentelemetry.javaagent.instrumentation.okhttp.v3_0.OkHttp3Singletons.contextInterceptor;
+import static io.opentelemetry.javaagent.instrumentation.okhttp.v3_0.OkHttp3Singletons.tracingInterceptor;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -45,12 +48,12 @@ class OkHttp3Instrumentation implements TypeInstrumentation {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      if (!builder.interceptors().contains(OkHttp3Singletons.contextInterceptor)) {
-        builder.interceptors().add(0, OkHttp3Singletons.contextInterceptor);
-        builder.interceptors().add(1, OkHttp3Singletons.connectionErrorInterceptor);
+      if (!builder.interceptors().contains(contextInterceptor())) {
+        builder.interceptors().add(0, contextInterceptor());
+        builder.interceptors().add(1, connectionErrorInterceptor());
       }
-      if (!builder.networkInterceptors().contains(OkHttp3Singletons.tracingInterceptor)) {
-        builder.addNetworkInterceptor(OkHttp3Singletons.tracingInterceptor);
+      if (!builder.networkInterceptors().contains(tracingInterceptor())) {
+        builder.addNetworkInterceptor(tracingInterceptor());
       }
     }
   }
