@@ -17,7 +17,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
-import io.opentelemetry.javaagent.bootstrap.ExceptionLogger;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.AttributeKeys;
 import javax.annotation.Nullable;
@@ -52,11 +51,7 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
   }
 
   private static void customizeResponse(Context context, HttpResponse response) {
-    try {
-      HttpServerResponseCustomizerHolder.getCustomizer()
-          .customize(context, response, NettyHttpResponseMutator.INSTANCE);
-    } catch (Throwable t) {
-      ExceptionLogger.logSuppressedError("Failed to customize Netty 4.0 HTTP server response", t);
-    }
+    HttpServerResponseCustomizerHolder.getCustomizer()
+        .customize(context, response, NettyHttpResponseMutator.INSTANCE);
   }
 }
