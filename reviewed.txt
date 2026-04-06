@@ -394,3 +394,4 @@ reactor-3.4:javaagent
 reactor-netty-0.9:javaagent
 reactor-kafka-1.0:javaagent
 reactor-kafka-1.0:testing
+reactor-netty-1.0:javaagent
