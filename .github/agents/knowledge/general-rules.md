@@ -21,7 +21,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Naming | Module/package naming | New or renamed modules/packages | `module-naming.md` |
 | Javaagent | Advice patterns | `@Advice` classes | `javaagent-advice-patterns.md` |
 | Javaagent | Module structure patterns | `InstrumentationModule`, `TypeInstrumentation` | `javaagent-module-patterns.md` |
-| Javaagent | Singletons patterns | `*Singletons` holder classes, singleton accessors, static-imported singleton callers | `javaagent-singletons-patterns.md` |
+| Javaagent | Singletons patterns | `*Singletons` holder classes, singleton accessors, callers of singleton accessors/fields | `javaagent-singletons-patterns.md` |
 | Javaagent | Incorrect `classLoaderMatcher()` | `classLoaderMatcher()` override that is redundant (muzzle already handles it) or missing when needed (muzzle cannot distinguish version range) | `javaagent-module-patterns.md` |
 | Semconv | Library vs javaagent semconv constant usage | Semconv constants/assertions | — |
 | Semconv | Dual semconv testing | `SemconvStability`, `maybeStable`, semconv Gradle tasks | `testing-semconv-stability.md` |

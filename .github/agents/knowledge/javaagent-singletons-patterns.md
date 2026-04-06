@@ -3,7 +3,7 @@
 ## Quick Reference
 
 - Use when: reviewing `*Singletons` holder classes and their callers
-- Review focus: field/accessor naming, eager initialization, static-import call sites
+- Review focus: field/accessor naming, eager initialization, singleton accessor call sites
 
 Javaagent modules keep shared `Instrumenter` instances and related collaborators in a dedicated
 `Singletons` holder class such as `MyLibrarySingletons`.
@@ -28,10 +28,12 @@ Javaagent modules keep shared `Instrumenter` instances and related collaborators
   - `CONTEXT` stays `CONTEXT`
   - `REQUEST_INFO` stays `REQUEST_INFO`
   - `RESPONSE_STATUS` stays `RESPONSE_STATUS`
-- Callers should static import the exported singleton member and use it unqualified:
-  accessor methods for lower camel collaborators, fields for uppercase constant-like members.
+- Callers should static import only exported singleton accessors and uppercase constant-like
+  fields, and use those members unqualified: accessors for lower camel collaborators, fields for
+  uppercase constant-like members.
 - Keep verb-named helper methods as verbs when they perform work instead of returning a stored
-  field. This naming rule applies to field accessors.
+  field. These methods are not singleton accessors and should not be static imported under this
+  rule.
 
 ## Preferred Pattern
 
@@ -102,7 +104,9 @@ class MyInstrumentation implements TypeInstrumentation {
   and immutable value constants.
 - Accessor methods named `getInstrumenter()`, `getHelper()`, `getSetter()`, and similar when they
   simply return a backing field.
-- Call sites that qualify singleton member usage with the holder class instead of static importing
-  the accessor or field.
+- Call sites that qualify singleton accessor or uppercase constant-like field usage with the holder
+  class instead of static importing the accessor or field.
+- Static imports of non-accessor helper methods on a `*Singletons` class when the method performs
+  work instead of returning a stored singleton or constant.
 - Mismatches between a field name and its accessor, such as `private static final Helper helper;`
   with `public static Helper getHelper()`.
