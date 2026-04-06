@@ -31,6 +31,7 @@ import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import ch.qos.logback.classic.LoggerContext;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.logs.Severity;
@@ -52,10 +53,13 @@ import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.assertj.core.api.MapAssert;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.condition.OS;
+import org.slf4j.ILoggerFactory;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -143,6 +147,16 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
     }
   }
 
+  @AfterAll
+  static void resetLogger() {
+    ILoggerFactory loggerFactorySpi = LoggerFactory.getILoggerFactory();
+    if (!(loggerFactorySpi instanceof LoggerContext)) {
+      return;
+    }
+    LoggerContext loggerContext = (LoggerContext) loggerFactorySpi;
+    loggerContext.reset();
+  }
+
   @Test
   void propertyConversion() {
     ConfigProperties configProperties =
@@ -181,7 +195,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
                     clientSpan
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
-                            satisfies(URL_FULL, stringAssert -> stringAssert.endsWith("/ping")),
+                            satisfies(URL_FULL, val -> val.endsWith("/ping")),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isNotZero())),
                 serverSpan ->
@@ -240,21 +254,20 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
 
     // Log
     List<LogRecordData> exportedLogRecords = testing.getExportedLogRecords();
-    assertThat(exportedLogRecords).as("No log record exported.").isNotEmpty();
+    assertThat(exportedLogRecords).isNotEmpty();
     if (!nativeImage) {
       // log records differ in native image mode due to different startup timing
       Optional<LogRecordData> firstInfo =
           exportedLogRecords.stream().filter(log -> log.getSeverity() == Severity.INFO).findFirst();
-      assertThat(firstInfo.isPresent()).as("No INFO log record exported.").isTrue();
+      assertThat(firstInfo).isPresent();
 
       LogRecordData firstLog = firstInfo.get();
       assertThat(firstLog.getBodyValue().asString())
-          .as("Should instrument logs")
           .startsWith("Starting ")
           .contains(this.getClass().getSimpleName());
 
       MapAssert<AttributeKey<?>, Object> attributesAssert =
-          assertThat(firstLog.getAttributes().asMap()).as("Should capture code attributes");
+          assertThat(firstLog.getAttributes().asMap());
 
       if (emitStableDatabaseSemconv()) {
         attributesAssert.containsEntry(
@@ -319,7 +332,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
               "select name from customer where id = 1", (rs, rowNum) -> rs.getString("name"));
         });
 
-    // 1 is not replaced by ?, otel.instrumentation.common.db-statement-sanitizer.enabled=false
+    // 1 is not replaced by ?, otel.instrumentation.common.db.query-sanitization.enabled=false
     testing.waitAndAssertTraces(
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(

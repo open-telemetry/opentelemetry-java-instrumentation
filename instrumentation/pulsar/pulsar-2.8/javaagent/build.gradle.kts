@@ -16,12 +16,12 @@ dependencies {
 
   testImplementation("javax.annotation:javax.annotation-api:1.3.2")
   testImplementation("org.testcontainers:testcontainers-pulsar")
-  testImplementation("org.apache.pulsar:pulsar-client-admin:2.8.0")
+  testLibrary("org.apache.pulsar:pulsar-client-admin:2.8.0")
 }
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
@@ -58,7 +58,7 @@ tasks {
     dependsOn(testReceiveSpanDisabled, testExperimental)
   }
 
-  if (findProperty("denyUnsafe") == "true") {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

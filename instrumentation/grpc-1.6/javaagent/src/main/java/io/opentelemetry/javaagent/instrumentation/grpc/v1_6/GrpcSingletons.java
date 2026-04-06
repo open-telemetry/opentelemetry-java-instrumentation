@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.ContextStorageBridge;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.Nullable;
 
 // Holds singleton references.
 public final class GrpcSingletons {
@@ -31,11 +32,11 @@ public final class GrpcSingletons {
   public static final VirtualField<ServerBuilder<?>, Boolean> SERVER_BUILDER_INSTRUMENTED =
       VirtualField.find(ServerBuilder.class, Boolean.class);
 
-  public static final ClientInterceptor CLIENT_INTERCEPTOR;
+  private static final ClientInterceptor clientInterceptor;
 
-  public static final ServerInterceptor SERVER_INTERCEPTOR;
+  private static final ServerInterceptor serverInterceptor;
 
-  private static final AtomicReference<Context.Storage> STORAGE_REFERENCE = new AtomicReference<>();
+  private static final AtomicReference<Context.Storage> storageReference = new AtomicReference<>();
 
   static {
     DeclarativeConfigProperties config =
@@ -64,17 +65,26 @@ public final class GrpcSingletons {
             .setCapturedServerRequestMetadata(serverRequestMetadata)
             .build();
 
-    CLIENT_INTERCEPTOR = telemetry.createClientInterceptor();
-    SERVER_INTERCEPTOR = telemetry.createServerInterceptor();
+    clientInterceptor = telemetry.createClientInterceptor();
+    serverInterceptor = telemetry.createServerInterceptor();
   }
 
-  public static Context.Storage getStorage() {
-    return STORAGE_REFERENCE.get();
+  public static ClientInterceptor clientInterceptor() {
+    return clientInterceptor;
+  }
+
+  public static ServerInterceptor serverInterceptor() {
+    return serverInterceptor;
+  }
+
+  @Nullable
+  public static Context.Storage storage() {
+    return storageReference.get();
   }
 
   public static Context.Storage setStorage(Context.Storage storage) {
-    STORAGE_REFERENCE.compareAndSet(null, new ContextStorageBridge(storage));
-    return getStorage();
+    storageReference.compareAndSet(null, new ContextStorageBridge(storage));
+    return storage();
   }
 
   private GrpcSingletons() {}

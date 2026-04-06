@@ -35,7 +35,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * (from the pool to the connection, where the context may be stale). This ensures that downstream
  * instrumentation (e.g. JDBC) on worker threads sees the correct parent context.
  */
-public class CommandSchedulerInstrumentation implements TypeInstrumentation {
+class CommandSchedulerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

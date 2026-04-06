@@ -20,7 +20,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import oracle.ucp.UniversalConnectionPool;
 
-public class UniversalConnectionPoolInstrumentation implements TypeInstrumentation {
+class UniversalConnectionPoolInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

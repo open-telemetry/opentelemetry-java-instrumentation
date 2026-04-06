@@ -23,15 +23,15 @@ import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.HttpJspPage;
 
-public class HttpJspPageInstrumentationSingletons {
+class HttpJspPageInstrumentationSingletons {
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jsp")
           .getBoolean("experimental_span_attributes/development", false);
 
-  private static final Instrumenter<HttpServletRequest, Void> INSTRUMENTER;
+  private static final Instrumenter<HttpServletRequest, Void> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<HttpServletRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.jsp-2.3",
@@ -51,8 +51,8 @@ public class HttpJspPageInstrumentationSingletons {
     return "Render " + spanName;
   }
 
-  public static Instrumenter<HttpServletRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+  static Instrumenter<HttpServletRequest, Void> instrumenter() {
+    return instrumenter;
   }
 
   private HttpJspPageInstrumentationSingletons() {}

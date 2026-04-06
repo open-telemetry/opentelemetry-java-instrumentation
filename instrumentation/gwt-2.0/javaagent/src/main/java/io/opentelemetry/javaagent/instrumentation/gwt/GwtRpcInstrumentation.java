@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.gwt;
 
+import static io.opentelemetry.javaagent.instrumentation.gwt.GwtSingletons.RPC_CONTEXT_KEY;
 import static io.opentelemetry.javaagent.instrumentation.gwt.GwtSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -21,7 +22,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class GwtRpcInstrumentation implements TypeInstrumentation {
+class GwtRpcInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -69,8 +70,7 @@ public class GwtRpcInstrumentation implements TypeInstrumentation {
         if (!instrumenter().shouldStart(parentContext, method)) {
           return null;
         }
-        Context context =
-            instrumenter().start(parentContext, method).with(GwtSingletons.RPC_CONTEXT_KEY, true);
+        Context context = instrumenter().start(parentContext, method).with(RPC_CONTEXT_KEY, true);
         return new AdviceScope(context, context.makeCurrent());
       }
 
@@ -106,7 +106,7 @@ public class GwtRpcInstrumentation implements TypeInstrumentation {
         return;
       }
       Context context = Java8BytecodeBridge.currentContext();
-      if (context.get(GwtSingletons.RPC_CONTEXT_KEY) == null) {
+      if (context.get(RPC_CONTEXT_KEY) == null) {
         // not inside rpc invocation
         return;
       }

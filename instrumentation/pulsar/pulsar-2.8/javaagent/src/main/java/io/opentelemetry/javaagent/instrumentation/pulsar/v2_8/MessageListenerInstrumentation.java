@@ -25,7 +25,7 @@ import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageListener;
 import org.apache.pulsar.client.impl.conf.ConsumerConfigurationData;
 
-public class MessageListenerInstrumentation implements TypeInstrumentation {
+class MessageListenerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

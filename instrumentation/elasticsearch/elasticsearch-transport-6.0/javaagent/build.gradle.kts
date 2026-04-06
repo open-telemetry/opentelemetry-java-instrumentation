@@ -46,13 +46,11 @@ dependencies {
   testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
-
 testing {
   suites {
     val elasticsearch6Test by registering(JvmTestSuite::class) {
       dependencies {
-        if (latestDepTest) {
+        if (otelProps.testLatestDeps) {
           implementation("org.elasticsearch.client:transport:6.4.+")
           implementation("org.elasticsearch.plugin:transport-netty4-client:6.4.+")
         } else {
@@ -66,7 +64,7 @@ testing {
 
     val elasticsearch65Test by registering(JvmTestSuite::class) {
       dependencies {
-        if (latestDepTest) {
+        if (otelProps.testLatestDeps) {
           implementation("org.elasticsearch.client:transport:6.+")
           implementation("org.elasticsearch.plugin:transport-netty4-client:6.+")
         } else {
@@ -80,7 +78,7 @@ testing {
 
     val elasticsearch7Test by registering(JvmTestSuite::class) {
       dependencies {
-        if (latestDepTest) {
+        if (otelProps.testLatestDeps) {
           implementation("org.elasticsearch.client:transport:latest.release")
           implementation("org.elasticsearch.plugin:transport-netty4-client:latest.release")
         } else {
@@ -96,9 +94,9 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
 
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testSuites = testing.suites.withType(JvmTestSuite::class)
@@ -127,7 +125,7 @@ tasks {
     dependsOn(testing.suites, stableSemconvSuites, experimentalSuites)
   }
 
-  if (findProperty("denyUnsafe") == "true") {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

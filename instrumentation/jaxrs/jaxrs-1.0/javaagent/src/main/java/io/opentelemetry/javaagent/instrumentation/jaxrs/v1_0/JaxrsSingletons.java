@@ -15,12 +15,12 @@ public final class JaxrsSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jaxrs-1.0";
 
-  private static final Instrumenter<HandlerData, Void> INSTRUMENTER;
+  private static final Instrumenter<HandlerData, Void> instrumenter;
 
   static {
     JaxrsCodeAttributesGetter codeAttributesGetter = new JaxrsCodeAttributesGetter();
 
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<HandlerData, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
@@ -31,7 +31,7 @@ public final class JaxrsSingletons {
   }
 
   public static Instrumenter<HandlerData, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private JaxrsSingletons() {}

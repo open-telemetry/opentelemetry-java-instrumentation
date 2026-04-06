@@ -28,7 +28,7 @@ import org.opensearch.client.Request;
 import org.opensearch.client.Response;
 import org.opensearch.client.ResponseListener;
 
-public class RestClientInstrumentation implements TypeInstrumentation {
+class RestClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.opensearch.client.RestClient");
@@ -49,7 +49,7 @@ public class RestClientInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$PerformRequestAsyncAdvice");
   }
 
-  public static class AdviceScope {
+  public static final class AdviceScope {
     private final OpenSearchRestRequest otelRequest;
     private final Context parentContext;
     private final Context context;

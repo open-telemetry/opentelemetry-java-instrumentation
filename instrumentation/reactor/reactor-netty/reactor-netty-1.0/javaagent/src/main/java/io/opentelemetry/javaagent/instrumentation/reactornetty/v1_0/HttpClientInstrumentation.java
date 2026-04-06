@@ -24,7 +24,7 @@ import reactor.netty.Connection;
 import reactor.netty.http.client.HttpClientRequest;
 import reactor.netty.http.client.HttpClientResponse;
 
-public class HttpClientInstrumentation implements TypeInstrumentation {
+class HttpClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("reactor.netty.http.client.HttpClient");

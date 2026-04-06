@@ -17,15 +17,13 @@ dependencies {
   testInstrumentation(project(":instrumentation:vertx:vertx-kafka-client-3.6:javaagent"))
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
-
 testing {
   suites {
     val testNoReceiveTelemetry by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project(":instrumentation:vertx:vertx-kafka-client-3.6:testing"))
 
-        val version = if (latestDepTest) "latest.release" else "5.0.0"
+        val version = if (otelProps.testLatestDeps) "latest.release" else "5.0.0"
         implementation("io.vertx:vertx-kafka-client:$version")
         implementation("io.vertx:vertx-codegen:$version")
       }
@@ -45,7 +43,7 @@ testing {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("testLatestDeps", latestDepTest)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
   test {

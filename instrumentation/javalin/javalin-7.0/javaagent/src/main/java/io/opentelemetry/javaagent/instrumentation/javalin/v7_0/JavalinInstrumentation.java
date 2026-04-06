@@ -20,7 +20,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JavalinInstrumentation implements TypeInstrumentation {
+class JavalinInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -38,7 +38,7 @@ public class JavalinInstrumentation implements TypeInstrumentation {
   public static class HandlerAdapterAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-    public static void onAfterExecute(@Advice.Argument(0) Context ctx, @Advice.Thrown Throwable t) {
+    public static void onAfterExecute(@Advice.Argument(0) Context ctx) {
       HttpServerRoute.update(
           io.opentelemetry.context.Context.current(),
           HttpServerRouteSource.CONTROLLER,

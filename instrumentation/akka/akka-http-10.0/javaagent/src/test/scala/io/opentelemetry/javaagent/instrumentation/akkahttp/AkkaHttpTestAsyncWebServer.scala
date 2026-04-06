@@ -63,7 +63,7 @@ object AkkaHttpTestAsyncWebServer {
   private var binding: ServerBinding = _
 
   def start(port: Int): Unit = synchronized {
-    if (null == binding) {
+    if (binding == null) {
       import scala.concurrent.duration._
       binding = Await.result(
         Http().bindAndHandleAsync(asyncHandler, "localhost", port),
@@ -73,7 +73,7 @@ object AkkaHttpTestAsyncWebServer {
   }
 
   def stop(): Unit = synchronized {
-    if (null != binding) {
+    if (binding != null) {
       binding.unbind()
       system.terminate()
       binding = null

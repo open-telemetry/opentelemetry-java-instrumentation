@@ -16,7 +16,7 @@ import org.hibernate.Transaction;
 
 public class Hibernate3Singletons {
 
-  private static final Instrumenter<HibernateOperation, Void> INSTANCE =
+  private static final Instrumenter<HibernateOperation, Void> instrumenter =
       HibernateInstrumenterFactory.createInstrumenter("io.opentelemetry.hibernate-3.3");
 
   public static final VirtualField<Criteria, SessionInfo> CRITERIA_SESSION_INFO =
@@ -27,7 +27,7 @@ public class Hibernate3Singletons {
       VirtualField.find(Transaction.class, SessionInfo.class);
 
   public static Instrumenter<HibernateOperation, Void> instrumenter() {
-    return INSTANCE;
+    return instrumenter;
   }
 
   private Hibernate3Singletons() {}

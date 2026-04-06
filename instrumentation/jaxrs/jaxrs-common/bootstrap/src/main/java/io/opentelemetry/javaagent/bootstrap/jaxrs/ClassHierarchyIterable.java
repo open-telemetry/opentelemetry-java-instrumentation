@@ -31,7 +31,7 @@ import javax.annotation.Nullable;
  *
  * <p>...
  */
-public class ClassHierarchyIterable implements Iterable<Class<?>> {
+public final class ClassHierarchyIterable implements Iterable<Class<?>> {
   private final Class<?> baseClass;
 
   public ClassHierarchyIterable(Class<?> baseClass) {
@@ -43,12 +43,12 @@ public class ClassHierarchyIterable implements Iterable<Class<?>> {
     return new ClassIterator();
   }
 
-  public class ClassIterator implements Iterator<Class<?>> {
+  private final class ClassIterator implements Iterator<Class<?>> {
     @Nullable private Class<?> next;
     private final Set<Class<?>> queuedInterfaces = new HashSet<>();
     private final Queue<Class<?>> classesToExpand = new ArrayDeque<>();
 
-    public ClassIterator() {
+    ClassIterator() {
       classesToExpand.add(baseClass);
     }
 
@@ -84,7 +84,7 @@ public class ClassHierarchyIterable implements Iterable<Class<?>> {
 
         Class<?> superClass = next.getSuperclass();
         if (superClass != null) {
-          classesToExpand.add(next.getSuperclass());
+          classesToExpand.add(superClass);
         }
       }
     }

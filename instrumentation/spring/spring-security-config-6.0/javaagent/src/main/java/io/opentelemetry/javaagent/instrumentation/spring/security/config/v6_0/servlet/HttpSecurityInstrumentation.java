@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 
 /** Instrumentation for {@link HttpSecurity}. */
-public class HttpSecurityInstrumentation implements TypeInstrumentation {
+class HttpSecurityInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

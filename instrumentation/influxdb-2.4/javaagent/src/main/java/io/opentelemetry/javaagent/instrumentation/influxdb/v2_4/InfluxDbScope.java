@@ -28,10 +28,6 @@ public final class InfluxDbScope {
   }
 
   public void end(Throwable throwable) {
-    if (scope == null) {
-      return;
-    }
-
     scope.close();
 
     instrumenter().end(context, influxDbRequest, null, throwable);

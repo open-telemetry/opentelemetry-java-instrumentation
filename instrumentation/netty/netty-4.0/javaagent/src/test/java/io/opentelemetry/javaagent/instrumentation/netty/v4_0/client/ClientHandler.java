@@ -18,7 +18,7 @@ future with response's status code.
 class ClientHandler extends ChannelInboundHandlerAdapter {
   private final CompletableFuture<Integer> result;
 
-  public ClientHandler(CompletableFuture<Integer> result) {
+  ClientHandler(CompletableFuture<Integer> result) {
     this.result = result;
   }
 

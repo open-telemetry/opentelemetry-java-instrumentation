@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class FinatraExceptionManagerInstrumentation implements TypeInstrumentation {
+class FinatraExceptionManagerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.twitter.finatra.http.exceptions.ExceptionManager");

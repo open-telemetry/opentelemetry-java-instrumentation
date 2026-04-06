@@ -21,7 +21,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
 import org.glassfish.grizzly.http.HttpRequestPacket;
 
-public class HttpCodecFilterInstrumentation implements TypeInstrumentation {
+class HttpCodecFilterInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -42,7 +42,7 @@ public class HttpCodecFilterInstrumentation implements TypeInstrumentation {
                         // this is for 2.3 through 2.3.19
                         "org.glassfish.grizzly.http.HttpPacketParsing")))
             .and(isPublic()),
-        HttpCodecFilterInstrumentation.class.getName() + "$HandleReadAdvice");
+        getClass().getName() + "$HandleReadAdvice");
   }
 
   @SuppressWarnings("unused")

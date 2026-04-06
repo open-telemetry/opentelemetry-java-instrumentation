@@ -21,7 +21,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.jboss.resteasy.core.ResourceLocatorInvoker;
 
-public class ResteasyResourceLocatorInvokerInstrumentation implements TypeInstrumentation {
+class ResteasyResourceLocatorInvokerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.jboss.resteasy.core.ResourceLocatorInvoker");

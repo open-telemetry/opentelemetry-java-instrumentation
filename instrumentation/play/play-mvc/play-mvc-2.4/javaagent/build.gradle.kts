@@ -62,7 +62,7 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   }
 
@@ -85,7 +85,7 @@ configurations.configureEach {
 
 // async-http-client 2.0 does not work with Netty versions newer than this due to referencing an
 // internal file.
-if (!(findProperty("testLatestDeps") == "true")) {
+if (!otelProps.testLatestDeps) {
   configurations.configureEach {
     resolutionStrategy {
       eachDependency {

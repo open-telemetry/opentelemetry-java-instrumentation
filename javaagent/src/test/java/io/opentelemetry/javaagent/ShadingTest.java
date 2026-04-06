@@ -47,11 +47,7 @@ class ShadingTest {
               });
     }
 
-    assertThat(unexpectedEntries)
-        .as(
-            "Agent jar should only contain entries with expected prefixes: %s",
-            EXPECTED_ENTRY_PREFIXES)
-        .isEmpty();
+    assertThat(unexpectedEntries).isEmpty();
   }
 
   private static String getAgentJarPath() {

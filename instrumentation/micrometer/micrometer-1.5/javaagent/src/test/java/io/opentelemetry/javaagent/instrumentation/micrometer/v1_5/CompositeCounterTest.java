@@ -5,8 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Metrics;
@@ -70,6 +71,7 @@ class CompositeCounterTest {
                                         point ->
                                             point
                                                 .hasValue(1)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "value"))))));
   }
 }

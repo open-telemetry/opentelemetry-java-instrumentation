@@ -17,16 +17,14 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:2.4.0")
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
-
 // spring 6 (which spring-kafka 3.+ uses) requires java 17
-if (latestDepTest) {
+if (otelProps.testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_17)
   }
 }
 
-if (!latestDepTest) {
+if (!otelProps.testLatestDeps) {
   // Spring Boot 2.x requires StaticLoggerBinder which is removed in logback-classic 1.3
   configurations.testRuntimeClasspath {
     resolutionStrategy {
@@ -37,7 +35,7 @@ if (!latestDepTest) {
 
 tasks {
   test {
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {

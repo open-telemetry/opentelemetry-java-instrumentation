@@ -28,9 +28,9 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     jvmArgs("-Dotel.instrumentation.lettuce.experimental.command-encoding-events.enabled=true")
-    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {

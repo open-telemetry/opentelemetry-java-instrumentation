@@ -21,7 +21,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AkkaDefaultSystemMessageQueueInstrumentation implements TypeInstrumentation {
+class AkkaDefaultSystemMessageQueueInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("akka.dispatch.DefaultSystemMessageQueue"));

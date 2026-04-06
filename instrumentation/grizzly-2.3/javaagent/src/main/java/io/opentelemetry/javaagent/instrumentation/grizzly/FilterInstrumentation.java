@@ -24,7 +24,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.glassfish.grizzly.filterchain.BaseFilter;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
 
-public class FilterInstrumentation implements TypeInstrumentation {
+class FilterInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -45,7 +45,7 @@ public class FilterInstrumentation implements TypeInstrumentation {
         named("handleRead")
             .and(takesArgument(0, named("org.glassfish.grizzly.filterchain.FilterChainContext")))
             .and(isPublic()),
-        FilterInstrumentation.class.getName() + "$HandleReadAdvice");
+        getClass().getName() + "$HandleReadAdvice");
   }
 
   @SuppressWarnings("unused")

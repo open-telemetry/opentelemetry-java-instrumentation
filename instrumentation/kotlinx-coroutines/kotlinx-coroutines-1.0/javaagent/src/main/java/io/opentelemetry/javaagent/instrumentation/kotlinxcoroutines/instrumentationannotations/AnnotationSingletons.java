@@ -14,10 +14,10 @@ public final class AnnotationSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.kotlinx-coroutines-1.0";
 
-  private static final Instrumenter<MethodRequest, Object> INSTRUMENTER = createInstrumenter();
+  private static final Instrumenter<MethodRequest, Object> instrumenter = createInstrumenter();
 
   public static Instrumenter<MethodRequest, Object> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private static Instrumenter<MethodRequest, Object> createInstrumenter() {

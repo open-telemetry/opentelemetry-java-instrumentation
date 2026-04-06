@@ -11,6 +11,7 @@ import org.jboss.netty.channel.socket.DatagramChannel;
 
 public final class ChannelUtil {
 
+  @Nullable
   public static String getNetworkTransport(@Nullable Channel channel) {
     if (channel == null) {
       return null;

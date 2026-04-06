@@ -28,7 +28,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * Instruments {@link ClassLoader} to have calls to get resources intercepted and check our map of
  * helper resources that is filled by instrumentation when they need helpers.
  */
-public class ResourceInjectionInstrumentation implements TypeInstrumentation {
+class ResourceInjectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

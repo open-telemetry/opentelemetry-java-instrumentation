@@ -27,7 +27,7 @@ import org.hibernate.query.CommonQueryContract;
 import org.hibernate.query.Query;
 import org.hibernate.query.spi.SqmQuery;
 
-public class QueryInstrumentation implements TypeInstrumentation {
+class QueryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

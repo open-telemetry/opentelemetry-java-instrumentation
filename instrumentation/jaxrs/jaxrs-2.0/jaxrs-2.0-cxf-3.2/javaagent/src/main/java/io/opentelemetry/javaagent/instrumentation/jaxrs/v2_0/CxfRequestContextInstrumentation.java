@@ -36,7 +36,7 @@ import org.apache.cxf.message.Message;
  * </code> which contains <code>MethodInvocationInfo</code>. The matched resource method can be
  * retrieved from that object
  */
-public class CxfRequestContextInstrumentation implements TypeInstrumentation {
+class CxfRequestContextInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -60,19 +60,26 @@ public class CxfRequestContextInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
 
-      public AdviceScope(
-          Class<?> resourceClass, Method method, AbstractRequestContextImpl requestContext) {
-        handlerData = new Jaxrs2HandlerData(resourceClass, method);
-        context =
-            Jaxrs2RequestContextHelper.createOrUpdateAbortSpan(
-                instrumenter(), (ContainerRequestContext) requestContext, handlerData);
-        scope = context != null ? context.makeCurrent() : null;
+      private AdviceScope(Jaxrs2HandlerData handlerData, Context context) {
+        this.handlerData = handlerData;
+        this.context = context;
+        scope = context.makeCurrent();
       }
 
-      public void exit(@Nullable Throwable throwable) {
-        if (scope == null) {
-          return;
+      @Nullable
+      public static AdviceScope start(
+          Class<?> resourceClass, Method method, AbstractRequestContextImpl requestContext) {
+        Jaxrs2HandlerData handlerData = new Jaxrs2HandlerData(resourceClass, method);
+        Context context =
+            Jaxrs2RequestContextHelper.createOrUpdateAbortSpan(
+                instrumenter(), (ContainerRequestContext) requestContext, handlerData);
+        if (context == null) {
+          return null;
         }
+        return new AdviceScope(handlerData, context);
+      }
+
+      public void end(@Nullable Throwable throwable) {
         scope.close();
         instrumenter().end(context, handlerData, null, throwable);
       }
@@ -99,14 +106,15 @@ public class CxfRequestContextInstrumentation implements TypeInstrumentation {
       MethodInvocationInfo invocationInfo = resourceInfoStack.peek();
       Method method = invocationInfo.getMethodInfo().getMethodToInvoke();
       Class<?> resourceClass = invocationInfo.getRealClass();
-      return new AdviceScope(resourceClass, method, requestContext);
+      return AdviceScope.start(resourceClass, method, requestContext);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown Throwable throwable, @Advice.Enter @Nullable AdviceScope adviceScope) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
-        adviceScope.exit(throwable);
+        adviceScope.end(throwable);
       }
     }
   }

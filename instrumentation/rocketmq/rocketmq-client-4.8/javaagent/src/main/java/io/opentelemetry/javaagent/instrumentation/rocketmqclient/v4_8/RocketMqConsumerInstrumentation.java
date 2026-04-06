@@ -16,7 +16,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.impl.consumer.DefaultMQPushConsumerImpl;
 
-public class RocketMqConsumerInstrumentation implements TypeInstrumentation {
+class RocketMqConsumerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

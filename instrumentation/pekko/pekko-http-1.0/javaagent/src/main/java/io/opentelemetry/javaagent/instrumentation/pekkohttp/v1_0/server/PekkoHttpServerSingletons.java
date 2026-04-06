@@ -13,18 +13,18 @@ import org.apache.pekko.http.scaladsl.model.HttpResponse;
 
 public final class PekkoHttpServerSingletons {
 
-  private static final Instrumenter<HttpRequest, HttpResponse> INSTRUMENTER;
+  private static final Instrumenter<HttpRequest, HttpResponse> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         JavaagentHttpServerInstrumenters.create(
             PekkoHttpUtil.instrumentationName(),
             new PekkoHttpServerAttributesGetter(),
-            PekkoHttpServerHeaders.INSTANCE);
+            new PekkoHttpServerHeaders());
   }
 
   public static Instrumenter<HttpRequest, HttpResponse> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static HttpResponse errorResponse() {

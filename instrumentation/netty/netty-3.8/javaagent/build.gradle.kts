@@ -36,7 +36,7 @@ dependencies {
 }
 
 // We need to force the dependency to the earliest supported version because other libraries declare newer versions.
-if (!(findProperty("testLatestDeps") == "true")) {
+if (!otelProps.testLatestDeps) {
   configurations.configureEach {
     if (!name.contains("muzzle")) {
       resolutionStrategy {
@@ -52,8 +52,8 @@ if (!(findProperty("testLatestDeps") == "true")) {
 }
 
 tasks {
-  test {
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {

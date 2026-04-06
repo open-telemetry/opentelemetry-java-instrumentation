@@ -24,7 +24,7 @@ public class OpenSearchRestInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // class introduced in 3.0.0
+    // added in 3.0.0
     return hasClassesNamed("org.opensearch.client.http.HttpUriRequestProducer");
   }
 

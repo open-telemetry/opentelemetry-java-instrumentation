@@ -13,7 +13,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ProtoUtf8UnsafeProcessorInstrumentation implements TypeInstrumentation {
+class ProtoUtf8UnsafeProcessorInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

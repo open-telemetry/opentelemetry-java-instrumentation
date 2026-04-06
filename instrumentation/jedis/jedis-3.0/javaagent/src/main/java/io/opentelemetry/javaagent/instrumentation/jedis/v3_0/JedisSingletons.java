@@ -16,12 +16,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 public final class JedisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-3.0";
 
-  private static final Instrumenter<JedisRequest, Void> INSTRUMENTER;
+  private static final Instrumenter<JedisRequest, Void> instrumenter;
 
   static {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
 
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<JedisRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
@@ -35,7 +35,7 @@ public final class JedisSingletons {
   }
 
   public static Instrumenter<JedisRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private JedisSingletons() {}

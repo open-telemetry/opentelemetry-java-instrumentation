@@ -31,15 +31,15 @@ public final class ReactorNettySingletons {
           .get("connection_telemetry")
           .getBoolean("enabled", false);
 
-  private static final Instrumenter<HttpClientRequest, HttpClientResponse> INSTRUMENTER;
-  private static final NettyConnectionInstrumenter CONNECTION_INSTRUMENTER;
+  private static final Instrumenter<HttpClientRequest, HttpClientResponse> instrumenter;
+  private static final NettyConnectionInstrumenter connectionInstrumenter;
 
   public static final VirtualField<ChannelPromise, ConnectionRequestAndContext>
       CONNECTION_REQUEST_AND_CONTEXT =
           VirtualField.find(ChannelPromise.class, ConnectionRequestAndContext.class);
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         JavaagentHttpClientInstrumenters.create(
             INSTRUMENTATION_NAME,
             new ReactorNettyHttpClientAttributesGetter(),
@@ -56,16 +56,16 @@ public final class ReactorNettySingletons {
                 ? NettyConnectionInstrumentationFlag.ENABLED
                 : NettyConnectionInstrumentationFlag.DISABLED,
             NettyConnectionInstrumentationFlag.DISABLED);
-    CONNECTION_INSTRUMENTER =
+    connectionInstrumenter =
         instrumenterFactory.createConnectionInstrumenter(GlobalOpenTelemetry.get());
   }
 
   public static Instrumenter<HttpClientRequest, HttpClientResponse> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static NettyConnectionInstrumenter connectionInstrumenter() {
-    return CONNECTION_INSTRUMENTER;
+    return connectionInstrumenter;
   }
 
   private ReactorNettySingletons() {}

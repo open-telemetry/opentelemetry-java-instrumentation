@@ -14,14 +14,14 @@ import jakarta.ws.rs.container.AsyncResponse;
 
 public final class JaxrsAnnotationsSingletons {
 
-  private static final Instrumenter<HandlerData, Void> INSTANCE =
+  private static final Instrumenter<HandlerData, Void> instrumenter =
       JaxrsInstrumenterFactory.createInstrumenter("io.opentelemetry.jaxrs-3.0-annotations");
 
   public static final VirtualField<AsyncResponse, AsyncResponseData> RESPONSE_DATA =
       VirtualField.find(AsyncResponse.class, AsyncResponseData.class);
 
   public static Instrumenter<HandlerData, Void> instrumenter() {
-    return INSTANCE;
+    return instrumenter;
   }
 
   private JaxrsAnnotationsSingletons() {}

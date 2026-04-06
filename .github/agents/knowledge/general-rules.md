@@ -15,16 +15,17 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | --- | --- | --- | --- |
 | General | Logic, correctness, reliability, safety, copy/paste mistakes, incorrect comments | Always | — |
 | Style | Style guide | Always | — |
-| Style | Uppercase field names should reflect semantic constants, not simply `static final` | Always | — |
+| Style | Uppercase field names should reflect semantic constants or immutable value constants such as `Duration` timeouts/intervals, not simply `static final` | Always | — |
 | Naming | Getter naming (`get` / `is`) | Always | — |
 | Style | Prefer `e` for used exceptions, prefer `f` for used exceptions in nested catch clauses when an outer catch already uses `e`, allow `error` for specific `*Error` catch types, prefer `t` for used `Throwable` values, prefer `ignored` for intentionally unused catch parameters, and use `ignore` for nested intentionally unused catch parameters when `ignored` would shadow an outer catch variable | Catch clauses, `Throwable` params | — |
 | Naming | Module/package naming | New or renamed modules/packages | `module-naming.md` |
 | Javaagent | Advice patterns | `@Advice` classes | `javaagent-advice-patterns.md` |
-| Javaagent | Module structure patterns | `InstrumentationModule`, `TypeInstrumentation`, `Singletons` | `javaagent-module-patterns.md` |
+| Javaagent | Module structure patterns | `InstrumentationModule`, `TypeInstrumentation` | `javaagent-module-patterns.md` |
+| Javaagent | Singletons patterns | `*Singletons` holder classes, singleton accessors, static-imported singleton callers | `javaagent-singletons-patterns.md` |
 | Javaagent | Incorrect `classLoaderMatcher()` | `classLoaderMatcher()` override that is redundant (muzzle already handles it) or missing when needed (muzzle cannot distinguish version range) | `javaagent-module-patterns.md` |
 | Semconv | Library vs javaagent semconv constant usage | Semconv constants/assertions | — |
 | Semconv | Dual semconv testing | `SemconvStability`, `maybeStable`, semconv Gradle tasks | `testing-semconv-stability.md` |
-| Testing | General test patterns | Test files in scope | `testing-general-patterns.md` |
+| Testing | General test patterns | Test files in scope — assertion style, resource cleanup, attribute assertions | `testing-general-patterns.md` |
 | Testing | Experimental flag tests | `testExperimental`, experimental attribute assertions, `experimental` flags in JVM args or system properties | `testing-experimental-flags.md` |
 | Library | TelemetryBuilder/getter/setter patterns | Library instrumentation classes | `library-patterns.md` |
 | API | Deprecation and breaking-change policy | Public API changes | `api-deprecation-policy.md` |
@@ -32,6 +33,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Build | Gradle conventions, muzzle, test tasks, plugins | `build.gradle.kts`, `settings.gradle.kts` | `gradle-conventions.md` |
 | Build | `testcontainersBuildService` declaration | Testcontainers dependency without `usesService` | `gradle-conventions.md` |
 | Style | Prefer instance creation over singletons for stateless interface impls (except on hot paths or Kotlin `object` declarations) | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`, enum/static singletons | — |
+| Style | Prefer `value == null` / `value != null` over `null == value` / `null != value` | Null comparisons | — |
 | Style | No unnecessary explicit type witnesses on generic method calls (`Collections.<String>emptyList()`) | Java generic method calls with explicit type parameters | — |
 | Style | Remove redundant null guards on attribute puts | `AttributesBuilder.put`, `onStart`, `onEnd`, attribute extraction methods | — |
 | General | No redundant `ByteBuffer.duplicate()` on `Value.getValue()` | `Value.getValue()` with `BYTES` type, `ByteBuffer` handling | — |
@@ -87,6 +89,15 @@ Do not flag the following patterns (common false positives):
   The project disables javac's `-Xlint:deprecation` globally and uses a custom Error Prone
   check (`OtelDeprecatedApiUsage`) instead. Only add the annotation when it is actually
   required to fix an Error Prone error — not speculatively.
+- Preserve concise explanatory comments attached to existing `@SuppressWarnings` annotations
+  when they explain why the suppression exists (for example `// using deprecated semconv`
+  or `// using deprecated config property`). This repository has established precedent for
+  such comments, and test code disables Error Prone's `SuppressWarningsWithoutExplanation`
+  check only because enforcing it everywhere causes too many failures, not because these
+  comments are undesirable.
+- When normalizing or moving an existing `@SuppressWarnings`, keep any accurate explanatory
+  comment with it. Remove the comment only if it is incorrect, obsolete, or contradicted by
+  the code after your change.
 
 ## [Naming] Getter Naming
 

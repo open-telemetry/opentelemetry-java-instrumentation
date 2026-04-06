@@ -209,17 +209,16 @@ public abstract class AbstractJdbcInstrumentationTest {
   }
 
   static DataSource createDs(String connectionPoolName, String dbType, String jdbcUrl) {
-    DataSource ds = null;
-    if (connectionPoolName.equals("tomcat")) {
-      ds = createTomcatDs(dbType, jdbcUrl);
+    switch (connectionPoolName) {
+      case "tomcat":
+        return createTomcatDs(dbType, jdbcUrl);
+      case "hikari":
+        return createHikariDs(dbType, jdbcUrl);
+      case "c3p0":
+        return createC3P0Ds(dbType, jdbcUrl);
+      default:
+        throw new IllegalArgumentException("Unknown connection pool: " + connectionPoolName);
     }
-    if (connectionPoolName.equals("hikari")) {
-      ds = createHikariDs(dbType, jdbcUrl);
-    }
-    if (connectionPoolName.equals("c3p0")) {
-      ds = createC3P0Ds(dbType, jdbcUrl);
-    }
-    return ds;
   }
 
   static Stream<Arguments> basicStatementStream() throws SQLException {

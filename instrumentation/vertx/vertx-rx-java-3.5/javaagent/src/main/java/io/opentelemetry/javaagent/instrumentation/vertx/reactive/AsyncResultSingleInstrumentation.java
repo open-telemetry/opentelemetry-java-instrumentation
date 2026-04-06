@@ -24,7 +24,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /** This instrumentation allows span context propagation across Vert.x reactive executions. */
-public class AsyncResultSingleInstrumentation implements TypeInstrumentation {
+class AsyncResultSingleInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     // Different versions of Vert.x has this class in different packages

@@ -9,8 +9,8 @@ muzzle {
 }
 
 tasks {
-  test {
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {

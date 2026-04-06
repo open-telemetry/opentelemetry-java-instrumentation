@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.quartz.v2_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
+import static io.opentelemetry.javaagent.instrumentation.quartz.v2_0.QuartzSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -18,7 +19,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.quartz.Scheduler;
 
-public class QuartzInstrumentation implements TypeInstrumentation {
+class QuartzInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("org.quartz.Scheduler");
@@ -53,7 +54,7 @@ public class QuartzInstrumentation implements TypeInstrumentation {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      QuartzSingletons.TELEMETRY.configure(scheduler);
+      telemetry().configure(scheduler);
     }
   }
 }

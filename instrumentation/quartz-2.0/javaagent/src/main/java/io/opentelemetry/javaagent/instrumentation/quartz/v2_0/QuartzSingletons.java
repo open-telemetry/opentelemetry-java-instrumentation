@@ -11,12 +11,16 @@ import io.opentelemetry.instrumentation.quartz.v2_0.QuartzTelemetry;
 
 public final class QuartzSingletons {
 
-  public static final QuartzTelemetry TELEMETRY =
+  private static final QuartzTelemetry telemetry =
       QuartzTelemetry.builder(GlobalOpenTelemetry.get())
           .setCaptureExperimentalSpanAttributes(
               DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "quartz")
                   .getBoolean("experimental_span_attributes/development", false))
           .build();
+
+  public static QuartzTelemetry telemetry() {
+    return telemetry;
+  }
 
   private QuartzSingletons() {}
 }

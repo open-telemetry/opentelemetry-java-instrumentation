@@ -26,7 +26,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import redis.clients.jedis.CommandArguments;
 import redis.clients.jedis.commands.ProtocolCommand;
 
-public class JedisConnectionInstrumentation implements TypeInstrumentation {
+class JedisConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("redis.clients.jedis.Connection");
@@ -69,7 +69,7 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
       return new AdviceScope(context, context.makeCurrent(), request);
     }
 
-    public void end(Socket socket, @Nullable Throwable throwable) {
+    public void end(@Nullable Socket socket, @Nullable Throwable throwable) {
       request.setSocket(socket);
       scope.close();
       JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);

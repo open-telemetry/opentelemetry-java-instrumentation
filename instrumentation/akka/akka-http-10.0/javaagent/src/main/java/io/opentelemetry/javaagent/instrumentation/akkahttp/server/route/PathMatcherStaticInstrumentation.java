@@ -22,7 +22,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class PathMatcherStaticInstrumentation implements TypeInstrumentation {
+class PathMatcherStaticInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return extendsClass(named("akka.http.scaladsl.server.PathMatcher"));

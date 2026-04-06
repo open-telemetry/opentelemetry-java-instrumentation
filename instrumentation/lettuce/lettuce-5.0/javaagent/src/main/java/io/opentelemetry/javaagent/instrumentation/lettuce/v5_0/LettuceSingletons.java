@@ -24,8 +24,8 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 public final class LettuceSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.lettuce-5.0";
 
-  private static final Instrumenter<RedisCommand<?, ?, ?>, Void> INSTRUMENTER;
-  private static final Instrumenter<RedisURI, Void> CONNECT_INSTRUMENTER;
+  private static final Instrumenter<RedisCommand<?, ?, ?>, Void> instrumenter;
+  private static final Instrumenter<RedisURI, Void> connectInstrumenter;
 
   public static final ContextKey<Context> COMMAND_CONTEXT_KEY =
       ContextKey.named("opentelemetry-lettuce-v5_0-context-key");
@@ -36,7 +36,7 @@ public final class LettuceSingletons {
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
 
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<RedisCommand<?, ?, ?>, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
@@ -48,7 +48,7 @@ public final class LettuceSingletons {
     LettuceConnectNetworkAttributesGetter connectNetworkAttributesGetter =
         new LettuceConnectNetworkAttributesGetter();
 
-    CONNECT_INSTRUMENTER =
+    connectInstrumenter =
         Instrumenter.<RedisURI, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, redisUri -> "CONNECT")
             .addAttributesExtractor(
@@ -65,11 +65,11 @@ public final class LettuceSingletons {
   }
 
   public static Instrumenter<RedisCommand<?, ?, ?>, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static Instrumenter<RedisURI, Void> connectInstrumenter() {
-    return CONNECT_INSTRUMENTER;
+    return connectInstrumenter;
   }
 
   private LettuceSingletons() {}

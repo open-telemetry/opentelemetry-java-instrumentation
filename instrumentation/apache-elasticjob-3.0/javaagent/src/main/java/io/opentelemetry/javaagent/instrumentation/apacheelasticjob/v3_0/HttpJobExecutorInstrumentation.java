@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.shardingsphere.elasticjob.api.ShardingContext;
 import org.apache.shardingsphere.elasticjob.http.executor.HttpJobExecutor;
 
-public class HttpJobExecutorInstrumentation implements TypeInstrumentation {
+class HttpJobExecutorInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.shardingsphere.elasticjob.http.executor.HttpJobExecutor");

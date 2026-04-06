@@ -36,6 +36,7 @@ public abstract class AbstractNatsExperimentalTest extends AbstractNatsTest {
   void testCapturedHeaders() {
     // given
     Dispatcher dispatcher = connection.createDispatcher(msg -> {}).subscribe("sub");
+    cleanup.deferCleanup(() -> connection.closeDispatcher(dispatcher));
 
     // when
     Headers headers = new Headers();
@@ -48,7 +49,6 @@ public abstract class AbstractNatsExperimentalTest extends AbstractNatsTest {
                   NatsMessage.builder().subject("sub").headers(headers).data("x").build();
               connection.publish(message);
             });
-    cleanup.deferCleanup(() -> connection.closeDispatcher(dispatcher));
 
     // then
     testing()

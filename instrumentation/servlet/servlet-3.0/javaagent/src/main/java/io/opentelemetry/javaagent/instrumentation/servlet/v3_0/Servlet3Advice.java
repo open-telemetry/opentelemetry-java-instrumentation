@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
-import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.getSnippetInjectionHelper;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.helper;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.snippetInjectionHelper;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -107,7 +107,7 @@ public class Servlet3Advice {
       return new Object[] {null, request, response};
     }
 
-    String snippet = getSnippetInjectionHelper().getSnippet();
+    String snippet = snippetInjectionHelper().getSnippet();
     if (!snippet.isEmpty()
         && !((HttpServletResponse) response)
             .containsHeader(Servlet3SnippetInjectingResponseWrapper.FAKE_SNIPPET_HEADER)) {

@@ -429,16 +429,10 @@ public abstract class AbstractSpringWebfluxTest {
               satisfies(
                   EXCEPTION_TYPE,
                   val ->
-                      val.satisfiesAnyOf(
-                          v ->
-                              assertThat(v)
-                                  .isEqualTo(
-                                      "org.springframework.web.server.ResponseStatusException"),
+                      val.isIn(
+                          "org.springframework.web.server.ResponseStatusException",
                           // Changed in spring 7+
-                          v ->
-                              assertThat(v)
-                                  .isEqualTo(
-                                      "org.springframework.web.reactive.resource.NoResourceFoundException"))),
+                          "org.springframework.web.reactive.resource.NoResourceFoundException")),
               satisfies(EXCEPTION_MESSAGE, val -> val.contains("404")),
               satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class)));
     }

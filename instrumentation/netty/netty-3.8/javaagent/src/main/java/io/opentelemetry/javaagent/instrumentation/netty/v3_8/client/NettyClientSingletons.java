@@ -22,11 +22,11 @@ public final class NettyClientSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.netty-3.8";
 
-  private static final Instrumenter<NettyRequest, HttpResponse> INSTRUMENTER;
-  private static final Instrumenter<NettyConnectionRequest, Channel> CONNECTION_INSTRUMENTER;
+  private static final Instrumenter<NettyRequest, HttpResponse> instrumenter;
+  private static final Instrumenter<NettyConnectionRequest, Channel> connectionInstrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         JavaagentHttpClientInstrumenters.create(
             INSTRUMENTATION_NAME,
             new NettyHttpClientAttributesGetter(),
@@ -36,7 +36,7 @@ public final class NettyClientSingletons {
                     (context, requestAndChannel, startAttributes) ->
                         NettyErrorHolder.init(context)));
 
-    CONNECTION_INSTRUMENTER =
+    connectionInstrumenter =
         Instrumenter.<NettyConnectionRequest, Channel>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, NettyConnectionRequest::spanName)
             .addAttributesExtractor(
@@ -49,11 +49,11 @@ public final class NettyClientSingletons {
   }
 
   public static Instrumenter<NettyRequest, HttpResponse> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static Instrumenter<NettyConnectionRequest, Channel> connectionInstrumenter() {
-    return CONNECTION_INSTRUMENTER;
+    return connectionInstrumenter;
   }
 
   private NettyClientSingletons() {}

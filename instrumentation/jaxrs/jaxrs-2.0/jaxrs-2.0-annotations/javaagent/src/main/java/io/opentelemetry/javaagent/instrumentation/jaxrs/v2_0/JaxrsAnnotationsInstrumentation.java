@@ -39,7 +39,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
+class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -128,7 +128,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
         context = instrumenter().start(parentContext, handlerData);
         scope = context.makeCurrent();
 
-        if (ASYNC_RESPONSE_DATA != null && asyncResponse != null) {
+        if (asyncResponse != null) {
           ASYNC_RESPONSE_DATA.set(asyncResponse, AsyncResponseData.create(context, handlerData));
         }
       }

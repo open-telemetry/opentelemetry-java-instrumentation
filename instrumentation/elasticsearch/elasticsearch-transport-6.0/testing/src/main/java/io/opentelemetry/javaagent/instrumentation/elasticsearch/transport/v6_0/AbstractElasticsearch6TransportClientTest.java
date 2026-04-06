@@ -90,6 +90,7 @@ public abstract class AbstractElasticsearch6TransportClientTest
 
   @AfterAll
   void cleanUp() throws Exception {
+    client.close();
     testNode.close();
   }
 
