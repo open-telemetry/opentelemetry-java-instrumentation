@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.instrumentationapi;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
@@ -13,7 +12,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
-import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
 public final class InstrumentationApiInstrumentationModule extends InstrumentationModule
@@ -21,11 +19,6 @@ public final class InstrumentationApiInstrumentationModule extends Instrumentati
 
   public InstrumentationApiInstrumentationModule() {
     super("opentelemetry-instrumentation-api");
-  }
-
-  @Override
-  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("application.io.opentelemetry.instrumentation.api.internal.SpanKey");
   }
 
   @Override
