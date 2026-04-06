@@ -25,6 +25,7 @@ public class ContextPropagationOperatorInstrumentationModule extends Instrumenta
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 1.0.0
     return hasClassesNamed("application.io.opentelemetry.context.Context");
   }
 
