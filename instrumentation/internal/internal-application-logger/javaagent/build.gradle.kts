@@ -18,7 +18,6 @@ muzzle {
   }
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
 dependencies {
   bootstrap(project(":instrumentation:internal:internal-application-logger:bootstrap"))
 
@@ -31,7 +30,7 @@ dependencies {
     }
   }
 
-  if (latestDepTest) {
+  if (otelProps.testLatestDeps) {
     testImplementation("ch.qos.logback:logback-classic:latest.release")
   } else {
     testImplementation("ch.qos.logback:logback-classic") {
@@ -49,7 +48,7 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter:2.5.3")
 }
 
-if (latestDepTest) {
+if (otelProps.testLatestDeps) {
   // spring 6 requires java 17
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_17)

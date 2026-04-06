@@ -10,19 +10,19 @@ import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrume
 import jodd.http.HttpRequest;
 import jodd.http.HttpResponse;
 
-public class JoddHttpSingletons {
+class JoddHttpSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jodd-http-4.2";
 
-  private static final Instrumenter<HttpRequest, HttpResponse> INSTRUMENTER;
+  private static final Instrumenter<HttpRequest, HttpResponse> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         JavaagentHttpClientInstrumenters.create(
             INSTRUMENTATION_NAME, new JoddHttpHttpAttributesGetter(), new HttpHeaderSetter());
   }
 
-  public static Instrumenter<HttpRequest, HttpResponse> instrumenter() {
-    return INSTRUMENTER;
+  static Instrumenter<HttpRequest, HttpResponse> instrumenter() {
+    return instrumenter;
   }
 
   private JoddHttpSingletons() {}

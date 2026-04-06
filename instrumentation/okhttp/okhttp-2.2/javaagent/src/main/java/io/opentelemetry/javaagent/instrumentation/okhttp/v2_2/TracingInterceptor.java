@@ -14,7 +14,7 @@ import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.io.IOException;
 
-public class TracingInterceptor implements Interceptor {
+public final class TracingInterceptor implements Interceptor {
   private final Instrumenter<Request, Response> instrumenter;
   private final ContextPropagators propagators;
 

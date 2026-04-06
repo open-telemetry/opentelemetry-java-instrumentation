@@ -17,11 +17,11 @@ import javax.annotation.Nullable;
 
 public class VertxSqlClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-sql-client-4.0";
-  private static final Instrumenter<VertxSqlClientRequest, Void> INSTRUMENTER =
+  private static final Instrumenter<VertxSqlClientRequest, Void> instrumenter =
       VertxSqlInstrumenterFactory.createInstrumenter(INSTRUMENTATION_NAME);
 
   public static Instrumenter<VertxSqlClientRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private static final VirtualField<SqlClientBase<?>, SqlConnectOptions> connectOptionsField =

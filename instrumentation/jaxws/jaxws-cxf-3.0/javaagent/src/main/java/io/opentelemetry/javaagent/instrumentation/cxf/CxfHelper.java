@@ -18,8 +18,6 @@ public class CxfHelper {
   private static final String CONTEXT_KEY = CxfHelper.class.getName() + ".Context";
   private static final String SCOPE_KEY = CxfHelper.class.getName() + ".Scope";
 
-  private CxfHelper() {}
-
   public static void start(Message message) {
     Context parentContext = Context.current();
 
@@ -57,4 +55,6 @@ public class CxfHelper {
     }
     instrumenter().end(context, request, null, throwable);
   }
+
+  private CxfHelper() {}
 }

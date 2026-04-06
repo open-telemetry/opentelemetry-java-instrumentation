@@ -13,10 +13,10 @@ import org.glassfish.grizzly.http.HttpResponsePacket;
 
 public class GrizzlySingletons {
 
-  private static final Instrumenter<HttpRequestPacket, HttpResponsePacket> INSTRUMENTER;
+  private static final Instrumenter<HttpRequestPacket, HttpResponsePacket> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         JavaagentHttpServerInstrumenters.create(
             "io.opentelemetry.grizzly-2.3",
             new GrizzlyHttpAttributesGetter(),
@@ -35,7 +35,7 @@ public class GrizzlySingletons {
   }
 
   public static Instrumenter<HttpRequestPacket, HttpResponsePacket> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private GrizzlySingletons() {}

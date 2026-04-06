@@ -6,13 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.R2dbcTelemetry;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.R2dbcTelemetryBuilder;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.internal.Experimental;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.internal.R2dbcSqlAttributesGetter;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizerHolder;
 
 public class R2dbcSingletons {
@@ -23,17 +22,12 @@ public class R2dbcSingletons {
     R2dbcTelemetryBuilder builder =
         R2dbcTelemetry.builder(GlobalOpenTelemetry.get())
             .setQuerySanitizationEnabled(
-                DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "r2dbc")
-                    .get("statement_sanitizer")
-                    .getBoolean("enabled", AgentCommonConfig.get().isQuerySanitizationEnabled()))
+                DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "r2dbc"))
             .addAttributesExtractor(
                 ServicePeerAttributesExtractor.create(
                     new R2dbcSqlAttributesGetter(), GlobalOpenTelemetry.get()));
     Experimental.setSqlCommenterEnabled(
-        builder,
-        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "r2dbc")
-            .get("sqlcommenter/development")
-            .getBoolean("enabled", AgentCommonConfig.get().isSqlCommenterEnabled()));
+        builder, DbConfig.isSqlCommenterEnabled(GlobalOpenTelemetry.get(), "r2dbc"));
     Experimental.customizeSqlCommenter(
         builder,
         sqlCommenterBuilder ->

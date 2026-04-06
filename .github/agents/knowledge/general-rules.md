@@ -17,14 +17,14 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Style | Style guide | Always | — |
 | Style | Uppercase field names should reflect semantic constants or immutable value constants such as `Duration` timeouts/intervals, not simply `static final` | Always | — |
 | Naming | Getter naming (`get` / `is`) | Always | — |
-| Naming | Boolean/collection option naming (`set*Enabled`, `setCapture*`, `setEmitExperimental*`) | `Experimental` or `TelemetryBuilder` setter changes | `library-patterns.md` |
 | Naming | Module/package naming | New or renamed modules/packages | `module-naming.md` |
 | Javaagent | Advice patterns | `@Advice` classes | `javaagent-advice-patterns.md` |
-| Javaagent | Module structure patterns | `InstrumentationModule`, `TypeInstrumentation`, `Singletons` | `javaagent-module-patterns.md` |
+| Javaagent | Module structure patterns | `InstrumentationModule`, `TypeInstrumentation` | `javaagent-module-patterns.md` |
+| Javaagent | Singletons patterns | `*Singletons` holder classes, singleton accessors, static-imported singleton callers | `javaagent-singletons-patterns.md` |
 | Javaagent | Incorrect `classLoaderMatcher()` | `classLoaderMatcher()` override that is redundant (muzzle already handles it) or missing when needed (muzzle cannot distinguish version range) | `javaagent-module-patterns.md` |
 | Semconv | Library vs javaagent semconv constant usage | Semconv constants/assertions | — |
 | Semconv | Dual semconv testing | `SemconvStability`, `maybeStable`, semconv Gradle tasks | `testing-semconv-stability.md` |
-| Testing | General test patterns | Test files in scope | `testing-general-patterns.md` |
+| Testing | General test patterns | Test files in scope — assertion style, resource cleanup, attribute assertions | `testing-general-patterns.md` |
 | Testing | Experimental flag tests | `testExperimental`, experimental attribute assertions, `experimental` flags in JVM args or system properties | `testing-experimental-flags.md` |
 | Library | TelemetryBuilder/getter/setter patterns | Library instrumentation classes | `library-patterns.md` |
 | API | Deprecation and breaking-change policy | Public API changes | `api-deprecation-policy.md` |
@@ -73,6 +73,15 @@ Do not flag the following patterns (common false positives):
   The project disables javac's `-Xlint:deprecation` globally and uses a custom Error Prone
   check (`OtelDeprecatedApiUsage`) instead. Only add the annotation when it is actually
   required to fix an Error Prone error — not speculatively.
+- Preserve concise explanatory comments attached to existing `@SuppressWarnings` annotations
+  when they explain why the suppression exists (for example `// using deprecated semconv`
+  or `// using deprecated config property`). This repository has established precedent for
+  such comments, and test code disables Error Prone's `SuppressWarningsWithoutExplanation`
+  check only because enforcing it everywhere causes too many failures, not because these
+  comments are undesirable.
+- When normalizing or moving an existing `@SuppressWarnings`, keep any accurate explanatory
+  comment with it. Remove the comment only if it is incorrect, obsolete, or contradicted by
+  the code after your change.
 
 ## [Naming] Getter Naming
 

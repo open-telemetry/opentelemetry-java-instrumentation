@@ -28,6 +28,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import org.apache.log4j.Category;
 import org.apache.log4j.MDC;
 import org.apache.log4j.Priority;
@@ -94,7 +95,11 @@ public class LogEventMapper {
   }
 
   public void capture(
-      String fqcn, Category logger, Priority level, Object message, Throwable throwable) {
+      String fqcn,
+      Category logger,
+      Priority level,
+      @Nullable Object message,
+      @Nullable Throwable throwable) {
     String instrumentationName = logger.getName();
     if (instrumentationName == null || instrumentationName.isEmpty()) {
       instrumentationName = "ROOT";

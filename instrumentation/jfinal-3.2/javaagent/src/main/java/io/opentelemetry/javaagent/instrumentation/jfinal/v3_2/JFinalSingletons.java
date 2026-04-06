@@ -21,7 +21,7 @@ import javax.annotation.Nullable;
 
 public class JFinalSingletons {
 
-  private static final Instrumenter<ClassAndMethod, Void> INSTRUMENTER;
+  private static final Instrumenter<ClassAndMethod, Void> instrumenter;
 
   static {
     // see
@@ -30,7 +30,7 @@ public class JFinalSingletons {
 
     CodeAttributesGetter<ClassAndMethod> codedAttributesGetter =
         ClassAndMethod.codeAttributesGetter();
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<ClassAndMethod, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.jfinal-3.2",
@@ -41,7 +41,7 @@ public class JFinalSingletons {
   }
 
   public static Instrumenter<ClassAndMethod, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static void updateRoute(@Nullable Action action) {

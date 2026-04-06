@@ -25,7 +25,7 @@ import javax.annotation.Nullable;
 
 public class VertxRedisClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-redis-client-4.0";
-  private static final Instrumenter<VertxRedisClientRequest, Void> INSTRUMENTER;
+  private static final Instrumenter<VertxRedisClientRequest, Void> instrumenter;
 
   private static final ThreadLocal<RedisURI> redisUriThreadLocal = new ThreadLocal<>();
   private static final VirtualField<Command, String> commandNameField =
@@ -49,11 +49,11 @@ public class VertxRedisClientSingletons {
                 ServicePeerAttributesExtractor.create(getter, GlobalOpenTelemetry.get()))
             .addOperationMetrics(DbClientMetrics.get());
 
-    INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
+    instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   public static Instrumenter<VertxRedisClientRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static <T> Future<T> wrapEndSpan(

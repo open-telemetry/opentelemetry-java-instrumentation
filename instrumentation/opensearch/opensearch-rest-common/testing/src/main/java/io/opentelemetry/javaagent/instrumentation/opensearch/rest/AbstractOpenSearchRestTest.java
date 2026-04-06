@@ -72,8 +72,12 @@ public abstract class AbstractOpenSearchRestTest {
   }
 
   @AfterAll
-  void tearDown() {
-    opensearch.stop();
+  void tearDown() throws IOException {
+    try {
+      client.close();
+    } finally {
+      opensearch.stop();
+    }
   }
 
   @Test

@@ -16,10 +16,10 @@ public class HttpUrlConnectionSingletons {
   public static final VirtualField<HttpURLConnection, HttpUrlState> HTTP_URL_STATE =
       VirtualField.find(HttpURLConnection.class, HttpUrlState.class);
 
-  private static final Instrumenter<HttpURLConnection, Integer> INSTRUMENTER;
+  private static final Instrumenter<HttpURLConnection, Integer> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         JavaagentHttpClientInstrumenters.create(
             "io.opentelemetry.http-url-connection",
             new HttpUrlHttpAttributesGetter(),
@@ -35,7 +35,7 @@ public class HttpUrlConnectionSingletons {
   }
 
   public static Instrumenter<HttpURLConnection, Integer> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private HttpUrlConnectionSingletons() {}

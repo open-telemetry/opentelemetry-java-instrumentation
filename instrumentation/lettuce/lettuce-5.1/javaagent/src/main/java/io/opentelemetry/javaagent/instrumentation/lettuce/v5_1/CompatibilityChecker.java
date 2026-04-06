@@ -9,8 +9,6 @@ import io.lettuce.core.tracing.Tracing;
 
 public class CompatibilityChecker {
 
-  private CompatibilityChecker() {}
-
   private static final boolean isCompatible = isCompatible();
 
   private static boolean isCompatible() {
@@ -28,4 +26,6 @@ public class CompatibilityChecker {
   public static boolean checkCompatible() {
     return isCompatible;
   }
+
+  private CompatibilityChecker() {}
 }

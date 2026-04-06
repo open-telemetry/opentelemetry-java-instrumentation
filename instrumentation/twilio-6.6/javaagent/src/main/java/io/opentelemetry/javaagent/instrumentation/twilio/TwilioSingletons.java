@@ -19,7 +19,7 @@ public class TwilioSingletons {
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "twilio")
           .getBoolean("experimental_span_attributes/development", false);
 
-  private static final Instrumenter<String, Object> INSTRUMENTER;
+  private static final Instrumenter<String, Object> instrumenter;
 
   static {
     InstrumenterBuilder<String, Object> instrumenterBuilder =
@@ -29,11 +29,11 @@ public class TwilioSingletons {
       instrumenterBuilder.addAttributesExtractor(new TwilioExperimentalAttributesExtractor());
     }
 
-    INSTRUMENTER = instrumenterBuilder.buildInstrumenter(alwaysClient());
+    instrumenter = instrumenterBuilder.buildInstrumenter(alwaysClient());
   }
 
   public static Instrumenter<String, Object> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   /** Derive span name from service execution metadata. */

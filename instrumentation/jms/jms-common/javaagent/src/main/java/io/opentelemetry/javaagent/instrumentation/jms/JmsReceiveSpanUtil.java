@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContextHolder;
+import javax.annotation.Nullable;
 
 public class JmsReceiveSpanUtil {
   private static final ContextPropagators propagators = GlobalOpenTelemetry.getPropagators();
@@ -23,7 +24,7 @@ public class JmsReceiveSpanUtil {
       Instrumenter<MessageWithDestination, Void> receiveInstrumenter,
       MessageWithDestination request,
       Timer timer,
-      Throwable throwable) {
+      @Nullable Throwable throwable) {
     Context parentContext = Context.current();
     // if receive instrumentation is not enabled we'll use the producer as parent
     if (!receiveInstrumentationEnabled) {

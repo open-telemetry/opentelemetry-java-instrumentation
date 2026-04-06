@@ -12,7 +12,7 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testLibrary("com.lmax:disruptor:3.3.4")
 
-  if (findProperty("testLatestDeps") == "true") {
+  if (otelProps.testLatestDeps) {
     testCompileOnly("biz.aQute.bnd:biz.aQute.bnd.annotation:7.0.0")
     testCompileOnly("com.google.errorprone:error_prone_annotations")
   }
@@ -20,7 +20,7 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
   val testAsyncLogger by registering(Test::class) {

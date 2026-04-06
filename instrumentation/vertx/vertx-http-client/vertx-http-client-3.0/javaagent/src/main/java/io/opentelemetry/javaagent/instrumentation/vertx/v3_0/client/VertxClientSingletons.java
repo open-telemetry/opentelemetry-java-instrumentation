@@ -16,7 +16,7 @@ import io.vertx.core.http.impl.HttpClientImpl;
 
 public class VertxClientSingletons {
 
-  private static final Instrumenter<HttpClientRequest, HttpClientResponse> INSTRUMENTER =
+  private static final Instrumenter<HttpClientRequest, HttpClientResponse> instrumenter =
       VertxClientInstrumenterFactory.create(
           "io.opentelemetry.vertx-http-client-3.0", new Vertx3HttpAttributesGetter());
 
@@ -30,7 +30,7 @@ public class VertxClientSingletons {
       VirtualField.find(HttpClientImpl.class, HttpClientOptions.class);
 
   public static Instrumenter<HttpClientRequest, HttpClientResponse> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private VertxClientSingletons() {}

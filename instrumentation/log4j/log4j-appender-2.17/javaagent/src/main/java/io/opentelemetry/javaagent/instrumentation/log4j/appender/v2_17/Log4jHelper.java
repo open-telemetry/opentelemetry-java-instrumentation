@@ -35,7 +35,7 @@ public class Log4jHelper {
 
   private static final LogEventMapper<Map<String, String>> mapper;
   private static final boolean captureExperimentalAttributes;
-  private static final MethodHandle stackTraceMethodHandle = getStackTraceMethodHandle();
+  @Nullable private static final MethodHandle stackTraceMethodHandle = getStackTraceMethodHandle();
 
   static {
     DeclarativeConfigProperties config =
@@ -110,6 +110,7 @@ public class Log4jHelper {
     builder.emit();
   }
 
+  @Nullable
   private static StackTraceElement getLocation(String loggerClassName) {
     if (stackTraceMethodHandle == null) {
       return null;
@@ -122,6 +123,7 @@ public class Log4jHelper {
     }
   }
 
+  @Nullable
   private static MethodHandle getStackTraceMethodHandle() {
     Class<?> stackTraceClass = null;
     try {

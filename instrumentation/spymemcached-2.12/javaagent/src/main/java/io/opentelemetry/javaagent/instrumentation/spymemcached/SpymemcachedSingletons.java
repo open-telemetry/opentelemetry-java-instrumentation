@@ -20,7 +20,7 @@ import javax.annotation.Nullable;
 public class SpymemcachedSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spymemcached-2.12";
 
-  private static final Instrumenter<SpymemcachedRequest, Object> INSTRUMENTER;
+  private static final Instrumenter<SpymemcachedRequest, Object> instrumenter;
 
   static {
     SpymemcachedAttributesGetter dbAttributesGetter = new SpymemcachedAttributesGetter();
@@ -29,7 +29,7 @@ public class SpymemcachedSingletons {
     ServerAttributesExtractor<SpymemcachedRequest, Void> serverAttributesExtractor =
         ServerAttributesExtractor.create(serverAttributesGetter);
 
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
@@ -60,7 +60,7 @@ public class SpymemcachedSingletons {
   }
 
   public static Instrumenter<SpymemcachedRequest, Object> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private SpymemcachedSingletons() {}

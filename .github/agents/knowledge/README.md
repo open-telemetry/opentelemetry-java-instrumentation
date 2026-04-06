@@ -13,10 +13,11 @@ Load only files relevant to the current scope to reduce noise and avoid over-con
 | `general-rules.md` | Always — review checklist table and core rules enforced on every review |
 | `gradle-conventions.md` | `build.gradle.kts` or `settings.gradle.kts` changes, custom test task registration or wiring |
 | `javaagent-advice-patterns.md` | ByteBuddy `@Advice` class or advice-method changes |
-| `javaagent-module-patterns.md` | `InstrumentationModule`, `TypeInstrumentation`, `Singletons`, `VirtualField`, `CallDepth` |
+| `javaagent-module-patterns.md` | `InstrumentationModule`, `TypeInstrumentation`, `VirtualField`, `CallDepth` |
+| `javaagent-singletons-patterns.md` | `*Singletons` holder classes, singleton accessors, static-imported singleton callers |
 | `library-patterns.md` | Library instrumentation telemetry, builder, getter, or setter pattern changes |
 | `module-naming.md` | New or renamed modules or packages; settings includes |
-| `testing-general-patterns.md` | Test files in scope — assertion style, attribute assertion patterns, `satisfies()` lambda usage |
+| `testing-general-patterns.md` | Test files in scope — assertion style, resource cleanup patterns, attribute assertion patterns, `satisfies()` lambda usage |
 | `testing-experimental-flags.md` | `testExperimental` task or experimental span-attribute assertions |
 | `testing-semconv-stability.md` | Semconv opt-in modes, `emitOld*`/`emitStable*`, `maybeStable`, Semconv test tasks |
 

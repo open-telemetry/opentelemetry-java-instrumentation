@@ -8,3 +8,9 @@ dependencies {
 
   compileOnly("com.oracle.database.jdbc:ucp:11.2.0.4")
 }
+
+tasks {
+  withType<Test>().configureEach {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
+}

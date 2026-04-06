@@ -14,13 +14,13 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
 public class SpringDataSingletons {
 
-  private static final Instrumenter<ClassAndMethod, Void> INSTRUMENTER;
+  private static final Instrumenter<ClassAndMethod, Void> instrumenter;
 
   static {
     CodeAttributesGetter<ClassAndMethod> codeAttributesGetter =
         ClassAndMethod.codeAttributesGetter();
 
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<ClassAndMethod, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.spring-data-1.8",
@@ -30,7 +30,7 @@ public class SpringDataSingletons {
   }
 
   public static Instrumenter<ClassAndMethod, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private SpringDataSingletons() {}

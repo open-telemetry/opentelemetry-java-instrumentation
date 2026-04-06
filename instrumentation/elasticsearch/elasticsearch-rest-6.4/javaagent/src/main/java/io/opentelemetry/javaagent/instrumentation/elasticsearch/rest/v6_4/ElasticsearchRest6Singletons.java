@@ -12,12 +12,12 @@ import org.elasticsearch.client.Response;
 
 public class ElasticsearchRest6Singletons {
 
-  private static final Instrumenter<ElasticsearchRestRequest, Response> INSTRUMENTER =
+  private static final Instrumenter<ElasticsearchRestRequest, Response> instrumenter =
       ElasticsearchRestJavaagentInstrumenterFactory.create(
           "io.opentelemetry.elasticsearch-rest-6.4");
 
   public static Instrumenter<ElasticsearchRestRequest, Response> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private ElasticsearchRest6Singletons() {}

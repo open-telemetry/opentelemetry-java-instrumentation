@@ -69,7 +69,8 @@ class JmsMessageProducerInstrumentation implements TypeInstrumentation {
       this.scope = scope;
     }
 
-    public static AdviceScope start(CallDepth callDepth, Destination destination, Message message) {
+    public static AdviceScope start(
+        CallDepth callDepth, @Nullable Destination destination, Message message) {
       if (callDepth.getAndIncrement() > 0) {
         return new AdviceScope(callDepth, null, null, null);
       }
@@ -77,7 +78,8 @@ class JmsMessageProducerInstrumentation implements TypeInstrumentation {
 
       MessageWithDestination messageWithDestination =
           MessageWithDestination.create(
-              JavaxMessageAdapter.create(message), JavaxDestinationAdapter.create(destination));
+              JavaxMessageAdapter.create(message),
+              destination == null ? null : JavaxDestinationAdapter.create(destination));
       if (!producerInstrumenter().shouldStart(parentContext, messageWithDestination)) {
         return new AdviceScope(callDepth, null, null, null);
       }
@@ -117,7 +119,7 @@ class JmsMessageProducerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
       adviceScope.end(throwable);
     }
   }

@@ -13,31 +13,15 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 
 public class LogbackSingletons {
-  private static final boolean ADD_BAGGAGE =
+  public static final boolean ADD_BAGGAGE =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "logback_mdc")
           .getBoolean("add_baggage", false);
-  private static final String TRACE_ID_KEY = AgentCommonConfig.get().getTraceIdKey();
-  private static final String SPAN_ID_KEY = AgentCommonConfig.get().getSpanIdKey();
-  private static final String TRACE_FLAGS_KEY = AgentCommonConfig.get().getTraceFlagsKey();
+  public static final String TRACE_ID_KEY = AgentCommonConfig.get().getTraceIdKey();
+  public static final String SPAN_ID_KEY = AgentCommonConfig.get().getSpanIdKey();
+  public static final String TRACE_FLAGS_KEY = AgentCommonConfig.get().getTraceFlagsKey();
 
   public static final VirtualField<ILoggingEvent, Context> CONTEXT =
       VirtualField.find(ILoggingEvent.class, Context.class);
-
-  public static boolean addBaggage() {
-    return ADD_BAGGAGE;
-  }
-
-  public static String traceIdKey() {
-    return TRACE_ID_KEY;
-  }
-
-  public static String spanIdKey() {
-    return SPAN_ID_KEY;
-  }
-
-  public static String traceFlagsKey() {
-    return TRACE_FLAGS_KEY;
-  }
 
   private LogbackSingletons() {}
 }

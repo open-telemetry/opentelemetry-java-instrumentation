@@ -15,7 +15,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrume
 
 public class NettyServerSingletons {
 
-  private static final Instrumenter<NettyCommonRequest, HttpResponse> INSTRUMENTER =
+  private static final Instrumenter<NettyCommonRequest, HttpResponse> instrumenter =
       JavaagentHttpServerInstrumenters.create(
           "io.opentelemetry.netty-4.0",
           new NettyHttpServerAttributesGetter(),
@@ -25,7 +25,7 @@ public class NettyServerSingletons {
                   (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context)));
 
   public static Instrumenter<NettyCommonRequest, HttpResponse> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private NettyServerSingletons() {}

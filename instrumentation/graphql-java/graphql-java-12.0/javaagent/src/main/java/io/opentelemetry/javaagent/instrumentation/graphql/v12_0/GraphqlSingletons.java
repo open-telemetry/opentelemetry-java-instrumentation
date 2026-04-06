@@ -41,7 +41,7 @@ public class GraphqlSingletons {
   //   java:
   //     graphql:
   //       capture_query: true
-  //       query_sanitizer:
+  //       query_sanitization:
   //         enabled: true
   //       operation_name_in_span_name:
   //         enabled: false
@@ -56,15 +56,15 @@ public class GraphqlSingletons {
           DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "graphql");
 
       this.captureQuery = config.getBoolean("capture_query", true);
-      this.querySanitizationEnabled = config.get("query_sanitizer").getBoolean("enabled", true);
+      this.querySanitizationEnabled = getQuerySanitizationEnabled(config);
       Boolean deprecatedAddOperationNameToSpanName =
           config.get("add_operation_name_to_span_name").getBoolean("enabled");
       if (deprecatedAddOperationNameToSpanName != null) {
         // Support the deprecated config key until 3.0.
         logger.warning(
             "The otel.instrumentation.graphql.add-operation-name-to-span-name.enabled setting is"
-                + " deprecated and will be removed in 3.0. Use"
-                + " otel.instrumentation.graphql.operation-name-in-span-name.enabled instead.");
+                + " deprecated and will be removed in 3.0. Use "
+                + "otel.instrumentation.graphql.operation-name-in-span-name.enabled instead.");
       }
       this.operationNameInSpanNameEnabled =
           config
@@ -74,6 +74,27 @@ public class GraphqlSingletons {
                   deprecatedAddOperationNameToSpanName != null
                       ? deprecatedAddOperationNameToSpanName
                       : false);
+    }
+
+    private static boolean getQuerySanitizationEnabled(DeclarativeConfigProperties config) {
+      Boolean querySanitizationEnabled = config.get("query_sanitization").getBoolean("enabled");
+      if (querySanitizationEnabled != null) {
+        return querySanitizationEnabled;
+      }
+
+      Boolean deprecatedQuerySanitizationEnabled =
+          config.get("query_sanitizer").getBoolean("enabled");
+      if (deprecatedQuerySanitizationEnabled != null) {
+        logger.warning(
+            "The otel.instrumentation.graphql.query-sanitizer.enabled setting or equivalent"
+                + " declarative configuration is deprecated and will be"
+                + " removed in 3.0. Use "
+                + "otel.instrumentation.graphql.query-sanitization.enabled"
+                + " or equivalent declarative configuration instead.");
+        return deprecatedQuerySanitizationEnabled;
+      }
+
+      return true;
     }
   }
 

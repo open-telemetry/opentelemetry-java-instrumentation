@@ -25,18 +25,18 @@ public class Jetty8Singletons {
 
   private static final Instrumenter<
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
-      INSTRUMENTER =
+      instrumenter =
           AgentServletInstrumenterBuilder.<HttpServletRequest, HttpServletResponse>create()
               .addContextCustomizer(
                   (context, request, attributes) -> new AppServerBridge.Builder().init(context))
               .propagateOperationListenersToOnEnd()
               .build(INSTRUMENTATION_NAME, Servlet3Accessor.INSTANCE);
 
-  private static final JettyHelper<HttpServletRequest, HttpServletResponse> HELPER =
-      new JettyHelper<>(INSTRUMENTER, Servlet3Accessor.INSTANCE);
+  private static final JettyHelper<HttpServletRequest, HttpServletResponse> helper =
+      new JettyHelper<>(instrumenter, Servlet3Accessor.INSTANCE);
 
   public static JettyHelper<HttpServletRequest, HttpServletResponse> helper() {
-    return HELPER;
+    return helper;
   }
 
   private Jetty8Singletons() {}

@@ -12,11 +12,11 @@ import io.opentelemetry.javaagent.instrumentation.redisson.RedissonRequest;
 public class RedissonSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.redisson-3.17";
 
-  private static final Instrumenter<RedissonRequest, Void> INSTRUMENTER =
+  private static final Instrumenter<RedissonRequest, Void> instrumenter =
       RedissonInstrumenterFactory.createInstrumenter(INSTRUMENTATION_NAME);
 
   public static Instrumenter<RedissonRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private RedissonSingletons() {}

@@ -236,7 +236,7 @@ class ReactorNettyClientSslTest {
                 assertThat(event)
                     .hasAttributesSatisfyingExactly(
                         equalTo(EXCEPTION_TYPE, SSLHandshakeException.class.getCanonicalName()),
-                        satisfies(EXCEPTION_MESSAGE, s -> s.isNotEmpty()),
-                        satisfies(EXCEPTION_STACKTRACE, s -> s.isNotEmpty())));
+                        satisfies(EXCEPTION_MESSAGE, val -> val.isNotEmpty()),
+                        satisfies(EXCEPTION_STACKTRACE, val -> val.isNotEmpty())));
   }
 }

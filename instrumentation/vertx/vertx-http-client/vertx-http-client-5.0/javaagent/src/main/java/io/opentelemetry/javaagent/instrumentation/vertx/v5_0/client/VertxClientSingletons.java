@@ -20,7 +20,7 @@ import javax.annotation.Nullable;
 
 public class VertxClientSingletons {
 
-  private static final Instrumenter<HttpClientRequest, HttpClientResponse> INSTRUMENTER =
+  private static final Instrumenter<HttpClientRequest, HttpClientResponse> instrumenter =
       VertxClientInstrumenterFactory.create(
           "io.opentelemetry.vertx-http-client-5.0", new Vertx5HttpAttributesGetter());
 
@@ -31,7 +31,7 @@ public class VertxClientSingletons {
       VirtualField.find(HttpClientRequest.class, Contexts.class);
 
   public static Instrumenter<HttpClientRequest, HttpClientResponse> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static void setAuthority(HttpClientRequest request, @Nullable HostAndPort authority) {

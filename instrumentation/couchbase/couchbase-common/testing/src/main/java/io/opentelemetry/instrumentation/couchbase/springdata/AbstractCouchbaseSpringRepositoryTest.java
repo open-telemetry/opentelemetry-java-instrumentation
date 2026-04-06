@@ -111,7 +111,7 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                             equalTo(maybeStable(DB_NAME), bucketCouchbase.name()),
                             satisfies(
                                 maybeStable(DB_STATEMENT),
-                                s -> s.startsWith("ViewQuery(testDocument/all)")),
+                                val -> val.startsWith("ViewQuery(testDocument/all)")),
                             equalTo(NETWORK_TYPE, networkType()),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
@@ -302,7 +302,7 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                             equalTo(maybeStable(DB_NAME), bucketCouchbase.name()),
                             satisfies(
                                 maybeStable(DB_STATEMENT),
-                                s -> s.startsWith("ViewQuery(testDocument/all)")),
+                                val -> val.startsWith("ViewQuery(testDocument/all)")),
                             equalTo(NETWORK_TYPE, networkType()),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),

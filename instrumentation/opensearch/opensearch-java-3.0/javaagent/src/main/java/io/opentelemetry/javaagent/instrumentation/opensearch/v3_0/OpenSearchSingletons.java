@@ -14,14 +14,14 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
 public class OpenSearchSingletons {
-  private static final Instrumenter<OpenSearchRequest, Void> INSTRUMENTER = createInstrumenter();
+  private static final Instrumenter<OpenSearchRequest, Void> instrumenter = createInstrumenter();
 
   public static final boolean CAPTURE_SEARCH_QUERY =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "opensearch")
           .getBoolean("capture_search_query", true);
 
   public static Instrumenter<OpenSearchRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private static Instrumenter<OpenSearchRequest, Void> createInstrumenter() {

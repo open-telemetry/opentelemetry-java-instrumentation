@@ -17,14 +17,14 @@ import ratpack.handling.Context;
 
 public class RatpackSingletons {
 
-  private static final Instrumenter<String, Void> INSTRUMENTER =
+  private static final Instrumenter<String, Void> instrumenter =
       Instrumenter.<String, Void>builder(
               GlobalOpenTelemetry.get(), "io.opentelemetry.ratpack-1.4", s -> s)
           .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
           .buildInstrumenter();
 
   public static Instrumenter<String, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static void updateSpanNames(io.opentelemetry.context.Context otelContext, Context ctx) {

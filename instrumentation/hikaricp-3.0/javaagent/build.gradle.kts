@@ -22,11 +22,9 @@ dependencies {
   testImplementation(project(":instrumentation:hikaricp-3.0:testing"))
 }
 
-val collectMetadata = findProperty("collectMetadata") == "true"
-
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {

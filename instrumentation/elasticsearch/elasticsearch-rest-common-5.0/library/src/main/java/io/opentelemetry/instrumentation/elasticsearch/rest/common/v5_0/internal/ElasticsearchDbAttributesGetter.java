@@ -58,7 +58,7 @@ final class ElasticsearchDbAttributesGetter
         && epDefinition.isSearchEndpoint()
         && httpEntity != null
         && httpEntity.isRepeatable()) {
-      // Retrieve HTTP body for search-type Elasticsearch requests when CAPTURE_SEARCH_QUERY is
+      // Retrieve HTTP body for search-type Elasticsearch requests when captureSearchQuery is
       // enabled.
       try (BufferedReader reader =
           new BufferedReader(new InputStreamReader(httpEntity.getContent(), UTF_8))) {

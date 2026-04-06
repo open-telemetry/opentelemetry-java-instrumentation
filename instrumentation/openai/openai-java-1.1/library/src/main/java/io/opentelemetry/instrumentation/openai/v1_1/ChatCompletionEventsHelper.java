@@ -40,7 +40,7 @@ final class ChatCompletionEventsHelper {
 
   private static final AttributeKey<String> EVENT_NAME = stringKey("event.name");
 
-  public static void emitPromptLogEvents(
+  static void emitPromptLogEvents(
       Context context,
       Logger eventLogger,
       ChatCompletionCreateParams request,
@@ -165,7 +165,7 @@ final class ChatCompletionEventsHelper {
     return contentParts.stream().map(ChatCompletionContentPartText::text).collect(joining());
   }
 
-  public static void emitCompletionLogEvents(
+  static void emitCompletionLogEvents(
       Context context,
       Logger eventLogger,
       ChatCompletion completion,
@@ -196,7 +196,7 @@ final class ChatCompletionEventsHelper {
     }
   }
 
-  public static void emitCompletionLogEvent(
+  static void emitCompletionLogEvent(
       Context context,
       Logger eventLogger,
       long index,

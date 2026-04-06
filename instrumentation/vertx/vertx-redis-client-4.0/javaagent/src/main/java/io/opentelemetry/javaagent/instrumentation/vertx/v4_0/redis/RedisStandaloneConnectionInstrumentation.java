@@ -79,10 +79,6 @@ class RedisStandaloneConnectionInstrumentation implements TypeInstrumentation {
       @Nullable
       public Future<Response> end(
           @Nullable Future<Response> responseFuture, @Nullable Throwable throwable) {
-        if (scope == null) {
-          return responseFuture;
-        }
-
         scope.close();
         if (throwable != null) {
           instrumenter().end(context, otelRequest, null, throwable);

@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1;
 
 import io.lettuce.core.tracing.Tracing;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.lettuce.v5_1.LettuceTelemetry;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 
 public class TracingHolder {
 
@@ -20,7 +20,8 @@ public class TracingHolder {
 
   public static final Tracing TRACING =
       LettuceTelemetry.builder(GlobalOpenTelemetry.get())
-          .setQuerySanitizationEnabled(AgentCommonConfig.get().isQuerySanitizationEnabled())
+          .setQuerySanitizationEnabled(
+              DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "lettuce"))
           .setEncodingSpanEventsEnabled(CAPTURE_COMMAND_ENCODING_EVENTS)
           .build()
           .createTracing();

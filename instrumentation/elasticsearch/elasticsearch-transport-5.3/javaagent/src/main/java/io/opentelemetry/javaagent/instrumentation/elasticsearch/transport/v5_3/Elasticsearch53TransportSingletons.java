@@ -12,14 +12,14 @@ import org.elasticsearch.action.ActionResponse;
 
 public class Elasticsearch53TransportSingletons {
 
-  private static final Instrumenter<ElasticTransportRequest, ActionResponse> INSTRUMENTER =
+  private static final Instrumenter<ElasticTransportRequest, ActionResponse> instrumenter =
       ElasticsearchTransportInstrumenterFactory.create(
           "io.opentelemetry.elasticsearch-transport-5.3",
           new Elasticsearch53TransportExperimentalAttributesExtractor(),
           new Elasticsearch53TransportAttributesGetter());
 
   public static Instrumenter<ElasticTransportRequest, ActionResponse> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private Elasticsearch53TransportSingletons() {}

@@ -14,12 +14,12 @@ import java.lang.reflect.Method;
 
 public class RmiClientSingletons {
 
-  private static final Instrumenter<Method, Void> INSTRUMENTER;
+  private static final Instrumenter<Method, Void> instrumenter;
 
   static {
     RmiClientAttributesGetter rpcAttributesGetter = new RmiClientAttributesGetter();
 
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<Method, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.rmi",
@@ -29,7 +29,7 @@ public class RmiClientSingletons {
   }
 
   public static Instrumenter<Method, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private RmiClientSingletons() {}

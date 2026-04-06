@@ -24,7 +24,7 @@ public class CamelSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.camel-2.20";
 
   private static final DecoratorRegistry registry = new DecoratorRegistry();
-  private static final Instrumenter<CamelRequest, Void> INSTRUMENTER;
+  private static final Instrumenter<CamelRequest, Void> instrumenter;
 
   static {
     SpanNameExtractor<CamelRequest> spanNameExtractor =
@@ -74,11 +74,11 @@ public class CamelSingletons {
     builder.addAttributesExtractor(attributesExtractor);
     builder.setSpanStatusExtractor(spanStatusExtractor);
 
-    INSTRUMENTER = builder.buildInstrumenter(request -> request.getSpanKind());
+    instrumenter = builder.buildInstrumenter(request -> request.getSpanKind());
   }
 
   public static Instrumenter<CamelRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static SpanDecorator getSpanDecorator(Endpoint endpoint) {

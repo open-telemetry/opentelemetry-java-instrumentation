@@ -84,14 +84,14 @@ class SnsTracingTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                             equalTo(AWS_SQS_QUEUE_URL, queueUrl),
-                            satisfies(AWS_REQUEST_ID, v -> v.isInstanceOf(String.class)),
+                            satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
                             equalTo(RPC_METHOD, "ReceiveMessage"),
                             equalTo(RPC_SYSTEM, "aws-api"),
                             equalTo(RPC_SERVICE, "AmazonSQS"),
                             equalTo(HTTP_REQUEST_METHOD, "POST"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                             satisfies(URL_FULL, val -> val.startsWith("http://")),
-                            satisfies(SERVER_ADDRESS, v -> v.isInstanceOf(String.class)),
+                            satisfies(SERVER_ADDRESS, val -> val.isInstanceOf(String.class)),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             satisfies(
                                 SERVER_PORT,
@@ -102,7 +102,7 @@ class SnsTracingTest {
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
                             equalTo(MESSAGING_DESTINATION_NAME, "snsToSqsTestQueue"),
                             equalTo(MESSAGING_OPERATION, "process"),
-                            satisfies(MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class))),
+                            satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasName("process child")
                         .hasParent(trace.getSpan(1))

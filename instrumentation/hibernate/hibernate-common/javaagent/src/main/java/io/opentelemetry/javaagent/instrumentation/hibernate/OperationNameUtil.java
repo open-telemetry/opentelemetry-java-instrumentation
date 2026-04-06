@@ -8,9 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.hibernate;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQueryAnalyzer;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -19,7 +20,8 @@ public class OperationNameUtil {
   private static final String FALLBACK_SPAN_NAME = "hibernate";
 
   private static final SqlQueryAnalyzer analyzer =
-      SqlQueryAnalyzer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
+      SqlQueryAnalyzer.create(
+          DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "hibernate"));
 
   // query could be HQL or SQL
   public static String getOperationNameForQuery(@Nullable String query) {

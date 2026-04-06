@@ -14,11 +14,11 @@ import org.opensearch.client.Response;
 
 public class OpenSearchRestSingletons {
 
-  private static final Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> INSTRUMENTER =
+  private static final Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> instrumenter =
       OpenSearchRestInstrumenterFactory.create("io.opentelemetry.opensearch-rest-1.0");
 
   public static Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static OpenSearchRestResponse convertResponse(Response response) {

@@ -36,8 +36,6 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
-
 testing {
   suites {
     val hibernate6Test by registering(JvmTestSuite::class) {
@@ -50,7 +48,7 @@ testing {
         implementation("com.h2database:h2:1.4.197")
         implementation("org.hsqldb:hsqldb:2.0.0")
         implementation(project(":instrumentation:hibernate:testing"))
-        if (latestDepTest) {
+        if (otelProps.testLatestDeps) {
           implementation("org.hibernate:hibernate-core:6.+")
         } else {
           implementation("org.hibernate:hibernate-core:6.0.0.Final")
@@ -68,7 +66,7 @@ testing {
         implementation("com.h2database:h2:1.4.197")
         implementation("org.hsqldb:hsqldb:2.0.0")
         implementation(project(":instrumentation:hibernate:testing"))
-        if (latestDepTest) {
+        if (otelProps.testLatestDeps) {
           implementation("org.hibernate:hibernate-core:7.+")
         } else {
           implementation("org.hibernate:hibernate-core:7.0.0.Final")
@@ -80,15 +78,13 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   named("compileHibernate7TestJava", JavaCompile::class).configure {
     options.release.set(17)
   }
-  val testJavaVersion =
-    gradle.startParameter.projectProperties.get("testJavaVersion")?.let(JavaVersion::toVersion)
-      ?: JavaVersion.current()
+  val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
   if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
     named("hibernate7Test", Test::class).configure {
       enabled = false

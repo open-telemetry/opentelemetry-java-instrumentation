@@ -54,7 +54,7 @@ public class Servlet5Singletons {
     return responseInstrumenter;
   }
 
-  public static OutputStreamSnippetInjectionHelper getSnippetInjectionHelper() {
+  public static OutputStreamSnippetInjectionHelper snippetInjectionHelper() {
     return snippetInjectionHelper;
   }
 

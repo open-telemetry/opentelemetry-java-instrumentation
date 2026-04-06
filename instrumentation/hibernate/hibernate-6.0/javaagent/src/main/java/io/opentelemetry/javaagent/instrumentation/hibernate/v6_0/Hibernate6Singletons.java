@@ -16,7 +16,7 @@ import org.hibernate.query.CommonQueryContract;
 
 public class Hibernate6Singletons {
 
-  private static final Instrumenter<HibernateOperation, Void> INSTANCE =
+  private static final Instrumenter<HibernateOperation, Void> instrumenter =
       HibernateInstrumenterFactory.createInstrumenter("io.opentelemetry.hibernate-6.0");
 
   public static final VirtualField<CommonQueryContract, SessionInfo>
@@ -31,7 +31,7 @@ public class Hibernate6Singletons {
       VirtualField.find(Transaction.class, SessionInfo.class);
 
   public static Instrumenter<HibernateOperation, Void> instrumenter() {
-    return INSTANCE;
+    return instrumenter;
   }
 
   private Hibernate6Singletons() {}

@@ -69,7 +69,7 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
       return new AdviceScope(context, context.makeCurrent(), request);
     }
 
-    public void end(Socket socket, @Nullable Throwable throwable) {
+    public void end(@Nullable Socket socket, @Nullable Throwable throwable) {
       request.setSocket(socket);
       scope.close();
       JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);

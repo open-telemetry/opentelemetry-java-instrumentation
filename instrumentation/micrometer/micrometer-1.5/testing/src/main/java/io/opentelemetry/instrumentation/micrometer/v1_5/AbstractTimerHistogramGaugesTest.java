@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -61,7 +62,8 @@ public abstract class AbstractTimerHistogramGaugesTest {
                                             point
                                                 .hasSum(555.5)
                                                 .hasCount(4)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "value"))))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -77,7 +79,8 @@ public abstract class AbstractTimerHistogramGaugesTest {
                                         point ->
                                             point
                                                 .hasValue(500)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "value"))))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -92,27 +95,27 @@ public abstract class AbstractTimerHistogramGaugesTest {
                                         point ->
                                             point
                                                 .hasValue(1)
-                                                .hasAttributes(
-                                                    attributeEntry("le", "1"),
-                                                    attributeEntry("tag", "value")),
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("le"), "1"),
+                                                    equalTo(stringKey("tag"), "value")),
                                         point ->
                                             point
                                                 .hasValue(2)
-                                                .hasAttributes(
-                                                    attributeEntry("le", "10"),
-                                                    attributeEntry("tag", "value")),
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("le"), "10"),
+                                                    equalTo(stringKey("tag"), "value")),
                                         point ->
                                             point
                                                 .hasValue(3)
-                                                .hasAttributes(
-                                                    attributeEntry("le", "100"),
-                                                    attributeEntry("tag", "value")),
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("le"), "100"),
+                                                    equalTo(stringKey("tag"), "value")),
                                         point ->
                                             point
                                                 .hasValue(4)
-                                                .hasAttributes(
-                                                    attributeEntry("le", "1000"),
-                                                    attributeEntry("tag", "value"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("le"), "1000"),
+                                                    equalTo(stringKey("tag"), "value"))))));
   }
 
   @Test
@@ -147,7 +150,8 @@ public abstract class AbstractTimerHistogramGaugesTest {
                                             point
                                                 .hasSum(0.55)
                                                 .hasCount(2)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "value"))))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -163,7 +167,8 @@ public abstract class AbstractTimerHistogramGaugesTest {
                                         point ->
                                             point
                                                 .hasValue(0.5)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "value"))))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -176,16 +181,16 @@ public abstract class AbstractTimerHistogramGaugesTest {
                                 gauge ->
                                     gauge.hasPointsSatisfying(
                                         point ->
-                                            point.hasAttributes(
-                                                attributeEntry("phi", "0.5"),
-                                                attributeEntry("tag", "value")),
+                                            point.hasAttributesSatisfyingExactly(
+                                                equalTo(stringKey("phi"), "0.5"),
+                                                equalTo(stringKey("tag"), "value")),
                                         point ->
-                                            point.hasAttributes(
-                                                attributeEntry("phi", "0.95"),
-                                                attributeEntry("tag", "value")),
+                                            point.hasAttributesSatisfyingExactly(
+                                                equalTo(stringKey("phi"), "0.95"),
+                                                equalTo(stringKey("tag"), "value")),
                                         point ->
-                                            point.hasAttributes(
-                                                attributeEntry("phi", "0.99"),
-                                                attributeEntry("tag", "value"))))));
+                                            point.hasAttributesSatisfyingExactly(
+                                                equalTo(stringKey("phi"), "0.99"),
+                                                equalTo(stringKey("tag"), "value"))))));
   }
 }

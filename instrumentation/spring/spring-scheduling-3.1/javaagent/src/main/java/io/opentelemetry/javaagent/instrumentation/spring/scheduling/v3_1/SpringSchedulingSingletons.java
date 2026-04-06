@@ -20,7 +20,7 @@ public class SpringSchedulingSingletons {
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "spring_scheduling")
           .getBoolean("experimental_span_attributes/development", false);
 
-  private static final Instrumenter<Runnable, Void> INSTRUMENTER;
+  private static final Instrumenter<Runnable, Void> instrumenter;
 
   static {
     SpringSchedulingCodeAttributesGetter codeAttributesGetter =
@@ -38,11 +38,11 @@ public class SpringSchedulingSingletons {
           AttributesExtractor.constant(AttributeKey.stringKey("job.system"), "spring_scheduling"));
     }
 
-    INSTRUMENTER = builder.buildInstrumenter();
+    instrumenter = builder.buildInstrumenter();
   }
 
   public static Instrumenter<Runnable, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private SpringSchedulingSingletons() {}

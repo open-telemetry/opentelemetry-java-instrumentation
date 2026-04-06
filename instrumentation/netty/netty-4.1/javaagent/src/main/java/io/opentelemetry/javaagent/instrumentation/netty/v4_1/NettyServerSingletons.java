@@ -23,8 +23,8 @@ import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 
 public class NettyServerSingletons {
 
-  private static final Instrumenter<NettyCommonRequest, HttpResponse> INSTRUMENTER;
-  private static final ProtocolEventHandler PROTOCOL_EVENT_HANDLER;
+  private static final Instrumenter<NettyCommonRequest, HttpResponse> instrumenter;
+  private static final ProtocolEventHandler protocolEventHandler;
 
   static {
     NettyServerTelemetryBuilder builder = NettyServerTelemetry.builder(GlobalOpenTelemetry.get());
@@ -37,26 +37,26 @@ public class NettyServerSingletons {
           .apply(builder)
           .setEmitExperimentalHttpServerTelemetry(true);
     }
-    INSTRUMENTER = NettyServerInstrumenterBuilderUtil.getBuilderExtractor().apply(builder).build();
-    PROTOCOL_EVENT_HANDLER =
+    instrumenter = NettyServerInstrumenterBuilderUtil.getBuilderExtractor().apply(builder).build();
+    protocolEventHandler =
         emitExperimental
             ? ProtocolEventHandler.Enabled.INSTANCE
             : ProtocolEventHandler.Noop.INSTANCE;
   }
 
   public static ChannelInboundHandler createRequestHandler() {
-    return new HttpServerRequestTracingHandler(INSTRUMENTER);
+    return new HttpServerRequestTracingHandler(instrumenter);
   }
 
   public static ChannelOutboundHandler createResponseHandler() {
     return new HttpServerResponseTracingHandler(
-        INSTRUMENTER, NettyHttpServerResponseBeforeCommitHandler.INSTANCE, PROTOCOL_EVENT_HANDLER);
+        instrumenter, NettyHttpServerResponseBeforeCommitHandler.INSTANCE, protocolEventHandler);
   }
 
   public static CombinedChannelDuplexHandler<ChannelInboundHandler, ChannelOutboundHandler>
       createCombinedHandler() {
     return new HttpServerTracingHandler(
-        INSTRUMENTER, NettyHttpServerResponseBeforeCommitHandler.INSTANCE, PROTOCOL_EVENT_HANDLER);
+        instrumenter, NettyHttpServerResponseBeforeCommitHandler.INSTANCE, protocolEventHandler);
   }
 
   private NettyServerSingletons() {}

@@ -31,10 +31,10 @@ public class NettyClientSingletons {
           .get("ssl_telemetry")
           .getBoolean("enabled", false);
 
-  private static final Instrumenter<NettyCommonRequest, HttpResponse> INSTRUMENTER;
-  private static final NettyConnectionInstrumenter CONNECTION_INSTRUMENTER;
-  private static final NettySslInstrumenter SSL_INSTRUMENTER;
-  private static final NettyClientHandlerFactory CLIENT_HANDLER_FACTORY;
+  private static final Instrumenter<NettyCommonRequest, HttpResponse> instrumenter;
+  private static final NettyConnectionInstrumenter connectionInstrumenter;
+  private static final NettySslInstrumenter sslInstrumenter;
+  private static final NettyClientHandlerFactory clientHandlerFactory;
 
   static {
     DefaultHttpClientInstrumenterBuilder<NettyCommonRequest, HttpResponse> builder =
@@ -46,28 +46,28 @@ public class NettyClientSingletons {
             builder,
             enabledOrErrorOnly(connectionTelemetryEnabled),
             enabledOrErrorOnly(sslTelemetryEnabled));
-    INSTRUMENTER = factory.instrumenter();
-    CONNECTION_INSTRUMENTER = factory.createConnectionInstrumenter(GlobalOpenTelemetry.get());
-    SSL_INSTRUMENTER = factory.createSslInstrumenter();
-    CLIENT_HANDLER_FACTORY =
+    instrumenter = factory.instrumenter();
+    connectionInstrumenter = factory.createConnectionInstrumenter(GlobalOpenTelemetry.get());
+    sslInstrumenter = factory.createSslInstrumenter();
+    clientHandlerFactory =
         new NettyClientHandlerFactory(
-            INSTRUMENTER, AgentCommonConfig.get().shouldEmitExperimentalHttpClientTelemetry());
+            instrumenter, AgentCommonConfig.get().shouldEmitExperimentalHttpClientTelemetry());
   }
 
   public static Instrumenter<NettyCommonRequest, HttpResponse> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static NettyConnectionInstrumenter connectionInstrumenter() {
-    return CONNECTION_INSTRUMENTER;
+    return connectionInstrumenter;
   }
 
   public static NettySslInstrumenter sslInstrumenter() {
-    return SSL_INSTRUMENTER;
+    return sslInstrumenter;
   }
 
   public static NettyClientHandlerFactory clientHandlerFactory() {
-    return CLIENT_HANDLER_FACTORY;
+    return clientHandlerFactory;
   }
 
   private NettyClientSingletons() {}

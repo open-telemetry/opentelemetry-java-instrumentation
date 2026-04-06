@@ -18,7 +18,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Nullable;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -32,7 +31,6 @@ class ChannelPipelineTest {
 
   private static final Class<?> defaultChannelPipelineClass = getDefaultChannelPipelineClass();
 
-  @Nullable
   private static Class<?> getDefaultChannelPipelineClass() {
     try {
       return Class.forName("io.netty.channel.DefaultChannelPipeline");
