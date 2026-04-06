@@ -23,6 +23,7 @@ import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExt
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 
 public class RabbitSingletons {
 
@@ -109,7 +110,7 @@ public class RabbitSingletons {
   }
 
   private static <T, V> AttributesExtractor<T, V> buildMessagingAttributesExtractor(
-      MessagingAttributesGetter<T, V> getter, MessageOperation operation) {
+      MessagingAttributesGetter<T, V> getter, @Nullable MessageOperation operation) {
     return MessagingAttributesExtractor.builder(getter, operation)
         .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
         .build();
