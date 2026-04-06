@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNam
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
-public final class OpenSearchSingletons {
+public class OpenSearchSingletons {
   private static final Instrumenter<OpenSearchRequest, Void> instrumenter = createInstrumenter();
 
   public static final boolean CAPTURE_SEARCH_QUERY =

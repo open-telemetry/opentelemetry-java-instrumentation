@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
-public final class KafkaSingletons {
+public class KafkaSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-clients-0.11";
 
   private static final boolean PRODUCER_PROPAGATION_ENABLED =

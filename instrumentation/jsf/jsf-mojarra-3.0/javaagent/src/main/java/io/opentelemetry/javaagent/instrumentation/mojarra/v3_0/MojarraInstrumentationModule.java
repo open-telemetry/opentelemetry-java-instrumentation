@@ -16,7 +16,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public final class MojarraInstrumentationModule extends InstrumentationModule
+public class MojarraInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public MojarraInstrumentationModule() {
     super("jsf-mojarra", "jsf-mojarra-3.0");

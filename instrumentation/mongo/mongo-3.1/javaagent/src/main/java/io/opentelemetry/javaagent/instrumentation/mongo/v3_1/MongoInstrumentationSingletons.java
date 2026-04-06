@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrumenterFactory;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.TracingCommandListener;
 
-public final class MongoInstrumentationSingletons {
+public class MongoInstrumentationSingletons {
 
   private static final Instrumenter<CommandStartedEvent, Void> instrumenter =
       MongoInstrumenterFactory.createInstrumenter(

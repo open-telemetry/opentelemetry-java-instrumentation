@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-public final class DropwizardMetricsAdapter implements MetricRegistryListener {
+public class DropwizardMetricsAdapter implements MetricRegistryListener {
 
   private static final Logger logger = Logger.getLogger(DropwizardMetricsAdapter.class.getName());
 

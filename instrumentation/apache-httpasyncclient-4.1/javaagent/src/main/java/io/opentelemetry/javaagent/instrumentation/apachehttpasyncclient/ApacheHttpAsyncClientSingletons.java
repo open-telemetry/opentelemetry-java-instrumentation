@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenters;
 import org.apache.http.HttpResponse;
 
-public final class ApacheHttpAsyncClientSingletons {
+public class ApacheHttpAsyncClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpasyncclient-4.1";
 
   private static final Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter;

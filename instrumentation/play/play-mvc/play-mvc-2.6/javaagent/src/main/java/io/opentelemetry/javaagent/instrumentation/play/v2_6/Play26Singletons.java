@@ -21,7 +21,7 @@ import play.libs.typedmap.TypedKey;
 import play.routing.Router;
 import scala.Option;
 
-public final class Play26Singletons {
+public class Play26Singletons {
 
   private static final String SPAN_NAME = "play.request";
   private static final Instrumenter<Void, Void> instrumenter =

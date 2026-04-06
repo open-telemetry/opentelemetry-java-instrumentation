@@ -9,7 +9,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.quartz.v2_0.QuartzTelemetry;
 
-public final class QuartzSingletons {
+public class QuartzSingletons {
 
   private static final QuartzTelemetry telemetry =
       QuartzTelemetry.builder(GlobalOpenTelemetry.get())

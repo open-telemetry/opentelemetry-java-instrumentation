@@ -19,7 +19,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import javax.annotation.Nullable;
 
-public final class JFinalSingletons {
+public class JFinalSingletons {
 
   private static final Instrumenter<ClassAndMethod, Void> instrumenter;
 

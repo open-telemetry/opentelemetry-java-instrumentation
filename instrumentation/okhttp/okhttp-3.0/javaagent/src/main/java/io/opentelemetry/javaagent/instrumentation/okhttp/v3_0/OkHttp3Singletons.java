@@ -20,7 +20,7 @@ import okhttp3.Interceptor;
 import okhttp3.Response;
 
 /** Holder of singleton interceptors for adding to instrumented clients. */
-public final class OkHttp3Singletons {
+public class OkHttp3Singletons {
 
   public static final VirtualField<Runnable, PropagatedContext> PROPAGATED_CONTEXT =
       VirtualField.find(Runnable.class, PropagatedContext.class);

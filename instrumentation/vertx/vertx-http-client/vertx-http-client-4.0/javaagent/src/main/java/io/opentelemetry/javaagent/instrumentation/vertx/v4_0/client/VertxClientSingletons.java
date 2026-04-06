@@ -12,7 +12,7 @@ import io.opentelemetry.javaagent.instrumentation.vertx.client.VertxClientInstru
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 
-public final class VertxClientSingletons {
+public class VertxClientSingletons {
 
   private static final Instrumenter<HttpClientRequest, HttpClientResponse> instrumenter =
       VertxClientInstrumenterFactory.create(

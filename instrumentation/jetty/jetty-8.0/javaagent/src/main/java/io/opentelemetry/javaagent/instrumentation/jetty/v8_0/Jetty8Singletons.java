@@ -17,7 +17,7 @@ import io.opentelemetry.javaagent.instrumentation.servlet.AgentServletInstrument
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public final class Jetty8Singletons {
+public class Jetty8Singletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jetty-8.0";
 
   public static final VirtualField<Runnable, PropagatedContext> PROPAGATED_CONTEXT =

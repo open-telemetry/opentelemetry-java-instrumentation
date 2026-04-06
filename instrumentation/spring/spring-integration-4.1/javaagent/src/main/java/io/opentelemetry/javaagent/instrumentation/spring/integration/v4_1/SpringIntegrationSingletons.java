@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import java.util.List;
 import org.springframework.messaging.support.ChannelInterceptor;
 
-public final class SpringIntegrationSingletons {
+public class SpringIntegrationSingletons {
 
   private static final List<String> PATTERNS =
       DeclarativeConfigUtil.getInstrumentationConfig(

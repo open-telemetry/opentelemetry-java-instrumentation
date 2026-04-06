@@ -16,7 +16,7 @@ import org.apache.rocketmq.client.apis.message.MessageView;
 import org.apache.rocketmq.client.java.impl.producer.SendReceiptImpl;
 import org.apache.rocketmq.client.java.message.PublishingMessageImpl;
 
-public final class RocketMqSingletons {
+public class RocketMqSingletons {
 
   private static final Instrumenter<PublishingMessageImpl, SendReceiptImpl> PRODUCER_INSTRUMENTER;
   private static final Instrumenter<ReceiveMessageRequest, List<MessageView>>

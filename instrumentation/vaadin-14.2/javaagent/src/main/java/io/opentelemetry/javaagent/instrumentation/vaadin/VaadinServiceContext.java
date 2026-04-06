@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vaadin;
 
-public final class VaadinServiceContext {
+public class VaadinServiceContext {
   private boolean requestHandled;
   private String spanNameCandidate;
 

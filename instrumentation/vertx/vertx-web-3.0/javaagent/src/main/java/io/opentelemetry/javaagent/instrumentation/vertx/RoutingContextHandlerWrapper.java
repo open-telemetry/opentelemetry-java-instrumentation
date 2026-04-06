@@ -19,7 +19,7 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 
 /** This is used to wrap Vert.x Handlers to provide nice user-friendly SERVER span names */
-public final class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
+public class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
 
   private final Handler<RoutingContext> handler;
 

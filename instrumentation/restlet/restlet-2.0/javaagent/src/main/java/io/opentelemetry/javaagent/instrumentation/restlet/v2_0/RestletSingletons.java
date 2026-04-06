@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import org.restlet.Request;
 import org.restlet.Response;
 
-public final class RestletSingletons {
+public class RestletSingletons {
 
   private static final Instrumenter<Request, Response> instrumenter =
       JavaagentHttpServerInstrumenters.create(

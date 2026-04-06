@@ -10,7 +10,7 @@ import org.apache.cxf.message.Message;
 import org.apache.cxf.service.Service;
 import org.apache.cxf.service.model.BindingOperationInfo;
 
-public final class CxfRequest {
+public class CxfRequest {
   private final Message message;
   private final String spanName;
 

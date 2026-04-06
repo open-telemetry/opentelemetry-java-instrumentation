@@ -11,7 +11,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.instrumentation.jms.JmsInstrumenterFactory;
 import io.opentelemetry.javaagent.instrumentation.jms.MessageWithDestination;
 
-public final class SpringJmsSingletons {
+public class SpringJmsSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-jms-6.0";
 
   private static final boolean RECEIVE_TELEMETRY_ENABLED =

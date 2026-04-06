@@ -12,7 +12,7 @@ import io.opentelemetry.context.Scope;
 import javax.annotation.Nullable;
 import org.apache.axis2.jaxws.core.MessageContext;
 
-public final class Axis2Helper {
+public class Axis2Helper {
   private static final String REQUEST_KEY = Axis2Helper.class.getName() + ".Request";
   private static final String CONTEXT_KEY = Axis2Helper.class.getName() + ".Context";
   private static final String SCOPE_KEY = Axis2Helper.class.getName() + ".Scope";

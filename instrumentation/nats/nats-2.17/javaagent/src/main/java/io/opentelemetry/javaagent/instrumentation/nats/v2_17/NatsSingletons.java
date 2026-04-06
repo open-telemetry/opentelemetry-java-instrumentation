@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsRequest;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import java.util.List;
 
-public final class NatsSingletons {
+public class NatsSingletons {
 
   private static final List<String> capturedHeaders =
       ExperimentalConfig.get().getMessagingHeaders();

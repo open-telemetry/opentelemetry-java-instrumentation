@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public final class ThreadLocalContext {
+public class ThreadLocalContext {
 
   private static final ThreadLocal<ThreadLocalContext> local = new ThreadLocal<>();
 

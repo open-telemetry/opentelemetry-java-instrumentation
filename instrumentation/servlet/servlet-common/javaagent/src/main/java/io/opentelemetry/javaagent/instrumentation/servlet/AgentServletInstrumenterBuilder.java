@@ -24,7 +24,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
+public class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
 
   private static final List<String> CAPTURE_REQUEST_PARAMETERS =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")

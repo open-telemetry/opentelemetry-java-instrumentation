@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.instrumenta
 import io.opentelemetry.api.trace.SpanKind;
 import javax.annotation.Nullable;
 
-public final class MethodRequest {
+public class MethodRequest {
   private final Class<?> declaringClass;
   private final String methodName;
   @Nullable private final String withSpanValue;
