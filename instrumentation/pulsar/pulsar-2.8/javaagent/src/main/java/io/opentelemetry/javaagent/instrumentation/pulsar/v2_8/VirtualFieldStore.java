@@ -32,9 +32,7 @@ public class VirtualFieldStore {
       TopicMessageImpl<?> topicMessage = (TopicMessageImpl<?>) instance;
       instance = topicMessage.getMessage();
     }
-    if (instance != null) {
-      MSG_FIELD.set(instance, context);
-    }
+    MSG_FIELD.set(instance, context);
   }
 
   public static void inject(Producer<?> instance, String serviceUrl, String topic) {
@@ -46,18 +44,13 @@ public class VirtualFieldStore {
   }
 
   public static void inject(SendCallback instance, Context context, PulsarRequest request) {
-    if (instance != null) {
-      CALLBACK_FIELD.set(instance, SendCallbackData.create(context, request));
-    }
+    CALLBACK_FIELD.set(instance, SendCallbackData.create(context, request));
   }
 
   public static Context extract(Message<?> instance) {
     if (instance instanceof TopicMessageImpl<?>) {
       TopicMessageImpl<?> topicMessage = (TopicMessageImpl<?>) instance;
       instance = topicMessage.getMessage();
-    }
-    if (instance == null) {
-      return Context.current();
     }
     Context ctx = MSG_FIELD.get(instance);
     return ctx == null ? Context.current() : ctx;
