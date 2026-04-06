@@ -14,13 +14,13 @@ import play.api.mvc.Result;
 import scala.runtime.AbstractFunction1;
 import scala.util.Try;
 
-public class RequestCompleteCallback extends AbstractFunction1<Try<Result>, Object> {
+final class RequestCompleteCallback extends AbstractFunction1<Try<Result>, Object> {
 
   private static final Logger logger = Logger.getLogger(RequestCompleteCallback.class.getName());
 
   private final Context context;
 
-  public RequestCompleteCallback(Context context) {
+  RequestCompleteCallback(Context context) {
     this.context = context;
   }
 
