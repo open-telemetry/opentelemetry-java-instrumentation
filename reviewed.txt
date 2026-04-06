@@ -351,3 +351,4 @@ opentelemetry-extension-annotations-1.0:javaagent
 opentelemetry-instrumentation-annotations-1.16:javaagent
 opentelemetry-instrumentation-api:testing
 opentelemetry-instrumentation-api:javaagent
+oracle-ucp-11.2:javaagent
