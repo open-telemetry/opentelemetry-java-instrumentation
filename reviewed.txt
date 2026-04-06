@@ -385,3 +385,4 @@ r2dbc-1.0:testing
 ratpack-1.4:javaagent
 rabbitmq-2.7:javaagent
 ratpack-1.4:testing
+ratpack-1.7:javaagent
