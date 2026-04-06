@@ -11,7 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import org.jboss.logmanager.ExtLogRecord;
 
-public final class JbossLogManagerHelper {
+public class JbossLogManagerHelper {
 
   private static final VirtualField<ExtLogRecord, Context> CONTEXT =
       VirtualField.find(ExtLogRecord.class, Context.class);
