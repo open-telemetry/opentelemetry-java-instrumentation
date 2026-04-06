@@ -43,7 +43,8 @@ abstract class AbstractReactorNettyHttpClientTest
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  private static final String UNUSABLE_PORT_URI = "http://localhost:" + PortUtils.UNUSABLE_PORT + "/";
+  private static final String UNUSABLE_PORT_URI =
+      "http://localhost:" + PortUtils.UNUSABLE_PORT + "/";
 
   abstract HttpClient createHttpClient(boolean readTimeout);
 
