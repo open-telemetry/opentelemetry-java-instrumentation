@@ -374,3 +374,4 @@ pulsar-2.8:javaagent
 quarkus-resteasy-reactive:javaagent
 quarkus-resteasy-reactive:quarkus-common-testing
 quarkus-resteasy-reactive:quarkus-3.0-testing
+quarkus-resteasy-reactive:quarkus-3.9-testing
