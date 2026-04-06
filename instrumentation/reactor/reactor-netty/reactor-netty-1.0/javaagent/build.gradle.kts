@@ -44,6 +44,10 @@ dependencies {
 }
 
 tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
   val testConnectionSpan by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -57,8 +61,6 @@ tasks {
   }
 
   test {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-
     filter {
       excludeTestsMatching("ReactorNettyConnectionSpanTest")
       excludeTestsMatching("ReactorNettyClientSslTest")
