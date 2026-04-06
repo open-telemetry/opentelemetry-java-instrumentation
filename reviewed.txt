@@ -392,3 +392,4 @@ ratpack-1.7:library
 reactor-3.1:testing
 reactor-3.4:javaagent
 reactor-netty-0.9:javaagent
+reactor-kafka-1.0:javaagent
