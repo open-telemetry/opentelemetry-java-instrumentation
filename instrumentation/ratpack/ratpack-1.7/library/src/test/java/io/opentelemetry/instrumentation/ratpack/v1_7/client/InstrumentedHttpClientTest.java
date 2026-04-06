@@ -21,7 +21,6 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.ratpack.v1_7.RatpackClientTelemetry;
 import io.opentelemetry.instrumentation.ratpack.v1_7.RatpackServerTelemetry;
@@ -340,7 +339,7 @@ class InstrumentedHttpClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("a-span").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("a-span").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
