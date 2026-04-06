@@ -20,7 +20,7 @@ public final class PekkoHttpServerSingletons {
         JavaagentHttpServerInstrumenters.create(
             PekkoHttpUtil.instrumentationName(),
             new PekkoHttpServerAttributesGetter(),
-            PekkoHttpServerHeaders.INSTANCE);
+            new PekkoHttpServerHeaders());
   }
 
   public static Instrumenter<HttpRequest, HttpResponse> instrumenter() {
