@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.xxljob.common;
 
-public final class XxlJobConstants {
+public class XxlJobConstants {
 
   private XxlJobConstants() {}
 

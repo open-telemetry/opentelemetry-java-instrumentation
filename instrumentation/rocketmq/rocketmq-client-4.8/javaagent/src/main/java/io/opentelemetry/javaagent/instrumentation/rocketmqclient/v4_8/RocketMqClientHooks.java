@@ -12,7 +12,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import org.apache.rocketmq.client.hook.ConsumeMessageHook;
 import org.apache.rocketmq.client.hook.SendMessageHook;
 
-public final class RocketMqClientHooks {
+public class RocketMqClientHooks {
 
   @SuppressWarnings("deprecation") // call to deprecated method will be removed in the future
   private static final RocketMqTelemetry TELEMETRY =

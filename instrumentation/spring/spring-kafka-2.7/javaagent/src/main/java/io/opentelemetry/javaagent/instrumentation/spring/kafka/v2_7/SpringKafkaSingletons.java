@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetry;
 import io.opentelemetry.instrumentation.spring.kafka.v2_7.internal.SpringKafkaErrorCauseExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
-public final class SpringKafkaSingletons {
+public class SpringKafkaSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-kafka-2.7";
 
   private static final SpringKafkaTelemetry TELEMETRY =

@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import org.springframework.web.servlet.ModelAndView;
 
-public final class SpringWebMvcInstrumenterFactory {
+public class SpringWebMvcInstrumenterFactory {
 
   private final String instrumentationName;
 

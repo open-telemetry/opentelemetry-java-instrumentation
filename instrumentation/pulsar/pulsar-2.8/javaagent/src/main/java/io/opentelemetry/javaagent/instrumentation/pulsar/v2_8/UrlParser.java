@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import javax.annotation.Nullable;
 
-public final class UrlParser {
+public class UrlParser {
 
   private UrlParser() {}
 

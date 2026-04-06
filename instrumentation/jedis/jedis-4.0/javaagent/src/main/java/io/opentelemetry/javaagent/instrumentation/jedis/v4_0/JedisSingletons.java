@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNam
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
-public final class JedisSingletons {
+public class JedisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-4.0";
 
   private static final Instrumenter<JedisRequest, Void> instrumenter;

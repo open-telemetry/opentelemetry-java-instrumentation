@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.Instrument
 import io.opentelemetry.instrumentation.graphql.v12_0.GraphQLTelemetry;
 import java.util.logging.Logger;
 
-public final class GraphqlSingletons {
+public class GraphqlSingletons {
 
   private static final Logger logger = Logger.getLogger(GraphqlSingletons.class.getName());
 

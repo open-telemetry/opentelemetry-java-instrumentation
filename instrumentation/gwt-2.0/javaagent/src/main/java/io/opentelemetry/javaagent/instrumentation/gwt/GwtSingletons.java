@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import java.lang.reflect.Method;
 
-public final class GwtSingletons {
+public class GwtSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.gwt-2.0";
 

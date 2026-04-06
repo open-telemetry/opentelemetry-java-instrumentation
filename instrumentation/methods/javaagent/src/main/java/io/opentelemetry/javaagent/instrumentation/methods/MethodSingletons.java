@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttribute
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
-final class MethodSingletons {
+class MethodSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.methods";
 
   private static final Instrumenter<MethodAndType, Void> instrumenter;

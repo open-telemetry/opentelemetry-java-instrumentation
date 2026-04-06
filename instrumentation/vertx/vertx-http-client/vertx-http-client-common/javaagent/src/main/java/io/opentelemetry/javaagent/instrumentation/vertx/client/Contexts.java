@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.client;
 
 import io.opentelemetry.context.Context;
 
-public final class Contexts {
+public class Contexts {
   public final Context parentContext;
   public final Context context;
 

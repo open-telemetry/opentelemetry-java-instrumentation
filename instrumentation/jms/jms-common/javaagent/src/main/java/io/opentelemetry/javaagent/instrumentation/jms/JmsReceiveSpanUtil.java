@@ -15,7 +15,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContextHolder;
 import javax.annotation.Nullable;
 
-public final class JmsReceiveSpanUtil {
+public class JmsReceiveSpanUtil {
   private static final ContextPropagators propagators = GlobalOpenTelemetry.getPropagators();
   private static final boolean receiveInstrumentationEnabled =
       ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();

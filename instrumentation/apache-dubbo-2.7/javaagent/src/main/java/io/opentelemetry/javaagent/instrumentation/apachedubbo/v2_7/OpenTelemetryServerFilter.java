@@ -16,7 +16,7 @@ import org.apache.dubbo.rpc.Result;
 @Activate(
     group = {"provider"},
     order = -1)
-public final class OpenTelemetryServerFilter implements Filter {
+public class OpenTelemetryServerFilter implements Filter {
 
   private final Filter delegate;
 

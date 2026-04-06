@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metric
 
 import io.opentelemetry.api.metrics.ObservableDoubleGauge;
 
-public final class ApplicationObservableDoubleGauge
+public class ApplicationObservableDoubleGauge
     implements application.io.opentelemetry.api.metrics.ObservableDoubleGauge {
 
   private final ObservableDoubleGauge agentGauge;

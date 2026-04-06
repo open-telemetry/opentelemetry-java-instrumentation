@@ -16,7 +16,7 @@ import io.opentelemetry.instrumentation.javahttpserver.internal.JavaHttpServerIn
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.util.List;
 
-public final class JavaHttpServerSingletons {
+public class JavaHttpServerSingletons {
 
   private static final List<Filter> instrumentationFilters;
 

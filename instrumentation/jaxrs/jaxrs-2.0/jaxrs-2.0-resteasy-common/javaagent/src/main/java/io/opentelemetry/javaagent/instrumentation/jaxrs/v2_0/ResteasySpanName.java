@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.bootstrap.jaxrs.JaxrsContextPath;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import javax.annotation.Nullable;
 
-public final class ResteasySpanName implements HttpServerRouteGetter<String> {
+public class ResteasySpanName implements HttpServerRouteGetter<String> {
 
   public static final ResteasySpanName INSTANCE = new ResteasySpanName();
 

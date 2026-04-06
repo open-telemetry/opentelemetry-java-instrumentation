@@ -10,7 +10,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import javax.annotation.Nullable;
 
-public final class StateHolder {
+public class StateHolder {
   public static final ThreadLocal<StateHolder> HOLDER = new ThreadLocal<>();
 
   @Nullable private KafkaProcessRequest request;

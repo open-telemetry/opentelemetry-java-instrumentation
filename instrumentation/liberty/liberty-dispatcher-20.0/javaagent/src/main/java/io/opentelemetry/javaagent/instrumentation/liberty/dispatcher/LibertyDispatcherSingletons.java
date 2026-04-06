@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
 
-final class LibertyDispatcherSingletons {
+class LibertyDispatcherSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.liberty-dispatcher-20.0";
 
   private static final Instrumenter<LibertyRequest, LibertyResponse> instrumenter;

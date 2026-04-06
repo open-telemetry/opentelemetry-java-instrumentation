@@ -18,7 +18,7 @@ import io.opentelemetry.semconv.SchemaUrls;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 
-public final class NettyClientSingletons {
+public class NettyClientSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.netty-3.8";
 

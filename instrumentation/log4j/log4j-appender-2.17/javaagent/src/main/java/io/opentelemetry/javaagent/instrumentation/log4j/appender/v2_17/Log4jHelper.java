@@ -28,7 +28,7 @@ import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.message.Message;
 
-public final class Log4jHelper {
+public class Log4jHelper {
 
   private static final java.util.logging.Logger logger =
       java.util.logging.Logger.getLogger(Log4jHelper.class.getName());

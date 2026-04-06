@@ -21,7 +21,7 @@ import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.ProtocolVersion;
 
-public final class ApacheHttpClientRequest {
+public class ApacheHttpClientRequest {
 
   private static final Logger logger = Logger.getLogger(ApacheHttpClientRequest.class.getName());
 

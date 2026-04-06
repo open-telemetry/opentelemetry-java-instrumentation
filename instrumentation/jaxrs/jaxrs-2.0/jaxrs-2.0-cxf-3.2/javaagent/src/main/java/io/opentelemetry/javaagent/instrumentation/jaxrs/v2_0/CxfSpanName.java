@@ -19,7 +19,7 @@ import org.apache.cxf.jaxrs.model.OperationResourceInfo;
 import org.apache.cxf.jaxrs.model.URITemplate;
 import org.apache.cxf.message.Exchange;
 
-public final class CxfSpanName implements HttpServerRouteGetter<String> {
+public class CxfSpanName implements HttpServerRouteGetter<String> {
 
   public static final CxfSpanName INSTANCE = new CxfSpanName();
 

@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_56.incuba
 
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 
-public final class ApplicationConfigProvider156Incubator
+public class ApplicationConfigProvider156Incubator
     implements application.io.opentelemetry.api.incubator.config.ConfigProvider {
 
   private final application.io.opentelemetry.api.incubator.config.DeclarativeConfigProperties

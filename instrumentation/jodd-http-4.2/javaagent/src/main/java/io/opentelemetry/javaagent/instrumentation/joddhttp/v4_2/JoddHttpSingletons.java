@@ -10,7 +10,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrume
 import jodd.http.HttpRequest;
 import jodd.http.HttpResponse;
 
-final class JoddHttpSingletons {
+class JoddHttpSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jodd-http-4.2";
 
   private static final Instrumenter<HttpRequest, HttpResponse> instrumenter;

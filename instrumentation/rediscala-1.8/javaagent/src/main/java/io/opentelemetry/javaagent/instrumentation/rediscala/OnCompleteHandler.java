@@ -12,7 +12,7 @@ import redis.RedisCommand;
 import scala.runtime.AbstractFunction1;
 import scala.util.Try;
 
-public final class OnCompleteHandler extends AbstractFunction1<Try<Object>, Void> {
+public class OnCompleteHandler extends AbstractFunction1<Try<Object>, Void> {
   private final Context context;
   private final RedisCommand<?, ?> request;
 

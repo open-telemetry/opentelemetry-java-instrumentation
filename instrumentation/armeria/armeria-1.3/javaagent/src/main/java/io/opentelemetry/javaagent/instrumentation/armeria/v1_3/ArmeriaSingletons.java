@@ -19,7 +19,7 @@ import java.util.function.Function;
 
 // Holds singleton references to decorators to match against during suppression.
 // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/903
-public final class ArmeriaSingletons {
+public class ArmeriaSingletons {
   private static final Function<HttpClient, HttpClient> clientDecorator;
 
   private static final Function<HttpService, HttpService> serverDecorator;

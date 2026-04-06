@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.common.ClickHouseDbRequest;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.common.ClickHouseInstrumenterFactory;
 
-public final class ClickHouseClientV2Singletons {
+public class ClickHouseClientV2Singletons {
 
   private static final String INSTRUMENTER_NAME = "io.opentelemetry.clickhouse-client-v2-0.8";
   private static final Instrumenter<ClickHouseDbRequest, Void> instrumenter;

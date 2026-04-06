@@ -20,7 +20,7 @@ import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyS
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.NettyClientHandlerFactory;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 
-public final class NettyClientSingletons {
+public class NettyClientSingletons {
 
   private static final boolean connectionTelemetryEnabled =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "netty")

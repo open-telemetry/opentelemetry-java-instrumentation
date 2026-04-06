@@ -11,7 +11,7 @@ import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 import org.apache.ibatis.binding.MapperMethod.SqlCommand;
 
-public final class SqlCommandUtil {
+public class SqlCommandUtil {
   private static final VirtualField<SqlCommand, ClassAndMethod> field =
       VirtualField.find(SqlCommand.class, ClassAndMethod.class);
 

@@ -12,7 +12,7 @@ import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
 import org.apache.rocketmq.client.apis.consumer.MessageListener;
 import org.apache.rocketmq.client.apis.message.MessageView;
 
-public final class MessageListenerWrapper implements MessageListener {
+public class MessageListenerWrapper implements MessageListener {
   private final MessageListener delegator;
 
   private MessageListenerWrapper(MessageListener delegator) {

@@ -24,7 +24,7 @@ import kotlin.coroutines.intrinsics.IntrinsicsKt;
  * Object} as it allows to avoid having to inject extra classes in the target classloader
  */
 @SuppressWarnings("unused") // methods calls injected through bytecode instrumentation
-public final class AnnotationInstrumentationHelper {
+public class AnnotationInstrumentationHelper {
 
   private static final VirtualField<Continuation<?>, Context> contextField =
       VirtualField.find(Continuation.class, Context.class);

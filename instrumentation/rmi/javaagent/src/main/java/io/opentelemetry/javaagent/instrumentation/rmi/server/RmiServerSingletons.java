@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMetho
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
-public final class RmiServerSingletons {
+public class RmiServerSingletons {
 
   private static final Instrumenter<ClassAndMethod, Void> instrumenter;
 

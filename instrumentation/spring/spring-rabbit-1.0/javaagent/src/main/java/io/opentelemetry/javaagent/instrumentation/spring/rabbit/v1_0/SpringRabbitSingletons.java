@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import org.springframework.amqp.core.Message;
 
-public final class SpringRabbitSingletons {
+public class SpringRabbitSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-rabbit-1.0";
 
