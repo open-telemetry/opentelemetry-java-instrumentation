@@ -24,7 +24,7 @@ public final class WithSpanSingletons {
 
   private static final Logger logger = Logger.getLogger(WithSpanSingletons.class.getName());
   private static final Instrumenter<Method, Object> instrumenter = createInstrumenter();
-  private static final Instrumenter<MethodRequest, Object> INSTRUMENTER_WITH_ATTRIBUTES =
+  private static final Instrumenter<MethodRequest, Object> instrumenterWithAttributes =
       createInstrumenterWithAttributes();
 
   public static Instrumenter<Method, Object> instrumenter() {
@@ -32,7 +32,7 @@ public final class WithSpanSingletons {
   }
 
   public static Instrumenter<MethodRequest, Object> instrumenterWithAttributes() {
-    return INSTRUMENTER_WITH_ATTRIBUTES;
+    return instrumenterWithAttributes;
   }
 
   private static Instrumenter<Method, Object> createInstrumenter() {
