@@ -13,6 +13,8 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
 
+val repositoryMetadata by configurations.creating
+
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-web")
   implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
@@ -36,6 +38,8 @@ dependencies {
     // are not in sync
     testImplementation("org.mongodb:mongodb-driver-sync:latest.release")
   }
+
+  repositoryMetadata("org.graalvm.buildtools:graalvm-reachability-metadata:1.0.0:repository@zip")
 }
 
 springBoot {
@@ -70,10 +74,25 @@ plugins.withId("org.graalvm.buildtools.native") {
     enabled = false
   }
 
+  val extractRepositoryMetadata by tasks.registering(Copy::class) {
+    inputs.files(repositoryMetadata)
+    from({
+      zipTree(repositoryMetadata.singleFile)
+    })
+    into(rootProject.layout.buildDirectory.dir("metadata-repository"))
+  }
+  tasks.named("nativeTestCompile").configure {
+    dependsOn(extractRepositoryMetadata)
+  }
+
   // See https://github.com/graalvm/native-build-tools/issues/572
   (extensions.getByName("graalvmNative") as ExtensionAware).extensions
     .configure<org.graalvm.buildtools.gradle.dsl.GraalVMReachabilityMetadataRepositoryExtension> {
       enabled.set(false)
+      // manully set up the metadata repository to avoid resolving the default repository, which
+      // currently fails with
+      // Resolution of the configuration ':smoke-tests-otel-starter:spring-boot-3:detachedConfiguration1' was attempted without an exclusive lock. This is unsafe and not allowed.
+      uri.set(extractRepositoryMetadata.get().destinationDir.toURI())
     }
 
   tasks.named<Test>("test").configure {
