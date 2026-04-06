@@ -354,3 +354,4 @@ opentelemetry-instrumentation-api:javaagent
 oracle-ucp-11.2:javaagent
 oracle-ucp-11.2:testing
 oracle-ucp-11.2:library
+oshi:library
