@@ -103,21 +103,23 @@ One positive landmark class can sometimes provide **both** bounds: its presence 
 module is at least version `X.Y`, and the same class disappears in `Y.Z`, so it also excludes
 `Y.Z+`. In that case, use a combined comment such as `// added in X.Y, removed in Y.Z`.
 
-For a single-item `hasClassesNamed(...)` check, prefer the compact form with the version
-comment above the statement or expression that uses the matcher, instead of splitting the
-single string onto its own line:
+When the entire `classLoaderMatcher()` return is a single `hasClassesNamed(...)` call with
+one class — no `.and(...)` chaining — prefer the compact form with the version comment above
+the statement or expression, instead of splitting the single string onto its own line:
 
 ```java
 // added in 3.0
 return hasClassesNamed("jakarta.faces.context.FacesContext");
 ```
 
-The same compact style applies to single negated exclusions:
-
 ```java
 // added in 8.10 (native OTel support)
-.and(not(hasClassesNamed("co.elastic.clients.transport.instrumentation.Instrumentation")));
+return not(hasClassesNamed("co.elastic.clients.transport.instrumentation.Instrumentation"));
 ```
+
+The compact form does **not** apply when matchers are chained (e.g., positive + negated).
+In that case, follow the multi-class rule: place each version comment directly above its
+class name string.
 
 **How to identify ceiling classes**: look for a **newer sibling module** for the same
 library, such as `mongo-4.0` next to `mongo-3.7`. If the newer module's
@@ -211,9 +213,10 @@ public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
   the module truly depends on an added or removed landmark class that muzzle does not inspect.
 - **Version comments are required on landmark classes.** For multi-class checks, or whenever
   the landmark version differs from the module's base version, every `hasClassesNamed()` call
-  needs a role comment. For a single-item `hasClassesNamed(...)` check, including a negated
-  exclusion in `.and(not(...))`, prefer the compact form with the comment above the statement
-  or expression instead of placing the only string on its own line.
+  needs a role comment. When the entire return expression is a single `hasClassesNamed(...)`
+  call with one class (no `.and(...)` chaining), prefer the compact form with the version
+  comment above the statement or expression. When matchers are chained, place each version
+  comment directly above its class name string.
   - Positive floor class → `// added in X.Y`, optionally with brief, non-duplicative context
     such as `renamed from javax` or `backported to 2.12.3`.
   - Positive ceiling class → `// removed in Y.Z`, optionally with brief, non-duplicative
@@ -226,11 +229,12 @@ public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
   when that class disappeared, not when it first appeared. Conversely, do use `// added in`
   for a **negated** exclusion class, because its first appearance is what starts the excluded
   range.
-- **Single-class landmark comments are required.** When a single-class `hasClassesNamed(...)`
-  check establishes the module's lower bound, or when a single-class negated check establishes
-  an excluded upper range, use the compact form with the version comment immediately above the
-  statement or expression that uses the matcher. Parenthetical context is fine only when it
-  adds interesting, non-duplicative signal. If the same positive class also establishes the
+- **Single-class landmark comments are required.** When the entire return expression is a
+  single `hasClassesNamed(...)` call with one class (no chaining), use the compact form with
+  the version comment above the statement or expression. When matchers are chained (e.g.,
+  positive `.and(not(...))` or multi-argument), place each version comment directly above its
+  class name string — not above the outer `.and(` expression. Parenthetical context is fine
+  only when it adds interesting, non-duplicative signal. If the same positive class also establishes the
   upper bound because it is removed or replaced in a newer sibling version, include that too,
   for example `// added in X.Y, removed in Y.Z`. First validate the stated boundaries from
   repository or upstream evidence; do not infer them from the module name alone.
