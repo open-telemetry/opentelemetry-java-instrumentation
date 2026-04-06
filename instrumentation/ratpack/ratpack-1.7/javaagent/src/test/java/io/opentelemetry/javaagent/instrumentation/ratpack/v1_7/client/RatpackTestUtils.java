@@ -10,7 +10,7 @@ import java.net.URI;
 import org.junit.jupiter.api.condition.OS;
 import ratpack.http.client.HttpClientReadTimeoutException;
 
-final class RatpackTestUtils {
+class RatpackTestUtils {
 
   private RatpackTestUtils() {}
 
