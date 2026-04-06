@@ -25,6 +25,7 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // skip instrumentation when opentelemetry-api-incubator is not present
+    // added in 1.37, removed in 1.38
     return hasClassesNamed("application.io.opentelemetry.api.incubator.metrics.DoubleGauge");
   }
 
