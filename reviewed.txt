@@ -362,3 +362,4 @@ pekko-actor-1.0:javaagent
 pekko-http-1.0:javaagent
 play-mvc-2.6:javaagent
 play-mvc-2.4:javaagent
+play-ws-2.1:javaagent
