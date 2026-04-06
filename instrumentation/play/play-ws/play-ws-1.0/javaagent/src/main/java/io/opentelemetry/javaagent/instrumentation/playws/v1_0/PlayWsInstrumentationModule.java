@@ -27,7 +27,7 @@ import play.shaded.ahc.org.asynchttpclient.handler.StreamedAsyncHandler;
 import play.shaded.ahc.org.asynchttpclient.ws.WebSocketUpgradeHandler;
 
 @AutoService(InstrumentationModule.class)
-public class PlayWsInstrumentationModule extends InstrumentationModule
+public final class PlayWsInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public PlayWsInstrumentationModule() {
     super("play-ws", "play-ws-1.0");
@@ -106,9 +106,7 @@ public class PlayWsInstrumentationModule extends InstrumentationModule
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Argument(0) Request request,
-        @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter Object[] enterResult) {
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter Object[] enterResult) {
 
       AdviceScope adviceScope = (AdviceScope) enterResult[0];
       if (adviceScope != null) {
