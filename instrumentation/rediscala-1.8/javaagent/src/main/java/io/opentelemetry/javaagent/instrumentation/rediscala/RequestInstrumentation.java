@@ -82,8 +82,8 @@ class RequestInstrumentation implements TypeInstrumentation {
       public void end(
           Object action,
           RedisCommand<?, ?> cmd,
-          Future<Object> responseFuture,
-          Throwable throwable) {
+          @Nullable Future<Object> responseFuture,
+          @Nullable Throwable throwable) {
         scope.close();
 
         ExecutionContext ctx = null;
@@ -99,6 +99,8 @@ class RequestInstrumentation implements TypeInstrumentation {
 
         if (throwable != null) {
           instrumenter().end(context, cmd, null, throwable);
+        } else if (responseFuture == null) {
+          instrumenter().end(context, cmd, null, null);
         } else {
           responseFuture.onComplete(new OnCompleteHandler(context, cmd), ctx);
         }
