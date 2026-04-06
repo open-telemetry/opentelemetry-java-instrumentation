@@ -9,6 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -32,6 +33,7 @@ class AbstractResteasyReactiveContextInstrumentation implements TypeInstrumentat
   public static class RunAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Nullable
     public static OtelRequestContext onEnter(
         @Advice.This AbstractResteasyReactiveContext<?, ?> requestContext) {
       if (requestContext instanceof ResteasyReactiveRequestContext) {
@@ -42,7 +44,7 @@ class AbstractResteasyReactiveContextInstrumentation implements TypeInstrumentat
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Enter OtelRequestContext context) {
+    public static void onExit(@Advice.Enter @Nullable OtelRequestContext context) {
       if (context != null) {
         context.close();
       }
