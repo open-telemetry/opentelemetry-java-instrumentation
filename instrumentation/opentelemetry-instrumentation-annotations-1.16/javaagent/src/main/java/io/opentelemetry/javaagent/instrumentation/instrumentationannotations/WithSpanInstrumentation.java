@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.instrumentationannotations;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.AnnotationSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.AnnotationSingletons.instrumenterWithAttributes;
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.KotlinCoroutineUtil.isKotlinSuspendMethod;
@@ -51,6 +52,11 @@ class WithSpanInstrumentation implements TypeInstrumentation {
     // exclude all kotlin suspend methods, these are handle in kotlinx-coroutines instrumentation
     excludedMethodsMatcher =
         AnnotationExcludedMethods.configureExcludedMethods().or(isKotlinSuspendMethod());
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("application.io.opentelemetry.instrumentation.annotations.WithSpan");
   }
 
   @Override

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.instrumentationannotations;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.AnnotationSingletons.attributes;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.hasParameters;
@@ -50,6 +51,12 @@ class AddingSpanAttributesInstrumentation implements TypeInstrumentation {
                     named(
                         "application.io.opentelemetry.instrumentation.annotations.SpanAttribute"))));
     excludedMethodsMatcher = AnnotationExcludedMethods.configureExcludedMethods();
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed(
+        "application.io.opentelemetry.instrumentation.annotations.AddingSpanAttributes");
   }
 
   @Override
