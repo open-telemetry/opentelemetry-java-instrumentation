@@ -43,7 +43,7 @@ abstract class AbstractReactorNettyHttpClientTest
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  private static final String UNOPENED_PORT_URI = "http://localhost:" + PortUtils.UNUSABLE_PORT + "/";
+  private static final String UNUSABLE_PORT_URI = "http://localhost:" + PortUtils.UNUSABLE_PORT + "/";
 
   abstract HttpClient createHttpClient(boolean readTimeout);
 
@@ -99,7 +99,7 @@ abstract class AbstractReactorNettyHttpClientTest
     optionsBuilder.setExpectedClientSpanNameMapper(
         (uri, method) -> {
           switch (uri.toString()) {
-            case UNOPENED_PORT_URI: // unopened port
+            case UNUSABLE_PORT_URI: // unopened port
             case "https://192.0.2.1/": // non routable address
               return "CONNECT";
             default:
@@ -112,7 +112,7 @@ abstract class AbstractReactorNettyHttpClientTest
         (uri, exception) -> {
           if (exception.getClass().getName().endsWith("ReactiveException")) {
             // unopened port or non routable address
-            if (UNOPENED_PORT_URI.equals(uri.toString())
+            if (UNUSABLE_PORT_URI.equals(uri.toString())
                 || "https://192.0.2.1/".equals(uri.toString())) {
               exception = exception.getCause();
             }
@@ -123,7 +123,7 @@ abstract class AbstractReactorNettyHttpClientTest
     optionsBuilder.setHttpAttributes(
         uri -> {
           // unopened port or non routable address
-          if (UNOPENED_PORT_URI.equals(uri.toString())
+          if (UNUSABLE_PORT_URI.equals(uri.toString())
               || "https://192.0.2.1/".equals(uri.toString())) {
             return emptySet();
           }
@@ -204,7 +204,7 @@ abstract class AbstractReactorNettyHttpClientTest
                     () ->
                         httpClient
                             .get()
-                            .uri(UNOPENED_PORT_URI)
+                            .uri(UNUSABLE_PORT_URI)
                             .responseSingle(
                                 (resp, content) -> {
                                   // Make sure to consume content since that's when we close the
