@@ -4632,7 +4632,6 @@ libraries:
     - GRAPHQL_SERVER_SPANS
     library_link: https://www.graphql-java.com/
     source_path: instrumentation/graphql-java/graphql-java-20.0
-    minimum_java_version: 11
     scope:
       name: io.opentelemetry.graphql-java-20.0
     has_standalone_library: true
@@ -6619,7 +6618,7 @@ libraries:
       default: ''
     - name: otel.instrumentation.jdbc.experimental.capture-query-parameters
       description: |
-        Sets whether the query parameters should be captured as span attributes named <code>db.query.parameter.&lt;key&gt;</code>. Enabling this option disables query sanitization.<p>WARNING: captured query parameters may contain sensitive information such as passwords, personally identifiable information or protected health info.
+        Sets whether the query parameters should be captured as span attributes named <code>db.query.parameter.&lt;key&gt;</code>. Enabling this option disables the statement sanitization.<p>WARNING: captured query parameters may contain sensitive information such as passwords, personally identifiable information or protected health info.
       type: boolean
       default: false
     - name: otel.instrumentation.jdbc-datasource.enabled
@@ -7558,7 +7557,7 @@ libraries:
       name: io.opentelemetry.jodd-http-4.2
       schema_url: https://opentelemetry.io/schemas/1.37.0
     javaagent_target_versions:
-    - org.jodd:jodd-http:[4.2.0,)
+    - org.jodd:jodd-http:[4.1.1,)
     configurations:
     - name: otel.instrumentation.http.known-methods
       description: |
@@ -13634,7 +13633,6 @@ libraries:
     features:
     - CONTEXT_PROPAGATION
     source_path: instrumentation/spring/spring-core-2.0
-    minimum_java_version: 17
     scope:
       name: io.opentelemetry.spring-core-2.0
     javaagent_target_versions:
@@ -14696,7 +14694,6 @@ libraries:
     features:
     - HTTP_ROUTE
     source_path: instrumentation/tomcat/tomcat-10.0
-    minimum_java_version: 11
     scope:
       name: io.opentelemetry.tomcat-10.0
       schema_url: https://opentelemetry.io/schemas/1.37.0
