@@ -88,13 +88,8 @@ public abstract class AbstractReactorKafkaTest {
             .withStartupTimeout(Duration.ofMinutes(1));
     kafka.start();
 
-    try {
-      sender = KafkaSender.create(senderOptions());
-      receiver = KafkaReceiver.create(receiverOptions());
-    } catch (RuntimeException | Error e) {
-      kafka.stop();
-      throw e;
-    }
+    sender = KafkaSender.create(senderOptions());
+    receiver = KafkaReceiver.create(receiverOptions());
   }
 
   @AfterAll
