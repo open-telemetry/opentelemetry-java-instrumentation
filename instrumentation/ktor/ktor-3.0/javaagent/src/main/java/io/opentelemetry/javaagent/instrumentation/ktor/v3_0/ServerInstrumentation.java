@@ -48,7 +48,7 @@ class ServerInstrumentation implements TypeInstrumentation {
       try {
         // since 3.0.3
         getter = lookup.findGetter(EmbeddedServer.class, "applicationInstance", Application.class);
-      } catch (NoSuchFieldException exception) {
+      } catch (NoSuchFieldException ignored) {
         // before 3.0.3
         getter = lookup.findGetter(EmbeddedServer.class, "_applicationInstance", Application.class);
       }

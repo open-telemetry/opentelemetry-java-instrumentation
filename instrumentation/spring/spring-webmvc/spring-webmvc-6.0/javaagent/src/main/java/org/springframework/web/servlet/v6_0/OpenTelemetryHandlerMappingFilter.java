@@ -45,8 +45,8 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
           // sets new value for PATH_ATTRIBUTE of request
           try {
             ServletRequestPathUtils.parseAndCache(request);
-          } catch (RuntimeException exception) {
-            logger.log(FINE, "Failed calling parseAndCache", exception);
+          } catch (RuntimeException e) {
+            logger.log(FINE, "Failed calling parseAndCache", e);
             return null;
           }
         }

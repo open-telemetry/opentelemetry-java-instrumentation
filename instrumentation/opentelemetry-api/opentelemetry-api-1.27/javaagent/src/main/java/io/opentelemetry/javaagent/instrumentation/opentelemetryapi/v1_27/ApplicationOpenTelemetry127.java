@@ -198,7 +198,7 @@ public class ApplicationOpenTelemetry127 implements application.io.opentelemetry
         | NoSuchMethodException
         | InstantiationException
         | IllegalAccessException
-        | InvocationTargetException exception) {
+        | InvocationTargetException ignored) {
       return null;
     }
   }

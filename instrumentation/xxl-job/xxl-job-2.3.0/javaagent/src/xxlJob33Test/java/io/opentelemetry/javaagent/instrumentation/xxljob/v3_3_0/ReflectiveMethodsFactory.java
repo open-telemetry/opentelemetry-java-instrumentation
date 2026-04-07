@@ -48,8 +48,8 @@ class ReflectiveMethodsFactory {
   private static Method getRequiredMethod(String name, Class<?>... parameterTypes) {
     try {
       return SINGLETON_OBJECT.getClass().getMethod(name, parameterTypes);
-    } catch (ReflectiveOperationException exception) {
-      throw new IllegalStateException("Failed to resolve reflective method: " + name, exception);
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalStateException("Failed to resolve reflective method: " + name, e);
     }
   }
 }

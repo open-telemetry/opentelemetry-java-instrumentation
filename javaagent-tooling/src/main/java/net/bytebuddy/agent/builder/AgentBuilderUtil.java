@@ -67,8 +67,8 @@ public class AgentBuilderUtil {
       agentBuilder = agentBuilder.with(new TransformContext());
 
       optimize((AgentBuilder.Default) agentBuilder);
-    } catch (Exception exception) {
-      throw new IllegalStateException("Failed to optimize transformations", exception);
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to optimize transformations", e);
     }
     return agentBuilder;
   }

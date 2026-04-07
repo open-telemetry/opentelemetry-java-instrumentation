@@ -78,10 +78,8 @@ class VertxRxCircuitBreakerHttpServerTest extends AbstractVertxRxHttpServerTest 
                               () -> {
                                 throw cause;
                               });
-                        } catch (Throwable throwable) {
-                          ctx.response()
-                              .setStatusCode(EXCEPTION.getStatus())
-                              .end(throwable.getMessage());
+                        } catch (Throwable t) {
+                          ctx.response().setStatusCode(EXCEPTION.getStatus()).end(t.getMessage());
                         }
                       }));
 

@@ -30,9 +30,9 @@ public class AsyncRunnableWrapper<REQUEST> implements Runnable {
   public void run() {
     try (Scope ignored = context.makeCurrent()) {
       runnable.run();
-    } catch (Throwable throwable) {
-      helper.recordAsyncException(context, throwable);
-      throw throwable;
+    } catch (Throwable t) {
+      helper.recordAsyncException(context, t);
+      throw t;
     }
   }
 }

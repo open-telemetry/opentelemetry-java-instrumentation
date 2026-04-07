@@ -25,7 +25,7 @@ public class CxfServerSpanNaming {
   private static Class<?> loadClass(String className) {
     try {
       return Class.forName(className);
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       return null;
     }
   }

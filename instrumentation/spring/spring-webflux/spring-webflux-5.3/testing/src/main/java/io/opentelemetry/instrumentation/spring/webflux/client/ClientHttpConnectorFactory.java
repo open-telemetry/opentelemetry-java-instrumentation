@@ -32,7 +32,7 @@ final class ClientHttpConnectorFactory {
     try {
       Class.forName("reactor.netty.http.client.HttpClient");
       return false;
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       return true;
     }
   }

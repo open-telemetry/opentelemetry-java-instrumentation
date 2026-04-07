@@ -41,7 +41,7 @@ public class OshiMetricsInstaller implements AgentListener {
       throws NoSuchMethodException {
     try {
       return oshiSystemInfoClass.getMethod("getCurrentPlatformEnum");
-    } catch (NoSuchMethodException exception) {
+    } catch (NoSuchMethodException ignored) {
       // renamed in oshi 6.0.0
       return oshiSystemInfoClass.getMethod("getCurrentPlatform");
     }

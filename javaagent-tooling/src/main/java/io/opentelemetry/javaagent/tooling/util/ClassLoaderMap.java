@@ -94,8 +94,8 @@ class ClassLoaderMap {
           field.set(null, map);
         }
       }
-    } catch (Exception exception) {
-      throw new IllegalStateException(exception);
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
     }
     return map;
   }

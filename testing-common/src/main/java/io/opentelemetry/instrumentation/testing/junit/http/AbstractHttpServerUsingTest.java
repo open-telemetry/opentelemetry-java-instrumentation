@@ -42,8 +42,8 @@ public abstract class AbstractHttpServerUsingTest<SERVER> {
 
     try {
       server = setupServer();
-    } catch (Exception exception) {
-      throw new IllegalStateException("Failed to start server", exception);
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to start server", e);
     }
     if (server != null) {
       logger.info(
@@ -63,8 +63,8 @@ public abstract class AbstractHttpServerUsingTest<SERVER> {
     }
     try {
       stopServer(server);
-    } catch (Exception exception) {
-      throw new IllegalStateException("Failed to stop server", exception);
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to stop server", e);
     }
     server = null;
     logger.info(getClass().getName() + " http server stopped at: http://localhost:" + port + "/");
@@ -73,8 +73,8 @@ public abstract class AbstractHttpServerUsingTest<SERVER> {
   protected URI buildAddress() {
     try {
       return new URI("http://localhost:" + port + getContextPath() + "/");
-    } catch (URISyntaxException exception) {
-      throw new IllegalStateException(exception);
+    } catch (URISyntaxException e) {
+      throw new IllegalStateException(e);
     }
   }
 

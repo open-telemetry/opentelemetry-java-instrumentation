@@ -318,7 +318,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
     try {
       return (boolean)
           Class.forName("jdk.jfr.FlightRecorder").getMethod("isAvailable").invoke(null);
-    } catch (ReflectiveOperationException exception) {
+    } catch (ReflectiveOperationException ignored) {
       return false;
     }
   }

@@ -34,7 +34,7 @@ public class ValueBridging {
           Class.forName(
               "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_59.ValueBridging159");
       return (Function<Object, Object>) clazz.getField("INSTANCE").get(null);
-    } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException exception) {
+    } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException ignored) {
       return v -> null;
     }
   }

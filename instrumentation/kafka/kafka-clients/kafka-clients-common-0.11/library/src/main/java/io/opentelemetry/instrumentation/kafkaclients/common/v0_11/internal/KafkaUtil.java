@@ -103,7 +103,7 @@ public final class KafkaUtil {
       Map<MetricName, ? extends Metric> metrics = consumer.metrics();
       Iterator<MetricName> metricIterator = metrics.keySet().iterator();
       return metricIterator.hasNext() ? metricIterator.next().tags().get("client-id") : null;
-    } catch (RuntimeException exception) {
+    } catch (RuntimeException e) {
       // ExceptionHandlingTest uses a Consumer that throws exception on every method call
       return null;
     }

@@ -79,7 +79,7 @@ public class OpenTelemetryConnection implements Connection {
     try {
       Class.forName("java.sql.ShardingKey");
       return true;
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       return false;
     }
   }

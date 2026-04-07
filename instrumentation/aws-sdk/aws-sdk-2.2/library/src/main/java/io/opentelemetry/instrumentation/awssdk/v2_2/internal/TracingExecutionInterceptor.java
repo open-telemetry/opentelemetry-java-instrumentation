@@ -216,10 +216,10 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
         executionAttributes.putAttribute(AWS_SDK_REQUEST_ATTRIBUTE, awsSdkRequest);
         fieldMapper.mapToAttributes(request, awsSdkRequest, span);
       }
-    } catch (Throwable throwable) {
-      requestFinisher.finish(otelContext, executionAttributes, null, throwable);
+    } catch (Throwable t) {
+      requestFinisher.finish(otelContext, executionAttributes, null, t);
       clearAttributes(executionAttributes);
-      throw throwable;
+      throw t;
     }
 
     SdkRequest modifiedRequest =
