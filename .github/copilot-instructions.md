@@ -1,56 +1,25 @@
 # OpenTelemetry Java Instrumentation
 
-## Testing
+## Scope
 
-Tests use AssertJ for assertions and JUnit 5 as the testing framework
+Repository-wide defaults for Copilot behavior.
+Keep scoped language or file-type rules in `.github/instructions/*.instructions.md`.
 
-Test classes and methods should not be public
+## Repository Layout
 
-When registering tests in gradle configurations, if using `val testName by registering(Test::class) {`...
-then you need to include `testClassesDirs` and `classpath` like so:
+- Workspace-level overview: `.github/README.md`
+- Scoped instructions and `applyTo` patterns: `.github/instructions/README.md`
+- Agent review and implementation knowledge index: `.github/agents/knowledge/README.md`
 
-```
-val testExperimental by registering(Test::class) {
-  testClassesDirs = sourceSets.test.get().output.classesDirs
-  classpath = sourceSets.test.get().runtimeClasspath
-  ...
-}
-```
+## Core References
 
-## General Java guidelines
+- Style guide and core conventions: `docs/contributing/style-guide.md`
+- Review and implementation knowledge by topic: `.github/agents/knowledge/README.md`
 
-* Always import classes when possible (i.e. don't use fully qualified class names in code).
+## Gradle Execution Rules
 
-## Gradle CLI
+Never use `--rerun-tasks`. Use `--rerun` when needed.
 
-Never use the `--rerun-tasks` flag unless explicitly asked to use this option.
-
-Gradle automatically detects changes and re-runs tasks automatically when needed. Using `--rerun-tasks`
-is wasteful and slows down builds unnecessarily.
-
-Builds and tests in this repository genuinely take a long time (often several minutes).
-When running Gradle commands, use a timeout of 0 (no timeout) and wait for them to complete.
-Do not assume a build has hung or failed just because it takes a while.
-
-## Throwing exceptions
-
-When writing instrumentation, you have to be really careful about throwing exceptions. For library
-instrumentations it might be acceptable, but in javaagent code you shouldn't throw exceptions
-(keep in mind that javaagent instrumentations sometimes use library instrumentations).
-
-In javaagent instrumentations we try not to break applications. If there are changes in the instrumented
-library that are not compatible with the instrumentation we disable the instrumentation instead of letting
-it fail. This is handled by muzzle. In javaagent instrumentations you should not fail if the methods
-that you need don't exist.
-
-## Javaagent Instrumentation
-
-### Java8BytecodeBridge
-
-When to use `Java8BytecodeBridge.currentContext()` vs `Context.current()` ?
-
-Using `Context.current()` is preferred. `Java8BytecodeBridge.currentContext()` is for using inside
-advice. We need this method because advice code is inlined in the instrumented method as it is.
-Since `Context.current()` is a static interface method it will cause a bytecode verification error
-when it is inserted into a pre 8 class. `Java8BytecodeBridge.currentContext()` is a regular class
-static method and can be used in any class version.
+Builds and tests in this repository can take several minutes.
+Run Gradle commands with timeout `0` (no timeout), and wait for completion.
+Do not treat slow output as a hang by default.

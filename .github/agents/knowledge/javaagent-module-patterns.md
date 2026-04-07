@@ -1,0 +1,259 @@
+# [Javaagent] Module Structure Patterns
+
+## Quick Reference
+
+- Use when: reviewing `InstrumentationModule`, `TypeInstrumentation`, `Singletons`, `VirtualField`, or `CallDepth` code
+- Review focus: registration and naming, matcher performance, safe advice wiring, singleton and hot-path patterns
+
+## InstrumentationModule
+
+Every javaagent instrumentation module has a central `InstrumentationModule` subclass that
+registers the instrumentation with the agent.
+
+### Required structure
+
+```java
+@AutoService(InstrumentationModule.class)
+public class MyLibrary10InstrumentationModule extends InstrumentationModule {
+
+  public MyLibrary10InstrumentationModule() {
+    super("my-library", "my-library-1.0");
+  }
+
+  @Override
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return asList(new MyClassInstrumentation(), new MyOtherClassInstrumentation());
+  }
+}
+```
+
+### Rules
+
+- Must have `@AutoService(InstrumentationModule.class)` — this registers it via SPI.
+- Class name follows `{Library}{Version}InstrumentationModule` (e.g.,
+  `OkHttp3InstrumentationModule`, `JedisInstrumentationModule`).
+- Constructor `super()` arguments: the **first** (main) name must equal the Gradle module
+  directory name excluding version suffix. Names use **kebab-case**. See
+  [module-naming.md](module-naming.md) for the full naming convention.
+- `typeInstrumentations()` returns the list of `TypeInstrumentation` implementations — use
+  `Arrays.asList(...)`.
+
+### `classLoaderMatcher()` — Version-Boundary Detection
+
+Override `classLoaderMatcher()` when the instrumentation targets a specific library version
+range and muzzle alone cannot distinguish it (e.g., a class was added or removed between
+versions but isn't referenced by helper classes).
+
+**Execution order**: `classLoaderMatcher()` runs **first** (fast), then `typeMatcher()`, then
+muzzle (expensive, cached). Use `classLoaderMatcher()` to pre-filter before muzzle runs.
+
+**When to override** (otherwise let muzzle handle it):
+
+- A landmark class was **added** in the target version (exclude older versions).
+- A landmark class was **removed** in a newer version (exclude newer versions).
+- A newer version has **native OpenTelemetry instrumentation** — avoid double-instrumentation.
+
+**When NOT to override** (muzzle catches these automatically):
+
+- Method signature changes, parameter type changes, field removals, package relocations.
+
+#### Pattern A: Check for a class added in the target version (most common)
+
+```java
+@Override
+public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+  // class added in 8.0
+  return hasClassesNamed("org.apache.wicket.request.RequestHandlerExecutor");
+}
+```
+
+#### Pattern B: Multiple landmark classes (AND logic)
+
+`hasClassesNamed()` with multiple arguments requires **ALL** classes to be present. A single
+class suffices for a simple version boundary — use multiple classes only when:
+
+- **One class is ambiguous** — e.g., it was backported to an older branch, so it doesn't
+  uniquely identify the target version. Adding a second class narrows the match.
+- **Floor + ceiling pinning** — one class proves "at least version X", another proves
+  "not yet version Y" (e.g., Hibernate 3.3 checks a class absent before 3.3 AND a class
+  absent in 4.0+, pinning to exactly 3.3.x–3.x).
+- **Cross-JAR dependency** — the classes come from different JARs that may be independently
+  present (e.g., Jersey checks both the JAX-RS spec API and the Jersey implementation class;
+  AWS SDK Lambda checks both the Lambda module and JSON protocol core).
+
+Place a comment **above each class name string** stating its version:
+
+```java
+@Override
+public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+  return hasClassesNamed(
+      // class added in 2.17.0 and backported to 2.12.3
+      "org.apache.logging.log4j.core.lookup.ConfigurationStrSubstitutor",
+      // class added in 2.15.0
+      "org.apache.logging.log4j.core.config.arbiters.DefaultArbiter");
+}
+```
+
+Here `ConfigurationStrSubstitutor` alone would also match 2.12.3 (due to back-port),
+so `DefaultArbiter` (added in 2.15) is required to tighten the match to 2.17+.
+
+Another common shape — floor + ceiling:
+
+```java
+@Override
+public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+  return hasClassesNamed(
+      // Not before 3.3.0.GA
+      "org.hibernate.transaction.JBossTransactionManagerLookup",
+      // Not in 4.0
+      "org.hibernate.classic.Validatable");
+}
+```
+
+#### Pattern C: Exclude newer versions with native instrumentation
+
+Use `.and(not(hasClassesNamed(...)))` to opt out when the library ships its own
+OpenTelemetry instrumentation:
+
+```java
+@Override
+public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+  // InternalRequest was introduced in 7.0.0
+  return hasClassesNamed("org.elasticsearch.client.RestClient$InternalRequest")
+      // Instrumentation class was introduced in 8.10 (native OTel support)
+      .and(not(hasClassesNamed(
+          "co.elastic.clients.transport.instrumentation.Instrumentation")));
+}
+```
+
+#### Pattern D: Exclude a version range (upper bound)
+
+```java
+@Override
+public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+  // LibraryTelemetryOptions was introduced in azure-core 1.53
+  return hasClassesNamed("com.azure.core.util.LibraryTelemetryOptions")
+      // OpenTelemetryTracer was introduced in azure-core-tracing-opentelemetry 1.0.0-beta.47
+      .and(not(hasClassesNamed("com.azure.core.tracing.opentelemetry.OpenTelemetryTracer")));
+}
+```
+
+#### Rules for `classLoaderMatcher()`
+
+- **Every `InstrumentationModule` should override `classLoaderMatcher()`** with a
+  `hasClassesNamed(...)` check for a class from the module's target library. This allows
+  the agent to skip the entire module early — before evaluating type matchers or muzzle —
+  when the target library is absent.
+  **Exceptions** — do not flag: modules under `instrumentation/internal/` (JDK/agent internals),
+  modules instrumenting JDK classes on all supported Java versions (executors,
+  http-url-connection, java-util-logging, rmi, jdbc), config-driven modules with no fixed
+  target library (`methods`, `external-annotations`), and test-only modules.
+- **Version comments on landmark classes.** For multi-class checks, `.and(not(...))`
+  chains, or cases where the landmark version differs from the module's base version,
+  each `hasClassesNamed()` call must have a `//` comment stating the library version
+  (e.g., `// added in 7.0.0`, `// removed in 3.0`).
+- **Do NOT add version comments on trivial single-class checks.** A single-class
+  `hasClassesNamed(...)` check whose landmark corresponds to the module's base
+  version does not need a comment — the version is obvious from the module name. Do not
+  suggest adding one.
+- Prefer **one landmark class** per version boundary — choose the most stable/specific class.
+- **Always include a positive `hasClassesNamed(...)` match.** A `classLoaderMatcher()` that
+  only uses `not(hasClassesNamed(...))` will match every class loader where the excluded
+  class is absent — including class loaders where the target library is not present at all.
+  Always start with a positive `hasClassesNamed(...)` for a class from the target library,
+  then chain `.and(not(...))` to exclude newer versions.
+- Pair with **muzzle config** (`assertInverse.set(true)`) for full coverage.
+- Use `hasClassesNamed(...)` (from `AgentElementMatchers`) — not raw ByteBuddy matchers.
+- `classLoaderMatcher()` runs against **every class loader** in the JVM before type matching
+  begins. It must be fast: use only `hasClassesNamed(...)` (a simple class-presence check).
+  Never use hierarchy matchers (`extendsClass(...)`, `implementsInterface(...)`) here.
+
+## TypeInstrumentation
+
+Each `TypeInstrumentation` class instruments a single target class.
+
+### Required structure
+
+```java
+public class MyClassInstrumentation implements TypeInstrumentation {
+
+  @Override
+  public ElementMatcher<TypeDescription> typeMatcher() {
+    return named("com.example.library.MyClass");
+  }
+
+  @Override
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
+        isMethod().and(named("execute")).and(takesArguments(1)),
+        getClass().getName() + "$ExecuteAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class ExecuteAdvice {
+    // ... advice methods
+  }
+}
+```
+
+### Rules
+
+- Do not flag or change the visibility or `final` modifier on `TypeInstrumentation`,
+  `InstrumentationModule`, or advice classes. Both `public class` and package-private `class`
+  (with or without `final`) are acceptable — this is not a style issue in javaagent code.
+- `typeMatcher()` should match only the types the instrumentation genuinely needs. Prefer
+  `named("fully.qualified.ClassName")` or `namedOneOf(...)` for single classes.
+  `extendsClass(...)` and `implementsInterface(...)` are appropriate when the instrumentation
+  targets subclasses or implementors of a type.
+- `transform()` wires method matchers to advice classes via `applyAdviceToMethod()`.
+- Reference the advice class using `getClass().getName() + "$InnerClassName"` — not
+  `InnerClassName.class.getName()`, `OuterClass.class.getName()`, or a string literal.
+  Any `.class.getName()` reference — whether to the inner advice class or the outer
+  instrumentation class — causes class loading in the agent's class loader, where library
+  types used by the advice are unavailable (causing `NoClassDefFoundError`).
+  `getClass().getName()` avoids this because it is a virtual call on the already-loaded
+  `this` instance, not a class literal.
+
+## Singletons Pattern
+
+Javaagent modules hold their `Instrumenter` instances and shared resources in a dedicated
+`Singletons` holder class (e.g., `MyLibrarySingletons`).
+
+### Rules
+
+- `Instrumenter` instances must be initialized at class-load time — either as a `static final`
+  field initializer or in a `static {}` block.
+- Use `GlobalOpenTelemetry.get()` to obtain the `OpenTelemetry` instance.
+- The instrumentation name string (second argument to `builder()`) should match the Gradle
+  module path: `"io.opentelemetry.<module-name>"` (e.g., `"io.opentelemetry.jedis-4.0"`).
+- Provide a static accessor method (typically named `instrumenter()`).
+
+## CallDepth (Preventing Recursive Instrumentation)
+
+When an instrumented method may call itself through the instrumented library, use `CallDepth`
+to prevent nested spans.
+
+### Rules
+
+- Use `CallDepth.forClass(TargetClass.class)` — the class argument identifies which
+  instrumentation's depth is being tracked.
+- In `@OnMethodEnter`: call `getAndIncrement()`, return the `CallDepth`.
+- In `@OnMethodExit`: if `decrementAndGet() > 0`, skip span-ending logic (still nested).
+
+## VirtualField (Attaching Context to Library Objects)
+
+`VirtualField` attaches virtual fields to library classes without modifying their bytecode,
+for associating OpenTelemetry context or state with library objects.
+
+### Rules
+
+- Call `VirtualField.find(Carrier.class, Value.class)` with class literals.
+- **Inside `@Advice` methods** these calls are **rewritten at bytecode transformation time**
+  by `VirtualFieldFindRewriter` into direct static calls to generated implementations —
+  they are never executed at runtime. It is perfectly fine to call `VirtualField.find()`
+  inside advice methods; do **not** extract them into helper classes or static final fields.
+- **Outside advice** (helper classes, singletons, etc.) the call executes at runtime, so
+  declare the result as a `static final` field to avoid repeated lookups.
+- The first type parameter is the "carrier" class (the library object); the second is the
+  attached value type.
+- Uses weak-key semantics: when the carrier is garbage-collected, the value is released.

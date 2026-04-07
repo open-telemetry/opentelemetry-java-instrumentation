@@ -387,6 +387,8 @@ public class TelemetryConverter {
         return Value.of(value.getBytesValue().toByteArray());
       case VALUE_NOT_SET:
         return EMPTY_VALUE;
+      case STRING_VALUE_STRINDEX:
+        throw new IllegalStateException("Unexpected attribute: " + value.getValueCase());
     }
     throw new IllegalStateException("Unexpected attribute: " + value.getValueCase());
   }
@@ -562,6 +564,8 @@ public class TelemetryConverter {
             converted.put(valueKey(key), EMPTY_VALUE);
           }
           break;
+        case STRING_VALUE_STRINDEX:
+          throw new IllegalStateException("Unexpected attribute: " + value.getValueCase());
       }
     }
     return converted.build();
@@ -630,6 +634,8 @@ public class TelemetryConverter {
             converted.put(valueKey(key), EMPTY_VALUE);
           }
           break;
+        case STRING_VALUE_STRINDEX:
+          throw new IllegalStateException("Unexpected attribute: " + value.getValueCase());
       }
     }
     return converted.build();

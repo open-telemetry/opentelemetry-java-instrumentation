@@ -172,7 +172,7 @@ public class RuleParser {
   public void addMetricDefsTo(MetricConfiguration conf, InputStream is) {
     try {
       JmxConfig config = loadConfig(is);
-      logger.log(FINE, "found {1} metric rules", config.getRules().size());
+      logger.log(FINE, "Found {0} metric rules", config.getRules().size());
       config.addMetricDefsTo(conf);
     } catch (Exception exception) {
       // It is essential that the parser exception is made visible to the user.
