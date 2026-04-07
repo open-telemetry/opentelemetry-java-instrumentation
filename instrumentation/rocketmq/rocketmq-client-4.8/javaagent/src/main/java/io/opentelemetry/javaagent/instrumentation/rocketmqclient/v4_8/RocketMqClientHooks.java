@@ -12,10 +12,10 @@ import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import org.apache.rocketmq.client.hook.ConsumeMessageHook;
 import org.apache.rocketmq.client.hook.SendMessageHook;
 
-public class RocketMqClientHooks {
+class RocketMqClientHooks {
 
   @SuppressWarnings("deprecation") // call to deprecated method will be removed in the future
-  private static final RocketMqTelemetry TELEMETRY =
+  private static final RocketMqTelemetry telemetry =
       RocketMqTelemetry.builder(GlobalOpenTelemetry.get())
           .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
           .setCaptureExperimentalSpanAttributes(
@@ -24,10 +24,9 @@ public class RocketMqClientHooks {
                   .getBoolean("experimental_span_attributes/development", false))
           .build();
 
-  public static final ConsumeMessageHook CONSUME_MESSAGE_HOOK =
-      TELEMETRY.createConsumeMessageHook();
+  static final ConsumeMessageHook consumeMessageHook = telemetry.createConsumeMessageHook();
 
-  public static final SendMessageHook SEND_MESSAGE_HOOK = TELEMETRY.createSendMessageHook();
+  static final SendMessageHook sendMessageHook = telemetry.createSendMessageHook();
 
   private RocketMqClientHooks() {}
 }

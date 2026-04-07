@@ -37,8 +37,7 @@ class RocketMqConsumerInstrumentation implements TypeInstrumentation {
                 value = "defaultMQPushConsumerImpl",
                 declaringType = DefaultMQPushConsumer.class)
             DefaultMQPushConsumerImpl defaultMqPushConsumerImpl) {
-      defaultMqPushConsumerImpl.registerConsumeMessageHook(
-          RocketMqClientHooks.CONSUME_MESSAGE_HOOK);
+      defaultMqPushConsumerImpl.registerConsumeMessageHook(RocketMqClientHooks.consumeMessageHook);
     }
   }
 }
