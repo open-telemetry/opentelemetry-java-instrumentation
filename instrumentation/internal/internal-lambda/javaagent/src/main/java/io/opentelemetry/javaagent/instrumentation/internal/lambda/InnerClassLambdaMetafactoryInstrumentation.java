@@ -78,10 +78,10 @@ class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumentation 
       Class<?> clazz = Class.forName("java.lang.invoke.AbstractValidatingLambdaMetafactory");
       clazz.getDeclaredField("interfaceClass");
       return true;
-    } catch (NoSuchFieldException exception) {
+    } catch (NoSuchFieldException ignored) {
       return false;
-    } catch (ClassNotFoundException exception) {
-      throw new IllegalStateException(exception);
+    } catch (ClassNotFoundException e) {
+      throw new IllegalStateException(e);
     }
   }
 

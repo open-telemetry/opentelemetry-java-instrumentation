@@ -34,7 +34,7 @@ class StructuredTaskScopeTest {
     try {
       // since jdk 25-ea+24
       tmp = (StructuredTaskScope) StructuredTaskScope.class.getMethod("open").invoke(null);
-    } catch (NoSuchMethodException exception) {
+    } catch (NoSuchMethodException ignored) {
       tmp =
           Class.forName("java.util.concurrent.StructuredTaskScope$ShutdownOnFailure")
               .asSubclass(StructuredTaskScope.class)

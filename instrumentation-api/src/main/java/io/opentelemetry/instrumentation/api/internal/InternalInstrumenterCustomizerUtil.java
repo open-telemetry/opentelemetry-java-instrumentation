@@ -21,7 +21,7 @@ public class InternalInstrumenterCustomizerUtil {
       // this class
       Class.forName(
           "io.opentelemetry.instrumentation.api.incubator.instrumenter.internal.InstrumenterCustomizerUtil");
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       // incubator api not available, ignore
     }
   }

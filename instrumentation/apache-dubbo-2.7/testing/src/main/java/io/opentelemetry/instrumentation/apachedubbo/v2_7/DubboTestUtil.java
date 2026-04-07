@@ -20,7 +20,7 @@ class DubboTestUtil {
       return Class.forName("org.apache.dubbo.rpc.model.FrameworkModel")
           .getDeclaredConstructor()
           .newInstance();
-    } catch (ReflectiveOperationException exception) {
+    } catch (ReflectiveOperationException ignored) {
       return null;
     }
   }

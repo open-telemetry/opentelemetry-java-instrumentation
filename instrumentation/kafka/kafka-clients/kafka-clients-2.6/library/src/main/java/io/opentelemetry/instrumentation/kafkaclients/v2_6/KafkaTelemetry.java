@@ -99,8 +99,8 @@ public final class KafkaTelemetry {
               }
               try {
                 return method.invoke(producer, args);
-              } catch (InvocationTargetException exception) {
-                throw exception.getCause();
+              } catch (InvocationTargetException e) {
+                throw e.getCause();
               }
             });
   }
@@ -117,8 +117,8 @@ public final class KafkaTelemetry {
               Timer timer = "poll".equals(method.getName()) ? Timer.start() : null;
               try {
                 result = method.invoke(consumer, args);
-              } catch (InvocationTargetException exception) {
-                throw exception.getCause();
+              } catch (InvocationTargetException e) {
+                throw e.getCause();
               }
               // ConsumerRecords<K, V> poll(long timeout)
               // ConsumerRecords<K, V> poll(Duration duration)

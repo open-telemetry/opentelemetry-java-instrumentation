@@ -34,7 +34,7 @@ public class LambdaTransformerHelper {
       if (result != null) {
         classBytes = result;
       }
-    } catch (Throwable throwable) {
+    } catch (Throwable ignored) {
       // sun.instrument.TransformerManager catches Throwable from ClassFileTransformer and ignores
       // it, we do the same.
     }

@@ -74,7 +74,7 @@ class QueryInstrumentation implements TypeInstrumentation {
       if (query instanceof SqmQuery) {
         try {
           queryString = ((SqmQuery) query).getSqmStatement().toHqlString();
-        } catch (RuntimeException exception) {
+        } catch (RuntimeException ignored) {
           // ignore
         }
       }

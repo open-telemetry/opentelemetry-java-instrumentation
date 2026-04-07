@@ -80,8 +80,8 @@ class SimpleAsyncTaskExecutorInstrumentationTest {
           try {
             task.accept(child1);
             task.accept(child2);
-          } catch (Throwable throwable) {
-            throw new AssertionError(throwable);
+          } catch (Throwable t) {
+            throw new AssertionError(t);
           }
           child1.waitForCompletion();
           child2.waitForCompletion();

@@ -62,7 +62,7 @@ public class ApplicationOpenTelemetry110 implements application.io.opentelemetry
         | NoSuchMethodException
         | InstantiationException
         | IllegalAccessException
-        | InvocationTargetException exception) {
+        | InvocationTargetException ignored) {
       return new ApplicationMeterFactory14();
     }
   }

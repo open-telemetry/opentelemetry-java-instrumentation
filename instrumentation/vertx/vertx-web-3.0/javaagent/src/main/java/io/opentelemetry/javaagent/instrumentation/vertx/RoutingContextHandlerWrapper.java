@@ -40,12 +40,12 @@ public class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
 
     try (Scope ignore = RouteHolder.init(otelContext, route).makeCurrent()) {
       handler.handle(context);
-    } catch (Throwable throwable) {
+    } catch (Throwable t) {
       Span serverSpan = LocalRootSpan.fromContextOrNull(otelContext);
       if (serverSpan != null) {
-        serverSpan.recordException(unwrapThrowable(throwable));
+        serverSpan.recordException(unwrapThrowable(t));
       }
-      throw throwable;
+      throw t;
     }
   }
 

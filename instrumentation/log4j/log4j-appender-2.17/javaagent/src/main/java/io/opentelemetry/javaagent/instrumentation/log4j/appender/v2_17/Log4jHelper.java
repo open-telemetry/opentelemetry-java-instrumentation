@@ -118,7 +118,7 @@ public class Log4jHelper {
 
     try {
       return (StackTraceElement) stackTraceMethodHandle.invoke(loggerClassName);
-    } catch (Throwable exception) {
+    } catch (Throwable ignored) {
       return null;
     }
   }
@@ -129,14 +129,14 @@ public class Log4jHelper {
     try {
       // since 2.9.0
       stackTraceClass = Class.forName("org.apache.logging.log4j.util.StackLocatorUtil");
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       // ignore
     }
     if (stackTraceClass == null) {
       try {
         // before 2.9.0
         stackTraceClass = Class.forName("org.apache.logging.log4j.core.impl.Log4jLogEvent");
-      } catch (ClassNotFoundException exception) {
+      } catch (ClassNotFoundException ignored) {
         // ignore
       }
     }
@@ -149,7 +149,7 @@ public class Log4jHelper {
               stackTraceClass,
               "calcLocation",
               MethodType.methodType(StackTraceElement.class, String.class));
-    } catch (Exception exception) {
+    } catch (Exception ignored) {
       return null;
     }
   }

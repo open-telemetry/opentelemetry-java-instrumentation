@@ -234,7 +234,7 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
               directWithAttributesChannelClass,
               "getAttribute",
               MethodType.methodType(Object.class, String.class));
-    } catch (NoSuchMethodException | IllegalAccessException exception) {
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
       return null;
     }
   }
@@ -257,7 +257,7 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
 
     try {
       return "output".equals(channelGetAttributeMh.invoke(messageChannel, "type"));
-    } catch (Throwable throwable) {
+    } catch (Throwable ignored) {
       return false;
     }
   }

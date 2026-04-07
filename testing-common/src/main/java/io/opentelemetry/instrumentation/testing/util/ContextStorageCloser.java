@@ -57,9 +57,9 @@ public class ContextStorageCloser {
       try {
         target.close();
         return true;
-      } catch (Throwable throwable) {
+      } catch (Throwable t) {
         restore();
-        if (throwable instanceof AssertionError) {
+        if (t instanceof AssertionError) {
           System.err.println();
           for (Map.Entry<Thread, StackTraceElement[]> threadEntry :
               Thread.getAllStackTraces().entrySet()) {
@@ -69,9 +69,9 @@ public class ContextStorageCloser {
             }
             System.err.println();
           }
-          throw (AssertionError) throwable;
+          throw (AssertionError) t;
         }
-        throw new IllegalStateException(throwable);
+        throw new IllegalStateException(t);
       }
     }
 
@@ -132,7 +132,7 @@ public class ContextStorageCloser {
                 "io.opentelemetry.javaagent.shaded.io.opentelemetry.context.ContextStorage");
         Method method = contextStorageClass.getDeclaredMethod("get");
         return method.invoke(null);
-      } catch (Exception exception) {
+      } catch (Exception ignored) {
         return null;
       }
     }
