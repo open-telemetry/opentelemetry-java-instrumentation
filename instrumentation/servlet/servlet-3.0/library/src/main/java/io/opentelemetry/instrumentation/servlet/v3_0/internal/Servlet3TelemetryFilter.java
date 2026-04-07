@@ -235,6 +235,7 @@ public final class Servlet3TelemetryFilter implements Filter {
               runnable.run();
             } catch (Throwable t) {
               otelRequest.asyncException = t;
+              throw t;
             }
           });
     }
