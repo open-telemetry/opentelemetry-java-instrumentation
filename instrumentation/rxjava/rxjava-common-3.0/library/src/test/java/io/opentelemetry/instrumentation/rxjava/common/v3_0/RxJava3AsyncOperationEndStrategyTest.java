@@ -314,22 +314,23 @@ class RxJava3AsyncOperationEndStrategyTest {
     void endsSpanOnceForMultipleSubscribers() {
       MaybeSubject<String> source = MaybeSubject.create();
 
-      Maybe<?> result =
-          (Maybe<?>) underTest.end(instrumenter, Context.root(), "request", source, String.class);
-      TestObserver<?> observer1 = result.test();
-      TestObserver<?> observer2 = result.test();
-      TestObserver<?> observer3 = result.test();
+      Maybe<String> result =
+          ((Maybe<?>) underTest.end(instrumenter, Context.root(), "request", source, String.class))
+              .cast(String.class);
+      TestObserver<String> observer1 = result.test();
+      TestObserver<String> observer2 = result.test();
+      TestObserver<String> observer3 = result.test();
 
       verifyNoInteractions(instrumenter);
 
       source.onSuccess("response");
 
       observer1.assertComplete();
-      observer1.assertValue(value -> value.equals("response"));
+      observer1.assertValue("response");
       observer2.assertComplete();
-      observer2.assertValue(value -> value.equals("response"));
+      observer2.assertValue("response");
       observer3.assertComplete();
-      observer3.assertValue(value -> value.equals("response"));
+      observer3.assertValue("response");
       verify(instrumenter).end(Context.root(), "request", "response", null);
     }
   }
@@ -442,21 +443,22 @@ class RxJava3AsyncOperationEndStrategyTest {
     void endsSpanOnceForMultipleSubscribers() {
       SingleSubject<String> source = SingleSubject.create();
 
-      Single<?> result =
-          (Single<?>) underTest.end(instrumenter, Context.root(), "request", source, String.class);
-      TestObserver<?> observer1 = result.test();
-      TestObserver<?> observer2 = result.test();
-      TestObserver<?> observer3 = result.test();
+      Single<String> result =
+          ((Single<?>) underTest.end(instrumenter, Context.root(), "request", source, String.class))
+              .cast(String.class);
+      TestObserver<String> observer1 = result.test();
+      TestObserver<String> observer2 = result.test();
+      TestObserver<String> observer3 = result.test();
 
       verifyNoInteractions(instrumenter);
 
       source.onSuccess("response");
 
-      observer1.assertValue(value -> value.equals("response"));
+      observer1.assertValue("response");
       observer1.assertComplete();
-      observer2.assertValue(value -> value.equals("response"));
+      observer2.assertValue("response");
       observer2.assertComplete();
-      observer3.assertValue(value -> value.equals("response"));
+      observer3.assertValue("response");
       observer3.assertComplete();
       verify(instrumenter).end(Context.root(), "request", "response", null);
     }
