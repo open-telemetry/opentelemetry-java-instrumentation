@@ -17,7 +17,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Style | Style guide | Always | — |
 | Style | Uppercase field names should reflect semantic constants or immutable value constants such as `Duration` timeouts/intervals, not simply `static final` | Always | — |
 | Naming | Getter naming (`get` / `is`) | Always | — |
-| Style | Prefer `e` for used exceptions, prefer `f` for used exceptions in nested catch clauses when an outer catch already uses `e`, allow `error` for specific `*Error` catch types, prefer `t` for used `Throwable` values, prefer `ignored` for intentionally unused catch parameters, and use `ignore` for nested intentionally unused catch parameters when `ignored` would shadow an outer catch variable | Catch clauses, `Throwable` params | — |
+| Style | Prefer `e` for used exceptions, prefer `f` for used exceptions in nested catch clauses when an outer catch already uses `e`, allow `error` for specific `*Error` catch types, prefer `t` for used `Throwable` catch values, prefer `ignored` for intentionally unused catch parameters, and use `ignore` for nested intentionally unused catch parameters when `ignored` would shadow an outer catch variable | Catch clauses | — |
 | Naming | Module/package naming | New or renamed modules/packages | `module-naming.md` |
 | Javaagent | Advice patterns | `@Advice` classes | `javaagent-advice-patterns.md` |
 | Javaagent | Module structure patterns | `InstrumentationModule`, `TypeInstrumentation` | `javaagent-module-patterns.md` |
@@ -113,8 +113,10 @@ inner exception variable name when the exception is used.
 
 `error` is also acceptable when the caught type is a specific `*Error` subtype.
 
-Prefer `t` for used `Throwable` values, including `catch (Throwable t)` and
-`Throwable` callback parameters.
+Prefer `t` for used `Throwable` catch values, including `catch (Throwable t)`.
+
+Do not apply these catch-variable naming preferences to method parameters,
+lambda parameters, fields, or other non-catch identifiers.
 
 If a catch parameter is intentionally unused, prefer `ignored` over `ignore`.
 
