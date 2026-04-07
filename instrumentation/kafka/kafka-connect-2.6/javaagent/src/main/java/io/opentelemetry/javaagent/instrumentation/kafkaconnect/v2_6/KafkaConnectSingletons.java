@@ -13,17 +13,17 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
-public final class KafkaConnectSingletons {
+public class KafkaConnectSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-connect-2.6";
-  private static final TextMapPropagator PROPAGATOR =
+  private static final TextMapPropagator propagator =
       GlobalOpenTelemetry.get().getPropagators().getTextMapPropagator();
 
   private static final Instrumenter<KafkaConnectTask, Void> instrumenter;
 
   static {
     KafkaConnectBatchProcessSpanLinksExtractor spanLinksExtractor =
-        new KafkaConnectBatchProcessSpanLinksExtractor(PROPAGATOR);
+        new KafkaConnectBatchProcessSpanLinksExtractor(propagator);
 
     instrumenter =
         Instrumenter.<KafkaConnectTask, Void>builder(

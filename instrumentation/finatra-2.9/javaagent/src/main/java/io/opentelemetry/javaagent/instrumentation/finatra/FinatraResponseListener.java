@@ -12,7 +12,7 @@ import com.twitter.finagle.http.Response;
 import com.twitter.util.FutureEventListener;
 import io.opentelemetry.context.Context;
 
-public final class FinatraResponseListener implements FutureEventListener<Response> {
+public class FinatraResponseListener implements FutureEventListener<Response> {
 
   private final Context context;
   private final FinatraRequest request;

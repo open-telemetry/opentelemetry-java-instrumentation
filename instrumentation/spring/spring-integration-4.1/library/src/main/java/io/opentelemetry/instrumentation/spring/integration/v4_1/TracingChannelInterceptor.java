@@ -216,7 +216,7 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
     try {
       return Class.forName(
           "org.springframework.cloud.stream.messaging.DirectWithAttributesChannel");
-    } catch (ClassNotFoundException ignore) {
+    } catch (ClassNotFoundException ignored) {
       return null;
     }
   }
@@ -275,7 +275,7 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
       }
 
       return candidate;
-    } catch (Throwable ignore) {
+    } catch (Throwable ignored) {
       return candidate;
     }
   }

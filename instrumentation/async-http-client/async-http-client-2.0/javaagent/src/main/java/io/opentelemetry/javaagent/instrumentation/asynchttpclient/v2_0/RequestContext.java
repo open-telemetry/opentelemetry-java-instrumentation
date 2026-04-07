@@ -9,7 +9,7 @@ import io.opentelemetry.context.Context;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.netty.request.NettyRequest;
 
-public final class RequestContext {
+public class RequestContext {
   private final Context parentContext;
   private final Request request;
   private Context context;

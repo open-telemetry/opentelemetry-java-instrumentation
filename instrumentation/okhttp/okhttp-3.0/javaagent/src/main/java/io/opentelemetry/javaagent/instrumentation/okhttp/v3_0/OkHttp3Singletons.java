@@ -20,7 +20,7 @@ import okhttp3.Interceptor;
 import okhttp3.Response;
 
 /** Holder of singleton interceptors for adding to instrumented clients. */
-public final class OkHttp3Singletons {
+public class OkHttp3Singletons {
 
   public static final VirtualField<Runnable, PropagatedContext> PROPAGATED_CONTEXT =
       VirtualField.find(Runnable.class, PropagatedContext.class);
@@ -28,7 +28,7 @@ public final class OkHttp3Singletons {
       JavaagentHttpClientInstrumenters.create(
           OkHttpClientInstrumenterBuilderFactory.create(GlobalOpenTelemetry.get()));
 
-  public static final Interceptor CONTEXT_INTERCEPTOR =
+  private static final Interceptor contextInterceptor =
       chain -> {
         try (Scope ignored =
             HttpClientRequestResendCount.initialize(Context.current()).makeCurrent()) {
@@ -36,11 +36,23 @@ public final class OkHttp3Singletons {
         }
       };
 
-  public static final Interceptor CONNECTION_ERROR_INTERCEPTOR =
+  private static final Interceptor connectionErrorInterceptor =
       new ConnectionErrorSpanInterceptor(instrumenter);
 
-  public static final Interceptor TRACING_INTERCEPTOR =
+  private static final Interceptor tracingInterceptor =
       new TracingInterceptor(instrumenter, GlobalOpenTelemetry.getPropagators());
+
+  public static Interceptor contextInterceptor() {
+    return contextInterceptor;
+  }
+
+  public static Interceptor connectionErrorInterceptor() {
+    return connectionErrorInterceptor;
+  }
+
+  public static Interceptor tracingInterceptor() {
+    return tracingInterceptor;
+  }
 
   private OkHttp3Singletons() {}
 }

@@ -9,7 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.extension.kotlin.ContextExtensionsKt;
 import kotlin.coroutines.CoroutineContext;
 
-public final class KotlinCoroutinesInstrumentationHelper {
+public class KotlinCoroutinesInstrumentationHelper {
 
   public static CoroutineContext addOpenTelemetryContext(CoroutineContext coroutineContext) {
     Context current = Context.current();

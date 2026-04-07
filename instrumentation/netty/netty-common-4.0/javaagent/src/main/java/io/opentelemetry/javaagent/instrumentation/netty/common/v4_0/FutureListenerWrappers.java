@@ -14,7 +14,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.ref.WeakReference;
 
-public final class FutureListenerWrappers {
+public class FutureListenerWrappers {
   // note: it's ok if the value is collected prior to the key, since this cache is only used to
   // remove the wrapped listener from the netty future, and if the value is collected prior to the
   // key, that means it's no longer used (referenced) by the netty future anyways.

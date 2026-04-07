@@ -49,7 +49,7 @@ class RabbitCommandInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CommandConstructorAdvice {
 
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static void setSpanNameAddHeaders(@Advice.This Command command) {
 
       Context context = CURRENT_RABBIT_CONTEXT.get();

@@ -3,12 +3,30 @@
 ## Quick Reference
 
 - Use when: test files (`**/src/test/**`) are in scope
-- Review focus: assertion style, test class visibility, attribute assertion patterns
+- Review focus: assertion style, test class visibility, resource cleanup patterns, attribute assertion patterns
 
 ## Assertion Framework
 
 - JUnit 5, AssertJ assertions (not JUnit `assertEquals`/`assertTrue`).
 - Test classes and methods should be package-private (no `public`).
+- Do not use AssertJ `.as(...)` descriptions or `.withFailMessage(...)` in tests.
+  Prefer direct assertions whose failure output shows the unexpected values.
+
+## Test Resource Cleanup
+
+- In JUnit tests, when an `AutoCloseable` is intended to remain live for most or all of the test
+  and only needs cleanup at test end, prefer `AutoCleanupExtension` with `deferCleanup(...)`
+  over wrapping most of the test body in try-with-resources.
+- Reuse an existing `cleanup` extension when one is already in scope.
+  Otherwise, add a `@RegisterExtension` field when the deferred-cleanup pattern improves
+  clarity or avoids wrapping most of the test body.
+- Keep try-with-resources for semantically scoped resources whose lifetime must end before the
+  rest of the test continues, such as `Scope` / `Context.makeCurrent()`, Mockito
+  `MockedStatic`, and short-lived readers, writers, streams, response bodies, or parsers.
+- Do not use `AutoCleanupExtension` in non-JUnit helper methods, `@BeforeAll`, or other shared
+  setup code where cleanup is not tied to a single test method.
+- If the test intentionally closes the resource mid-test or asserts behavior around explicit
+  close, keep the direct close or try-with-resources in the test body.
 
 ## Span Attribute Assertions
 

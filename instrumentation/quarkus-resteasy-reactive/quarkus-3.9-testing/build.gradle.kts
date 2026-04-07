@@ -24,7 +24,7 @@ otelJava {
 }
 
 var quarkusVersion = "3.9.1"
-if (findProperty("testLatestDeps") == "true") {
+if (otelProps.testLatestDeps) {
   quarkusVersion = "3.9.+"
 }
 
@@ -74,7 +74,7 @@ tasks {
     systemProperty("quarkus-internal-test.serialized-app-model.path", testModelPath.get().asFile.toString())
   }
 
-  if (findProperty("denyUnsafe") == "true") {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

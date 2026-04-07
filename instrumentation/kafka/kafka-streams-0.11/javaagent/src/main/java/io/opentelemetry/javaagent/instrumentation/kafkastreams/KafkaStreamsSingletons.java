@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
-public final class KafkaStreamsSingletons {
+public class KafkaStreamsSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-streams-0.11";
 

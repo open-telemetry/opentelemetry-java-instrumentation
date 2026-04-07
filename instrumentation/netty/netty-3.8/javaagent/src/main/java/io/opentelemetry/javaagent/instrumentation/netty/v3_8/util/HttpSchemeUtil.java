@@ -6,12 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.util;
 
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.NettyRequest;
+import javax.annotation.Nullable;
 import org.jboss.netty.channel.ChannelHandler;
 
-public final class HttpSchemeUtil {
+public class HttpSchemeUtil {
 
   private static final Class<? extends ChannelHandler> sslHandlerClass = getSslHandlerClass();
 
+  @Nullable
   private static Class<? extends ChannelHandler> getSslHandlerClass() {
     try {
       return Class.forName(

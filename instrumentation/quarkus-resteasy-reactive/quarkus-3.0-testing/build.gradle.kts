@@ -25,7 +25,7 @@ otelJava {
 
 // io.quarkus.platform:quarkus-bom is missing for 3.0.0.Final
 var quarkusVersion = "3.0.1.Final"
-if (findProperty("testLatestDeps") == "true") {
+if (otelProps.testLatestDeps) {
   quarkusVersion = "3.5.+"
 }
 
@@ -75,7 +75,7 @@ tasks {
     systemProperty("quarkus-internal-test.serialized-app-model.path", testModelPath.get().asFile.toString())
   }
 
-  if (findProperty("denyUnsafe") == "true") {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

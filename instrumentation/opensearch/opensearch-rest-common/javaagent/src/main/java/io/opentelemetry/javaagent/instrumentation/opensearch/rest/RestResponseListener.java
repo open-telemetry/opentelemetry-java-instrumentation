@@ -12,7 +12,7 @@ import java.util.function.Function;
 import org.opensearch.client.Response;
 import org.opensearch.client.ResponseListener;
 
-public final class RestResponseListener implements ResponseListener {
+public class RestResponseListener implements ResponseListener {
 
   private final ResponseListener listener;
   private final Context parentContext;

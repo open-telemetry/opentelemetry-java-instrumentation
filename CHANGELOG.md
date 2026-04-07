@@ -8,9 +8,20 @@
   and deprecated config key `otel.instrumentation.graphql.add-operation-name-to-span-name.enabled`
   in favor of `setQuerySanitizationEnabled()`, `setOperationNameInSpanNameEnabled()`, and
   `otel.instrumentation.graphql.operation-name-in-span-name.enabled`
-- Deprecated the declarative config name `statement_sanitizer` in favor of `query_sanitization`
+- Deprecated the DB query sanitization system property names
+  `otel.instrumentation.common.db-statement-sanitizer.enabled`,
+  `otel.instrumentation.jdbc.statement-sanitizer.enabled`,
+  `otel.instrumentation.mongo.statement-sanitizer.enabled`, and
+  `otel.instrumentation.r2dbc.statement-sanitizer.enabled` in favor of the corresponding
+  `*.query-sanitization.enabled` names, and deprecated the declarative config name
+  `statement_sanitizer` in favor of `query_sanitization`
 - Deprecated the declarative config group `common.database` in favor of `common.db`
-- Deprecated the GraphQL declarative config name `query_sanitizer` in favor of
+- Deprecated the common DB sqlcommenter system property name
+  `otel.instrumentation.common.experimental.db-sqlcommenter.enabled` in favor of
+  `otel.instrumentation.common.db.experimental.sqlcommenter.enabled`
+- Deprecated the GraphQL system property name
+  `otel.instrumentation.graphql.query-sanitizer.enabled` and declarative config name
+  `query_sanitizer` in favor of `otel.instrumentation.graphql.query-sanitization.enabled` and
   `query_sanitization`
 
 ## Version 2.26.1 (2026-03-23)

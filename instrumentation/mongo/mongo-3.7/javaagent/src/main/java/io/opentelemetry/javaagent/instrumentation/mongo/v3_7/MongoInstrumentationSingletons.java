@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrumenterFactory;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.TracingCommandListener;
 
-public final class MongoInstrumentationSingletons {
+public class MongoInstrumentationSingletons {
 
   private static final Instrumenter<CommandStartedEvent, Void> instrumenter =
       MongoInstrumenterFactory.createInstrumenter(
@@ -21,10 +21,14 @@ public final class MongoInstrumentationSingletons {
           "io.opentelemetry.mongo-3.7",
           DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "mongo"));
 
-  public static final CommandListener LISTENER = new TracingCommandListener(instrumenter);
+  private static final CommandListener tracingListener = new TracingCommandListener(instrumenter);
 
-  public static boolean isTracingListener(CommandListener listener) {
-    return listener.getClass().getName().equals(LISTENER.getClass().getName());
+  public static CommandListener tracingListener() {
+    return tracingListener;
+  }
+
+  public static boolean isTracingListener(CommandListener commandListener) {
+    return commandListener.getClass().getName().equals(tracingListener.getClass().getName());
   }
 
   private MongoInstrumentationSingletons() {}

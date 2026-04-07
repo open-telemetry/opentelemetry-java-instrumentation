@@ -11,7 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import javax.annotation.Nullable;
 
-public final class EndpointId {
+public class EndpointId {
 
   private static final ContextKey<String> KEY = named("elasticsearch-api-client-endpoint-id");
 

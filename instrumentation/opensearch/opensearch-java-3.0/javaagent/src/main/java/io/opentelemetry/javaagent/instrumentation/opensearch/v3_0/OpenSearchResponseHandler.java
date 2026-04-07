@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.opensearch.v3_0.OpenSea
 import io.opentelemetry.context.Context;
 import java.util.function.BiConsumer;
 
-public final class OpenSearchResponseHandler implements BiConsumer<Object, Throwable> {
+public class OpenSearchResponseHandler implements BiConsumer<Object, Throwable> {
   private final Context context;
   private final OpenSearchRequest otelRequest;
 

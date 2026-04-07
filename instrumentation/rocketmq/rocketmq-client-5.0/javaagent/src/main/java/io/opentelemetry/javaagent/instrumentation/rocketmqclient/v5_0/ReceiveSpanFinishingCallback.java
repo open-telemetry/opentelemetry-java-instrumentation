@@ -15,7 +15,7 @@ import org.apache.rocketmq.client.apis.message.MessageView;
 import org.apache.rocketmq.client.java.impl.consumer.ReceiveMessageResult;
 import org.apache.rocketmq.shaded.com.google.common.util.concurrent.FutureCallback;
 
-public final class ReceiveSpanFinishingCallback implements FutureCallback<ReceiveMessageResult> {
+public class ReceiveSpanFinishingCallback implements FutureCallback<ReceiveMessageResult> {
 
   private final ReceiveMessageRequest request;
   private final Timer timer;

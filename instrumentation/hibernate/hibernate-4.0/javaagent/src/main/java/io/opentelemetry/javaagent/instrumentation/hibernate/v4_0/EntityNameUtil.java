@@ -10,7 +10,7 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.internal.StatelessSessionImpl;
 
-public final class EntityNameUtil {
+public class EntityNameUtil {
 
   private EntityNameUtil() {}
 

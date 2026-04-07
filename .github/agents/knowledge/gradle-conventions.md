@@ -51,17 +51,36 @@ Verify `build.gradle.kts` applies the correct plugin for the module type:
 | `library/` | `otel.library-instrumentation` |
 | `testing/` | `otel.java-conventions` |
 
-## Boolean Project Properties
+## Shared Gradle Project Properties
 
-For simple boolean Gradle project properties in `build.gradle.kts`, prefer the repository's most
-common pattern:
+In `build.gradle.kts`, prefer the shared `otelProps` extension for repository-wide Gradle project
+properties that are already modeled there, including:
+
+- `testLatestDeps`
+- `denyUnsafe`
+- `collectMetadata`
+- `testJavaVersion`
+- `testJavaVM`
+- `maxTestRetries`
+- `enableStrictContext`
+
+Examples:
 
 ```kotlin
-val myFlag = findProperty("myFlag") == "true"
-if (myFlag) {
+if (otelProps.testLatestDeps) {
   // ...
 }
+
+tasks.withType<Test>().configureEach {
+  systemProperty("collectMetadata", otelProps.collectMetadata)
+}
 ```
+
+For module-local one-off properties that are not part of `otelProps`, using `findProperty(...)`
+directly is still fine.
+
+`settings.gradle.kts` is the exception: it cannot use project extensions like `otelProps`, so
+direct `gradle.startParameter.projectProperties[...]` access is expected there.
 
 ## `testInstrumentation` Dependencies
 
@@ -175,6 +194,9 @@ When a module has custom test tasks (e.g., `testStableSemconv`), system properti
 args that apply to **all** test tasks should be set once in a `withType<Test>().configureEach`
 block, not repeated on each individual task.
 
+If a property or JVM arg is moved into `withType<Test>().configureEach`, remove any now-redundant
+copies from individual tasks unless a task intentionally overrides the shared value.
+
 When there is only one test task, `tasks.test { ... }` is fine — do not convert it to
 `withType<Test>().configureEach` and do not flag it.
 
@@ -186,7 +208,7 @@ should apply to all tasks. If so, move them to `withType<Test>().configureEach`.
 ```kotlin
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
     // ... other properties common to all test tasks
   }
 
@@ -205,7 +227,7 @@ review**. Only verify correctness when they are already present.
 
 | Property | Type | Value |
 | --- | --- | --- |
-| `collectMetadata` | System property | Pass-through of the `collectMetadata` Gradle project property; defaults to `"false"` |
+| `collectMetadata` | System property | Pass-through of `otelProps.collectMetadata`; defaults to `false` |
 | `metadataConfig` | System property | A single `key=value` string describing the non-default configuration active during this test run |
 
 When already present, verify:

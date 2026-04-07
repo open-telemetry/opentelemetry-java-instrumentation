@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.Instrument
 import io.opentelemetry.instrumentation.graphql.v12_0.GraphQLTelemetry;
 import java.util.logging.Logger;
 
-public final class GraphqlSingletons {
+public class GraphqlSingletons {
 
   private static final Logger logger = Logger.getLogger(GraphqlSingletons.class.getName());
 
@@ -63,8 +63,8 @@ public final class GraphqlSingletons {
         // Support the deprecated config key until 3.0.
         logger.warning(
             "The otel.instrumentation.graphql.add-operation-name-to-span-name.enabled setting is"
-                + " deprecated and will be removed in 3.0. Use"
-                + " otel.instrumentation.graphql.operation-name-in-span-name.enabled instead.");
+                + " deprecated and will be removed in 3.0. Use "
+                + "otel.instrumentation.graphql.operation-name-in-span-name.enabled instead.");
       }
       this.operationNameInSpanNameEnabled =
           config
@@ -86,8 +86,11 @@ public final class GraphqlSingletons {
           config.get("query_sanitizer").getBoolean("enabled");
       if (deprecatedQuerySanitizationEnabled != null) {
         logger.warning(
-            "query_sanitizer is deprecated in declarative configuration"
-                + " and has been replaced by query_sanitization.");
+            "The otel.instrumentation.graphql.query-sanitizer.enabled setting or equivalent"
+                + " declarative configuration is deprecated and will be"
+                + " removed in 3.0. Use "
+                + "otel.instrumentation.graphql.query-sanitization.enabled"
+                + " or equivalent declarative configuration instead.");
         return deprecatedQuerySanitizationEnabled;
       }
 

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.ResteasySingletons.LOCATOR_NAME;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -45,7 +46,7 @@ class ResteasyResourceLocatorInvokerInstrumentation implements TypeInstrumentati
 
       Context currentContext = Java8BytecodeBridge.currentContext();
 
-      String name = ResteasySingletons.LOCATOR_NAME.get(resourceInvoker);
+      String name = LOCATOR_NAME.get(resourceInvoker);
       ResteasySpanName.INSTANCE.updateServerSpanName(currentContext, name);
 
       // subresource locator returns a resources class that may have @Path annotations

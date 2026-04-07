@@ -56,9 +56,7 @@ class ConcurrentIntegrationTest {
 
     futures.forEach(f -> f.cancel(true));
 
-    assertThat(logMessages)
-        .as("Verify that the application logger bridge did not lose any messages")
-        .hasSize(count.get());
+    assertThat(logMessages).hasSize(count.get());
   }
 
   private static final class TestLogger implements InternalLogger {

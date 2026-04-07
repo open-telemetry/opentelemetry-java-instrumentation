@@ -40,19 +40,26 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
       private final Context context;
       private final Scope scope;
 
-      public AdviceScope(
-          Class<?> resourceClass, Method method, ContainerRequestContext requestContext) {
-        handlerData = new Jaxrs3HandlerData(resourceClass, method);
-        context =
-            Jaxrs3RequestContextHelper.createOrUpdateAbortSpan(
-                instrumenter(), requestContext, handlerData);
-        scope = context != null ? context.makeCurrent() : null;
+      private AdviceScope(Jaxrs3HandlerData handlerData, Context context) {
+        this.handlerData = handlerData;
+        this.context = context;
+        scope = context.makeCurrent();
       }
 
-      public void exit(@Nullable Throwable throwable) {
-        if (scope == null) {
-          return;
+      @Nullable
+      public static AdviceScope start(
+          Class<?> resourceClass, Method method, ContainerRequestContext requestContext) {
+        Jaxrs3HandlerData handlerData = new Jaxrs3HandlerData(resourceClass, method);
+        Context context =
+            Jaxrs3RequestContextHelper.createOrUpdateAbortSpan(
+                instrumenter(), requestContext, handlerData);
+        if (context == null) {
+          return null;
         }
+        return new AdviceScope(handlerData, context);
+      }
+
+      public void end(@Nullable Throwable throwable) {
         scope.close();
         instrumenter().end(context, handlerData, null, throwable);
       }
@@ -77,14 +84,15 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
         return null;
       }
 
-      return new AdviceScope(resourceClass, method, requestContext);
+      return AdviceScope.start(resourceClass, method, requestContext);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown Throwable throwable, @Advice.Enter @Nullable AdviceScope adviceScope) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
-        adviceScope.exit(throwable);
+        adviceScope.end(throwable);
       }
     }
   }

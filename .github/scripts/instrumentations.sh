@@ -14,6 +14,7 @@ readonly INSTRUMENTATIONS=(
   "apache-dbcp-2.0:javaagent:test"
   "apache-dbcp-2.0:javaagent:testStableSemconv"
   "apache-dubbo-2.7:javaagent:testDubbo"
+  "apache-dubbo-2.7:javaagent:testDubboStableSemconv"
   "apache-elasticjob-3.0:javaagent:test"
   "apache-elasticjob-3.0:javaagent:testExperimental"
   "apache-httpasyncclient-4.1:javaagent:test"

@@ -21,7 +21,7 @@ import play.libs.typedmap.TypedKey;
 import play.routing.Router;
 import scala.Option;
 
-public final class Play26Singletons {
+public class Play26Singletons {
 
   private static final String SPAN_NAME = "play.request";
   private static final Instrumenter<Void, Void> instrumenter =
@@ -65,6 +65,7 @@ public final class Play26Singletons {
     HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, route);
   }
 
+  @Nullable
   private static String getRoute(Request<?> request) {
     // more about routes here:
     // https://github.com/playframework/playframework/blob/master/documentation/manual/releases/release26/migration26/Migration26.md

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0;
 
-import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons.getSnippetInjectionHelper;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons.snippetInjectionHelper;
 
 import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet.ServletOutputStreamInjectionState;
@@ -29,6 +29,6 @@ public class Servlet5OutputStreamWriteIntAdvice {
     // call (see skipOn above)
     // if it returns false, then it means nothing was written to the servletOutputStream and the
     // original method call should be executed
-    return !getSnippetInjectionHelper().handleWrite(state, servletOutputStream, write);
+    return !snippetInjectionHelper().handleWrite(state, servletOutputStream, write);
   }
 }

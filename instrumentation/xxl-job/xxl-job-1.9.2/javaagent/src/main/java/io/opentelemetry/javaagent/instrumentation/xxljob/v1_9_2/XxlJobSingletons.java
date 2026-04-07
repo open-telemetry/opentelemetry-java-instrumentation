@@ -12,7 +12,7 @@ import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobHelper;
 import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobInstrumenterFactory;
 import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobProcessRequest;
 
-public final class XxlJobSingletons {
+public class XxlJobSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.xxl-job-1.9.2";
   private static final Instrumenter<XxlJobProcessRequest, Void> instrumenter =
       XxlJobInstrumenterFactory.create(INSTRUMENTATION_NAME);

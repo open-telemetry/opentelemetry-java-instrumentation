@@ -30,7 +30,8 @@ public class OpenAi1TestHelper implements TestHelper {
   @Override
   public MessageToolCallBuilder messageToolCallBuilder() {
     return new MessageToolCallBuilder() {
-      final ChatCompletionMessageToolCall.Builder builder = ChatCompletionMessageToolCall.builder();
+      private final ChatCompletionMessageToolCall.Builder builder =
+          ChatCompletionMessageToolCall.builder();
 
       @Override
       public MessageToolCallBuilder id(String id) {
@@ -57,7 +58,7 @@ public class OpenAi1TestHelper implements TestHelper {
   }
 
   private static class FunctionBuilderImpl implements FunctionBuilder {
-    final ChatCompletionMessageToolCall.Function.Builder builder =
+    private final ChatCompletionMessageToolCall.Function.Builder builder =
         ChatCompletionMessageToolCall.Function.builder();
 
     @Override

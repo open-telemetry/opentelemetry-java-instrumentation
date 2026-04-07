@@ -56,7 +56,7 @@ class KafkaMetricsConsumerInstrumentation implements TypeInstrumentation {
       // To prevent such issues, a copy of the `config` should be created here before
       //  any modifications are made. This ensures that each thread operates on its
       //  own independent copy of the configuration, thereby eliminating the risk of
-      //  configurations corruption.
+      //  configuration corruption.
       //
       // More detailed information:
       //  https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/12538

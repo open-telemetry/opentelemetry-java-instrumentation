@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.helidon.v4_3;
 
+import static io.opentelemetry.javaagent.instrumentation.helidon.v4_3.HelidonSingletons.instrumentationFilters;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -34,7 +35,7 @@ class HelidonInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.Return HttpRouting.Builder httpContext) {
-      HelidonSingletons.FILTERS.forEach(httpContext::addFilter);
+      instrumentationFilters().forEach(httpContext::addFilter);
     }
   }
 }

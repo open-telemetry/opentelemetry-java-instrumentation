@@ -13,7 +13,7 @@ import javax.jms.TemporaryQueue;
 import javax.jms.TemporaryTopic;
 import javax.jms.Topic;
 
-public final class JavaxDestinationAdapter implements DestinationAdapter {
+public class JavaxDestinationAdapter implements DestinationAdapter {
 
   public static DestinationAdapter create(Destination destination) {
     return new JavaxDestinationAdapter(destination);

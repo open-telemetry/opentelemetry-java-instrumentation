@@ -11,6 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
+import io.opentelemetry.javaagent.bootstrap.ExceptionLogger;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.NettyRequest;
 import org.jboss.netty.channel.Channel;
@@ -51,8 +52,8 @@ public class HttpServerResponseTracingHandler extends SimpleChannelDownstreamHan
     try {
       HttpServerResponseCustomizerHolder.getCustomizer()
           .customize(context, response, NettyHttpResponseMutator.INSTANCE);
-    } catch (Throwable ignore) {
-      // Ignore.
+    } catch (Throwable t) {
+      ExceptionLogger.logSuppressedError("Failed to customize Netty 3.8 HTTP server response", t);
     }
   }
 }

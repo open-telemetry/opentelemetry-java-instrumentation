@@ -408,8 +408,8 @@ public class HelperInjector implements Transformer {
             // class is loaded and if it is, we ignore the error.
             try {
               Class.forName(className, false, null);
-            } catch (ClassNotFoundException unused) {
-              // throw the original error
+            } catch (ClassNotFoundException e) {
+              error.addSuppressed(e);
               throw error;
             }
           }

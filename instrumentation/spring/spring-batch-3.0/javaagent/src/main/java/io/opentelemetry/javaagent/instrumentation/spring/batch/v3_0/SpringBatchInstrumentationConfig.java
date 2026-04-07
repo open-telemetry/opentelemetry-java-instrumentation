@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 
-public final class SpringBatchInstrumentationConfig {
+public class SpringBatchInstrumentationConfig {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-batch-3.0";
 

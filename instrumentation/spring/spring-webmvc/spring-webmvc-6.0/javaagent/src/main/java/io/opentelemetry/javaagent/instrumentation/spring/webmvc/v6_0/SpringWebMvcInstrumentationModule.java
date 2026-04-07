@@ -27,6 +27,7 @@ public class SpringWebMvcInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in Servlet 5.0 (renamed from javax.servlet)
     return hasClassesNamed("jakarta.servlet.Filter");
   }
 

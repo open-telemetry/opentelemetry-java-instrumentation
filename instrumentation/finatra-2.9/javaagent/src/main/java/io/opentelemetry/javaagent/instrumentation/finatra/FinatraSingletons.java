@@ -19,7 +19,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import javax.annotation.Nullable;
 
-public final class FinatraSingletons {
+public class FinatraSingletons {
 
   public static final VirtualField<Response, Throwable> THROWABLE =
       VirtualField.find(Response.class, Throwable.class);

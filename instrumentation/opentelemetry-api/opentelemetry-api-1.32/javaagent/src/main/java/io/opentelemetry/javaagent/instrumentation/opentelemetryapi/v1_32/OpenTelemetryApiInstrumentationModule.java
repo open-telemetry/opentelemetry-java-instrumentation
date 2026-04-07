@@ -33,6 +33,7 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
         .and(
             not(
                 hasClassesNamed(
+                    // added in 1.31
                     "application.io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder")));
   }
 

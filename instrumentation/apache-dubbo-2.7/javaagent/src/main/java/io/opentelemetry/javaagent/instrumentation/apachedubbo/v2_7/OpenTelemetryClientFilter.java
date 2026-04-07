@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7;
 
+import static io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7.DubboSingletons.clientFilter;
+
 import org.apache.dubbo.common.extension.Activate;
 import org.apache.dubbo.rpc.Filter;
 import org.apache.dubbo.rpc.Invocation;
@@ -14,12 +16,12 @@ import org.apache.dubbo.rpc.Result;
 @Activate(
     group = {"consumer"},
     order = -1)
-public final class OpenTelemetryClientFilter implements Filter {
+public class OpenTelemetryClientFilter implements Filter {
 
   private final Filter delegate;
 
   public OpenTelemetryClientFilter() {
-    delegate = DubboSingletons.CLIENT_FILTER;
+    delegate = clientFilter();
   }
 
   @Override

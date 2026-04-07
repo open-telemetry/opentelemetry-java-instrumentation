@@ -47,7 +47,7 @@ public class SpringSchedulingCodeAttributesGetter implements CodeAttributesGette
         && OUTCOME_TRACKING_RUNNABLE_CLASS.isAssignableFrom(runnable.getClass())) {
       try {
         return unwrap((Runnable) OUTCOME_TRACKING_RUNNABLE_FIELD.get(runnable));
-      } catch (IllegalAccessException ignore) {
+      } catch (IllegalAccessException ignored) {
         // should not happen because setAccessible was called
       }
     }

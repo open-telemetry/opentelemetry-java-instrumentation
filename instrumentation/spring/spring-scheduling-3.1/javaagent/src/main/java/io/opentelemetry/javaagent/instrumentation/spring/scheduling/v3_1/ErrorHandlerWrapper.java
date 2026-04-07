@@ -9,7 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import org.springframework.util.ErrorHandler;
 
-public final class ErrorHandlerWrapper implements ErrorHandler {
+public class ErrorHandlerWrapper implements ErrorHandler {
   private final ErrorHandler errorHandler;
 
   public ErrorHandlerWrapper(ErrorHandler errorHandler) {

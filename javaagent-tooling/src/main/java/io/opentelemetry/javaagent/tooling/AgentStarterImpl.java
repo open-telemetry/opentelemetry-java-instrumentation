@@ -58,13 +58,11 @@ public class AgentStarterImpl implements AgentStarter {
       // LauncherHelper was already loaded before we set up transformer
       instrumentation.retransformClasses(clazz);
       return transformer.hookInserted;
-    } catch (ClassNotFoundException | UnmodifiableClassException ignore) {
-      // ignore
+    } catch (ClassNotFoundException | UnmodifiableClassException ignored) {
+      return false;
     } finally {
       instrumentation.removeTransformer(transformer);
     }
-
-    return false;
   }
 
   @Override

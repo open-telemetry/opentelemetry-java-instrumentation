@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.nats.v2_17;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.nats.v2_17.NatsSingletons.CONSUMER_PROCESS_INSTRUMENTER;
+import static io.opentelemetry.javaagent.instrumentation.nats.v2_17.NatsSingletons.getConsumerProcessInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -58,16 +58,16 @@ class MessageHandlerInstrumentation implements TypeInstrumentation {
       public static AdviceScope start(Message message) {
         Context parentContext = Context.current();
         NatsRequest request = NatsRequest.create(message.getConnection(), message);
-        if (!CONSUMER_PROCESS_INSTRUMENTER.shouldStart(parentContext, request)) {
+        if (!getConsumerProcessInstrumenter().shouldStart(parentContext, request)) {
           return null;
         }
-        Context context = CONSUMER_PROCESS_INSTRUMENTER.start(parentContext, request);
+        Context context = getConsumerProcessInstrumenter().start(parentContext, request);
         return new AdviceScope(request, context, context.makeCurrent());
       }
 
       public void end(@Nullable Throwable throwable) {
         scope.close();
-        CONSUMER_PROCESS_INSTRUMENTER.end(context, request, null, throwable);
+        getConsumerProcessInstrumenter().end(context, request, null, throwable);
       }
     }
 

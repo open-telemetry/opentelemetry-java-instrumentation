@@ -134,6 +134,9 @@ Auto-fix boundaries:
 
 - Safe to fix:
   - import cleanup or direct style-guide conformance
+  - normalization of existing `@SuppressWarnings` syntax or placement, but preserve any
+    accurate explanatory comment attached to the suppression instead of deleting it as
+    style noise
   - obvious assertion API migrations (e.g., AssertJ preference) and idiomatic
     simplifications listed in `testing-general-patterns.md` § AssertJ Idiomatic
     Simplifications (e.g., `assertThat(list.size()).isEqualTo(N)` →
@@ -142,6 +145,8 @@ Auto-fix boundaries:
     lambdas where the lambda parameter is already an `AbstractAssert` (e.g.,
     `AbstractStringAssert`). Calls like `taskId.contains(jobName)` on the assert object are
     already valid AssertJ assertions; do not wrap them in `assertThat(...).isTrue()`
+  - AssertJ `.as(...)` descriptions and `.withFailMessage(...)` in tests — remove them
+    and prefer direct assertions whose failure output already exposes the unexpected values
   - deterministic semconv constant handling aligned with repository rules
   - missing test-task wiring patterns with clear canonical form
   - missing `testInstrumentation` cross-version references — when a javaagent module belongs
@@ -207,6 +212,16 @@ Auto-fix boundaries:
     to avoid allocating on every invocation. Only convert singletons used at
     registration/initialization time (e.g., `Instrumenter` builder chains, `Singletons`
     setup)
+  - try-with-resources wrapping most of a test body for an `AutoCloseable` that only
+    needs cleanup at test end — convert to `AutoCleanupExtension` with `deferCleanup(...)`.
+    Add a `@RegisterExtension static final AutoCleanupExtension cleanup =
+    AutoCleanupExtension.create();` field if one does not already exist, then replace
+    the try-with-resources with `cleanup.deferCleanup(resource);` and un-indent the body.
+    Keep try-with-resources for semantically scoped resources whose lifetime must end
+    mid-test (e.g., `Scope` / `Context.makeCurrent()`, `MockedStatic`, short-lived
+    readers/writers/streams/response bodies).
+    Do not apply this conversion in non-JUnit helper methods, `@BeforeAll`, or shared
+    setup code.
   - `hasAttributesSatisfying(...)` calls in test assertions — replace with
     `hasAttributesSatisfyingExactly(...)` because it is more precise (the non-exact
     variant silently ignores unexpected attributes)

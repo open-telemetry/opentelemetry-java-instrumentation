@@ -28,7 +28,7 @@ public class ExceptionFilter implements Filter {
       while (tmp.getCause() != null) {
         tmp = tmp.getCause();
       }
-      if (tmp.getMessage() != null && tmp.getMessage().contains("submit exception")) {
+      if (tmp instanceof IllegalStateException && "submit exception".equals(tmp.getMessage())) {
         throw (IllegalStateException) tmp;
       }
       throw exception;

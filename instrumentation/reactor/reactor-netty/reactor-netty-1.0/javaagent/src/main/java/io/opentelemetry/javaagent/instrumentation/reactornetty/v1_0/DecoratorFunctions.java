@@ -13,7 +13,7 @@ import reactor.netty.Connection;
 import reactor.netty.http.client.HttpClientInfos;
 import reactor.util.context.ContextView;
 
-public final class DecoratorFunctions {
+public class DecoratorFunctions {
 
   // ignore already decorated functions
   public static boolean shouldDecorate(Class<?> callbackClass) {

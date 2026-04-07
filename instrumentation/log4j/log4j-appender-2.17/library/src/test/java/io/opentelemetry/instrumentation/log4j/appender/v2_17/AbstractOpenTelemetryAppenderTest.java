@@ -46,7 +46,7 @@ abstract class AbstractOpenTelemetryAppenderTest {
   @AfterAll
   static void cleanupAll() {
     // This is to make sure that other test classes don't have issues with the logger provider set
-    OpenTelemetryAppender.install(null);
+    OpenTelemetryAppender.resetForTest();
   }
 
   protected abstract InstrumentationExtension getTesting();

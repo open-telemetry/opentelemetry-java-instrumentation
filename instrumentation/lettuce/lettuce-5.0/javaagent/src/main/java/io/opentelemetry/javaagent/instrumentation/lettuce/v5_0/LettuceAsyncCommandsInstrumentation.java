@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_CONTEXT_KEY;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -78,7 +79,7 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
 
       Context context = instrumenter().start(parentContext, command);
       // remember the context that called dispatch, it is used in LettuceAsyncCommandInstrumentation
-      context = context.with(LettuceSingletons.COMMAND_CONTEXT_KEY, parentContext);
+      context = context.with(COMMAND_CONTEXT_KEY, parentContext);
       return new AdviceScope(context, context.makeCurrent());
     }
 

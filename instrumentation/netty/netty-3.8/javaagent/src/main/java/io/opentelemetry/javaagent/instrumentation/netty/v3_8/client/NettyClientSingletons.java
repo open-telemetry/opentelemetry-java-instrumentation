@@ -18,12 +18,12 @@ import io.opentelemetry.semconv.SchemaUrls;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 
-public final class NettyClientSingletons {
+public class NettyClientSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.netty-3.8";
 
   private static final Instrumenter<NettyRequest, HttpResponse> instrumenter;
-  private static final Instrumenter<NettyConnectionRequest, Channel> CONNECTION_INSTRUMENTER;
+  private static final Instrumenter<NettyConnectionRequest, Channel> connectionInstrumenter;
 
   static {
     instrumenter =
@@ -36,7 +36,7 @@ public final class NettyClientSingletons {
                     (context, requestAndChannel, startAttributes) ->
                         NettyErrorHolder.init(context)));
 
-    CONNECTION_INSTRUMENTER =
+    connectionInstrumenter =
         Instrumenter.<NettyConnectionRequest, Channel>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, NettyConnectionRequest::spanName)
             .addAttributesExtractor(
@@ -53,7 +53,7 @@ public final class NettyClientSingletons {
   }
 
   public static Instrumenter<NettyConnectionRequest, Channel> connectionInstrumenter() {
-    return CONNECTION_INSTRUMENTER;
+    return connectionInstrumenter;
   }
 
   private NettyClientSingletons() {}

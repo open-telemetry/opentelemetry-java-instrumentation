@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameE
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
-public final class GrailsSingletons {
+public class GrailsSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.grails-3.0";
 
   private static final Instrumenter<HandlerData, Void> instrumenter;

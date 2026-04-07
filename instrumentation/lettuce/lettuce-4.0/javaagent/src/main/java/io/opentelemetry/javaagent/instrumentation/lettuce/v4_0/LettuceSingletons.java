@@ -21,11 +21,11 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 
-public final class LettuceSingletons {
+public class LettuceSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.lettuce-4.0";
 
   private static final Instrumenter<RedisCommand<?, ?, ?>, Void> instrumenter;
-  private static final Instrumenter<RedisURI, Void> CONNECT_INSTRUMENTER;
+  private static final Instrumenter<RedisURI, Void> connectInstrumenter;
 
   public static final ContextKey<Context> COMMAND_CONTEXT_KEY =
       ContextKey.named("opentelemetry-lettuce-v4_0-context-key");
@@ -48,7 +48,7 @@ public final class LettuceSingletons {
     LettuceConnectNetworkAttributesGetter netAttributesGetter =
         new LettuceConnectNetworkAttributesGetter();
 
-    CONNECT_INSTRUMENTER =
+    connectInstrumenter =
         Instrumenter.<RedisURI, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, redisUri -> "CONNECT")
             .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
@@ -68,7 +68,7 @@ public final class LettuceSingletons {
   }
 
   public static Instrumenter<RedisURI, Void> connectInstrumenter() {
-    return CONNECT_INSTRUMENTER;
+    return connectInstrumenter;
   }
 
   private LettuceSingletons() {}

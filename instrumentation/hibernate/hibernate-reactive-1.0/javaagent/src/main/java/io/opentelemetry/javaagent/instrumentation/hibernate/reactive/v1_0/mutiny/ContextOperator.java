@@ -12,7 +12,7 @@ import io.smallrye.mutiny.operators.UniOperator;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
 
-public final class ContextOperator<T> extends UniOperator<T, T> {
+public class ContextOperator<T> extends UniOperator<T, T> {
   private final Context context;
 
   public ContextOperator(Uni<? extends T> upstream, Context context) {

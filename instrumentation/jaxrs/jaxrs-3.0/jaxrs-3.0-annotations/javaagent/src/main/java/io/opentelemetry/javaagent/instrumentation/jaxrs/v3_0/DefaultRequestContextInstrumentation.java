@@ -48,8 +48,7 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
       }
 
       @Nullable
-      public static AdviceScope enter(
-          Class<?> filterClass, Method method, ContainerRequestContext requestContext) {
+      public static AdviceScope start(Class<?> filterClass, Method method) {
         Context parentContext = Context.current();
         Jaxrs3HandlerData handlerData = new Jaxrs3HandlerData(filterClass, method);
 
@@ -67,7 +66,7 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
         return new AdviceScope(context, context.makeCurrent(), handlerData);
       }
 
-      public void exit(@Nullable Throwable throwable) {
+      public void end(@Nullable Throwable throwable) {
         scope.close();
         instrumenter().end(context, handlerData, null, throwable);
       }
@@ -97,15 +96,16 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
         return null;
       }
 
-      return AdviceScope.enter(filterClass, method, requestContext);
+      return AdviceScope.start(filterClass, method);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown Throwable throwable, @Advice.Enter @Nullable AdviceScope adviceScope) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
 
       if (adviceScope != null) {
-        adviceScope.exit(throwable);
+        adviceScope.end(throwable);
       }
     }
   }

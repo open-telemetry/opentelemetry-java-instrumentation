@@ -51,9 +51,7 @@ tasks {
   }
 }
 
-val testLatestDeps = findProperty("testLatestDeps") == "true"
-
-if (!testLatestDeps) {
+if (!otelProps.testLatestDeps) {
   configurations.testRuntimeClasspath {
     resolutionStrategy {
       eachDependency {

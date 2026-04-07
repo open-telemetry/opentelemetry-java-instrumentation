@@ -254,21 +254,20 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
 
     // Log
     List<LogRecordData> exportedLogRecords = testing.getExportedLogRecords();
-    assertThat(exportedLogRecords).as("No log record exported.").isNotEmpty();
+    assertThat(exportedLogRecords).isNotEmpty();
     if (!nativeImage) {
       // log records differ in native image mode due to different startup timing
       Optional<LogRecordData> firstInfo =
           exportedLogRecords.stream().filter(log -> log.getSeverity() == Severity.INFO).findFirst();
-      assertThat(firstInfo.isPresent()).as("No INFO log record exported.").isTrue();
+      assertThat(firstInfo).isPresent();
 
       LogRecordData firstLog = firstInfo.get();
       assertThat(firstLog.getBodyValue().asString())
-          .as("Should instrument logs")
           .startsWith("Starting ")
           .contains(this.getClass().getSimpleName());
 
       MapAssert<AttributeKey<?>, Object> attributesAssert =
-          assertThat(firstLog.getAttributes().asMap()).as("Should capture code attributes");
+          assertThat(firstLog.getAttributes().asMap());
 
       if (emitStableDatabaseSemconv()) {
         attributesAssert.containsEntry(
@@ -333,7 +332,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
               "select name from customer where id = 1", (rs, rowNum) -> rs.getString("name"));
         });
 
-    // 1 is not replaced by ?, otel.instrumentation.common.db-statement-sanitizer.enabled=false
+    // 1 is not replaced by ?, otel.instrumentation.common.db.query-sanitization.enabled=false
     testing.waitAndAssertTraces(
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(

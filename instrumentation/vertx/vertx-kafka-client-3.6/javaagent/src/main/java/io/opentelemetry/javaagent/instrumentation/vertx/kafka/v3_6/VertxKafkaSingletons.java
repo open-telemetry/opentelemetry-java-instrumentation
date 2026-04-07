@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
-public final class VertxKafkaSingletons {
+public class VertxKafkaSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-kafka-client-3.6";
 

@@ -4,8 +4,8 @@ semantic_conventions:
   - DATABASE_CLIENT_METRICS
 library_link: https://github.com/redis/jedis
 configurations:
-  - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-    description: Enables statement sanitization for database queries.
+  - name: otel.instrumentation.common.db.query-sanitization.enabled
+    description: Enables query sanitization for database queries.
     type: boolean
     default: true
   - name: otel.instrumentation.common.peer-service-mapping

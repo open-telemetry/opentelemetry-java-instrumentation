@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
  * Shared helper class for Spring Cloud Gateway instrumentation across different versions (WebFlux
  * and WebMVC).
  */
-public final class GatewayRouteHelper {
+public class GatewayRouteHelper {
 
   /** Route ID attribute key. */
   public static final AttributeKey<String> ROUTE_ID_ATTRIBUTE =

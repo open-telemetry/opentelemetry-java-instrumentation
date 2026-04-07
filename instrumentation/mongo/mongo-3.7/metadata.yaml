@@ -7,13 +7,13 @@ semantic_conventions:
   - DATABASE_CLIENT_METRICS
 library_link: https://www.mongodb.com/docs/drivers/java-drivers/
 configurations:
-  - name: otel.instrumentation.mongo.statement-sanitizer.enabled
+  - name: otel.instrumentation.mongo.query-sanitization.enabled
     description: >
-      Enables statement sanitization for MongoDB queries. Takes precedence over
-      otel.instrumentation.common.db-statement-sanitizer.enabled.
+      Enables query sanitization for MongoDB queries. Takes precedence over
+      otel.instrumentation.common.db.query-sanitization.enabled.
     type: boolean
     default: true
-  - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-    description: Enables statement sanitization for database queries.
+  - name: otel.instrumentation.common.db.query-sanitization.enabled
+    description: Enables query sanitization for database queries.
     type: boolean
     default: true

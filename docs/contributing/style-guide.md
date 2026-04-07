@@ -79,18 +79,22 @@ methods.
 
 ### `final` keyword usage
 
-Public non-internal non-test classes should be declared `final` where possible.
-"Internal" here includes `.internal` packages **and** `javaagent/src/main/` classes — javaagent
-instrumentation code is not public API.
-"Test" here includes `src/test/` directories and any module whose directory name starts or ends
-with `testing` or `tests` (e.g., `testing/`, `testing-common/`, `testing-apps/`,
-`quarkus-2.0-testing/`, `smoke-tests/`).
+**Classes**: Declare public classes `final` where possible, but only in public API code.
 
-Methods should only be declared `final` if they are in public non-internal non-test non-final classes.
+The following are **not** public API — do not add `final` to classes there:
 
-Fields should be declared `final` where possible.
+- `javaagent/src/main/` — internal implementation detail, even when classes are `public` for
+  service loading or cross-package access
+- `.internal` packages
+- Test code — `src/test/` directories and modules whose directory name starts or ends with
+  `testing` or `tests` (e.g., `testing/`, `testing-common/`, `quarkus-2.0-testing/`,
+  `smoke-tests/`)
 
-Method parameters and local variables should never be declared `final`.
+**Methods**: Declare `final` only in non-final public API classes.
+
+**Fields**: Declare `final` where possible.
+
+**Parameters and local variables**: Never declare `final`.
 
 ### Null comparisons
 
