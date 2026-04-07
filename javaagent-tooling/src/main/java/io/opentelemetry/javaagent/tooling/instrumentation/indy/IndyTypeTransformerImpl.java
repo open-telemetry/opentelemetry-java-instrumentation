@@ -62,7 +62,9 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
                 .advice(methodMatcher, adviceClassName)
                 // advice transformation already performs uninlining
                 .with(
-                    transformAdvice ? poolStrategy : new AdviceUninliningPoolStrategy(poolStrategy))
+                    transformAdvice
+                        ? poolStrategy
+                        : new AdviceInliningPoolStrategy(poolStrategy, false))
                 .include(getAdviceLocator(instrumentationModule.getClass().getClassLoader()))
                 .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler()));
   }
