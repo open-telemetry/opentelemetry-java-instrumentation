@@ -415,3 +415,4 @@ rocketmq-client-4.8:library
 rocketmq-client-4.8:testing
 rocketmq-client-5.0:javaagent
 runtime-telemetry-java17:javaagent
+runtime-telemetry:library
