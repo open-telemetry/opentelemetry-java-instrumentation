@@ -56,7 +56,7 @@ class ResourceInjectionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetResourceAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(suppress = Throwable.class)
     @Advice.AssignReturned.ToReturned
     public static URL onExit(
         @Advice.This ClassLoader classLoader,

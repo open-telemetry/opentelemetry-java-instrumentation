@@ -44,7 +44,7 @@ class DefineClassInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class DefineClassAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static DefineClassContext onEnter(
         @Advice.This ClassLoader classLoader,
         @Advice.Argument(0) String className,
