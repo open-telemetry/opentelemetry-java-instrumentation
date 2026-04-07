@@ -58,7 +58,7 @@ class DefineClassInstrumentation implements TypeInstrumentation {
     // TODO: the ToReturned does nothing except for signaling the AdviceTransformer that it must
     // not touch this advice
     // this is done because we do not want the return values to be wrapped in array types
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     @Advice.AssignReturned.ToReturned
     public static Class<?> onExit(
         @Advice.Enter DefineClassContext context, @Advice.Return Class<?> returned) {
@@ -69,7 +69,7 @@ class DefineClassInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class DefineClassWithThreeArgsAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static DefineClassContext onEnter(
         @Advice.This ClassLoader classLoader,
         @Advice.Argument(0) String className,
@@ -80,7 +80,7 @@ class DefineClassInstrumentation implements TypeInstrumentation {
     // TODO: the ToReturned does nothing except for signaling the AdviceTransformer that it must
     // not touch this advice
     // this is done because we do not want the return values to be wrapped in array types
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     @Advice.AssignReturned.ToReturned
     public static Class<?> onExit(
         @Advice.Enter DefineClassContext context, @Advice.Return Class<?> returned) {
