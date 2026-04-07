@@ -97,10 +97,8 @@ class RequestInstrumentation implements TypeInstrumentation {
           ctx = ((RoundRobinPoolRequest) action).executionContext();
         }
 
-        if (throwable != null) {
+        if (throwable != null || responseFuture == null) {
           instrumenter().end(context, cmd, null, throwable);
-        } else if (responseFuture == null) {
-          instrumenter().end(context, cmd, null, null);
         } else {
           responseFuture.onComplete(new OnCompleteHandler(context, cmd), ctx);
         }
