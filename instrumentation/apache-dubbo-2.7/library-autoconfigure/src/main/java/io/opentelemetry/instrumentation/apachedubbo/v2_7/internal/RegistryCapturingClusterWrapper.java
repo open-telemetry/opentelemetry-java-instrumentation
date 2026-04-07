@@ -36,8 +36,7 @@ public final class RegistryCapturingClusterWrapper implements Cluster {
     MethodHandle two = null;
     MethodHandle one = null;
     try {
-      Method m =
-          Cluster.class.getMethod("join", Directory.class, boolean.class);
+      Method m = Cluster.class.getMethod("join", Directory.class, boolean.class);
       m.setAccessible(true);
       two = LOOKUP.unreflect(m);
     } catch (ReflectiveOperationException ignored) {

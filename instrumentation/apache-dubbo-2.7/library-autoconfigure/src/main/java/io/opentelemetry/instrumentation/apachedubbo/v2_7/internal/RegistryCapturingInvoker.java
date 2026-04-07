@@ -14,8 +14,8 @@ import org.apache.dubbo.rpc.Result;
  * Wraps a cluster invoker to publish the consumer registry address for the current thread while the
  * delegate chain runs (for example into the Dubbo consumer protocol filter chain).
  *
- * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 final class RegistryCapturingInvoker<T> implements Invoker<T> {
 

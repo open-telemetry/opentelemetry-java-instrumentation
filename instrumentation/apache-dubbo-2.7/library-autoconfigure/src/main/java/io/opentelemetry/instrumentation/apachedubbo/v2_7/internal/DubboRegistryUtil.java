@@ -72,9 +72,9 @@ public final class DubboRegistryUtil {
 
   /**
    * Resolves {@code protocol://host:port} from a registry-backed directory (for example {@code
-   * RegistryDirectory}), using {@code getRegistry()} when present and otherwise the {@code registry}
-   * field. Called once per consumer refer when {@link RegistryCapturingClusterWrapper} wraps the
-   * cluster invoker.
+   * RegistryDirectory}), using {@code getRegistry()} when present and otherwise the {@code
+   * registry} field. Called once per consumer refer when {@link RegistryCapturingClusterWrapper}
+   * wraps the cluster invoker.
    */
   @Nullable
   public static String tryExtractRegistryAddressFromDirectory(Directory<?> directory) {
