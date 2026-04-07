@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttri
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.thrift.common.client.ThriftClientNetworkAttributesGetter;
 import io.opentelemetry.instrumentation.thrift.common.server.ThriftServerNetworkAttributesGetter;
 
@@ -27,7 +26,6 @@ public final class ThriftInstrumenterFactory {
             GlobalOpenTelemetry.get(), instrumentationName, new ThriftSpanNameExtractor())
         .setSpanStatusExtractor(ThriftSpanStatusExtractor.INSTANCE)
         .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
-        .addAttributesExtractor(ServerAttributesExtractor.create(netClientAttributesGetter))
         .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
         .addOperationMetrics(RpcClientMetrics.get())
         .buildClientInstrumenter(ThriftHeaderSetter.INSTANCE);

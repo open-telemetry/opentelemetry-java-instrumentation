@@ -40,7 +40,7 @@ public final class ThriftClientInstrumentation implements TypeInstrumentation {
 
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArguments(2)),
-        ThriftClientInstrumentation.class.getName() + "$ConstructorTowAdvice");
+        ThriftClientInstrumentation.class.getName() + "$ConstructorTwoAdvice");
 
     transformer.applyAdviceToMethod(
         isMethod().and(isProtected()).and(nameStartsWith("sendBase")),
@@ -63,7 +63,7 @@ public final class ThriftClientInstrumentation implements TypeInstrumentation {
     }
   }
 
-  public static class ConstructorTowAdvice {
+  public static class ConstructorTwoAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Origin("#t") String serviceName,

@@ -33,7 +33,7 @@ public final class ThriftServerInstrumentationModule extends InstrumentationModu
         new ThriftAsyncProcessInstrumentation(),
         new ThriftFrameBufferInstrumentation(),
         new ThriftBaseProcessorInstrumentation(),
-        new ThriftMutiplexedProcessorInstrumentation(),
+        new ThriftMultiplexedProcessorInstrumentation(),
         new ThriftBaseAsyncProcessorInstrumentation());
   }
 }

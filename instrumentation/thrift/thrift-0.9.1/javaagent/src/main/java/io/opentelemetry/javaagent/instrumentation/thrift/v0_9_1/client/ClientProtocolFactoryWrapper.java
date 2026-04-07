@@ -10,9 +10,9 @@ import org.apache.thrift.protocol.TProtocolFactory;
 import org.apache.thrift.transport.TTransport;
 
 public final class ClientProtocolFactoryWrapper implements TProtocolFactory {
-  public TProtocolFactory delegate;
-  public TTransport transport;
-  public String serviceName;
+  private final TProtocolFactory delegate;
+  private final TTransport transport;
+  private final String serviceName;
 
   @Override
   public TProtocol getProtocol(TTransport transport) {

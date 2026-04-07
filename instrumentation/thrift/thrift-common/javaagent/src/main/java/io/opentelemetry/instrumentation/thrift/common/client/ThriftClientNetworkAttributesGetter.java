@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.thrift.common.client;
 
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
-import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import io.opentelemetry.instrumentation.thrift.common.ThriftRequest;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -14,8 +13,7 @@ import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 public final class ThriftClientNetworkAttributesGetter
-    implements ServerAttributesGetter<ThriftRequest>,
-        NetworkAttributesGetter<ThriftRequest, Integer> {
+    implements NetworkAttributesGetter<ThriftRequest, Integer> {
 
   @Nullable
   @Override

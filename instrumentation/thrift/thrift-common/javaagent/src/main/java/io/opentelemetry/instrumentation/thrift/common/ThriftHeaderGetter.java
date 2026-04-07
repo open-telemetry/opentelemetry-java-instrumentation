@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.thrift.common;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.context.propagation.TextMapGetter;
 import javax.annotation.Nullable;
 
@@ -13,6 +15,9 @@ public enum ThriftHeaderGetter implements TextMapGetter<ThriftRequest> {
 
   @Override
   public Iterable<String> keys(ThriftRequest request) {
+    if (request == null) {
+      return emptyList();
+    }
     return request.getHeader().keySet();
   }
 

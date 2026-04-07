@@ -25,7 +25,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.thrift.protocol.TProtocol;
 
-public final class ThriftMutiplexedProcessorInstrumentation implements TypeInstrumentation {
+public final class ThriftMultiplexedProcessorInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -36,7 +36,7 @@ public final class ThriftMutiplexedProcessorInstrumentation implements TypeInstr
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isMethod().and(named("process")),
-        ThriftMutiplexedProcessorInstrumentation.class.getName() + "$ProcessAdvice");
+        ThriftMultiplexedProcessorInstrumentation.class.getName() + "$ProcessAdvice");
   }
 
   public static class ProcessAdvice {
