@@ -54,7 +54,8 @@ public final class RuntimeMetricsBuilder {
    *
    * @deprecated Use {@link RuntimeTelemetry} in the {@code runtime-telemetry} module instead and
    *     set {@code otel.instrumentation.runtime-telemetry.capture-gc-cause=true} when you need the
-   *     legacy opt-in behavior.
+   * @deprecated Use {@link RuntimeTelemetry#builder(OpenTelemetry)} in the {@code
+   *     runtime-telemetry} module instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
