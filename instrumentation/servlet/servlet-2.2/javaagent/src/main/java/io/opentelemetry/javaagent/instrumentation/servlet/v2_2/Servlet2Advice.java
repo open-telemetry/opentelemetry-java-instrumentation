@@ -28,9 +28,9 @@ public class Servlet2Advice {
   public static class AdviceScope {
 
     private final CallDepth callDepth;
-    private final ServletRequestContext<HttpServletRequest> requestContext;
-    private final Context context;
-    private final Scope scope;
+    @Nullable private final ServletRequestContext<HttpServletRequest> requestContext;
+    @Nullable private final Context context;
+    @Nullable private final Scope scope;
 
     public AdviceScope(
         CallDepth callDepth, HttpServletRequest request, HttpServletResponse response) {
