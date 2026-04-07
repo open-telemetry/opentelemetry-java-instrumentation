@@ -28,7 +28,7 @@ class RuntimeMetricsBuilderTest {
   static void setup() {
     try {
       Class.forName("jdk.jfr.FlightRecorder");
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       Assumptions.abort("JFR not present");
     }
     Assumptions.assumeTrue(FlightRecorder.isAvailable(), "JFR not available");
