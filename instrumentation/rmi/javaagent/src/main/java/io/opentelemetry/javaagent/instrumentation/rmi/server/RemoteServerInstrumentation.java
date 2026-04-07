@@ -80,7 +80,7 @@ class RemoteServerInstrumentation implements TypeInstrumentation {
         return new AdviceScope(callDepth, classAndMethod, context, context.makeCurrent());
       }
 
-      public void end(Throwable throwable) {
+      public void end(@Nullable Throwable throwable) {
         if (callDepth.decrementAndGet() > 0) {
           return;
         }
