@@ -80,13 +80,13 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
   public static class SendCommandAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.Argument(0) ProtocolCommand command, @Advice.Argument(1) byte[][] args) {
       return AdviceScope.start(JedisRequest.create(command, asList(args)));
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.FieldValue("socket") Socket socket,
         @Advice.Thrown @Nullable Throwable throwable,
@@ -101,12 +101,12 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
   public static class SendCommand2Advice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(0) CommandArguments command) {
       return AdviceScope.start(JedisRequest.create(command));
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.FieldValue("socket") Socket socket,
         @Advice.Thrown @Nullable Throwable throwable,

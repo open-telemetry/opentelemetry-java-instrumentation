@@ -41,12 +41,12 @@ class ConsumerBaseInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class TriggerListenerAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter() {
       MessageListenerContext.startProcessing();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit() {
       MessageListenerContext.endProcessing();
     }

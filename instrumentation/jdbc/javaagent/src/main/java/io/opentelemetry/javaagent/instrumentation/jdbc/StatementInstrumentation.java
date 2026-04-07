@@ -61,7 +61,7 @@ class StatementInstrumentation implements TypeInstrumentation {
   public static class StatementAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(value = 0, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.Argument(0) String sql, @Advice.This Statement statement) {
       if (JdbcSingletons.isWrapper(statement, Statement.class)) {
@@ -75,7 +75,7 @@ class StatementInstrumentation implements TypeInstrumentation {
       };
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter Object[] enterResult) {
       JdbcAdviceScope adviceScope = (JdbcAdviceScope) enterResult[0];
@@ -89,7 +89,7 @@ class StatementInstrumentation implements TypeInstrumentation {
   public static class AddBatchAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static String addBatch(
         @Advice.This Statement statement, @Advice.Argument(0) String sql) {
       if (statement instanceof PreparedStatement) {
@@ -107,7 +107,7 @@ class StatementInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ClearBatchAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void clearBatch(@Advice.This Statement statement) {
       JdbcData.clearBatch(statement);
     }
@@ -117,7 +117,7 @@ class StatementInstrumentation implements TypeInstrumentation {
   public static class ExecuteBatchAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static JdbcAdviceScope onEnter(@Advice.This Statement statement) {
       if (JdbcSingletons.isWrapper(statement, Statement.class)) {
         return null;
@@ -126,7 +126,7 @@ class StatementInstrumentation implements TypeInstrumentation {
       return JdbcAdviceScope.startBatch(CallDepth.forClass(Statement.class), statement);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable JdbcAdviceScope adviceScope) {
@@ -139,7 +139,7 @@ class StatementInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CloseAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void closeStatement(@Advice.This Statement statement) {
       JdbcData.close(statement);
     }

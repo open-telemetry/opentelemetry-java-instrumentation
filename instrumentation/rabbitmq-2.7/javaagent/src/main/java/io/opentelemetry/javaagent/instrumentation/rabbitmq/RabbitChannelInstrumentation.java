@@ -144,13 +144,13 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static ChannelMethodAdviceScope onEnter(
         @Advice.This Channel channel, @Advice.Origin("Channel.#m") String method) {
       return ChannelMethodAdviceScope.start(CallDepth.forClass(Channel.class), channel, method);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter ChannelMethodAdviceScope adviceScope) {
@@ -162,7 +162,7 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
   public static class ChannelPublishAdvice {
 
     @Advice.AssignReturned.ToArguments(@Advice.AssignReturned.ToArguments.ToArgument(4))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AMQP.BasicProperties setSpanNameAddHeaders(
         @Advice.Argument(0) String exchange,
         @Advice.Argument(1) String routingKey,
@@ -259,12 +259,12 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static ChannelGetAdviceScope takeTimestamp() {
       return ChannelGetAdviceScope.start();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void extractAndStartSpan(
         @Advice.This Channel channel,
         @Advice.Argument(0) String queue,
@@ -279,7 +279,7 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
   public static class ChannelConsumeAdvice {
 
     @Advice.AssignReturned.ToArguments(@Advice.AssignReturned.ToArguments.ToArgument(6))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object wrapConsumer(
         @Advice.This Channel channel,
         @Advice.Argument(0) String queue,

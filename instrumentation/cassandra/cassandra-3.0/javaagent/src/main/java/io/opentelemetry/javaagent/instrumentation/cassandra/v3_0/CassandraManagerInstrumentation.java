@@ -43,7 +43,7 @@ class CassandraManagerInstrumentation implements TypeInstrumentation {
      * @param session The fresh session to patch. This session is replaced with new session
      */
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Session injectTracingSession(@Advice.Return Session session) {
       // This should cover ours and OT's TracingSession
       if (session.getClass().getName().endsWith("cassandra.TracingSession")) {

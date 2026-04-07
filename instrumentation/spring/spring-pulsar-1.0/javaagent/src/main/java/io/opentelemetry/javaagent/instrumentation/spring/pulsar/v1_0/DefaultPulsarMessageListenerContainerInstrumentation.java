@@ -55,7 +55,7 @@ class DefaultPulsarMessageListenerContainerInstrumentation implements TypeInstru
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(0) Message<?> message) {
       Context parentContext = VirtualFieldStore.extract(message);
       if (!instrumenter().shouldStart(parentContext, message)) {
@@ -65,7 +65,7 @@ class DefaultPulsarMessageListenerContainerInstrumentation implements TypeInstru
       return new AdviceScope(context, context.makeCurrent());
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(0) Message<?> message,
         @Advice.Thrown @Nullable Throwable throwable,

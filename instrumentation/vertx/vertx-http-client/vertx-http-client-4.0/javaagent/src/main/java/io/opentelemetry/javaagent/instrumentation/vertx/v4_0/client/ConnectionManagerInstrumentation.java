@@ -47,7 +47,7 @@ class ConnectionManagerInstrumentation implements TypeInstrumentation {
   public static class GetConnectionArg2Advice {
     @Nullable
     @AssignReturned.ToArguments(@ToArgument(2))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Handler<?> wrapHandler(@Advice.Argument(2) @Nullable Handler<?> handler) {
       return HandlerWrapper.wrap(handler);
     }
@@ -57,7 +57,7 @@ class ConnectionManagerInstrumentation implements TypeInstrumentation {
   public static class GetConnectionArg3Advice {
     @Nullable
     @AssignReturned.ToArguments(@ToArgument(3))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Handler<?> wrapHandler(@Advice.Argument(3) @Nullable Handler<?> handler) {
       return HandlerWrapper.wrap(handler);
     }
@@ -67,7 +67,7 @@ class ConnectionManagerInstrumentation implements TypeInstrumentation {
   public static class GetConnectionArg4Advice {
     @Nullable
     @AssignReturned.ToArguments(@ToArgument(4))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Handler<?> wrapHandler(@Advice.Argument(4) @Nullable Handler<?> handler) {
       return HandlerWrapper.wrap(handler);
     }

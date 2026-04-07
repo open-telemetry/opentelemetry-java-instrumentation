@@ -31,7 +31,7 @@ class SingleThreadEventExecutorInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class DisablePropagationAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter() {
       if (Java8BytecodeBridge.currentContext() != Java8BytecodeBridge.rootContext()) {
         // Prevent context from leaking by running this method under root context.
@@ -41,7 +41,7 @@ class SingleThreadEventExecutorInstrumentation implements TypeInstrumentation {
       return null;
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();

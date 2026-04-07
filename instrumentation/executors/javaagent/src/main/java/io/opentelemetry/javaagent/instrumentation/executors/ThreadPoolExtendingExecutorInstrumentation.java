@@ -40,7 +40,7 @@ class ThreadPoolExtendingExecutorInstrumentation implements TypeInstrumentation 
   public static class BeforeExecuteAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Runnable onEnter(@Advice.Argument(1) Runnable runnable) {
       if (runnable instanceof ContextPropagatingRunnable) {
         return ((ContextPropagatingRunnable) runnable).unwrap();
@@ -53,7 +53,7 @@ class ThreadPoolExtendingExecutorInstrumentation implements TypeInstrumentation 
   public static class AfterExecuteAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Runnable onEnter(@Advice.Argument(0) Runnable runnable) {
       if (runnable instanceof ContextPropagatingRunnable) {
         return ((ContextPropagatingRunnable) runnable).unwrap();

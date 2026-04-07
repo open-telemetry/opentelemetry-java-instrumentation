@@ -32,7 +32,7 @@ class HistogramInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class UpdateAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This Histogram histogram, @Advice.Argument(0) long value) {
       metrics().histogramUpdate(histogram, value);
     }

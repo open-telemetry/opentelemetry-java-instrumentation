@@ -44,7 +44,7 @@ class HttpServerFilterInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class PrepareResponseAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.Argument(0) FilterChainContext ctx,
         @Advice.Argument(2) HttpResponsePacket response) {
@@ -53,7 +53,7 @@ class HttpServerFilterInstrumentation implements TypeInstrumentation {
           .customize(context, response, new GrizzlyHttpResponseMutator());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(0) FilterChainContext ctx,
         @Advice.Argument(2) HttpResponsePacket response) {

@@ -36,7 +36,7 @@ class KotlinCoroutinesInstrumentation implements TypeInstrumentation {
   public static class ContextAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CoroutineContext enter(@Advice.Argument(1) CoroutineContext coroutineContext) {
       return coroutineContext == null
           ? null

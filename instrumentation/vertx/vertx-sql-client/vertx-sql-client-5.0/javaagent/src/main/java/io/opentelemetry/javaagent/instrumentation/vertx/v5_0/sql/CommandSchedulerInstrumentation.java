@@ -59,7 +59,7 @@ class CommandSchedulerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ScheduleAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Scope onEnter(@Advice.Argument(0) CommandBase<?> command) {
       Context stored = getCommandContext(command);
@@ -75,7 +75,7 @@ class CommandSchedulerInstrumentation implements TypeInstrumentation {
       return stored.makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();

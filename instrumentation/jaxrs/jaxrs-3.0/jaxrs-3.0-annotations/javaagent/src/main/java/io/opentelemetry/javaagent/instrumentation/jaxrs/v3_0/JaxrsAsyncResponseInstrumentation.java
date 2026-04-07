@@ -51,7 +51,7 @@ class JaxrsAsyncResponseInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AsyncResponseAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void stopSpan(@Advice.This AsyncResponse asyncResponse) {
 
       AsyncResponseData data = RESPONSE_DATA.get(asyncResponse);
@@ -65,7 +65,7 @@ class JaxrsAsyncResponseInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AsyncResponseThrowableAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.This AsyncResponse asyncResponse, @Advice.Argument(0) Throwable throwable) {
 
@@ -80,7 +80,7 @@ class JaxrsAsyncResponseInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AsyncResponseCancelAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void stopSpan(@Advice.This AsyncResponse asyncResponse) {
 
       AsyncResponseData data = RESPONSE_DATA.get(asyncResponse);

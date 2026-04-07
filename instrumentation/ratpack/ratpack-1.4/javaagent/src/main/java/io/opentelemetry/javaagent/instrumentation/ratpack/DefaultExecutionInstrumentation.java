@@ -42,7 +42,7 @@ class DefaultExecutionInstrumentation implements TypeInstrumentation {
       @ToArgument(value = 0, index = 0),
       @ToArgument(value = 1, index = 1)
     })
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] wrap(
         @Advice.Argument(0) Action<? super Throwable> originalOnError,
         @Advice.Argument(1) Action<? super Continuation> originalSegment) {

@@ -38,7 +38,7 @@ class ClientResourcesInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class BuilderAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Return ClientResources.Builder builder) {
       if (CompatibilityChecker.checkCompatible()) {
         builder.tracing(TracingHolder.TRACING);

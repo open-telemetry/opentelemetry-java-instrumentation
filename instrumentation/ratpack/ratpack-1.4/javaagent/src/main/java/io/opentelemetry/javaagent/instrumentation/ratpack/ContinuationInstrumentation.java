@@ -44,7 +44,7 @@ class ContinuationInstrumentation implements TypeInstrumentation {
   public static class ResumeAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Block wrap(@Advice.Argument(0) Block block) {
       return BlockWrapper.wrapIfNeeded(block);
     }

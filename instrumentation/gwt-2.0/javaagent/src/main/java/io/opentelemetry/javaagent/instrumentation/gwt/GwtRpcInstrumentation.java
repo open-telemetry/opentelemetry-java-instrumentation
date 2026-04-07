@@ -81,12 +81,12 @@ class GwtRpcInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(1) Method method) {
       return AdviceScope.start(method);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(1) Method method,
         @Advice.Thrown @Nullable Throwable throwable,
@@ -100,7 +100,7 @@ class GwtRpcInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class EncodeResponseForFailureAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(1) @Nullable Throwable throwable) {
       if (throwable == null) {
         return;

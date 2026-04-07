@@ -45,7 +45,7 @@ class PekkoDefaultSystemMessageQueueInstrumentation implements TypeInstrumentati
   @SuppressWarnings("unused")
   public static class DispatchSystemAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static PropagatedContext enter(@Advice.Argument(1) SystemMessage systemMessage) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, systemMessage)) {
@@ -55,7 +55,7 @@ class PekkoDefaultSystemMessageQueueInstrumentation implements TypeInstrumentati
       return null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exit(
         @Advice.Argument(1) SystemMessage systemMessage,
         @Advice.Enter PropagatedContext propagatedContext,

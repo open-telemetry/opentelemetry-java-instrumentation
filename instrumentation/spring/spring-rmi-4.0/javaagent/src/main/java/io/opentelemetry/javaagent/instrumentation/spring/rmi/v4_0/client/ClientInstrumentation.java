@@ -64,7 +64,7 @@ public class ClientInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(0) MethodInvocation methodInv) {
       Method method = methodInv.getMethod();
       Context parentContext = Java8BytecodeBridge.currentContext();
@@ -75,7 +75,7 @@ public class ClientInstrumentation implements TypeInstrumentation {
       return new AdviceScope(method, context, context.makeCurrent());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

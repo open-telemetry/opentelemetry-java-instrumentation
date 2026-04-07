@@ -32,7 +32,7 @@ class TestTypeInstrumentation implements TypeInstrumentation {
   public static class TestAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(inline = false)
     public static String methodExit(@Advice.This Runnable test) {
       STRING.set(test, "instrumented");
       return "instrumented";
@@ -43,7 +43,7 @@ class TestTypeInstrumentation implements TypeInstrumentation {
   public static class Test2Advice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(inline = false)
     public static String methodExit(@Advice.This Runnable test) {
       return STRING.get(test);
     }

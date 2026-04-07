@@ -40,12 +40,12 @@ class AbstractMessageConvertingMessageSourceInstrumentation implements TypeInstr
 
   @SuppressWarnings("unused")
   public static class ConvertMessagesAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void methodEnter(@Advice.Argument(0) Collection<?> messages) {
       SpringAwsUtil.initialize(messages);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit() {
       SpringAwsUtil.clear();
     }
@@ -53,7 +53,7 @@ class AbstractMessageConvertingMessageSourceInstrumentation implements TypeInstr
 
   @SuppressWarnings("unused")
   public static class ConvertAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Argument(0) Object originalMessage, @Advice.Return Message<?> convertedMessage) {
       SpringAwsUtil.attachTracingState(originalMessage, convertedMessage);

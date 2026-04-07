@@ -43,7 +43,7 @@ class StructuredTaskScopeInstrumentation implements TypeInstrumentation {
   public static class ForkCallableAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static PropagatedContext enterCallableFork(@Advice.Argument(0) Callable<?> task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
@@ -52,7 +52,7 @@ class StructuredTaskScopeInstrumentation implements TypeInstrumentation {
       return null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exitCallableFork(
         @Advice.Argument(0) Callable<?> task,
         @Advice.Enter @Nullable PropagatedContext propagatedContext,

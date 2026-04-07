@@ -164,7 +164,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RequestBodyAdvice {
 
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, inline = false)
     public static Message onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
@@ -176,7 +176,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Message onExit(@Advice.Enter Message message) {
       return message;
     }
@@ -220,7 +220,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToArguments(@ToArgument(value = 1, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
@@ -232,7 +232,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
       return new Object[] {adviceScope, headers};
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This Connection connection,
         @Advice.Thrown @Nullable Throwable throwable,
@@ -248,7 +248,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RequestMessageAdvice {
 
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, inline = false)
     public static Message onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) Message request,
@@ -264,7 +264,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Message onExit(@Advice.Enter Message response) {
       return response;
     }
@@ -273,7 +273,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RequestFutureBodyAdvice {
 
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, inline = false)
     public static CompletableFuture<Message> onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
@@ -283,7 +283,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static CompletableFuture<Message> onExit(
         @Advice.Enter CompletableFuture<Message> future) {
       return future;
@@ -294,7 +294,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
   public static class RequestFutureHeadersBodyAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(value = 1, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
@@ -307,7 +307,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static CompletableFuture<Message> onExit(
         @Advice.This Connection connection,
         @Advice.Thrown @Nullable Throwable throwable,
@@ -324,7 +324,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RequestFutureMessageAdvice {
 
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, inline = false)
     public static CompletableFuture<Message> onEnter(
         @Advice.This Connection connection, @Advice.Argument(0) Message message) {
       // execute original method body to handle null message
@@ -337,7 +337,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static CompletableFuture<Message> onExit(
         @Advice.Return CompletableFuture<Message> originalResult,
         @Advice.Enter CompletableFuture<Message> future) {
@@ -348,7 +348,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RequestTimeoutFutureBodyAdvice {
 
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, inline = false)
     public static CompletableFuture<Message> onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
@@ -359,7 +359,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static CompletableFuture<Message> onExit(
         @Advice.Enter CompletableFuture<Message> future) {
       return future;
@@ -370,7 +370,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
   public static class RequestTimeoutFutureHeadersBodyAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(value = 1, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
@@ -384,7 +384,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static CompletableFuture<Message> onExit(
         @Advice.This Connection connection,
         @Advice.Thrown @Nullable Throwable throwable,
@@ -402,7 +402,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
   public static class RequestTimeoutFutureMessageAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(value = 0, index = 1))
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, inline = false)
     public static Object[] onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) Message message,
@@ -419,7 +419,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static CompletableFuture<Message> onExit(
         @Advice.Return @Nullable CompletableFuture<Message> originalResult,
         @Advice.Enter Object[] enterResult) {

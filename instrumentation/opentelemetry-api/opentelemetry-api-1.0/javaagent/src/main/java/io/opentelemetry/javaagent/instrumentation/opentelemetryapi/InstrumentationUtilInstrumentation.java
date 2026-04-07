@@ -39,13 +39,13 @@ class InstrumentationUtilInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ShouldSuppressAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Advice.OnNonDefaultValue.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Advice.OnNonDefaultValue.class, inline = false)
     public static boolean methodEnter() {
       return true;
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static boolean methodExit(
         @Advice.Argument(0) application.io.opentelemetry.context.Context context) {
       return InstrumentationUtil.shouldSuppressInstrumentation(
@@ -56,7 +56,7 @@ class InstrumentationUtilInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SuppressAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Advice.OnNonDefaultValue.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Advice.OnNonDefaultValue.class, inline = false)
     public static boolean methodEnter(@Advice.Argument(0) Runnable runnable) {
       InstrumentationUtil.suppressInstrumentation(runnable);
       return true;

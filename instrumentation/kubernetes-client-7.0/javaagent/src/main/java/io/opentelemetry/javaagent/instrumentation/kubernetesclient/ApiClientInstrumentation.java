@@ -59,7 +59,7 @@ class ApiClientInstrumentation implements TypeInstrumentation {
   public static class BuildRequestAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Request onExit(@Advice.Return Request originalReturnValue) {
       Context parentContext = currentContext();
       if (!instrumenter().shouldStart(parentContext, originalReturnValue)) {
@@ -79,7 +79,7 @@ class ApiClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ExecuteAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Return ApiResponse<?> response, @Advice.Thrown Throwable throwable) {
       CurrentState currentState = CurrentState.remove();
@@ -102,7 +102,7 @@ class ApiClientInstrumentation implements TypeInstrumentation {
   public static class ExecuteAsyncAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(value = 2, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.Argument(0) Call httpCall, @Advice.Argument(2) ApiCallback<?> originalCallback) {
       CurrentState current = CurrentState.remove();
@@ -118,7 +118,7 @@ class ApiClientInstrumentation implements TypeInstrumentation {
       return new Object[] {current, callback};
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter Object[] enterResult) {
       CurrentState current = (CurrentState) enterResult[0];

@@ -33,7 +33,7 @@ class FinatraRouteBuilderInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class BuildAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Return Route route, @Advice.FieldValue("callback") Function1<?, ?> callback) {
       setCallbackClass(route, callback.getClass());

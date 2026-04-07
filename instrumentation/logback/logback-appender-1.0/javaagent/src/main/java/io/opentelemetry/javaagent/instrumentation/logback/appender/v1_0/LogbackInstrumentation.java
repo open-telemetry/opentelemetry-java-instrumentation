@@ -41,7 +41,7 @@ class LogbackInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CallAppendersAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth methodEnter(@Advice.Argument(0) ILoggingEvent event) {
       // need to track call depth across all loggers in order to avoid double capture when one
       // logging framework delegates to another
@@ -53,7 +53,7 @@ class LogbackInstrumentation implements TypeInstrumentation {
       return callDepth;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(@Advice.Enter CallDepth callDepth) {
       callDepth.decrementAndGet();
     }

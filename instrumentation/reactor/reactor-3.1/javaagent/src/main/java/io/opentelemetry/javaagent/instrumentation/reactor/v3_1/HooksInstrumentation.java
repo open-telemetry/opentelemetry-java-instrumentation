@@ -38,7 +38,7 @@ class HooksInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ResetOnEachOperatorAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void postStaticInitializer() {
       ContextPropagationOperator.builder()
           .setCaptureExperimentalSpanAttributes(

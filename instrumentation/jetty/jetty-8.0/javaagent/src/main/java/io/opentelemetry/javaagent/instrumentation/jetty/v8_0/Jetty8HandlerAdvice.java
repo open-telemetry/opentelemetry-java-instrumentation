@@ -59,7 +59,7 @@ public class Jetty8HandlerAdvice {
     }
   }
 
-  @Advice.OnMethodEnter(suppress = Throwable.class)
+  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
   @Nullable
   public static AdviceScope onEnter(
       @Advice.Argument(2) HttpServletRequest request,
@@ -67,7 +67,7 @@ public class Jetty8HandlerAdvice {
     return AdviceScope.start(request, response);
   }
 
-  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
   public static void stopSpan(
       @Advice.Argument(2) HttpServletRequest request,
       @Advice.Argument(3) HttpServletResponse response,

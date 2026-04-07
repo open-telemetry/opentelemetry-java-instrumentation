@@ -39,7 +39,7 @@ class ContextInstrumentation implements TypeInstrumentation {
   public static class WrapRootAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static application.io.opentelemetry.context.Context methodExit(
         @Advice.Return application.io.opentelemetry.context.Context root) {
       return AgentContextStorage.wrapRootContext(root);

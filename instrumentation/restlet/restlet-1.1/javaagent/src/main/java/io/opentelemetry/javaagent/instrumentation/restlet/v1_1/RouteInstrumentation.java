@@ -38,7 +38,7 @@ class RouteInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RouteBeforeHandleAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void getRouteInfo(@Advice.This Route route, @Advice.Argument(0) Request request) {
       String pattern = route.getTemplate().getPattern();
 

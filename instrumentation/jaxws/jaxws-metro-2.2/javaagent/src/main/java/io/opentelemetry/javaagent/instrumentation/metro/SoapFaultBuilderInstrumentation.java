@@ -35,7 +35,7 @@ class SoapFaultBuilderInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CaptureThrowableAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Argument(2) Throwable throwable) {
       if (throwable == null) {
         return;

@@ -35,7 +35,7 @@ class JaxWsServerFactoryBeanInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CreateAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Return Server server) {
       Endpoint endpoint = server.getEndpoint();
       endpoint.getInInterceptors().add(new TracingStartInInterceptor());

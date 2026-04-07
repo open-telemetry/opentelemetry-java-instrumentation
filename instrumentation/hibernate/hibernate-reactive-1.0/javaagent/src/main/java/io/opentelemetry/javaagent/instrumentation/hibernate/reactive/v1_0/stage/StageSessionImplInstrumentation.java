@@ -39,13 +39,13 @@ class StageSessionImplInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class WithTransactionAdvice {
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Function<?, ?> onEnter(@Advice.Argument(0) Function<?, ?> function) {
       return FunctionWrapper.wrap(function);
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static CompletionStage<?> onExit(@Advice.Return CompletionStage<?> completionStage) {
       return CompletionStageWrapper.wrap(completionStage);
     }

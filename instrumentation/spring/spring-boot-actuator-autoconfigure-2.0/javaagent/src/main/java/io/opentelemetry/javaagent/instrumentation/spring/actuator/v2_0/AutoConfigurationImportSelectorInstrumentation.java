@@ -35,7 +35,7 @@ class AutoConfigurationImportSelectorInstrumentation implements TypeInstrumentat
   public static class GetCandidateConfigurationsAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static List<String> onExit(@Advice.Return List<String> originalConfigurations) {
       List<String> configurations = originalConfigurations;
       if (configurations.contains(
