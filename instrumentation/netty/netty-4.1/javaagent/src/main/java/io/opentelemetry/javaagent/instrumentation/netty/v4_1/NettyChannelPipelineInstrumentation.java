@@ -86,7 +86,7 @@ public class NettyChannelPipelineInstrumentation
         ChannelHandlerContext context = pipeline.context(handler);
         if (context == null) {
           // probably a ChannelInitializer that was used and removed
-          // see the comment above in @Advice.OnMethodEnter(inline = false)
+          // see the comment above in @Advice.OnMethodEnter
           return;
         }
         name = context.name();
