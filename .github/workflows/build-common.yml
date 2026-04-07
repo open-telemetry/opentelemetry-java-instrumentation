@@ -457,7 +457,7 @@ jobs:
           ./gradlew
           :smoke-tests:test
           -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
-          -PskipOpenJ9SmokeTests=${{ inputs.skip-openj9-tests && 'true' || 'false' }}
+          ${{ inputs.skip-openj9-tests && matrix.smoke-test-suite != 'websphere' && '-PskipOpenJ9SmokeTests=true' || '' }}
           ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Build scan
