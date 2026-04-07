@@ -7,15 +7,13 @@ package io.opentelemetry.instrumentation.apachedubbo.v2_7.internal;
 
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.same;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.rpc.Invocation;
 import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.Result;
 import org.apache.dubbo.rpc.cluster.Cluster;
+import org.apache.dubbo.rpc.cluster.Directory;
 import org.apache.dubbo.rpc.cluster.directory.StaticDirectory;
 import org.junit.jupiter.api.Test;
 
@@ -27,15 +25,42 @@ class RegistryCapturingClusterWrapperTest {
   @Test
   @SuppressWarnings("unchecked")
   void joinDoesNotWrapStaticDirectory() {
-    Cluster inner = mock(Cluster.class);
-    RegistryCapturingClusterWrapper wrapper = new RegistryCapturingClusterWrapper(inner);
     Invoker<Object> innerInvoker = new NoopInvoker(DUMMY_URL);
+    RegistryCapturingClusterWrapper wrapper =
+        new RegistryCapturingClusterWrapper(new FakeCluster(innerInvoker));
     StubInvoker stub = new StubInvoker(DUMMY_URL);
     StaticDirectory<Object> staticDir = new StaticDirectory<>(singletonList(stub));
-    when(inner.join(same(staticDir))).thenReturn(innerInvoker);
 
     Invoker<Object> out = wrapper.join(staticDir);
     assertThat(out).isSameAs(innerInvoker);
+  }
+
+  /**
+   * Fake {@link Cluster} that provides both the Dubbo 2.7 {@code join(Directory)} and 3.0.4+ {@code
+   * join(Directory, boolean)} signatures, following the same pattern as {@link
+   * RegistryCapturingClusterWrapper}.
+   */
+  @SuppressWarnings("unchecked")
+  private static class FakeCluster implements Cluster {
+    private final Invoker<?> invoker;
+
+    FakeCluster(Invoker<?> invoker) {
+      this.invoker = invoker;
+    }
+
+    // Dubbo 2.7 signature
+    // @Override — present in 2.7, removed in 3.0.4+
+    @SuppressWarnings({"MissingOverride", "UnusedMethod", "UnusedVariable", "EffectivelyPrivate"})
+    public <T> Invoker<T> join(Directory<T> directory) {
+      return (Invoker<T>) invoker;
+    }
+
+    // Dubbo 3.0.4+ signature
+    // @Override — present in 3.0.4+, absent in 2.7
+    @SuppressWarnings({"MissingOverride", "UnusedMethod", "UnusedVariable", "EffectivelyPrivate"})
+    public <T> Invoker<T> join(Directory<T> directory, boolean buildFilterChain) {
+      return (Invoker<T>) invoker;
+    }
   }
 
   private static class NoopInvoker implements Invoker<Object> {
