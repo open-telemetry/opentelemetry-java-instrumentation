@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.rxjava.v2_0.TracingAssembly;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class TracingAssemblyActivation {
+class TracingAssemblyActivation {
 
   private static final ClassValue<AtomicBoolean> activated =
       new ClassValue<AtomicBoolean>() {
@@ -20,7 +20,7 @@ public class TracingAssemblyActivation {
         }
       };
 
-  public static void activate(Class<?> clz) {
+  static void activate(Class<?> clz) {
     if (activated.get(clz).compareAndSet(false, true)) {
       TracingAssembly.builder()
           .setCaptureExperimentalSpanAttributes(
