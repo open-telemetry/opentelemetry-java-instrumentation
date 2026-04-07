@@ -108,18 +108,18 @@ public final class TracingAssembly {
   @GuardedBy("TracingAssembly.class")
   private static RxJava3AsyncOperationEndStrategy asyncOperationEndStrategy;
 
-  private final boolean captureExperimentalSpanAttributes;
-
-  TracingAssembly(boolean captureExperimentalSpanAttributes) {
-    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
-  }
-
   public static TracingAssembly create() {
     return builder().build();
   }
 
   public static TracingAssemblyBuilder builder() {
     return new TracingAssemblyBuilder();
+  }
+
+  private final boolean captureExperimentalSpanAttributes;
+
+  TracingAssembly(boolean captureExperimentalSpanAttributes) {
+    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
   }
 
   public void enable() {
