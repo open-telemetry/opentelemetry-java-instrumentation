@@ -6,13 +6,14 @@ muzzle {
   pass {
     group.set("org.jodd")
     module.set("jodd-http")
-    versions.set("[4.2.0,)")
+    versions.set("[4.1.1,)")
+    assertInverse.set(true)
   }
 }
 
 dependencies {
-  // 4.2 is the first version with java 8, follow-redirects and HttpRequest#headerOverwrite method
-  library("org.jodd:jodd-http:4.2.0")
+  // 4.1.1 is the first version with HttpBase#headerOverwrite used by header injection
+  library("org.jodd:jodd-http:4.1.1")
 
   testImplementation(project(":instrumentation:jodd-http-4.2:javaagent"))
   testImplementation(project(":instrumentation-api-incubator"))
@@ -20,7 +21,7 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {

@@ -20,13 +20,13 @@ import io.vertx.sqlclient.internal.SqlClientBase;
 import io.vertx.sqlclient.internal.command.CommandBase;
 import javax.annotation.Nullable;
 
-public final class VertxSqlClientSingletons {
+public class VertxSqlClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-sql-client-5.0";
-  private static final Instrumenter<VertxSqlClientRequest, Void> INSTRUMENTER =
+  private static final Instrumenter<VertxSqlClientRequest, Void> instrumenter =
       VertxSqlInstrumenterFactory.createInstrumenter(INSTRUMENTATION_NAME);
 
   public static Instrumenter<VertxSqlClientRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private static final VirtualField<Pool, String> poolDbSystem =

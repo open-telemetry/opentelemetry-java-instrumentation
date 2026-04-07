@@ -15,9 +15,7 @@ otelJava {
   // StructuredTaskScopeTest that uses preview feature, requires that the test is compiled for the
   // same vm version that is going to execute the test. Choose whichever is greater 21 or the
   // version of the vm that is going to run test
-  val testJavaVersion =
-    gradle.startParameter.projectProperties["testJavaVersion"]?.let(JavaVersion::toVersion)
-      ?: JavaVersion.current()
+  val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
   minJavaVersionSupported.set(JavaVersion.toVersion(max(
     testJavaVersion.majorVersion.toInt(),
     JavaVersion.VERSION_21.majorVersion.toInt()

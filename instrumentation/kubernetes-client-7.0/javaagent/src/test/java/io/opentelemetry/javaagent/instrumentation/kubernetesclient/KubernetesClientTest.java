@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,7 +53,6 @@ class KubernetesClientTest {
 
   private CoreV1Api coreV1Api;
 
-  @Nullable
   private static String experimental(String value) {
     return EXPERIMENTAL_ATTRIBUTES ? value : null;
   }

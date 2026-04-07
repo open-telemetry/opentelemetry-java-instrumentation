@@ -29,6 +29,7 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 1.31
     return hasClassesNamed(
         "application.io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder");
   }

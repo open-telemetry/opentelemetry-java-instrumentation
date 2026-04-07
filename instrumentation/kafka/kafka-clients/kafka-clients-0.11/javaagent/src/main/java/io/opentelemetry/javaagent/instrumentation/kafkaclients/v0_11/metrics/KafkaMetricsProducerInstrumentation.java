@@ -45,8 +45,6 @@ class KafkaMetricsProducerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Map<String, Object> onEnter(
         @Advice.Argument(0) Map<String, Object> originalConfig) {
-      Map<String, Object> config = originalConfig;
-
       // In versions of spring-kafka prior to 2.5.0.RC1, when the `ProducerPerThread`
       //  of DefaultKafkaProducerFactory is set to true, the `config` object entering
       //  this advice block can be shared across multiple threads. Directly modifying
@@ -57,13 +55,13 @@ class KafkaMetricsProducerInstrumentation implements TypeInstrumentation {
       // To prevent such issues, a copy of the `config` should be created here before
       //  any modifications are made. This ensures that each thread operates on its
       //  own independent copy of the configuration, thereby eliminating the risk of
-      //  configurations corruption.
+      //  configuration corruption.
       //
       // More detailed information:
       //  https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/12538
 
       // ensure config is a mutable map and avoid concurrency conflicts
-      config = new HashMap<>(config);
+      Map<String, Object> config = new HashMap<>(originalConfig);
       enhanceConfig(config);
       return config;
     }

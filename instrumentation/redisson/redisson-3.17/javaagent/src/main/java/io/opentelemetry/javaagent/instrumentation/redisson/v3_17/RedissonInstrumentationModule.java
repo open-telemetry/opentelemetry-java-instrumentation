@@ -25,6 +25,7 @@ public class RedissonInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 3.17.0
     return hasClassesNamed("org.redisson.api.RFunction");
   }
 

@@ -15,10 +15,12 @@ import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackClientInstr
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import ratpack.exec.Execution;
 
-public final class RatpackSingletons {
+public class RatpackSingletons {
+
+  private static final OpenTelemetryHttpClient httpClient;
 
   static {
-    HTTP_CLIENT =
+    httpClient =
         new OpenTelemetryHttpClient(
             RatpackClientInstrumenterBuilderFactory.create(
                     "io.opentelemetry.ratpack-1.7", GlobalOpenTelemetry.get())
@@ -26,10 +28,8 @@ public final class RatpackSingletons {
                 .build());
   }
 
-  private static final OpenTelemetryHttpClient HTTP_CLIENT;
-
   public static OpenTelemetryHttpClient httpClient() {
-    return HTTP_CLIENT;
+    return httpClient;
   }
 
   public static void propagateContextToChannel(Execution execution, Channel channel) {

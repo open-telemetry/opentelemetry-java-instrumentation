@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.v8_0;
 
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.junit.jupiter.api.Assumptions.abort;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -25,16 +25,15 @@ class QueuedThreadPoolTest {
     QueuedThreadPool pool = new QueuedThreadPool();
     // run test only if QueuedThreadPool has dispatch method
     // dispatch method was removed in jetty 9.1
-    Method dispatch = null;
+    Method dispatch;
     try {
       dispatch = QueuedThreadPool.class.getMethod("dispatch", Runnable.class);
-    } catch (NoSuchMethodException ignore) {
-      // ignore
+    } catch (NoSuchMethodException ignored) {
+      abort("Jetty 9.1+ removed dispatch(Runnable)");
+      return;
     }
-    assumeTrue(dispatch != null);
     pool.start();
 
-    Method finalDispatch = dispatch;
     testing.runWithSpan(
         "parent",
         () -> {
@@ -42,12 +41,10 @@ class QueuedThreadPoolTest {
           JavaAsyncChild child1 = new JavaAsyncChild();
           // this child won't
           JavaAsyncChild child2 = new JavaAsyncChild(false, false);
-          if (finalDispatch != null) {
-            finalDispatch.invoke(pool, child1);
-            finalDispatch.invoke(pool, child2);
-            child1.waitForCompletion();
-            child2.waitForCompletion();
-          }
+          dispatch.invoke(pool, child1);
+          dispatch.invoke(pool, child2);
+          child1.waitForCompletion();
+          child2.waitForCompletion();
         });
 
     testing.waitAndAssertTraces(
@@ -67,23 +64,20 @@ class QueuedThreadPoolTest {
     QueuedThreadPool pool = new QueuedThreadPool();
     // run test only if QueuedThreadPool has dispatch method
     // dispatch method was removed in jetty 9.1
-    Method dispatch = null;
+    Method dispatch;
     try {
       dispatch = QueuedThreadPool.class.getMethod("dispatch", Runnable.class);
-    } catch (NoSuchMethodException ignore) {
-      // ignore
+    } catch (NoSuchMethodException ignored) {
+      abort("Jetty 9.1+ removed dispatch(Runnable)");
+      return;
     }
-    assumeTrue(dispatch != null);
     pool.start();
 
     JavaAsyncChild child = new JavaAsyncChild(true, true);
-    Method finalDispatch = dispatch;
     testing.runWithSpan(
         "parent",
         () -> {
-          if (finalDispatch != null) {
-            finalDispatch.invoke(pool, JavaLambdaMaker.lambda(child));
-          }
+          dispatch.invoke(pool, JavaLambdaMaker.lambda(child));
         });
 
     // We block in child to make sure spans close in predictable order

@@ -45,7 +45,6 @@ dependencies {
   latestDepTestLibrary("co.elastic.clients:elasticsearch-java:7.17.19") // native on-by-default instrumentation after this version
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
 testing {
   suites {
     val version8Test by registering(JvmTestSuite::class) {
@@ -62,7 +61,7 @@ testing {
         implementation("com.fasterxml.jackson.core:jackson-databind:2.14.2")
         implementation("org.testcontainers:testcontainers-elasticsearch")
 
-        if (latestDepTest) {
+        if (otelProps.testLatestDeps) {
           // 8.10+ has native, on-by-default opentelemetry instrumentation
           implementation("co.elastic.clients:elasticsearch-java:8.9.+")
         } else {
@@ -77,7 +76,7 @@ tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {

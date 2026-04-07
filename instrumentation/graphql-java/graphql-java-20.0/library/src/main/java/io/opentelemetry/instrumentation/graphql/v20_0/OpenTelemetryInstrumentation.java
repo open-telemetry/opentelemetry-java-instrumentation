@@ -31,6 +31,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.OpenTelemetryInstrumentationHelper;
 import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.OpenTelemetryInstrumentationState;
 import java.util.concurrent.CompletionStage;
+import javax.annotation.Nullable;
 
 final class OpenTelemetryInstrumentation extends SimplePerformantInstrumentation {
   private final OpenTelemetryInstrumentationHelper helper;
@@ -89,35 +90,30 @@ final class OpenTelemetryInstrumentation extends SimplePerformantInstrumentation
       Context childContext = dataFetcherInstrumenter.start(parentContext, environment);
       state.setContextForPath(path, childContext);
 
-      boolean isCompletionStage = false;
-
-      Object fieldValue = null;
+      Object fieldValue;
       try (Scope ignored = childContext.makeCurrent()) {
         fieldValue = dataFetcher.get(environment);
-        isCompletionStage = fieldValue instanceof CompletionStage;
-
-        if (isCompletionStage) {
-          return ((CompletionStage<?>) fieldValue)
-              .whenComplete(
-                  (result, throwable) -> {
-                    handleDataFetcherResult(childContext, result);
-                    dataFetcherInstrumenter.end(childContext, environment, result, throwable);
-                  });
-        }
-        return fieldValue;
       } catch (Throwable throwable) {
         dataFetcherInstrumenter.end(childContext, environment, null, throwable);
         throw throwable;
-      } finally {
-        if (!isCompletionStage) {
-          handleDataFetcherResult(childContext, fieldValue);
-          dataFetcherInstrumenter.end(childContext, environment, fieldValue, null);
-        }
       }
+
+      if (fieldValue instanceof CompletionStage) {
+        return ((CompletionStage<?>) fieldValue)
+            .whenComplete(
+                (result, throwable) -> {
+                  handleDataFetcherResult(childContext, result);
+                  dataFetcherInstrumenter.end(childContext, environment, result, throwable);
+                });
+      }
+
+      handleDataFetcherResult(childContext, fieldValue);
+      dataFetcherInstrumenter.end(childContext, environment, fieldValue, null);
+      return fieldValue;
     };
   }
 
-  private static void handleDataFetcherResult(Context context, Object result) {
+  private static void handleDataFetcherResult(Context context, @Nullable Object result) {
     if (!(result instanceof DataFetcherResult)) {
       return;
     }

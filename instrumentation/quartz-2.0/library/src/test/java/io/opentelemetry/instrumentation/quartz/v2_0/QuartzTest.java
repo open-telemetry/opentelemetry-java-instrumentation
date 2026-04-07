@@ -13,7 +13,7 @@ import org.quartz.Scheduler;
 class QuartzTest extends AbstractQuartzTest {
 
   @RegisterExtension
-  static InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Override
   protected void configureScheduler(Scheduler scheduler) {

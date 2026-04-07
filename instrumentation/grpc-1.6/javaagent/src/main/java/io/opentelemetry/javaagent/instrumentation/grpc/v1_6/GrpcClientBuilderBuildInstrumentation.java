@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.grpc.v1_6;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.grpc.v1_6.GrpcSingletons.MANAGED_CHANNEL_BUILDER_INSTRUMENTED;
+import static io.opentelemetry.javaagent.instrumentation.grpc.v1_6.GrpcSingletons.clientInterceptor;
 import static net.bytebuddy.matcher.ElementMatchers.declaresField;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -45,7 +46,7 @@ class GrpcClientBuilderBuildInstrumentation implements TypeInstrumentation {
         @Advice.This ManagedChannelBuilder<?> builder,
         @Advice.FieldValue("interceptors") List<ClientInterceptor> interceptors) {
       if (!Boolean.TRUE.equals(MANAGED_CHANNEL_BUILDER_INSTRUMENTED.get(builder))) {
-        interceptors.add(0, GrpcSingletons.CLIENT_INTERCEPTOR);
+        interceptors.add(0, clientInterceptor());
         MANAGED_CHANNEL_BUILDER_INSTRUMENTED.set(builder, true);
       }
     }

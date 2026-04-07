@@ -16,7 +16,7 @@ import io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.client.ClientA
 import io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.server.ServerAttributesGetter;
 import java.lang.reflect.Method;
 
-public final class SpringRmiSingletons {
+public class SpringRmiSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-rmi-4.0";
 
   private static final Instrumenter<Method, Void> CLIENT_INSTRUMENTER = buildClientInstrumenter();

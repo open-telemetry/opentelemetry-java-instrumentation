@@ -12,7 +12,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
@@ -66,16 +65,10 @@ public abstract class AbstractControllerSpringWebFluxServerTest
                         satisfies(
                             EXCEPTION_TYPE,
                             val ->
-                                val.satisfiesAnyOf(
-                                    v ->
-                                        assertThat(v)
-                                            .isEqualTo(
-                                                "org.springframework.web.server.ResponseStatusException"),
+                                val.isIn(
+                                    "org.springframework.web.server.ResponseStatusException",
                                     // Changed in spring 7+
-                                    v ->
-                                        assertThat(v)
-                                            .isEqualTo(
-                                                "org.springframework.web.reactive.resource.NoResourceFoundException"))),
+                                    "org.springframework.web.reactive.resource.NoResourceFoundException")),
                         satisfies(EXCEPTION_MESSAGE, val -> val.contains("404")),
                         satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
       }

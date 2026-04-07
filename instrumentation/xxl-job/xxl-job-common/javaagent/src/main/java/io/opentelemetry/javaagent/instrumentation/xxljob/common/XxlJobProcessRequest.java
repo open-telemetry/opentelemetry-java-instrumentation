@@ -10,7 +10,7 @@ import com.xxl.job.core.handler.IJobHandler;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 
-public final class XxlJobProcessRequest {
+public class XxlJobProcessRequest {
 
   @Nullable private final String methodName;
   private final int jobId;

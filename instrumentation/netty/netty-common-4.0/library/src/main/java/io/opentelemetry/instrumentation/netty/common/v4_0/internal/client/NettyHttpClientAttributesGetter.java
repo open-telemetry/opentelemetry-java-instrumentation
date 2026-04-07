@@ -38,6 +38,7 @@ final class NettyHttpClientAttributesGetter
     }
   }
 
+  @Nullable
   private String getHost(NettyCommonRequest requestAndChannel) {
     List<String> values = getHttpRequestHeader(requestAndChannel, "host");
     return values.isEmpty() ? null : values.get(0);

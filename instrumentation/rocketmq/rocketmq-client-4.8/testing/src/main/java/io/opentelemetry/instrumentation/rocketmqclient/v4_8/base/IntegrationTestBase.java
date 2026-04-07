@@ -33,21 +33,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class IntegrationTestBase {
-  public static final Logger logger = LoggerFactory.getLogger(IntegrationTestBase.class);
+  private static final Logger logger = LoggerFactory.getLogger(IntegrationTestBase.class);
 
-  static final String BROKER_NAME_PREFIX = "TestBrokerName_";
-  static final AtomicInteger BROKER_INDEX = new AtomicInteger(0);
-  static final List<File> TMPE_FILES = new ArrayList<>();
-  static final List<BrokerController> BROKER_CONTROLLERS = new ArrayList<>();
-  static final List<NamesrvController> NAMESRV_CONTROLLERS = new ArrayList<>();
-  static final int COMMIT_LOG_SIZE = 1024 * 1024 * 100;
-  static final int INDEX_NUM = 1000;
+  private static final String BROKER_NAME_PREFIX = "TestBrokerName_";
+  private static final AtomicInteger brokerIndex = new AtomicInteger(0);
+  private static final List<File> tempFiles = new ArrayList<>();
+  private static final List<BrokerController> brokerControllers = new ArrayList<>();
+  private static final List<NamesrvController> namesrvControllers = new ArrayList<>();
+  private static final int COMMIT_LOG_SIZE = 1024 * 1024 * 100;
+  private static final int INDEX_NUM = 1000;
 
   private static String createTempDir() {
     String path = null;
     try {
       File file = Files.createTempDirectory("opentelemetry-rocketmq-client-temp").toFile();
-      TMPE_FILES.add(file);
+      tempFiles.add(file);
       path = file.getCanonicalPath();
     } catch (IOException e) {
       logger.warn("Error creating temporary directory.", e);
@@ -56,7 +56,7 @@ public final class IntegrationTestBase {
   }
 
   public static void deleteTempDir() {
-    for (File file : TMPE_FILES) {
+    for (File file : tempFiles) {
       boolean deleted = file.delete();
       if (!deleted) {
         file.deleteOnExit();
@@ -87,7 +87,7 @@ public final class IntegrationTestBase {
     } catch (Exception e) {
       logger.info("Name Server start failed", e);
     }
-    NAMESRV_CONTROLLERS.add(namesrvController);
+    namesrvControllers.add(namesrvController);
     return namesrvController;
   }
 
@@ -97,7 +97,7 @@ public final class IntegrationTestBase {
 
     BrokerConfig brokerConfig = new BrokerConfig();
     MessageStoreConfig storeConfig = new MessageStoreConfig();
-    brokerConfig.setBrokerName(BROKER_NAME_PREFIX + BROKER_INDEX.getAndIncrement());
+    brokerConfig.setBrokerName(BROKER_NAME_PREFIX + brokerIndex.getAndIncrement());
     brokerConfig.setBrokerIP1("127.0.0.1");
     brokerConfig.setNamesrvAddr(nsAddr);
     brokerConfig.setEnablePropertyFilter(true);
@@ -128,7 +128,7 @@ public final class IntegrationTestBase {
       logger.error("Broker start failed", t);
       throw new IllegalStateException("Broker start failed", t);
     }
-    BROKER_CONTROLLERS.add(brokerController);
+    brokerControllers.add(brokerController);
     return brokerController;
   }
 
@@ -164,8 +164,8 @@ public final class IntegrationTestBase {
                   createTopic.invoke(null, nsAddr, clusterName, topic, 20, emptyMap(), 3);
                   return true;
                 });
-      } catch (ClassNotFoundException | NoSuchMethodException ex) {
-        throw new IllegalStateException("Could not initialize topic", ex);
+      } catch (ClassNotFoundException | NoSuchMethodException f) {
+        throw new IllegalStateException("Could not initialize topic", f);
       }
     }
   }

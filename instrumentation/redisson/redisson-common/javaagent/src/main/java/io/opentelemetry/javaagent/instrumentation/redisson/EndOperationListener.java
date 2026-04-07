@@ -9,7 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.function.BiConsumer;
 
-public final class EndOperationListener<T> implements BiConsumer<T, Throwable> {
+public class EndOperationListener<T> implements BiConsumer<T, Throwable> {
   private final Instrumenter<RedissonRequest, Void> instrumenter;
   private final Context context;
   private final RedissonRequest request;

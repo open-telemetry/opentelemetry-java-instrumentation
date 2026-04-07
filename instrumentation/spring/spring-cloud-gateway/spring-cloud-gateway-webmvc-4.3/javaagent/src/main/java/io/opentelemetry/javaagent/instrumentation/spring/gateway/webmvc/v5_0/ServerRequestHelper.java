@@ -22,7 +22,7 @@ import org.springframework.web.servlet.function.ServerRequest;
  * Helper class for extracting Spring Cloud Gateway Server WebMVC route information from
  * ServerRequest and adding it to spans.
  */
-public final class ServerRequestHelper {
+public class ServerRequestHelper {
   @Nullable private static final Field routeIdField;
 
   static {

@@ -31,20 +31,20 @@ class AgentSpanTestingInstrumentation implements TypeInstrumentation {
         named("runWithAllSpanKeys"), getClass().getName() + "$RunWithAllSpanKeysAdvice");
   }
 
-  public static class AdviceScope {
+  private static final class AdviceScope {
     private final Context context;
     private final Scope scope;
 
-    public AdviceScope(Context context, Scope scope) {
+    private AdviceScope(Context context, Scope scope) {
       this.context = context;
       this.scope = scope;
     }
 
-    public Context getContext() {
+    private Context getContext() {
       return context;
     }
 
-    public void end() {
+    private void end() {
       scope.close();
     }
   }

@@ -23,7 +23,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import javax.annotation.Nullable;
 
-public final class Servlet5Singletons {
+public class Servlet5Singletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.servlet-5.0";
 
@@ -54,7 +54,7 @@ public final class Servlet5Singletons {
     return responseInstrumenter;
   }
 
-  public static OutputStreamSnippetInjectionHelper getSnippetInjectionHelper() {
+  public static OutputStreamSnippetInjectionHelper snippetInjectionHelper() {
     return snippetInjectionHelper;
   }
 

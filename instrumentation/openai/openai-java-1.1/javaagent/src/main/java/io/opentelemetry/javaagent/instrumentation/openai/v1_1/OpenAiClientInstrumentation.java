@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.openai.v1_1;
 
-import static io.opentelemetry.javaagent.instrumentation.openai.v1_1.OpenAiSingletons.TELEMETRY;
+import static io.opentelemetry.javaagent.instrumentation.openai.v1_1.OpenAiSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
@@ -34,7 +34,7 @@ class OpenAiClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     @Advice.AssignReturned.ToReturned
     public static OpenAIClient onExit(@Advice.Return OpenAIClient client) {
-      return TELEMETRY.wrap(client);
+      return telemetry().wrap(client);
     }
   }
 }

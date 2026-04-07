@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.finatra;
 
 import javax.annotation.Nullable;
 
-public final class FinatraRequest {
+public class FinatraRequest {
   private final Class<?> controllerClass;
   @Nullable private final Class<?> declaringClass;
   @Nullable private final String methodName;

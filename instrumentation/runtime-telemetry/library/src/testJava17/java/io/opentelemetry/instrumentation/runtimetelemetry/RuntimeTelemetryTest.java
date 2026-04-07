@@ -10,6 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import io.github.netmikey.logunit.api.LogCapturer;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrConfig;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
@@ -25,6 +26,8 @@ class RuntimeTelemetryTest {
 
   @RegisterExtension LogCapturer logs = LogCapturer.create().captureForType(RuntimeTelemetry.class);
 
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   private InMemoryMetricReader reader;
   private OpenTelemetrySdk sdk;
 
@@ -32,7 +35,7 @@ class RuntimeTelemetryTest {
   void setup() {
     try {
       Class.forName("jdk.jfr.FlightRecorder");
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException e) {
       Assumptions.abort("JFR not present");
     }
     Assumptions.assumeTrue(FlightRecorder.isAvailable(), "JFR not available");
@@ -53,41 +56,44 @@ class RuntimeTelemetryTest {
 
   @Test
   void create_Default() {
-    try (RuntimeTelemetry unused = RuntimeTelemetry.create(sdk)) {
-      assertThat(reader.collectAllMetrics())
-          .isNotEmpty()
-          .allSatisfy(
-              metric -> {
-                assertThat(metric.getInstrumentationScopeInfo().getName())
-                    .isEqualTo("io.opentelemetry.runtime-telemetry");
-              });
-    }
+    RuntimeTelemetry runtimeTelemetry = RuntimeTelemetry.create(sdk);
+    cleanup.deferCleanup(runtimeTelemetry);
+
+    assertThat(reader.collectAllMetrics())
+        .isNotEmpty()
+        .allSatisfy(
+            metric -> {
+              assertThat(metric.getInstrumentationScopeInfo().getName())
+                  .isEqualTo("io.opentelemetry.runtime-telemetry");
+            });
   }
 
   @Test
   void builder_DefaultNoJfr() {
     // By default, no JFR features are enabled because all features either overlap
     // with JMX or are experimental
-    try (var runtimeTelemetry = RuntimeTelemetry.builder(sdk).build()) {
-      assertThat(runtimeTelemetry.getJfrTelemetry()).isNull();
-    }
+    var runtimeTelemetry = RuntimeTelemetry.builder(sdk).build();
+    cleanup.deferCleanup(runtimeTelemetry);
+
+    assertThat(runtimeTelemetry.getJfrTelemetry()).isNull();
   }
 
   @Test
   void builder_WithFeatureEnabled() {
     RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(sdk);
     builder.getJfrConfig().enableFeature(JfrFeature.LOCK_METRICS);
-    try (var runtimeTelemetry = builder.build()) {
-      JfrConfig.JfrRuntimeMetrics jfrRuntimeMetrics =
-          (JfrConfig.JfrRuntimeMetrics) runtimeTelemetry.getJfrTelemetry();
-      assertThat(jfrRuntimeMetrics).isNotNull();
-      assertThat(jfrRuntimeMetrics.getRecordedEventHandlers())
-          .hasSizeGreaterThan(0)
-          .allSatisfy(
-              handler -> {
-                assertThat(handler.getFeature()).isEqualTo(JfrFeature.LOCK_METRICS);
-              });
-    }
+    var runtimeTelemetry = builder.build();
+    cleanup.deferCleanup(runtimeTelemetry);
+
+    JfrConfig.JfrRuntimeMetrics jfrRuntimeMetrics =
+        (JfrConfig.JfrRuntimeMetrics) runtimeTelemetry.getJfrTelemetry();
+    assertThat(jfrRuntimeMetrics).isNotNull();
+    assertThat(jfrRuntimeMetrics.getRecordedEventHandlers())
+        .hasSizeGreaterThan(0)
+        .allSatisfy(
+            handler -> {
+              assertThat(handler.getFeature()).isEqualTo(JfrFeature.LOCK_METRICS);
+            });
   }
 
   @Test

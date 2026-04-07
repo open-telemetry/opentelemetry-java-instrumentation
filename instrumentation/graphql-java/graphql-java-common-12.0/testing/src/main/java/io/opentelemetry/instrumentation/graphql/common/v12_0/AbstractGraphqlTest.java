@@ -271,8 +271,8 @@ public abstract class AbstractGraphqlTest {
                                             equalTo(EXCEPTION_TYPE, "InvalidSyntax"),
                                             satisfies(
                                                 EXCEPTION_MESSAGE,
-                                                message ->
-                                                    message.startsWithIgnoringCase(
+                                                val ->
+                                                    val.startsWithIgnoringCase(
                                                         "Invalid Syntax"))))));
   }
 
@@ -311,8 +311,7 @@ public abstract class AbstractGraphqlTest {
                                             equalTo(EXCEPTION_TYPE, "ValidationError"),
                                             satisfies(
                                                 EXCEPTION_MESSAGE,
-                                                message ->
-                                                    message.startsWith("Validation error"))))));
+                                                val -> val.startsWith("Validation error"))))));
   }
 
   @Test
@@ -350,8 +349,8 @@ public abstract class AbstractGraphqlTest {
         key,
         val ->
             val.satisfies(
-                querySource -> {
-                  String normalized = normalizeQuery(querySource);
+                v -> {
+                  String normalized = normalizeQuery(v);
                   String valueNormalized = normalizeQuery(value);
                   assertThat(normalized).isEqualTo(valueNormalized);
                 }));

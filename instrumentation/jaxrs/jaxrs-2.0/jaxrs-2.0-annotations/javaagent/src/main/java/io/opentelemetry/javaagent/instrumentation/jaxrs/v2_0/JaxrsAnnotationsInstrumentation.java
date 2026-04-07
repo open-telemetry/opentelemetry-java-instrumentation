@@ -128,7 +128,7 @@ class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
         context = instrumenter().start(parentContext, handlerData);
         scope = context.makeCurrent();
 
-        if (ASYNC_RESPONSE_DATA != null && asyncResponse != null) {
+        if (asyncResponse != null) {
           ASYNC_RESPONSE_DATA.set(asyncResponse, AsyncResponseData.create(context, handlerData));
         }
       }

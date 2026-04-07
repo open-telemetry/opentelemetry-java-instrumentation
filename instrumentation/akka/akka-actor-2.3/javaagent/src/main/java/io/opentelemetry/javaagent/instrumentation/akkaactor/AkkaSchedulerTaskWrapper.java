@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.akkaactor;
 import io.opentelemetry.context.Context;
 import javax.annotation.Nullable;
 
-public final class AkkaSchedulerTaskWrapper {
+public class AkkaSchedulerTaskWrapper {
   @Nullable private static final Class<?> RUN_ON_CLOSE_TASK_CLASS = getRunOnCloseTaskClass();
 
   @Nullable

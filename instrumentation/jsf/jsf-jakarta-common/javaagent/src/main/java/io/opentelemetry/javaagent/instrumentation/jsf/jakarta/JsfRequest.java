@@ -28,7 +28,7 @@ public class JsfRequest {
 
   @Nullable
   private static String getSpanName(ActionEvent event) {
-    // https://jakarta.ee/specifications/faces/2.3/apidocs/index.html?javax/faces/component/ActionSource2.html
+    // https://jakarta.ee/specifications/faces/3.0/apidocs/jakarta/faces/component/actionsource2
     // ActionSource2 was added in JSF 1.2 and is implemented by components that have an action
     // attribute such as a button or a link
     if (event.getComponent() instanceof ActionSource2) {

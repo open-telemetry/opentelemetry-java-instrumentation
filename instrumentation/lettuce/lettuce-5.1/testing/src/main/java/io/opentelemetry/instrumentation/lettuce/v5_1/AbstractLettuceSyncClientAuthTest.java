@@ -65,7 +65,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
     // the auth() argument type changed between 5.x -> 6.x
     try {
       authMethod = commandsClass.getMethod("auth", String.class);
-    } catch (NoSuchMethodException unused) {
+    } catch (NoSuchMethodException ignored) {
       authMethod = commandsClass.getMethod("auth", CharSequence.class);
     }
 

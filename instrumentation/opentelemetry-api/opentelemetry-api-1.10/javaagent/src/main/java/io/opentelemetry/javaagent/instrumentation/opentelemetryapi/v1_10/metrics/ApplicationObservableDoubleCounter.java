@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metric
 
 import io.opentelemetry.api.metrics.ObservableDoubleCounter;
 
-public final class ApplicationObservableDoubleCounter
+public class ApplicationObservableDoubleCounter
     implements application.io.opentelemetry.api.metrics.ObservableDoubleCounter {
 
   private final ObservableDoubleCounter agentCounter;

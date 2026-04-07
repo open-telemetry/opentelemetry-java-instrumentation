@@ -10,7 +10,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 
-public final class ExperimentalAttributesExtractor
+public class ExperimentalAttributesExtractor
     implements AttributesExtractor<CouchbaseRequestInfo, Void> {
 
   @Override

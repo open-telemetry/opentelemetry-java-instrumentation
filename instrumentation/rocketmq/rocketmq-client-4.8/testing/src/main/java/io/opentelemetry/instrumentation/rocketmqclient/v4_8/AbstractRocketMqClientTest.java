@@ -157,9 +157,7 @@ abstract class AbstractRocketMqClientTest {
           }
         });
     SendResult sendResult = result.get(10, SECONDS);
-    assertThat(sendResult.getSendStatus())
-        .describedAs("Send status should be SEND_OK")
-        .isEqualTo(SendStatus.SEND_OK);
+    assertThat(sendResult.getSendStatus()).isEqualTo(SendStatus.SEND_OK);
     // waiting longer than assertTraces below does on its own because of CI flakiness
     tracingMessageListener.waitForMessages();
 
@@ -219,9 +217,7 @@ abstract class AbstractRocketMqClientTest {
             "parent",
             () -> {
               SendResult sendResult = producer.send(msg);
-              assertThat(sendResult.getSendStatus())
-                  .describedAs("Send status should be SEND_OK")
-                  .isEqualTo(SendStatus.SEND_OK);
+              assertThat(sendResult.getSendStatus()).isEqualTo(SendStatus.SEND_OK);
             });
     // waiting longer than assertTraces below does on its own because of CI flakiness
     tracingMessageListener.waitForMessages();
@@ -434,9 +430,7 @@ abstract class AbstractRocketMqClientTest {
                       sharedTopic, "TagA", "Hello RocketMQ".getBytes(Charset.defaultCharset()));
               msg.putUserProperty("Test-Message-Header", "test");
               SendResult sendResult = producer.send(msg);
-              assertThat(sendResult.getSendStatus())
-                  .describedAs("Send status should be SEND_OK")
-                  .isEqualTo(SendStatus.SEND_OK);
+              assertThat(sendResult.getSendStatus()).isEqualTo(SendStatus.SEND_OK);
             });
     // waiting longer than assertTraces below does on its own because of CI flakiness
     tracingMessageListener.waitForMessages();

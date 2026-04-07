@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import java.util.function.Function;
 
-public final class ClickHouseInstrumenterFactory {
+public class ClickHouseInstrumenterFactory {
 
   @SuppressWarnings("deprecation") // to support old semconv
   public static Instrumenter<ClickHouseDbRequest, Void> createInstrumenter(

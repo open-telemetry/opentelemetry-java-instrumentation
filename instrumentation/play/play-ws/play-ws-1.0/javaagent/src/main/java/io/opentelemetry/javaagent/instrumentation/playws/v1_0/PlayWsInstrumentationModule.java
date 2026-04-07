@@ -106,9 +106,7 @@ public class PlayWsInstrumentationModule extends InstrumentationModule
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Argument(0) Request request,
-        @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter Object[] enterResult) {
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter Object[] enterResult) {
 
       AdviceScope adviceScope = (AdviceScope) enterResult[0];
       if (adviceScope != null) {

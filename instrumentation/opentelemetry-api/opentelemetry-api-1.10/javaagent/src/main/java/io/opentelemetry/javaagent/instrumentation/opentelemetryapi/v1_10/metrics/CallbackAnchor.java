@@ -36,7 +36,7 @@ import java.util.function.Function;
  *       callback is collected too, and the weak reference goes null.
  * </ol>
  */
-public final class CallbackAnchor {
+public class CallbackAnchor {
 
   // Anchors callbacks to this class's lifecycle. Since this class is injected as a helper into each
   // application class loader, callbacks are naturally tied to their class loader's lifecycle.

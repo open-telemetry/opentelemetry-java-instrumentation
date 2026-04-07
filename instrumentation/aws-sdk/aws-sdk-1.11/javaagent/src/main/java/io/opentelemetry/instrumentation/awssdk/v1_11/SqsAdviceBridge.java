@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
-public final class SqsAdviceBridge {
+public class SqsAdviceBridge {
   private SqsAdviceBridge() {}
 
   public static void referenceForMuzzleOnly() {

@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.undertow.UndertowActiveHandlers;
 import io.undertow.server.HttpServerExchange;
 
-public final class UndertowSingletons {
+public class UndertowSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.undertow-1.4";
 
   private static final Instrumenter<HttpServerExchange, HttpServerExchange> instrumenter;

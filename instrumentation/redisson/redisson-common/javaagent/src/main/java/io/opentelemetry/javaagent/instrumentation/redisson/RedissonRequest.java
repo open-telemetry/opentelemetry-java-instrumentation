@@ -10,8 +10,10 @@ import static java.util.Collections.singletonList;
 
 import com.google.auto.value.AutoValue;
 import io.netty.buffer.ByteBuf;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import io.opentelemetry.javaagent.bootstrap.ExceptionLogger;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -28,7 +30,8 @@ import org.redisson.client.protocol.CommandsData;
 public abstract class RedissonRequest {
 
   private static final RedisCommandSanitizer sanitizer =
-      RedisCommandSanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
+      RedisCommandSanitizer.create(
+          DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "redisson"));
 
   public static RedissonRequest create(InetSocketAddress address, Object command) {
     return new AutoValue_RedissonRequest(address, command);
@@ -122,13 +125,15 @@ public abstract class RedissonRequest {
     if (command instanceof CommandData && COMMAND_DATA_GET_PROMISE != null) {
       try {
         return (CompletionStage<?>) COMMAND_DATA_GET_PROMISE.invoke(command);
-      } catch (Throwable ignored) {
+      } catch (Throwable t) {
+        ExceptionLogger.logSuppressedError("Failed to get Redisson command promise", t);
         return null;
       }
     } else if (command instanceof CommandsData && COMMANDS_DATA_GET_PROMISE != null) {
       try {
         return (CompletionStage<?>) COMMANDS_DATA_GET_PROMISE.invoke(command);
-      } catch (Throwable ignored) {
+      } catch (Throwable t) {
+        ExceptionLogger.logSuppressedError("Failed to get Redisson commands promise", t);
         return null;
       }
     }
@@ -148,13 +153,13 @@ public abstract class RedissonRequest {
               "org.redisson.misc.RPromise", false, RedissonRequest.class.getClassLoader());
       // try versions older than 3.16.8
       return lookup.findVirtual(commandClass, "getPromise", MethodType.methodType(promiseClass));
-    } catch (NoSuchMethodException | ClassNotFoundException e) {
+    } catch (NoSuchMethodException | ClassNotFoundException ignored) {
       // in 3.16.8 CommandsData#getPromise() and CommandData#getPromise() return type was changed in
       // a backwards-incompatible way from RPromise to CompletableFuture
       try {
         return lookup.findVirtual(
             commandClass, "getPromise", MethodType.methodType(CompletableFuture.class));
-      } catch (NoSuchMethodException | IllegalAccessException ignored) {
+      } catch (NoSuchMethodException | IllegalAccessException ignore) {
         return null;
       }
     } catch (IllegalAccessException ignored) {

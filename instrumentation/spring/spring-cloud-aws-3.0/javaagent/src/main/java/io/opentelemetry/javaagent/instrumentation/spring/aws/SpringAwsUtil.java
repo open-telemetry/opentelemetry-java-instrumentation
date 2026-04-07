@@ -21,7 +21,7 @@ import javax.annotation.Nullable;
 import org.springframework.messaging.Message;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 
-public final class SpringAwsUtil {
+public class SpringAwsUtil {
   private static final ThreadLocal<TracingList> context = new ThreadLocal<>();
   private static final VirtualField<Message<?>, TracingContext> tracingContextField =
       VirtualField.find(Message.class, TracingContext.class);
