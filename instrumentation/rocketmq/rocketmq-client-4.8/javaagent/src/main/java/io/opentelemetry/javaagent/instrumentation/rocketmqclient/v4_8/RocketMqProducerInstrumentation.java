@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8;
 
+import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8.RocketMqSingletons.sendMessageHook;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -35,7 +36,7 @@ class RocketMqProducerInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.FieldValue(value = "defaultMQProducerImpl", declaringType = DefaultMQProducer.class)
             DefaultMQProducerImpl defaultMqProducerImpl) {
-      defaultMqProducerImpl.registerSendMessageHook(RocketMqClientHooks.sendMessageHook);
+      defaultMqProducerImpl.registerSendMessageHook(sendMessageHook());
     }
   }
 }
