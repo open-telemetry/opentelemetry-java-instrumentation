@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
-public final class TelemetryDataUtil {
+public class TelemetryDataUtil {
 
   public static Comparator<List<SpanData>> orderByRootSpanKind(SpanKind... spanKinds) {
     List<SpanKind> list = asList(spanKinds);

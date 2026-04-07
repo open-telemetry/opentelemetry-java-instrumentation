@@ -110,7 +110,7 @@ public abstract class AbstractExecutorServiceTest<T extends ExecutorService, U e
     executeAndCancelTasks(task -> executor.submit((Callable<?>) task));
   }
 
-  protected final void executeTwoTasks(ThrowingConsumer<U> task) {
+  protected void executeTwoTasks(ThrowingConsumer<U> task) {
     testing.runWithSpan(
         "parent",
         () -> {
@@ -137,7 +137,7 @@ public abstract class AbstractExecutorServiceTest<T extends ExecutorService, U e
                         .hasParent(trace.getSpan(0))));
   }
 
-  protected final void executeAndCancelTasks(Function<U, Future<?>> task) {
+  protected void executeAndCancelTasks(Function<U, Future<?>> task) {
     List<U> children = new ArrayList<>();
     List<Future<?>> jobFutures = new ArrayList<>();
 

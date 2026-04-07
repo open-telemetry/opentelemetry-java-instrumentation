@@ -31,7 +31,7 @@ public abstract class AbstractHttpServerUsingTest<SERVER> {
 
   protected abstract void stopServer(SERVER server) throws Exception;
 
-  protected final InstrumentationTestRunner testing() {
+  protected InstrumentationTestRunner testing() {
     return testing;
   }
 
@@ -100,12 +100,11 @@ public abstract class AbstractHttpServerUsingTest<SERVER> {
     return url;
   }
 
-  final void setTesting(InstrumentationTestRunner testing, WebClient client, int port) {
+  void setTesting(InstrumentationTestRunner testing, WebClient client, int port) {
     setTesting(testing, client, port, null);
   }
 
-  final void setTesting(
-      InstrumentationTestRunner testing, WebClient client, int port, URI address) {
+  void setTesting(InstrumentationTestRunner testing, WebClient client, int port, URI address) {
     this.testing = testing;
     this.client = client;
     this.port = port;

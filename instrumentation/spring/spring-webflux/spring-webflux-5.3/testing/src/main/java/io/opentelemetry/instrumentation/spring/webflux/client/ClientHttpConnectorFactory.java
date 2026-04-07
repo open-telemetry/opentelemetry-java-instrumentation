@@ -18,7 +18,7 @@ import reactor.ipc.netty.resources.PoolResources;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.LoopResources;
 
-final class ClientHttpConnectorFactory {
+class ClientHttpConnectorFactory {
 
   static ClientHttpConnector create() {
     return isOldVersion() ? createOldVersionConnector(false) : createNewVersionConnector(false);

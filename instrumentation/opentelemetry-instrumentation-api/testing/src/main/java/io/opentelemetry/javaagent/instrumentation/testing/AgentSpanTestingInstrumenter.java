@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import javax.annotation.Nullable;
 
-public final class AgentSpanTestingInstrumenter {
+public class AgentSpanTestingInstrumenter {
 
   private static final ContextKey<String> REQUEST_CONTEXT_KEY =
       ContextKey.named("test-request-key");

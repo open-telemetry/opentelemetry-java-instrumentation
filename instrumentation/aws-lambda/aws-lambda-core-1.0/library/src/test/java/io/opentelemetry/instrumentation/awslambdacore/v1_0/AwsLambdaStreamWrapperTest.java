@@ -116,7 +116,7 @@ class AwsLambdaStreamWrapperTest {
                             equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
-  public static final class TestRequestHandler implements RequestStreamHandler {
+  public static class TestRequestHandler implements RequestStreamHandler {
 
     @Override
     public void handleRequest(InputStream input, OutputStream output, Context context)

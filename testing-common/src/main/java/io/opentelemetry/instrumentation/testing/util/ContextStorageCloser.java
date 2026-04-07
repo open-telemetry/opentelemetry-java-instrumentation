@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Helper class for closing context storage with retry in case there are strict context check
  * failures.
  */
-public final class ContextStorageCloser {
+public class ContextStorageCloser {
 
   private ContextStorageCloser() {}
 

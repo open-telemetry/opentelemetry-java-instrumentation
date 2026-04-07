@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.context.ConfigurableApplicationContext;
 
-public final class SpringWebfluxServerInstrumentationTest
+public class SpringWebfluxServerInstrumentationTest
     extends AbstractHttpServerTest<ConfigurableApplicationContext> {
 
   private static final String CONTEXT_PATH = "/test";
