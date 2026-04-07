@@ -164,6 +164,7 @@
       matchPackageNames: [
         'net.bytebuddy:**',
       ],
+      allowedVersions: '!/\\-jdk5/'
     },
     {
       groupName: 'gradle shadow packages',
