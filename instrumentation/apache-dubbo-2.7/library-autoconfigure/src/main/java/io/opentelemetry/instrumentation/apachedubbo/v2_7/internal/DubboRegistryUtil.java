@@ -11,7 +11,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 import org.apache.dubbo.common.URL;
@@ -37,22 +36,11 @@ public final class DubboRegistryUtil {
   private static final ThreadLocal<String> CAPTURED_REGISTRY_ADDRESS = new ThreadLocal<>();
 
   /**
-   * Called by RegistryAddressCaptureFilter (order -10001) before ConsumerContextFilter overwrites
-   * invocation.getInvoker(). In Dubbo 2.7.5+ and 3.x the invoker at this point is the cluster
-   * invoker with getDirectory().
+   * Used by {@link RegistryCapturingInvoker} while the cluster delegate runs (including into
+   * consumer protocol filters).
    */
-  public static void captureRegistryAddress(RpcInvocation invocation) {
-    Invoker<?> invoker = invocation.getInvoker();
-    if (invoker == null) {
-      return;
-    }
-    Directory<?> directory = getDirectory(invoker);
-    if (directory != null) {
-      String address = extractRegistryAddressFromDirectory(directory);
-      if (address != null) {
-        CAPTURED_REGISTRY_ADDRESS.set(address);
-      }
-    }
+  static void pushCapturedRegistryAddress(String address) {
+    CAPTURED_REGISTRY_ADDRESS.set(address);
   }
 
   public static void clearCapturedRegistryAddress() {
@@ -61,7 +49,6 @@ public final class DubboRegistryUtil {
 
   @Nullable
   public static String extractRegistryAddress(RpcInvocation invocation) {
-    // 1. Check ThreadLocal (set by RegistryAddressCaptureFilter for Dubbo 2.7.5+ and 3.x)
     String captured = CAPTURED_REGISTRY_ADDRESS.get();
     if (captured != null) {
       return captured;
@@ -72,17 +59,26 @@ public final class DubboRegistryUtil {
       return null;
     }
 
-    // 2. Try invoker reflection (Dubbo 3.x fallback if capture filter didn't run)
     Directory<?> directory = getDirectory(invoker);
     if (directory != null) {
-      String address = extractRegistryAddressFromDirectory(directory);
+      String address = tryExtractRegistryAddressFromDirectory(directory);
       if (address != null) {
         return address;
       }
     }
 
-    // 3. Try ProviderConsumerRegTable (Dubbo 2.7.0-2.7.4)
-    return RegTableLookup.extractFromRegTable(invoker.getUrl());
+    return null;
+  }
+
+  /**
+   * Resolves {@code protocol://host:port} from a registry-backed directory (for example {@code
+   * RegistryDirectory}), using {@code getRegistry()} when present and otherwise the {@code registry}
+   * field. Called once per consumer refer when {@link RegistryCapturingClusterWrapper} wraps the
+   * cluster invoker.
+   */
+  @Nullable
+  public static String tryExtractRegistryAddressFromDirectory(Directory<?> directory) {
+    return extractRegistryAddressFromDirectory(directory);
   }
 
   public static String buildServiceTarget(URL url) {
@@ -204,70 +200,6 @@ public final class DubboRegistryUtil {
       }
     }
     return null;
-  }
-
-  /**
-   * Lazily-initialized holder for ProviderConsumerRegTable access. This class only exists in Dubbo
-   * 2.7.0-2.7.4; all reflection is wrapped to fail gracefully on Dubbo 2.7.5+ and 3.x.
-   */
-  private static class RegTableLookup {
-    private static final MethodHandle CONSUMER_INVOKERS_GETTER;
-    private static final MethodHandle GET_REGISTRY_URL;
-
-    static {
-      MethodHandle consumerInvokersGetter = null;
-      MethodHandle getRegistryUrl = null;
-      try {
-        Class<?> tableClass =
-            Class.forName("org.apache.dubbo.registry.support.ProviderConsumerRegTable");
-        Field f = tableClass.getField("consumerInvokers");
-        consumerInvokersGetter = LOOKUP.unreflectGetter(f);
-
-        Class<?> wrapperClass =
-            Class.forName("org.apache.dubbo.registry.support.ConsumerInvokerWrapper");
-        Method m = wrapperClass.getMethod("getRegistryUrl");
-        getRegistryUrl = LOOKUP.unreflect(m);
-      } catch (Throwable ignored) {
-        // ProviderConsumerRegTable not available (Dubbo 2.7.5+ or 3.x)
-      }
-      CONSUMER_INVOKERS_GETTER = consumerInvokersGetter;
-      GET_REGISTRY_URL = getRegistryUrl;
-    }
-
-    @Nullable
-    @SuppressWarnings("unchecked") // ConcurrentHashMap generic cast from reflective access
-    static String extractFromRegTable(URL invokerUrl) {
-      if (CONSUMER_INVOKERS_GETTER == null || GET_REGISTRY_URL == null) {
-        return null;
-      }
-      try {
-        String serviceKey = invokerUrl.getServiceKey();
-        if (serviceKey == null || serviceKey.isEmpty()) {
-          return null;
-        }
-        ConcurrentHashMap<String, Set<?>> table =
-            (ConcurrentHashMap<String, Set<?>>) CONSUMER_INVOKERS_GETTER.invoke();
-        Set<?> wrappers = table.get(serviceKey);
-        if (wrappers == null || wrappers.isEmpty()) {
-          return null;
-        }
-        // Only return registry address when exactly one registry is registered for this service.
-        // With multiple registries we cannot determine which one handled the current invocation,
-        // so we return null and let the caller fall back to the provider IP address.
-        if (wrappers.size() != 1) {
-          return null;
-        }
-        Object wrapper = wrappers.iterator().next();
-        Object urlObj = GET_REGISTRY_URL.invoke(wrapper);
-        if (!(urlObj instanceof URL)) {
-          return null;
-        }
-        URL registryUrl = (URL) urlObj;
-        return registryUrl.getProtocol() + "://" + registryUrl.getAddress();
-      } catch (Throwable t) {
-        return null;
-      }
-    }
   }
 
   private DubboRegistryUtil() {}

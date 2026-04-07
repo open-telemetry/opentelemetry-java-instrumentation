@@ -33,6 +33,9 @@ public class DubboInstrumentationModule extends InstrumentationModule
     helperResourceBuilder.register(
         "META-INF/services/org.apache.dubbo.rpc.Filter",
         "apache-dubbo-2.7/META-INF/services/org.apache.dubbo.rpc.Filter");
+    helperResourceBuilder.register(
+        "META-INF/services/org.apache.dubbo.rpc.cluster.Cluster",
+        "apache-dubbo-2.7/META-INF/services/org.apache.dubbo.rpc.cluster.Cluster");
   }
 
   @Override
@@ -44,15 +47,15 @@ public class DubboInstrumentationModule extends InstrumentationModule
   public void injectClasses(ClassInjector injector) {
     injector
         .proxyBuilder(
-            "io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7.RegistryAddressCaptureFilter")
-        .inject(InjectionMode.CLASS_ONLY);
-    injector
-        .proxyBuilder(
             "io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7.OpenTelemetryClientFilter")
         .inject(InjectionMode.CLASS_ONLY);
     injector
         .proxyBuilder(
             "io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7.OpenTelemetryServerFilter")
+        .inject(InjectionMode.CLASS_ONLY);
+    injector
+        .proxyBuilder(
+            "io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7.RegistryCapturingClusterWrapperProxy")
         .inject(InjectionMode.CLASS_ONLY);
   }
 
