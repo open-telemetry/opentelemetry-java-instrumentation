@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rmi.context.client;
 
-import static io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPropagator.PROPAGATOR;
+import static io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPropagator.propagator;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -66,7 +66,7 @@ public class RmiClientContextInstrumentation implements TypeInstrumentation {
       if (!c.isReusable()) {
         return;
       }
-      if (PROPAGATOR.isRmiInternalObject(id)) {
+      if (propagator().isRmiInternalObject(id)) {
         return;
       }
       Context currentContext = Java8BytecodeBridge.currentContext();
@@ -76,7 +76,7 @@ public class RmiClientContextInstrumentation implements TypeInstrumentation {
       }
 
       // caching if a connection can support enhanced format
-      PROPAGATOR.attemptToPropagateContext(c, currentContext);
+      propagator().attemptToPropagateContext(c, currentContext);
     }
   }
 }
