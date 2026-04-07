@@ -93,7 +93,14 @@ class WrapperTest extends AbstractWrapperTest {
                 equalTo(MESSAGING_OPERATION, "publish"),
                 satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
-                satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
+                satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
+                satisfies(
+                    MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+                    stringAssert -> {
+                      if (isExperimentalEnabled) {
+                        stringAssert.matches("^localhost:\\d+(,localhost:\\d+)*$");
+                      }
+                    })));
     if (testHeaders) {
       assertions.add(
           equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));

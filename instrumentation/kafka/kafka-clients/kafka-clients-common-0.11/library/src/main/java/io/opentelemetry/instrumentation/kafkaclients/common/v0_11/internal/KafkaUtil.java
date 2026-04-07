@@ -12,12 +12,16 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.Metric;
 import org.apache.kafka.common.MetricName;
 
@@ -35,10 +39,12 @@ public final class KafkaUtil {
 
   private static final MethodHandle GET_GROUP_METADATA;
   private static final MethodHandle GET_GROUP_ID;
+  private static final Field PRODUCER_CONFIG_FIELD;
 
   static {
     MethodHandle getGroupMetadata;
     MethodHandle getGroupId;
+    Field producerConfigField;
 
     try {
       Class<?> consumerGroupMetadata =
@@ -50,13 +56,21 @@ public final class KafkaUtil {
               Consumer.class, "groupMetadata", MethodType.methodType(consumerGroupMetadata));
       getGroupId =
           lookup.findVirtual(consumerGroupMetadata, "groupId", MethodType.methodType(String.class));
-    } catch (ClassNotFoundException | IllegalAccessException | NoSuchMethodException ignored) {
+
+      producerConfigField = KafkaProducer.class.getDeclaredField("producerConfig");
+      producerConfigField.setAccessible(true);
+    } catch (ClassNotFoundException
+        | IllegalAccessException
+        | NoSuchMethodException
+        | NoSuchFieldException ignored) {
       getGroupMetadata = null;
       getGroupId = null;
+      producerConfigField = null;
     }
 
     GET_GROUP_METADATA = getGroupMetadata;
     GET_GROUP_ID = getGroupId;
+    PRODUCER_CONFIG_FIELD = producerConfigField;
   }
 
   @Nullable
@@ -112,14 +126,25 @@ public final class KafkaUtil {
   }
 
   @Nullable
-  public static String extractBootstrapServers(@Nullable Object serversConfig) {
+  public static String extractBootstrapServers(Producer<?, ?> producer) {
+    if (!KafkaProducer.class.equals(producer.getClass())) {
+      return null;
+    }
+    try {
+      ProducerConfig producerConfig = (ProducerConfig) PRODUCER_CONFIG_FIELD.get(producer);
+      return extractBootstrapServers(
+          producerConfig.getList(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
+    } catch (IllegalAccessException | IllegalArgumentException ignored) {
+      return null;
+    }
+  }
+
+  @Nullable
+  public static String extractBootstrapServers(@Nullable List<String> serversConfig) {
     if (serversConfig == null) {
       return null;
     }
-    if (serversConfig instanceof List) {
-      return ((List<?>) serversConfig).stream().map(Object::toString).collect(joining(","));
-    }
-    return serversConfig.toString();
+    return serversConfig.stream().map(Object::toString).collect(joining(","));
   }
 
   private KafkaUtil() {}

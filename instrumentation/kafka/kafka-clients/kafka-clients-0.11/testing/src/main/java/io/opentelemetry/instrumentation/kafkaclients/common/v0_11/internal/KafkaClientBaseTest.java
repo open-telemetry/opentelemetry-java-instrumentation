@@ -81,7 +81,7 @@ public abstract class KafkaClientBaseTest {
   protected Consumer<Integer, String> consumer;
   private final CountDownLatch consumerReady = new CountDownLatch(1);
 
-  static final boolean isExperimentalEnabled =
+  protected static final boolean isExperimentalEnabled =
       Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes");
 
   public static final int partition = 0;

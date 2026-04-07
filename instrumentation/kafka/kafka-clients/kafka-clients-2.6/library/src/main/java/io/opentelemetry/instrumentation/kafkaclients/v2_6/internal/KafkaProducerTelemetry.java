@@ -16,10 +16,8 @@ import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.function.BiFunction;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
@@ -33,17 +31,14 @@ public class KafkaProducerTelemetry {
   private final TextMapPropagator propagator;
   private final Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter;
   private final boolean producerPropagationEnabled;
-  @Nullable private final Map<String, Object> producerConfigs;
 
   public KafkaProducerTelemetry(
       TextMapPropagator propagator,
       Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter,
-      boolean producerPropagationEnabled,
-      Map<String, Object> producerConfigs) {
+      boolean producerPropagationEnabled) {
     this.propagator = propagator;
     this.producerInstrumenter = producerInstrumenter;
     this.producerPropagationEnabled = producerPropagationEnabled;
-    this.producerConfigs = producerConfigs;
   }
 
   /**
@@ -52,11 +47,10 @@ public class KafkaProducerTelemetry {
    * @param record the producer record to inject span info.
    */
   public <K, V> ProducerRecord<K, V> buildAndInjectSpan(
-      ProducerRecord<K, V> record, String clientId) {
+      ProducerRecord<K, V> record, String clientId, String bootstrapServers) {
     Context parentContext = Context.current();
 
-    KafkaProducerRequest request =
-        KafkaProducerRequest.create(record, clientId, bootstrapServers());
+    KafkaProducerRequest request = KafkaProducerRequest.create(record, clientId, bootstrapServers);
     if (!producerInstrumenter.shouldStart(parentContext, request)) {
       return record;
     }
@@ -83,11 +77,11 @@ public class KafkaProducerTelemetry {
       ProducerRecord<K, V> record,
       Producer<K, V> producer,
       Callback callback,
-      BiFunction<ProducerRecord<K, V>, Callback, Future<RecordMetadata>> sendFn) {
+      BiFunction<ProducerRecord<K, V>, Callback, Future<RecordMetadata>> sendFn,
+      String bootstrapServers) {
     Context parentContext = Context.current();
 
-    KafkaProducerRequest request =
-        KafkaProducerRequest.create(record, producer, bootstrapServers());
+    KafkaProducerRequest request = KafkaProducerRequest.create(record, producer, bootstrapServers);
     if (!producerInstrumenter.shouldStart(parentContext, request)) {
       return sendFn.apply(record, callback);
     }
@@ -103,14 +97,6 @@ public class KafkaProducerTelemetry {
       producerInstrumenter.end(context, request, null, t);
       throw t;
     }
-  }
-
-  private String bootstrapServers() {
-    if (producerConfigs == null) {
-      return null;
-    }
-    Object servers = producerConfigs.get(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG);
-    return KafkaUtil.extractBootstrapServers(servers);
   }
 
   private class ProducerCallback implements Callback {

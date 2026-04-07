@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProducerRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.MetricsReporterList;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetryMetricsReporter;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetrySupplier;
@@ -63,15 +64,13 @@ public final class KafkaTelemetry {
       Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter,
       Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter,
       Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter,
-      boolean producerPropagationEnabled,
-      Map<String, Object> producerConfigs) {
+      boolean producerPropagationEnabled) {
     this.openTelemetry = openTelemetry;
     this.producerTelemetry =
         new KafkaProducerTelemetry(
             openTelemetry.getPropagators().getTextMapPropagator(),
             producerInstrumenter,
-            producerPropagationEnabled,
-            producerConfigs);
+            producerPropagationEnabled);
     this.consumerTelemetry =
         new KafkaConsumerTelemetry(consumerReceiveInstrumenter, consumerProcessInstrumenter);
   }
@@ -96,7 +95,11 @@ public final class KafkaTelemetry {
                         ? (Callback) args[1]
                         : null;
                 return producerTelemetry.buildAndInjectSpan(
-                    record, producer, callback, producer::send);
+                    record,
+                    producer,
+                    callback,
+                    producer::send,
+                    KafkaUtil.extractBootstrapServers(producer));
               }
               try {
                 return method.invoke(producer, args);
