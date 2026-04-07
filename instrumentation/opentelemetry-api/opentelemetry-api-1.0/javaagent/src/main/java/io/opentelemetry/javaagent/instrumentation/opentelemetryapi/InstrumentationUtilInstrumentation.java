@@ -39,7 +39,10 @@ class InstrumentationUtilInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ShouldSuppressAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Advice.OnNonDefaultValue.class, inline = false)
+    @Advice.OnMethodEnter(
+        suppress = Throwable.class,
+        skipOn = Advice.OnNonDefaultValue.class,
+        inline = false)
     public static boolean methodEnter() {
       return true;
     }
@@ -56,7 +59,10 @@ class InstrumentationUtilInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SuppressAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Advice.OnNonDefaultValue.class, inline = false)
+    @Advice.OnMethodEnter(
+        suppress = Throwable.class,
+        skipOn = Advice.OnNonDefaultValue.class,
+        inline = false)
     public static boolean methodEnter(@Advice.Argument(0) Runnable runnable) {
       InstrumentationUtil.suppressInstrumentation(runnable);
       return true;

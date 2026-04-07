@@ -45,7 +45,10 @@ class EclipseOsgiInstrumentation implements TypeInstrumentation {
 
     // "skipOn" is used to skip execution of the instrumented method when a ClassLoaderMatcher is
     // currently executing, since we will be returning false regardless in onExit below
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, suppress = Throwable.class, inline = false)
+    @Advice.OnMethodEnter(
+        skipOn = Advice.OnNonDefaultValue.class,
+        suppress = Throwable.class,
+        inline = false)
     public static boolean onEnter(@Advice.Argument(0) String packageName) {
       // disable dynamic imports for everything except io.opentelemetry classes to allow dynamic
       // import of @WithSpan etc.

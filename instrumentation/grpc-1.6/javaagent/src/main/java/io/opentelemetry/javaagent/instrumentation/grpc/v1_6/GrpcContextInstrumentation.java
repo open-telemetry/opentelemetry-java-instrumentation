@@ -35,7 +35,10 @@ class GrpcContextInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ContextBridgeAdvice {
 
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, suppress = Throwable.class, inline = false)
+    @Advice.OnMethodEnter(
+        skipOn = Advice.OnNonDefaultValue.class,
+        suppress = Throwable.class,
+        inline = false)
     @Nullable
     public static Context.Storage onEnter() {
       return storage();
