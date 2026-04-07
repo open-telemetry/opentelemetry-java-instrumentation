@@ -52,8 +52,6 @@ public final class RuntimeMetricsBuilder {
   /**
    * Enable the capture of the jvm.gc.cause attribute with the jvm.gc.duration metric.
    *
-   * @deprecated Use {@link RuntimeTelemetry} in the {@code runtime-telemetry} module instead and
-   *     set {@code otel.instrumentation.runtime-telemetry.capture-gc-cause=true} when you need the
    * @deprecated Use {@link RuntimeTelemetry#builder(OpenTelemetry)} in the {@code
    *     runtime-telemetry} module instead.
    */
