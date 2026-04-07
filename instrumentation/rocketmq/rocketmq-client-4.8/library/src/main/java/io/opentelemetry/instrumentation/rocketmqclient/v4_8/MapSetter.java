@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.SendMessageContext;
+import org.apache.rocketmq.common.message.Message;
 
 final class MapSetter implements TextMapSetter<SendMessageContext> {
 
@@ -16,6 +17,10 @@ final class MapSetter implements TextMapSetter<SendMessageContext> {
     if (carrier == null) {
       return;
     }
-    carrier.getMessage().getProperties().put(key, value);
+    Message message = carrier.getMessage();
+    if (message == null) {
+      return;
+    }
+    message.getProperties().put(key, value);
   }
 }
