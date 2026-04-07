@@ -119,12 +119,7 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
                             equalTo(USER_AGENT_ORIGINAL, TEST_USER_AGENT),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                             equalTo(HTTP_ROUTE, getContextPath() + "/" + route),
-                            satisfies(
-                                CLIENT_ADDRESS,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isEqualTo(TEST_CLIENT_IP),
-                                        v -> assertThat(v).isNull())))));
+                            satisfies(CLIENT_ADDRESS, val -> val.isIn(TEST_CLIENT_IP, null)))));
   }
 
   @Test

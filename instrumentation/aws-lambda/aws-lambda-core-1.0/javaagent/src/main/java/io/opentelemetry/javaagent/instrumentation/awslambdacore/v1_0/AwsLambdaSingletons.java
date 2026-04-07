@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.AwsLambdaFun
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrapperConfiguration;
 import java.time.Duration;
 
-public final class AwsLambdaSingletons {
+public class AwsLambdaSingletons {
 
   private static final AwsLambdaFunctionInstrumenter FUNCTION_INSTRUMENTER =
       AwsLambdaFunctionInstrumenterFactory.createInstrumenter(GlobalOpenTelemetry.get());

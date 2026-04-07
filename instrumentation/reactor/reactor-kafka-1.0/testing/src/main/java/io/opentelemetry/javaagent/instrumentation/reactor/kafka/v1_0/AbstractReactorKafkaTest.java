@@ -94,10 +94,15 @@ public abstract class AbstractReactorKafkaTest {
 
   @AfterAll
   static void tearDownAll() {
-    if (sender != null) {
-      sender.close();
+    try {
+      if (sender != null) {
+        sender.close();
+      }
+    } finally {
+      if (kafka != null) {
+        kafka.stop();
+      }
     }
-    kafka.stop();
   }
 
   @SuppressWarnings("unchecked")

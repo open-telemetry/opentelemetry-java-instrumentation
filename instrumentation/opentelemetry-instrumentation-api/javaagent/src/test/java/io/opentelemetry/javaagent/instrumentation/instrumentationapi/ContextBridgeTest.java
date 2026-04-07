@@ -84,7 +84,7 @@ class ContextBridgeTest {
   @Test
   void testSpanKeyBridge_UnbridgedSpan() {
     OpenTelemetrySdk openTelemetry = OpenTelemetrySdk.builder().build();
-    // span is bridged only when it is created though a bridged OpenTelemetry instance obtained
+    // span is bridged only when it is created through a bridged OpenTelemetry instance obtained
     // from GlobalOpenTelemetry
     Span span = openTelemetry.getTracer("test").spanBuilder("test").startSpan();
 

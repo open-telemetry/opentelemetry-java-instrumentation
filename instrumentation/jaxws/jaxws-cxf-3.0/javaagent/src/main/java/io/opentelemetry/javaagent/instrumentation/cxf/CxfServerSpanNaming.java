@@ -12,7 +12,7 @@ import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import javax.annotation.Nullable;
 
-public final class CxfServerSpanNaming {
+public class CxfServerSpanNaming {
   @Nullable
   private static final Class<?> JAVAX_SERVLET_REQUEST =
       loadClass("javax.servlet.http.HttpServletRequest");

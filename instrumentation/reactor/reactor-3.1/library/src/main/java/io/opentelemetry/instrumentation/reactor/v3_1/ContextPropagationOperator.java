@@ -182,8 +182,8 @@ public final class ContextPropagationOperator {
     }
     try {
       SCHEDULERS_HOOK_METHOD.invoke(key, function);
-    } catch (Throwable throwable) {
-      logger.log(WARNING, "Failed to install scheduler hook", throwable);
+    } catch (Throwable t) {
+      logger.log(WARNING, "Failed to install scheduler hook", t);
     }
   }
 

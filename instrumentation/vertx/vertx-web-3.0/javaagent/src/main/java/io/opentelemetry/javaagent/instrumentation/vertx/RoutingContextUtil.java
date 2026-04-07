@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.vertx.ext.web.RoutingContext;
 
-public final class RoutingContextUtil {
+public class RoutingContextUtil {
   private static final VirtualField<RoutingContext, String> routeField =
       VirtualField.find(RoutingContext.class, String.class);
 

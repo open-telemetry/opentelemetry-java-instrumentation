@@ -30,8 +30,8 @@ class OpenTelemetryIncubatorInstrumentation implements TypeInstrumentation {
   public static class InitAdvice {
     @Advice.OnMethodEnter
     public static void init() {
-      // the sole purpose of this advice is to ensure that the classes are
-      // recognized as helper class and injected into class loader
+      // the sole purpose of this advice is to ensure that the class is
+      // recognized as a helper class and injected into the class loader
       ApplicationOpenTelemetry156Incubator.class.getName();
     }
   }

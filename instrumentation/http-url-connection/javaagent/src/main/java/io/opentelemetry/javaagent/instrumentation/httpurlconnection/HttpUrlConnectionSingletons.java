@@ -11,7 +11,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenters;
 import java.net.HttpURLConnection;
 
-public final class HttpUrlConnectionSingletons {
+public class HttpUrlConnectionSingletons {
 
   public static final VirtualField<HttpURLConnection, HttpUrlState> HTTP_URL_STATE =
       VirtualField.find(HttpURLConnection.class, HttpUrlState.class);

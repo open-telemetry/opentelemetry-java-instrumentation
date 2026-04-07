@@ -10,7 +10,7 @@ import io.opentelemetry.javaagent.bootstrap.LambdaTransformer;
 import io.opentelemetry.javaagent.bootstrap.LambdaTransformerHolder;
 
 /** Helper class for transforming lambda class bytes. */
-public final class LambdaTransformerHelper {
+public class LambdaTransformerHelper {
 
   private LambdaTransformerHelper() {}
 

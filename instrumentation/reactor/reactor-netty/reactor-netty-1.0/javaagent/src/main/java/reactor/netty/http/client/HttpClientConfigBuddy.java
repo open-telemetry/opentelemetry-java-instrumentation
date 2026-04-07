@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 
 // class in reactor package to access package-private code
-public final class HttpClientConfigBuddy {
+public class HttpClientConfigBuddy {
 
   public static boolean hasDeferredConfig(HttpClientConfig config) {
     return config.deferredConf != null;

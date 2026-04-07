@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.opensearch.v3_0.OpenSearchSingletons.CAPTURE_SEARCH_QUERY;
 import static io.opentelemetry.javaagent.instrumentation.opensearch.v3_0.OpenSearchSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -27,6 +29,11 @@ import org.opensearch.client.transport.Endpoint;
 import org.opensearch.client.transport.OpenSearchTransport;
 
 class OpenSearchTransportInstrumentation implements TypeInstrumentation {
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("org.opensearch.client.transport.OpenSearchTransport");
+  }
+
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("org.opensearch.client.transport.OpenSearchTransport"));
@@ -67,7 +74,7 @@ class OpenSearchTransportInstrumentation implements TypeInstrumentation {
 
       String queryBody = null;
 
-      if (OpenSearchSingletons.CAPTURE_SEARCH_QUERY
+      if (CAPTURE_SEARCH_QUERY
           && (request instanceof SearchRequest || request instanceof MsearchRequest)) {
         queryBody = OpenSearchBodyExtractor.extractSanitized(jsonpMapper, request);
       }

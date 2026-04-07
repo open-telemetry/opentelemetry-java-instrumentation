@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -60,7 +61,8 @@ public abstract class AbstractTimerTest {
                                             point
                                                 .hasSum(42)
                                                 .hasCount(1)
-                                                .hasAttributes(attributeEntry("tag", "value"))
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "value"))
                                                 .hasBucketBoundaries(NO_BUCKETS)))));
     testing()
         .waitAndAssertMetrics(
@@ -77,7 +79,8 @@ public abstract class AbstractTimerTest {
                                         point ->
                                             point
                                                 .hasValue(42)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "value"))))));
 
     // micrometer gauge histogram is not emitted
     testing()
@@ -176,7 +179,8 @@ public abstract class AbstractTimerTest {
                                             point
                                                 .hasSum(555.5)
                                                 .hasCount(4)
-                                                .hasAttributes(attributeEntry("tag", "value"))
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "value"))
                                                 .satisfies(hasBucketBoundaries(1, 10, 100, 1_000))
                                                 .hasBucketCounts(1, 1, 1, 1, 0)))));
   }

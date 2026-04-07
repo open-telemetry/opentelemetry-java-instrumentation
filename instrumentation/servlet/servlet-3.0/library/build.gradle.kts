@@ -28,7 +28,7 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   }
 
-  if (findProperty("testLatestDeps") == "true") {
+  if (otelProps.testLatestDeps) {
     compileTestJava {
       options.release.set(11)
     }

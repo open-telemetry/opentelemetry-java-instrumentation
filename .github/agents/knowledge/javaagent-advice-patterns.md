@@ -172,6 +172,95 @@ Because `none()` matches no methods, ByteBuddy never inlines this advice into an
 `suppress = Throwable.class` on such a method is entirely meaningless — **do not add it**,
 and **do not flag its absence** during review.
 
+## AdviceScope Patterns
+
+`AdviceScope` usage in this repository falls into **two justified state patterns**.
+Review new code against these patterns instead of treating every existing variation as equally
+canonical.
+
+### Pattern 1 — Nullable `AdviceScope` for ordinary advice
+
+Use this by default when enter advice may decide not to start instrumentation.
+
+- `@Advice.OnMethodEnter` returns `@Nullable AdviceScope`
+- The factory method returns `null` when preconditions fail or instrumentation should not start
+- If an `AdviceScope` is created, its `Context` and `Scope` fields should be non-null
+- The `end()` method should close `scope` unconditionally; the null check belongs in exit advice,
+  not inside `AdviceScope.end()`
+
+In this document, use `start()` / `end()` as the canonical `AdviceScope` naming.
+For new code, prefer `start()` for the factory method and `end()` for the completion method.
+Do not introduce one-off names such as `create()` for ordinary `AdviceScope` factories.
+
+Preferred shape:
+
+```java
+public static class AdviceScope {
+  private final Context context;
+  private final Scope scope;
+
+  private AdviceScope(Context context) {
+    this.context = context;
+    this.scope = context.makeCurrent();
+  }
+
+  @Nullable
+  public static AdviceScope start(Request request) {
+    Context parentContext = Context.current();
+    if (!instrumenter().shouldStart(parentContext, request)) {
+      return null;
+    }
+    Context context = instrumenter().start(parentContext, request);
+    return new AdviceScope(context);
+  }
+
+  public void end(@Nullable Throwable throwable) {
+    scope.close();
+    instrumenter().end(context, request, null, throwable);
+  }
+}
+
+@Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+public static void onExit(
+    @Advice.Thrown @Nullable Throwable throwable,
+    @Advice.Enter @Nullable AdviceScope adviceScope) {
+  if (adviceScope != null) {
+    adviceScope.end(throwable);
+  }
+}
+```
+
+### Pattern 2 — Non-null placeholder `AdviceScope` for bookkeeping
+
+Use a non-null `AdviceScope` with nullable internals only when exit advice still needs state even
+if no tracing scope was started, for example:
+
+- `CallDepth` tracking
+- wrapped arguments or listeners that must be carried from enter to exit
+- other bookkeeping that must survive even on the "no span started" path
+
+In this pattern, `AdviceScope` is the carrier object for control-flow state, not just tracing
+state. Nullable inner fields and exit guards are justified here.
+
+### Do not use the defensive hybrid as a standard pattern
+
+Avoid the hybrid shape where:
+
+- `@Advice.Enter` is `@Nullable AdviceScope`
+- `AdviceScope` still stores a nullable `Scope`
+- `AdviceScope.end()` has an extra `if (scope == null)` guard
+
+That double-guards the same condition and makes simple advice harder to reason about.
+If the helper that creates the context can return `null`, prefer returning `null` from
+`AdviceScope.start()` and only creating `AdviceScope` when the context is present.
+
+### Async completion is not a separate `AdviceScope` state pattern
+
+Async instrumentations may end spans from listeners, callbacks, or wrapped handlers instead of
+directly in method exit. That affects **where** the scope/span is completed, but it does not
+justify a third core `AdviceScope` state model. Async advice should still use either Pattern 1 or
+Pattern 2 as appropriate.
+
 ## Never Throw Exceptions in Javaagent Code
 
 Javaagent instrumentations must never throw exceptions. The goal is to be invisible to the
@@ -193,3 +282,5 @@ the instrumentation automatically rather than letting it fail at runtime.
 - **`@Advice.OnMethodExit` method named `onEnter`** (or vice versa) — the method name should match the annotation. A mismatch is a copy-paste bug that compiles but confuses readers and may mask intent errors.
 - **Advice referenced in `transform()` using anything other than `getClass().getName() + "$InnerAdvice"`** — see `javaagent-module-patterns.md` for the canonical pattern. Flag `this.getClass().getName() + "$InnerAdvice"` as a redundant qualifier, and flag both `InnerAdvice.class.getName()` and `OuterInstrumentation.class.getName() + "$InnerAdvice"` because any `.class` literal in a `transform()` method triggers unwanted class loading.
 - **`onThrowable = Throwable.class` on return-only exit advice** — if the exit method only processes `@Advice.Return` and has no `@Advice.Enter` state to clean up, `onThrowable` should be omitted. The return value is `null`/zero on the exceptional path, and dereferencing it causes a suppressed exception for no benefit. Keep `suppress = Throwable.class` but remove `onThrowable`.
+- **One-off `AdviceScope` method naming** — for new ordinary advice, prefer `start()` / `end()` for `AdviceScope` methods, and avoid introducing unique names such as `create()`.
+- **Defensive hybrid `AdviceScope` in simple advice** — if `@Advice.Enter` is already nullable, flag simple advice that also stores a nullable inner `Scope`/`Context` and re-checks it inside `AdviceScope.end()`. Prefer returning `null` from the factory and keeping the created `AdviceScope` fully initialized.

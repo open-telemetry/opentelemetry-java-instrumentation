@@ -82,7 +82,7 @@ class JspSpan {
     this.exceptionClass = exceptionClass;
   }
 
-  public boolean getErrorMessageOptional() {
+  public boolean isErrorMessageOptional() {
     return errorMessageOptional;
   }
 

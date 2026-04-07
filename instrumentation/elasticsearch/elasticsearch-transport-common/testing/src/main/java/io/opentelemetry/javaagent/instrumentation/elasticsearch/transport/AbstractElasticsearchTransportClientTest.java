@@ -101,12 +101,7 @@ public abstract class AbstractElasticsearchTransportClientTest
   private List<AttributeAssertion> addNetworkTypeAttribute(AttributeAssertion... assertions) {
     List<AttributeAssertion> result = new ArrayList<>(asList(assertions));
     if (hasNetworkType()) {
-      result.add(
-          satisfies(
-              NETWORK_TYPE,
-              val ->
-                  val.satisfiesAnyOf(
-                      v -> assertThat(v).isEqualTo("ipv4"), v -> assertThat(v).isEqualTo("ipv6"))));
+      result.add(satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6")));
     }
     return result;
   }

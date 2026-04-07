@@ -7,9 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.spanIdKey;
-import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.traceFlagsKey;
-import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.traceIdKey;
+import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.ADD_BAGGAGE;
+import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.CONTEXT;
+import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.SPAN_ID_KEY;
+import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.TRACE_FLAGS_KEY;
+import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.TRACE_ID_KEY;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -64,7 +66,7 @@ class LoggingEventInstrumentation implements TypeInstrumentation {
         return contextData;
       }
 
-      Context context = LogbackSingletons.CONTEXT.get(event);
+      Context context = CONTEXT.get(event);
       if (context == null) {
         return contextData;
       }
@@ -77,13 +79,13 @@ class LoggingEventInstrumentation implements TypeInstrumentation {
       SpanContext spanContext = Java8BytecodeBridge.spanFromContext(context).getSpanContext();
 
       if (spanContext.isValid()) {
-        spanContextData.put(traceIdKey(), spanContext.getTraceId());
-        spanContextData.put(spanIdKey(), spanContext.getSpanId());
-        spanContextData.put(traceFlagsKey(), spanContext.getTraceFlags().asHex());
+        spanContextData.put(TRACE_ID_KEY, spanContext.getTraceId());
+        spanContextData.put(SPAN_ID_KEY, spanContext.getSpanId());
+        spanContextData.put(TRACE_FLAGS_KEY, spanContext.getTraceFlags().asHex());
       }
       spanContextData.putAll(ConfiguredResourceAttributesHolder.getResourceAttributes());
 
-      if (LogbackSingletons.addBaggage()) {
+      if (ADD_BAGGAGE) {
         Baggage baggage = Java8BytecodeBridge.baggageFromContext(context);
 
         // using a lambda here does not play nicely with instrumentation bytecode process

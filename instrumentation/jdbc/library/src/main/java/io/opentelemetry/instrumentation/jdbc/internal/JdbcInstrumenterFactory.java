@@ -51,7 +51,9 @@ public final class JdbcInstrumenterFactory {
         DbConfig.isCommonQuerySanitizationEnabled(
             openTelemetry,
             ConfigPropertiesUtil.getBoolean(
-                "otel.instrumentation.common.db-statement-sanitizer.enabled", true));
+                "otel.instrumentation.common.db.query-sanitization.enabled",
+                ConfigPropertiesUtil.getBoolean(
+                    "otel.instrumentation.common.db-statement-sanitizer.enabled", true)));
     return createStatementInstrumenter(
         openTelemetry, emptyList(), true, querySanitizationEnabled, captureQueryParameters);
   }

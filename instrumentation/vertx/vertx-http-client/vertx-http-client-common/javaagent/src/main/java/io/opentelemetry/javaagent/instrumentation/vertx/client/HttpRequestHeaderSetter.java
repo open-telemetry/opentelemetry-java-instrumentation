@@ -9,7 +9,7 @@ import io.opentelemetry.context.propagation.TextMapSetter;
 import io.vertx.core.http.HttpClientRequest;
 import javax.annotation.Nullable;
 
-public final class HttpRequestHeaderSetter implements TextMapSetter<HttpClientRequest> {
+public class HttpRequestHeaderSetter implements TextMapSetter<HttpClientRequest> {
 
   @Override
   public void set(@Nullable HttpClientRequest carrier, String key, String value) {

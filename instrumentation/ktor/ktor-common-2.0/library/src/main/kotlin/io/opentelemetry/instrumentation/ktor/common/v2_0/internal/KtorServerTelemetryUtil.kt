@@ -34,7 +34,7 @@ object KtorServerTelemetryUtil {
   // requests. This issue can be worked around by adding -Dio.ktor.internal.disable.sfg=true to jvm
   // arguments. Adding this no-op interceptor seems to also work around the issue.
   // See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/16430
-  val emptyInterceptor = object : ContinuationInterceptor {
+  private val emptyInterceptor = object : ContinuationInterceptor {
     override val key = ContinuationInterceptor
 
     override fun <T> interceptContinuation(continuation: Continuation<T>): Continuation<T> = object : Continuation<T> {

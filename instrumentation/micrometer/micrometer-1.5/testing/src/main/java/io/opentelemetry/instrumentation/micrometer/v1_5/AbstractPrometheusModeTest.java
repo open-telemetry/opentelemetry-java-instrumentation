@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -60,8 +61,8 @@ public abstract class AbstractPrometheusModeTest {
                                             point ->
                                                 point
                                                     .hasValue(12)
-                                                    .hasAttributes(
-                                                        attributeEntry("tag", "value"))))));
+                                                    .hasAttributesSatisfyingExactly(
+                                                        equalTo(stringKey("tag"), "value"))))));
   }
 
   @Test
@@ -96,7 +97,8 @@ public abstract class AbstractPrometheusModeTest {
                                             point
                                                 .hasSum(54)
                                                 .hasCount(2)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "value"))))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -113,7 +115,8 @@ public abstract class AbstractPrometheusModeTest {
                                         point ->
                                             point
                                                 .hasValue(42)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "value"))))));
   }
 
   @Test
@@ -150,8 +153,8 @@ public abstract class AbstractPrometheusModeTest {
                                             point ->
                                                 point
                                                     .hasValue(1)
-                                                    .hasAttributes(
-                                                        attributeEntry("tag", "value"))))));
+                                                    .hasAttributesSatisfyingExactly(
+                                                        equalTo(stringKey("tag"), "value"))))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -168,7 +171,8 @@ public abstract class AbstractPrometheusModeTest {
                                         point ->
                                             point
                                                 .hasValue(42)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "value"))))));
   }
 
   @Test
@@ -197,7 +201,8 @@ public abstract class AbstractPrometheusModeTest {
                                         point ->
                                             point
                                                 .hasValue(42)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "value"))))));
   }
 
   @Test
@@ -230,8 +235,8 @@ public abstract class AbstractPrometheusModeTest {
                                             point ->
                                                 point
                                                     .hasValue(1)
-                                                    .hasAttributes(
-                                                        attributeEntry("tag", "value"))))));
+                                                    .hasAttributesSatisfyingExactly(
+                                                        equalTo(stringKey("tag"), "value"))))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -248,7 +253,8 @@ public abstract class AbstractPrometheusModeTest {
                                         .hasPointsSatisfying(
                                             point ->
                                                 point
-                                                    .hasAttributes(attributeEntry("tag", "value"))
+                                                    .hasAttributesSatisfyingExactly(
+                                                        equalTo(stringKey("tag"), "value"))
                                                     .satisfies(
                                                         pointData ->
                                                             assertThat(pointData.getValue())
@@ -273,7 +279,8 @@ public abstract class AbstractPrometheusModeTest {
                                         point ->
                                             point
                                                 .hasValue(0)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "value"))))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -288,7 +295,8 @@ public abstract class AbstractPrometheusModeTest {
                                         point ->
                                             point
                                                 .hasValue(0)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "value"))))));
   }
 
   @Test
@@ -323,7 +331,8 @@ public abstract class AbstractPrometheusModeTest {
                                             point
                                                 .hasSum(16.789)
                                                 .hasCount(3)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "value"))))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -340,6 +349,7 @@ public abstract class AbstractPrometheusModeTest {
                                         point ->
                                             point
                                                 .hasValue(10.789)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "value"))))));
   }
 }

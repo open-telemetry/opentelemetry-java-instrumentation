@@ -913,19 +913,13 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                                 satisfies(
                                     URL_FULL,
                                     val ->
-                                        val.satisfiesAnyOf(
-                                            v ->
-                                                assertThat(v)
-                                                    .isEqualTo(
-                                                        "http://somebucket.localhost:"
-                                                            + server.httpPort()
-                                                            + "/somekey"),
-                                            v ->
-                                                assertThat(v)
-                                                    .isEqualTo(
-                                                        "http://localhost:"
-                                                            + server.httpPort()
-                                                            + "/somebucket/somekey"))),
+                                        val.isIn(
+                                            "http://somebucket.localhost:"
+                                                + server.httpPort()
+                                                + "/somekey",
+                                            "http://localhost:"
+                                                + server.httpPort()
+                                                + "/somebucket/somekey")),
                                 equalTo(SERVER_PORT, server.httpPort()),
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                                 equalTo(RPC_SYSTEM, "aws-api"),

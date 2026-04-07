@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNam
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
-public final class OpenSearchRestInstrumenterFactory {
+public class OpenSearchRestInstrumenterFactory {
 
   public static Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> create(
       String instrumentationName) {

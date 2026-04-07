@@ -140,8 +140,8 @@ public abstract class AbstractJdbcInstrumentationTest {
                           if (dataSource instanceof Closeable) {
                             try {
                               ((Closeable) dataSource).close();
-                            } catch (IOException ignore) {
-                              // ignore
+                            } catch (IOException ignored) {
+                              // ignore exceptions during close
                             }
                           }
                         }));

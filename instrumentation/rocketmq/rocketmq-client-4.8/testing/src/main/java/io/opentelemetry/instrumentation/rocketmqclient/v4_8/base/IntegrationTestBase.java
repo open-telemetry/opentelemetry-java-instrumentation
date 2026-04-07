@@ -164,8 +164,8 @@ public final class IntegrationTestBase {
                   createTopic.invoke(null, nsAddr, clusterName, topic, 20, emptyMap(), 3);
                   return true;
                 });
-      } catch (ClassNotFoundException | NoSuchMethodException ex) {
-        throw new IllegalStateException("Could not initialize topic", ex);
+      } catch (ClassNotFoundException | NoSuchMethodException f) {
+        throw new IllegalStateException("Could not initialize topic", f);
       }
     }
   }

@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.micrometer.core.instrument.LongTaskTimer;
 import io.micrometer.core.instrument.Metrics;
@@ -95,11 +96,13 @@ public abstract class AbstractLongTaskTimerHistogramTest {
                                     gauge.hasPointsSatisfying(
                                         point ->
                                             point
-                                                .hasAttributes(attributeEntry("le", "0.1"))
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("le"), "0.1"))
                                                 .hasValue(2),
                                         point ->
                                             point
-                                                .hasAttributes(attributeEntry("le", "1"))
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("le"), "1"))
                                                 .hasValue(3)))));
 
     // when
@@ -159,10 +162,12 @@ public abstract class AbstractLongTaskTimerHistogramTest {
                                         point ->
                                             point
                                                 .hasValue(0)
-                                                .hasAttributes(attributeEntry("le", "0.1")),
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("le"), "0.1")),
                                         point ->
                                             point
                                                 .hasValue(0)
-                                                .hasAttributes(attributeEntry("le", "1"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("le"), "1"))))));
   }
 }

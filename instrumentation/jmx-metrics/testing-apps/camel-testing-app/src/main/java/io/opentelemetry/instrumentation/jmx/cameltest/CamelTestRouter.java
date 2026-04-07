@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import org.apache.camel.builder.RouteBuilder;
 
-public class CamelTestRouter extends RouteBuilder {
+class CamelTestRouter extends RouteBuilder {
   private static final long DEFAULT_EXCHANGE_DELAY_MS = 50;
   private static final long MAXIMUM_EXCHANGE_DELAY_DELTA = 20;
 
@@ -44,13 +44,13 @@ public class CamelTestRouter extends RouteBuilder {
     from("timer:test-request-timer?period=50")
         .routeId("Camel-Test-Route")
         .threads(5) // Needed for some thread pool metrics to appear
-        .setHeader("birdSpeciesId", this::getRandomBirdSpeciesId)
+        .setHeader("birdSpeciesId", CamelTestRouter::getRandomBirdSpeciesId)
         .setHeader("id", simple("${header.birdSpeciesId}"))
         .to("direct:bird-species")
         .log("${body}");
   }
 
-  long getRandomBirdSpeciesId() {
+  private static long getRandomBirdSpeciesId() {
     return ThreadLocalRandom.current().nextLong(1, BIRD_SPECIES.size() + 1L);
   }
 }

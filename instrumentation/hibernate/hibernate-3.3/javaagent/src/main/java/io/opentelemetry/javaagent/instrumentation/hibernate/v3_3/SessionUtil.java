@@ -11,7 +11,7 @@ import javax.annotation.Nullable;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 
-public final class SessionUtil {
+public class SessionUtil {
 
   private static final VirtualField<Session, SessionInfo> SESSION_SESSION_INFO =
       VirtualField.find(Session.class, SessionInfo.class);

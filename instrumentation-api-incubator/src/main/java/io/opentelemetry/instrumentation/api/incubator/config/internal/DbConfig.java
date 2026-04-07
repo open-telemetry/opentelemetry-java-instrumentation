@@ -7,7 +7,8 @@ package io.opentelemetry.instrumentation.api.incubator.config.internal;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import java.util.function.Function;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -17,6 +18,7 @@ import javax.annotation.Nullable;
  */
 public final class DbConfig {
   private static final Logger logger = Logger.getLogger(DbConfig.class.getName());
+  private static final Set<String> warnedDeprecatedProperties = ConcurrentHashMap.newKeySet();
 
   public static boolean isCommonQuerySanitizationEnabled(OpenTelemetry openTelemetry) {
     return isCommonQuerySanitizationEnabled(openTelemetry, true);
@@ -24,26 +26,23 @@ public final class DbConfig {
 
   public static boolean isCommonQuerySanitizationEnabled(
       OpenTelemetry openTelemetry, boolean defaultValue) {
-    Boolean querySanitizationEnabled =
-        getCommonDbValue(openTelemetry, DbConfig::getQuerySanitizationEnabled);
+    Boolean querySanitizationEnabled = getCommonQuerySanitizationEnabled(openTelemetry);
     return querySanitizationEnabled != null ? querySanitizationEnabled : defaultValue;
   }
 
   public static boolean isQuerySanitizationEnabled(
       OpenTelemetry openTelemetry, String instrumentationName) {
+    DeclarativeConfigProperties instrumentationConfig =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, instrumentationName);
     Boolean querySanitizationEnabled =
         getQuerySanitizationEnabled(
-            DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, instrumentationName));
+            instrumentationConfig,
+            "otel.instrumentation." + instrumentationName + ".statement-sanitizer.enabled",
+            "otel.instrumentation." + instrumentationName + ".query-sanitization.enabled");
     if (querySanitizationEnabled != null) {
       return querySanitizationEnabled;
     }
     return isCommonQuerySanitizationEnabled(openTelemetry);
-  }
-
-  public static boolean isCommonSqlCommenterEnabled(
-      OpenTelemetry openTelemetry, boolean defaultValue) {
-    Boolean sqlCommenterEnabled = getCommonSqlCommenterEnabled(openTelemetry);
-    return sqlCommenterEnabled != null ? sqlCommenterEnabled : defaultValue;
   }
 
   public static boolean isSqlCommenterEnabled(
@@ -54,43 +53,86 @@ public final class DbConfig {
   public static boolean isSqlCommenterEnabled(
       OpenTelemetry openTelemetry, String instrumentationName, boolean defaultValue) {
     Boolean sqlCommenterEnabled =
-        getSqlCommenterEnabled(
-            DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, instrumentationName));
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, instrumentationName)
+            .get("sqlcommenter/development")
+            .getBoolean("enabled");
     if (sqlCommenterEnabled != null) {
       return sqlCommenterEnabled;
     }
-    return isCommonSqlCommenterEnabled(openTelemetry, defaultValue);
+
+    sqlCommenterEnabled = getCommonSqlCommenterEnabled(openTelemetry);
+    return sqlCommenterEnabled != null ? sqlCommenterEnabled : defaultValue;
   }
 
   @Nullable
   private static Boolean getCommonSqlCommenterEnabled(OpenTelemetry openTelemetry) {
-    return getCommonDbValue(openTelemetry, DbConfig::getSqlCommenterEnabled);
-  }
-
-  @Nullable
-  private static Boolean getCommonDbValue(
-      OpenTelemetry openTelemetry, Function<DeclarativeConfigProperties, Boolean> configReader) {
     DeclarativeConfigProperties commonConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
 
-    Boolean value = configReader.apply(commonConfig.get("db"));
+    Boolean value = commonConfig.get("db").get("sqlcommenter/development").getBoolean("enabled");
     if (value != null) {
       return value;
     }
 
-    Boolean deprecatedValue = configReader.apply(commonConfig.get("database"));
+    // this variant was never a regular (non-declarative) configuration property name
+    Boolean deprecatedValue =
+        commonConfig.get("database").get("sqlcommenter/development").getBoolean("enabled");
     if (deprecatedValue != null) {
-      logger.warning(
-          "common.database is deprecated in declarative configuration"
-              + " and has been replaced by common.db.");
+      warnIfDeprecatedDeclarativeConfigurationUsed(
+          "instrumentation/development: java: common: database:"
+              + " sqlcommenter/development: enabled",
+          "instrumentation/development: java: common: db: sqlcommenter/development: enabled");
       return deprecatedValue;
+    }
+
+    Boolean deprecatedPropertyValue =
+        commonConfig.get("db_sqlcommenter/development").getBoolean("enabled");
+    if (deprecatedPropertyValue != null) {
+      warnIfDeprecatedExperimentalSystemPropertyUsed(
+          "otel.instrumentation.common.experimental.db-sqlcommenter.enabled",
+          "otel.instrumentation.common.db.experimental.sqlcommenter.enabled");
+      return deprecatedPropertyValue;
     }
 
     return null;
   }
 
   @Nullable
-  private static Boolean getQuerySanitizationEnabled(DeclarativeConfigProperties config) {
+  private static Boolean getCommonQuerySanitizationEnabled(OpenTelemetry openTelemetry) {
+    DeclarativeConfigProperties commonConfig =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
+
+    Boolean value = commonConfig.get("db").get("query_sanitization").getBoolean("enabled");
+    if (value != null) {
+      return value;
+    }
+
+    // this variant was never a regular (non-declarative) configuration property name
+    Boolean deprecatedStatementSanitizerValue =
+        commonConfig.get("database").get("statement_sanitizer").getBoolean("enabled");
+    if (deprecatedStatementSanitizerValue != null) {
+      warnIfDeprecatedDeclarativeConfigurationUsed(
+          "instrumentation/development: java: common: database: statement_sanitizer: enabled",
+          "instrumentation/development: java: common: db: query_sanitization: enabled");
+      return deprecatedStatementSanitizerValue;
+    }
+
+    // this variant was never a declarative configuration property name
+    Boolean deprecatedStatementSanitizerPropertyValue =
+        commonConfig.get("db_statement_sanitizer").getBoolean("enabled");
+    if (deprecatedStatementSanitizerPropertyValue != null) {
+      warnIfDeprecatedSystemPropertyUsed(
+          "otel.instrumentation.common.db-statement-sanitizer.enabled",
+          "otel.instrumentation.common.db.query-sanitization.enabled");
+      return deprecatedStatementSanitizerPropertyValue;
+    }
+
+    return null;
+  }
+
+  @Nullable
+  private static Boolean getQuerySanitizationEnabled(
+      DeclarativeConfigProperties config, String deprecatedProperty, String replacementProperty) {
     Boolean value = config.get("query_sanitization").getBoolean("enabled");
     if (value != null) {
       return value;
@@ -98,18 +140,61 @@ public final class DbConfig {
 
     Boolean deprecatedValue = config.get("statement_sanitizer").getBoolean("enabled");
     if (deprecatedValue != null) {
-      logger.warning(
-          "statement_sanitizer is deprecated in declarative configuration"
-              + " and has been replaced by query_sanitization.");
+      warnIfDeprecatedSettingOrEquivalentUsed(deprecatedProperty, replacementProperty);
       return deprecatedValue;
     }
 
     return null;
   }
 
-  @Nullable
-  private static Boolean getSqlCommenterEnabled(DeclarativeConfigProperties config) {
-    return config.get("sqlcommenter/development").getBoolean("enabled");
+  private static void warnIfDeprecatedDeclarativeConfigurationUsed(
+      String deprecatedProperty, String replacementProperty) {
+    if (warnedDeprecatedProperties.add(deprecatedProperty)) {
+      logger.warning(
+          "The '"
+              + deprecatedProperty
+              + "' declarative configuration is deprecated"
+              + " and will be removed in a future version. Use '"
+              + replacementProperty
+              + "' instead.");
+    }
+  }
+
+  private static void warnIfDeprecatedSystemPropertyUsed(
+      String deprecatedProperty, String replacementProperty) {
+    if (warnedDeprecatedProperties.add(deprecatedProperty)) {
+      logger.warning(
+          "The "
+              + deprecatedProperty
+              + " system property is deprecated and will be removed in 3.0. Use "
+              + replacementProperty
+              + " instead.");
+    }
+  }
+
+  private static void warnIfDeprecatedExperimentalSystemPropertyUsed(
+      String deprecatedProperty, String replacementProperty) {
+    if (warnedDeprecatedProperties.add(deprecatedProperty)) {
+      logger.warning(
+          "The "
+              + deprecatedProperty
+              + " system property is deprecated and will be removed in a future version. Use "
+              + replacementProperty
+              + " instead.");
+    }
+  }
+
+  private static void warnIfDeprecatedSettingOrEquivalentUsed(
+      String deprecatedProperty, String replacementProperty) {
+    if (warnedDeprecatedProperties.add(deprecatedProperty)) {
+      logger.warning(
+          "The "
+              + deprecatedProperty
+              + " setting and the equivalent declarative configuration property"
+              + " are deprecated and will be removed in 3.0. Use "
+              + replacementProperty
+              + " or equivalent declarative configuration instead.");
+    }
   }
 
   private DbConfig() {}

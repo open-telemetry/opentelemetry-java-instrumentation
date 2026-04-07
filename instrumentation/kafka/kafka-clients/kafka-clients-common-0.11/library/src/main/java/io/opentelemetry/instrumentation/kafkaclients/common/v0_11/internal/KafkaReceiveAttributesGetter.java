@@ -16,8 +16,8 @@ import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import org.apache.kafka.common.TopicPartition;
 
-enum KafkaReceiveAttributesGetter implements MessagingAttributesGetter<KafkaReceiveRequest, Void> {
-  INSTANCE;
+final class KafkaReceiveAttributesGetter
+    implements MessagingAttributesGetter<KafkaReceiveRequest, Void> {
 
   @Override
   public String getSystem(KafkaReceiveRequest request) {

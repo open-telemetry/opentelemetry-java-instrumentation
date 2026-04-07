@@ -13,7 +13,7 @@ import org.asynchttpclient.AsyncHandler;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.Response;
 
-public final class AsyncHttpClientSingletons {
+public class AsyncHttpClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.async-http-client-2.0";
 
   private static final Instrumenter<RequestContext, Response> instrumenter;

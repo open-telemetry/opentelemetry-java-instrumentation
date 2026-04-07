@@ -227,7 +227,7 @@ public class IntegrationTestUtils {
       try {
         process.exitValue();
         return;
-      } catch (IllegalThreadStateException ex) {
+      } catch (IllegalThreadStateException ignored) {
         if (rem > 0) {
           Thread.sleep(Math.min(NANOSECONDS.toMillis(rem) + 1, 100));
         }

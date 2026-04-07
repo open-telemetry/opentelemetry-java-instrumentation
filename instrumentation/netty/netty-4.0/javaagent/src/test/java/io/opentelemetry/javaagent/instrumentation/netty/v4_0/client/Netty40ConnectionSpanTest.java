@@ -139,27 +139,12 @@ class Netty40ConnectionSpanTest {
                   span.hasName("CONNECT").hasKind(INTERNAL).hasParent(trace.getSpan(0));
                   span.hasAttributesSatisfyingExactly(
                       equalTo(NETWORK_TRANSPORT, "tcp"),
-                      satisfies(
-                          NETWORK_TYPE,
-                          val ->
-                              val.satisfiesAnyOf(
-                                  v -> assertThat(v).isEqualTo("ipv4"),
-                                  v -> assertThat(v).isNull())),
+                      satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", null)),
                       equalTo(SERVER_ADDRESS, uri.getHost()),
                       equalTo(SERVER_PORT, uri.getPort()),
                       equalTo(maybeStablePeerService(), "test-peer-service"),
-                      satisfies(
-                          NETWORK_PEER_PORT,
-                          val ->
-                              val.satisfiesAnyOf(
-                                  v -> assertThat(v).isEqualTo(uri.getPort()),
-                                  v -> assertThat(v).isNull())),
-                      satisfies(
-                          NETWORK_PEER_ADDRESS,
-                          val ->
-                              val.satisfiesAnyOf(
-                                  v -> assertThat(v).isEqualTo("127.0.0.1"),
-                                  v -> assertThat(v).isNull())));
+                      satisfies(NETWORK_PEER_PORT, val -> val.isIn((long) uri.getPort(), null)),
+                      satisfies(NETWORK_PEER_ADDRESS, val -> val.isIn("127.0.0.1", null)));
                 }));
   }
 

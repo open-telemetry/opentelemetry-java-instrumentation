@@ -12,7 +12,7 @@ import scala.runtime.AbstractFunction1;
 import zio.http.Handler;
 import zio.http.RoutePattern;
 
-public final class HandlerWrapper {
+public class HandlerWrapper {
 
   public static <IN, OUT, ERR> Handler<?, ERR, IN, OUT> wrap(
       Handler<?, ERR, IN, OUT> handler, RoutePattern<?> routePattern) {

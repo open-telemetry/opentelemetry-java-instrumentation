@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNam
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
-public final class GeodeSingletons {
+public class GeodeSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.geode-1.4";
 
   private static final Instrumenter<GeodeRequest, Void> instrumenter;

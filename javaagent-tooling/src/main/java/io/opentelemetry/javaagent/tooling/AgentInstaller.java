@@ -22,6 +22,7 @@ import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProp
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.bootstrap.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper;
+import io.opentelemetry.javaagent.bootstrap.ExceptionLogger;
 import io.opentelemetry.javaagent.bootstrap.InstrumentedTaskClasses;
 import io.opentelemetry.javaagent.bootstrap.LambdaTransformer;
 import io.opentelemetry.javaagent.bootstrap.LambdaTransformerHolder;
@@ -313,7 +314,14 @@ public class AgentInstaller {
               Context serverContext, T response, HttpServerResponseMutator<T> responseMutator) {
 
             for (HttpServerResponseCustomizer modifier : customizers) {
-              modifier.customize(serverContext, response, responseMutator);
+              try {
+                modifier.customize(serverContext, response, responseMutator);
+              } catch (Throwable t) {
+                ExceptionLogger.logSuppressedError(
+                    "Failed to customize HTTP server response with "
+                        + modifier.getClass().getName(),
+                    t);
+              }
             }
           }
         });

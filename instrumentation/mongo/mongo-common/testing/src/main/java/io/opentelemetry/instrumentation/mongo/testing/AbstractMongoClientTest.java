@@ -559,9 +559,7 @@ public abstract class AbstractMongoClientTest<T> {
         equalTo(SERVER_PORT, port),
         satisfies(
             maybeStable(DB_STATEMENT),
-            val ->
-                val.satisfies(
-                    statement -> assertThat(statements).contains(statement.replaceAll(" ", "")))),
+            val -> val.satisfies(v -> assertThat(statements).contains(v.replaceAll(" ", "")))),
         equalTo(maybeStable(DB_SYSTEM), MONGODB),
         equalTo(
             DB_CONNECTION_STRING,

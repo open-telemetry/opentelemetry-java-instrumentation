@@ -54,7 +54,7 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
                 .advice(methodMatcher, adviceClassName)
                 // change inline attribute for advice OnMethodEnter and OnMethodExit annotations to
                 // false
-                .with(new AdviceUninliningPoolStrategy(poolStrategy))
+                .with(new AdviceInliningPoolStrategy(poolStrategy, false))
                 .include(getAdviceLocator(instrumentationModule.getClass().getClassLoader()))
                 .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler()));
   }

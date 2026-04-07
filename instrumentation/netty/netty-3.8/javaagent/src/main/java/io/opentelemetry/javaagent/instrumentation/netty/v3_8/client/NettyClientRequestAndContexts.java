@@ -18,6 +18,7 @@ abstract class NettyClientRequestAndContexts {
     return new AutoValue_NettyClientRequestAndContexts(parentContext, context, request);
   }
 
+  @Nullable
   abstract Context parentContext();
 
   abstract Context context();

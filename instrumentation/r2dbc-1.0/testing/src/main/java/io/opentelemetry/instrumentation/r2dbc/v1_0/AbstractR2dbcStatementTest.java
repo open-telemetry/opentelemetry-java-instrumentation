@@ -40,6 +40,7 @@ import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
@@ -88,7 +89,7 @@ public abstract class AbstractR2dbcStatementTest {
               "MYSQL_PASSWORD", PW_DB,
               "MYSQL_DATABASE", DB);
 
-  private static final Map<String, DbSystemProps> SYSTEMS = new HashMap<>();
+  private static final Map<String, DbSystemProps> SYSTEMS = new LinkedHashMap<>();
 
   static {
     SYSTEMS.put(POSTGRESQL.system, POSTGRESQL);
@@ -134,7 +135,7 @@ public abstract class AbstractR2dbcStatementTest {
     }
   }
 
-  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideParameters")
   void testQueries(Parameter parameter) {

@@ -38,7 +38,6 @@ testing {
       targets {
         all {
           testTask.configure {
-            jvmArgs("-Dlog4j2.is.webapp=false")
             jvmArgs("-Dlog4j2.enable.threadlocals=false")
             jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
           }
@@ -55,7 +54,6 @@ testing {
         all {
           testTask.configure {
             jvmArgs("-Dotel.instrumentation.log4j-context-data.add-baggage=true")
-            jvmArgs("-Dlog4j2.is.webapp=false")
             jvmArgs("-Dlog4j2.enable.threadlocals=true")
           }
         }
@@ -73,7 +71,6 @@ testing {
             jvmArgs("-Dotel.instrumentation.common.logging.trace-id=trace_id_test")
             jvmArgs("-Dotel.instrumentation.common.logging.span-id=span_id_test")
             jvmArgs("-Dotel.instrumentation.common.logging.trace-flags=trace_flags_test")
-            jvmArgs("-Dlog4j2.is.webapp=false")
             jvmArgs("-Dlog4j2.enable.threadlocals=true")
           }
         }
@@ -83,10 +80,13 @@ testing {
 }
 
 tasks {
+  withType<Test>().configureEach {
+    jvmArgs("-Dlog4j2.is.webapp=false")
+  }
+
   // Threadlocals are always false if is.webapp is true, so we make sure to override it because as of
   // now testing-common includes jetty / servlet.
   test {
-    jvmArgs("-Dlog4j2.is.webapp=false")
     jvmArgs("-Dlog4j2.enable.threadlocals=true")
     jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
   }

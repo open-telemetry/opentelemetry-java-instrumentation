@@ -17,13 +17,15 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Style | Style guide | Always | — |
 | Style | Uppercase field names should reflect semantic constants or immutable value constants such as `Duration` timeouts/intervals, not simply `static final` | Always | — |
 | Naming | Getter naming (`get` / `is`) | Always | — |
+| Style | Prefer `e` for used exceptions, prefer `f` for used exceptions in nested catch clauses when an outer catch already uses `e`, allow `error` for specific `*Error` catch types, prefer `t` for used `Throwable` catch values, prefer `ignored` for intentionally unused catch parameters, and use `ignore` for nested intentionally unused catch parameters when `ignored` would shadow an outer catch variable | Catch clauses | — |
 | Naming | Module/package naming | New or renamed modules/packages | `module-naming.md` |
 | Javaagent | Advice patterns | `@Advice` classes | `javaagent-advice-patterns.md` |
-| Javaagent | Module structure patterns | `InstrumentationModule`, `TypeInstrumentation`, `Singletons` | `javaagent-module-patterns.md` |
+| Javaagent | Module structure patterns | `InstrumentationModule`, `TypeInstrumentation` | `javaagent-module-patterns.md` |
+| Javaagent | Singletons patterns | `*Singletons` holder classes, singleton accessors, callers of singleton accessors/fields | `javaagent-singletons-patterns.md` |
 | Javaagent | Incorrect `classLoaderMatcher()` | `classLoaderMatcher()` override that is redundant (muzzle already handles it) or missing when needed (muzzle cannot distinguish version range) | `javaagent-module-patterns.md` |
 | Semconv | Library vs javaagent semconv constant usage | Semconv constants/assertions | — |
 | Semconv | Dual semconv testing | `SemconvStability`, `maybeStable`, semconv Gradle tasks | `testing-semconv-stability.md` |
-| Testing | General test patterns | Test files in scope | `testing-general-patterns.md` |
+| Testing | General test patterns | Test files in scope — assertion style, resource cleanup, attribute assertions | `testing-general-patterns.md` |
 | Testing | Experimental flag tests | `testExperimental`, experimental attribute assertions, `experimental` flags in JVM args or system properties | `testing-experimental-flags.md` |
 | Library | TelemetryBuilder/getter/setter patterns | Library instrumentation classes | `library-patterns.md` |
 | API | Deprecation and breaking-change policy | Public API changes | `api-deprecation-policy.md` |
@@ -55,6 +57,21 @@ Flag real defects, including:
 
 Only flag substantive problems, not stylistic preference.
 
+## [Javaagent] Best-Effort Suppressed Failures
+
+When javaagent runtime code intentionally suppresses a `Throwable` to avoid breaking the
+application, do not silently swallow it.
+
+- Prefer `ExceptionLogger.logSuppressedError(...)` for suppressed failures in javaagent code.
+  It logs at `FINE` and matches the agent's default ByteBuddy advice suppression path in
+  `ExceptionHandlers.defaultExceptionHandler()`.
+- Use this for best-effort hooks such as response customizers, bootstrap fallbacks, or other
+  optional extension points where failure must not change application behavior.
+- Do not introduce ad-hoc local loggers for one-off suppressed javaagent failures when
+  `ExceptionLogger` is available from bootstrap.
+- Keep the message action-oriented and specific (for example, "Failed to customize Netty 4.1
+  HTTP server response").
+
 ## [Style] Style Guide
 
 Read and apply `docs/contributing/style-guide.md`.
@@ -72,10 +89,43 @@ Do not flag the following patterns (common false positives):
   The project disables javac's `-Xlint:deprecation` globally and uses a custom Error Prone
   check (`OtelDeprecatedApiUsage`) instead. Only add the annotation when it is actually
   required to fix an Error Prone error — not speculatively.
+- Preserve concise explanatory comments attached to existing `@SuppressWarnings` annotations
+  when they explain why the suppression exists (for example `// using deprecated semconv`
+  or `// using deprecated config property`). This repository has established precedent for
+  such comments, and test code disables Error Prone's `SuppressWarningsWithoutExplanation`
+  check only because enforcing it everywhere causes too many failures, not because these
+  comments are undesirable.
+- When normalizing or moving an existing `@SuppressWarnings`, keep any accurate explanatory
+  comment with it. Remove the comment only if it is incorrect, obsolete, or contradicted by
+  the code after your change.
 
 ## [Naming] Getter Naming
 
 Public API getters should use `get*` (or `is*` for booleans).
+
+## [Style] Catch Exception Variable Naming
+
+Prefer `e` as the exception variable name in catch clauses when the exception is
+used.
+
+For nested catch clauses, when an outer catch already uses `e`, prefer `f` as the
+inner exception variable name when the exception is used.
+
+`error` is also acceptable when the caught type is a specific `*Error` subtype.
+
+Prefer `t` for used `Throwable` catch values, including `catch (Throwable t)`.
+
+Do not apply these catch-variable naming preferences to method parameters,
+lambda parameters, fields, or other non-catch identifiers.
+
+If a catch parameter is intentionally unused, prefer `ignored` over `ignore`.
+
+For nested catch clauses, if `ignored` would shadow an outer catch variable,
+prefer `ignore` for the inner intentionally unused catch parameter.
+
+Both `ignored` and `ignore` are recognized by IntelliJ's `CatchMayIgnoreException`
+inspection as intentional unused-catch names. In test sources, IntelliJ also
+recognizes `expected` and `ok`.
 
 ## [Style] Prefer Instance Creation Over Singletons
 

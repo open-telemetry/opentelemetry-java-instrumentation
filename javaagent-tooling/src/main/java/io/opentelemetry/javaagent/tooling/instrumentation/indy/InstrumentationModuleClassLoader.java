@@ -399,10 +399,10 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
       // In Java 8 getDefinedPackage does not exist (HotSpot) or is not accessible (OpenJ9)
       try {
         return lookup.findVirtual(ClassLoader.class, "getPackage", methodType);
-      } catch (NoSuchMethodException ex) {
-        throw new IllegalStateException("expected method to always exist!", ex);
-      } catch (IllegalAccessException ex2) {
-        throw new IllegalStateException("Method should be accessible from here", ex2);
+      } catch (NoSuchMethodException f) {
+        throw new IllegalStateException("expected method to always exist!", f);
+      } catch (IllegalAccessException f) {
+        throw new IllegalStateException("Method should be accessible from here", f);
       }
     }
   }

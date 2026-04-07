@@ -16,13 +16,13 @@ import com.alibaba.fastjson.JSONObject;
 import com.zaxxer.hikari.HikariDataSource;
 import io.opentelemetry.api.internal.StringUtils;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
 import java.util.List;
-import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
@@ -41,6 +41,9 @@ import tech.powerjob.worker.log.OmsLogger;
 class PowerJobBasicProcessorTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private static final boolean EXPERIMENTAL_ATTRIBUTES_ENABLED =
       Boolean.getBoolean("otel.instrumentation.powerjob.experimental-span-attributes");
@@ -276,7 +279,8 @@ class PowerJobBasicProcessorTest {
 
   @Test
   void testSpringDataSourceProcessor() throws Exception {
-    DataSource dataSource = new HikariDataSource();
+    HikariDataSource dataSource = new HikariDataSource();
+    cleanup.deferCleanup(dataSource);
     long jobId = 1;
     String jobParam = "{\"dirPath\":\"/abc\"}";
     TaskContext taskContext = genTaskContext(jobId, jobParam);

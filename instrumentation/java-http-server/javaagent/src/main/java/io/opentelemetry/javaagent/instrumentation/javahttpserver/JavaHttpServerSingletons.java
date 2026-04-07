@@ -16,9 +16,9 @@ import io.opentelemetry.instrumentation.javahttpserver.internal.JavaHttpServerIn
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.util.List;
 
-public final class JavaHttpServerSingletons {
+public class JavaHttpServerSingletons {
 
-  public static final List<Filter> filters;
+  private static final List<Filter> instrumentationFilters;
 
   static {
     CommonConfig config = AgentCommonConfig.get();
@@ -30,7 +30,12 @@ public final class JavaHttpServerSingletons {
         .configure(config);
     JavaHttpServerTelemetry serverTelemetry = serverBuilder.build();
 
-    filters = asList(serverTelemetry.createFilter(), new ResponseCustomizingFilter());
+    instrumentationFilters =
+        asList(serverTelemetry.createFilter(), new ResponseCustomizingFilter());
+  }
+
+  public static List<Filter> instrumentationFilters() {
+    return instrumentationFilters;
   }
 
   private JavaHttpServerSingletons() {}

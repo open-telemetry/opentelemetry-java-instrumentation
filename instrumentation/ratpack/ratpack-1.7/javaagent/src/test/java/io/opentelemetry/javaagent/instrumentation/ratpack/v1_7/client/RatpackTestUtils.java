@@ -10,11 +10,11 @@ import java.net.URI;
 import org.junit.jupiter.api.condition.OS;
 import ratpack.http.client.HttpClientReadTimeoutException;
 
-public final class RatpackTestUtils {
+class RatpackTestUtils {
 
   private RatpackTestUtils() {}
 
-  public static Throwable ratpackClientSpanErrorMapper(URI uri, Throwable exception) {
+  static Throwable ratpackClientSpanErrorMapper(URI uri, Throwable exception) {
     if (uri.toString().equals("https://192.0.2.1/")
         || (OS.WINDOWS.isCurrentOs() && uri.toString().equals("http://localhost:61/"))) {
       return new ConnectTimeoutException("Connect timeout (PT2S) connecting to " + uri);

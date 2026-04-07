@@ -62,9 +62,7 @@ class TomcatJdbcInstrumentationTest {
   }
 
   private static void assertConnectionPoolMetrics(String poolName) {
-    assertThat(poolName)
-        .as("tomcat-jdbc generates a unique pool name if it's not explicitly provided")
-        .isNotEmpty();
+    assertThat(poolName).isNotEmpty();
 
     DbConnectionPoolMetricsAssertions.create(testing, "io.opentelemetry.tomcat-jdbc", poolName)
         // no timeouts happen during this test

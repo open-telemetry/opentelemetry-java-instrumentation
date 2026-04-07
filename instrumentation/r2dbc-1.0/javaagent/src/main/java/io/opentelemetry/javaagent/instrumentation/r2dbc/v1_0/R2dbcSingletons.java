@@ -14,9 +14,9 @@ import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.internal.Expe
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.internal.R2dbcSqlAttributesGetter;
 import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizerHolder;
 
-public final class R2dbcSingletons {
+public class R2dbcSingletons {
 
-  private static final R2dbcTelemetry TELEMETRY;
+  private static final R2dbcTelemetry telemetry;
 
   static {
     R2dbcTelemetryBuilder builder =
@@ -32,11 +32,11 @@ public final class R2dbcSingletons {
         builder,
         sqlCommenterBuilder ->
             SqlCommenterCustomizerHolder.getCustomizer().customize(sqlCommenterBuilder));
-    TELEMETRY = builder.build();
+    telemetry = builder.build();
   }
 
   public static R2dbcTelemetry telemetry() {
-    return TELEMETRY;
+    return telemetry;
   }
 
   private R2dbcSingletons() {}

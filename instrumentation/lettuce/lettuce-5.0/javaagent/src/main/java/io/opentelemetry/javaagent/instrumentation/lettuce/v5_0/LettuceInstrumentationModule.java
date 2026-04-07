@@ -26,6 +26,7 @@ public class LettuceInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 5.1
     return not(hasClassesNamed("io.lettuce.core.tracing.Tracing"));
   }
 
