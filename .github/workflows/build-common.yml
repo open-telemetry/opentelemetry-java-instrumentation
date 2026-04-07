@@ -453,7 +453,12 @@ jobs:
       - name: Test
         env:
           DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
-        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }} ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+        run: >
+          ./gradlew
+          :smoke-tests:test
+          -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
+          ${{ inputs.skip-openj9-tests && matrix.smoke-test-suite != 'websphere' && '-PskipOpenJ9SmokeTests=true' || '' }}
+          ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Build scan
         if: ${{ !cancelled() && hashFiles('build-scan.txt') != '' }}
