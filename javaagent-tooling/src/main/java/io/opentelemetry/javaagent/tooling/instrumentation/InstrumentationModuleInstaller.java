@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.type.TypeDescription;
@@ -118,7 +119,17 @@ public final class InstrumentationModuleInstaller {
           .injectClasses(injectedClassesCollector);
     }
 
-    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule);
+    MuzzleMatcher muzzleMatcher =
+        new MuzzleMatcher(
+            logger,
+            instrumentationModule,
+            cl ->
+                // In indy modules muzzle searches for types in both application class loader and in
+                // the agent class loader. Since we allow using agent class in indy instrumentation
+                // these classes are treated as regular non-helper classes for which muzzle performs
+                // reference checks.
+                IndyModuleRegistry.createInstrumentationClassLoaderForMuzzle(
+                    instrumentationModule, cl));
 
     Function<ClassLoader, List<HelperClassDefinition>> helperGenerator =
         cl -> {
@@ -187,7 +198,8 @@ public final class InstrumentationModuleInstaller {
       return parentAgentBuilder;
     }
 
-    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule);
+    MuzzleMatcher muzzleMatcher =
+        new MuzzleMatcher(logger, instrumentationModule, UnaryOperator.identity());
     AgentBuilder.Transformer helperInjector =
         new HelperInjector(
             instrumentationModule.instrumentationName(),
