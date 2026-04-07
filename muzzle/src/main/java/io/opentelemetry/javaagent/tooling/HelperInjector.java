@@ -280,7 +280,8 @@ public class HelperInjector implements Transformer {
     if (classLoader == BOOTSTRAP_CLASSLOADER_PLACEHOLDER && instrumentation == null) {
       logger.log(
           SEVERE,
-          "Cannot inject helpers into the bootstrap class loader without an instance of Instrumentation. Programmer error!");
+          "Cannot inject helpers into the bootstrap class loader without an instance of"
+              + " Instrumentation. Programmer error!");
       return;
     }
     try {
@@ -310,7 +311,8 @@ public class HelperInjector implements Transformer {
       if (logger.isLoggable(SEVERE)) {
         logger.log(
             SEVERE,
-            "Error preparing helpers while processing {0} for {1}. Failed to inject helper classes into instance {2}",
+            "Error preparing helpers while processing {0} for {1}. Failed to inject helper classes"
+                + " into instance {2}",
             new Object[] {typeDescription, requestingName, classLoader},
             e);
       }

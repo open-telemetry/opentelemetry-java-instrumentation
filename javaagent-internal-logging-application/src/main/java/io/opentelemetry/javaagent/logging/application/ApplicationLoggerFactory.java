@@ -34,8 +34,8 @@ final class ApplicationLoggerFactory extends ApplicationLoggerBridge
           .create(ApplicationLoggerBridge.class.getName())
           .log(
               InternalLogger.Level.WARN,
-              "Multiple application logger implementations were provided."
-                  + " The javaagent will use the first bridge provided and ignore the following ones (this one).",
+              "Multiple application logger implementations were provided. The javaagent will use"
+                  + " the first bridge provided and ignore the following ones (this one).",
               null);
       return;
     }
