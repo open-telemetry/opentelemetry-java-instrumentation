@@ -20,7 +20,7 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.util.function.Consumer;
 import org.assertj.core.api.AbstractLongAssert;
 
-public final class HttpSpanDataAssert {
+public class HttpSpanDataAssert {
 
   private final SpanDataAssert span;
 

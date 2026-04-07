@@ -17,7 +17,7 @@ import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 import org.apache.rocketmq.test.util.MQRandomUtils;
 import org.apache.rocketmq.test.util.RandomUtil;
 
-public final class BaseConf {
+public class BaseConf {
   public static final String nsAddr;
   public static final String broker1Addr;
   static final String broker1Name;

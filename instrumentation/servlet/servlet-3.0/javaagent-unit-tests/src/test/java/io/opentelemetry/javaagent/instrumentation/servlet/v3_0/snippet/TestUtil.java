@@ -12,7 +12,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-final class TestUtil {
+class TestUtil {
 
   static byte[] readFileAsBytes(String resourceName) throws IOException {
     try (InputStream in =

@@ -386,7 +386,7 @@ abstract class AbstractIcebergTest {
                                                 expectedReport.tableName())))));
   }
 
-  static final class SimpleReporter implements MetricsReporter {
+  static class SimpleReporter implements MetricsReporter {
     private MetricsReport report;
 
     @Override

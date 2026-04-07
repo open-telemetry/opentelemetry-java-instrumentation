@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.testing;
 
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 
-public final class AgentSpanTesting {
+public class AgentSpanTesting {
 
   /**
    * Runs the provided {@code runnable} inside the scope of a SERVER span with name {@code

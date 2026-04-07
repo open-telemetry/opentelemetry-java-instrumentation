@@ -12,7 +12,7 @@ import java.lang.reflect.Proxy;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 
-public final class ProxyStatementFactory {
+public class ProxyStatementFactory {
 
   public static Statement proxyStatementWithCustomClassLoader(Statement statement)
       throws Exception {

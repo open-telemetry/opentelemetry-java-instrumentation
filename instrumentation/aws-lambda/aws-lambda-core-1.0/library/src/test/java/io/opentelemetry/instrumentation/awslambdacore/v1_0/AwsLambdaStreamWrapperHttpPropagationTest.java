@@ -135,7 +135,7 @@ class AwsLambdaStreamWrapperHttpPropagationTest {
                             equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
-  public static final class TestRequestHandler implements RequestStreamHandler {
+  public static class TestRequestHandler implements RequestStreamHandler {
 
     private static final JsonFactory JSON_FACTORY = new JsonFactory();
 

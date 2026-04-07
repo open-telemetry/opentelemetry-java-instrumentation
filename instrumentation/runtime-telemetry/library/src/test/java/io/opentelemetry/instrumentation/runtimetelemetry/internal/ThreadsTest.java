@@ -165,7 +165,7 @@ class ThreadsTest {
     assertThat(set).contains(Thread.currentThread());
   }
 
-  static final class ThreadInfoAnswer implements Answer<Object> {
+  static class ThreadInfoAnswer implements Answer<Object> {
 
     private final boolean isDaemon;
     private final Thread.State state;

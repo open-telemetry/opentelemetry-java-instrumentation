@@ -41,11 +41,11 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  protected final CreateEmbeddingResponse doEmbeddings(EmbeddingCreateParams request) {
+  protected CreateEmbeddingResponse doEmbeddings(EmbeddingCreateParams request) {
     return doEmbeddings(request, getClient(), getClientAsync());
   }
 
-  protected final CreateEmbeddingResponse doEmbeddings(
+  protected CreateEmbeddingResponse doEmbeddings(
       EmbeddingCreateParams request, OpenAIClient client, OpenAIClientAsync clientAsync) {
     switch (testType) {
       case SYNC:

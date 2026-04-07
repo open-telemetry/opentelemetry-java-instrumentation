@@ -94,8 +94,7 @@ class AwsLambdaSqsEventWrapperTest {
                             equalTo(MESSAGING_OPERATION, "process"))));
   }
 
-  public static final class TestRequestHandler
-      implements RequestHandler<SQSEvent, SQSBatchResponse> {
+  public static class TestRequestHandler implements RequestHandler<SQSEvent, SQSBatchResponse> {
     @Override
     public SQSBatchResponse handleRequest(SQSEvent input, Context context) {
       return null;

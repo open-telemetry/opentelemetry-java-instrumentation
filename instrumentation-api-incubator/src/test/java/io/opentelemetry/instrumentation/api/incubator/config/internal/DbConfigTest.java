@@ -177,7 +177,7 @@ class DbConfigTest {
     ((Set<?>) warnedDeprecatedPropertiesField.get(null)).clear();
   }
 
-  private static final class TestHandler extends Handler {
+  private static class TestHandler extends Handler {
     private final List<LogRecord> records = new ArrayList<>();
 
     @Override

@@ -37,7 +37,7 @@ class AddUrlTest {
     assertThat(clazz.getMethod("getHostName").invoke(null)).isEqualTo("not-the-host-name");
   }
 
-  private static final class TestUrlClassLoader extends URLClassLoader {
+  private static class TestUrlClassLoader extends URLClassLoader {
 
     TestUrlClassLoader() {
       super(new URL[0], null);
