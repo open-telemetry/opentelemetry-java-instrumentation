@@ -45,7 +45,7 @@ class CouchbaseBucketInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CouchbaseClientAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth trackCallDepth() {
       CallDepth callDepth = CallDepth.forClass(CouchbaseCluster.class);
       callDepth.getAndIncrement();
@@ -53,7 +53,7 @@ class CouchbaseBucketInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Observable<?> subscribeResult(
         @Advice.Origin("#t") Class<?> declaringClass,
         @Advice.Origin("#m") String methodName,
@@ -72,7 +72,7 @@ class CouchbaseBucketInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CouchbaseClientQueryAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth trackCallDepth() {
       CallDepth callDepth = CallDepth.forClass(CouchbaseCluster.class);
       callDepth.getAndIncrement();
@@ -80,7 +80,7 @@ class CouchbaseBucketInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Observable<?> subscribeResult(
         @Advice.Origin("#t") Class<?> declaringClass,
         @Advice.Origin("#m") String methodName,

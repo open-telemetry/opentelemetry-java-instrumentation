@@ -40,7 +40,7 @@ class DefaultFilterChainInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class NotifyFailureAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onFail(
         @Advice.Argument(0) FilterChainContext ctx, @Advice.Argument(1) Throwable throwable) {
       Context context = GrizzlyStateStorage.removeContext(ctx);

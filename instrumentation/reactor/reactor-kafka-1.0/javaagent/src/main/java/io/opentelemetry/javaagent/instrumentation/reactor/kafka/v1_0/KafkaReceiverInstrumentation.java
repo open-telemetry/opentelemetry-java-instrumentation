@@ -35,7 +35,7 @@ class KafkaReceiverInstrumentation implements TypeInstrumentation {
   public static class CreateAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static KafkaReceiver<?, ?> onExit(@Advice.Return KafkaReceiver<?, ?> receiver) {
       if (receiver instanceof InstrumentedKafkaReceiver) {
         return receiver;

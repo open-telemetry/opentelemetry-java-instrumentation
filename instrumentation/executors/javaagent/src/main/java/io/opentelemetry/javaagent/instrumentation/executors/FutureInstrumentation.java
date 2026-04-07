@@ -98,7 +98,7 @@ class FutureInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CanceledFutureAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void exit(@Advice.This Future<?> future) {
       // Try to clear parent span even if future was not cancelled:
       // the expectation is that parent span should be cleared after 'cancel'

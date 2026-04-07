@@ -37,7 +37,7 @@ class HttpClientConnectInstrumentation implements TypeInstrumentation {
   public static class ConnectAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Mono<? extends Connection> onExit(
         @Advice.Return Mono<? extends Connection> connection, @Advice.This HttpClient httpClient) {
 

@@ -36,7 +36,7 @@ class MessageHeaderUtilsInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class PreserveContextAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Argument(0) Message<?> original, @Advice.Return Message<?> result) {
       SpringAwsUtil.copyTracingState(original, result);

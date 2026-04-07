@@ -34,7 +34,7 @@ class ArmeriaServerBuilderInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class BuildAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(inline = false)
     public static void onEnter(@Advice.This ServerBuilder builder) {
       builder.decorator(serverDecorator());
     }

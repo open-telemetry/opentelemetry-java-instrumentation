@@ -37,7 +37,7 @@ class ContextHandlerInstrumentation implements TypeInstrumentation {
   public static class CreateOperationsAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.Argument(0) Channel channel) {
       // set context to the first unprocessed request
       ServerContext serverContext = ServerContexts.peekFirst(channel);
@@ -47,7 +47,7 @@ class ContextHandlerInstrumentation implements TypeInstrumentation {
       return null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();

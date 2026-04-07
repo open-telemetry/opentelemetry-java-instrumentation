@@ -50,7 +50,7 @@ class LettuceConnectInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static AdviceScope onEnter(@Advice.Argument(1) RedisURI redisUri) {
       Context parentContext = currentContext();
@@ -62,7 +62,7 @@ class LettuceConnectInstrumentation implements TypeInstrumentation {
       return new AdviceScope(context, context.makeCurrent());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(1) RedisURI redisUri,
         @Advice.Thrown @Nullable Throwable throwable,

@@ -64,7 +64,7 @@ class PoolInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class PoolAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth onEnter(@Advice.Argument(1) SqlConnectOptions sqlConnectOptions) {
       CallDepth callDepth = CallDepth.forClass(Pool.class);
       if (callDepth.getAndIncrement() > 0) {
@@ -76,7 +76,7 @@ class PoolInstrumentation implements TypeInstrumentation {
       return callDepth;
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Return Pool pool,
         @Advice.Argument(1) SqlConnectOptions sqlConnectOptions,
@@ -94,7 +94,7 @@ class PoolInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetConnectionAdvice {
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Future<SqlConnection> onExit(
         @Advice.This Pool pool, @Advice.Return Future<SqlConnection> future) {
       // copy connect options stored on pool to new connection

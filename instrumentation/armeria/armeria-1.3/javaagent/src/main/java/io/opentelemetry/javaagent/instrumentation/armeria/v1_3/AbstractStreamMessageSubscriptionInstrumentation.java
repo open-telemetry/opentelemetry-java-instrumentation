@@ -55,7 +55,7 @@ class AbstractStreamMessageSubscriptionInstrumentation implements TypeInstrument
   public static class WrapSubscriberAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Subscriber<?> wrapSubscriber(@Advice.Argument(1) Subscriber<?> subscriber) {
       return SubscriberWrapper.wrap(subscriber);
     }
@@ -65,7 +65,7 @@ class AbstractStreamMessageSubscriptionInstrumentation implements TypeInstrument
   public static class WrapCompletableFutureAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(4))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CompletableFuture<?> wrapCompletableFuture(
         @Advice.Argument(4) CompletableFuture<?> future) {
       return CompletableFutureWrapper.wrap(future);

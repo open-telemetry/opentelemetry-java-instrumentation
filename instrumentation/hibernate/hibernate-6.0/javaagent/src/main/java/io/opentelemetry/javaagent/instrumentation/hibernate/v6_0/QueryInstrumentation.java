@@ -60,7 +60,7 @@ class QueryInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class QueryMethodAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static HibernateOperationScope startMethod(@Advice.This CommonQueryContract query) {
 
       if (HibernateOperationScope.enterDepthSkipCheck()) {
@@ -88,7 +88,7 @@ class QueryInstrumentation implements TypeInstrumentation {
       return HibernateOperationScope.start(hibernateOperation, parentContext, instrumenter());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void endMethod(
         @Advice.Thrown Throwable throwable, @Advice.Enter HibernateOperationScope scope) {
 

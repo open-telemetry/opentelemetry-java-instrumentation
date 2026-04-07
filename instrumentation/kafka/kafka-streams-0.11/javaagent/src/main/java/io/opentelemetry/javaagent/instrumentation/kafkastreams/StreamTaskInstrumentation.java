@@ -35,14 +35,14 @@ class StreamTaskInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ProcessAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static StateHolder onEnter() {
       StateHolder holder = new StateHolder();
       HOLDER.set(holder);
       return holder;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Enter StateHolder holder, @Advice.Thrown Throwable throwable) {
       HOLDER.remove();

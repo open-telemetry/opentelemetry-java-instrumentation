@@ -97,7 +97,7 @@ class KafkaProducerInstrumentation implements TypeInstrumentation {
       @ToArgument(value = 0, index = 1),
       @ToArgument(value = 1, index = 2)
     })
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.FieldValue("apiVersions") ApiVersions apiVersions,
         @Advice.FieldValue("clientId") String clientId,
@@ -116,7 +116,7 @@ class KafkaProducerInstrumentation implements TypeInstrumentation {
       return new Object[] {adviceScope, record, callback};
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter Object[] enterResult) {
 

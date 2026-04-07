@@ -48,7 +48,7 @@ class HttpCodecFilterInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class HandleReadAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(0) FilterChainContext ctx, @Advice.Argument(1) Object httpHeader) {
 

@@ -34,7 +34,7 @@ class ArmeriaWebClientBuilderInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class BuildAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(inline = false)
     public static void build(@Advice.This WebClientBuilder builder) {
       builder.decorator(clientDecorator());
     }

@@ -43,13 +43,13 @@ class ContextPropagationOperator34Instrumentation implements TypeInstrumentation
 
   @SuppressWarnings("unused")
   public static class GetContextViewAdvice {
-    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class)
+    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class, inline = false)
     public static boolean methodEnter() {
       return false;
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static application.io.opentelemetry.context.Context methodExit(
         @Advice.Argument(0) ContextView reactorContext,
         @Advice.Argument(1) application.io.opentelemetry.context.Context defaultContext) {

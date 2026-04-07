@@ -37,7 +37,7 @@ class CategoryInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CallAppendersAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) LoggingEvent event) {
       VirtualFieldHelper.CONTEXT.set(event, Java8BytecodeBridge.currentContext());
     }

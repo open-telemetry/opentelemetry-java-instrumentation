@@ -93,14 +93,14 @@ class TwilioSyncInstrumentation implements TypeInstrumentation {
 
     /** Method entry instrumentation. */
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope methodEnter(
         @Advice.This Object that, @Advice.Origin("#m") String methodName) {
       return AdviceScope.start(that, methodName);
     }
 
     /** Method exit instrumentation. */
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope,

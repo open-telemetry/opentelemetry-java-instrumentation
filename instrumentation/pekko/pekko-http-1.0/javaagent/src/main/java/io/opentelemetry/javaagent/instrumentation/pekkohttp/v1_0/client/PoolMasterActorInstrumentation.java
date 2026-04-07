@@ -35,12 +35,12 @@ class PoolMasterActorInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ClearContextAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope enter() {
       return Java8BytecodeBridge.rootContext().makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();

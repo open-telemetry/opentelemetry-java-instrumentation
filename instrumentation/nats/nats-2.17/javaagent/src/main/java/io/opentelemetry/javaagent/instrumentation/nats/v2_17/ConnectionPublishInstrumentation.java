@@ -79,7 +79,7 @@ class ConnectionPublishInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class PublishBodyAdvice {
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, inline = false)
     public static boolean onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
@@ -92,7 +92,7 @@ class ConnectionPublishInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class PublishHeadersBodyAdvice {
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, inline = false)
     public static boolean onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
@@ -106,7 +106,7 @@ class ConnectionPublishInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class PublishReplyToBodyAdvice {
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, inline = false)
     public static boolean onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
@@ -149,7 +149,7 @@ class ConnectionPublishInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToArguments(@ToArgument(value = 2, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
@@ -162,7 +162,7 @@ class ConnectionPublishInstrumentation implements TypeInstrumentation {
       return new Object[] {adviceScope, headers};
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter Object[] enterResult) {
       AdviceScope adviceScope = (AdviceScope) enterResult[0];
@@ -174,7 +174,7 @@ class ConnectionPublishInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class PublishMessageAdvice {
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, inline = false)
     public static boolean onEnter(
         @Advice.This Connection connection, @Advice.Argument(0) Message message) {
       if (message == null) {

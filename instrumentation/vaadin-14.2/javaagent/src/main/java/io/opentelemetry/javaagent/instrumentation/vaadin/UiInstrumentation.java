@@ -36,7 +36,7 @@ class UiInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SetCurrentAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) UI ui) {
       helper().updateServerSpanName(ui);
     }

@@ -48,12 +48,12 @@ class JedisInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class JedisMethodAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static JedisRequestContext<JedisRequest> onEnter() {
       return JedisRequestContext.attach();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter JedisRequestContext<JedisRequest> requestContext) {
       if (requestContext != null) {
         requestContext.detachAndEnd();

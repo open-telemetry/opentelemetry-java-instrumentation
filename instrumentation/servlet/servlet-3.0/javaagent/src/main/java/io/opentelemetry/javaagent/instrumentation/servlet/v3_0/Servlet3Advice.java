@@ -95,7 +95,7 @@ public class Servlet3Advice {
     @ToArgument(value = 0, index = 1),
     @ToArgument(value = 1, index = 2)
   })
-  @Advice.OnMethodEnter(suppress = Throwable.class)
+  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
   public static Object[] onEnter(
       @Advice.This(typing = Assigner.Typing.DYNAMIC) Object servletOrFilter,
       @Advice.Argument(0) ServletRequest request,
@@ -123,7 +123,7 @@ public class Servlet3Advice {
     return new Object[] {adviceScope, request, response};
   }
 
-  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
   public static void stopSpan(
       @Advice.Argument(0) ServletRequest request,
       @Advice.Argument(1) ServletResponse response,

@@ -36,7 +36,7 @@ class MutinySessionFactoryInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ContextAdvice {
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Uni<?> onExit(@Advice.Return Uni<?> uni) {
       return ContextOperator.plug(uni);
     }

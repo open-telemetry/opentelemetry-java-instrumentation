@@ -31,7 +31,7 @@ class GraphInterpreterInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class PushAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Scope onEnter(@Advice.Argument(0) GraphInterpreter.Connection connection) {
       // processPush is called when execution passes to application or server. Here we propagate the
@@ -43,7 +43,7 @@ class GraphInterpreterInstrumentation implements TypeInstrumentation {
       return null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();

@@ -42,7 +42,7 @@ class SourceNodeRecordDeserializerInstrumentation implements TypeInstrumentation
   public static class SaveHeadersAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static ConsumerRecord<?, ?> saveHeaders(
         @Advice.Argument(0) ConsumerRecord<?, ?> incoming,
         @Advice.Return ConsumerRecord<?, ?> result) {

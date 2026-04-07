@@ -50,7 +50,7 @@ class KafkaReadStreamImplInstrumentation implements TypeInstrumentation {
   public static class HandlerAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static <K, V> Handler<ConsumerRecord<K, V>> onEnter(
         @Advice.This KafkaReadStreamImpl<K, V> readStream,
         @Advice.Argument(0) Handler<ConsumerRecord<K, V>> handler) {
@@ -63,7 +63,7 @@ class KafkaReadStreamImplInstrumentation implements TypeInstrumentation {
   public static class BatchHandlerAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static <K, V> Handler<ConsumerRecords<K, V>> onEnter(
         @Advice.This KafkaReadStreamImpl<K, V> readStream,
         @Advice.Argument(0) Handler<ConsumerRecords<K, V>> handler) {
@@ -76,12 +76,12 @@ class KafkaReadStreamImplInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RunAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static boolean onEnter() {
       return KafkaClientsConsumerProcessTracing.setEnabled(false);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter boolean previousValue) {
       KafkaClientsConsumerProcessTracing.setEnabled(previousValue);
     }

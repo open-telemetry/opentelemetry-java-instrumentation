@@ -39,12 +39,12 @@ class CallableInstrumentation implements TypeInstrumentation {
   public static class CallableAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope enter(@Advice.This Callable<?> task) {
       return TaskAdviceHelper.makePropagatedContextCurrent(CALLABLE_PROPAGATED_CONTEXT, task);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();

@@ -34,7 +34,7 @@ class ServerTubeAssemblerContextInstrumentation implements TypeInstrumentation {
   public static class AddTracingAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Tube onExit(
         @Advice.This ServerTubeAssemblerContext context, @Advice.Return Tube tube) {
       return new TracingTube(context.getEndpoint(), tube);

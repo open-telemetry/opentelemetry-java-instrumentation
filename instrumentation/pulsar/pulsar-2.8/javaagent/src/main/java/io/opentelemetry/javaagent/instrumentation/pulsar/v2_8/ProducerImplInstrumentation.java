@@ -50,7 +50,7 @@ class ProducerImplInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ProducerImplConstructorAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void intercept(
         @Advice.This ProducerImpl<?> producer, @Advice.Argument(value = 0) PulsarClient client) {
       PulsarClientImpl pulsarClient = (PulsarClientImpl) client;
@@ -63,7 +63,7 @@ class ProducerImplInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ProducerSendAsyncMethodAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void before(
         @Advice.This ProducerImpl<?> producer,
         @Advice.Argument(value = 0) Message<?> message,

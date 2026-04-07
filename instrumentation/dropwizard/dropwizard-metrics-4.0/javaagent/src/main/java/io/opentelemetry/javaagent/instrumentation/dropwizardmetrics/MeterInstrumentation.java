@@ -32,7 +32,7 @@ class MeterInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class MarkAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This Meter meter, @Advice.Argument(0) long increment) {
       metrics().meterMark(meter, increment);
     }

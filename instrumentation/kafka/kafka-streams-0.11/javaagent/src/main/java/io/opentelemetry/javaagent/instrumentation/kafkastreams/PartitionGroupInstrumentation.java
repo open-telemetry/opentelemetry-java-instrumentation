@@ -43,7 +43,7 @@ class PartitionGroupInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class NextRecordAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Return StampedRecord record) {
       if (record == null) {
         return;

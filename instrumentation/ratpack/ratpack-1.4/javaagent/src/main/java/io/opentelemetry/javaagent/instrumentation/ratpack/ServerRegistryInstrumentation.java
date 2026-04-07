@@ -34,7 +34,7 @@ class ServerRegistryInstrumentation implements TypeInstrumentation {
   public static class BuildAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Registry injectTracing(@Advice.Return Registry registry) {
       return registry.join(
           Registry.builder().add(HandlerDecorator.prepend(new TracingHandler())).build());

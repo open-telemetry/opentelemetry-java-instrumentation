@@ -38,7 +38,7 @@ class RestClientTransportInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RestClientTransportAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onPrepareLowLevelRequest(
         @Advice.Argument(1) Endpoint<?, ?, ?> endpoint, @Advice.Return Request request) {
       String endpointId = endpoint.id();

@@ -104,7 +104,7 @@ public class Servlet2Advice {
   }
 
   @Nullable
-  @Advice.OnMethodEnter(suppress = Throwable.class)
+  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
   public static AdviceScope onEnter(
       @Advice.Argument(0) ServletRequest request,
       @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC) ServletResponse response) {
@@ -117,7 +117,7 @@ public class Servlet2Advice {
         (HttpServletResponse) response);
   }
 
-  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
   public static void stopSpan(
       @Advice.Argument(0) ServletRequest request,
       @Advice.Argument(1) ServletResponse response,

@@ -40,7 +40,7 @@ class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SaveContextAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void saveContext(@Advice.This AsyncCommand<?, ?, ?> asyncCommand) {
       Context context = Java8BytecodeBridge.currentContext();
       // get the context that submitted this command and attach it, it will be used to run callbacks
@@ -52,7 +52,7 @@ class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RestoreContextAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Scope onEnter(@Advice.This AsyncCommand<?, ?, ?> asyncCommand) {
       Context context = CONTEXT.get(asyncCommand);
@@ -62,7 +62,7 @@ class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
       return context.makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();

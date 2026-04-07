@@ -33,7 +33,7 @@ class DefaultChannelPipelineInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class NotifyHandlerExceptionAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(1) Throwable throwable) {
       if (throwable != null) {
         NettyErrorHolder.set(Java8BytecodeBridge.currentContext(), throwable);

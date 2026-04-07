@@ -44,7 +44,7 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class QueryAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static ClickHouseScope onEnter(
         @Advice.This Client client, @Advice.Argument(0) String sqlQuery) {
       CallDepth callDepth = CallDepth.forClass(Client.class);
@@ -70,7 +70,7 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
       return ClickHouseScope.start(instrumenter(), parentContext, request);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown Throwable throwable, @Advice.Enter ClickHouseScope scope) {
       CallDepth callDepth = CallDepth.forClass(Client.class);

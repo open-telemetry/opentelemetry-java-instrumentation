@@ -47,7 +47,7 @@ class AwsHttpClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class HttpClientAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Argument(value = 0) Request<?> request,
         @Advice.Return Response<?> response,

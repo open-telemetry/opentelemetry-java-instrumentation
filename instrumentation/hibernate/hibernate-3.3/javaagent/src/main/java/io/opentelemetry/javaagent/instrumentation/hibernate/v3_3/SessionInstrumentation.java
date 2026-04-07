@@ -89,7 +89,7 @@ class SessionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SessionMethodAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static HibernateOperationScope startMethod(
         @Advice.This Object session,
         @Advice.Origin("#m") String name,
@@ -111,7 +111,7 @@ class SessionInstrumentation implements TypeInstrumentation {
       return HibernateOperationScope.start(hibernateOperation, parentContext, instrumenter());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void endMethod(
         @Advice.Thrown Throwable throwable, @Advice.Enter HibernateOperationScope enterScope) {
 
@@ -122,7 +122,7 @@ class SessionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetQueryAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void getQuery(@Advice.This Object session, @Advice.Return Query query) {
 
       SessionInfo sessionInfo = SessionUtil.getSessionInfo(session);
@@ -133,7 +133,7 @@ class SessionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetTransactionAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void getTransaction(
         @Advice.This Object session, @Advice.Return Transaction transaction) {
 
@@ -145,7 +145,7 @@ class SessionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetCriteriaAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void getCriteria(@Advice.This Object session, @Advice.Return Criteria criteria) {
 
       SessionInfo sessionInfo = SessionUtil.getSessionInfo(session);

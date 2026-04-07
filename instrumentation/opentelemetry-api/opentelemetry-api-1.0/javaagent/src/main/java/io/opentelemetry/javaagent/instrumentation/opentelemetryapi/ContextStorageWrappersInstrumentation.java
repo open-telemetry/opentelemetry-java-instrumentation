@@ -42,7 +42,7 @@ class ContextStorageWrappersInstrumentation implements TypeInstrumentation {
   public static class AddWrapperAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static List<
             Function<
                 ? super application.io.opentelemetry.context.ContextStorage,
