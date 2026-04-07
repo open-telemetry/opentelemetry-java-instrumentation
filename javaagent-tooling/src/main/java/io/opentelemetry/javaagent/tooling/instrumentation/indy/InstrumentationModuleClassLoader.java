@@ -202,8 +202,6 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     return adviceNames;
   }
 
-  public static final Map<String, byte[]> bytecodeOverride = new ConcurrentHashMap<>();
-
   @Override
   public Class<?> loadClass(String name) throws ClassNotFoundException {
     // We explicitly override loadClass from ClassLoader to ensure
@@ -223,10 +221,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
       if (result == null) {
         BytecodeWithUrl injected = getInjectedClass(name);
         if (injected != null) {
-          byte[] bytecode =
-              bytecodeOverride.get(name) != null
-                  ? bytecodeOverride.get(name)
-                  : injected.getBytecode();
+          byte[] bytecode = injected.getBytecode();
           if (System.getSecurityManager() == null) {
             result = defineClassWithPackage(name, bytecode);
           } else {

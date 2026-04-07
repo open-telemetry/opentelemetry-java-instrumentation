@@ -7,9 +7,7 @@ package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -23,20 +21,14 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 public final class IndyTypeTransformerImpl implements TypeTransformer {
 
-  // path (with trailing slash) to dump transformed advice class to
-  private static final String DUMP_PATH = null;
   private final Advice.WithCustomMapping adviceMapping;
   private AgentBuilder.Identified.Extendable agentBuilder;
   private final InstrumentationModule instrumentationModule;
-  private final boolean transformAdvice;
 
   public IndyTypeTransformerImpl(
       AgentBuilder.Identified.Extendable agentBuilder, InstrumentationModule module) {
     this.agentBuilder = agentBuilder;
     this.instrumentationModule = module;
-    this.transformAdvice =
-        !(instrumentationModule instanceof ExperimentalInstrumentationModule)
-            || !((ExperimentalInstrumentationModule) instrumentationModule).isIndyReady();
     this.adviceMapping =
         Advice.withCustomMapping()
             .with(
@@ -60,43 +52,24 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
         agentBuilder.transform(
             new AgentBuilder.Transformer.ForAdvice(mappingCustomizer.apply(adviceMapping))
                 .advice(methodMatcher, adviceClassName)
-                // advice transformation already performs uninlining
-                .with(
-                    transformAdvice
-                        ? poolStrategy
-                        : new AdviceInliningPoolStrategy(poolStrategy, false))
+                // change inline attribute for advice OnMethodEnter and OnMethodExit annotations to
+                // false
+                .with(new AdviceInliningPoolStrategy(poolStrategy, false))
                 .include(getAdviceLocator(instrumentationModule.getClass().getClassLoader()))
                 .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler()));
   }
 
-  private ClassFileLocator getAdviceLocator(ClassLoader classLoader) {
+  private static ClassFileLocator getAdviceLocator(ClassLoader classLoader) {
     ClassFileLocator classFileLocator = ClassFileLocator.ForClassLoader.of(classLoader);
     return new AdviceLocator(
         classFileLocator,
         (slashClassName, bytes) -> {
-          if (transformAdvice) {
-            // rewrite inline advice to a from accepted by indy instrumentation
-            return transformAdvice(slashClassName, bytes);
-          } else {
-            // verify that advice does not call VirtualField.find
-            // NOTE: this check is here to help converting the advice for the indy instrumentation,
-            // it can be removed once the conversion is completed
-            VirtualFieldChecker.check(bytes);
-            return bytes;
-          }
+          // verify that advice does not call VirtualField.find
+          // NOTE: this check is here to help converting the advice for the indy instrumentation,
+          // it can be removed once the conversion is completed
+          VirtualFieldChecker.check(bytes);
+          return bytes;
         });
-  }
-
-  private static byte[] transformAdvice(String slashClassName, byte[] bytes) {
-    byte[] result = AdviceTransformer.transform(bytes);
-    if (result != null) {
-      dump(slashClassName, result);
-      InstrumentationModuleClassLoader.bytecodeOverride.put(
-          slashClassName.replace('/', '.'), result);
-    } else {
-      result = bytes;
-    }
-    return result;
   }
 
   @Override
@@ -150,18 +123,6 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
     public byte[] resolve() {
       byte[] bytes = delegate.resolve();
       return transform.apply(name, bytes);
-    }
-  }
-
-  private static void dump(String name, byte[] bytes) {
-    if (DUMP_PATH == null) {
-      return;
-    }
-    try (FileOutputStream fos =
-        new FileOutputStream(DUMP_PATH + name.replace('/', '.') + ".class")) {
-      fos.write(bytes);
-    } catch (IOException e) {
-      throw new IllegalStateException(e);
     }
   }
 }
