@@ -444,6 +444,63 @@ abstract class AbstractRocketMqClientTest {
                             .hasKind(SpanKind.INTERNAL)));
   }
 
+  @Test
+  void testRocketmqProduceOneway() throws Exception {
+    testing()
+        .runWithSpan(
+            "parent",
+            () -> {
+              producer.sendOneway(msg);
+            });
+    // waiting longer than assertTraces below does on its own because of CI flakiness
+    tracingMessageListener.waitForMessages();
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                    span ->
+                        span.hasName(sharedTopic + " publish")
+                            .hasKind(SpanKind.PRODUCER)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
+                                equalTo(MESSAGING_OPERATION, "publish"),
+                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, "TagA"),
+                                satisfies(
+                                    AttributeKey.stringKey("messaging.rocketmq.broker_address"),
+                                    val -> val.isInstanceOf(String.class))),
+                    span ->
+                        span.hasName(sharedTopic + " process")
+                            .hasKind(SpanKind.CONSUMER)
+                            .hasParent(trace.getSpan(1))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
+                                equalTo(MESSAGING_OPERATION, "process"),
+                                satisfies(
+                                    MESSAGING_MESSAGE_BODY_SIZE,
+                                    val -> val.isInstanceOf(Long.class)),
+                                satisfies(
+                                    MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
+                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, "TagA"),
+                                satisfies(
+                                    AttributeKey.stringKey("messaging.rocketmq.broker_address"),
+                                    val -> val.isInstanceOf(String.class)),
+                                satisfies(
+                                    AttributeKey.longKey("messaging.rocketmq.queue_id"),
+                                    val -> val.isInstanceOf(Long.class)),
+                                satisfies(
+                                    AttributeKey.longKey("messaging.rocketmq.queue_offset"),
+                                    val -> val.isInstanceOf(Long.class))),
+                    span ->
+                        span.hasName("messageListener")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(2))));
+  }
+
   private static Consumer<List<? extends LinkData>> links(SpanContext... spanContexts) {
     return links -> {
       assertThat(links).hasSize(spanContexts.length);

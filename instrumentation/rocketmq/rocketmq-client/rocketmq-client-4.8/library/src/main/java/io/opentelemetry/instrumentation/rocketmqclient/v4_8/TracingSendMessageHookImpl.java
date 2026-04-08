@@ -46,10 +46,10 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
       return;
     }
     Context otelContext = contextField.get(context);
-      if (otelContext != null
-          && (context.getSendResult() != null
-          || context.getException() != null
-          || CommunicationMode.ONEWAY == context.getCommunicationMode())) {
+    if (otelContext != null
+        && (context.getSendResult() != null
+            || context.getException() != null
+            || CommunicationMode.ONEWAY == context.getCommunicationMode())) {
       instrumenter.end(otelContext, context, null, context.getException());
     }
   }
