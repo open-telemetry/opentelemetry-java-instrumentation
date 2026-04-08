@@ -37,7 +37,7 @@ public class SpringKafkaSingletons {
                     .getBoolean("experimental_span_attributes/development", false))
             .setMessagingReceiveTelemetryEnabled(
                 ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
-            .setErrorCauseExtractor(SpringKafkaErrorCauseExtractor.INSTANCE);
+            .setErrorCauseExtractor(new SpringKafkaErrorCauseExtractor());
     batchProcessInstrumenter = factory.createBatchProcessInstrumenter();
   }
 
