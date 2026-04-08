@@ -9,9 +9,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.concurrent.CompletableFuture;
 
-class CompletableFutureWrapper {
+public class CompletableFutureWrapper {
 
-  static <T> CompletableFuture<T> wrap(CompletableFuture<T> future, Context context) {
+  public static <T> CompletableFuture<T> wrap(CompletableFuture<T> future, Context context) {
     CompletableFuture<T> result = new CompletableFuture<>();
     future.whenComplete(
         (T value, Throwable throwable) -> {
