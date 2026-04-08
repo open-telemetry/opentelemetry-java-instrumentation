@@ -37,8 +37,7 @@ class WrapperSendExceptionTest {
     ProducerRecord<String, String> record =
         new ProducerRecord<>("test-topic", "test-key", "test-value");
 
-    assertThatThrownBy(
-            () -> testing.runWithSpan("parent", () -> wrappedProducer.send(record)))
+    assertThatThrownBy(() -> testing.runWithSpan("parent", () -> wrappedProducer.send(record)))
         .isInstanceOf(KafkaException.class)
         .hasMessage("send failed");
 
