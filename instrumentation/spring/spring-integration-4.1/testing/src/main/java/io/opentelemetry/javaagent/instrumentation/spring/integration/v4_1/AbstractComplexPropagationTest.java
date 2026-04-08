@@ -36,9 +36,9 @@ import org.springframework.messaging.SubscribableChannel;
 public abstract class AbstractComplexPropagationTest {
 
   private final Class<?> additionalContextClass;
-  protected InstrumentationExtension testing;
+  protected final InstrumentationExtension testing;
 
-  ConfigurableApplicationContext applicationContext;
+  private ConfigurableApplicationContext applicationContext;
 
   public AbstractComplexPropagationTest(
       InstrumentationExtension testing, Class<?> additionalContextClass) {
@@ -143,8 +143,8 @@ public abstract class AbstractComplexPropagationTest {
   }
 
   static class Payload {
-    String body;
-    Map<String, String> headers;
+    private final String body;
+    private final Map<String, String> headers;
 
     Payload(String body, Map<String, String> headers) {
       this.body = body;
