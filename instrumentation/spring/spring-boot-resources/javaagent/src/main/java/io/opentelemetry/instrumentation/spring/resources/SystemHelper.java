@@ -39,13 +39,11 @@ class SystemHelper {
   }
 
   InputStream openClasspathResource(String filename) {
-    String path = addBootInfPrefix ? "BOOT-INF/classes/" + filename : filename;
-    return classLoader.getResourceAsStream(path);
+    return classLoader.getResourceAsStream(withBootInfPrefix(filename));
   }
 
   InputStream openClasspathResource(String directory, String filename) {
-    String path = directory + "/" + filename;
-    return classLoader.getResourceAsStream(path);
+    return classLoader.getResourceAsStream(withBootInfPrefix(directory + "/" + filename));
   }
 
   InputStream openFile(String filename) throws Exception {
@@ -67,5 +65,9 @@ class SystemHelper {
     Method argumentsMethod = infoClass.getMethod("arguments");
     Optional<String[]> optionalArgs = (Optional<String[]>) argumentsMethod.invoke(info);
     return optionalArgs.orElse(new String[0]);
+  }
+
+  private String withBootInfPrefix(String path) {
+    return addBootInfPrefix ? "BOOT-INF/classes/" + path : path;
   }
 }
