@@ -89,6 +89,9 @@ public class KafkaProducerTelemetry {
 
     try (Scope ignored = context.makeCurrent()) {
       return sendFn.apply(record, new ProducerCallback(callback, parentContext, context, request));
+    } catch (Throwable t) {
+      producerInstrumenter.end(context, request, null, t);
+      throw t;
     }
   }
 
