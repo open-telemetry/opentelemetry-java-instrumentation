@@ -338,13 +338,7 @@ fun configureImage(
 
   if (server == "wildfly") {
     // wildfly url without .zip or .tar.gz suffix
-    val majorVersion = version.substring(0, version.indexOf(".")).toInt()
-    val serverBaseUrl = if (majorVersion >= 25) {
-      "https://github.com/wildfly/wildfly/releases/download/$version/wildfly-$version"
-    } else {
-      "https://download.jboss.org/wildfly/$version/wildfly-$version"
-    }
-    extraArgs["baseDownloadUrl"] = serverBaseUrl
+    extraArgs["baseDownloadUrl"] = "https://repo1.maven.org/maven2/org/wildfly/wildfly-dist/$version/wildfly-dist-$version"
   } else if (server == "payara") {
     if (version == "5.2020.6") {
       extraArgs["domainName"] = "production"
