@@ -60,15 +60,12 @@ Only flag substantive problems, not stylistic preference.
 ## [Javaagent] Best-Effort Suppressed Failures
 
 When javaagent runtime code intentionally suppresses a `Throwable` to avoid breaking the
-application, do not silently swallow it.
+application, do not silently swallow it unless the failure is an expected optional probe.
 
-- Prefer `ExceptionLogger.logSuppressedError(...)` for suppressed failures in javaagent code.
-  It logs at `FINE` and matches the agent's default ByteBuddy advice suppression path in
-  `ExceptionHandlers.defaultExceptionHandler()`.
-- Use this for best-effort hooks such as response customizers, bootstrap fallbacks, or other
-  optional extension points where failure must not change application behavior.
-- Do not introduce ad-hoc local loggers for one-off suppressed javaagent failures when
-  `ExceptionLogger` is available from bootstrap.
+- In ordinary instrumentation implementation code, local JUL `logger.log(FINE, ...)` is an
+  established pattern and preserves module / class logger identity.
+- Silent suppression is acceptable for expected optional-probe paths, such as classpath or
+  version-detection lookups where failure is routine and logging would be noisy.
 - Keep the message action-oriented and specific (for example, "Failed to customize Netty 4.1
   HTTP server response").
 
