@@ -54,8 +54,6 @@ abstract class KafkaStreamsBaseTest {
       AttributeKey.stringKey("messaging.client_id");
   protected static final String STREAM_PENDING = "test.pending";
   protected static final String STREAM_PROCESSED = "test.processed";
-  protected static final AttributeKey<String> MESSAGING_KAFKA_BOOTSTRAP_SERVERS =
-      AttributeKey.stringKey("messaging.kafka.bootstrap.servers");
 
   static KafkaContainer kafka;
   static Producer<Integer, String> producer;

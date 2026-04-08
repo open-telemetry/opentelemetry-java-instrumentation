@@ -73,8 +73,6 @@ public abstract class KafkaClientBaseTest {
   protected static final String SHARED_TOPIC = "shared.topic";
   protected static final AttributeKey<String> MESSAGING_CLIENT_ID =
       AttributeKey.stringKey("messaging.client_id");
-  protected static final AttributeKey<String> MESSAGING_KAFKA_BOOTSTRAP_SERVERS =
-      AttributeKey.stringKey("messaging.kafka.bootstrap.servers");
 
   private KafkaContainer kafka;
   protected Producer<Integer, String> producer;
@@ -197,8 +195,8 @@ public abstract class KafkaClientBaseTest {
     if (isExperimentalEnabled) {
       assertions.add(
           satisfies(
-              MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
-              stringAssert -> stringAssert.matches("^localhost:\\d+(,localhost:\\d+)*$")));
+              stringKey("messaging.kafka.bootstrap.servers"),
+              val -> val.matches("^localhost:\\d+(,localhost:\\d+)*$")));
     }
     return assertions;
   }

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.kafka;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -59,8 +60,6 @@ public abstract class AbstractVertxKafkaTest {
 
   private static final AttributeKey<String> MESSAGING_CLIENT_ID =
       AttributeKey.stringKey("messaging.client_id");
-  protected static final AttributeKey<String> MESSAGING_KAFKA_BOOTSTRAP_SERVERS =
-      AttributeKey.stringKey("messaging.kafka.bootstrap.servers");
 
   KafkaContainer kafka;
   Vertx vertx;
@@ -188,8 +187,8 @@ public abstract class AbstractVertxKafkaTest {
     if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
       assertions.add(
           satisfies(
-              MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
-              stringAssert -> stringAssert.matches("^localhost:\\d+(,localhost:\\d+)*$")));
+              stringKey("messaging.kafka.bootstrap.servers"),
+              val -> val.matches("^localhost:\\d+(,localhost:\\d+)*$")));
     }
     String messageKey = record.key();
     if (messageKey != null) {
