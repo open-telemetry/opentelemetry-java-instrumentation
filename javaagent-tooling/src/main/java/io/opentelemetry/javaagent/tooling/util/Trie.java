@@ -22,16 +22,17 @@ public interface Trie<V> {
    * will return {@code 10}.
    */
   @Nullable
-  default V getOrNull(CharSequence str) {
-    return getOrDefault(str, null);
-  }
+  V getOrNull(CharSequence str);
 
   /**
    * Returns the value associated with the longest matched prefix, or the {@code defaultValue} if
    * there wasn't a match. For example: for a trie containing an {@code ("abc", 10)} entry {@code
    * trie.getOrDefault("abcd", -1)} will return {@code 10}.
    */
-  V getOrDefault(CharSequence str, V defaultValue);
+  default V getOrDefault(CharSequence str, V defaultValue) {
+    V result = getOrNull(str);
+    return result != null ? result : defaultValue;
+  }
 
   /** Returns {@code true} if this trie contains the prefix {@code str}. */
   default boolean contains(CharSequence str) {

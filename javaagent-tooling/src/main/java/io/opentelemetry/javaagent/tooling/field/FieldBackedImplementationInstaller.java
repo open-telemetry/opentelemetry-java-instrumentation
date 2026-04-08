@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling.field;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.tooling.field.GeneratedVirtualFieldNames.getFieldAccessorInterfaceName;
+import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINEST;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -27,6 +28,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.AsmVisitorWrapper;
@@ -78,8 +80,10 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
       Class<?> instrumenterClass, VirtualFieldMappings virtualFieldMappings) {
     this.instrumenterClass = instrumenterClass;
     this.virtualFieldMappings = virtualFieldMappings;
-    // This class is used only when running with javaagent, thus this calls is safe
-    this.instrumentation = InstrumentationHolder.getInstrumentation();
+    // This class is used only when running with javaagent, thus this call is safe
+    this.instrumentation =
+        requireNonNull(
+            InstrumentationHolder.getInstrumentation(), "Instrumentation must not be null");
 
     ByteBuddy byteBuddy = new ByteBuddy();
     fieldAccessorInterfaces =
@@ -146,6 +150,7 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
       final HelperInjector injector =
           HelperInjector.forDynamicTypes(getClass().getSimpleName(), helpers, instrumentation);
 
+      @Nullable
       @Override
       public DynamicType.Builder<?> transform(
           DynamicType.Builder<?> builder,
