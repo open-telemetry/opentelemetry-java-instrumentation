@@ -446,3 +446,4 @@ servlet-5.0:library
 servlet-common-javax:library
 servlet-5.0:testing
 servlet-5.0:tomcat-testing
+servlet-common:library
