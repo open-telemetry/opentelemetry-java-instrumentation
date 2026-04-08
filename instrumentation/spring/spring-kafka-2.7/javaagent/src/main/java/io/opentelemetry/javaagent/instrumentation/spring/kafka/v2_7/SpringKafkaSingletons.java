@@ -17,7 +17,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 public class SpringKafkaSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-kafka-2.7";
 
-  private static final SpringKafkaTelemetry TELEMETRY =
+  private static final SpringKafkaTelemetry telemetry =
       SpringKafkaTelemetry.builder(GlobalOpenTelemetry.get())
           .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
           .setCaptureExperimentalSpanAttributes(
@@ -26,7 +26,7 @@ public class SpringKafkaSingletons {
           .setMessagingReceiveTelemetryEnabled(
               ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
           .build();
-  private static final Instrumenter<KafkaReceiveRequest, Void> BATCH_PROCESS_INSTRUMENTER;
+  private static final Instrumenter<KafkaReceiveRequest, Void> batchProcessInstrumenter;
 
   static {
     KafkaInstrumenterFactory factory =
@@ -38,15 +38,15 @@ public class SpringKafkaSingletons {
             .setMessagingReceiveTelemetryEnabled(
                 ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
             .setErrorCauseExtractor(SpringKafkaErrorCauseExtractor.INSTANCE);
-    BATCH_PROCESS_INSTRUMENTER = factory.createBatchProcessInstrumenter();
+    batchProcessInstrumenter = factory.createBatchProcessInstrumenter();
   }
 
   public static SpringKafkaTelemetry telemetry() {
-    return TELEMETRY;
+    return telemetry;
   }
 
   public static Instrumenter<KafkaReceiveRequest, Void> batchProcessInstrumenter() {
-    return BATCH_PROCESS_INSTRUMENTER;
+    return batchProcessInstrumenter;
   }
 
   private SpringKafkaSingletons() {}
