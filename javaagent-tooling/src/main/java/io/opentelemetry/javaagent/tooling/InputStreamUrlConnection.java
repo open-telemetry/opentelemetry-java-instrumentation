@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.Permission;
+import javax.annotation.Nullable;
 
 public class InputStreamUrlConnection extends URLConnection {
   private final InputStream inputStream;
@@ -30,6 +31,7 @@ public class InputStreamUrlConnection extends URLConnection {
     return inputStream;
   }
 
+  @Nullable
   @Override
   public Permission getPermission() {
     // No permissions needed because all classes are in memory
