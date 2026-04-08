@@ -5,10 +5,13 @@
 
 package io.opentelemetry.javaagent.bootstrap.servlet;
 
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+
 // this is shared by both ServletOutputStream and PrintWriter injection
 public final class InjectionState {
   private static final int HEAD_TAG_WRITTEN_FAKE_VALUE = -1;
   private static final int HEAD_TAG_PREFIX_LENGTH = "<head".length();
+  private static final String DEFAULT_CHARACTER_ENCODING = ISO_8859_1.name();
   private final SnippetInjectingResponseWrapper wrapper;
   private int headTagBytesSeen = 0;
 
@@ -21,7 +24,8 @@ public final class InjectionState {
   }
 
   public String getCharacterEncoding() {
-    return wrapper.getCharacterEncoding();
+    String characterEncoding = wrapper.getCharacterEncoding();
+    return characterEncoding == null ? DEFAULT_CHARACTER_ENCODING : characterEncoding;
   }
 
   public boolean isHeadTagWritten() {
