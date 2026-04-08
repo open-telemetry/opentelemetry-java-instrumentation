@@ -34,6 +34,10 @@ tasks {
     }
     include("**/*ChunkRootSpanTest.*")
     jvmArgs("-Dotel.instrumentation.spring-batch.experimental.chunk.new-trace=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.spring-batch.experimental.chunk.new-trace=true",
+    )
   }
 
   val testItemLevelSpan by registering(Test::class) {
@@ -45,6 +49,7 @@ tasks {
     }
     include("**/*ItemLevelSpanTest.*", "**/*CustomSpanEventTest.*")
     jvmArgs("-Dotel.instrumentation.spring-batch.item.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.spring-batch.item.enabled=true")
   }
 
   test {
@@ -53,8 +58,6 @@ tasks {
       excludeTestsMatching("*ItemLevelSpanTest")
       excludeTestsMatching("*CustomSpanEventTest")
     }
-
-    systemProperty("metadataConfig", "otel.instrumentation.spring-batch.experimental-span-attributes=true")
   }
 
   check {
