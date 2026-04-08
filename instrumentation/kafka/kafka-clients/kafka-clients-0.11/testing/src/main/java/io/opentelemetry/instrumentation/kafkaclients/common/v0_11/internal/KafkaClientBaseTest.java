@@ -28,6 +28,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -53,9 +54,9 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -66,6 +67,8 @@ import org.testcontainers.utility.DockerImageName;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class KafkaClientBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(KafkaClientBaseTest.class);
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected static final String SHARED_TOPIC = "shared.topic";
   protected static final AttributeKey<String> MESSAGING_CLIENT_ID =
@@ -90,6 +93,7 @@ public abstract class KafkaClientBaseTest {
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.Kafka.*Server\\).*", 1))
             .withStartupTimeout(Duration.ofMinutes(1));
+    cleanup.deferAfterAll(kafka::stop);
     kafka.start();
 
     // create test topic
@@ -104,8 +108,10 @@ public abstract class KafkaClientBaseTest {
     }
 
     producer = new KafkaProducer<>(producerProps());
+    cleanup.deferAfterAll(producer);
 
     consumer = new KafkaConsumer<>(consumerProps());
+    cleanup.deferAfterAll(consumer);
 
     consumer.subscribe(
         singletonList(SHARED_TOPIC),
@@ -142,17 +148,6 @@ public abstract class KafkaClientBaseTest {
     props.put("key.serializer", IntegerSerializer.class.getName());
     props.put("value.serializer", StringSerializer.class.getName());
     return props;
-  }
-
-  @AfterAll
-  void cleanupClass() {
-    if (producer != null) {
-      producer.close();
-    }
-    if (consumer != null) {
-      consumer.close();
-    }
-    kafka.stop();
   }
 
   public void awaitUntilConsumerIsReady() throws InterruptedException {
