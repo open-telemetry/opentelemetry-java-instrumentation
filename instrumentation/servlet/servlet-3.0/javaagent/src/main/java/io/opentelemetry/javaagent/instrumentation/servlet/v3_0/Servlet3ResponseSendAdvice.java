@@ -65,7 +65,7 @@ public class Servlet3ResponseSendAdvice {
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
   public static void stopSpan(
-      @Advice.Thrown Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
+      @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
     adviceScope.exit(throwable);
   }
 }
