@@ -6,6 +6,7 @@
 package io.opentelemetry.testing;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import java.util.List;
@@ -39,13 +40,13 @@ public class BatchRecordListener {
         });
   }
 
-  public static void reset() {
-    messageReceived = new CountDownLatch(2);
+  public static void reset(int expectedMessages) {
+    messageReceived = new CountDownLatch(expectedMessages);
     lastBatchSize.set(0);
   }
 
   public static void waitForMessages() throws InterruptedException {
-    messageReceived.await(30, SECONDS);
+    assertThat(messageReceived.await(30, SECONDS)).isTrue();
   }
 
   public static int getLastBatchSize() {
