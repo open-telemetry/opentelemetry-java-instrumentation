@@ -11,7 +11,15 @@ public final class SpringSchedulingTaskTracing {
 
   private SpringSchedulingTaskTracing() {}
 
+  /**
+   * @deprecated use {@link #setWrappingEnabled(boolean)} instead.
+   */
+  @Deprecated
   public static boolean setEnabled(boolean enabled) {
+    return setWrappingEnabled(enabled);
+  }
+
+  public static boolean setWrappingEnabled(boolean enabled) {
     boolean previous = wrappingEnabled.get();
     wrappingEnabled.set(enabled);
     return previous;
