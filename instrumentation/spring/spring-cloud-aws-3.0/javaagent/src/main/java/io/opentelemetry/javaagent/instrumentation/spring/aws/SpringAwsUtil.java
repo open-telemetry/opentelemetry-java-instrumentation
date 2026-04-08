@@ -21,13 +21,13 @@ import javax.annotation.Nullable;
 import org.springframework.messaging.Message;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 
-public class SpringAwsUtil {
+class SpringAwsUtil {
   private static final ThreadLocal<TracingList> context = new ThreadLocal<>();
   private static final VirtualField<Message<?>, TracingContext> tracingContextField =
       VirtualField.find(Message.class, TracingContext.class);
 
   // put the TracingList into thread local, so we can use it in attachTracingState method
-  public static void initialize(Collection<?> messages) {
+  static void initialize(Collection<?> messages) {
     if (messages instanceof TracingList tracingList) {
       // disable tracing in the iterator of TracingList, we'll do the tracing when message handler
       // is called
@@ -36,13 +36,13 @@ public class SpringAwsUtil {
     }
   }
 
-  public static void clear() {
+  static void clear() {
     context.remove();
   }
 
   // copy tracing state from the sqs message to spring message, we'll use that state when the
   // message handler is called
-  public static void attachTracingState(Object originalMessage, Message<?> convertedMessage) {
+  static void attachTracingState(Object originalMessage, Message<?> convertedMessage) {
     TracingList tracingList = context.get();
     if (tracingList == null) {
       return;
@@ -54,7 +54,7 @@ public class SpringAwsUtil {
     tracingContextField.set(convertedMessage, new TracingContext(tracingList, message));
   }
 
-  public static void copyTracingState(Message<?> original, Message<?> transformed) {
+  static void copyTracingState(Message<?> original, Message<?> transformed) {
     if (original == transformed) {
       return;
     }
@@ -63,7 +63,7 @@ public class SpringAwsUtil {
   }
 
   @Nullable
-  public static MessageScope handleMessage(Message<?> message) {
+  static MessageScope handleMessage(Message<?> message) {
     TracingContext tracingContext = tracingContextField.get(message);
     if (tracingContext == null) {
       return null;
@@ -74,7 +74,7 @@ public class SpringAwsUtil {
 
   // restore context from the first message of the batch
   @Nullable
-  public static Scope handleBatch(Collection<Message<?>> messages) {
+  static Scope handleBatch(Collection<Message<?>> messages) {
     if (messages.isEmpty()) {
       return null;
     }
@@ -91,7 +91,7 @@ public class SpringAwsUtil {
     return parentContext.makeCurrent();
   }
 
-  public static class MessageScope {
+  static class MessageScope {
     final Instrumenter<SqsProcessRequest, Response> instrumenter;
     final Context context;
     final SqsProcessRequest request;
@@ -110,7 +110,7 @@ public class SpringAwsUtil {
       this.scope = context.makeCurrent();
     }
 
-    public void close(Throwable throwable) {
+    void close(Throwable throwable) {
       scope.close();
       instrumenter.end(context, request, response, throwable);
     }
