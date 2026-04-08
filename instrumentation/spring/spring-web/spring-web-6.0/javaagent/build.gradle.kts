@@ -30,12 +30,14 @@ tasks {
   val testExperimental by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
+    systemProperty("metadataConfig", "otel.instrumentation.http.client.emit-experimental-telemetry=true")
     jvmArgs("-Dotel.instrumentation.http.client.emit-experimental-telemetry=true")
   }
 
   val testStableSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
   }
 
