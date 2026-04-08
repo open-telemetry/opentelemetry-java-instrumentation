@@ -11765,7 +11765,7 @@ libraries:
       name: io.opentelemetry.r2dbc-1.0
     has_standalone_library: true
     javaagent_target_versions:
-    - io.r2dbc:r2dbc-spi:[1.0.0.RELEASE,)
+    - io.r2dbc:r2dbc-spi:[0.9.0.RELEASE,)
     configurations:
     - name: otel.instrumentation.r2dbc.query-sanitization.enabled
       description: |
