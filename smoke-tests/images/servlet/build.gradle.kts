@@ -64,26 +64,22 @@ val targets = mapOf(
     ImageTarget(
       listOf("open-liberty:20.0.0.12-full-java11-openj9@sha256:2fa4af95d6c48e3db79edfd2b8a9c71e26c63a68c3fcae92f222fbb42c469ed2"),
       listOf("hotspot", "openj9"),
-      listOf("8", "11"),
-      mapOf("release" to "2020-11-11_0736")
+      listOf("8", "11")
     ),
     ImageTarget(
       listOf("open-liberty:21.0.0.12-full-java11-openj9@sha256:eb014c600b5e08b799cb0c5781e606cf1e7a28ad913ba956c9d9e7f8a2f528dc"),
       listOf("hotspot", "openj9"),
-      listOf("8", "11", "17"),
-      mapOf("release" to "2021-11-17_1256")
+      listOf("8", "11", "17")
     ),
     ImageTarget(
       listOf("open-liberty:22.0.0.12-full-java11-openj9@sha256:a06f1da35a564f00354b86c7d01d8cc9d6eef156ce88d5b59605c5c02bf48c72"),
       listOf("hotspot", "openj9"),
-      listOf("8", "11", "17"),
-      mapOf("release" to "22.0.0.12")
+      listOf("8", "11", "17")
     ),
     ImageTarget(
       listOf("open-liberty:23.0.0.12-full-java11-openj9@sha256:cd6aa69cffffb45427cbb6a5640cd00b13c98064f296a66894ea1decd181e1c3"),
       listOf("hotspot", "openj9"),
-      listOf("8", "11", "17", "21"),
-      mapOf("release" to "23.0.0.12")
+      listOf("8", "11", "17", "21")
     ),
   ),
   "payara" to listOf(
