@@ -518,7 +518,7 @@ abstract class AbstractRocketMqClientTest {
                                 equalTo(MESSAGING_OPERATION, "publish"),
                                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, "TagA"),
                                 satisfies(
-                                    AttributeKey.stringKey("messaging.rocketmq.broker_address"),
+                                    stringKey("messaging.rocketmq.broker_address"),
                                     val -> val.isInstanceOf(String.class))),
                     span ->
                         span.hasName(sharedTopic + " process")
@@ -535,13 +535,13 @@ abstract class AbstractRocketMqClientTest {
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, "TagA"),
                                 satisfies(
-                                    AttributeKey.stringKey("messaging.rocketmq.broker_address"),
+                                    stringKey("messaging.rocketmq.broker_address"),
                                     val -> val.isInstanceOf(String.class)),
                                 satisfies(
-                                    AttributeKey.longKey("messaging.rocketmq.queue_id"),
+                                    longKey("messaging.rocketmq.queue_id"),
                                     val -> val.isInstanceOf(Long.class)),
                                 satisfies(
-                                    AttributeKey.longKey("messaging.rocketmq.queue_offset"),
+                                    longKey("messaging.rocketmq.queue_offset"),
                                     val -> val.isInstanceOf(Long.class))),
                     span ->
                         span.hasName("messageListener")
