@@ -7,6 +7,9 @@ package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -65,17 +68,9 @@ class ExceptionHandlingTest {
   @Test
   @SuppressWarnings({"unchecked"})
   void testProducerHandlesReadOnlyHeaders() {
-    Producer<String, String> producer =
-        (Producer<String, String>)
-            Proxy.newProxyInstance(
-                ExceptionHandlingTest.class.getClassLoader(),
-                new Class<?>[] {Producer.class},
-                (proxy, method, args) -> {
-                  if ("send".equals(method.getName())) {
-                    return CompletableFuture.completedFuture(null);
-                  }
-                  throw new IllegalStateException("can't invoke");
-                });
+    Producer<String, String> producer = mock(Producer.class);
+    when(producer.send(any(), any())).thenReturn(CompletableFuture.completedFuture(null));
+
     KafkaTelemetry telemetry = KafkaTelemetry.builder(testing.getOpenTelemetry()).build();
     Producer<String, String> wrappedProducer = telemetry.wrap(producer);
 
