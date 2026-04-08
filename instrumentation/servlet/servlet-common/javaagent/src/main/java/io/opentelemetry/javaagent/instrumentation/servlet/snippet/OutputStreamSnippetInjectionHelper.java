@@ -5,19 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.snippet;
 
-import static java.util.logging.Level.FINE;
-
+import io.opentelemetry.javaagent.bootstrap.ExceptionLogger;
 import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.function.Supplier;
-import java.util.logging.Logger;
 
 public class OutputStreamSnippetInjectionHelper {
-
-  private static final Logger logger =
-      Logger.getLogger(OutputStreamSnippetInjectionHelper.class.getName());
 
   private final Supplier<String> snippetSupplier;
 
@@ -60,7 +55,7 @@ public class OutputStreamSnippetInjectionHelper {
     try {
       snippetBytes = snippetSupplier.get().getBytes(state.getCharacterEncoding());
     } catch (UnsupportedEncodingException e) {
-      logger.log(FINE, "Failed getting snippet bytes", e);
+      ExceptionLogger.logSuppressedError("Failed to get servlet response snippet bytes", e);
       return false;
     }
     // updating Content-Length before any further writing in case that writing triggers a flush
@@ -86,7 +81,7 @@ public class OutputStreamSnippetInjectionHelper {
     try {
       snippetBytes = snippetSupplier.get().getBytes(state.getCharacterEncoding());
     } catch (UnsupportedEncodingException e) {
-      logger.log(FINE, "Failed getting snippet bytes", e);
+      ExceptionLogger.logSuppressedError("Failed to get servlet response snippet bytes", e);
       return false;
     }
     state.getWrapper().updateContentLengthIfPreviouslySet();

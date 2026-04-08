@@ -27,14 +27,11 @@ public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST,
       ServletRequestContext<REQUEST> requestContext,
       REQUEST request,
       RESPONSE response,
-      Throwable throwable,
+      @Nullable Throwable throwable,
       boolean topLevel,
-      Context context,
+      @Nullable Context context,
       Scope scope) {
-
-    if (scope != null) {
-      scope.close();
-    }
+    scope.close();
 
     if (context == null && topLevel) {
       Context currentContext = Context.current();
@@ -52,7 +49,7 @@ public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST,
       captureServletAttributes(currentContext, request);
     }
 
-    if (scope == null || context == null) {
+    if (context == null) {
       return;
     }
 

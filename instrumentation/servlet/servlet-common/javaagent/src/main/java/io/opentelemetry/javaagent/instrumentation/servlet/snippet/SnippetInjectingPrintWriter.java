@@ -26,8 +26,10 @@ public class SnippetInjectingPrintWriter extends PrintWriter {
       super.write(s, off, len);
       return;
     }
-    for (int i = off; i < s.length() && i - off < len; i++) {
-      write(s.charAt(i));
+    String value = String.valueOf(s);
+    checkOffsetAndLength(value.length(), off, len);
+    for (int i = off; i < off + len; i++) {
+      write(value.charAt(i));
     }
   }
 
@@ -55,8 +57,15 @@ public class SnippetInjectingPrintWriter extends PrintWriter {
       super.write(buf, off, len);
       return;
     }
-    for (int i = off; i < buf.length && i - off < len; i++) {
+    checkOffsetAndLength(buf.length, off, len);
+    for (int i = off; i < off + len; i++) {
       write(buf[i]);
+    }
+  }
+
+  private static void checkOffsetAndLength(int length, int off, int len) {
+    if (off < 0 || len < 0 || off > length - len) {
+      throw new IndexOutOfBoundsException();
     }
   }
 }
