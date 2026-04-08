@@ -10,6 +10,7 @@ import static java.util.Collections.emptyList;
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 import io.micrometer.core.instrument.util.TimeUtils;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NavigableSet;
@@ -40,9 +41,14 @@ final class HistogramAdviceUtil {
     double timeUnitMultiplier = timeUnit == null ? 1.0 : TimeUtils.nanosToUnit(1, timeUnit);
     List<Double> result = new ArrayList<>(buckets.size());
     for (double b : buckets) {
-      result.add(b * timeUnitMultiplier);
+      // use BigDecimal to avoid precision loss when multiplying by timeUnitMultiplier
+      result.add(preciseCalculateBucket(b, timeUnitMultiplier));
     }
     return result;
+  }
+
+  private static double preciseCalculateBucket(double value, double multiplier) {
+    return BigDecimal.valueOf(value).multiply(BigDecimal.valueOf(multiplier)).doubleValue();
   }
 
   private HistogramAdviceUtil() {}
