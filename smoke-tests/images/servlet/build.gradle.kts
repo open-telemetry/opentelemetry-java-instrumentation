@@ -1,5 +1,7 @@
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+import org.gradle.api.services.BuildService
+import org.gradle.api.services.BuildServiceParameters
 
 plugins {
   id("otel.spotless-conventions")
@@ -15,6 +17,12 @@ data class ImageTarget(
   val war: String = "servlet-3.0",
   val windows: Boolean = true
 )
+
+abstract class DockerBuildService : BuildService<BuildServiceParameters.None>
+
+gradle.sharedServices.registerIfAbsent("dockerBuildService", DockerBuildService::class.java) {
+  maxParallelUsages.set(1)
+}
 
 val extraTag = findProperty("extraTag")
   ?: java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(java.time.LocalDateTime.now())
@@ -351,6 +359,8 @@ fun configureImage(
     dependsOn(prepareTask)
     group = "build"
     description = "Builds Docker image with $server $version on JDK $jdk-$vm${if (isWindows) " on Windows" else ""}"
+
+    usesService(gradle.sharedServices.registrations["dockerBuildService"].service)
 
     inputDir.set(dockerWorkingDir)
     images.add(image)
