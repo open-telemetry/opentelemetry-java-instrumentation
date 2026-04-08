@@ -56,15 +56,15 @@ public abstract class AbstractSpringPulsarTest {
       Boolean.getBoolean("otel.instrumentation.pulsar.experimental-span-attributes");
   private static final DockerImageName DEFAULT_IMAGE_NAME =
       DockerImageName.parse("apachepulsar/pulsar:4.0.2");
+  private static final String OTEL_SUBSCRIPTION = "otel-subscription";
+  protected static final String OTEL_TOPIC = "persistent://public/default/otel-topic";
   private static PulsarContainer pulsarContainer;
   private static ConfigurableApplicationContext applicationContext;
   private static PulsarTemplate<String> pulsarTemplate;
   private static PulsarClient client;
   private static CountDownLatch latch;
-  private static final String OTEL_SUBSCRIPTION = "otel-subscription";
   protected static String brokerHost;
   protected static int brokerPort;
-  protected static final String OTEL_TOPIC = "persistent://public/default/otel-topic";
 
   @BeforeAll
   @SuppressWarnings("unchecked")
@@ -102,17 +102,20 @@ public abstract class AbstractSpringPulsarTest {
   }
 
   @AfterAll
-  static void teardown() throws PulsarClientException {
-    if (applicationContext != null) {
-      applicationContext.close();
-    }
+  static void tearDown() throws PulsarClientException {
     try {
-      if (client != null) {
-        client.close();
+      if (applicationContext != null) {
+        applicationContext.close();
       }
     } finally {
-      if (pulsarContainer != null) {
-        pulsarContainer.stop();
+      try {
+        if (client != null) {
+          client.close();
+        }
+      } finally {
+        if (pulsarContainer != null) {
+          pulsarContainer.stop();
+        }
       }
     }
   }
