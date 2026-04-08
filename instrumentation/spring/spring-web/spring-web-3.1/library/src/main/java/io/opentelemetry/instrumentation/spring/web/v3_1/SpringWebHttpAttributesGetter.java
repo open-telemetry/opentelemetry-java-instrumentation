@@ -63,7 +63,6 @@ class SpringWebHttpAttributesGetter
   }
 
   @Override
-  @Nullable
   public String getUrlFull(HttpRequest httpRequest) {
     return httpRequest.getURI().toString();
   }
