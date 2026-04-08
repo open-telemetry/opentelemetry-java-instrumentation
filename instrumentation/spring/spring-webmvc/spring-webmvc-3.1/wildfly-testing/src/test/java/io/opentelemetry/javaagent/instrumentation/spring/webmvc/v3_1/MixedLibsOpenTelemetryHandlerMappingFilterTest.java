@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1;
 
+import static java.util.Objects.requireNonNull;
+
 import com.example.hello.HelloController;
 import com.example.hello.TestFilter;
 import java.io.File;
@@ -27,16 +29,18 @@ class MixedLibsOpenTelemetryHandlerMappingFilterTest
             .addClass(HelloController.class)
             .addClass(TestFilter.class)
             .addAsLibraries(
-                new File("build/app-libs")
-                    .listFiles((dir, name) -> name.contains("spring-webmvc")));
+                requireNonNull(
+                    new File("build/app-libs")
+                        .listFiles((dir, name) -> name.contains("spring-webmvc"))));
 
     EnterpriseArchive ear =
         ShrinkWrap.create(EnterpriseArchive.class)
             .setApplicationXML("application.xml")
             .addAsModule(war)
             .addAsLibraries(
-                new File("build/app-libs")
-                    .listFiles((dir, name) -> !name.contains("spring-webmvc")));
+                requireNonNull(
+                    new File("build/app-libs")
+                        .listFiles((dir, name) -> !name.contains("spring-webmvc"))));
 
     return ear;
   }

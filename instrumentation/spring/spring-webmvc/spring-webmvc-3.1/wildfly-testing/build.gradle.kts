@@ -62,7 +62,7 @@ tasks {
     from(appLibrary).into(layout.buildDirectory.dir("app-libs"))
   }
 
-  test {
+  withType<Test>().configureEach {
     dependsOn(modifyLogbackJar)
     dependsOn(setupServer)
     dependsOn(copyDependencies)
