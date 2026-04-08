@@ -21,7 +21,9 @@ class ReflectiveMethodsFactory {
     public void destroyMethod() {}
 
     public ReturnT<String> echo(String param) {
-      return new ReturnT<>("echo: " + param);
+      ReturnT<String> result = new ReturnT<>();
+      result.setContent("echo: " + param);
+      return result;
     }
   }
 
@@ -33,28 +35,25 @@ class ReflectiveMethodsFactory {
 
   static Method getMethod() {
     try {
-      return SINGLETON_OBJECT.getClass().getMethod("echo", String.class);
+      return ReflectObject.class.getMethod("echo", String.class);
     } catch (Throwable t) {
-      // Ignore
+      return null;
     }
-    return null;
   }
 
   static Method getInitMethod() {
     try {
-      return SINGLETON_OBJECT.getClass().getMethod("initMethod");
+      return ReflectObject.class.getMethod("initMethod");
     } catch (Throwable t) {
-      // Ignore
+      return null;
     }
-    return null;
   }
 
   static Method getDestroyMethod() {
     try {
-      return SINGLETON_OBJECT.getClass().getMethod("destroyMethod");
+      return ReflectObject.class.getMethod("destroyMethod");
     } catch (Throwable t) {
-      // Ignore
+      return null;
     }
-    return null;
   }
 }

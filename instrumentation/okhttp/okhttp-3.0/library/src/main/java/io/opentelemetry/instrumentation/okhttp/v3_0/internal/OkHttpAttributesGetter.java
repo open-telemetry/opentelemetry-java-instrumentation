@@ -18,9 +18,9 @@ import okhttp3.Response;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public enum OkHttpAttributesGetter
+@SuppressWarnings("OtelDeprecatedApiUsage") // SPDY_3 is deprecated but still used in okhttp 3.x
+public final class OkHttpAttributesGetter
     implements HttpClientAttributesGetter<Interceptor.Chain, Response> {
-  INSTANCE;
 
   @Override
   public String getHttpRequestMethod(Interceptor.Chain chain) {
@@ -62,10 +62,11 @@ public enum OkHttpAttributesGetter
         return "http";
       case SPDY_3:
         return "spdy";
-    }
-    // added in 3.11.0
-    if ("H2_PRIOR_KNOWLEDGE".equals(response.protocol().name())) {
-      return "http";
+      default:
+        // added in 3.11.0
+        if ("H2_PRIOR_KNOWLEDGE".equals(response.protocol().name())) {
+          return "http";
+        }
     }
     return null;
   }
@@ -85,10 +86,11 @@ public enum OkHttpAttributesGetter
         return "2";
       case SPDY_3:
         return "3.1";
-    }
-    // added in 3.11.0
-    if ("H2_PRIOR_KNOWLEDGE".equals(response.protocol().name())) {
-      return "2";
+      default:
+        // added in 3.11.0
+        if ("H2_PRIOR_KNOWLEDGE".equals(response.protocol().name())) {
+          return "2";
+        }
     }
     return null;
   }

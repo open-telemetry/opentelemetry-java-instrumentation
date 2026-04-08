@@ -8,10 +8,11 @@ dependencies {
 
   implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.17:library-autoconfigure"))
 
+  testImplementation(project(":instrumentation:log4j:log4j-appender-2.17:testing"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testLibrary("com.lmax:disruptor:3.3.4")
 
-  if (findProperty("testLatestDeps") as Boolean) {
+  if (otelProps.testLatestDeps) {
     testCompileOnly("biz.aQute.bnd:biz.aQute.bnd.annotation:7.0.0")
     testCompileOnly("com.google.errorprone:error_prone_annotations")
   }
@@ -19,15 +20,28 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
   val testAsyncLogger by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector")
   }
 
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=code")
+  }
+
+  val testBothSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")
+  }
+
   check {
-    dependsOn(testAsyncLogger)
+    dependsOn(testAsyncLogger, testStableSemconv, testBothSemconv)
   }
 }

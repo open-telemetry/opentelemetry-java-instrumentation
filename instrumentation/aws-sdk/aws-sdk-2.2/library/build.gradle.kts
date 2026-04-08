@@ -24,9 +24,12 @@ dependencies {
   testLibrary("software.amazon.awssdk:dynamodb:2.2.0")
   testLibrary("software.amazon.awssdk:ec2:2.2.0")
   testLibrary("software.amazon.awssdk:kinesis:2.2.0")
+  testLibrary("software.amazon.awssdk:lambda:2.2.0")
   testLibrary("software.amazon.awssdk:rds:2.2.0")
   testLibrary("software.amazon.awssdk:s3:2.2.0")
+  testLibrary("software.amazon.awssdk:secretsmanager:2.2.0")
   testLibrary("software.amazon.awssdk:ses:2.2.0")
+  testLibrary("software.amazon.awssdk:sfn:2.2.0")
 }
 
 testing {
@@ -36,17 +39,11 @@ testing {
         implementation(project())
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
         compileOnly("software.amazon.awssdk:sqs:2.2.0")
-        if (findProperty("testLatestDeps") as Boolean) {
-          implementation("software.amazon.awssdk:aws-core:latest.release")
-          implementation("software.amazon.awssdk:aws-json-protocol:latest.release")
-          implementation("software.amazon.awssdk:dynamodb:latest.release")
-          implementation("software.amazon.awssdk:lambda:latest.release")
-        } else {
-          implementation("software.amazon.awssdk:aws-core:2.2.0")
-          implementation("software.amazon.awssdk:aws-json-protocol:2.2.0")
-          implementation("software.amazon.awssdk:dynamodb:2.2.0")
-          implementation("software.amazon.awssdk:lambda:2.2.0")
-        }
+        val version = if (otelProps.testLatestDeps) "latest.release" else "2.2.0"
+        implementation("software.amazon.awssdk:aws-core:$version")
+        implementation("software.amazon.awssdk:aws-json-protocol:$version")
+        implementation("software.amazon.awssdk:dynamodb:$version")
+        implementation("software.amazon.awssdk:lambda:$version")
       }
     }
 
@@ -54,11 +51,8 @@ testing {
       dependencies {
         implementation(project())
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
-        if (findProperty("testLatestDeps") as Boolean) {
-          implementation("software.amazon.awssdk:lambda:latest.release")
-        } else {
-          implementation("software.amazon.awssdk:lambda:2.17.0")
-        }
+        val version = if (otelProps.testLatestDeps) "latest.release" else "2.17.0"
+        implementation("software.amazon.awssdk:lambda:$version")
       }
     }
 
@@ -66,11 +60,8 @@ testing {
       dependencies {
         implementation(project())
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
-        if (findProperty("testLatestDeps") as Boolean) {
-          implementation("software.amazon.awssdk:bedrockruntime:latest.release")
-        } else {
-          implementation("software.amazon.awssdk:bedrockruntime:2.25.63")
-        }
+        val version = if (otelProps.testLatestDeps) "latest.release" else "2.25.63"
+        implementation("software.amazon.awssdk:bedrockruntime:$version")
       }
     }
   }
@@ -81,15 +72,17 @@ tasks {
     // NB: If you'd like to change these, there is some cleanup work to be done, as most tests ignore this and
     // set the value directly (the "library" does not normally query it, only library-autoconfigure)
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", true)
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
   val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 
   check {
-    dependsOn(testing.suites)
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites, testStableSemconv)
   }
 }

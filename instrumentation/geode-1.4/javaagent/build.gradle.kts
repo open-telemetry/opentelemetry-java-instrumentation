@@ -11,15 +11,25 @@ muzzle {
 }
 
 dependencies {
-  library("org.apache.geode:geode-core:1.4.0")
-
+  library("org.apache.geode:geode-core:1.4.0") {
+    // jna 4.0.0 has invalid ZIP64 headers, broken on JDK 23+ (JDK-8313765)
+    exclude(group = "net.java.dev.jna", module = "jna")
+  }
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 }
 
 tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
   val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   check {

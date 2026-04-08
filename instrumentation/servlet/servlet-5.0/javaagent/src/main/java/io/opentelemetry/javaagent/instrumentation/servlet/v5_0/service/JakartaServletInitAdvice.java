@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.service;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons.SERVLET_MAPPING_RESOLVER;
+
 import jakarta.servlet.Servlet;
 import jakarta.servlet.ServletConfig;
 import net.bytebuddy.asm.Advice;
@@ -14,13 +14,12 @@ import net.bytebuddy.asm.Advice;
 @SuppressWarnings("unused")
 public class JakartaServletInitAdvice {
 
-  @Advice.OnMethodEnter(suppress = Throwable.class)
+  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
   public static void servletInit(
       @Advice.This Servlet servlet, @Advice.Argument(0) ServletConfig servletConfig) {
     if (servletConfig == null) {
       return;
     }
-    VirtualField.find(Servlet.class, MappingResolver.Factory.class)
-        .set(servlet, new JakartaServletMappingResolverFactory(servletConfig));
+    SERVLET_MAPPING_RESOLVER.set(servlet, new JakartaServletMappingResolverFactory(servletConfig));
   }
 }

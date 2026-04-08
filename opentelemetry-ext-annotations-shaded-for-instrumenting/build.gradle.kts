@@ -1,6 +1,7 @@
 plugins {
   id("com.gradleup.shadow")
   id("otel.java-conventions")
+  id("otel.nullaway-conventions")
 }
 
 description = "opentelemetry-extension-annotations shaded for internal javaagent usage"

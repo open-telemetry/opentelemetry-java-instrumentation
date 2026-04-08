@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentCo
 import static io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisSingletons.instrumenter;
 import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.is;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -20,6 +19,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jedis.JedisRequestContext;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
@@ -27,7 +27,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Protocol;
 
-public class JedisConnectionInstrumentation implements TypeInstrumentation {
+class JedisConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("redis.clients.jedis.Connection");
@@ -36,8 +36,7 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("sendCommand"))
+        named("sendCommand")
             .and(takesArguments(1))
             .and(
                 takesArgument(
@@ -45,10 +44,9 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
                     namedOneOf(
                         "redis.clients.jedis.Protocol$Command",
                         "redis.clients.jedis.ProtocolCommand"))),
-        this.getClass().getName() + "$SendCommandNoArgsAdvice");
+        getClass().getName() + "$SendCommandNoArgsAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("sendCommand"))
+        named("sendCommand")
             .and(takesArguments(2))
             .and(
                 takesArgument(
@@ -57,77 +55,78 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
                         "redis.clients.jedis.Protocol$Command",
                         "redis.clients.jedis.ProtocolCommand")))
             .and(takesArgument(1, is(byte[][].class))),
-        this.getClass().getName() + "$SendCommandWithArgsAdvice");
+        getClass().getName() + "$SendCommandWithArgsAdvice");
+  }
+
+  public static class AdviceScope {
+    private final Context context;
+    private final Scope scope;
+    private final JedisRequest request;
+
+    private AdviceScope(Context context, Scope scope, JedisRequest request) {
+      this.context = context;
+      this.scope = scope;
+      this.request = request;
+    }
+
+    @Nullable
+    public static AdviceScope start(JedisRequest request) {
+      Context parentContext = currentContext();
+      if (!instrumenter().shouldStart(parentContext, request)) {
+        return null;
+      }
+      Context context = instrumenter().start(parentContext, request);
+      return new AdviceScope(context, context.makeCurrent(), request);
+    }
+
+    public void end(@Nullable Throwable throwable) {
+      scope.close();
+      JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
+    }
   }
 
   @SuppressWarnings("unused")
   public static class SendCommandNoArgsAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static AdviceScope onEnter(
         @Advice.This Connection connection,
-        @Advice.Argument(value = 0, typing = Assigner.Typing.DYNAMIC) Protocol.Command command,
-        @Advice.Local("otelJedisRequest") JedisRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = currentContext();
-      request = JedisRequest.create(connection, command);
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return;
-      }
-
-      context = instrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
+        @Advice.Argument(value = 0, typing = Assigner.Typing.DYNAMIC) Protocol.Command command) {
+      JedisRequest request = JedisRequest.create(connection, command);
+      return AdviceScope.start(request);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelJedisRequest") JedisRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(throwable);
       }
-
-      scope.close();
-      JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
     }
   }
 
   @SuppressWarnings("unused")
   public static class SendCommandWithArgsAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static AdviceScope onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(value = 0, typing = Assigner.Typing.DYNAMIC) Protocol.Command command,
-        @Advice.Argument(1) byte[][] args,
-        @Advice.Local("otelJedisRequest") JedisRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = currentContext();
-      request = JedisRequest.create(connection, command, asList(args));
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return;
-      }
-
-      context = instrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
+        @Advice.Argument(1) byte[][] args) {
+      JedisRequest request = JedisRequest.create(connection, command, asList(args));
+      return AdviceScope.start(request);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelJedisRequest") JedisRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(throwable);
       }
-
-      scope.close();
-      JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
     }
   }
 }

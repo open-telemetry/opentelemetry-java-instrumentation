@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
+import static java.util.Objects.requireNonNull;
+
 import java.util.concurrent.atomic.AtomicReference;
 
 final class InternalLoggerFactoryHolder {
@@ -24,7 +26,7 @@ final class InternalLoggerFactoryHolder {
   }
 
   static InternalLogger.Factory get() {
-    return loggerFactory.get();
+    return requireNonNull(loggerFactory.get());
   }
 
   private InternalLoggerFactoryHolder() {}

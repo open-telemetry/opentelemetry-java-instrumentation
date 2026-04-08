@@ -14,12 +14,13 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContext;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContexts;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 // used before reactor-netty-0.8
-public class ContextHandlerInstrumentation implements TypeInstrumentation {
+class ContextHandlerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("reactor.ipc.netty.channel.ContextHandler");
@@ -29,13 +30,14 @@ public class ContextHandlerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("createOperations").and(takesArgument(0, named("io.netty.channel.Channel"))),
-        ContextHandlerInstrumentation.class.getName() + "$CreateOperationsAdvice");
+        getClass().getName() + "$CreateOperationsAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class CreateOperationsAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.Argument(0) Channel channel) {
       // set context to the first unprocessed request
       ServerContext serverContext = ServerContexts.peekFirst(channel);
@@ -45,8 +47,8 @@ public class ContextHandlerInstrumentation implements TypeInstrumentation {
       return null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Enter Scope scope) {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

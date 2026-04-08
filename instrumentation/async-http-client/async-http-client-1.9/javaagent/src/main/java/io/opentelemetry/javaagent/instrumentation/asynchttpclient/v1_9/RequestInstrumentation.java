@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.common.VirtualFieldHelper.ASYNC_HANDLER_DATA;
 import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9.AsyncHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -15,14 +16,15 @@ import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.Request;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.asynchttpclient.common.AsyncHandlerData;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class RequestInstrumentation implements TypeInstrumentation {
+class RequestInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -36,30 +38,29 @@ public class RequestInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("com.ning.http.client.Request")))
             .and(takesArgument(1, named("com.ning.http.client.AsyncHandler")))
             .and(isPublic()),
-        this.getClass().getName() + "$ExecuteAdvice");
+        getClass().getName() + "$ExecuteAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ExecuteAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) Request request,
-        @Advice.Argument(1) AsyncHandler<?> handler,
-        @Advice.Local("otelScope") Scope scope) {
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Scope onEnter(
+        @Advice.Argument(0) Request request, @Advice.Argument(1) AsyncHandler<?> handler) {
       Context parentContext = currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
-        return;
+        return null;
       }
 
       Context context = instrumenter().start(parentContext, request);
-      VirtualField.find(AsyncHandler.class, AsyncHandlerData.class)
-          .set(handler, AsyncHandlerData.create(parentContext, context, request));
-      scope = context.makeCurrent();
+      ASYNC_HANDLER_DATA.set(
+          handler, AsyncHandlerData.create(parentContext, context, request, instrumenter()));
+      return context.makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Local("otelScope") Scope scope) {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

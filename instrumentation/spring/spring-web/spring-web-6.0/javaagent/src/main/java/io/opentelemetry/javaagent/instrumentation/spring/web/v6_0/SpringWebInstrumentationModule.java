@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.web.v6_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilder;
@@ -32,17 +32,12 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
 
   @Override
   public void registerHelperResources(HelperResourceBuilder helperResourceBuilder) {
-    if (!isIndyModule()) {
-      // make the filter class file loadable by ClassPathResource - in some cases (e.g.
-      // spring-guice,
-      // see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/7428)
-      // Spring
-      // might want to read the class file metadata; this line will make the filter class file
-      // visible
-      // to the bean class loader
-      helperResourceBuilder.register(
-          "org/springframework/web/servlet/v6_0/OpenTelemetryHandlerMappingFilter.class");
-    }
+    // make the filter class file loadable by ClassPathResource - in some cases (e.g. spring-guice,
+    // see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/7428)
+    // Spring might want to read the class file metadata; this line will make the filter class file
+    // visible to the bean class loader
+    helperResourceBuilder.register(
+        "org/springframework/web/servlet/v6_0/OpenTelemetryHandlerMappingFilter.class");
   }
 
   @Override
@@ -53,6 +48,6 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new WebApplicationContextInstrumentation());
+    return asList(new WebApplicationContextInstrumentation(), new RestTemplateInstrumentation());
   }
 }

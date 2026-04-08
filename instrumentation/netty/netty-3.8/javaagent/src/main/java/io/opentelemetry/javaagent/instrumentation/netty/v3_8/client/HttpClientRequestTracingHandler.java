@@ -10,8 +10,8 @@ import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.Netty
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.NettyConnectionContext;
+import io.opentelemetry.javaagent.instrumentation.netty.v3_8.NettyRequest;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
@@ -42,8 +42,7 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
       parentContext = Context.current();
     }
 
-    HttpRequestAndChannel request =
-        HttpRequestAndChannel.create((HttpRequest) message, ctx.getChannel());
+    NettyRequest request = NettyRequest.create((HttpRequest) message, ctx.getChannel());
     if (!instrumenter().shouldStart(parentContext, request)) {
       super.writeRequested(ctx, event);
       return;
@@ -55,9 +54,9 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
 
     try (Scope ignored = context.makeCurrent()) {
       super.writeRequested(ctx, event);
-    } catch (Throwable throwable) {
-      instrumenter().end(context, request, null, throwable);
-      throw throwable;
+    } catch (Throwable t) {
+      instrumenter().end(context, request, null, t);
+      throw t;
     }
     // span is ended normally in HttpClientResponseTracingHandler
   }

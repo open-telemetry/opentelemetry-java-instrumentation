@@ -18,14 +18,12 @@ import net.bytebuddy.asm.Advice;
 @SuppressWarnings("unused")
 public class AsyncDispatchAdvice {
 
-  @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static void enter(
-      @Advice.This AsyncContext context,
-      @Advice.AllArguments Object[] args,
-      @Advice.Local("otelCallDepth") CallDepth callDepth) {
-    callDepth = CallDepth.forClass(AsyncContext.class);
+  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+  public static CallDepth enter(
+      @Advice.This AsyncContext context, @Advice.AllArguments Object[] args) {
+    CallDepth callDepth = CallDepth.forClass(AsyncContext.class);
     if (callDepth.getAndIncrement() > 0) {
-      return;
+      return callDepth;
     }
 
     ServletRequest request = context.getRequest();
@@ -42,10 +40,11 @@ public class AsyncDispatchAdvice {
       // processing, and nothing can be done with the request anymore after this
       request.setAttribute(CONTEXT_ATTRIBUTE, currentContext);
     }
+    return callDepth;
   }
 
-  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-  public static void exit(@Advice.Local("otelCallDepth") CallDepth callDepth) {
+  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+  public static void exit(@Advice.Enter CallDepth callDepth) {
     callDepth.decrementAndGet();
   }
 }

@@ -16,7 +16,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JerseyResourceMethodDispatcherInstrumentation implements TypeInstrumentation {
+class JerseyResourceMethodDispatcherInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -33,13 +33,13 @@ public class JerseyResourceMethodDispatcherInstrumentation implements TypeInstru
                     namedOneOf(
                         "javax.ws.rs.core.Request",
                         "org.glassfish.jersey.server.ContainerRequest"))),
-        JerseyResourceMethodDispatcherInstrumentation.class.getName() + "$DispatchAdvice");
+        getClass().getName() + "$DispatchAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class DispatchAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(1) Request request) {
       JerseySpanName.INSTANCE.updateServerSpanName(request);
     }

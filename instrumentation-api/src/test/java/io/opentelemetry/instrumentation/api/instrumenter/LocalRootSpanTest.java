@@ -5,10 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -23,13 +20,13 @@ class LocalRootSpanTest {
   @Test
   void spanWithoutParentIsLocalRoot() {
     Context parentContext = Context.root();
-    assertTrue(LocalRootSpan.isLocalRoot(parentContext));
+    assertThat(LocalRootSpan.isLocalRoot(parentContext)).isTrue();
   }
 
   @Test
   void spanWithInvalidParentIsLocalRoot() {
     Context parentContext = Context.root().with(Span.getInvalid());
-    assertTrue(LocalRootSpan.isLocalRoot(parentContext));
+    assertThat(LocalRootSpan.isLocalRoot(parentContext)).isTrue();
   }
 
   @Test
@@ -43,7 +40,7 @@ class LocalRootSpanTest {
                         "0000000000000002",
                         TraceFlags.getSampled(),
                         TraceState.getDefault())));
-    assertTrue(LocalRootSpan.isLocalRoot(parentContext));
+    assertThat(LocalRootSpan.isLocalRoot(parentContext)).isTrue();
   }
 
   @Test
@@ -57,7 +54,7 @@ class LocalRootSpanTest {
                         "0000000000000002",
                         TraceFlags.getSampled(),
                         TraceState.getDefault())));
-    assertFalse(LocalRootSpan.isLocalRoot(parentContext));
+    assertThat(LocalRootSpan.isLocalRoot(parentContext)).isFalse();
   }
 
   @Test
@@ -66,10 +63,10 @@ class LocalRootSpanTest {
     Context context = LocalRootSpan.store(Context.root(), span);
 
     try (Scope ignored = context.makeCurrent()) {
-      assertSame(span, LocalRootSpan.current());
+      assertThat(LocalRootSpan.current()).isSameAs(span);
     }
-    assertSame(span, LocalRootSpan.fromContext(context));
-    assertSame(span, LocalRootSpan.fromContextOrNull(context));
+    assertThat(LocalRootSpan.fromContext(context)).isSameAs(span);
+    assertThat(LocalRootSpan.fromContextOrNull(context)).isSameAs(span);
   }
 
   @Test
@@ -77,9 +74,9 @@ class LocalRootSpanTest {
     Context context = Context.root();
 
     try (Scope ignored = context.makeCurrent()) {
-      assertFalse(LocalRootSpan.current().getSpanContext().isValid());
+      assertThat(LocalRootSpan.current().getSpanContext().isValid()).isFalse();
     }
-    assertFalse(LocalRootSpan.fromContext(context).getSpanContext().isValid());
-    assertNull(LocalRootSpan.fromContextOrNull(context));
+    assertThat(LocalRootSpan.fromContext(context).getSpanContext().isValid()).isFalse();
+    assertThat(LocalRootSpan.fromContextOrNull(context)).isNull();
   }
 }

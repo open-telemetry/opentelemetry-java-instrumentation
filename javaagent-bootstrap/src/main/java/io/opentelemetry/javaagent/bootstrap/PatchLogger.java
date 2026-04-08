@@ -5,12 +5,22 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
+import static java.util.logging.Level.CONFIG;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.FINEST;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.OFF;
+import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Level.WARNING;
+
 import java.text.MessageFormat;
 import java.util.ResourceBundle;
 import java.util.function.Supplier;
+import java.util.logging.Filter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
+import javax.annotation.Nullable;
 
 /**
  * Dependencies of the agent sometimes call java.util.logging.Logger.getLogger(). This can have the
@@ -29,7 +39,7 @@ public class PatchLogger {
 
   private final InternalLogger internalLogger;
 
-  private ResourceBundle resourceBundle;
+  @Nullable private ResourceBundle resourceBundle;
 
   public static PatchLogger getLogger(String name) {
     return new PatchLogger(name);
@@ -167,28 +177,28 @@ public class PatchLogger {
 
   public Level getLevel() {
     if (internalLogger.isLoggable(InternalLogger.Level.ERROR)) {
-      return Level.SEVERE;
+      return SEVERE;
     } else if (internalLogger.isLoggable(InternalLogger.Level.WARN)) {
-      return Level.WARNING;
+      return WARNING;
     } else if (internalLogger.isLoggable(InternalLogger.Level.INFO)) {
-      return Level.CONFIG;
+      return CONFIG;
     } else if (internalLogger.isLoggable(InternalLogger.Level.DEBUG)) {
-      return Level.FINE;
+      return FINE;
     } else if (internalLogger.isLoggable(InternalLogger.Level.TRACE)) {
-      return Level.FINEST;
+      return FINEST;
     } else {
-      return Level.OFF;
+      return OFF;
     }
   }
 
   private static InternalLogger.Level toInternalLevel(Level level) {
-    if (level.intValue() >= Level.SEVERE.intValue()) {
+    if (level.intValue() >= SEVERE.intValue()) {
       return InternalLogger.Level.ERROR;
-    } else if (level.intValue() >= Level.WARNING.intValue()) {
+    } else if (level.intValue() >= WARNING.intValue()) {
       return InternalLogger.Level.WARN;
-    } else if (level.intValue() >= Level.CONFIG.intValue()) {
+    } else if (level.intValue() >= INFO.intValue()) {
       return InternalLogger.Level.INFO;
-    } else if (level.intValue() >= Level.FINE.intValue()) {
+    } else if (level.intValue() >= FINE.intValue()) {
       return InternalLogger.Level.DEBUG;
     } else {
       return InternalLogger.Level.TRACE;
@@ -303,6 +313,7 @@ public class PatchLogger {
 
   public void throwing(String sourceClass, String sourceMethod, Throwable thrown) {}
 
+  @Nullable
   public ResourceBundle getResourceBundle() {
     return resourceBundle;
   }
@@ -311,6 +322,7 @@ public class PatchLogger {
     this.resourceBundle = resourceBundle;
   }
 
+  @Nullable
   public String getResourceBundleName() {
     return null;
   }
@@ -329,6 +341,8 @@ public class PatchLogger {
 
   public void addHandler(Handler handler) {}
 
+  public void removeHandler(Handler handler) {}
+
   public static PatchLogger getAnonymousLogger() {
     return getLogger("");
   }
@@ -339,6 +353,19 @@ public class PatchLogger {
 
   public static PatchLogger getGlobal() {
     return global;
+  }
+
+  public void setFilter(Filter filter) {}
+
+  @Nullable
+  public Filter getFilter() {
+    return null;
+  }
+
+  public void setUseParentHandlers(boolean useParentHandlers) {}
+
+  public boolean getUseParentHandlers() {
+    return true;
   }
 
   private static String getMessage(LogRecord record) {

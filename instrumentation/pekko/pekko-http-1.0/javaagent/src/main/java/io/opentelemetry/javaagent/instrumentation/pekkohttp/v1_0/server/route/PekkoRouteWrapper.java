@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import org.apache.pekko.http.scaladsl.server.RequestContext;
 import org.apache.pekko.http.scaladsl.server.RouteResult;
 import scala.Function1;
@@ -21,7 +20,7 @@ public class PekkoRouteWrapper implements Function1<RequestContext, Future<Route
 
   @Override
   public Future<RouteResult> apply(RequestContext ctx) {
-    Context context = Java8BytecodeBridge.currentContext();
+    Context context = Context.current();
     PekkoRouteHolder routeHolder = PekkoRouteHolder.get(context);
     if (routeHolder == null) {
       return route.apply(ctx);

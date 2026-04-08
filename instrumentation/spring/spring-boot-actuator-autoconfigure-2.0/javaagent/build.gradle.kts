@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -17,6 +18,11 @@ dependencies {
   library("io.micrometer:micrometer-core:1.5.0")
   testLibrary("io.micrometer:micrometer-registry-prometheus:1.0.1")
 
+  if (otelProps.testLatestDeps) {
+    // Micrometer moved into its own Spring Boot starter in version 4
+    testLibrary("org.springframework.boot:spring-boot-starter-micrometer-metrics:4.0.0")
+  }
+
   implementation(project(":instrumentation:micrometer:micrometer-1.5:javaagent"))
 
   // dependency management pins logback-classic to 1.3 which is the last release that supports java 8
@@ -31,17 +37,15 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.spring-boot-actuator-autoconfigure.enabled=true")
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
-
 // spring 6 (spring boot 3) requires java 17
-if (latestDepTest) {
+if (otelProps.testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_17)
   }
 }
 
 // spring 6 (spring boot 3) uses slf4j 2.0
-if (!latestDepTest) {
+if (!otelProps.testLatestDeps) {
   configurations.testRuntimeClasspath {
     resolutionStrategy {
       // requires old logback (and therefore also old slf4j)

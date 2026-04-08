@@ -1,0 +1,66 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.runtimemetrics.java8;
+
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.stream.Collectors.toList;
+
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.logs.data.LogRecordData;
+import java.util.List;
+import org.apache.commons.io.IOUtils;
+import org.awaitility.Awaitility;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+class JarAnalyzerInstallerTest {
+
+  @RegisterExtension
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @Test
+  @SuppressWarnings("ReturnValueIgnored")
+  void jarAnalyzerEnabled() {
+    // We clear exported data before running tests. Here we load a class from commons-io with the
+    // assumption that no commons-io classes have been loaded yet, and we'll have at least the
+    // commons-io jar show up in jar analyzer events.
+    IOUtils.class.getName();
+
+    List<LogRecordData> events =
+        Awaitility.await()
+            .until(
+                () ->
+                    testing.logRecords().stream()
+                        .filter(record -> "package.info".equals(record.getEventName()))
+                        .collect(toList()),
+                (eventList) -> !eventList.isEmpty());
+
+    assertThat(events)
+        .isNotEmpty()
+        .allSatisfy(
+            logRecord ->
+                assertThat(logRecord.getAttributes())
+                    .containsEntry("package.type", "jar")
+                    .containsEntry("package.checksum_algorithm", "SHA1")
+                    .hasEntrySatisfying(
+                        stringKey("package.checksum"), value -> assertThat(value).isNotNull())
+                    .hasEntrySatisfying(
+                        stringKey("package.path"), value -> assertThat(value).isNotNull())
+                    .satisfies(
+                        attributes -> {
+                          String packageName = attributes.get(stringKey("package.name"));
+                          if (packageName != null) {
+                            assertThat(packageName).matches(".*:.*");
+                          }
+                          String packageVersion = attributes.get(stringKey("package.version"));
+                          if (packageVersion != null) {
+                            assertThat(packageVersion).matches(".*\\..*");
+                          }
+                        }));
+  }
+}

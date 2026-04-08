@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import reactor.core.publisher.Mono;
@@ -19,7 +20,7 @@ import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientConfig;
 import reactor.netty.http.client.HttpClientConfigBuddy;
 
-public class HttpClientConnectInstrumentation implements TypeInstrumentation {
+class HttpClientConnectInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("reactor.netty.http.client.HttpClientConnect");
@@ -29,16 +30,16 @@ public class HttpClientConnectInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("connect").and(returns(named("reactor.core.publisher.Mono"))),
-        this.getClass().getName() + "$ConnectAdvice");
+        getClass().getName() + "$ConnectAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ConnectAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.Return(readOnly = false) Mono<? extends Connection> connection,
-        @Advice.This HttpClient httpClient) {
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static Mono<? extends Connection> onExit(
+        @Advice.Return Mono<? extends Connection> connection, @Advice.This HttpClient httpClient) {
 
       HttpClientConfig config = httpClient.configuration();
       // reactor-netty 1.0.x has a bug: the .mapConnect() function is not applied when deferred
@@ -46,8 +47,9 @@ public class HttpClientConnectInstrumentation implements TypeInstrumentation {
       // we're fixing this bug here, so that our instrumentation can safely add its own
       // .mapConnect() listener
       if (HttpClientConfigBuddy.hasDeferredConfig(config)) {
-        connection = HttpClientConfigBuddy.getConnector(config).apply(connection);
+        return HttpClientConfigBuddy.getConnector(config).apply(connection);
       }
+      return connection;
     }
   }
 }

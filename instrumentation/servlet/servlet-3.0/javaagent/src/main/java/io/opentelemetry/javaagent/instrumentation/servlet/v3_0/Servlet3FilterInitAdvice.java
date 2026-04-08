@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.FILTER_MAPPING_RESOLVER;
+
 import javax.servlet.Filter;
 import javax.servlet.FilterConfig;
 import net.bytebuddy.asm.Advice;
@@ -14,13 +14,12 @@ import net.bytebuddy.asm.Advice;
 @SuppressWarnings("unused")
 public class Servlet3FilterInitAdvice {
 
-  @Advice.OnMethodEnter(suppress = Throwable.class)
+  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
   public static void filterInit(
       @Advice.This Filter filter, @Advice.Argument(0) FilterConfig filterConfig) {
     if (filterConfig == null) {
       return;
     }
-    VirtualField.find(Filter.class, MappingResolver.Factory.class)
-        .set(filter, new Servlet3FilterMappingResolverFactory(filterConfig));
+    FILTER_MAPPING_RESOLVER.set(filter, new Servlet3FilterMappingResolverFactory(filterConfig));
   }
 }

@@ -35,11 +35,6 @@ import io.opentelemetry.testing.internal.armeria.common.HttpMethod;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import io.opentelemetry.testing.internal.armeria.common.QueryParams;
 import io.opentelemetry.testing.internal.armeria.common.RequestHeaders;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.webapp.WebAppContext;
@@ -48,12 +43,9 @@ import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsProvider;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.CsvSource;
 
 public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
 
@@ -102,7 +94,7 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
   }
 
   @ParameterizedTest
-  @ArgumentsSource(PathTestArgs.class)
+  @CsvSource({"hello.jsf, *.jsf", "faces/hello.xhtml, faces/*"})
   void testPath(String path, String route) {
     AggregatedHttpResponse response =
         client.get(address.resolve(path).toString()).aggregate().join();
@@ -127,20 +119,7 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
                             equalTo(USER_AGENT_ORIGINAL, TEST_USER_AGENT),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                             equalTo(HTTP_ROUTE, getContextPath() + "/" + route),
-                            satisfies(
-                                CLIENT_ADDRESS,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isEqualTo(TEST_CLIENT_IP),
-                                        v -> assertThat(v).isNull())))));
-  }
-
-  static class PathTestArgs implements ArgumentsProvider {
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      return Stream.of(
-          Arguments.of("hello.xhtml", "*.xhtml"), Arguments.of("faces/hello.xhtml", "faces/*"));
-    }
+                            satisfies(CLIENT_ADDRESS, val -> val.isIn(TEST_CLIENT_IP, null)))));
   }
 
   @Test
@@ -204,7 +183,7 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
                     span.hasName(getContextPath() + "/greeting.xhtml")
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent(),
-                span -> handlerSpan(trace, 0, "#{greetingForm.submit()}", null)));
+                span -> assertHandlerSpan(span, trace, 0, "#{greetingForm.submit()}", null)));
   }
 
   @Test
@@ -270,22 +249,20 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
                         .hasNoParent()
                         .hasStatus(StatusData.error())
                         .hasException(expectedException),
-                span -> handlerSpan(trace, 0, "#{greetingForm.submit()}", expectedException)));
+                span ->
+                    assertHandlerSpan(
+                        span, trace, 0, "#{greetingForm.submit()}", expectedException)));
   }
 
-  List<Consumer<SpanDataAssert>> handlerSpan(
-      TraceAssert trace, int parentIndex, String spanName, Exception expectedException) {
-    List<Consumer<SpanDataAssert>> assertions =
-        new ArrayList<>(
-            Arrays.asList(
-                span ->
-                    span.hasName(spanName)
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(parentIndex))));
-
+  private static void assertHandlerSpan(
+      SpanDataAssert span,
+      TraceAssert trace,
+      int parentIndex,
+      String spanName,
+      Exception expectedException) {
+    span.hasName(spanName).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(parentIndex));
     if (expectedException != null) {
-      assertions.add(span -> span.hasStatus(StatusData.error()).hasException(expectedException));
+      span.hasStatus(StatusData.error()).hasException(expectedException);
     }
-    return assertions;
   }
 }

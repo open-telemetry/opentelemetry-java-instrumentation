@@ -18,7 +18,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import org.assertj.core.api.AssertAccess;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.batch.core.Job;
@@ -161,7 +160,7 @@ abstract class ItemLevelSpanTest {
           // firstly compute child span count for each chunk, we'll sort chunks from larger to
           // smaller based on child count
 
-          List<SpanData> spans = AssertAccess.getActual(trace);
+          List<SpanData> spans = trace.actual();
           Map<SpanData, Long> childCount = new HashMap<>();
 
           for (SpanData span : spans) {

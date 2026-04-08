@@ -11,6 +11,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import javax.annotation.Nullable;
 import org.springframework.batch.core.scope.context.ChunkContext;
 
 public class ItemSingletons {
@@ -19,13 +20,13 @@ public class ItemSingletons {
   static final String ITEM_OPERATION_WRITE = "ItemWrite";
   static final String ITEM_OPERATION_PROCESS = "ItemProcess";
 
-  private static final Instrumenter<String, Void> INSTRUMENTER =
+  private static final Instrumenter<String, Void> instrumenter =
       Instrumenter.<String, Void>builder(
               GlobalOpenTelemetry.get(), instrumentationName(), str -> str)
           .buildInstrumenter();
 
   public static Instrumenter<String, Void> itemInstrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static String itemName(ChunkContext chunkContext, String itemOperationName) {
@@ -47,6 +48,7 @@ public class ItemSingletons {
     return currentContext.with(CHUNK_CONTEXT_KEY, chunkContext);
   }
 
+  @Nullable
   public static ChunkContext getChunkContext(Context currentContext) {
     return currentContext.get(CHUNK_CONTEXT_KEY);
   }

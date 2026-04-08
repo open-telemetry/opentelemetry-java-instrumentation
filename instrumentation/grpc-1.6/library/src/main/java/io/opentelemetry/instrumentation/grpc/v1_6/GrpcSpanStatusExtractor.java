@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
+import static java.util.Arrays.asList;
+
 import com.google.errorprone.annotations.Immutable;
 import io.grpc.Status;
 import io.grpc.StatusException;
@@ -12,7 +14,6 @@ import io.grpc.StatusRuntimeException;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -54,7 +55,7 @@ enum GrpcSpanStatusExtractor implements SpanStatusExtractor<GrpcRequest, Status>
 
   static {
     serverErrorStatuses.addAll(
-        Arrays.asList(
+        asList(
             Status.Code.UNKNOWN,
             Status.Code.DEADLINE_EXCEEDED,
             Status.Code.UNIMPLEMENTED,

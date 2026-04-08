@@ -5,23 +5,22 @@
 
 package io.opentelemetry.javaagent.tooling.ignore;
 
-import static java.util.Collections.emptyList;
-
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import java.util.List;
 
 @AutoService(IgnoredTypesConfigurer.class)
 public class UserExcludedClassLoadersConfigurer implements IgnoredTypesConfigurer {
 
-  // visible for tests
-  static final String EXCLUDED_CLASS_LOADERS_CONFIG = "otel.javaagent.exclude-class-loaders";
-
   @Override
-  public void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
-    List<String> excludedClassLoaders = config.getList(EXCLUDED_CLASS_LOADERS_CONFIG, emptyList());
+  public void configure(IgnoredTypesBuilder builder) {
+    configureInternal(builder, AgentDistributionConfig.get().getExcludeClassLoaders());
+  }
+
+  // Visible for testing
+  void configureInternal(IgnoredTypesBuilder builder, List<String> excludedClassLoaders) {
     for (String excludedClassLoader : excludedClassLoaders) {
       excludedClassLoader = excludedClassLoader.trim();
       // remove the trailing *

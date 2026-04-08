@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.v8_0;
 
+import static io.opentelemetry.javaagent.instrumentation.jetty.v8_0.Jetty8Singletons.PROPAGATED_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
@@ -20,7 +20,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JettyQueuedThreadPoolInstrumentation implements TypeInstrumentation {
+class JettyQueuedThreadPoolInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -31,31 +31,28 @@ public class JettyQueuedThreadPoolInstrumentation implements TypeInstrumentation
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("dispatch").and(takesArguments(1)).and(takesArgument(0, Runnable.class)),
-        this.getClass().getName() + "$DispatchAdvice");
+        getClass().getName() + "$DispatchAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class DispatchAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static PropagatedContext enterJobSubmit(@Advice.Argument(0) Runnable task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
-        VirtualField<Runnable, PropagatedContext> virtualField =
-            VirtualField.find(Runnable.class, PropagatedContext.class);
-        return ExecutorAdviceHelper.attachContextToTask(context, virtualField, task);
+        return ExecutorAdviceHelper.attachContextToTask(context, PROPAGATED_CONTEXT, task);
       }
       return null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exitJobSubmit(
         @Advice.Argument(0) Runnable task,
         @Advice.Enter PropagatedContext propagatedContext,
         @Advice.Thrown Throwable throwable) {
-      VirtualField<Runnable, PropagatedContext> virtualField =
-          VirtualField.find(Runnable.class, PropagatedContext.class);
-      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable, virtualField, task);
+      ExecutorAdviceHelper.cleanUpAfterSubmit(
+          propagatedContext, throwable, PROPAGATED_CONTEXT, task);
     }
   }
 }

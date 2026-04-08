@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0;
 
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.ResteasySingletons.INVOKER_NAME;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.ResteasySingletons.LOCATOR_NAME;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsPathUtil;
@@ -20,7 +21,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.jboss.resteasy.core.ResourceLocatorInvoker;
 import org.jboss.resteasy.core.ResourceMethodInvoker;
 
-public class ResteasyRootNodeTypeInstrumentation implements TypeInstrumentation {
+class ResteasyRootNodeTypeInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.jboss.resteasy.core.registry.RootNode");
@@ -38,25 +39,23 @@ public class ResteasyRootNodeTypeInstrumentation implements TypeInstrumentation 
                     namedOneOf(
                         "org.jboss.resteasy.core.ResourceInvoker",
                         "org.jboss.resteasy.spi.ResourceInvoker"))),
-        ResteasyRootNodeTypeInstrumentation.class.getName() + "$AddInvokerAdvice");
+        getClass().getName() + "$AddInvokerAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class AddInvokerAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void addInvoker(
         @Advice.Argument(0) String path,
         @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC) Object invoker) {
       String normalizedPath = JaxrsPathUtil.normalizePath(path);
       if (invoker instanceof ResourceLocatorInvoker) {
         ResourceLocatorInvoker resourceLocatorInvoker = (ResourceLocatorInvoker) invoker;
-        VirtualField.find(ResourceLocatorInvoker.class, String.class)
-            .set(resourceLocatorInvoker, normalizedPath);
+        LOCATOR_NAME.set(resourceLocatorInvoker, normalizedPath);
       } else if (invoker instanceof ResourceMethodInvoker) {
         ResourceMethodInvoker resourceMethodInvoker = (ResourceMethodInvoker) invoker;
-        VirtualField.find(ResourceMethodInvoker.class, String.class)
-            .set(resourceMethodInvoker, normalizedPath);
+        INVOKER_NAME.set(resourceMethodInvoker, normalizedPath);
       }
     }
   }

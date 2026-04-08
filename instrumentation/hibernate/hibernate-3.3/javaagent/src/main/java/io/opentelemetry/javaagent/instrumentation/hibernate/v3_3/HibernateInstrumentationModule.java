@@ -26,9 +26,9 @@ public class HibernateInstrumentationModule extends InstrumentationModule
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return hasClassesNamed(
-        // Not in 4.0
+        // removed in 4.0.0.Final
         "org.hibernate.classic.Validatable",
-        // Not before 3.3.0.GA
+        // added in 3.3.0.GA
         "org.hibernate.transaction.JBossTransactionManagerLookup");
   }
 
@@ -45,5 +45,10 @@ public class HibernateInstrumentationModule extends InstrumentationModule
         new SessionFactoryInstrumentation(),
         new SessionInstrumentation(),
         new TransactionInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

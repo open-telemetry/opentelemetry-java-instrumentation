@@ -33,6 +33,7 @@ public final class TransformSafeLogger {
       Thread thread = new Thread(new LogMessageQueueReader());
       thread.setName("otel-javaagent-transform-safe-logger");
       thread.setDaemon(true);
+      thread.setContextClassLoader(null);
       thread.start();
     } else {
       logMessageQueue = null;

@@ -12,11 +12,13 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class Log4j27InstrumentationModule extends InstrumentationModule {
+public class Log4j27InstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public Log4j27InstrumentationModule() {
     super("log4j-context-data", "log4j-context-data-2.7");
   }
@@ -25,19 +27,24 @@ public class Log4j27InstrumentationModule extends InstrumentationModule {
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // want to cover 2.7 up to (but not including) 2.17.0
     return hasClassesNamed(
-            // class added in 2.7
+            // added in 2.7
             "org.apache.logging.log4j.core.impl.ContextDataInjectorFactory")
         .and(
             not(
                 hasClassesNamed(
-                    // class added in 2.17.0 and backported to 2.12.3
+                    // added in 2.17.0 and backported to 2.12.3
                     "org.apache.logging.log4j.core.lookup.ConfigurationStrSubstitutor",
-                    // class added in 2.15.0
+                    // added in 2.15.0
                     "org.apache.logging.log4j.core.config.arbiters.DefaultArbiter")));
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ContextDataInjectorFactoryInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

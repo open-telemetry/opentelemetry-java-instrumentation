@@ -13,10 +13,11 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.smallrye.mutiny.Uni;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class MutinySessionFactoryInstrumentation implements TypeInstrumentation {
+class MutinySessionFactoryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -29,14 +30,15 @@ public class MutinySessionFactoryInstrumentation implements TypeInstrumentation 
         nameStartsWith("open")
             .or(nameStartsWith("with"))
             .and(returns(named("io.smallrye.mutiny.Uni"))),
-        this.getClass().getName() + "$ContextAdvice");
+        getClass().getName() + "$ContextAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ContextAdvice {
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Return(readOnly = false) Uni<?> uni) {
-      uni = ContextOperator.plug(uni);
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static Uni<?> onExit(@Advice.Return Uni<?> uni) {
+      return ContextOperator.plug(uni);
     }
   }
 }

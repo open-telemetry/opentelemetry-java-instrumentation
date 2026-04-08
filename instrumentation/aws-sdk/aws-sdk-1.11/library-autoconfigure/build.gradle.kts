@@ -26,10 +26,13 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-    systemProperty("otel.instrumentation.messaging.experimental.capture-headers", "test-message-header")
+    systemProperty("otel.instrumentation.messaging.experimental.capture-headers", "Test-Message-Header")
   }
 
   val testReceiveSpansDisabled by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     filter {
       includeTestsMatching("SqsSuppressReceiveSpansTest")
     }
@@ -48,7 +51,7 @@ tasks {
   }
 }
 
-if (!(findProperty("testLatestDeps") as Boolean)) {
+if (!otelProps.testLatestDeps) {
   configurations.testRuntimeClasspath {
     resolutionStrategy {
       eachDependency {

@@ -8,6 +8,17 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.common.Attributes;
@@ -19,10 +30,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
-import io.opentelemetry.semconv.ErrorAttributes;
-import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.ServerAttributes;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
 class DbClientMetricsTest {
@@ -42,20 +49,20 @@ class DbClientMetricsTest {
 
     Attributes operationAttributes =
         Attributes.builder()
-            .put(DbClientCommonAttributesExtractor.DB_SYSTEM_NAME, "myDb")
-            .put(SqlClientAttributesExtractor.DB_COLLECTION_NAME, "table")
-            .put(DbClientCommonAttributesExtractor.DB_NAMESPACE, "potatoes")
-            .put(DbClientAttributesExtractor.DB_OPERATION_NAME, "SELECT")
-            .put(ServerAttributes.SERVER_ADDRESS, "localhost")
-            .put(ServerAttributes.SERVER_PORT, 1234)
+            .put(DB_SYSTEM_NAME, "myDb")
+            .put(DB_COLLECTION_NAME, "table")
+            .put(DB_NAMESPACE, "potatoes")
+            .put(DB_OPERATION_NAME, "SELECT")
+            .put(DB_QUERY_SUMMARY, "SELECT table")
+            .put(SERVER_ADDRESS, "localhost")
+            .put(SERVER_PORT, 1234)
             .build();
 
     Attributes responseAttributes =
         Attributes.builder()
-            .put(DbClientAttributesExtractor.DB_RESPONSE_STATUS_CODE, "200")
-            .put(ErrorAttributes.ERROR_TYPE, "400")
-            .put(NetworkAttributes.NETWORK_PEER_ADDRESS, "1.2.3.4")
-            .put(NetworkAttributes.NETWORK_PEER_PORT, 8080)
+            .put(ERROR_TYPE, "400")
+            .put(NETWORK_PEER_ADDRESS, "1.2.3.4")
+            .put(NETWORK_PEER_PORT, 8080)
             .build();
 
     Context parent =
@@ -88,27 +95,16 @@ class DbClientMetricsTest {
                                     point
                                         .hasSum(0.15 /* seconds */)
                                         .hasAttributesSatisfying(
-                                            equalTo(
-                                                DbClientCommonAttributesExtractor.DB_SYSTEM_NAME,
-                                                "myDb"),
-                                            equalTo(
-                                                DbClientCommonAttributesExtractor.DB_NAMESPACE,
-                                                "potatoes"),
-                                            equalTo(
-                                                DbClientAttributesExtractor.DB_OPERATION_NAME,
-                                                "SELECT"),
-                                            equalTo(
-                                                SqlClientAttributesExtractor.DB_COLLECTION_NAME,
-                                                "table"),
-                                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                                            equalTo(ServerAttributes.SERVER_PORT, 1234),
-                                            equalTo(
-                                                DbClientAttributesExtractor.DB_RESPONSE_STATUS_CODE,
-                                                "200"),
-                                            equalTo(ErrorAttributes.ERROR_TYPE, "400"),
-                                            equalTo(
-                                                NetworkAttributes.NETWORK_PEER_ADDRESS, "1.2.3.4"),
-                                            equalTo(NetworkAttributes.NETWORK_PEER_PORT, 8080))
+                                            equalTo(DB_SYSTEM_NAME, "myDb"),
+                                            equalTo(DB_NAMESPACE, "potatoes"),
+                                            equalTo(DB_OPERATION_NAME, "SELECT"),
+                                            equalTo(DB_COLLECTION_NAME, "table"),
+                                            equalTo(DB_QUERY_SUMMARY, "SELECT table"),
+                                            equalTo(SERVER_ADDRESS, "localhost"),
+                                            equalTo(SERVER_PORT, 1234),
+                                            equalTo(ERROR_TYPE, "400"),
+                                            equalTo(NETWORK_PEER_ADDRESS, "1.2.3.4"),
+                                            equalTo(NETWORK_PEER_PORT, 8080))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -118,6 +114,6 @@ class DbClientMetricsTest {
   }
 
   private static long nanos(int millis) {
-    return TimeUnit.MILLISECONDS.toNanos(millis);
+    return MILLISECONDS.toNanos(millis);
   }
 }

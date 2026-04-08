@@ -1,0 +1,13 @@
+display_name: JFinal
+description: >
+  This instrumentation enriches HTTP server spans with route information, and enables
+  controller spans for JFinal controller methods (controller spans are disabled by default).
+features:
+  - HTTP_ROUTE
+  - CONTROLLER_SPANS
+library_link: https://github.com/jfinal/jfinal
+configurations:
+  - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+    description: Enables the creation of experimental controller spans.
+    type: boolean
+    default: false

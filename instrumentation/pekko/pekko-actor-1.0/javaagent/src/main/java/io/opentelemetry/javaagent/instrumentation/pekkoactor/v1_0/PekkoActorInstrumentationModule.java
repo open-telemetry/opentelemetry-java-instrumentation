@@ -10,10 +10,12 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class PekkoActorInstrumentationModule extends InstrumentationModule {
+public class PekkoActorInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public PekkoActorInstrumentationModule() {
     super("pekko-actor", "pekko-actor-1.0");
   }
@@ -25,5 +27,10 @@ public class PekkoActorInstrumentationModule extends InstrumentationModule {
         new PekkoActorCellInstrumentation(),
         new PekkoDefaultSystemMessageQueueInstrumentation(),
         new PekkoScheduleInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

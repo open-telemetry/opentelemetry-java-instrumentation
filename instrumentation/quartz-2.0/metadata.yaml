@@ -1,0 +1,8 @@
+display_name: Quartz
+description: This instrumentation enables spans for Quartz job execution.
+library_link: https://www.quartz-scheduler.org/
+configurations:
+  - name: otel.instrumentation.quartz.experimental-span-attributes
+    description: Enables the experimental `job.system` span attribute.
+    type: boolean
+    default: false

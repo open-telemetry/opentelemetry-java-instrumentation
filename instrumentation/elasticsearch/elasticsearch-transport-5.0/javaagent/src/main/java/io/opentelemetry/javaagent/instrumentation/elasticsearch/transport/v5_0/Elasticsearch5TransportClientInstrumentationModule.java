@@ -10,10 +10,12 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class Elasticsearch5TransportClientInstrumentationModule extends InstrumentationModule {
+public class Elasticsearch5TransportClientInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public Elasticsearch5TransportClientInstrumentationModule() {
     super("elasticsearch-transport", "elasticsearch-transport-5.0", "elasticsearch");
   }
@@ -21,5 +23,10 @@ public class Elasticsearch5TransportClientInstrumentationModule extends Instrume
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new AbstractClientInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

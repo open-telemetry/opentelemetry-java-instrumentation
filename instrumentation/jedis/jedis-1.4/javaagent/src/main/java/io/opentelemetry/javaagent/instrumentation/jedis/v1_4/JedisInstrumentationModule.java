@@ -12,11 +12,13 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class JedisInstrumentationModule extends InstrumentationModule {
+public class JedisInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public JedisInstrumentationModule() {
     super("jedis", "jedis-1.4");
@@ -24,12 +26,17 @@ public class JedisInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // Avoid matching 3.x
+    // added in 3.0
     return not(hasClassesNamed("redis.clients.jedis.commands.ProtocolCommand"));
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new JedisConnectionInstrumentation(), new JedisInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

@@ -12,11 +12,6 @@ muzzle {
   }
 }
 
-tasks.withType<Test>().configureEach {
-  // TODO run tests both with and without experimental span attributes
-  jvmArgs("-Dotel.instrumentation.guava.experimental-span-attributes=true")
-}
-
 dependencies {
   bootstrap(project(":instrumentation:executors:bootstrap"))
 
@@ -30,4 +25,31 @@ dependencies {
   testImplementation(project(":instrumentation-annotations-support-testing"))
   testImplementation(project(":instrumentation-annotations"))
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
+}
+
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=code")
+  }
+
+  val testBothSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.guava.experimental-span-attributes=true")
+  }
+
+  check {
+    dependsOn(testStableSemconv, testBothSemconv, testExperimental)
+  }
 }

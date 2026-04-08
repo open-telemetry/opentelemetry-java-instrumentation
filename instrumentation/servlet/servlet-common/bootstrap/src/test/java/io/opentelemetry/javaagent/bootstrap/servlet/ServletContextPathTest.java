@@ -10,10 +10,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.context.Context;
 import org.junit.jupiter.api.Test;
 
-public class ServletContextPathTest {
+class ServletContextPathTest {
 
   @Test
-  public void shouldAddSlashBetweenContextAndSpanName() {
+  void shouldAddSlashBetweenContextAndSpanName() {
     Context contextWithEmptyPath = ServletContextPath.init(Context.root(), p -> p, "");
     Context contextWithPath = ServletContextPath.init(Context.root(), p -> p, "/context");
 
@@ -23,7 +23,7 @@ public class ServletContextPathTest {
   }
 
   @Test
-  public void shouldNotResultInDuplicateSlash() {
+  void shouldNotResultInDuplicateSlash() {
     Context contextWithEmptyPath = ServletContextPath.init(Context.root(), p -> p, "");
     Context contextWithPath = ServletContextPath.init(Context.root(), p -> p, "/context");
 
@@ -34,7 +34,7 @@ public class ServletContextPathTest {
   }
 
   @Test
-  public void shouldIgnoreEmptySpanName() {
+  void shouldIgnoreEmptySpanName() {
     Context contextWithEmptyPath = ServletContextPath.init(Context.root(), p -> p, "");
     Context contextWithPath = ServletContextPath.init(Context.root(), p -> p, "/context");
 

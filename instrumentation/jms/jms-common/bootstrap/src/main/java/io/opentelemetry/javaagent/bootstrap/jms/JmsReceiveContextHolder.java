@@ -16,7 +16,7 @@ public final class JmsReceiveContextHolder implements ImplicitContextKeyed {
   private static final ContextKey<JmsReceiveContextHolder> KEY =
       named("opentelemetry-jms-receive-context");
 
-  private Context receiveContext;
+  @Nullable private Context receiveContext;
 
   private JmsReceiveContextHolder() {}
 

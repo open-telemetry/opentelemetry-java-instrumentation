@@ -5,31 +5,32 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.util;
 
-import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
+import io.opentelemetry.javaagent.instrumentation.netty.v3_8.NettyRequest;
+import javax.annotation.Nullable;
 import org.jboss.netty.channel.ChannelHandler;
 
-public final class HttpSchemeUtil {
+public class HttpSchemeUtil {
 
   private static final Class<? extends ChannelHandler> sslHandlerClass = getSslHandlerClass();
 
-  @SuppressWarnings("unchecked")
+  @Nullable
   private static Class<? extends ChannelHandler> getSslHandlerClass() {
     try {
-      return (Class<? extends ChannelHandler>)
-          Class.forName(
+      return Class.forName(
               "org.jboss.netty.handler.ssl.SslHandler",
               false,
-              HttpSchemeUtil.class.getClassLoader());
-    } catch (ClassNotFoundException exception) {
+              HttpSchemeUtil.class.getClassLoader())
+          .asSubclass(ChannelHandler.class);
+    } catch (ClassNotFoundException ignored) {
       return null;
     }
   }
 
-  public static String getScheme(HttpRequestAndChannel requestAndChannel) {
+  public static String getScheme(NettyRequest requestAndChannel) {
     return isHttps(requestAndChannel) ? "https" : "http";
   }
 
-  private static boolean isHttps(HttpRequestAndChannel requestAndChannel) {
+  private static boolean isHttps(NettyRequest requestAndChannel) {
     return sslHandlerClass != null
         && requestAndChannel.channel().getPipeline().get(sslHandlerClass) != null;
   }

@@ -5,13 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum RabbitChannelAttributesGetter implements MessagingAttributesGetter<ChannelAndMethod, Void> {
-  INSTANCE;
+final class RabbitChannelAttributesGetter
+    implements MessagingAttributesGetter<ChannelAndMethod, Void> {
 
   @Override
   public String getSystem(ChannelAndMethod channelAndMethod) {
@@ -81,9 +83,9 @@ enum RabbitChannelAttributesGetter implements MessagingAttributesGetter<ChannelA
     if (channelAndMethod.getHeaders() != null) {
       Object value = channelAndMethod.getHeaders().get(name);
       if (value != null) {
-        return Collections.singletonList(value.toString());
+        return singletonList(value.toString());
       }
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 }

@@ -6,10 +6,11 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import java.util.function.Function;
 
 /**
@@ -21,28 +22,28 @@ public final class InstrumentationConfigUtil {
 
   @CanIgnoreReturnValue
   public static <T, REQUEST, RESPONSE> T configureClientBuilder(
-      ConfigProperties config,
+      OpenTelemetry openTelemetry,
       T builder,
       Function<T, DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE>> getBuilder) {
-    getBuilder.apply(builder).configure(getConfig(config));
+    getBuilder.apply(builder).configure(getConfig(openTelemetry));
     return builder;
   }
 
   @CanIgnoreReturnValue
   public static <T, REQUEST, RESPONSE> T configureServerBuilder(
-      ConfigProperties config,
+      OpenTelemetry openTelemetry,
       T builder,
       Function<T, DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE>> getBuilder) {
-    getBuilder.apply(builder).configure(getConfig(config));
+    getBuilder.apply(builder).configure(getConfig(openTelemetry));
     return builder;
   }
 
-  private static CommonConfig getConfig(ConfigProperties config) {
-    return new CommonConfig(new ConfigPropertiesBridge(config));
+  private static CommonConfig getConfig(OpenTelemetry openTelemetry) {
+    return new CommonConfig(openTelemetry);
   }
 
-  public static boolean isStatementSanitizationEnabled(ConfigProperties config, String key) {
-    return config.getBoolean(
-        key, config.getBoolean("otel.instrumentation.common.db-statement-sanitizer.enabled", true));
+  public static boolean isQuerySanitizationEnabled(
+      OpenTelemetry openTelemetry, String instrumentationName) {
+    return DbConfig.isQuerySanitizationEnabled(openTelemetry, instrumentationName);
   }
 }

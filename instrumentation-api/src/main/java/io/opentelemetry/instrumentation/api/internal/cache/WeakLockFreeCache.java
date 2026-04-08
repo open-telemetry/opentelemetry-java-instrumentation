@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.internal.cache;
 
 import io.opentelemetry.instrumentation.api.internal.cache.weaklockfree.WeakConcurrentMap;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 
 final class WeakLockFreeCache<K, V> implements Cache<K, V> {
 
@@ -22,6 +23,7 @@ final class WeakLockFreeCache<K, V> implements Cache<K, V> {
   }
 
   @Override
+  @Nullable
   public V get(K key) {
     return delegate.getIfPresent(key);
   }

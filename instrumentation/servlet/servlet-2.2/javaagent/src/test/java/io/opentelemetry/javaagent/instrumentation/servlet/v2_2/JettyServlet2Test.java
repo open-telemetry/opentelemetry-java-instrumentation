@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_REQUIRED;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
@@ -15,9 +16,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
 
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -29,7 +27,6 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.HashSet;
-import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Response;
@@ -96,8 +93,7 @@ class JettyServlet2Test extends AbstractHttpServerTest<Server> {
   }
 
   @Override
-  public String expectedServerSpanName(
-      ServerEndpoint endpoint, String method, @Nullable String route) {
+  public String expectedServerSpanName(ServerEndpoint endpoint, String method, String route) {
     if (method.equals(HttpConstants._OTHER)) {
       return "HTTP " + getContextPath() + endpoint.getPath();
     }
@@ -111,15 +107,12 @@ class JettyServlet2Test extends AbstractHttpServerTest<Server> {
     }
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
     String responseMethod = endpoint.equals(REDIRECT) ? "sendRedirect" : "sendError";
     return span.hasName("Response." + responseMethod)
         .hasKind(INTERNAL)
-        .hasAttributesSatisfyingExactly(
-            equalTo(CODE_NAMESPACE, Response.class.getName()),
-            equalTo(CODE_FUNCTION, responseMethod));
+        .hasAttributesSatisfyingExactly(codeFunctionAssertions(Response.class, responseMethod));
   }
 }

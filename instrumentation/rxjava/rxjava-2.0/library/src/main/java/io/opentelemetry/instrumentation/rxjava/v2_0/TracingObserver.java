@@ -28,9 +28,10 @@ import io.reactivex.Observer;
 import io.reactivex.internal.fuseable.QueueDisposable;
 import io.reactivex.internal.observers.BasicFuseableObserver;
 import java.lang.reflect.Field;
+import javax.annotation.Nullable;
 
 class TracingObserver<T> extends BasicFuseableObserver<T, T> {
-  private static final Field queueDisposableField = getQueueDisposableField();
+  @Nullable private static final Field queueDisposableField = getQueueDisposableField();
 
   // BasicFuseableObserver#actual has been renamed to downstream in newer versions, we can't use it
   // in this class
@@ -80,15 +81,16 @@ class TracingObserver<T> extends BasicFuseableObserver<T, T> {
     return getQueueDisposable().poll();
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // casting reflection result
   private QueueDisposable<T> getQueueDisposable() {
     try {
       return (QueueDisposable<T>) queueDisposableField.get(this);
-    } catch (Throwable throwable) {
-      throw new IllegalStateException(throwable);
+    } catch (Throwable t) {
+      throw new IllegalStateException(t);
     }
   }
 
+  @Nullable
   private static Field getField(String fieldName) {
 
     try {
@@ -99,6 +101,7 @@ class TracingObserver<T> extends BasicFuseableObserver<T, T> {
     return null;
   }
 
+  @Nullable
   private static Field getQueueDisposableField() {
     Field queueDisposableField = getField("qd");
     if (queueDisposableField == null) {

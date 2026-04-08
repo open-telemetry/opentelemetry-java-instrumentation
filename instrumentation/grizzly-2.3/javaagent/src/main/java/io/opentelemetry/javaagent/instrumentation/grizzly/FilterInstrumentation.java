@@ -17,14 +17,14 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.matcher.ElementMatchers;
 import org.glassfish.grizzly.filterchain.BaseFilter;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
 
-public class FilterInstrumentation implements TypeInstrumentation {
+class FilterInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -35,8 +35,8 @@ public class FilterInstrumentation implements TypeInstrumentation {
   public ElementMatcher<TypeDescription> typeMatcher() {
     return hasSuperClass(named("org.glassfish.grizzly.filterchain.BaseFilter"))
         // HttpCodecFilter is instrumented in the server instrumentation
-        .and(not(ElementMatchers.named("org.glassfish.grizzly.http.HttpCodecFilter")))
-        .and(not(ElementMatchers.named("org.glassfish.grizzly.http.HttpServerFilter")));
+        .and(not(named("org.glassfish.grizzly.http.HttpCodecFilter")))
+        .and(not(named("org.glassfish.grizzly.http.HttpServerFilter")));
   }
 
   @Override
@@ -45,29 +45,24 @@ public class FilterInstrumentation implements TypeInstrumentation {
         named("handleRead")
             .and(takesArgument(0, named("org.glassfish.grizzly.filterchain.FilterChainContext")))
             .and(isPublic()),
-        FilterInstrumentation.class.getName() + "$HandleReadAdvice");
+        getClass().getName() + "$HandleReadAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class HandleReadAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.This BaseFilter it,
-        @Advice.Argument(0) FilterChainContext ctx,
-        @Advice.Local("otelScope") Scope scope) {
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Scope onEnter(
+        @Advice.This BaseFilter it, @Advice.Argument(0) FilterChainContext ctx) {
       if (Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
-        return;
+        return null;
       }
-
       Context context = GrizzlyStateStorage.getContext(ctx);
-      if (context != null) {
-        scope = context.makeCurrent();
-      }
+      return context != null ? context.makeCurrent() : null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.This BaseFilter it, @Advice.Local("otelScope") Scope scope) {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This BaseFilter it, @Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

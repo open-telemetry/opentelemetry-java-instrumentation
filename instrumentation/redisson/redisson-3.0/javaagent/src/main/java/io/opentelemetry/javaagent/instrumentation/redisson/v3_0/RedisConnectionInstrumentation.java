@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.redisson.v3_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.redisson.v3_0.RedissonSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
@@ -18,12 +17,13 @@ import io.opentelemetry.javaagent.instrumentation.redisson.EndOperationListener;
 import io.opentelemetry.javaagent.instrumentation.redisson.PromiseWrapper;
 import io.opentelemetry.javaagent.instrumentation.redisson.RedissonRequest;
 import java.net.InetSocketAddress;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.redisson.client.RedisConnection;
 
-public class RedisConnectionInstrumentation implements TypeInstrumentation {
+class RedisConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.redisson.client.RedisConnection");
@@ -31,54 +31,69 @@ public class RedisConnectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isMethod().and(named("send")), this.getClass().getName() + "$SendAdvice");
+    transformer.applyAdviceToMethod(named("send"), getClass().getName() + "$SendAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class SendAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.This RedisConnection connection,
-        @Advice.Argument(0) Object arg,
-        @Advice.Local("otelRequest") RedissonRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+    public static class AdviceScope {
+      private final RedissonRequest request;
+      private final Context context;
+      private final Scope scope;
 
-      Context parentContext = currentContext();
-      InetSocketAddress remoteAddress = (InetSocketAddress) connection.getChannel().remoteAddress();
-      request = RedissonRequest.create(remoteAddress, arg);
-      PromiseWrapper<?> promise = request.getPromiseWrapper();
-      if (promise == null) {
-        return;
-      }
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return;
+      private AdviceScope(RedissonRequest request, Context context, Scope scope) {
+        this.request = request;
+        this.context = context;
+        this.scope = scope;
       }
 
-      context = instrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
+      @Nullable
+      public static AdviceScope start(RedisConnection connection, Object arg) {
+        InetSocketAddress remoteAddress =
+            (InetSocketAddress) connection.getChannel().remoteAddress();
+        RedissonRequest request = RedissonRequest.create(remoteAddress, arg);
+        PromiseWrapper<?> promise = request.getPromiseWrapper();
+        if (promise == null) {
+          return null;
+        }
+        Context parentContext = currentContext();
+        if (!instrumenter().shouldStart(parentContext, request)) {
+          return null;
+        }
 
-      promise.setEndOperationListener(new EndOperationListener<>(instrumenter(), context, request));
+        Context context = instrumenter().start(parentContext, request);
+        Scope scope = context.makeCurrent();
+
+        promise.setEndOperationListener(
+            new EndOperationListener<>(instrumenter(), context, request));
+        return new AdviceScope(request, context, scope);
+      }
+
+      public void end(@Nullable Throwable throwable) {
+        scope.close();
+
+        if (throwable != null) {
+          instrumenter().end(context, request, null, throwable);
+        }
+        // span ended in EndOperationListener
+      }
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static AdviceScope onEnter(
+        @Advice.This RedisConnection connection, @Advice.Argument(0) Object arg) {
+      return AdviceScope.start(connection, arg);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelRequest") RedissonRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-
-      if (scope == null) {
-        return;
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(throwable);
       }
-      scope.close();
-
-      if (throwable != null) {
-        instrumenter().end(context, request, null, throwable);
-      }
-      // span ended in EndOperationListener
     }
   }
 }

@@ -7,20 +7,20 @@ package io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
-public final class SpringSchedulingSingletons {
+public class SpringSchedulingSingletons {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.spring-scheduling.experimental-span-attributes", false);
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "spring_scheduling")
+          .getBoolean("experimental_span_attributes/development", false);
 
-  private static final Instrumenter<Runnable, Void> INSTRUMENTER;
+  private static final Instrumenter<Runnable, Void> instrumenter;
 
   static {
     SpringSchedulingCodeAttributesGetter codeAttributesGetter =
@@ -38,11 +38,11 @@ public final class SpringSchedulingSingletons {
           AttributesExtractor.constant(AttributeKey.stringKey("job.system"), "spring_scheduling"));
     }
 
-    INSTRUMENTER = builder.buildInstrumenter();
+    instrumenter = builder.buildInstrumenter();
   }
 
   public static Instrumenter<Runnable, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private SpringSchedulingSingletons() {}

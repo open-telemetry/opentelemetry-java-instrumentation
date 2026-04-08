@@ -14,11 +14,14 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    jvmArgs("-Dotel.instrumentation.lettuce.experimental.command-encoding-events.enabled=true")
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
   val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 

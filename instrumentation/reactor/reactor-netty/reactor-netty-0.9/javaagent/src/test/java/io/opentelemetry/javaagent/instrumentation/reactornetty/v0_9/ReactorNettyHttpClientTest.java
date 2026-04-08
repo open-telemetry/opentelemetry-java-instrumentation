@@ -5,13 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v0_9;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.condition.OS;
 import reactor.netty.http.client.HttpClient;
 
 class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
@@ -26,8 +28,7 @@ class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
                     tcpClient.doOnConnected(
                         connection ->
                             connection.addHandlerLast(
-                                new ReadTimeoutHandler(
-                                    READ_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS)));
+                                new ReadTimeoutHandler(READ_TIMEOUT.toMillis(), MILLISECONDS)));
               }
               return tcpClient.option(
                   ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) CONNECTION_TIMEOUT.toMillis());
@@ -38,7 +39,13 @@ class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     super.configure(optionsBuilder);
 
-    optionsBuilder.setSingleConnectionFactory(ReactorNettyHttpClientTest::createSingleConnection);
+    if (OS.WINDOWS.isCurrentOs()) {
+      // Disable remote connection tests on Windows due to reactor-netty creating extra spans
+      optionsBuilder.setTestRemoteConnection(false);
+    } else {
+      // Only run single connection tests on Linux due to networking stack differences
+      optionsBuilder.setSingleConnectionFactory(ReactorNettyHttpClientTest::createSingleConnection);
+    }
   }
 
   private static SingleConnection createSingleConnection(String host, int port) {

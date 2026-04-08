@@ -42,11 +42,11 @@ import javax.annotation.Nullable;
 @SuppressWarnings("SystemOut")
 public final class OpenTelemetryAgent {
 
-  public static void premain(String agentArgs, Instrumentation inst) {
+  public static void premain(@Nullable String agentArgs, Instrumentation inst) {
     startAgent(inst, agentArgs, true);
   }
 
-  public static void agentmain(String agentArgs, Instrumentation inst) {
+  public static void agentmain(@Nullable String agentArgs, Instrumentation inst) {
     startAgent(inst, agentArgs, false);
   }
 
@@ -57,10 +57,10 @@ public final class OpenTelemetryAgent {
       InstrumentationHolder.setInstrumentation(inst);
       JavaagentFileHolder.setJavaagentFile(javaagentFile);
       AgentInitializer.initialize(inst, javaagentFile, fromPremain, agentArgs);
-    } catch (Throwable ex) {
+    } catch (Throwable t) {
       // Don't rethrow.  We don't have a log manager here, so just print.
       System.err.println("ERROR " + OpenTelemetryAgent.class.getName());
-      ex.printStackTrace();
+      t.printStackTrace();
     }
   }
 

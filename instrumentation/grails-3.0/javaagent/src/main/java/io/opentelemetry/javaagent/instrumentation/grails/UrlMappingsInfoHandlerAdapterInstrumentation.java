@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.grails;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -22,7 +21,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.grails.web.mapping.mvc.GrailsControllerUrlMappingInfo;
 
-public class UrlMappingsInfoHandlerAdapterInstrumentation implements TypeInstrumentation {
+class UrlMappingsInfoHandlerAdapterInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.grails.web.mapping.mvc.UrlMappingsInfoHandlerAdapter");
@@ -31,18 +30,17 @@ public class UrlMappingsInfoHandlerAdapterInstrumentation implements TypeInstrum
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("handle"))
             .and(takesArgument(2, named(Object.class.getName())))
             .and(takesArguments(3)),
-        UrlMappingsInfoHandlerAdapterInstrumentation.class.getName() + "$ServerSpanNameAdvice");
+        getClass().getName() + "$ServerSpanNameAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ServerSpanNameAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void nameSpan(@Advice.Argument(2) Object handler) {
 
       if (handler instanceof GrailsControllerUrlMappingInfo) {

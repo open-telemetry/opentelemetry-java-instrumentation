@@ -7,33 +7,39 @@ package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
 import static io.opentelemetry.javaagent.instrumentation.spymemcached.SpymemcachedSingletons.instrumenter;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
 public abstract class CompletionListener<T> {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.spymemcached.experimental-span-attributes", false);
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "spymemcached")
+          .getBoolean("experimental_span_attributes/development", false);
 
   private static final String DB_COMMAND_CANCELLED = "spymemcached.command.cancelled";
   private static final String MEMCACHED_RESULT = "spymemcached.result";
   private static final String HIT = "hit";
   private static final String MISS = "miss";
 
-  private final Context context;
   private final SpymemcachedRequest request;
+  private final Context context;
 
   protected CompletionListener(Context parentContext, SpymemcachedRequest request) {
     this.request = request;
     context = instrumenter().start(parentContext, request);
   }
 
+  public Context getContext() {
+    return context;
+  }
+
   protected void closeAsyncSpan(T future) {
     Span span = Span.fromContext(context);
+    Throwable error = null;
     try {
       processResult(span, future);
     } catch (CancellationException e) {
@@ -48,17 +54,17 @@ public abstract class CompletionListener<T> {
           span.setAttribute(DB_COMMAND_CANCELLED, true);
         }
       } else {
-        instrumenter().end(context, request, null, e);
+        error = e;
       }
     } catch (InterruptedException e) {
       // Avoid swallowing InterruptedException
-      instrumenter().end(context, request, null, e);
+      error = e;
       Thread.currentThread().interrupt();
     } catch (Throwable t) {
       // This should never happen, just in case to make sure we cover all unexpected exceptions
-      instrumenter().end(context, request, null, t);
+      error = t;
     } finally {
-      instrumenter().end(context, request, future, null);
+      instrumenter().end(context, request, future, error);
     }
   }
 
@@ -73,5 +79,9 @@ public abstract class CompletionListener<T> {
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       span.setAttribute(MEMCACHED_RESULT, hit ? HIT : MISS);
     }
+  }
+
+  public void done(Throwable thrown) {
+    closeSyncSpan(thrown);
   }
 }

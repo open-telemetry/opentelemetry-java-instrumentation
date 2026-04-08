@@ -1,0 +1,4 @@
+description: >
+  This instrumentation provides a bridge between the agent's OpenTelemetry context and the
+  application's OpenTelemetry context when using Reactor 3.4+ with ContextView API.
+classification: internal

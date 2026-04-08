@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.aws;
 
+import static java.util.Collections.singletonMap;
+
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
@@ -27,7 +29,6 @@ import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
-import java.util.Collections;
 import java.util.EnumSet;
 import org.elasticmq.rest.sqs.SQSRestServer;
 import org.elasticmq.rest.sqs.SQSRestServerBuilder;
@@ -133,8 +134,7 @@ class AwsConnector {
 
   void setQueuePublishingPolicy(String queueUrl, String queueArn) {
     logger.info("Set policy for queue {}", queueArn);
-    sqsClient.setQueueAttributes(
-        queueUrl, Collections.singletonMap("Policy", getSqsPolicy(queueArn)));
+    sqsClient.setQueueAttributes(queueUrl, singletonMap("Policy", getSqsPolicy(queueArn)));
   }
 
   String createQueue(String queueName) {

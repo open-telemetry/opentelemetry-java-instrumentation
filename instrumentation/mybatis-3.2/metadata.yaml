@@ -1,1 +1,4 @@
+display_name: MyBatis
+description: This instrumentation enables spans for MyBatis mapper method executions.
 disabled_by_default: true
+library_link: https://mybatis.org/mybatis-3/

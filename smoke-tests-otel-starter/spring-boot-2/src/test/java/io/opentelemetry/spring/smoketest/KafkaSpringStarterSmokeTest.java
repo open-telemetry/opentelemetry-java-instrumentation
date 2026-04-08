@@ -5,7 +5,19 @@
 
 package io.opentelemetry.spring.smoketest;
 
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.kafka.ProducerFactoryCustomizerConfiguration;
 import org.junit.jupiter.api.condition.DisabledInNativeImage;
+import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
 
 @DisabledInNativeImage // See GraalVmNativeKafkaSpringStarterSmokeTest for the GraalVM native test
-public class KafkaSpringStarterSmokeTest extends AbstractJvmKafkaSpringStarterSmokeTest {}
+class KafkaSpringStarterSmokeTest extends AbstractJvmKafkaSpringStarterSmokeTest {
+  @Override
+  protected Class<?> kafkaProducerFactoryCustomizerClass() {
+    return ProducerFactoryCustomizerConfiguration.class;
+  }
+
+  @Override
+  protected Class<?> kafkaAutoConfigurationClass() {
+    return KafkaAutoConfiguration.class;
+  }
+}

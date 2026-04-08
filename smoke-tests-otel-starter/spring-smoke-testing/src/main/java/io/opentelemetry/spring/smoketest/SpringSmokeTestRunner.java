@@ -7,6 +7,9 @@ package io.opentelemetry.spring.smoketest;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
+import io.opentelemetry.instrumentation.testing.provider.TestLogRecordExporterComponentProvider;
+import io.opentelemetry.instrumentation.testing.provider.TestMetricExporterComponentProvider;
+import io.opentelemetry.instrumentation.testing.provider.TestSpanExporterComponentProvider;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.MetricData;
@@ -20,7 +23,7 @@ import java.util.List;
  * An implementation of {@link InstrumentationTestRunner} that initializes OpenTelemetry SDK and
  * uses in-memory exporter to collect traces and metrics.
  */
-public final class SpringSmokeTestRunner extends InstrumentationTestRunner {
+public class SpringSmokeTestRunner extends InstrumentationTestRunner {
 
   static InMemorySpanExporter testSpanExporter;
   static InMemoryMetricExporter testMetricExporter;
@@ -36,6 +39,11 @@ public final class SpringSmokeTestRunner extends InstrumentationTestRunner {
     testSpanExporter = InMemorySpanExporter.create();
     testMetricExporter = InMemoryMetricExporter.create(AggregationTemporality.DELTA);
     testLogRecordExporter = InMemoryLogRecordExporter.create();
+
+    // for declarative config
+    TestLogRecordExporterComponentProvider.setLogRecordExporter(testLogRecordExporter);
+    TestMetricExporterComponentProvider.setMetricExporter(testMetricExporter);
+    TestSpanExporterComponentProvider.setSpanExporter(testSpanExporter);
   }
 
   @Override

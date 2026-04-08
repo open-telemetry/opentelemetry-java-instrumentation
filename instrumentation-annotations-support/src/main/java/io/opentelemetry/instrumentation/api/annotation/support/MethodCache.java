@@ -10,6 +10,7 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 
 /**
  * Implementation of {@link Cache} that uses {@link ClassValue} to store values keyed by {@link
@@ -21,6 +22,7 @@ final class MethodCache<V> extends ClassValue<Map<Method, V>> implements Cache<M
     return this.get(key.getDeclaringClass()).computeIfAbsent(key, mappingFunction);
   }
 
+  @Nullable
   @Override
   public V get(Method key) {
     return this.get(key.getDeclaringClass()).get(key);

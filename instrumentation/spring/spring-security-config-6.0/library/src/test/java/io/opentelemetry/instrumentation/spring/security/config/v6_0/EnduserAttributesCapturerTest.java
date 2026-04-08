@@ -5,14 +5,17 @@
 
 package io.opentelemetry.instrumentation.spring.security.config.v6_0;
 
+import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ID;
+import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ROLE;
+import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_SCOPE;
+import static java.util.Arrays.asList;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
-import java.util.Arrays;
 import java.util.function.Consumer;
 import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.Test;
@@ -22,7 +25,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-public class EnduserAttributesCapturerTest {
+class EnduserAttributesCapturerTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
@@ -35,7 +38,7 @@ public class EnduserAttributesCapturerTest {
         new PreAuthenticatedAuthenticationToken(
             "principal",
             null,
-            Arrays.asList(
+            asList(
                 new SimpleGrantedAuthority("ROLE_role1"),
                 new SimpleGrantedAuthority("ROLE_role2"),
                 new SimpleGrantedAuthority("SCOPE_scope1"),
@@ -45,9 +48,9 @@ public class EnduserAttributesCapturerTest {
         capturer,
         authentication,
         span ->
-            span.doesNotHave(attribute(EnduserIncubatingAttributes.ENDUSER_ID))
-                .doesNotHave(attribute(EnduserIncubatingAttributes.ENDUSER_ROLE))
-                .doesNotHave(attribute(EnduserIncubatingAttributes.ENDUSER_SCOPE)));
+            span.doesNotHave(attribute(ENDUSER_ID))
+                .doesNotHave(attribute(ENDUSER_ROLE))
+                .doesNotHave(attribute(ENDUSER_SCOPE)));
   }
 
   @Test
@@ -61,7 +64,7 @@ public class EnduserAttributesCapturerTest {
         new PreAuthenticatedAuthenticationToken(
             "principal",
             null,
-            Arrays.asList(
+            asList(
                 new SimpleGrantedAuthority("SCOPE_scope1"),
                 new SimpleGrantedAuthority("SCOPE_scope2")));
 
@@ -69,9 +72,9 @@ public class EnduserAttributesCapturerTest {
         capturer,
         authentication,
         span ->
-            span.hasAttribute(EnduserIncubatingAttributes.ENDUSER_ID, "principal")
-                .doesNotHave(attribute(EnduserIncubatingAttributes.ENDUSER_ROLE))
-                .hasAttribute(EnduserIncubatingAttributes.ENDUSER_SCOPE, "scope1,scope2"));
+            span.hasAttribute(ENDUSER_ID, "principal")
+                .doesNotHave(attribute(ENDUSER_ROLE))
+                .hasAttribute(ENDUSER_SCOPE, "scope1,scope2"));
   }
 
   @Test
@@ -85,7 +88,7 @@ public class EnduserAttributesCapturerTest {
         new PreAuthenticatedAuthenticationToken(
             "principal",
             null,
-            Arrays.asList(
+            asList(
                 new SimpleGrantedAuthority("ROLE_role1"),
                 new SimpleGrantedAuthority("ROLE_role2")));
 
@@ -93,9 +96,9 @@ public class EnduserAttributesCapturerTest {
         capturer,
         authentication,
         span ->
-            span.hasAttribute(EnduserIncubatingAttributes.ENDUSER_ID, "principal")
-                .hasAttribute(EnduserIncubatingAttributes.ENDUSER_ROLE, "role1,role2")
-                .doesNotHave(attribute(EnduserIncubatingAttributes.ENDUSER_SCOPE)));
+            span.hasAttribute(ENDUSER_ID, "principal")
+                .hasAttribute(ENDUSER_ROLE, "role1,role2")
+                .doesNotHave(attribute(ENDUSER_SCOPE)));
   }
 
   @Test
@@ -107,7 +110,7 @@ public class EnduserAttributesCapturerTest {
         new PreAuthenticatedAuthenticationToken(
             "principal",
             null,
-            Arrays.asList(
+            asList(
                 new SimpleGrantedAuthority("ROLE_role1"),
                 new SimpleGrantedAuthority("ROLE_role2"),
                 new SimpleGrantedAuthority("SCOPE_scope1"),
@@ -117,9 +120,9 @@ public class EnduserAttributesCapturerTest {
         capturer,
         authentication,
         span ->
-            span.hasAttribute(EnduserIncubatingAttributes.ENDUSER_ID, "principal")
-                .doesNotHave(attribute(EnduserIncubatingAttributes.ENDUSER_ROLE))
-                .doesNotHave(attribute(EnduserIncubatingAttributes.ENDUSER_SCOPE)));
+            span.hasAttribute(ENDUSER_ID, "principal")
+                .doesNotHave(attribute(ENDUSER_ROLE))
+                .doesNotHave(attribute(ENDUSER_SCOPE)));
   }
 
   @Test
@@ -131,7 +134,7 @@ public class EnduserAttributesCapturerTest {
         new PreAuthenticatedAuthenticationToken(
             "principal",
             null,
-            Arrays.asList(
+            asList(
                 new SimpleGrantedAuthority("ROLE_role1"),
                 new SimpleGrantedAuthority("ROLE_role2"),
                 new SimpleGrantedAuthority("SCOPE_scope1"),
@@ -141,9 +144,9 @@ public class EnduserAttributesCapturerTest {
         capturer,
         authentication,
         span ->
-            span.doesNotHave(attribute(EnduserIncubatingAttributes.ENDUSER_ID))
-                .hasAttribute(EnduserIncubatingAttributes.ENDUSER_ROLE, "role1,role2")
-                .doesNotHave(attribute(EnduserIncubatingAttributes.ENDUSER_SCOPE)));
+            span.doesNotHave(attribute(ENDUSER_ID))
+                .hasAttribute(ENDUSER_ROLE, "role1,role2")
+                .doesNotHave(attribute(ENDUSER_SCOPE)));
   }
 
   @Test
@@ -155,7 +158,7 @@ public class EnduserAttributesCapturerTest {
         new PreAuthenticatedAuthenticationToken(
             "principal",
             null,
-            Arrays.asList(
+            asList(
                 new SimpleGrantedAuthority("ROLE_role1"),
                 new SimpleGrantedAuthority("ROLE_role2"),
                 new SimpleGrantedAuthority("SCOPE_scope1"),
@@ -165,9 +168,9 @@ public class EnduserAttributesCapturerTest {
         capturer,
         authentication,
         span ->
-            span.doesNotHave(attribute(EnduserIncubatingAttributes.ENDUSER_ID))
-                .doesNotHave(attribute(EnduserIncubatingAttributes.ENDUSER_ROLE))
-                .hasAttribute(EnduserIncubatingAttributes.ENDUSER_SCOPE, "scope1,scope2"));
+            span.doesNotHave(attribute(ENDUSER_ID))
+                .doesNotHave(attribute(ENDUSER_ROLE))
+                .hasAttribute(ENDUSER_SCOPE, "scope1,scope2"));
   }
 
   @Test
@@ -183,7 +186,7 @@ public class EnduserAttributesCapturerTest {
         new PreAuthenticatedAuthenticationToken(
             "principal",
             null,
-            Arrays.asList(
+            asList(
                 new SimpleGrantedAuthority("role_role1"),
                 new SimpleGrantedAuthority("role_role2"),
                 new SimpleGrantedAuthority("scope_scope1"),
@@ -193,9 +196,9 @@ public class EnduserAttributesCapturerTest {
         capturer,
         authentication,
         span ->
-            span.hasAttribute(EnduserIncubatingAttributes.ENDUSER_ID, "principal")
-                .hasAttribute(EnduserIncubatingAttributes.ENDUSER_ROLE, "role1,role2")
-                .hasAttribute(EnduserIncubatingAttributes.ENDUSER_SCOPE, "scope1,scope2"));
+            span.hasAttribute(ENDUSER_ID, "principal")
+                .hasAttribute(ENDUSER_ROLE, "role1,role2")
+                .hasAttribute(ENDUSER_SCOPE, "scope1,scope2"));
   }
 
   void test(

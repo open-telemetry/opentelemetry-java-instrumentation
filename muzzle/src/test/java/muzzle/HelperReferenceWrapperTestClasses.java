@@ -12,11 +12,11 @@ public class HelperReferenceWrapperTestClasses {
     void foo();
   }
 
-  interface Interface2 {
+  public interface Interface2 {
     void bar();
   }
 
-  abstract static class AbstractClasspathType implements Interface1 {
+  public abstract static class AbstractClasspathType implements Interface1 {
     private Object privateFieldsAreIgnored;
     protected Object field;
 

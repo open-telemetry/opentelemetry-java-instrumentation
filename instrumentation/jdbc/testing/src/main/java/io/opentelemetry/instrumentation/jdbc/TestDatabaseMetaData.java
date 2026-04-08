@@ -12,7 +12,7 @@ import java.sql.RowIdLifetime;
 import java.sql.SQLException;
 
 class TestDatabaseMetaData implements DatabaseMetaData {
-  final String url;
+  private final String url;
 
   TestDatabaseMetaData() {
     this("jdbc:postgresql://127.0.0.1:5432/dbname");

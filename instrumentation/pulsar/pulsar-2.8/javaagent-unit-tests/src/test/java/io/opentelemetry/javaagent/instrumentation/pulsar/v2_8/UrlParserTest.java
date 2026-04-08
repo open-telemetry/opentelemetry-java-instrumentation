@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.UrlParser.UrlData;
 import org.junit.jupiter.api.Test;
 
-public class UrlParserTest {
+class UrlParserTest {
 
   @Test
   void parseUrl() {

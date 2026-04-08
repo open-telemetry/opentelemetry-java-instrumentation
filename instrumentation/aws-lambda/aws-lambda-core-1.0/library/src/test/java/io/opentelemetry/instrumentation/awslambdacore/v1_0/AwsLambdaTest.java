@@ -12,10 +12,10 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class AwsLambdaTest extends AbstractAwsLambdaTest {
+class AwsLambdaTest extends AbstractAwsLambdaTest {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Override
   protected RequestHandler<String, String> handler() {
@@ -27,7 +27,7 @@ public class AwsLambdaTest extends AbstractAwsLambdaTest {
     return testing;
   }
 
-  private static final class TestRequestHandler extends TracingRequestHandler<String, String> {
+  private static class TestRequestHandler extends TracingRequestHandler<String, String> {
 
     TestRequestHandler(OpenTelemetrySdk openTelemetrySdk) {
       super(openTelemetrySdk);

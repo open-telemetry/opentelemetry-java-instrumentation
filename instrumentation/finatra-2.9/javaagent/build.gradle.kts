@@ -67,7 +67,7 @@ configurations {
 }
 
 tasks {
-  if (findProperty("testLatestDeps") as Boolean) {
+  if (otelProps.testLatestDeps) {
     // Separate task
     named("test") {
       enabled = false
@@ -85,6 +85,29 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  }
+
+  if (otelProps.denyUnsafe) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
+  }
+}
+
+if (otelProps.testLatestDeps) {
+  configurations.named("latestDepTestRuntimeClasspath") {
+    resolutionStrategy {
+      eachDependency {
+        // finatra 24.2.0 doesn't work with jackson 2.20.0
+        if (requested.group.startsWith("com.fasterxml.jackson")) {
+          useVersion("2.19.2")
+        }
+      }
+    }
   }
 }

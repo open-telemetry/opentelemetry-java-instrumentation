@@ -7,10 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.spanIdKey;
-import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.traceFlagsKey;
-import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.traceIdKey;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.ADD_BAGGAGE;
+import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.CONTEXT;
+import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.SPAN_ID_KEY;
+import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.TRACE_FLAGS_KEY;
+import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.TRACE_ID_KEY;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -21,7 +22,6 @@ import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.baggage.BaggageEntry;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
@@ -30,11 +30,12 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class LoggingEventInstrumentation implements TypeInstrumentation {
+class LoggingEventInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("ch.qos.logback.classic.spi.ILoggingEvent");
@@ -48,28 +49,26 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
-            .and(namedOneOf("getMDCPropertyMap", "getMdc"))
-            .and(takesArguments(0)),
-        LoggingEventInstrumentation.class.getName() + "$GetMdcAdvice");
+        isPublic().and(namedOneOf("getMDCPropertyMap", "getMdc")).and(takesArguments(0)),
+        getClass().getName() + "$GetMdcAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class GetMdcAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static Map<String, String> onExit(
         @Advice.This ILoggingEvent event,
-        @Advice.Return(typing = Typing.DYNAMIC, readOnly = false) Map<String, String> contextData) {
+        @Advice.Return(typing = Typing.DYNAMIC) Map<String, String> contextData) {
 
       if (contextData != null && contextData.containsKey(AgentCommonConfig.get().getTraceIdKey())) {
         // Assume already instrumented event if traceId is present.
-        return;
+        return contextData;
       }
 
-      Context context = VirtualField.find(ILoggingEvent.class, Context.class).get(event);
+      Context context = CONTEXT.get(event);
       if (context == null) {
-        return;
+        return contextData;
       }
 
       Map<String, String> spanContextData = new HashMap<>();
@@ -80,13 +79,13 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
       SpanContext spanContext = Java8BytecodeBridge.spanFromContext(context).getSpanContext();
 
       if (spanContext.isValid()) {
-        spanContextData.put(traceIdKey(), spanContext.getTraceId());
-        spanContextData.put(spanIdKey(), spanContext.getSpanId());
-        spanContextData.put(traceFlagsKey(), spanContext.getTraceFlags().asHex());
+        spanContextData.put(TRACE_ID_KEY, spanContext.getTraceId());
+        spanContextData.put(SPAN_ID_KEY, spanContext.getSpanId());
+        spanContextData.put(TRACE_FLAGS_KEY, spanContext.getTraceFlags().asHex());
       }
       spanContextData.putAll(ConfiguredResourceAttributesHolder.getResourceAttributes());
 
-      if (LogbackSingletons.addBaggage()) {
+      if (ADD_BAGGAGE) {
         Baggage baggage = Java8BytecodeBridge.baggageFromContext(context);
 
         // using a lambda here does not play nicely with instrumentation bytecode process
@@ -98,7 +97,7 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
         }
       }
 
-      contextData = spanContextData;
+      return spanContextData;
     }
   }
 }

@@ -11,8 +11,9 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttribute
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.semconv.SchemaUrls;
 
-public final class ResponseInstrumenterFactory {
+public class ResponseInstrumenterFactory {
 
   public static Instrumenter<ClassAndMethod, Void> createInstrumenter(String instrumentationName) {
     CodeAttributesGetter<ClassAndMethod> codeAttributesGetter =
@@ -22,6 +23,7 @@ public final class ResponseInstrumenterFactory {
             instrumentationName,
             CodeSpanNameExtractor.create(codeAttributesGetter))
         .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
+        .setSchemaUrl(SchemaUrls.V1_37_0)
         .buildInstrumenter();
   }
 

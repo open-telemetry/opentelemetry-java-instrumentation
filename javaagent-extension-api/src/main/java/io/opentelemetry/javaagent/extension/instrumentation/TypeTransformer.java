@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.extension.instrumentation;
 
+import java.util.function.Function;
 import net.bytebuddy.agent.builder.AgentBuilder;
+import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -21,8 +23,19 @@ public interface TypeTransformer {
    * Apply the advice class named {@code adviceClassName} to the instrumented type methods that
    * match {@code methodMatcher}.
    */
+  default void applyAdviceToMethod(
+      ElementMatcher<? super MethodDescription> methodMatcher, String adviceClassName) {
+    applyAdviceToMethod(methodMatcher, Function.identity(), adviceClassName);
+  }
+
+  /**
+   * Apply the advice class named {@code adviceClassName} to the instrumented type methods that
+   * match {@code methodMatcher}.
+   */
   void applyAdviceToMethod(
-      ElementMatcher<? super MethodDescription> methodMatcher, String adviceClassName);
+      ElementMatcher<? super MethodDescription> methodMatcher,
+      Function<Advice.WithCustomMapping, Advice.WithCustomMapping> mappingCustomizer,
+      String adviceClassName);
 
   /**
    * Apply a custom ByteBuddy {@link AgentBuilder.Transformer} to the instrumented type. Note that

@@ -20,13 +20,16 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import okhttp3.Call;
 import okhttp3.Request;
 
-public class ApiClientInstrumentation implements TypeInstrumentation {
+class ApiClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.kubernetes.client.openapi.ApiClient");
@@ -36,45 +39,47 @@ public class ApiClientInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isPublic().and(named("buildRequest")).and(takesArguments(10).or(takesArguments(11))),
-        this.getClass().getName() + "$BuildRequestAdvice");
+        getClass().getName() + "$BuildRequestAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("execute"))
             .and(takesArguments(2))
             .and(takesArgument(0, named("okhttp3.Call"))),
-        this.getClass().getName() + "$ExecuteAdvice");
+        getClass().getName() + "$ExecuteAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("executeAsync"))
             .and(takesArguments(3))
             .and(takesArgument(0, named("okhttp3.Call")))
             .and(takesArgument(2, named("io.kubernetes.client.openapi.ApiCallback"))),
-        this.getClass().getName() + "$ExecuteAsyncAdvice");
+        getClass().getName() + "$ExecuteAsyncAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class BuildRequestAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(@Advice.Return(readOnly = false) Request request) {
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static Request onExit(@Advice.Return Request originalReturnValue) {
       Context parentContext = currentContext();
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return;
+      if (!instrumenter().shouldStart(parentContext, originalReturnValue)) {
+        return originalReturnValue;
       }
 
-      Context context = instrumenter().start(parentContext, request);
+      Context context = instrumenter().start(parentContext, originalReturnValue);
       Scope scope = context.makeCurrent();
-      Request.Builder requestWithPropagation = request.newBuilder();
+      Request.Builder requestWithPropagation = originalReturnValue.newBuilder();
       inject(context, requestWithPropagation);
-      request = requestWithPropagation.build();
+      Request request = requestWithPropagation.build();
       CurrentState.set(parentContext, context, scope, request);
+      return request;
     }
   }
 
   @SuppressWarnings("unused")
   public static class ExecuteAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Return ApiResponse<?> response, @Advice.Thrown Throwable throwable) {
       CurrentState currentState = CurrentState.remove();
@@ -96,39 +101,34 @@ public class ApiClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ExecuteAsyncAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) Call httpCall,
-        @Advice.Argument(value = 2, readOnly = false) ApiCallback<?> callback,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelRequest") Request request) {
+    @AssignReturned.ToArguments(@ToArgument(value = 2, index = 1))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Object[] onEnter(
+        @Advice.Argument(0) Call httpCall, @Advice.Argument(2) ApiCallback<?> originalCallback) {
       CurrentState current = CurrentState.remove();
       if (current == null) {
-        return;
+        return new Object[] {null, originalCallback};
       }
-
-      context = current.getContext();
-      scope = current.getScope();
-      request = current.getRequest();
-      callback = new TracingApiCallback<>(callback, current.getParentContext(), context, request);
+      ApiCallback<?> callback =
+          new TracingApiCallback<>(
+              originalCallback,
+              current.getParentContext(),
+              current.getContext(),
+              current.getRequest());
+      return new Object[] {current, callback};
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelRequest") Request request) {
-      if (scope == null) {
-        return;
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter Object[] enterResult) {
+      CurrentState current = (CurrentState) enterResult[0];
+      if (current != null) {
+        current.getScope().close();
+        if (throwable != null) {
+          instrumenter().end(current.getContext(), current.getRequest(), null, throwable);
+        }
+        // else span will be ended in the TracingApiCallback
       }
-      scope.close();
-
-      if (throwable != null) {
-        instrumenter().end(context, request, null, throwable);
-      }
-      // else span will be ended in the TracingApiCallback
     }
   }
 }

@@ -16,11 +16,27 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Response<?>> {
   private static final boolean CAN_GET_RESPONSE_METADATA = canGetResponseMetadata();
   private static final AttributeKey<String> AWS_REQUEST_ID = stringKey("aws.request_id");
+
+  // Copied from AwsIncubatingAttributes
+  private static final AttributeKey<String> AWS_SECRETSMANAGER_SECRET_ARN =
+      stringKey("aws.secretsmanager.secret.arn");
+  private static final AttributeKey<String> AWS_LAMBDA_RESOURCE_MAPPING_ID =
+      stringKey("aws.lambda.resource_mapping.id");
+  private static final AttributeKey<String> AWS_SNS_TOPIC_ARN = stringKey("aws.sns.topic.arn");
+  private static final AttributeKey<String> AWS_STEP_FUNCTIONS_ACTIVITY_ARN =
+      stringKey("aws.step_functions.activity.arn");
+  private static final AttributeKey<String> AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN =
+      stringKey("aws.step_functions.state_machine.arn");
+  private static final AttributeKey<String> AWS_S3_BUCKET = stringKey("aws.s3.bucket");
+  private static final AttributeKey<String> AWS_SQS_QUEUE_URL = stringKey("aws.sqs.queue.url");
+  private static final AttributeKey<String> AWS_KINESIS_STREAM_NAME =
+      stringKey("aws.kinesis.stream_name");
 
   // AmazonWebServiceResult is only available in v1.11.33 and later
   private static boolean canGetResponseMetadata() {
@@ -28,13 +44,35 @@ class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Respo
       Class<?> clazz = Class.forName("com.amazonaws.AmazonWebServiceResult");
       clazz.getMethod("getSdkResponseMetadata");
       return true;
-    } catch (ClassNotFoundException | NoSuchMethodException exception) {
+    } catch (ClassNotFoundException | NoSuchMethodException ignored) {
       return false;
     }
   }
 
   @Override
-  public void onStart(AttributesBuilder attributes, Context parentContext, Request<?> request) {}
+  public void onStart(AttributesBuilder attributes, Context parentContext, Request<?> request) {
+    Object originalRequest = request.getOriginalRequest();
+    setAttribute(
+        attributes,
+        AWS_LAMBDA_RESOURCE_MAPPING_ID,
+        originalRequest,
+        RequestAccess::getLambdaResourceMappingId);
+    setAttribute(attributes, AWS_SNS_TOPIC_ARN, originalRequest, RequestAccess::getSnsTopicArn);
+    setAttribute(
+        attributes,
+        AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN,
+        originalRequest,
+        RequestAccess::getStateMachineArn);
+    setAttribute(
+        attributes,
+        AWS_STEP_FUNCTIONS_ACTIVITY_ARN,
+        originalRequest,
+        RequestAccess::getStepFunctionsActivityArn);
+    setAttribute(attributes, AWS_S3_BUCKET, originalRequest, RequestAccess::getBucketName);
+    setAttribute(attributes, AWS_SQS_QUEUE_URL, originalRequest, RequestAccess::getQueueUrl);
+    setAttribute(
+        attributes, AWS_KINESIS_STREAM_NAME, originalRequest, RequestAccess::getStreamName);
+  }
 
   @Override
   public void onEnd(
@@ -43,18 +81,35 @@ class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Respo
       Request<?> request,
       @Nullable Response<?> response,
       @Nullable Throwable error) {
-    ResponseMetadata responseMetadata = getResponseMetadata(response);
+    Object awsResp = getAwsResponse(response);
+    if (awsResp != null) {
+      setAttribute(attributes, AWS_SECRETSMANAGER_SECRET_ARN, awsResp, RequestAccess::getSecretArn);
+      setAttribute(
+          attributes,
+          AWS_LAMBDA_RESOURCE_MAPPING_ID,
+          awsResp,
+          RequestAccess::getLambdaResourceMappingId);
+      setAttribute(attributes, AWS_SNS_TOPIC_ARN, awsResp, RequestAccess::getSnsTopicArn);
+      setAttribute(
+          attributes,
+          AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN,
+          awsResp,
+          RequestAccess::getStateMachineArn);
+      setAttribute(
+          attributes,
+          AWS_STEP_FUNCTIONS_ACTIVITY_ARN,
+          awsResp,
+          RequestAccess::getStepFunctionsActivityArn);
+    }
 
+    ResponseMetadata responseMetadata = getResponseMetadata(response);
     if (responseMetadata != null) {
-      String requestId = responseMetadata.getRequestId();
-      if (requestId != null) {
-        attributes.put(AWS_REQUEST_ID, requestId);
-      }
+      attributes.put(AWS_REQUEST_ID, responseMetadata.getRequestId());
     }
   }
 
   @NoMuzzle
-  private static ResponseMetadata getResponseMetadata(Response<?> response) {
+  private static ResponseMetadata getResponseMetadata(@Nullable Response<?> response) {
     if (CAN_GET_RESPONSE_METADATA
         && response != null
         && response.getAwsResponse() instanceof AmazonWebServiceResult) {
@@ -62,5 +117,21 @@ class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Respo
       return awsResp.getSdkResponseMetadata();
     }
     return null;
+  }
+
+  public static void setAttribute(
+      AttributesBuilder attributes,
+      AttributeKey<String> key,
+      Object carrier,
+      Function<Object, String> getter) {
+    attributes.put(key, getter.apply(carrier));
+  }
+
+  @Nullable
+  private static Object getAwsResponse(@Nullable Response<?> response) {
+    if (response == null) {
+      return null;
+    }
+    return response.getAwsResponse();
   }
 }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
@@ -30,7 +31,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
@@ -45,7 +45,7 @@ public final class AwsSdkInstrumenterFactory {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-sdk-2.2";
 
   private static final AttributesExtractor<ExecutionAttributes, Response> rpcAttributesExtractor =
-      RpcClientAttributesExtractor.create(AwsSdkRpcAttributesGetter.INSTANCE);
+      RpcClientAttributesExtractor.create(new AwsSdkRpcAttributesGetter());
   private static final AwsSdkExperimentalAttributesExtractor experimentalAttributesExtractor =
       new AwsSdkExperimentalAttributesExtractor();
 
@@ -59,23 +59,21 @@ public final class AwsSdkInstrumenterFactory {
 
   private static final List<AttributesExtractor<ExecutionAttributes, Response>>
       defaultAttributesExtractors =
-          Arrays.asList(rpcAttributesExtractor, httpClientSuppressionAttributesExtractor);
+          asList(rpcAttributesExtractor, httpClientSuppressionAttributesExtractor);
 
   private static final List<AttributesExtractor<ExecutionAttributes, Response>>
       extendedAttributesExtractors =
-          Arrays.asList(
+          asList(
               rpcAttributesExtractor,
               experimentalAttributesExtractor,
               httpClientSuppressionAttributesExtractor);
 
   private static final List<AttributesExtractor<ExecutionAttributes, Response>>
-      defaultConsumerAttributesExtractors =
-          Arrays.asList(rpcAttributesExtractor, httpAttributesExtractor);
+      defaultConsumerAttributesExtractors = asList(rpcAttributesExtractor, httpAttributesExtractor);
 
   private static final List<AttributesExtractor<ExecutionAttributes, Response>>
       extendedConsumerAttributesExtractors =
-          Arrays.asList(
-              rpcAttributesExtractor, httpAttributesExtractor, experimentalAttributesExtractor);
+          asList(rpcAttributesExtractor, httpAttributesExtractor, experimentalAttributesExtractor);
 
   private final OpenTelemetry openTelemetry;
   @Nullable private final TextMapPropagator messagingPropagator;
@@ -130,7 +128,7 @@ public final class AwsSdkInstrumenterFactory {
 
   public Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter() {
     MessageOperation operation = MessageOperation.RECEIVE;
-    SqsReceiveRequestAttributesGetter getter = SqsReceiveRequestAttributesGetter.INSTANCE;
+    SqsReceiveRequestAttributesGetter getter = new SqsReceiveRequestAttributesGetter();
     AttributesExtractor<SqsReceiveRequest, Response> messagingAttributeExtractor =
         messagingAttributesExtractor(getter, operation);
 
@@ -145,7 +143,7 @@ public final class AwsSdkInstrumenterFactory {
 
   public Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter() {
     MessageOperation operation = MessageOperation.PROCESS;
-    SqsProcessRequestAttributesGetter getter = SqsProcessRequestAttributesGetter.INSTANCE;
+    SqsProcessRequestAttributesGetter getter = new SqsProcessRequestAttributesGetter();
 
     InstrumenterBuilder<SqsProcessRequest, Response> builder =
         Instrumenter.<SqsProcessRequest, Response>builder(
@@ -197,7 +195,7 @@ public final class AwsSdkInstrumenterFactory {
 
   public Instrumenter<ExecutionAttributes, Response> producerInstrumenter() {
     MessageOperation operation = MessageOperation.PUBLISH;
-    SqsAttributesGetter getter = SqsAttributesGetter.INSTANCE;
+    SqsAttributesGetter getter = new SqsAttributesGetter();
     AttributesExtractor<ExecutionAttributes, Response> messagingAttributeExtractor =
         messagingAttributesExtractor(getter, operation);
 
@@ -224,15 +222,15 @@ public final class AwsSdkInstrumenterFactory {
   }
 
   public Instrumenter<ExecutionAttributes, Response> bedrockRuntimeInstrumenter() {
+    BedrockRuntimeAttributesGetter getter = new BedrockRuntimeAttributesGetter();
     return createInstrumenter(
         openTelemetry,
-        GenAiSpanNameExtractor.create(BedrockRuntimeAttributesGetter.INSTANCE),
+        GenAiSpanNameExtractor.create(getter),
         SpanKindExtractor.alwaysClient(),
         attributesExtractors(),
         builder ->
             builder
-                .addAttributesExtractor(
-                    GenAiAttributesExtractor.create(BedrockRuntimeAttributesGetter.INSTANCE))
+                .addAttributesExtractor(GenAiAttributesExtractor.create(getter))
                 .addOperationMetrics(GenAiClientMetrics.get()),
         true);
   }

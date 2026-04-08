@@ -20,6 +20,7 @@ public final class ApacheHttpClientRequest {
 
   @Nullable private final URI uri;
   private final HttpRequest delegate;
+  @Nullable private final HttpHost target;
 
   ApacheHttpClientRequest(@Nullable HttpHost httpHost, HttpRequest httpRequest) {
     URI calculatedUri = getUri(httpRequest);
@@ -29,10 +30,11 @@ public final class ApacheHttpClientRequest {
       uri = calculatedUri;
     }
     delegate = httpRequest;
+    target = httpHost;
   }
 
   /** Returns the actual {@link HttpRequest} being executed by the client. */
-  public HttpRequest getDelegate() {
+  public HttpRequest getRequest() {
     return delegate;
   }
 
@@ -46,10 +48,43 @@ public final class ApacheHttpClientRequest {
   }
 
   @Nullable
+  String getScheme() {
+    if (uri != null) {
+      return uri.getScheme();
+    }
+    if (target != null) {
+      return target.getSchemeName();
+    }
+    return null;
+  }
+
+  @Nullable
+  String getServerAddress() {
+    if (uri != null) {
+      return uri.getHost();
+    }
+    if (target != null) {
+      return target.getHostName();
+    }
+    return null;
+  }
+
+  @Nullable
+  Integer getServerPort() {
+    if (uri != null) {
+      return uri.getPort();
+    }
+    if (target != null) {
+      return target.getPort();
+    }
+    return null;
+  }
+
+  @Nullable
   private static URI getUri(HttpRequest httpRequest) {
     try {
       // this can be relative or absolute
-      return new URI(httpRequest.getUri().toString());
+      return httpRequest.getUri();
     } catch (URISyntaxException e) {
       logger.log(FINE, e.getMessage(), e);
       return null;

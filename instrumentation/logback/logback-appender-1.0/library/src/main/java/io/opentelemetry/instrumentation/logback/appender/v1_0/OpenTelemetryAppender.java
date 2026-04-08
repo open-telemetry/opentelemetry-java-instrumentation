@@ -6,7 +6,9 @@
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 
+import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
@@ -23,7 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.stream.Collectors;
+import java.util.function.Consumer;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -35,9 +37,12 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private boolean captureMarkerAttribute = false;
   private boolean captureKeyValuePairAttributes = false;
   private boolean captureLoggerContext = false;
+  private boolean captureTemplate = false;
   private boolean captureArguments = false;
-  private boolean captureLogstashAttributes = false;
+  private boolean captureLogstashMarkerAttributes = false;
+  private boolean captureLogstashStructuredArguments = false;
   private List<String> captureMdcAttributes = emptyList();
+  private boolean captureEventName = false;
 
   private volatile OpenTelemetry openTelemetry;
   private LoggingEventMapper mapper;
@@ -56,23 +61,34 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    * the {@link LoggerContext}.
    */
   public static void install(OpenTelemetry openTelemetry) {
+    forEachAppender(appender -> appender.setOpenTelemetry(openTelemetry));
+  }
+
+  static void resetForTest() {
+    forEachAppender(OpenTelemetryAppender::resetAppenderForTest);
+  }
+
+  private static void forEachAppender(Consumer<OpenTelemetryAppender> consumer) {
     ILoggerFactory loggerFactorySpi = LoggerFactory.getILoggerFactory();
     if (!(loggerFactorySpi instanceof LoggerContext)) {
       return;
     }
     LoggerContext loggerContext = (LoggerContext) loggerFactorySpi;
-    for (ch.qos.logback.classic.Logger logger : loggerContext.getLoggerList()) {
-      logger.iteratorForAppenders().forEachRemaining(appender -> install(openTelemetry, appender));
+    for (Logger logger : loggerContext.getLoggerList()) {
+      logger
+          .iteratorForAppenders()
+          .forEachRemaining(appender -> forEachAppender(consumer, appender));
     }
   }
 
-  private static void install(OpenTelemetry openTelemetry, Appender<?> appender) {
+  private static void forEachAppender(
+      Consumer<OpenTelemetryAppender> consumer, Appender<?> appender) {
     if (appender instanceof OpenTelemetryAppender) {
-      ((OpenTelemetryAppender) appender).setOpenTelemetry(openTelemetry);
+      consumer.accept((OpenTelemetryAppender) appender);
     } else if (appender instanceof AppenderAttachable) {
       ((AppenderAttachable<?>) appender)
           .iteratorForAppenders()
-          .forEachRemaining(a -> OpenTelemetryAppender.install(openTelemetry, a));
+          .forEachRemaining(a -> forEachAppender(consumer, a));
     }
   }
 
@@ -86,9 +102,16 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             .setCaptureMarkerAttribute(captureMarkerAttribute)
             .setCaptureKeyValuePairAttributes(captureKeyValuePairAttributes)
             .setCaptureLoggerContext(captureLoggerContext)
+            .setCaptureTemplate(captureTemplate)
             .setCaptureArguments(captureArguments)
-            .setCaptureLogstashAttributes(captureLogstashAttributes)
+            .setCaptureLogstashMarkerAttributes(captureLogstashMarkerAttributes)
+            .setCaptureLogstashStructuredArguments(captureLogstashStructuredArguments)
+            .setCaptureEventName(captureEventName)
             .build();
+    if (captureEventName) {
+      addWarn(
+          "The captureEventName setting is deprecated and will be removed in a future version.");
+    }
     eventsToReplay = new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
     super.start();
   }
@@ -174,6 +197,16 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   }
 
   /**
+   * Sets whether the message template should be captured in logs if arguments are provided.
+   *
+   * @param captureTemplate whether the message template should be captured in logs if arguments are
+   *     provided
+   */
+  public void setCaptureTemplate(boolean captureTemplate) {
+    this.captureTemplate = captureTemplate;
+  }
+
+  /**
    * Sets whether the arguments should be set to logs.
    *
    * @param captureArguments To enable or disable capturing logger arguments
@@ -182,13 +215,14 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     this.captureArguments = captureArguments;
   }
 
-  /**
-   * Sets whether the Logstash attributes should be set to logs.
-   *
-   * @param captureLogstashAttributes To enable or disable capturing Logstash attributes
-   */
-  public void setCaptureLogstashAttributes(boolean captureLogstashAttributes) {
-    this.captureLogstashAttributes = captureLogstashAttributes;
+  /** Sets whether the Logstash marker attributes should be captured. */
+  public void setCaptureLogstashMarkerAttributes(boolean captureLogstashMarkerAttributes) {
+    this.captureLogstashMarkerAttributes = captureLogstashMarkerAttributes;
+  }
+
+  /** Sets whether the Logstash StructuredArguments should be captured. */
+  public void setCaptureLogstashStructuredArguments(boolean captureLogstashStructuredArguments) {
+    this.captureLogstashStructuredArguments = captureLogstashStructuredArguments;
   }
 
   /** Configures the {@link MDC} attributes that will be copied to logs. */
@@ -198,6 +232,22 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     } else {
       captureMdcAttributes = emptyList();
     }
+  }
+
+  /**
+   * Sets whether the value of the {@code event.name} attribute is used as the log event name.
+   *
+   * <p>The {@code event.name} attribute is captured via any other mechanism supported by this
+   * appender, such as when {@code captureKeyValuePairAttributes} is true.
+   *
+   * <p>When {@code captureEventName} is true, then the value of the {@code event.name} attribute
+   * will be used as the log event name, and {@code event.name} attribute will be removed.
+   *
+   * @param captureEventName to enable or disable capturing the {@code event.name} attribute as the
+   *     log event name
+   */
+  public void setCaptureEventName(boolean captureEventName) {
+    this.captureEventName = captureEventName;
   }
 
   /**
@@ -233,15 +283,24 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     }
   }
 
+  private void resetAppenderForTest() {
+    Lock writeLock = lock.writeLock();
+    writeLock.lock();
+    try {
+      openTelemetry = null;
+      eventsToReplay.clear();
+      replayLimitWarningLogged.set(false);
+    } finally {
+      writeLock.unlock();
+    }
+  }
+
   private void emit(OpenTelemetry openTelemetry, ILoggingEvent event) {
     mapper.emit(openTelemetry.getLogsBridge(), event, -1);
   }
 
   // copied from SDK's DefaultConfigProperties
   private static List<String> filterBlanksAndNulls(String[] values) {
-    return Arrays.stream(values)
-        .map(String::trim)
-        .filter(s -> !s.isEmpty())
-        .collect(Collectors.toList());
+    return Arrays.stream(values).map(String::trim).filter(s -> !s.isEmpty()).collect(toList());
   }
 }

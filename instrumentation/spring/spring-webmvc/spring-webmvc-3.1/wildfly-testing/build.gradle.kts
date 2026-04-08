@@ -50,16 +50,11 @@ tasks {
     destinationDirectory.set(layout.buildDirectory.dir("tmp"))
     archiveFileName.set("logback-classic-modified.jar")
     exclude("/META-INF/services/javax.servlet.ServletContainerInitializer")
-    doFirst {
-      configurations.configureEach {
-        if (name.lowercase().endsWith("testruntimeclasspath")) {
-          val logbackJar = find { it.name.contains("logback-classic") }
-          logbackJar?.let {
-            from(zipTree(logbackJar))
-          }
-        }
-      }
-    }
+
+    val testRuntimeClasspath = configurations.named("testRuntimeClasspath")
+    from({
+      testRuntimeClasspath.get().filter { it.name.contains("logback-classic") }.map { zipTree(it) }
+    })
   }
 
   val copyDependencies by registering(Copy::class) {
@@ -72,21 +67,17 @@ tasks {
     dependsOn(setupServer)
     dependsOn(copyDependencies)
 
-    doFirst {
-      // --add-modules is unrecognized on jdk8, ignore it instead of failing
-      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-      // needed for java 11 to avoid org.jboss.modules.ModuleNotFoundException: java.se
-      jvmArgs("--add-modules=java.se")
-      // add offset to default port values
-      jvmArgs("-Djboss.socket.binding.port-offset=300")
-      jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    // --add-modules is unrecognized on jdk8, ignore it instead of failing
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    // needed for java 11 to avoid org.jboss.modules.ModuleNotFoundException: java.se
+    jvmArgs("--add-modules=java.se")
+    // add offset to default port values
+    jvmArgs("-Djboss.socket.binding.port-offset=300")
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
-      // remove logback-classic from classpath
-      classpath = classpath.filter {
-        !it.absolutePath.contains("logback-classic")
-      }
-      // add modified copy of logback-classic to classpath
-      classpath = classpath.plus(files(layout.buildDirectory.file("tmp/logback-classic-modified.jar")))
-    }
+    // remove logback-classic from classpath and add modified copy
+    classpath = classpath.filter {
+      !it.absolutePath.contains("logback-classic")
+    }.plus(files(layout.buildDirectory.file("tmp/logback-classic-modified.jar")))
   }
 }

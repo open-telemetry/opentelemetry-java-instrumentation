@@ -3,7 +3,11 @@ plugins {
 }
 
 dependencies {
-  library("com.datastax.oss:java-driver-core:4.4.0")
+  if (otelProps.testLatestDeps) {
+    library("org.apache.cassandra:java-driver-core:4.18.0")
+  } else {
+    library("com.datastax.oss:java-driver-core:4.4.0")
+  }
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
@@ -17,6 +21,8 @@ tasks {
   }
 
   val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 

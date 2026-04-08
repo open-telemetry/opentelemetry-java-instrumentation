@@ -10,10 +10,10 @@ import static java.util.logging.Level.WARNING;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -23,15 +23,15 @@ import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.HttpJspPage;
 
-public class HttpJspPageInstrumentationSingletons {
+class HttpJspPageInstrumentationSingletons {
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.jsp.experimental-span-attributes", false);
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jsp")
+          .getBoolean("experimental_span_attributes/development", false);
 
-  private static final Instrumenter<HttpServletRequest, Void> INSTRUMENTER;
+  private static final Instrumenter<HttpServletRequest, Void> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<HttpServletRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.jsp-2.3",
@@ -51,8 +51,8 @@ public class HttpJspPageInstrumentationSingletons {
     return "Render " + spanName;
   }
 
-  public static Instrumenter<HttpServletRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+  static Instrumenter<HttpServletRequest, Void> instrumenter() {
+    return instrumenter;
   }
 
   private HttpJspPageInstrumentationSingletons() {}

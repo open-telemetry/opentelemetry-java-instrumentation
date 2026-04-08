@@ -5,25 +5,24 @@
 
 package io.opentelemetry.instrumentation.jaxrs;
 
+import static io.opentelemetry.api.common.AttributeKey.booleanKey;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionSuffixAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
@@ -33,7 +32,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpServerTest<SERVER> {
 
   protected abstract void awaitBarrier(int amount, TimeUnit timeUnit) throws Exception;
@@ -43,6 +41,10 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
   }
 
   protected boolean asyncCancelHasSendError() {
+    return false;
+  }
+
+  protected boolean testExperimental() {
     return false;
   }
 
@@ -191,12 +193,19 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
     assertThat(response.status().code()).isEqualTo(testKind.statusCode);
     testKind.assertBody(response.contentUtf8());
 
+    List<AttributeAssertion> attributeAssertions =
+        codeFunctionSuffixAssertions("test.JaxRsTestResource", "asyncOp");
+
+    if (testKind == AsyncResponseTestKind.CANCELED && testExperimental()) {
+      attributeAssertions.add(equalTo(booleanKey("jaxrs.canceled"), true));
+    }
+
     testing()
         .waitAndAssertTraces(
             trace -> {
               List<Consumer<SpanDataAssert>> assertions =
                   new ArrayList<>(
-                      Arrays.asList(
+                      asList(
                           span ->
                               assertServerSpan(
                                   span,
@@ -212,13 +221,7 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
                             span.hasName("JaxRsTestResource.asyncOp")
                                 .hasKind(SpanKind.INTERNAL)
                                 .hasParent(trace.getSpan(0))
-                                .hasAttributesSatisfyingExactly(
-                                    satisfies(
-                                        CODE_NAMESPACE, name -> name.endsWith("JaxRsTestResource")),
-                                    equalTo(CODE_FUNCTION, "asyncOp"),
-                                    equalTo(
-                                        AttributeKey.booleanKey("jaxrs.canceled"),
-                                        testKind == AsyncResponseTestKind.CANCELED ? true : null));
+                                .hasAttributesSatisfyingExactly(attributeAssertions);
                             if (testKind == AsyncResponseTestKind.FAILING) {
                               span.hasStatus(StatusData.error())
                                   .hasException(new IllegalStateException("failure"));
@@ -301,10 +304,7 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
                           .hasKind(SpanKind.INTERNAL)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
-                              equalTo(
-                                  CODE_NAMESPACE,
-                                  "io.opentelemetry.instrumentation.jaxrs.v2_0.test.JaxRsTestResource"),
-                              equalTo(CODE_FUNCTION, "jaxRs21Async"));
+                              codeFunctionSuffixAssertions(".JaxRsTestResource", "jaxRs21Async"));
                       if (testKind == CompletionStageTestKind.FAILING) {
                         span.hasStatus(StatusData.error())
                             .hasException(new IllegalStateException("failure"));
@@ -319,7 +319,6 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
     return span.hasName("JaxRsTestResource." + methodName)
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
-            satisfies(CODE_NAMESPACE, name -> name.endsWith("JaxRsTestResource")),
-            equalTo(CODE_FUNCTION, methodName));
+            codeFunctionSuffixAssertions(".JaxRsTestResource", methodName));
   }
 }

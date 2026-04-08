@@ -11,10 +11,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AkkaScheduleInstrumentation implements TypeInstrumentation {
+class AkkaScheduleInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -29,32 +31,32 @@ public class AkkaScheduleInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, named("scala.concurrent.duration.FiniteDuration")))
             .and(takesArgument(2, named("java.lang.Runnable")))
             .and(takesArgument(3, named("scala.concurrent.ExecutionContext"))),
-        AkkaScheduleInstrumentation.class.getName() + "$ScheduleAdvice");
+        getClass().getName() + "$ScheduleAdvice");
     transformer.applyAdviceToMethod(
         named("scheduleOnce")
             .and(takesArgument(0, named("scala.concurrent.duration.FiniteDuration")))
             .and(takesArgument(1, named("java.lang.Runnable")))
             .and(takesArgument(2, named("scala.concurrent.ExecutionContext"))),
-        AkkaScheduleInstrumentation.class.getName() + "$ScheduleOnceAdvice");
+        getClass().getName() + "$ScheduleOnceAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ScheduleAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void enterSchedule(
-        @Advice.Argument(value = 2, readOnly = false) Runnable runnable) {
-      runnable = AkkaSchedulerTaskWrapper.wrap(runnable);
+    @AssignReturned.ToArguments(@ToArgument(2))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Runnable enterSchedule(@Advice.Argument(2) Runnable runnable) {
+      return AkkaSchedulerTaskWrapper.wrap(runnable);
     }
   }
 
   @SuppressWarnings("unused")
   public static class ScheduleOnceAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void enterScheduleOnce(
-        @Advice.Argument(value = 1, readOnly = false) Runnable runnable) {
-      runnable = AkkaSchedulerTaskWrapper.wrap(runnable);
+    @AssignReturned.ToArguments(@ToArgument(1))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Runnable enterScheduleOnce(@Advice.Argument(1) Runnable runnable) {
+      return AkkaSchedulerTaskWrapper.wrap(runnable);
     }
   }
 }

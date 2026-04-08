@@ -25,6 +25,6 @@ class SnsClientTest extends AbstractSnsClientTest {
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
             .setCaptureExperimentalSpanAttributes(true)
             .build()
-            .newRequestHandler());
+            .createRequestHandler());
   }
 }

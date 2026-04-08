@@ -1,0 +1,7 @@
+display_name: Spring Core
+description: >
+  This instrumentation provides context propagation for Spring Core asynchronous task execution, it
+  does not emit any telemetry on its own.
+features:
+  - CONTEXT_PROPAGATION
+library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/core/package-summary.html

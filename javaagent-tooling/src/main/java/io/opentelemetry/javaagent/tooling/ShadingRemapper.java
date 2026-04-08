@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import java.util.Map;
 import java.util.TreeMap;
 import org.objectweb.asm.commons.Remapper;
@@ -34,6 +35,8 @@ public class ShadingRemapper extends Remapper {
   private final TreeMap<String, String> map = new TreeMap<>();
 
   public ShadingRemapper(Rule... rules) {
+    super(AsmApi.VERSION);
+
     for (Rule rule : rules) {
       map.put(rule.from, rule.to);
     }

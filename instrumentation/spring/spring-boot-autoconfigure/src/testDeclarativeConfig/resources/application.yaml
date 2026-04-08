@@ -1,0 +1,29 @@
+otel:
+  # "file_format" serves as opt-in to the new file format
+  file_format: "1.0"
+
+  tracer_provider:
+    processors:
+      - batch:
+          exporter:
+            otlp_http:
+              endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318}/v1/traces # to test that we can use env vars in declarative config
+
+  # very lightweight test to make sure the declarative config is loaded
+  # the full config is tested in smoke-tests-otel-starter/spring-boot-2/src/testDeclarativeConfig
+  instrumentation/development:
+    java:
+      foo:
+        string_key: string_value
+        string_key_with_env: ${STRING_ENV:default_value}
+        string_key_with_env_quoted: "${STRING_ENV:default_quoted_value}"
+        int_key: 42
+        int_key_with_env: ${INT_ENV:100}
+        int_key_with_env_quoted: "${INT_ENV:200}"
+        bool_key: true
+        bool_key_with_env: ${BOOL_ENV:false}
+        bool_key_with_env_quoted: "${BOOL_ENV:true}"
+        double_key: 3.14
+        double_key_with_env: ${DOUBLE_ENV:2.71}
+        double_key_with_env_quoted: "${DOUBLE_ENV:1.61}"
+

@@ -6,6 +6,9 @@
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
 import static java.util.Collections.emptyList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.stream.Collectors.toList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
@@ -24,13 +27,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.ThreadContext;
@@ -71,6 +73,14 @@ public class OpenTelemetryAppender extends AbstractAppender {
    * the {@link LoggerContext}.
    */
   public static void install(OpenTelemetry openTelemetry) {
+    forEachAppender(appender -> appender.setOpenTelemetry(openTelemetry));
+  }
+
+  static void resetForTest() {
+    forEachAppender(OpenTelemetryAppender::resetAppenderForTest);
+  }
+
+  private static void forEachAppender(Consumer<OpenTelemetryAppender> consumer) {
     org.apache.logging.log4j.spi.LoggerContext loggerContextSpi = LogManager.getContext(false);
     if (!(loggerContextSpi instanceof LoggerContext)) {
       return;
@@ -83,7 +93,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
         .forEach(
             appender -> {
               if (appender instanceof OpenTelemetryAppender) {
-                ((OpenTelemetryAppender) appender).setOpenTelemetry(openTelemetry);
+                consumer.accept((OpenTelemetryAppender) appender);
               }
             });
   }
@@ -101,6 +111,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     @PluginBuilderAttribute private boolean captureMapMessageAttributes;
     @PluginBuilderAttribute private boolean captureMarkerAttribute;
     @PluginBuilderAttribute private String captureContextDataAttributes;
+    @PluginBuilderAttribute private boolean captureEventName;
     @PluginBuilderAttribute private int numLogsCapturedBeforeOtelInstall;
 
     @Nullable private OpenTelemetry openTelemetry;
@@ -125,9 +136,21 @@ public class OpenTelemetryAppender extends AbstractAppender {
      *     method name and line number)
      */
     @CanIgnoreReturnValue
-    public B captureCodeAttributes(boolean captureCodeAttributes) {
+    public B setCaptureCodeAttributes(boolean captureCodeAttributes) {
       this.captureCodeAttributes = captureCodeAttributes;
       return asBuilder();
+    }
+
+    /**
+     * Sets whether the code attributes (file name, class name, method name and line number) should
+     * be set to logs.
+     *
+     * @deprecated Use {@link #setCaptureCodeAttributes(boolean)} instead.
+     */
+    @Deprecated
+    @CanIgnoreReturnValue
+    public B captureCodeAttributes(boolean captureCodeAttributes) {
+      return setCaptureCodeAttributes(captureCodeAttributes);
     }
 
     /** Sets whether log4j {@link MapMessage} attributes should be copied to logs. */
@@ -156,6 +179,24 @@ public class OpenTelemetryAppender extends AbstractAppender {
     }
 
     /**
+     * Sets whether the value of the {@code event.name} attribute is used as the log event name.
+     *
+     * <p>The {@code event.name} attribute is captured via any other mechanism supported by this
+     * appender, such as when {@code captureContextDataAttributes} includes {@code event.name}.
+     *
+     * <p>When {@code captureEventName} is true, then the value of the {@code event.name} attribute
+     * will be used as the log event name, and {@code event.name} attribute will be removed.
+     *
+     * @param captureEventName to enable or disable capturing the {@code event.name} attribute as
+     *     the log event name
+     */
+    @CanIgnoreReturnValue
+    public B setCaptureEventName(boolean captureEventName) {
+      this.captureEventName = captureEventName;
+      return asBuilder();
+    }
+
+    /**
      * Log telemetry is emitted after the initialization of the OpenTelemetry Logback appender with
      * an {@link OpenTelemetry} object. This setting allows you to modify the size of the cache used
      * to replay the logs that were emitted prior to setting the OpenTelemetry instance into the
@@ -176,6 +217,10 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
     @Override
     public OpenTelemetryAppender build() {
+      if (captureEventName) {
+        LOGGER.warn(
+            "The captureEventName setting is deprecated and will be removed in a future version.");
+      }
       OpenTelemetry openTelemetry = this.openTelemetry;
       return new OpenTelemetryAppender(
           getName(),
@@ -188,6 +233,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
           captureMapMessageAttributes,
           captureMarkerAttribute,
           captureContextDataAttributes,
+          captureEventName,
           numLogsCapturedBeforeOtelInstall,
           openTelemetry);
     }
@@ -204,6 +250,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
       boolean captureMapMessageAttributes,
       boolean captureMarkerAttribute,
       String captureContextDataAttributes,
+      boolean captureEventName,
       int numLogsCapturedBeforeOtelInstall,
       OpenTelemetry openTelemetry) {
 
@@ -215,7 +262,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
             captureCodeAttributes,
             captureMapMessageAttributes,
             captureMarkerAttribute,
-            splitAndFilterBlanksAndNulls(captureContextDataAttributes));
+            splitAndFilterBlanksAndNulls(captureContextDataAttributes),
+            captureEventName);
     this.openTelemetry = openTelemetry;
     this.captureCodeAttributes = captureCodeAttributes;
     if (numLogsCapturedBeforeOtelInstall != 0) {
@@ -232,7 +280,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     return Arrays.stream(value.split(","))
         .map(String::trim)
         .filter(s -> !s.isEmpty())
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   /**
@@ -253,6 +301,18 @@ public class OpenTelemetryAppender extends AbstractAppender {
     // now emit
     for (LogEventToReplay eventToReplay : eventsToReplay) {
       emit(openTelemetry, eventToReplay);
+    }
+  }
+
+  private void resetAppenderForTest() {
+    Lock writeLock = lock.writeLock();
+    writeLock.lock();
+    try {
+      openTelemetry = null;
+      eventsToReplay.clear();
+      replayLimitWarningLogged.set(false);
+    } finally {
+      writeLock.unlock();
     }
   }
 
@@ -301,10 +361,11 @@ public class OpenTelemetryAppender extends AbstractAppender {
     // reconstruct the context from context data
     if (context == Context.root()) {
       ContextDataAccessor<ReadOnlyStringMap> contextDataAccessor = ContextDataAccessorImpl.INSTANCE;
-      String traceId = contextDataAccessor.getValue(contextData, ContextDataKeys.TRACE_ID_KEY);
-      String spanId = contextDataAccessor.getValue(contextData, ContextDataKeys.SPAN_ID_KEY);
+      ContextDataKeys contextDataKeys = ContextDataKeys.create(openTelemetry);
+      String traceId = contextDataAccessor.getValue(contextData, contextDataKeys.getTraceIdKey());
+      String spanId = contextDataAccessor.getValue(contextData, contextDataKeys.getSpanIdKey());
       String traceFlags =
-          contextDataAccessor.getValue(contextData, ContextDataKeys.TRACE_FLAGS_KEY);
+          contextDataAccessor.getValue(contextData, contextDataKeys.getTraceFlags());
       if (traceId != null && spanId != null && traceFlags != null) {
         context =
             Context.root()
@@ -333,9 +394,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
     Instant timestamp = event.getInstant();
     if (timestamp != null) {
       builder.setTimestamp(
-          TimeUnit.MILLISECONDS.toNanos(timestamp.getEpochMillisecond())
-              + timestamp.getNanoOfMillisecond(),
-          TimeUnit.NANOSECONDS);
+          MILLISECONDS.toNanos(timestamp.getEpochMillisecond()) + timestamp.getNanoOfMillisecond(),
+          NANOSECONDS);
     }
     builder.emit();
   }

@@ -14,6 +14,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -23,10 +24,10 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import play.mvc.Http.Context.Implicit;
 import play.mvc.Results;
 import play.routing.RoutingDsl;
 import play.server.Server;
@@ -54,7 +55,7 @@ class PlayServerTest extends AbstractHttpServerTest<Server> {
                         INDEXED_CHILD,
                         () -> {
                           INDEXED_CHILD.collectSpanAttributes(
-                              it -> play.mvc.Http.Context.Implicit.request().getQueryString(it));
+                              it -> Implicit.request().getQueryString(it));
                           return Results.status(INDEXED_CHILD.getStatus(), INDEXED_CHILD.getBody());
                         }))
             .GET(QUERY_PARAM.getPath())
@@ -77,14 +78,13 @@ class PlayServerTest extends AbstractHttpServerTest<Server> {
                           Tuple2<String, String> header =
                               new Tuple2<>(
                                   "X-Test-Response",
-                                  play.mvc.Http.Context.Implicit.request()
-                                      .getHeader("X-Test-Request"));
+                                  Implicit.request().getHeader("X-Test-Request"));
                           return new Results.Status(
                               javaResult
                                   .toScala()
                                   .withHeaders(
                                       JavaConverters.asScalaIteratorConverter(
-                                              Collections.singletonList(header).iterator())
+                                              singletonList(header).iterator())
                                           .asScala()
                                           .toSeq()));
                         }))

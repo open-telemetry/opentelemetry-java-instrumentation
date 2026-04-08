@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -16,17 +17,29 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.trace.data.LinkData;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 
 class InterceptorsTest extends AbstractInterceptorsTest {
+
+  private static final KafkaTelemetry kafkaTelemetry =
+      KafkaTelemetry.builder(testing.getOpenTelemetry())
+          .setMessagingReceiveTelemetryEnabled(true)
+          .setCapturedHeaders(singletonList("Test-Message-Header"))
+          .build();
+
+  @Override
+  protected KafkaTelemetry kafkaTelemetry() {
+    return kafkaTelemetry;
+  }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
@@ -42,12 +55,13 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
+                          equalTo(
+                              stringArrayKey("messaging.header.Test_Message_Header"),
+                              singletonList("test")),
                           equalTo(MESSAGING_SYSTEM, "kafka"),
                           equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                           equalTo(MESSAGING_OPERATION, "publish"),
-                          satisfies(
-                              MESSAGING_CLIENT_ID,
-                              stringAssert -> stringAssert.startsWith("producer"))));
+                          satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer"))));
           SpanContext spanContext = trace.getSpan(1).getSpanContext();
           producerSpanContext.set(
               SpanContext.createFromRemoteParent(
@@ -64,13 +78,14 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                         .hasNoParent()
                         .hasLinksSatisfying(links -> assertThat(links).isEmpty())
                         .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringArrayKey("messaging.header.Test_Message_Header"),
+                                singletonList("test")),
                             equalTo(MESSAGING_SYSTEM, "kafka"),
                             equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                             equalTo(MESSAGING_OPERATION, "receive"),
                             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
-                            satisfies(
-                                MESSAGING_CLIENT_ID,
-                                stringAssert -> stringAssert.startsWith("consumer")),
+                            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)),
                 span ->
                     span.hasName(SHARED_TOPIC + " process")
@@ -78,21 +93,20 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(producerSpanContext.get()))
                         .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringArrayKey("messaging.header.Test_Message_Header"),
+                                singletonList("test")),
                             equalTo(MESSAGING_SYSTEM, "kafka"),
                             equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                             equalTo(MESSAGING_OPERATION, "process"),
-                            equalTo(
-                                MESSAGING_MESSAGE_BODY_SIZE,
-                                greeting.getBytes(StandardCharsets.UTF_8).length),
+                            equalTo(MESSAGING_MESSAGE_BODY_SIZE, greeting.getBytes(UTF_8).length),
                             satisfies(
                                 MESSAGING_DESTINATION_PARTITION_ID,
                                 AbstractStringAssert::isNotEmpty),
                             satisfies(
                                 MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
                             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
-                            satisfies(
-                                MESSAGING_CLIENT_ID,
-                                stringAssert -> stringAssert.startsWith("consumer"))),
+                            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer"))),
                 span ->
                     span.hasName("process child")
                         .hasKind(SpanKind.INTERNAL)

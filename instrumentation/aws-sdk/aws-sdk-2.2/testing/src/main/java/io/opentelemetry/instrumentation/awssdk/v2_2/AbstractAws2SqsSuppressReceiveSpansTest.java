@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQS_QUEUE_URL;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
@@ -22,16 +23,15 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
@@ -39,13 +39,14 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.SqsClientBuilder;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAws2SqsBaseTest {
 
   @Override
   protected void assertSqsTraces(boolean withParent, boolean captureHeaders) {
     List<Consumer<TraceAssert>> traceAsserts =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 trace -> trace.hasSpansSatisfyingExactly(span -> createQueueSpan(span)),
                 trace ->
                     trace.hasSpansSatisfyingExactly(
@@ -54,7 +55,7 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
                         span ->
                             span.hasName("process child")
                                 .hasParent(trace.getSpan(1))
-                                .hasAttributes(Attributes.empty()))));
+                                .hasTotalAttributeCount(0))));
 
     if (withParent) {
       /*
@@ -73,7 +74,7 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
                           .hasTotalRecordedLinks(0)
                           .hasAttributesSatisfyingExactly(
                               equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                              equalTo(stringKey("aws.queue.url"), queueUrl),
+                              equalTo(AWS_SQS_QUEUE_URL, queueUrl),
                               satisfies(
                                   AWS_REQUEST_ID,
                                   val ->
@@ -84,7 +85,8 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
                               equalTo(RPC_METHOD, "ReceiveMessage"),
                               equalTo(HTTP_REQUEST_METHOD, "POST"),
                               equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                              satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
+                              satisfies(
+                                  URL_FULL, val -> val.startsWith("http://localhost:" + sqsPort)),
                               equalTo(SERVER_ADDRESS, "localhost"),
                               equalTo(SERVER_PORT, sqsPort))));
     }
@@ -110,14 +112,14 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
     // generates the process spans
     response.messages().forEach(message -> {});
 
-    assertThat(response.messages().size()).isEqualTo(3);
+    assertThat(response.messages()).hasSize(3);
 
     // +2: 3 messages, 2x traceparent, 1x not injected due to too many attrs
     assertThat(totalAttrs).isEqualTo(18 + (isSqsAttributeInjectionEnabled() ? 2 : 0));
 
     List<Consumer<TraceAssert>> traceAsserts =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 trace -> trace.hasSpansSatisfyingExactly(span -> createQueueSpan(span)),
                 trace -> {
                   List<Consumer<SpanDataAssert>> spanAsserts =
@@ -148,13 +150,15 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
                               equalTo(RPC_METHOD, "ReceiveMessage"),
                               equalTo(HTTP_REQUEST_METHOD, "POST"),
                               equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                              satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
+                              satisfies(
+                                  URL_FULL, val -> val.startsWith("http://localhost:" + sqsPort)),
                               equalTo(SERVER_ADDRESS, "localhost"),
                               equalTo(SERVER_PORT, sqsPort),
                               equalTo(MESSAGING_SYSTEM, AWS_SQS),
                               equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                               equalTo(MESSAGING_OPERATION, "process"),
-                              satisfies(MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class)))));
+                              satisfies(
+                                  MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)))));
     }
     getTesting().waitAndAssertTraces(traceAsserts);
   }

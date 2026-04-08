@@ -5,15 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class SpymemcachedInstrumentationModule extends InstrumentationModule {
+public class SpymemcachedInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public SpymemcachedInstrumentationModule() {
     super("spymemcached", "spymemcached-2.12");
@@ -21,6 +23,11 @@ public class SpymemcachedInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new MemcachedClientInstrumentation());
+    return asList(new MemcachedClientInstrumentation(), new MemcachedConnectionInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

@@ -33,7 +33,7 @@ final class OpenTelemetryClient extends SimpleDecoratingHttpClient {
       return unwrap().execute(ctx, req);
     }
 
-    Context context = instrumenter.start(Context.current(), ctx);
+    Context context = instrumenter.start(parentContext, ctx);
 
     ctx.log()
         .whenComplete()

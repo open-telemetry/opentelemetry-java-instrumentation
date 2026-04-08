@@ -16,12 +16,14 @@ import com.netflix.hystrix.HystrixInvokableInfo;
 import io.opentelemetry.instrumentation.rxjava.v1_0.TracedOnSubscribe;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import rx.Observable;
 
-public class HystrixCommandInstrumentation implements TypeInstrumentation {
+class HystrixCommandInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed(
@@ -39,37 +41,37 @@ public class HystrixCommandInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("getExecutionObservable").and(returns(named("rx.Observable"))),
-        this.getClass().getName() + "$ExecuteAdvice");
+        getClass().getName() + "$ExecuteAdvice");
     transformer.applyAdviceToMethod(
         named("getFallbackObservable").and(returns(named("rx.Observable"))),
-        this.getClass().getName() + "$FallbackAdvice");
+        getClass().getName() + "$FallbackAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ExecuteAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static Observable<?> stopSpan(
         @Advice.This HystrixInvokableInfo<?> command,
-        @Advice.Return(readOnly = false) Observable<?> result,
-        @Advice.Thrown Throwable throwable) {
+        @Advice.Return @Nullable Observable<?> result) {
 
       HystrixRequest request = HystrixRequest.create(command, "execute");
-      result = Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));
+      return Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));
     }
   }
 
   @SuppressWarnings("unused")
   public static class FallbackAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static Observable<?> stopSpan(
         @Advice.This HystrixInvokableInfo<?> command,
-        @Advice.Return(readOnly = false) Observable<?> result,
-        @Advice.Thrown Throwable throwable) {
+        @Advice.Return @Nullable Observable<?> result) {
 
       HystrixRequest request = HystrixRequest.create(command, "fallback");
-      result = Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));
+      return Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));
     }
   }
 }

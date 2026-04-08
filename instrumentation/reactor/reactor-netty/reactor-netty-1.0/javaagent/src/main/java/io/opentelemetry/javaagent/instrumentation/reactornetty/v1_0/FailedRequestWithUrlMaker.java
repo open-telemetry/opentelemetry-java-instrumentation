@@ -41,8 +41,8 @@ final class FailedRequestWithUrlMaker {
       }
       try {
         return method.invoke(failedRequest, args);
-      } catch (InvocationTargetException exception) {
-        throw exception.getCause();
+      } catch (InvocationTargetException e) {
+        throw e.getCause();
       }
     }
 

@@ -29,9 +29,8 @@ dependencies {
   // Ensure no cross interference
   testInstrumentation(project(":instrumentation:azure-core:azure-core-1.19:javaagent"))
   testInstrumentation(project(":instrumentation:azure-core:azure-core-1.36:javaagent"))
+  testInstrumentation(project(":instrumentation:azure-core:azure-core-1.53:javaagent"))
 }
-
-val latestDepTest = findProperty("testLatestDeps") as Boolean
 
 testing {
   suites {
@@ -39,7 +38,7 @@ testing {
     // extracted to the output directory are not available during tests
     val testAzure by registering(JvmTestSuite::class) {
       dependencies {
-        if (latestDepTest) {
+        if (otelProps.testLatestDeps) {
           implementation("com.azure:azure-core:1.18.0") // see azure-core-1.19 module
         } else {
           implementation("com.azure:azure-core:1.14.0")

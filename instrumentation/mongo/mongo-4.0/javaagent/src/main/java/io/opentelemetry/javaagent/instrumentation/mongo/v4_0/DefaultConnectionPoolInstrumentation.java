@@ -13,10 +13,12 @@ import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class DefaultConnectionPoolInstrumentation implements TypeInstrumentation {
+class DefaultConnectionPoolInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.mongodb.internal.connection.DefaultConnectionPool");
@@ -28,16 +30,17 @@ public class DefaultConnectionPoolInstrumentation implements TypeInstrumentation
     transformer.applyAdviceToMethod(
         named("getAsync")
             .and(takesArgument(0, named("com.mongodb.internal.async.SingleResultCallback"))),
-        this.getClass().getName() + "$SingleResultCallbackAdvice");
+        getClass().getName() + "$SingleResultCallbackAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class SingleResultCallbackAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrapCallback(
-        @Advice.Argument(value = 0, readOnly = false) SingleResultCallback<Object> callback) {
-      callback = new SingleResultCallbackWrapper(Java8BytecodeBridge.currentContext(), callback);
+    @AssignReturned.ToArguments(@ToArgument(0))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static SingleResultCallback<Object> wrapCallback(
+        @Advice.Argument(0) SingleResultCallback<Object> callback) {
+      return new SingleResultCallbackWrapper(Java8BytecodeBridge.currentContext(), callback);
     }
   }
 }

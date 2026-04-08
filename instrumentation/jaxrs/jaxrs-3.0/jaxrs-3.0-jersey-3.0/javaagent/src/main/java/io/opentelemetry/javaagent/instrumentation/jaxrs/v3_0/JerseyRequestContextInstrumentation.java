@@ -14,8 +14,8 @@ import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ResourceInfo;
 import jakarta.ws.rs.core.UriInfo;
 import java.lang.reflect.Method;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.asm.Advice.Local;
 
 /**
  * Jersey specific context instrumentation.
@@ -35,17 +35,45 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
   @SuppressWarnings("unused")
   public static class ContainerRequestContextAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void decorateAbortSpan(
-        @Advice.This ContainerRequestContext requestContext,
-        @Local("otelHandlerData") Jaxrs3HandlerData handlerData,
-        @Local("otelContext") Context context,
-        @Local("otelScope") Scope scope) {
-      UriInfo uriInfo = requestContext.getUriInfo();
+    public static class AdviceScope {
+      private final Jaxrs3HandlerData handlerData;
+      private final Context context;
+      private final Scope scope;
 
+      private AdviceScope(Jaxrs3HandlerData handlerData, Context context) {
+        this.handlerData = handlerData;
+        this.context = context;
+        scope = context.makeCurrent();
+      }
+
+      @Nullable
+      public static AdviceScope start(
+          Class<?> resourceClass, Method method, ContainerRequestContext requestContext) {
+        Jaxrs3HandlerData handlerData = new Jaxrs3HandlerData(resourceClass, method);
+        Context context =
+            Jaxrs3RequestContextHelper.createOrUpdateAbortSpan(
+                instrumenter(), requestContext, handlerData);
+        if (context == null) {
+          return null;
+        }
+        return new AdviceScope(handlerData, context);
+      }
+
+      public void end(@Nullable Throwable throwable) {
+        scope.close();
+        instrumenter().end(context, handlerData, null, throwable);
+      }
+    }
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static AdviceScope decorateAbortSpan(
+        @Advice.This ContainerRequestContext requestContext) {
+
+      UriInfo uriInfo = requestContext.getUriInfo();
       if (requestContext.getProperty(JaxrsConstants.ABORT_HANDLED) != null
           || !(uriInfo instanceof ResourceInfo)) {
-        return;
+        return null;
       }
 
       ResourceInfo resourceInfo = (ResourceInfo) uriInfo;
@@ -53,29 +81,19 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
       Class<?> resourceClass = resourceInfo.getResourceClass();
 
       if (resourceClass == null || method == null) {
-        return;
+        return null;
       }
 
-      handlerData = new Jaxrs3HandlerData(resourceClass, method);
-      context =
-          Jaxrs3RequestContextHelper.createOrUpdateAbortSpan(
-              instrumenter(), requestContext, handlerData);
-      if (context != null) {
-        scope = context.makeCurrent();
-      }
+      return AdviceScope.start(resourceClass, method, requestContext);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
-        @Local("otelHandlerData") Jaxrs3HandlerData handlerData,
-        @Local("otelContext") Context context,
-        @Local("otelScope") Scope scope,
-        @Advice.Thrown Throwable throwable) {
-      if (scope == null) {
-        return;
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(throwable);
       }
-      scope.close();
-      instrumenter().end(context, handlerData, null, throwable);
     }
   }
 }

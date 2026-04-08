@@ -12,8 +12,9 @@ import reactor.core.Scannable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxOperator;
 import reactor.core.publisher.Operators;
+import reactor.util.context.Context;
 
-public final class TracingDisablingKafkaFlux<T> extends FluxOperator<T, T> {
+public class TracingDisablingKafkaFlux<T> extends FluxOperator<T, T> {
 
   public TracingDisablingKafkaFlux(Flux<? extends T> source) {
     super(source);
@@ -44,7 +45,7 @@ public final class TracingDisablingKafkaFlux<T> extends FluxOperator<T, T> {
     }
 
     @Override
-    public reactor.util.context.Context currentContext() {
+    public Context currentContext() {
       return actual.currentContext();
     }
 

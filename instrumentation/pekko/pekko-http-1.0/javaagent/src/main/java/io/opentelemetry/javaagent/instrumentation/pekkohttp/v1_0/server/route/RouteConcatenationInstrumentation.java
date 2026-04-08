@@ -11,6 +11,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pekko.http.scaladsl.server.RequestContext;
@@ -18,7 +20,7 @@ import org.apache.pekko.http.scaladsl.server.RouteResult;
 import scala.Function1;
 import scala.concurrent.Future;
 
-public class RouteConcatenationInstrumentation implements TypeInstrumentation {
+class RouteConcatenationInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.pekko.http.scaladsl.server.RouteConcatenation$RouteWithConcatenation");
@@ -26,18 +28,18 @@ public class RouteConcatenationInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(isConstructor(), this.getClass().getName() + "$ApplyAdvice");
-    transformer.applyAdviceToMethod(named("$tilde"), this.getClass().getName() + "$ApplyAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ApplyAdvice");
+    transformer.applyAdviceToMethod(named("$tilde"), getClass().getName() + "$ApplyAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ApplyAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(value = 0, readOnly = false)
-            Function1<RequestContext, Future<RouteResult>> route) {
-      route = new PekkoRouteWrapper(route);
+    @AssignReturned.ToArguments(@ToArgument(0))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Object onEnter(
+        @Advice.Argument(0) Function1<RequestContext, Future<RouteResult>> route) {
+      return new PekkoRouteWrapper(route);
     }
   }
 }

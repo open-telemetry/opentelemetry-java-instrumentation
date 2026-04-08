@@ -8,16 +8,15 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 import static io.opentelemetry.instrumentation.test.utils.ClassUtils.getClassName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.ErrorAttributes.ErrorTypeValues.OTHER;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JavaInterfaces.Jax;
-import io.opentelemetry.semconv.ErrorAttributes;
 import java.util.stream.Stream;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -104,7 +103,6 @@ class JaxRs2AnnotationsInstrumentationTest {
         Arguments.of("/child/call", new JavaInterfaces.DefaultChildClassOnInterface()));
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest
   @MethodSource("provideArguments")
   void createSpanForAnnotatedMethod(String path, Jax action) {
@@ -121,13 +119,13 @@ class JaxRs2AnnotationsInstrumentationTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_ROUTE, path),
-                            equalTo(ERROR_TYPE, ErrorAttributes.ErrorTypeValues.OTHER)),
+                            equalTo(ERROR_TYPE, OTHER)),
                 span ->
                     span.hasName(className + ".call")
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, action.getClass().getName()),
-                            equalTo(CODE_FUNCTION, "call"))));
+                            SemconvCodeStabilityUtil.codeFunctionAssertions(
+                                action.getClass(), "call"))));
   }
 
   @Test
@@ -147,8 +145,7 @@ class JaxRs2AnnotationsInstrumentationTest {
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(ERROR_TYPE, ErrorAttributes.ErrorTypeValues.OTHER))));
+                            equalTo(HTTP_REQUEST_METHOD, "GET"), equalTo(ERROR_TYPE, OTHER))));
   }
 
   @Path("/interface")

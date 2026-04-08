@@ -10,10 +10,11 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.File;
@@ -35,18 +36,20 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.Testcontainers;
-import org.testcontainers.containers.BrowserWebDriverContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.selenium.BrowserWebDriverContainer;
 
 class GwtTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   private static final Logger logger = LoggerFactory.getLogger(GwtTest.class);
   static int port;
   static Server server;
-  static BrowserWebDriverContainer<?> browser;
+  static BrowserWebDriverContainer browser;
   static URI address;
 
   static void startServer() throws Exception {
@@ -76,8 +79,7 @@ class GwtTest {
     Testcontainers.exposeHostPorts(port);
 
     browser =
-        new BrowserWebDriverContainer<>()
-            .withCapabilities(new ChromeOptions())
+        new BrowserWebDriverContainer("selenium/standalone-chrome")
             .withLogConsumer(new Slf4jLogConsumer(logger));
     browser.start();
 
@@ -90,11 +92,11 @@ class GwtTest {
     browser.stop();
   }
 
-  static final String getContextPath() {
+  static String getContextPath() {
     return "/xyz";
   }
 
-  RemoteWebDriver getDriver() {
+  private static RemoteWebDriver getDriver() {
     RemoteWebDriver driver =
         new RemoteWebDriver(browser.getSeleniumAddress(), new ChromeOptions(), false);
     driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(30));
@@ -102,8 +104,10 @@ class GwtTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void testGwt() {
     RemoteWebDriver driver = getDriver();
+    cleanup.deferCleanup(driver::close);
 
     // fetch the test page
     driver.get(address.resolve("greeting.html").toString());
@@ -145,7 +149,8 @@ class GwtTest {
 
     // click a button to trigger calling java code
     driver.findElement(By.className("greeting.button")).click();
-    assertEquals(driver.findElement(By.className("message.received")).getText(), "Hello, Otel");
+    assertThat(driver.findElement(By.className("message.received")).getText())
+        .isEqualTo("Hello, Otel");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -167,7 +172,7 @@ class GwtTest {
 
     // click a button to trigger calling java code
     driver.findElement(By.className("error.button")).click();
-    assertEquals(driver.findElement(By.className("error.received")).getText(), "Error");
+    assertThat(driver.findElement(By.className("error.received")).getText()).isEqualTo("Error");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -185,7 +190,5 @@ class GwtTest {
                             equalTo(RPC_SYSTEM, "gwt"),
                             equalTo(RPC_SERVICE, "test.gwt.shared.MessageService"),
                             equalTo(RPC_METHOD, "sendMessage"))));
-
-    driver.close();
   }
 }

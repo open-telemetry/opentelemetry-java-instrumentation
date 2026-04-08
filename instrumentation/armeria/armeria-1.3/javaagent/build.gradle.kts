@@ -24,8 +24,44 @@ dependencies {
   testCompileOnly("com.google.errorprone:error_prone_annotations")
 }
 
+testing {
+  suites {
+    val testArmeria19 by registering(JvmTestSuite::class) {
+      sources {
+        java {
+          setSrcDirs(listOf("src/test/java", "src/testArmeria19/java"))
+        }
+      }
+      dependencies {
+        implementation("com.linecorp.armeria:armeria:1.9.2")
+        implementation("com.linecorp.armeria:armeria-junit5:1.9.2")
+        implementation(project(":instrumentation:armeria:armeria-1.3:testing"))
+        compileOnly("com.google.errorprone:error_prone_annotations")
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+  }
+
+  check {
+    dependsOn(testing.suites, testStableSemconv)
+  }
+
+  if (otelProps.denyUnsafe) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
   }
 }

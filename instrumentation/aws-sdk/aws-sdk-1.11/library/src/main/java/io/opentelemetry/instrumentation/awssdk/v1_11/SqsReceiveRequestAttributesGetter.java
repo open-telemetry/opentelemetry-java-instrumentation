@@ -5,16 +5,16 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
+import static java.util.stream.Collectors.toList;
+
 import com.amazonaws.Response;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 
-enum SqsReceiveRequestAttributesGetter
+class SqsReceiveRequestAttributesGetter
     implements MessagingAttributesGetter<SqsReceiveRequest, Response<?>> {
-  INSTANCE;
 
   // copied from MessagingIncubatingAttributes.MessagingSystemIncubatingValues
   private static final String AWS_SQS = "aws_sqs";
@@ -28,6 +28,9 @@ enum SqsReceiveRequestAttributesGetter
   public String getDestination(SqsReceiveRequest request) {
     Object originalRequest = request.getRequest().getOriginalRequest();
     String queueUrl = RequestAccess.getQueueUrl(originalRequest);
+    if (queueUrl == null) {
+      return null;
+    }
     int i = queueUrl.lastIndexOf('/');
     return i > 0 ? queueUrl.substring(i + 1) : null;
   }
@@ -89,6 +92,6 @@ enum SqsReceiveRequestAttributesGetter
     return StreamSupport.stream(request.getMessages().spliterator(), false)
         .map(message -> message.getMessageAttribute(name))
         .filter(value -> value != null)
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 }

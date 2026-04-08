@@ -32,4 +32,9 @@ class JerseyJettyHttpServerTest extends JaxRsJettyHttpServerTest {
     // disables a test that jersey deems invalid
     return false;
   }
+
+  @Override
+  protected boolean testExperimental() {
+    return Boolean.getBoolean("otel.instrumentation.jaxrs.experimental-span-attributes");
+  }
 }

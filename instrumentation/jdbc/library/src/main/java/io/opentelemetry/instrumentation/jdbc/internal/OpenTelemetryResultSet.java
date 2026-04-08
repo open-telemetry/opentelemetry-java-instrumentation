@@ -27,6 +27,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 @SuppressWarnings({"UngroupedOverloads", "OverloadMethodsDeclarationOrder"})
 class OpenTelemetryResultSet implements ResultSet {
@@ -34,9 +35,17 @@ class OpenTelemetryResultSet implements ResultSet {
   private final ResultSet delegate;
   private final Statement statement;
 
-  OpenTelemetryResultSet(ResultSet delegate, Statement statement) {
+  private OpenTelemetryResultSet(ResultSet delegate, Statement statement) {
     this.delegate = delegate;
     this.statement = statement;
+  }
+
+  @Nullable
+  public static ResultSet wrap(@Nullable ResultSet delegate, Statement statement) {
+    if (delegate == null) {
+      return null;
+    }
+    return new OpenTelemetryResultSet(delegate, statement);
   }
 
   @Override

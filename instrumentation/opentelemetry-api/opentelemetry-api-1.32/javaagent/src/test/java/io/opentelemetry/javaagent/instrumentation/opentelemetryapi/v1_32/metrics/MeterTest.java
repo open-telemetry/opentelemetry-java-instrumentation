@@ -77,6 +77,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasHistogramSatisfying(
                             histogram ->
@@ -85,7 +86,7 @@ class MeterTest {
                                         point
                                             .hasSum(11.0)
                                             .hasBucketBoundaries(10.0)
-                                            .hasAttributesSatisfying(
+                                            .hasAttributesSatisfyingExactly(
                                                 equalTo(stringKey("test"), "test"))))));
   }
 
@@ -112,6 +113,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasHistogramSatisfying(
                             histogram ->
@@ -120,7 +122,7 @@ class MeterTest {
                                         point
                                             .hasSum(12.1)
                                             .hasBucketBoundaries(10.0)
-                                            .hasAttributesSatisfying(
+                                            .hasAttributesSatisfyingExactly(
                                                 equalTo(stringKey("test"), "test"))))));
   }
 }

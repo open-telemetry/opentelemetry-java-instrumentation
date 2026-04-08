@@ -41,7 +41,3 @@ kotlin {
     jvmTarget.set(JvmTarget.JVM_1_8)
   }
 }
-
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
-}

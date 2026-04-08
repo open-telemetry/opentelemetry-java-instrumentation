@@ -1,0 +1,24 @@
+description: >
+  This instrumentation enables JVM runtime metrics using JMX (Java 8+) and JFR (Java 17+) to
+  monitor CPU, memory, garbage collection, threads, classes, buffer pools, and file descriptors.
+semantic_conventions:
+  - JVM_RUNTIME_METRICS
+library_link: https://github.com/open-telemetry/opentelemetry-java-instrumentation/tree/main/instrumentation/runtime-telemetry
+configurations:
+  - name: otel.instrumentation.runtime-telemetry.emit-experimental-metrics
+    description: Enables the capture of experimental JVM runtime metrics.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.runtime-telemetry.experimental.prefer-jfr
+    description: >
+      Prefers JFR over JMX for metrics where both collection methods are available (Java 17+).
+    type: boolean
+    default: false
+  - name: otel.instrumentation.runtime-telemetry.experimental.package-emitter.enabled
+    description: Enables creating events for JAR libraries used by the application.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.runtime-telemetry.experimental.package-emitter.jars-per-second
+    description: The number of JAR files processed per second by the package emitter.
+    type: int
+    default: 10

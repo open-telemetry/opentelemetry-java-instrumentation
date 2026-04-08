@@ -1,10 +1,9 @@
-// Enable testing scala code in groovy spock tests.
-
 plugins {
   scala
 }
 
 dependencies {
+  compileOnly("org.scala-lang:scala-library:2.11.12")
   testCompileOnly("org.scala-lang:scala-library:2.11.12")
 }
 

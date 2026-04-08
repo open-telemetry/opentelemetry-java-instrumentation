@@ -9,6 +9,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 public abstract class AbstractProcessMetricsTest {
 
@@ -17,6 +18,7 @@ public abstract class AbstractProcessMetricsTest {
   protected abstract InstrumentationExtension testing();
 
   @Test
+  @EnabledIfSystemProperty(named = "testExperimental", matches = "true")
   void test() {
     // when
     registerMetrics();

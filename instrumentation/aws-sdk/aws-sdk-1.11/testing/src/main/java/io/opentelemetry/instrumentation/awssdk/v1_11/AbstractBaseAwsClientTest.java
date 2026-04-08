@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_ME
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.AmazonWebServiceClient;
@@ -38,6 +39,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractBaseAwsClientTest {
   protected abstract InstrumentationExtension testing();
 
@@ -83,8 +85,9 @@ public abstract class AbstractBaseAwsClientTest {
     assertThat(requestHandler2s).isNotNull();
     assertThat(
             requestHandler2s.stream()
-                .filter(h -> "TracingRequestHandler".equals(h.getClass().getSimpleName())))
-        .isNotNull();
+                .filter(h -> "TracingRequestHandler".equals(h.getClass().getSimpleName()))
+                .collect(toList()))
+        .isNotEmpty();
 
     testing()
         .waitAndAssertTraces(
@@ -101,14 +104,15 @@ public abstract class AbstractBaseAwsClientTest {
                                   equalTo(SERVER_PORT, server.httpPort()),
                                   equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                   equalTo(RPC_SYSTEM, "aws-api"),
-                                  satisfies(RPC_SERVICE, v -> v.contains(service)),
+                                  satisfies(RPC_SERVICE, val -> val.contains(service)),
                                   equalTo(RPC_METHOD, operation),
                                   equalTo(stringKey("aws.agent"), "java-aws-sdk")));
 
                       if (hasRequestId()) {
                         attributes.add(
                             satisfies(
-                                stringKey("aws.request_id"), v -> v.isInstanceOf(String.class)));
+                                stringKey("aws.request_id"),
+                                val -> val.isInstanceOf(String.class)));
                       }
 
                       attributes.addAll(additionalAttributes);

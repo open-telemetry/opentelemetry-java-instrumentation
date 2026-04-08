@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy;
 
+import static java.util.logging.Level.FINE;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -15,11 +16,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.opentelemetry.javaagent.bootstrap.ExceptionLogger;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.logging.Level;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
+import net.bytebuddy.asm.Advice;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -34,20 +36,24 @@ class ExceptionHandlerTest {
 
   @BeforeAll
   static void setUp() {
+    Advice.WithCustomMapping customMapping =
+        Advice.withCustomMapping()
+            // required for AssignReturned annotation and throwable suppression
+            .with(new Advice.AssignReturned.Factory().withSuppressed(Throwable.class));
     AgentBuilder builder =
         new AgentBuilder.Default()
             .disableClassFormatChanges()
             .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
             .type(named(ExceptionHandlerTest.class.getName() + "$SomeClass"))
             .transform(
-                new AgentBuilder.Transformer.ForAdvice()
+                new AgentBuilder.Transformer.ForAdvice(customMapping)
                     .with(
                         new AgentBuilder.LocationStrategy.Simple(
                             ClassFileLocator.ForClassLoader.of(BadAdvice.class.getClassLoader())))
                     .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
                     .advice(isMethod().and(named("isInstrumented")), BadAdvice.class.getName()))
             .transform(
-                new AgentBuilder.Transformer.ForAdvice()
+                new AgentBuilder.Transformer.ForAdvice(customMapping)
                     .with(
                         new AgentBuilder.LocationStrategy.Simple(
                             ClassFileLocator.ForClassLoader.of(BadAdvice.class.getClassLoader())))
@@ -62,7 +68,7 @@ class ExceptionHandlerTest {
     // keep logger in static field to ensure that it won't get gcd before ExceptionLogger
     // class is initialized which would reset logger back to default configuration
     exceptionLogger = Logger.getLogger(ExceptionLogger.class.getName());
-    exceptionLogger.setLevel(Level.FINE);
+    exceptionLogger.setLevel(FINE);
     exceptionLogger.addHandler(testHandler);
   }
 
@@ -80,13 +86,16 @@ class ExceptionHandlerTest {
     int initLogEvents = testHandler.getRecords().size();
 
     // Triggers classload and instrumentation
-    assertThat(SomeClass.isInstrumented()).isTrue();
+    assertThat(SomeClass.isInstrumented().get())
+        .describedAs("method should have been instrumented")
+        .isTrue();
+
     assertThat(testHandler.getRecords())
         .hasSize(initLogEvents + 1)
         .last()
         .satisfies(
             event -> {
-              assertThat(event.getLevel()).isEqualTo(Level.FINE);
+              assertThat(event.getLevel()).isEqualTo(FINE);
               assertThat(event.getMessage())
                   .startsWith("Failed to handle exception in instrumentation for");
             });
@@ -104,8 +113,9 @@ class ExceptionHandlerTest {
 
     Class<?> someClazz = loader.loadClass(SomeClass.class.getName());
     assertThat(someClazz.getClassLoader()).isSameAs(loader);
-    someClazz.getMethod("isInstrumented").invoke(null);
+    AtomicBoolean instrumented = (AtomicBoolean) someClazz.getMethod("isInstrumented").invoke(null);
     assertThat(testHandler.getRecords()).hasSize(initLogEvents);
+    assertThat(instrumented.get()).describedAs("method should have been instrumented").isTrue();
   }
 
   @Test
@@ -120,8 +130,8 @@ class ExceptionHandlerTest {
 
   public static class SomeClass {
 
-    public static boolean isInstrumented() {
-      return false;
+    public static AtomicBoolean isInstrumented() {
+      return new AtomicBoolean();
     }
 
     public static void smallStack() {

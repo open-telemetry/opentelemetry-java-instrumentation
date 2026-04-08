@@ -15,18 +15,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import oracle.ucp.UniversalConnectionPool;
 
 final class ConnectionPoolMetrics {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.orcale-ucp-11.2";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.oracle-ucp-11.2";
 
   // a weak map does not make sense here because each Meter holds a reference to the connection pool
   // none of the UniversalConnectionPool implementations contain equals()/hashCode(), so it's safe
   // to keep them in a plain ConcurrentHashMap
-  private static final Map<UniversalConnectionPool, BatchCallback> dataSourceMetrics =
+  private static final Map<UniversalConnectionPool, BatchCallback> connectionPoolMetrics =
       new ConcurrentHashMap<>();
 
-  public static void registerMetrics(
-      OpenTelemetry openTelemetry, UniversalConnectionPool connectionPool) {
-    dataSourceMetrics.computeIfAbsent(
-        connectionPool, (unused) -> createMeters(openTelemetry, connectionPool));
+  static void registerMetrics(OpenTelemetry openTelemetry, UniversalConnectionPool connectionPool) {
+    connectionPoolMetrics.computeIfAbsent(
+        connectionPool, pool -> createMeters(openTelemetry, pool));
   }
 
   private static BatchCallback createMeters(
@@ -49,8 +48,7 @@ final class ConnectionPoolMetrics {
               connectionPool.getBorrowedConnectionsCount(), usedConnectionsAttributes);
           connections.record(
               connectionPool.getAvailableConnectionsCount(), idleConnectionsAttributes);
-          maxConnections.record(
-              connectionPool.getStatistics().getPeakConnectionsCount(), attributes);
+          maxConnections.record(connectionPool.getMaxPoolSize(), attributes);
           pendingRequestsForConnection.record(
               connectionPool.getStatistics().getPendingRequestsCount(), attributes);
         },
@@ -59,8 +57,8 @@ final class ConnectionPoolMetrics {
         pendingRequestsForConnection);
   }
 
-  public static void unregisterMetrics(UniversalConnectionPool connectionPool) {
-    BatchCallback callback = dataSourceMetrics.remove(connectionPool);
+  static void unregisterMetrics(UniversalConnectionPool connectionPool) {
+    BatchCallback callback = connectionPoolMetrics.remove(connectionPool);
     if (callback != null) {
       callback.close();
     }

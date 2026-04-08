@@ -50,12 +50,8 @@ public class Jetty12Helper {
   }
 
   public void end(Context context, Request request, Response response, @Nullable Throwable error) {
-    if (error == null) {
-      error = AppServerBridge.getException(context);
-    }
-    if (error == null) {
-      error = ServletAsyncContext.getAsyncException(context);
-    }
+    error = AppServerBridge.getException(context, error);
+    error = ServletAsyncContext.getAsyncException(context, error);
 
     instrumenter.end(context, request, response, error);
   }

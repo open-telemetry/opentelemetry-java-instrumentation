@@ -10,80 +10,86 @@ import java.util.concurrent.Callable;
 
 // To better see which library is tested
 @SuppressWarnings("UnnecessarilyFullyQualified")
-public class SayTracedHello {
+class SayTracedHello {
+
+  SayTracedHello() {}
+
+  // used to verify that constructor with tracing annotation doesn't break instrumentation
+  @com.appoptics.api.ext.LogMethod
+  SayTracedHello(String unused) {}
 
   @com.appoptics.api.ext.LogMethod
-  public String appoptics() {
+  String appoptics() {
     Span.current().setAttribute("providerAttr", "AppOptics");
     return "hello!";
   }
 
   @com.newrelic.api.agent.Trace
-  public String newrelic() {
+  String newrelic() {
     Span.current().setAttribute("providerAttr", "NewRelic");
     return "hello!";
   }
 
   @com.signalfx.tracing.api.Trace
-  public String signalfx() {
+  String signalfx() {
     Span.current().setAttribute("providerAttr", "SignalFx");
     return "hello!";
   }
 
   @com.tracelytics.api.ext.LogMethod
-  public String tracelytics() {
+  String tracelytics() {
     Span.current().setAttribute("providerAttr", "Tracelytics");
     return "hello!";
   }
 
   @datadog.trace.api.Trace
-  public String datadog() {
+  String datadog() {
     Span.current().setAttribute("providerAttr", "Datadog");
     return "hello!";
   }
 
   @io.opentracing.contrib.dropwizard.Trace
-  public String dropwizard() {
+  String dropwizard() {
     Span.current().setAttribute("providerAttr", "Dropwizard");
     return "hello!";
   }
 
   @kamon.annotation.Trace("spanName")
-  public String kamonold() {
+  String kamonold() {
     Span.current().setAttribute("providerAttr", "KamonOld");
     return "hello!";
   }
 
   @kamon.annotation.api.Trace
-  public String kamonnew() {
+  String kamonnew() {
     Span.current().setAttribute("providerAttr", "KamonNew");
     return "hello!";
   }
 
   @org.springframework.cloud.sleuth.annotation.NewSpan
-  public String sleuth() {
+  String sleuth() {
     Span.current().setAttribute("providerAttr", "Sleuth");
     return "hello!";
   }
 
   @io.opentracing.contrib.dropwizard.Trace
-  public static String sayHello() {
+  static String sayHello() {
     Span.current().setAttribute("myattr", "test");
     return "hello!";
   }
 
   @io.opentracing.contrib.dropwizard.Trace
-  public static String sayHelloSayHa() {
+  static String sayHelloSayHa() {
     Span.current().setAttribute("myattr", "test2");
     return sayHello() + sayHello();
   }
 
   @io.opentracing.contrib.dropwizard.Trace
-  public static String sayError() {
+  static String sayError() {
     throw new IllegalStateException();
   }
 
-  public static String fromCallable() {
+  static String fromCallable() {
     return new Callable<String>() {
       @com.newrelic.api.agent.Trace
       @Override
@@ -93,7 +99,7 @@ public class SayTracedHello {
     }.call();
   }
 
-  public static String fromCallableWhenDisabled() {
+  static String fromCallableWhenDisabled() {
     return new Callable<String>() {
       @com.newrelic.api.agent.Trace
       @Override

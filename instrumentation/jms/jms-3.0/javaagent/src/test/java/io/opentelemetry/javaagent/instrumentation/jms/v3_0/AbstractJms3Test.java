@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
@@ -33,19 +34,16 @@ import jakarta.jms.Session;
 import jakarta.jms.TextMessage;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.activemq.artemis.jms.client.ActiveMQDestination;
 import org.assertj.core.api.AbstractAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsProvider;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
@@ -107,8 +105,8 @@ abstract class AbstractJms3Test {
     }
   }
 
-  @ArgumentsSource(DestinationsProvider.class)
   @ParameterizedTest
+  @MethodSource("destinationArguments")
   void testMessageListener(DestinationFactory destinationFactory, boolean isTemporary)
       throws Exception {
 
@@ -131,7 +129,7 @@ abstract class AbstractJms3Test {
     testing.runWithSpan("parent", () -> producer.send(destination, sentMessage));
 
     // then
-    TextMessage receivedMessage = receivedMessageFuture.get(10, TimeUnit.SECONDS);
+    TextMessage receivedMessage = receivedMessageFuture.get(10, SECONDS);
     assertThat(receivedMessage.getText()).isEqualTo(sentMessage.getText());
 
     String actualDestinationName = ((ActiveMQDestination) destination).getName();
@@ -165,8 +163,8 @@ abstract class AbstractJms3Test {
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 
-  @ArgumentsSource(EmptyReceiveArgumentsProvider.class)
   @ParameterizedTest
+  @MethodSource("emptyReceiveArguments")
   void shouldNotEmitTelemetryOnEmptyReceive(
       DestinationFactory destinationFactory, MessageReceiver receiver) throws JMSException {
 
@@ -185,16 +183,16 @@ abstract class AbstractJms3Test {
     testing.waitForTraces(0);
   }
 
-  @ArgumentsSource(DestinationsProvider.class)
   @ParameterizedTest
+  @MethodSource("destinationArguments")
   void shouldCaptureMessageHeaders(DestinationFactory destinationFactory, boolean isTemporary)
       throws Exception {
 
     // given
     Destination destination = destinationFactory.create(session);
     TextMessage sentMessage = session.createTextMessage("hello there");
-    sentMessage.setStringProperty("test_message_header", "test");
-    sentMessage.setIntProperty("test_message_int_header", 1234);
+    sentMessage.setStringProperty("Test_Message_Header", "test");
+    sentMessage.setIntProperty("Test_Message_Int_Header", 1234);
 
     MessageProducer producer = session.createProducer(destination);
     cleanup.deferCleanup(producer);
@@ -211,7 +209,7 @@ abstract class AbstractJms3Test {
     testing.runWithSpan("parent", () -> producer.send(sentMessage));
 
     // then
-    TextMessage receivedMessage = receivedMessageFuture.get(10, TimeUnit.SECONDS);
+    TextMessage receivedMessage = receivedMessageFuture.get(10, SECONDS);
     assertThat(receivedMessage.getText()).isEqualTo(sentMessage.getText());
 
     String actualDestinationName = ((ActiveMQDestination) destination).getName();
@@ -234,10 +232,10 @@ abstract class AbstractJms3Test {
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary),
                             equalTo(
-                                stringArrayKey("messaging.header.test_message_header"),
+                                stringArrayKey("messaging.header.Test_Message_Header"),
                                 singletonList("test")),
                             equalTo(
-                                stringArrayKey("messaging.header.test_message_int_header"),
+                                stringArrayKey("messaging.header.Test_Message_Int_Header"),
                                 singletonList("1234"))),
                 span ->
                     span.hasName(actualDestinationName + " process")
@@ -249,10 +247,10 @@ abstract class AbstractJms3Test {
                             equalTo(MESSAGING_OPERATION, "process"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             equalTo(
-                                stringArrayKey("messaging.header.test_message_header"),
+                                stringArrayKey("messaging.header.Test_Message_Header"),
                                 singletonList("test")),
                             equalTo(
-                                stringArrayKey("messaging.header.test_message_int_header"),
+                                stringArrayKey("messaging.header.Test_Message_Int_Header"),
                                 singletonList("1234"))),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
@@ -263,38 +261,30 @@ abstract class AbstractJms3Test {
         : satisfies(MESSAGING_DESTINATION_TEMPORARY, AbstractAssert::isNull);
   }
 
-  static final class EmptyReceiveArgumentsProvider implements ArgumentsProvider {
+  private static Stream<Arguments> emptyReceiveArguments() {
+    DestinationFactory topic = session -> session.createTopic("someTopic");
+    DestinationFactory queue = session -> session.createQueue("someQueue");
+    MessageReceiver receive = consumer -> consumer.receive(100);
+    MessageReceiver receiveNoWait = MessageConsumer::receiveNoWait;
 
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      DestinationFactory topic = session -> session.createTopic("someTopic");
-      DestinationFactory queue = session -> session.createQueue("someQueue");
-      MessageReceiver receive = consumer -> consumer.receive(100);
-      MessageReceiver receiveNoWait = MessageConsumer::receiveNoWait;
-
-      return Stream.of(
-          arguments(topic, receive),
-          arguments(queue, receive),
-          arguments(topic, receiveNoWait),
-          arguments(queue, receiveNoWait));
-    }
+    return Stream.of(
+        arguments(topic, receive),
+        arguments(queue, receive),
+        arguments(topic, receiveNoWait),
+        arguments(queue, receiveNoWait));
   }
 
-  static final class DestinationsProvider implements ArgumentsProvider {
+  private static Stream<Arguments> destinationArguments() {
+    DestinationFactory topic = session -> session.createTopic("someTopic");
+    DestinationFactory queue = session -> session.createQueue("someQueue");
+    DestinationFactory tempTopic = Session::createTemporaryTopic;
+    DestinationFactory tempQueue = Session::createTemporaryQueue;
 
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      DestinationFactory topic = session -> session.createTopic("someTopic");
-      DestinationFactory queue = session -> session.createQueue("someQueue");
-      DestinationFactory tempTopic = Session::createTemporaryTopic;
-      DestinationFactory tempQueue = Session::createTemporaryQueue;
-
-      return Stream.of(
-          arguments(topic, false),
-          arguments(queue, false),
-          arguments(tempTopic, true),
-          arguments(tempQueue, true));
-    }
+    return Stream.of(
+        arguments(topic, false),
+        arguments(queue, false),
+        arguments(tempTopic, true),
+        arguments(tempQueue, true));
   }
 
   @FunctionalInterface

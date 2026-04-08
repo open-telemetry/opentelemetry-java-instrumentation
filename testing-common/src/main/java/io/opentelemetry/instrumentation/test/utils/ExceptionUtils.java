@@ -5,9 +5,8 @@
 
 package io.opentelemetry.instrumentation.test.utils;
 
-public final class ExceptionUtils {
+public class ExceptionUtils {
 
-  @SuppressWarnings("unchecked")
   static RuntimeException sneakyThrow(Throwable t) {
     if (t == null) {
       throw new NullPointerException("t");

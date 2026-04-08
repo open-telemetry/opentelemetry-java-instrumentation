@@ -107,8 +107,8 @@ public final class JettyClientTracingListener
                   (proxy, method, args) -> {
                     try (Scope ignored = context.makeCurrent()) {
                       return method.invoke(listener, args);
-                    } catch (InvocationTargetException exception) {
-                      throw exception.getCause();
+                    } catch (InvocationTargetException e) {
+                      throw e.getCause();
                     }
                   });
 

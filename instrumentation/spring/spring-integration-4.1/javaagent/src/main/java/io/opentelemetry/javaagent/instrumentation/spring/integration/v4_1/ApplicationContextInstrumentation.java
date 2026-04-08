@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static org.springframework.beans.factory.support.BeanDefinitionBuilder.genericBeanDefinition;
@@ -22,7 +21,7 @@ import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.integration.channel.interceptor.GlobalChannelInterceptorWrapper;
 
-public class ApplicationContextInstrumentation implements TypeInstrumentation {
+class ApplicationContextInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("org.springframework.context.support.AbstractApplicationContext");
@@ -36,14 +35,13 @@ public class ApplicationContextInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("postProcessBeanFactory"))
+        named("postProcessBeanFactory")
             .and(
                 takesArgument(
                     0,
                     named(
                         "org.springframework.beans.factory.config.ConfigurableListableBeanFactory"))),
-        ApplicationContextInstrumentation.class.getName() + "$PostProcessBeanFactoryAdvice");
+        getClass().getName() + "$PostProcessBeanFactoryAdvice");
   }
 
   @SuppressWarnings("unused")

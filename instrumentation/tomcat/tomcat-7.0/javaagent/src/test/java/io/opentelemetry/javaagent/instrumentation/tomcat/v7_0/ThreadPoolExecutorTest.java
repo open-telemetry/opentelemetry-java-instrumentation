@@ -5,11 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.tomcat.util.threads.TaskQueue;
 import org.apache.tomcat.util.threads.ThreadPoolExecutor;
@@ -41,7 +43,7 @@ class ThreadPoolExecutorTest {
           }
         };
 
-    ThreadPoolExecutor pool = new ThreadPoolExecutor(1, 1, 0, TimeUnit.MILLISECONDS, queue);
+    ThreadPoolExecutor pool = new ThreadPoolExecutor(1, 1, 0, MILLISECONDS, queue);
     queue.setParent(pool);
 
     CountDownLatch latch = new CountDownLatch(1);
@@ -81,6 +83,6 @@ class ThreadPoolExecutorTest {
                     span.hasName("child2").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
 
     pool.shutdown();
-    pool.awaitTermination(10, TimeUnit.SECONDS);
+    pool.awaitTermination(10, SECONDS);
   }
 }

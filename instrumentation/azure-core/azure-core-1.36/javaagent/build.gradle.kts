@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("com.azure")
     module.set("azure-core")
-    versions.set("[1.36.0,)")
+    versions.set("[1.36.0,1.53.0)")
     assertInverse.set(true)
   }
 }
@@ -29,13 +29,12 @@ dependencies {
   // Ensure no cross interference
   testInstrumentation(project(":instrumentation:azure-core:azure-core-1.14:javaagent"))
   testInstrumentation(project(":instrumentation:azure-core:azure-core-1.19:javaagent"))
+  testInstrumentation(project(":instrumentation:azure-core:azure-core-1.53:javaagent"))
 }
-
-val latestDepTest = findProperty("testLatestDeps") as Boolean
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 }
 
@@ -45,12 +44,12 @@ testing {
     // extracted to the output directory are not available during tests
     val testAzure by registering(JvmTestSuite::class) {
       dependencies {
-        if (latestDepTest) {
-          implementation("com.azure:azure-core:latest.release")
-          implementation("com.azure:azure-core-test:latest.release")
+        if (otelProps.testLatestDeps) {
+          implementation("com.azure:azure-core:1.52.0")
+          implementation("com.azure:azure-core-test:1.26.2")
         } else {
           implementation("com.azure:azure-core:1.36.0")
-          implementation("com.azure:azure-core-test:1.16.2")
+          implementation("com.azure:azure-core-test:1.14.1")
         }
       }
     }

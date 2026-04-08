@@ -23,10 +23,10 @@ import software.amazon.awssdk.http.SdkHttpResponse;
  * A {@link ExecutionInterceptor} for use as an SPI by the AWS SDK to automatically trace all
  * requests.
  */
-public class TracingExecutionInterceptor implements ExecutionInterceptor {
+public final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   private final ExecutionInterceptor delegate =
-      AwsSdkSingletons.telemetry().newExecutionInterceptor();
+      AwsSdkSingletons.telemetry().createExecutionInterceptor();
 
   @Override
   public void beforeExecution(

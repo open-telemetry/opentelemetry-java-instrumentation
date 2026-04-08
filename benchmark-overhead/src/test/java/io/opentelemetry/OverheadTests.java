@@ -5,7 +5,10 @@
 
 package io.opentelemetry;
 
-import static org.junit.jupiter.api.Assertions.fail;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
+import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
 import io.opentelemetry.agents.Agent;
@@ -22,6 +25,7 @@ import io.opentelemetry.util.NamingConventions;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -104,7 +108,7 @@ public class OverheadTests {
     // Without it, our jfr file will be empty.
     petclinic.execInContainer("kill", "1");
     while (petclinic.isRunning()) {
-      TimeUnit.MILLISECONDS.sleep(500);
+      MILLISECONDS.sleep(500);
     }
     postgres.stop();
   }
@@ -142,14 +146,14 @@ public class OverheadTests {
     petclinic.execInContainer(startCommand);
 
     long deadline =
-        System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(testConfig.getWarmupSeconds());
+        System.currentTimeMillis() + SECONDS.toMillis(testConfig.getWarmupSeconds());
     while (System.currentTimeMillis() < deadline) {
       GenericContainer<?> k6 =
-          new GenericContainer<>(DockerImageName.parse("loadimpact/k6"))
+          new GenericContainer<>(DockerImageName.parse("grafana/k6"))
               .withNetwork(NETWORK)
               .withCopyFileToContainer(MountableFile.forHostPath("./k6"), "/app")
               .withCommand("run", "-u", "5", "-i", "200", "/app/basic.js")
-              .withStartupCheckStrategy(new OneShotStartupCheckStrategy());
+              .withStartupCheckStrategy(new OneShotStartupCheckStrategy().withTimeout(Duration.ofMinutes(5)));
       k6.start();
     }
 

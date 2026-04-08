@@ -36,4 +36,9 @@ public class PekkoHttpServerRouteInstrumentationModule extends InstrumentationMo
         new PathMatcherStaticInstrumentation(),
         new RouteConcatenationInstrumentation());
   }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
+  }
 }

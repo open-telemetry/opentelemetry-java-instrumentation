@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 
-public class TelemetryDataUtilTest {
+class TelemetryDataUtilTest {
 
   @Test
   void testTraceOrderPreserved() {

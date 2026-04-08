@@ -5,6 +5,10 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
+import static java.util.Arrays.asList;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.SEVERE;
+
 import io.opentelemetry.javaagent.bootstrap.IndyBootstrapDispatcher;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import java.lang.invoke.CallSite;
@@ -15,8 +19,6 @@ import java.lang.invoke.MethodType;
 import java.lang.invoke.MutableCallSite;
 import java.lang.reflect.Method;
 import java.security.PrivilegedAction;
-import java.util.Arrays;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -152,7 +154,7 @@ public class IndyBootstrap {
           throw new IllegalArgumentException("Unknown bootstrapping kind: " + kind);
       }
     } catch (Exception e) {
-      logger.log(Level.SEVERE, e.getMessage(), e);
+      logger.log(SEVERE, e.getMessage(), e);
       return null;
     }
   }
@@ -207,7 +209,7 @@ public class IndyBootstrap {
         // There have been nested bootstrapping attempts
         // Update the callsite of those to run the actual instrumentation
         logger.log(
-            Level.FINE,
+            FINE,
             "Fixing nested instrumentation invokedynamic instruction bootstrapping for instrumented class {0} and advice {1}.{2}, the instrumentation should be active now",
             new Object[] {lookup.lookupClass().getName(), adviceClassName, adviceMethodName});
         nestedBootstrapCallSite.setTarget(methodHandle);
@@ -224,7 +226,7 @@ public class IndyBootstrap {
     String moduleName = instrumentationModule.getClass().getName();
     return (adviceMethod, exit) ->
         (instrumentedType, instrumentedMethod) ->
-            Arrays.asList(
+            asList(
                 JavaConstant.Simple.ofLoaded(BOOTSTRAP_KIND_ADVICE),
                 JavaConstant.Simple.ofLoaded(moduleName),
                 JavaConstant.Simple.ofLoaded(adviceMethod.getDescriptor()),
@@ -300,7 +302,7 @@ public class IndyBootstrap {
                 "Unknown type of method: " + proxiedMethod.getName());
           }
 
-          return Arrays.asList(
+          return asList(
               JavaConstant.Simple.ofLoaded(BOOTSTRAP_KIND_PROXY),
               JavaConstant.Simple.ofLoaded(moduleName),
               JavaConstant.Simple.ofLoaded(proxiedType.getName()),

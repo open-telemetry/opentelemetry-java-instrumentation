@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -13,7 +14,6 @@ import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.MockWebServerExtension;
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
@@ -65,8 +65,7 @@ public abstract class AbstractAws2LambdaTest {
     String clientContextHeader =
         server.takeRequest().request().headers().get("x-amz-client-context");
     assertThat(clientContextHeader).isNotEmpty();
-    String clientContextJson =
-        new String(Base64.getDecoder().decode(clientContextHeader), StandardCharsets.UTF_8);
+    String clientContextJson = new String(Base64.getDecoder().decode(clientContextHeader), UTF_8);
     assertThat(clientContextJson).contains("traceparent");
 
     getTesting()

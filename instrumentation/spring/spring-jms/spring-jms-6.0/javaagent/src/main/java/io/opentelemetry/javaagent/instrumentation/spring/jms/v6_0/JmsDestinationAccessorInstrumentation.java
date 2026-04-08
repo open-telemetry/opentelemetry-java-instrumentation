@@ -10,17 +10,19 @@ import static io.opentelemetry.javaagent.instrumentation.spring.jms.v6_0.SpringJ
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JmsDestinationAccessorInstrumentation implements TypeInstrumentation {
+class JmsDestinationAccessorInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.springframework.jms.support.destination.JmsDestinationAccessor");
@@ -30,13 +32,14 @@ public class JmsDestinationAccessorInstrumentation implements TypeInstrumentatio
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("receiveFromConsumer").and(returns(named("jakarta.jms.Message"))),
-        this.getClass().getName() + "$ReceiveAdvice");
+        getClass().getName() + "$ReceiveAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ReceiveAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static Scope onEnter() {
       if (isReceiveTelemetryEnabled()) {
         return null;
@@ -44,12 +47,12 @@ public class JmsDestinationAccessorInstrumentation implements TypeInstrumentatio
       // suppress receive span creation in jms instrumentation
       Context context =
           InstrumenterUtil.suppressSpan(
-              receiveInstrumenter(), Java8BytecodeBridge.currentContext(), null);
+              receiveInstrumenter(), Java8BytecodeBridge.currentContext(), SpanKind.CONSUMER);
       return context.makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Enter Scope scope) {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope == null) {
         return;
       }

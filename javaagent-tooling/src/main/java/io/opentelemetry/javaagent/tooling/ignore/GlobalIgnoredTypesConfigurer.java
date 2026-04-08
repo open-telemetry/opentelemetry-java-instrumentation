@@ -11,13 +11,12 @@ import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.tooling.ExtensionClassLoader;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.InstrumentationModuleClassLoader;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 
 @AutoService(IgnoredTypesConfigurer.class)
 public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
 
   @Override
-  public void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
+  public void configure(IgnoredTypesBuilder builder) {
     configureIgnoredTypes(builder);
     configureIgnoredClassLoaders(builder);
     configureIgnoredTasks(builder);
@@ -125,6 +124,7 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
             "org.springframework.context.support.ContextTypeMatchClassLoader$ContextOverridingClassLoader")
         .ignoreClassLoader("sun.misc.Launcher$ExtClassLoader")
         .ignoreClassLoader("org.openjdk.nashorn.internal.runtime.ScriptLoader")
+        .ignoreClassLoader("jdk.nashorn.internal.runtime.ScriptLoader")
         .ignoreClassLoader("org.codehaus.janino.ByteArrayClassLoader")
         .ignoreClassLoader("org.eclipse.persistence.internal.jaxb.JaxbClassLoader")
         .ignoreClassLoader("com.alibaba.fastjson.util.ASMClassLoader")
@@ -156,6 +156,8 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
     // TODO Workaround for
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/787
     builder.ignoreTaskClass("org.apache.tomcat.util.net.NioEndpoint$SocketProcessor");
+    builder.ignoreTaskClass("org.apache.tomcat.util.net.JIoEndpoint$SocketProcessor");
+    builder.ignoreTaskClass("org.apache.tomcat.util.net.AprEndpoint$SocketProcessor");
 
     // HttpConnection implements Runnable. When async request is completed HttpConnection
     // may be sent to process next request while context from previous request hasn't been
@@ -184,5 +186,8 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
     // Skip propagating context into truffle compiler.
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/8415
     builder.ignoreTaskClass("org.graalvm.compiler.truffle.runtime.CompilationTask");
+
+    // Skip propagating context into mysql jdbc driver cleanup thread.
+    builder.ignoreTaskClass("com.mysql.cj.jdbc.AbandonedConnectionCleanupThread");
   }
 }

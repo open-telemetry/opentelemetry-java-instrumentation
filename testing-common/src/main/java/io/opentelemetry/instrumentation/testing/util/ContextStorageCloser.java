@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Helper class for closing context storage with retry in case there are strict context check
  * failures.
  */
-public final class ContextStorageCloser {
+public class ContextStorageCloser {
 
   private ContextStorageCloser() {}
 
@@ -52,14 +52,14 @@ public final class ContextStorageCloser {
   private abstract static class ContextRestorer {
     abstract void restore();
 
-    @SuppressWarnings("SystemOut")
+    @SuppressWarnings("SystemOut") // only used for debugging tests
     boolean runWithRestore(AutoCloseable target) {
       try {
         target.close();
         return true;
-      } catch (Throwable throwable) {
+      } catch (Throwable t) {
         restore();
-        if (throwable instanceof AssertionError) {
+        if (t instanceof AssertionError) {
           System.err.println();
           for (Map.Entry<Thread, StackTraceElement[]> threadEntry :
               Thread.getAllStackTraces().entrySet()) {
@@ -69,9 +69,9 @@ public final class ContextStorageCloser {
             }
             System.err.println();
           }
-          throw (AssertionError) throwable;
+          throw (AssertionError) t;
         }
-        throw new IllegalStateException(throwable);
+        throw new IllegalStateException(t);
       }
     }
 
@@ -85,7 +85,7 @@ public final class ContextStorageCloser {
       Object pendingScopes = getStrictContextStoragePendingScopes(strictContextStorage);
       Field mapField = pendingScopes.getClass().getDeclaredField("map");
       mapField.setAccessible(true);
-      @SuppressWarnings("unchecked")
+      @SuppressWarnings("unchecked") // casting reflection result
       ConcurrentHashMap<Object, Object> map =
           (ConcurrentHashMap<Object, Object>) mapField.get(pendingScopes);
       Map<Object, Object> copy = new HashMap<>(map);
@@ -132,7 +132,7 @@ public final class ContextStorageCloser {
                 "io.opentelemetry.javaagent.shaded.io.opentelemetry.context.ContextStorage");
         Method method = contextStorageClass.getDeclaredMethod("get");
         return method.invoke(null);
-      } catch (Exception exception) {
+      } catch (Exception ignored) {
         return null;
       }
     }

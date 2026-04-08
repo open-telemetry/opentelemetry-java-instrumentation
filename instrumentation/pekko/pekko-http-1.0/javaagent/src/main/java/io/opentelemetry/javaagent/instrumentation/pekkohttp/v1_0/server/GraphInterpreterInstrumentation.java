@@ -16,7 +16,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pekko.stream.impl.fusing.GraphInterpreter;
 
-public class GraphInterpreterInstrumentation implements TypeInstrumentation {
+class GraphInterpreterInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.pekko.stream.impl.fusing.GraphInterpreter");
@@ -31,7 +31,7 @@ public class GraphInterpreterInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class PushAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.Argument(0) GraphInterpreter.Connection connection) {
       // processPush is called when execution passes to application or server. Here we propagate the
       // context to the application code.
@@ -42,7 +42,7 @@ public class GraphInterpreterInstrumentation implements TypeInstrumentation {
       return null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();

@@ -16,7 +16,9 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.AbstractServlet5Test.HTML_PRINT_WRITER;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.AbstractServlet5Test.HTML_SERVLET_OUTPUT_STREAM;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
+import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.RequestDispatcher;
@@ -26,7 +28,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CountDownLatch;
 
 public class TestServlet5 {
@@ -66,7 +67,7 @@ public class TestServlet5 {
             } else if (CAPTURE_PARAMETERS.equals(endpoint)) {
               req.setCharacterEncoding("UTF8");
               String value = req.getParameter("test-parameter");
-              if (!value.equals("test value õäöü")) {
+              if (!"test value õäöü".equals(value)) {
                 throw new IllegalStateException(
                     "request parameter does not have expected value " + value);
               }
@@ -86,7 +87,7 @@ public class TestServlet5 {
               resp.setContentType("text/html");
               resp.setStatus(endpoint.getStatus());
               resp.setContentLength(endpoint.getBody().length());
-              byte[] body = endpoint.getBody().getBytes(StandardCharsets.UTF_8);
+              byte[] body = endpoint.getBody().getBytes(UTF_8);
               resp.getOutputStream().write(body, 0, body.length);
             }
             return null;
@@ -100,7 +101,12 @@ public class TestServlet5 {
     protected void service(HttpServletRequest req, HttpServletResponse resp) {
       ServerEndpoint endpoint = ServerEndpoint.forPath(req.getServletPath());
       CountDownLatch latch = new CountDownLatch(1);
-      AsyncContext context = req.startAsync();
+      boolean startAsyncInSpan =
+          SUCCESS.equals(endpoint) && "true".equals(req.getParameter("startAsyncInSpan"));
+      AsyncContext context =
+          startAsyncInSpan
+              ? GlobalTraceUtil.runWithSpan("startAsync", () -> req.startAsync())
+              : req.startAsync();
       if (endpoint.equals(EXCEPTION)) {
         context.setTimeout(5000);
       }
@@ -136,7 +142,7 @@ public class TestServlet5 {
                     } else if (CAPTURE_PARAMETERS.equals(endpoint)) {
                       req.setCharacterEncoding("UTF8");
                       String value = req.getParameter("test-parameter");
-                      if (!value.equals("test value õäöü")) {
+                      if (!"test value õäöü".equals(value)) {
                         throw new IllegalStateException(
                             "request parameter does not have expected value " + value);
                       }
@@ -173,18 +179,18 @@ public class TestServlet5 {
                     }
                     return null;
                   });
-            } catch (Exception exception) {
-              if (exception instanceof RuntimeException) {
-                throw (RuntimeException) exception;
+            } catch (Exception e) {
+              if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
               }
-              throw new IllegalStateException(exception);
+              throw new IllegalStateException(e);
             } finally {
               latch.countDown();
             }
           });
       try {
         latch.await();
-      } catch (InterruptedException exception) {
+      } catch (InterruptedException ignored) {
         Thread.currentThread().interrupt();
       }
     }
@@ -221,7 +227,7 @@ public class TestServlet5 {
               } else if (CAPTURE_PARAMETERS.equals(endpoint)) {
                 req.setCharacterEncoding("UTF8");
                 String value = req.getParameter("test-parameter");
-                if (!value.equals("test value õäöü")) {
+                if (!"test value õäöü".equals(value)) {
                   throw new IllegalStateException(
                       "request parameter does not have expected value " + value);
                 }

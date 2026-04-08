@@ -33,7 +33,7 @@ public class CassandraTelemetry {
   }
 
   /**
-   * Construct a new tracing-enable CqlSession using the provided {@link CqlSession} instance.
+   * Construct a new tracing-enabled CqlSession using the provided {@link CqlSession} instance.
    *
    * @param session An instance of CqlSession configured as desired.
    * @return a {@link TracingCqlSession}.

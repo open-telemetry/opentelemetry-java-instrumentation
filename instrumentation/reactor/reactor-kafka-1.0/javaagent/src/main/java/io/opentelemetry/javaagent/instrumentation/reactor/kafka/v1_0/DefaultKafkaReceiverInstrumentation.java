@@ -11,12 +11,13 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import reactor.core.publisher.Flux;
 
 // handles versions 1.0.0 - 1.2.+
-public class DefaultKafkaReceiverInstrumentation implements TypeInstrumentation {
+class DefaultKafkaReceiverInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -27,17 +28,19 @@ public class DefaultKafkaReceiverInstrumentation implements TypeInstrumentation 
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("createConsumerFlux").and(returns(named("reactor.core.publisher.Flux"))),
-        this.getClass().getName() + "$CreateConsumerFluxAdvice");
+        getClass().getName() + "$CreateConsumerFluxAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class CreateConsumerFluxAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(@Advice.Return(readOnly = false) Flux<?> flux) {
-      if (!(flux instanceof TracingDisablingKafkaFlux)) {
-        flux = new TracingDisablingKafkaFlux<>(flux);
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static Flux<?> onExit(@Advice.Return Flux<?> flux) {
+      if (flux instanceof TracingDisablingKafkaFlux) {
+        return flux;
       }
+      return new TracingDisablingKafkaFlux<>(flux);
     }
   }
 }

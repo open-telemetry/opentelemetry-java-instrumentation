@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
@@ -18,13 +17,13 @@ import org.springframework.web.client.RestTemplate;
 /**
  * Configures {@link RestTemplate} for tracing.
  *
- * <p>Adds Open Telemetry instrumentation to RestTemplate beans after initialization.
+ * <p>Adds OpenTelemetry instrumentation to RestTemplate beans after initialization.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
 @ConditionalOnEnabledInstrumentation(module = "spring-web")
-@ConditionalOnClass(RestTemplate.class)
+@ConditionalOnClass({RestTemplate.class, RestTemplateCustomizer.class})
 @Configuration
 public class SpringWebInstrumentationAutoConfiguration {
 
@@ -33,17 +32,15 @@ public class SpringWebInstrumentationAutoConfiguration {
   // static to avoid "is not eligible for getting processed by all BeanPostProcessors" warning
   @Bean
   static RestTemplateBeanPostProcessor otelRestTemplateBeanPostProcessor(
-      ObjectProvider<OpenTelemetry> openTelemetryProvider,
-      ObjectProvider<ConfigProperties> configPropertiesProvider) {
-    return new RestTemplateBeanPostProcessor(openTelemetryProvider, configPropertiesProvider);
+      ObjectProvider<OpenTelemetry> openTelemetryProvider) {
+    return new RestTemplateBeanPostProcessor(openTelemetryProvider);
   }
 
   @Bean
   RestTemplateCustomizer otelRestTemplateCustomizer(
-      ObjectProvider<OpenTelemetry> openTelemetryProvider,
-      ObjectProvider<ConfigProperties> configPropertiesProvider) {
+      ObjectProvider<OpenTelemetry> openTelemetryProvider) {
     return restTemplate ->
         RestTemplateInstrumentation.addIfNotPresent(
-            restTemplate, openTelemetryProvider.getObject(), configPropertiesProvider.getObject());
+            restTemplate, openTelemetryProvider.getObject());
   }
 }

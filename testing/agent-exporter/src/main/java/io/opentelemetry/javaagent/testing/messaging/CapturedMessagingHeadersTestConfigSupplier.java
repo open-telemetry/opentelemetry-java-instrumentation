@@ -25,10 +25,10 @@ public class CapturedMessagingHeadersTestConfigSupplier
     Map<String, String> testConfig = new HashMap<>();
     testConfig.put(
         "otel.instrumentation.messaging.experimental.capture-headers",
-        // most tests use "test-message-header", "test_message_header" is used for JMS2+ because
+        // most tests use "Test-Message-Header". "Test_Message_Header" is used for JMS2+ because
         // '-' is not allowed in a JMS property name. JMS property name should be a valid java
         // identifier.
-        "test-message-header, test-message-int-header, test_message_header, test_message_int_header");
+        "Test-Message-Header, Test-Message-Int-Header, Test_Message_Header, Test_Message_Int_Header");
     return testConfig;
   }
 }

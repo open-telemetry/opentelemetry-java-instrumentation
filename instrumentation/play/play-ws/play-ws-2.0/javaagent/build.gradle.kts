@@ -25,6 +25,7 @@ muzzle {
     group.set("com.typesafe.play")
     module.set("play-ahc-ws-standalone_2.13")
     versions.set("[2.0.6,2.1.0)")
+    assertInverse.set(true)
   }
 }
 
@@ -44,4 +45,16 @@ dependencies {
   testInstrumentation(project(":instrumentation:akka:akka-actor-2.3:javaagent"))
 
   latestDepTestLibrary("com.typesafe.play:play-ahc-ws-standalone_$scalaVersion:2.0.+") // see play-ws-2.1 module
+}
+
+tasks {
+  test {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
+  if (otelProps.denyUnsafe) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
+  }
 }

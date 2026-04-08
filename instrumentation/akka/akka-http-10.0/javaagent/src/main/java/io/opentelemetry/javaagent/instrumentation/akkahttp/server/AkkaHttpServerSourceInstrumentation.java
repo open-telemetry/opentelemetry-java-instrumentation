@@ -14,10 +14,12 @@ import akka.stream.scaladsl.Flow;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AkkaHttpServerSourceInstrumentation implements TypeInstrumentation {
+class AkkaHttpServerSourceInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("akka.http.scaladsl.Http$IncomingConnection");
@@ -27,16 +29,17 @@ public class AkkaHttpServerSourceInstrumentation implements TypeInstrumentation 
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("handleWith").and(takesArgument(0, named("akka.stream.scaladsl.Flow"))),
-        this.getClass().getName() + "$AkkaBindAndHandleAdvice");
+        getClass().getName() + "$AkkaBindAndHandleAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class AkkaBindAndHandleAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrapHandler(
-        @Advice.Argument(value = 0, readOnly = false) Flow<HttpRequest, HttpResponse, ?> handler) {
-      handler = AkkaFlowWrapper.wrap(handler);
+    @AssignReturned.ToArguments(@ToArgument(0))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Flow<HttpRequest, HttpResponse, ?> wrapHandler(
+        @Advice.Argument(0) Flow<HttpRequest, HttpResponse, ?> handler) {
+      return AkkaFlowWrapper.wrap(handler);
     }
   }
 }

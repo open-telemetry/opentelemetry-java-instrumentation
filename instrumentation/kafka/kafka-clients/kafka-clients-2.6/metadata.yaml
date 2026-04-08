@@ -1,0 +1,5 @@
+description: This standalone instrumentation enables messaging spans for Kafka producers and consumers, and collects internal Kafka client metrics.
+display_name: Apache Kafka Client
+library_link: https://kafka.apache.org/
+semantic_conventions:
+  - MESSAGING_SPANS

@@ -5,18 +5,25 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
+import static java.util.logging.Level.FINE;
+
+import io.opentelemetry.instrumentation.api.internal.Initializer;
 import java.lang.invoke.CallSite;
 import java.lang.invoke.ConstantCallSite;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Array;
+import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * Contains the bootstrap method for initializing invokedynamic callsites which are added via agent
  * instrumentation.
  */
 public class IndyBootstrapDispatcher {
+
+  private static final Logger logger = Logger.getLogger(IndyBootstrapDispatcher.class.getName());
 
   private static volatile MethodHandle bootstrap;
 
@@ -28,6 +35,7 @@ public class IndyBootstrapDispatcher {
    * @param bootstrapMethod the method to delegate to. Must have the same type as {@link
    *     #bootstrap}.
    */
+  @Initializer
   public static void init(MethodHandle bootstrapMethod) {
     bootstrap = bootstrapMethod;
   }
@@ -42,7 +50,7 @@ public class IndyBootstrapDispatcher {
       try {
         callSite = (CallSite) bootstrap.invoke(lookup, adviceMethodName, adviceMethodType, args);
       } catch (Throwable e) {
-        ExceptionLogger.logSuppressedError("Error bootstrapping indy instruction", e);
+        logger.log(FINE, "Error bootstrapping indy instruction", e);
       }
     }
     if (callSite == null) {
@@ -66,6 +74,7 @@ public class IndyBootstrapDispatcher {
     return MethodHandles.dropArguments(noopNoArg, 0, methodType.parameterList());
   }
 
+  @Nullable
   private static Object getDefaultValue(Class<?> classOrPrimitive) {
     if (classOrPrimitive.isPrimitive()) {
       // arrays of primitives are initialized with the correct primitive default value (e.g. 0 for

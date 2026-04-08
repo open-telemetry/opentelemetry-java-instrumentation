@@ -24,6 +24,7 @@ public class NettyInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 3.3.0.Final, removed in 4.0.0.Alpha1
     return hasClassesNamed("org.jboss.netty.handler.codec.http.HttpMessage");
   }
 
@@ -39,5 +40,10 @@ public class NettyInstrumentationModule extends InstrumentationModule
         new NettyChannelInstrumentation(),
         new NettyChannelPipelineInstrumentation(),
         new DefaultChannelPipelineInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

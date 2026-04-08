@@ -16,6 +16,8 @@ import org.quartz.impl.matchers.EverythingMatcher;
 /** Entrypoint for telemetry instrumentation of Quartz jobs. */
 public final class QuartzTelemetry {
 
+  private final JobListener jobListener;
+
   /** Returns a new {@link QuartzTelemetry} configured with the given {@link OpenTelemetry}. */
   public static QuartzTelemetry create(OpenTelemetry openTelemetry) {
     return builder(openTelemetry).build();
@@ -31,8 +33,6 @@ public final class QuartzTelemetry {
   QuartzTelemetry(JobListener jobListener) {
     this.jobListener = jobListener;
   }
-
-  private final JobListener jobListener;
 
   /**
    * Configures the {@link Scheduler} to enable tracing of jobs.

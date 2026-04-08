@@ -14,7 +14,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class OpenTelemetryInstrumentation implements TypeInstrumentation {
+class OpenTelemetryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -23,8 +23,7 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        none(), OpenTelemetryInstrumentation.class.getName() + "$InitAdvice");
+    transformer.applyAdviceToMethod(none(), getClass().getName() + "$InitAdvice");
   }
 
   @SuppressWarnings({"ReturnValueIgnored", "unused"})

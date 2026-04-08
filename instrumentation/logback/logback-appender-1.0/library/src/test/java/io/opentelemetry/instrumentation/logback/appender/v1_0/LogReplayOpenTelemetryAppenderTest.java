@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeAttributesLogCount;
+
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.util.ContextInitializer;
 import ch.qos.logback.core.spi.ContextAware;
@@ -50,7 +52,7 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
       URL url = LogReplayOpenTelemetryAppenderTest.class.getResource("/logback-test.xml");
       ContextInitializer.class.getMethod("configureByResource", URL.class).invoke(ci, url);
       // by default LoggerContext contains HOSTNAME property we clear it to start with empty context
-      resetLoggerContext();
+      Helper.resetLoggerContext();
     }
   }
 
@@ -74,6 +76,6 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
                 .hasResource(resource)
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("log message 1")
-                .hasTotalAttributeCount(4));
+                .hasTotalAttributeCount(codeAttributesLogCount()));
   }
 }

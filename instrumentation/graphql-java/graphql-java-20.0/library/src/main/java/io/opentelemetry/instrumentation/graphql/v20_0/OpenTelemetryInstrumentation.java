@@ -6,8 +6,12 @@
 package io.opentelemetry.instrumentation.graphql.v20_0;
 
 import static graphql.execution.instrumentation.InstrumentationState.ofState;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 
 import graphql.ExecutionResult;
+import graphql.GraphQLError;
+import graphql.execution.DataFetcherResult;
 import graphql.execution.ResultPath;
 import graphql.execution.instrumentation.InstrumentationContext;
 import graphql.execution.instrumentation.InstrumentationState;
@@ -18,21 +22,25 @@ import graphql.execution.instrumentation.parameters.InstrumentationExecutionPara
 import graphql.execution.instrumentation.parameters.InstrumentationFieldFetchParameters;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.graphql.internal.OpenTelemetryInstrumentationHelper;
-import io.opentelemetry.instrumentation.graphql.internal.OpenTelemetryInstrumentationState;
+import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.OpenTelemetryInstrumentationHelper;
+import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.OpenTelemetryInstrumentationState;
 import java.util.concurrent.CompletionStage;
+import javax.annotation.Nullable;
 
 final class OpenTelemetryInstrumentation extends SimplePerformantInstrumentation {
   private final OpenTelemetryInstrumentationHelper helper;
-  private final Instrumenter<DataFetchingEnvironment, Void> dataFetcherInstrumenter;
+  private final Instrumenter<DataFetchingEnvironment, Object> dataFetcherInstrumenter;
   private final boolean createSpansForTrivialDataFetcher;
 
   OpenTelemetryInstrumentation(
       OpenTelemetryInstrumentationHelper helper,
-      Instrumenter<DataFetchingEnvironment, Void> dataFetcherInstrumenter,
+      Instrumenter<DataFetchingEnvironment, Object> dataFetcherInstrumenter,
       boolean createSpansForTrivialDataFetcher) {
     this.helper = helper;
     this.dataFetcherInstrumenter = dataFetcherInstrumenter;
@@ -82,30 +90,42 @@ final class OpenTelemetryInstrumentation extends SimplePerformantInstrumentation
       Context childContext = dataFetcherInstrumenter.start(parentContext, environment);
       state.setContextForPath(path, childContext);
 
-      boolean isCompletionStage = false;
-
+      Object fieldValue;
       try (Scope ignored = childContext.makeCurrent()) {
-        Object fieldValue = dataFetcher.get(environment);
-
-        isCompletionStage = fieldValue instanceof CompletionStage;
-
-        if (isCompletionStage) {
-          return ((CompletionStage<?>) fieldValue)
-              .whenComplete(
-                  (result, throwable) ->
-                      dataFetcherInstrumenter.end(childContext, environment, null, throwable));
-        }
-
-        return fieldValue;
-
-      } catch (Throwable throwable) {
-        dataFetcherInstrumenter.end(childContext, environment, null, throwable);
-        throw throwable;
-      } finally {
-        if (!isCompletionStage) {
-          dataFetcherInstrumenter.end(childContext, environment, null, null);
-        }
+        fieldValue = dataFetcher.get(environment);
+      } catch (Throwable t) {
+        dataFetcherInstrumenter.end(childContext, environment, null, t);
+        throw t;
       }
+
+      if (fieldValue instanceof CompletionStage) {
+        return ((CompletionStage<?>) fieldValue)
+            .whenComplete(
+                (result, throwable) -> {
+                  handleDataFetcherResult(childContext, result);
+                  dataFetcherInstrumenter.end(childContext, environment, result, throwable);
+                });
+      }
+
+      handleDataFetcherResult(childContext, fieldValue);
+      dataFetcherInstrumenter.end(childContext, environment, fieldValue, null);
+      return fieldValue;
     };
+  }
+
+  private static void handleDataFetcherResult(Context context, @Nullable Object result) {
+    if (!(result instanceof DataFetcherResult)) {
+      return;
+    }
+
+    DataFetcherResult<?> dataFetcherResult = (DataFetcherResult<?>) result;
+    Span span = Span.fromContext(context);
+    for (GraphQLError error : dataFetcherResult.getErrors()) {
+      AttributesBuilder attributes = Attributes.builder();
+      attributes.put(EXCEPTION_TYPE, String.valueOf(error.getErrorType()));
+      attributes.put(EXCEPTION_MESSAGE, error.getMessage());
+
+      span.addEvent("exception", attributes.build());
+    }
   }
 }

@@ -6,36 +6,21 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 import org.elasticsearch.action.ActionResponse;
 
-final class ElasticsearchTransportAttributesGetter
+public class ElasticsearchTransportAttributesGetter
     implements DbClientAttributesGetter<ElasticTransportRequest, ActionResponse> {
 
-  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getDbSystem(ElasticTransportRequest request) {
-    return DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getUser(ElasticTransportRequest request) {
-    return null;
+  public String getDbSystemName(ElasticTransportRequest request) {
+    return DbSystemNameIncubatingValues.ELASTICSEARCH;
   }
 
   @Override
   @Nullable
   public String getDbNamespace(ElasticTransportRequest request) {
-    return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getConnectionString(ElasticTransportRequest request) {
     return null;
   }
 

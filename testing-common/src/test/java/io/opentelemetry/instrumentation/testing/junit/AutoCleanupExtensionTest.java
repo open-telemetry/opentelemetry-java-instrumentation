@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing.junit;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -23,11 +23,11 @@ class AutoCleanupExtensionTest {
   void shouldRunCleanupAfterTest() {
     autoCleanup.deferCleanup(count::incrementAndGet);
 
-    assertEquals(0, count.get());
+    assertThat(count.get()).isEqualTo(0);
   }
 
   @AfterAll
   static void verifyCount() {
-    assertEquals(1, count.get());
+    assertThat(count.get()).isEqualTo(1);
   }
 }

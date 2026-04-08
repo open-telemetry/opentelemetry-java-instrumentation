@@ -15,9 +15,8 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum ArmeriaHttpServerAttributesGetter
+final class ArmeriaHttpServerAttributesGetter
     implements HttpServerAttributesGetter<ServiceRequestContext, RequestLog> {
-  INSTANCE;
 
   @Override
   public String getHttpRequestMethod(ServiceRequestContext ctx) {
@@ -100,11 +99,6 @@ enum ArmeriaHttpServerAttributesGetter
   }
 
   private static HttpRequest request(ServiceRequestContext ctx) {
-    HttpRequest request = ctx.request();
-    if (request == null) {
-      throw new IllegalStateException(
-          "Context always has a request in decorators, this exception indicates a programming bug.");
-    }
-    return request;
+    return ctx.request();
   }
 }

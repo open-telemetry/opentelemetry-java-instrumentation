@@ -9,29 +9,29 @@ import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.Sprin
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import org.springframework.batch.core.JobExecution;
 
 public class JobSingletons {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.spring-batch.experimental-span-attributes", false);
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "spring_batch")
+          .getBoolean("experimental_span_attributes/development", false);
 
-  private static final Instrumenter<JobExecution, Void> INSTRUMENTER;
+  private static final Instrumenter<JobExecution, Void> instrumenter;
 
   static {
-    InstrumenterBuilder<JobExecution, Void> instrumenter =
+    InstrumenterBuilder<JobExecution, Void> instrumenterBuilder =
         Instrumenter.builder(
             GlobalOpenTelemetry.get(), instrumentationName(), JobSingletons::extractSpanName);
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
-      instrumenter.addAttributesExtractor(
+      instrumenterBuilder.addAttributesExtractor(
           AttributesExtractor.constant(AttributeKey.stringKey("job.system"), "spring_batch"));
     }
-    INSTRUMENTER = instrumenter.buildInstrumenter();
+    instrumenter = instrumenterBuilder.buildInstrumenter();
   }
 
   private static String extractSpanName(JobExecution jobExecution) {
@@ -39,7 +39,7 @@ public class JobSingletons {
   }
 
   public static Instrumenter<JobExecution, Void> jobInstrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private JobSingletons() {}

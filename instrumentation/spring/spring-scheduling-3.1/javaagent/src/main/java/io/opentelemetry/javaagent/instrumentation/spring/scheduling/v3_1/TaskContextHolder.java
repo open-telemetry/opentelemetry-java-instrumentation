@@ -12,12 +12,12 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
 import javax.annotation.Nullable;
 
-public final class TaskContextHolder implements ImplicitContextKeyed {
+public class TaskContextHolder implements ImplicitContextKeyed {
 
   private static final ContextKey<TaskContextHolder> KEY =
       named("opentelemetry-spring-scheduling-task");
 
-  private Context taskContext;
+  @Nullable private Context taskContext;
 
   private TaskContextHolder() {}
 

@@ -15,13 +15,13 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -58,9 +58,9 @@ class SpringIntegrationAndRabbitTest {
                         .hasAttributesSatisfyingExactly(
                             satisfies(
                                 NETWORK_PEER_ADDRESS,
-                                s -> s.isIn("127.0.0.1", "0:0:0:0:0:0:0:1", null)),
-                            satisfies(NETWORK_PEER_PORT, l -> l.isInstanceOf(Long.class)),
-                            satisfies(NETWORK_TYPE, s -> s.isIn("ipv4", "ipv6", null)),
+                                val -> val.isIn("127.0.0.1", "0:0:0:0:0:0:0:1", null)),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                            satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6", null)),
                             equalTo(MESSAGING_SYSTEM, "rabbitmq")),
                 span -> span.hasName("queue.declare"),
                 span -> span.hasName("queue.bind"),
@@ -71,17 +71,17 @@ class SpringIntegrationAndRabbitTest {
                         .hasAttributesSatisfyingExactly(
                             satisfies(
                                 NETWORK_PEER_ADDRESS,
-                                s -> s.isIn("127.0.0.1", "0:0:0:0:0:0:0:1", null)),
-                            satisfies(NETWORK_PEER_PORT, l -> l.isInstanceOf(Long.class)),
-                            satisfies(NETWORK_TYPE, s -> s.isIn("ipv4", "ipv6", null)),
+                                val -> val.isIn("127.0.0.1", "0:0:0:0:0:0:0:1", null)),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                            satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6", null)),
                             equalTo(MESSAGING_SYSTEM, "rabbitmq"),
                             equalTo(MESSAGING_DESTINATION_NAME, "testTopic"),
                             equalTo(MESSAGING_OPERATION, "publish"),
-                            satisfies(MESSAGING_MESSAGE_BODY_SIZE, l -> l.isInstanceOf(Long.class)),
                             satisfies(
-                                MessagingIncubatingAttributes
-                                    .MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
-                                s -> s.isInstanceOf(String.class))),
+                                MESSAGING_MESSAGE_BODY_SIZE, val -> val.isInstanceOf(Long.class)),
+                            satisfies(
+                                MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
+                                val -> val.isInstanceOf(String.class))),
                 // spring-cloud-stream-binder-rabbit listener puts all messages into a BlockingQueue
                 // immediately after receiving
                 // that's why the rabbitmq CONSUMER span will never have any child span (and
@@ -96,17 +96,17 @@ class SpringIntegrationAndRabbitTest {
                         .hasAttributesSatisfyingExactly(
                             satisfies(
                                 NETWORK_PEER_ADDRESS,
-                                s -> s.isIn("127.0.0.1", "0:0:0:0:0:0:0:1", null)),
-                            satisfies(NETWORK_PEER_PORT, l -> l.isInstanceOf(Long.class)),
-                            satisfies(NETWORK_TYPE, s -> s.isIn("ipv4", "ipv6", null)),
+                                val -> val.isIn("127.0.0.1", "0:0:0:0:0:0:0:1", null)),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                            satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6", null)),
                             equalTo(MESSAGING_SYSTEM, "rabbitmq"),
                             equalTo(MESSAGING_DESTINATION_NAME, "testTopic"),
                             equalTo(MESSAGING_OPERATION, "process"),
-                            satisfies(MESSAGING_MESSAGE_BODY_SIZE, l -> l.isInstanceOf(Long.class)),
                             satisfies(
-                                MessagingIncubatingAttributes
-                                    .MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
-                                s -> s.isInstanceOf(String.class))),
+                                MESSAGING_MESSAGE_BODY_SIZE, val -> val.isInstanceOf(Long.class)),
+                            satisfies(
+                                MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
+                                val -> val.isInstanceOf(String.class))),
                 // spring-integration will detect that spring-rabbit has already created a consumer
                 // span and back off
                 span ->
@@ -117,9 +117,9 @@ class SpringIntegrationAndRabbitTest {
                             equalTo(MESSAGING_SYSTEM, "rabbitmq"),
                             equalTo(MESSAGING_DESTINATION_NAME, "testTopic"),
                             equalTo(MESSAGING_OPERATION, "process"),
-                            satisfies(MESSAGING_MESSAGE_ID, s -> s.isInstanceOf(String.class)),
+                            satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                             satisfies(
-                                MESSAGING_MESSAGE_BODY_SIZE, l -> l.isInstanceOf(Long.class))),
+                                MESSAGING_MESSAGE_BODY_SIZE, val -> val.isInstanceOf(Long.class))),
                 span ->
                     span.hasName("consumer").hasParent(trace.getSpan(8)).hasTotalAttributeCount(0)),
         trace ->
@@ -130,9 +130,9 @@ class SpringIntegrationAndRabbitTest {
                         .hasAttributesSatisfyingExactly(
                             satisfies(
                                 NETWORK_PEER_ADDRESS,
-                                s -> s.isIn("127.0.0.1", "0:0:0:0:0:0:0:1", null)),
-                            satisfies(NETWORK_PEER_PORT, l -> l.isInstanceOf(Long.class)),
-                            satisfies(NETWORK_TYPE, s -> s.isIn("ipv4", "ipv6", null)),
+                                val -> val.isIn("127.0.0.1", "0:0:0:0:0:0:0:1", null)),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                            satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6", null)),
                             equalTo(MESSAGING_SYSTEM, "rabbitmq"))));
   }
 }

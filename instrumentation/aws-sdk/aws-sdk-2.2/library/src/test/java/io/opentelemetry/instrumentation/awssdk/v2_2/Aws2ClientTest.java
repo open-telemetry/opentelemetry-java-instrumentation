@@ -27,6 +27,6 @@ class Aws2ClientTest extends AbstractAws2ClientTest {
                 .setCaptureExperimentalSpanAttributes(true)
                 .setUseConfiguredPropagatorForMessaging(isSqsAttributeInjectionEnabled())
                 .build()
-                .newExecutionInterceptor());
+                .createExecutionInterceptor());
   }
 }

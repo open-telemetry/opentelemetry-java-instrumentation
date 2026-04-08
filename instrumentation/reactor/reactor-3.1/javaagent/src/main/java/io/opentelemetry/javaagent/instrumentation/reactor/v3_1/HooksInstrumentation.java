@@ -9,15 +9,16 @@ import static net.bytebuddy.matcher.ElementMatchers.isTypeInitializer;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HooksInstrumentation implements TypeInstrumentation {
+class HooksInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return namedOneOf(
@@ -31,18 +32,18 @@ public class HooksInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isTypeInitializer().or(named("resetOnEachOperator")),
-        this.getClass().getName() + "$ResetOnEachOperatorAdvice");
+        getClass().getName() + "$ResetOnEachOperatorAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ResetOnEachOperatorAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void postStaticInitializer() {
       ContextPropagationOperator.builder()
           .setCaptureExperimentalSpanAttributes(
-              AgentInstrumentationConfig.get()
-                  .getBoolean("otel.instrumentation.reactor.experimental-span-attributes", false))
+              DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "reactor")
+                  .getBoolean("experimental_span_attributes/development", false))
           .build()
           .registerOnEachOperator();
     }

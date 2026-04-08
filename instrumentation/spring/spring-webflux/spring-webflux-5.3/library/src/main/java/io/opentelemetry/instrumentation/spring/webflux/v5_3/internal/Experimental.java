@@ -25,6 +25,12 @@ public final class Experimental {
   private static volatile BiConsumer<SpringWebfluxServerTelemetryBuilder, Boolean>
       setEmitExperimentalServerTelemetry;
 
+  /**
+   * Sets whether experimental HTTP client telemetry should be emitted.
+   *
+   * @param builder the client telemetry builder
+   * @param emitExperimentalTelemetry {@code true} to emit experimental telemetry
+   */
   public static void setEmitExperimentalTelemetry(
       SpringWebfluxClientTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
     if (setEmitExperimentalClientTelemetry != null) {
@@ -32,6 +38,12 @@ public final class Experimental {
     }
   }
 
+  /**
+   * Sets whether experimental HTTP server telemetry should be emitted.
+   *
+   * @param builder the server telemetry builder
+   * @param emitExperimentalTelemetry {@code true} to emit experimental telemetry
+   */
   public static void setEmitExperimentalTelemetry(
       SpringWebfluxServerTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
     if (setEmitExperimentalServerTelemetry != null) {

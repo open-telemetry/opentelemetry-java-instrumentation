@@ -9,8 +9,7 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import javax.annotation.Nullable;
 import org.springframework.amqp.core.Message;
 
-enum MessageHeaderGetter implements TextMapGetter<Message> {
-  INSTANCE;
+class MessageHeaderGetter implements TextMapGetter<Message> {
 
   @Override
   public Iterable<String> keys(Message carrier) {
@@ -19,7 +18,10 @@ enum MessageHeaderGetter implements TextMapGetter<Message> {
 
   @Nullable
   @Override
-  public String get(Message carrier, String key) {
+  public String get(@Nullable Message carrier, String key) {
+    if (carrier == null) {
+      return null;
+    }
     Object value = carrier.getMessageProperties().getHeaders().get(key);
     return value == null ? null : value.toString();
   }

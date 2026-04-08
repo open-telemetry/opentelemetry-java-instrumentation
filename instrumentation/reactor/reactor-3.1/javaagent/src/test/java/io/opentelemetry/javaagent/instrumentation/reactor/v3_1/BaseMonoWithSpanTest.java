@@ -5,11 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor.v3_1;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.instrumentation.otelannotations.AbstractWithSpanTest;
 import org.junit.jupiter.api.Test;
@@ -18,7 +15,6 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.UnicastProcessor;
 import reactor.test.StepVerifier;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 abstract class BaseMonoWithSpanTest extends AbstractWithSpanTest<Mono<String>, Mono<String>> {
 
   @Override
@@ -77,21 +73,19 @@ abstract class BaseMonoWithSpanTest extends AbstractWithSpanTest<Mono<String>, M
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
-                                equalTo(CODE_NAMESPACE, traced.getClass().getName()),
-                                equalTo(CODE_FUNCTION, "outer")),
+                                codeFunctionAssertions(traced.getClass(), "outer")),
                     span ->
                         span.hasName("TracedWithSpan.mono")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(CODE_NAMESPACE, traced.getClass().getName()),
-                                equalTo(CODE_FUNCTION, "mono")),
+                                codeFunctionAssertions(traced.getClass(), "mono")),
                     span ->
                         span.hasName("inner-manual")
                             .hasKind(SpanKind.INTERNAL)
                             // earliest tested and latest version behave differently
                             .hasParent(trace.getSpan(Boolean.getBoolean("testLatestDeps") ? 0 : 1))
-                            .hasAttributes(Attributes.empty())));
+                            .hasTotalAttributeCount(0)));
   }
 
   @Test
@@ -121,19 +115,18 @@ abstract class BaseMonoWithSpanTest extends AbstractWithSpanTest<Mono<String>, M
                         span.hasName("parent")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributes(Attributes.empty()),
+                            .hasTotalAttributeCount(0),
                     span ->
                         span.hasName("TracedWithSpan.mono")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(CODE_NAMESPACE, traced.getClass().getName()),
-                                equalTo(CODE_FUNCTION, "mono")),
+                                codeFunctionAssertions(traced.getClass(), "mono")),
                     span ->
                         span.hasName("inner-manual")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(Boolean.getBoolean("testLatestDeps") ? 0 : 1))
-                            .hasAttributes(Attributes.empty())));
+                            .hasTotalAttributeCount(0)));
   }
 
   // Because we test on the Mono API but need to be able to complete the processor, we

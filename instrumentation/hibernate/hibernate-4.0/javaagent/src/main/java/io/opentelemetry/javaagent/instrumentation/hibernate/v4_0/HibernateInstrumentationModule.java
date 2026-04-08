@@ -26,9 +26,9 @@ public class HibernateInstrumentationModule extends InstrumentationModule
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return hasClassesNamed(
-        // not present before 4.0
+        // added in 4.0.0.Final
         "org.hibernate.internal.SessionFactoryImpl",
-        // missing in 6.0
+        // removed in 6.0.0.Final
         "org.hibernate.Criteria");
   }
 
@@ -45,5 +45,10 @@ public class HibernateInstrumentationModule extends InstrumentationModule
         new SessionFactoryInstrumentation(),
         new SessionInstrumentation(),
         new TransactionInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

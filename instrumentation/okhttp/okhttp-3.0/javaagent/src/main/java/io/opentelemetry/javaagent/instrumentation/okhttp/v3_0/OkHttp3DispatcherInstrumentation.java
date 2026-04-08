@@ -6,12 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.okhttp.v3_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.okhttp.v3_0.OkHttp3Singletons.PROPAGATED_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
@@ -21,7 +21,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class OkHttp3DispatcherInstrumentation implements TypeInstrumentation {
+class OkHttp3DispatcherInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("okhttp3.Dispatcher");
@@ -32,31 +32,28 @@ public class OkHttp3DispatcherInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         namedOneOf("enqueue", "enqueue$okhttp")
             .and(takesArgument(0, implementsInterface(named(Runnable.class.getName())))),
-        OkHttp3DispatcherInstrumentation.class.getName() + "$AttachStateAdvice");
+        getClass().getName() + "$AttachStateAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class AttachStateAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static PropagatedContext onEnter(@Advice.Argument(0) Runnable call) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, call)) {
-        VirtualField<Runnable, PropagatedContext> virtualField =
-            VirtualField.find(Runnable.class, PropagatedContext.class);
-        return ExecutorAdviceHelper.attachContextToTask(context, virtualField, call);
+        return ExecutorAdviceHelper.attachContextToTask(context, PROPAGATED_CONTEXT, call);
       }
       return null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(0) Runnable call,
         @Advice.Enter PropagatedContext propagatedContext,
         @Advice.Thrown Throwable throwable) {
-      VirtualField<Runnable, PropagatedContext> virtualField =
-          VirtualField.find(Runnable.class, PropagatedContext.class);
-      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable, virtualField, call);
+      ExecutorAdviceHelper.cleanUpAfterSubmit(
+          propagatedContext, throwable, PROPAGATED_CONTEXT, call);
     }
   }
 }

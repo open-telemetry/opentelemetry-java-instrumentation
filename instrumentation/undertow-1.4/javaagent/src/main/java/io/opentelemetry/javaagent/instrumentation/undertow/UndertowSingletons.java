@@ -6,22 +6,27 @@
 package io.opentelemetry.javaagent.instrumentation.undertow;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.undertow.UndertowActiveHandlers;
 import io.undertow.server.HttpServerExchange;
 
-public final class UndertowSingletons {
+public class UndertowSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.undertow-1.4";
 
-  private static final Instrumenter<HttpServerExchange, HttpServerExchange> INSTRUMENTER;
+  private static final Instrumenter<HttpServerExchange, HttpServerExchange> instrumenter;
+
+  public static final VirtualField<Runnable, PropagatedContext> PROPAGATED_CONTEXT =
+      VirtualField.find(Runnable.class, PropagatedContext.class);
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         JavaagentHttpServerInstrumenters.create(
             INSTRUMENTATION_NAME,
             new UndertowHttpAttributesGetter(),
-            UndertowExchangeGetter.INSTANCE,
+            new UndertowExchangeGetter(),
             builder ->
                 builder.addContextCustomizer(
                     (context, request, attributes) -> {
@@ -36,10 +41,10 @@ public final class UndertowSingletons {
                     }));
   }
 
-  private static final UndertowHelper HELPER = new UndertowHelper(INSTRUMENTER);
+  private static final UndertowHelper helper = new UndertowHelper(instrumenter);
 
   public static UndertowHelper helper() {
-    return HELPER;
+    return helper;
   }
 
   private UndertowSingletons() {}

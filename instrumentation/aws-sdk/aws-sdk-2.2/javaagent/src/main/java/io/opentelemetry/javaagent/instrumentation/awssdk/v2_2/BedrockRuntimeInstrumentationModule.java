@@ -39,13 +39,12 @@ public class BedrockRuntimeInstrumentationModule extends AbstractAwsSdkInstrumen
 
   @Override
   public void doTransform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        none(), BedrockRuntimeInstrumentationModule.class.getName() + "$RegisterAdvice");
+    transformer.applyAdviceToMethod(none(), getClass().getName() + "$RegisterAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class RegisterAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit() {
       // (indirectly) using BedrockRuntimeImpl class here to make sure it is available from
       // BedrockRuntimeAccess (injected into app classloader) and checked by Muzzle

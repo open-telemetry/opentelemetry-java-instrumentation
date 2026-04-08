@@ -5,11 +5,6 @@
 
 package io.opentelemetry.instrumentation.akkaactor
 
-/*
- * Copyright The OpenTelemetry Authors
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
@@ -91,7 +86,7 @@ object Greeter {
   def props(message: String, receiverActor: ActorRef): Props =
     Props(new Greeter(message, receiverActor))
 
-  final case class WhoToGreet(who: String)
+  case class WhoToGreet(who: String)
 
   case object Greet
 
@@ -115,7 +110,7 @@ class Greeter(message: String, receiverActor: ActorRef) extends Actor {
 object Receiver {
   def props: Props = Props[Receiver]()
 
-  final case class Greeting(greeting: String)
+  case class Greeting(greeting: String)
 
 }
 

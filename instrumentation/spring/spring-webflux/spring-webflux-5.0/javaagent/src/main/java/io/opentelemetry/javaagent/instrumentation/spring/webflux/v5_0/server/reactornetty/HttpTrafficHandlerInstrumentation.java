@@ -14,12 +14,13 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContext;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContexts;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 // used since reactor-netty-0.8
-public class HttpTrafficHandlerInstrumentation implements TypeInstrumentation {
+class HttpTrafficHandlerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("reactor.netty.http.server.HttpTrafficHandler");
@@ -28,14 +29,14 @@ public class HttpTrafficHandlerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("run").and(takesNoArguments()),
-        HttpTrafficHandlerInstrumentation.class.getName() + "$RunAdvice");
+        named("run").and(takesNoArguments()), getClass().getName() + "$RunAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class RunAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(
         @Advice.FieldValue("ctx") ChannelHandlerContext channelHandlerContext) {
       // set context to the first unprocessed request
@@ -46,8 +47,8 @@ public class HttpTrafficHandlerInstrumentation implements TypeInstrumentation {
       return null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Enter Scope scope) {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

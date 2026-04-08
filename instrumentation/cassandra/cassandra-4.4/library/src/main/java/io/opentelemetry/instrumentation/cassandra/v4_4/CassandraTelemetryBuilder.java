@@ -14,7 +14,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNam
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 
 /** A builder of {@link CassandraTelemetry}. */
 public class CassandraTelemetryBuilder {
@@ -26,20 +25,21 @@ public class CassandraTelemetryBuilder {
 
   private final OpenTelemetry openTelemetry;
 
-  private boolean statementSanitizationEnabled = true;
+  private boolean querySanitizationEnabled = true;
 
   protected CassandraTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
   }
 
   /**
-   * Sets whether the {@code db.statement} attribute on the spans emitted by the constructed {@link
-   * CassandraTelemetry} should be sanitized. If set to {@code true}, all parameters that can
-   * potentially contain sensitive information will be masked. Enabled by default.
+   * Sets whether the {@code db.statement}/{@code db.query.text} attribute on the spans emitted by
+   * the constructed {@link CassandraTelemetry} should be sanitized. If set to {@code true}, all
+   * parameters that can potentially contain sensitive information will be masked. Enabled by
+   * default.
    */
   @CanIgnoreReturnValue
-  public CassandraTelemetryBuilder setStatementSanitizationEnabled(boolean enabled) {
-    this.statementSanitizationEnabled = enabled;
+  public CassandraTelemetryBuilder setQuerySanitizationEnabled(boolean enabled) {
+    this.querySanitizationEnabled = enabled;
     return this;
   }
 
@@ -48,12 +48,12 @@ public class CassandraTelemetryBuilder {
    * CassandraTelemetryBuilder}.
    */
   public CassandraTelemetry build() {
-    return new CassandraTelemetry(createInstrumenter(openTelemetry, statementSanitizationEnabled));
+    return new CassandraTelemetry(createInstrumenter(openTelemetry, querySanitizationEnabled));
   }
 
   @SuppressWarnings("deprecation") // to support old database semantic conventions
   protected Instrumenter<CassandraRequest, ExecutionInfo> createInstrumenter(
-      OpenTelemetry openTelemetry, boolean statementSanitizationEnabled) {
+      OpenTelemetry openTelemetry, boolean querySanitizationEnabled) {
     CassandraSqlAttributesGetter attributesGetter = new CassandraSqlAttributesGetter();
 
     return Instrumenter.<CassandraRequest, ExecutionInfo>builder(
@@ -61,10 +61,8 @@ public class CassandraTelemetryBuilder {
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(attributesGetter)
                 .setTableAttribute(DB_CASSANDRA_TABLE)
-                .setStatementSanitizationEnabled(statementSanitizationEnabled)
+                .setQuerySanitizationEnabled(querySanitizationEnabled)
                 .build())
-        .addAttributesExtractor(
-            NetworkAttributesExtractor.create(new CassandraNetworkAttributesGetter()))
         .addAttributesExtractor(new CassandraAttributesExtractor())
         .addOperationMetrics(DbClientMetrics.get())
         .buildInstrumenter(SpanKindExtractor.alwaysClient());

@@ -5,14 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0;
 
+import static java.util.Collections.singletonList;
+
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.Collections;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class JaxWsInstrumentationModule extends InstrumentationModule {
+public class JaxWsInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public JaxWsInstrumentationModule() {
     super("jaxws", "jaxws-2.0");
@@ -20,6 +23,11 @@ public class JaxWsInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Collections.singletonList(new WebServiceProviderInstrumentation());
+    return singletonList(new WebServiceProviderInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

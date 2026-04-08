@@ -8,10 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.undertow;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD_FROM_REQUEST_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
@@ -22,7 +24,6 @@ import io.undertow.Undertow;
 import io.undertow.util.Headers;
 import io.undertow.util.HttpString;
 import io.undertow.util.StatusCodes;
-import java.util.Collections;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class UndertowServerDispatchTest extends AbstractHttpServerTest<Undertow> {
@@ -111,7 +112,22 @@ class UndertowServerDispatchTest extends AbstractHttpServerTest<Undertow> {
                                           exchange
                                               .getResponseSender()
                                               .send(INDEXED_CHILD.getBody());
-                                        }))))
+                                        })))
+                    .addExactPath(
+                        INDEXED_CHILD_FROM_REQUEST_BODY.rawPath(),
+                        exchange ->
+                            exchange.dispatch(
+                                k -> {
+                                  exchange.startBlocking();
+                                  controller(
+                                      INDEXED_CHILD_FROM_REQUEST_BODY,
+                                      () -> {
+                                        String requestBody =
+                                            readRequestBody(exchange.getInputStream());
+                                        bodyConsumer(INDEXED_CHILD_FROM_REQUEST_BODY, requestBody);
+                                        exchange.getResponseSender().send(requestBody);
+                                      });
+                                })))
             .build();
     server.start();
     return server;
@@ -129,7 +145,8 @@ class UndertowServerDispatchTest extends AbstractHttpServerTest<Undertow> {
     // throwing exception from dispatched task just makes the request time out
     options.setTestException(false);
     options.setHasResponseCustomizer(endpoint -> true);
+    options.setTestHttpBodyPipelining(true);
 
-    options.setHttpAttributes(endpoint -> Collections.singleton(NETWORK_PEER_PORT));
+    options.setHttpAttributes(endpoint -> singleton(NETWORK_PEER_PORT));
   }
 }

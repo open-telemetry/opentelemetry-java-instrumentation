@@ -31,3 +31,9 @@ configurations.testRuntimeClasspath {
 tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }
+
+if (otelProps.denyUnsafe) {
+  tasks.withType<Test>().configureEach {
+    enabled = false
+  }
+}

@@ -11,9 +11,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsConstants;
 import java.lang.reflect.Method;
+import javax.annotation.Nullable;
 import javax.ws.rs.container.ContainerRequestContext;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.asm.Advice.Local;
 import org.jboss.resteasy.core.ResourceMethodInvoker;
 import org.jboss.resteasy.core.interception.jaxrs.PostMatchContainerRequestContext;
 
@@ -36,15 +36,44 @@ public class Resteasy31RequestContextInstrumentation extends AbstractRequestCont
   @SuppressWarnings("unused")
   public static class ContainerRequestContextAdvice {
 
+    public static class AdviceScope {
+      private final Jaxrs2HandlerData handlerData;
+      private final Context context;
+      private final Scope scope;
+
+      private AdviceScope(Jaxrs2HandlerData handlerData, Context context) {
+        this.handlerData = handlerData;
+        this.context = context;
+        scope = context.makeCurrent();
+      }
+
+      @Nullable
+      public static AdviceScope start(
+          Class<?> resourceClass, Method method, ContainerRequestContext requestContext) {
+        Jaxrs2HandlerData handlerData = new Jaxrs2HandlerData(resourceClass, method);
+        Context context =
+            Jaxrs2RequestContextHelper.createOrUpdateAbortSpan(
+                instrumenter(), requestContext, handlerData);
+        if (context == null) {
+          return null;
+        }
+        return new AdviceScope(handlerData, context);
+      }
+
+      public void end(@Nullable Throwable throwable) {
+        scope.close();
+        instrumenter().end(context, handlerData, null, throwable);
+      }
+    }
+
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void decorateAbortSpan(
-        @Advice.This ContainerRequestContext requestContext,
-        @Local("otelHandlerData") Jaxrs2HandlerData handlerData,
-        @Local("otelContext") Context context,
-        @Local("otelScope") Scope scope) {
+    public static AdviceScope decorateAbortSpan(
+        @Advice.This ContainerRequestContext requestContext) {
+
       if (requestContext.getProperty(JaxrsConstants.ABORT_HANDLED) != null
           || !(requestContext instanceof PostMatchContainerRequestContext)) {
-        return;
+        return null;
       }
 
       ResourceMethodInvoker resourceMethodInvoker =
@@ -52,26 +81,16 @@ public class Resteasy31RequestContextInstrumentation extends AbstractRequestCont
       Method method = resourceMethodInvoker.getMethod();
       Class<?> resourceClass = resourceMethodInvoker.getResourceClass();
 
-      handlerData = new Jaxrs2HandlerData(resourceClass, method);
-      context =
-          Jaxrs2RequestContextHelper.createOrUpdateAbortSpan(
-              instrumenter(), requestContext, handlerData);
-      if (context != null) {
-        scope = context.makeCurrent();
-      }
+      return AdviceScope.start(resourceClass, method, requestContext);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Local("otelHandlerData") Jaxrs2HandlerData handlerData,
-        @Local("otelContext") Context context,
-        @Local("otelScope") Scope scope,
-        @Advice.Thrown Throwable throwable) {
-      if (scope == null) {
-        return;
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(throwable);
       }
-      scope.close();
-      instrumenter().end(context, handlerData, null, throwable);
     }
   }
 }

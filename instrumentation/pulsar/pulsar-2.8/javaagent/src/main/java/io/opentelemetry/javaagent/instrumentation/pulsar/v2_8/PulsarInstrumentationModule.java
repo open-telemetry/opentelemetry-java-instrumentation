@@ -5,21 +5,24 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
+import static java.util.Arrays.asList;
+
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.Arrays;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class PulsarInstrumentationModule extends InstrumentationModule {
+public class PulsarInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public PulsarInstrumentationModule() {
     super("pulsar", "pulsar-2.8");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Arrays.asList(
+    return asList(
         new ConsumerBaseInstrumentation(),
         new ConsumerImplInstrumentation(),
         new ProducerImplInstrumentation(),
@@ -27,5 +30,10 @@ public class PulsarInstrumentationModule extends InstrumentationModule {
         new MessageListenerInstrumentation(),
         new SendCallbackInstrumentation(),
         new TransactionImplInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

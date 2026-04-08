@@ -37,4 +37,9 @@ public class KotlinCoroutinesInstrumentationModule extends InstrumentationModule
     return asList(
         new KotlinCoroutinesInstrumentation(), new KotlinCoroutineDispatcherInstrumentation());
   }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
+  }
 }

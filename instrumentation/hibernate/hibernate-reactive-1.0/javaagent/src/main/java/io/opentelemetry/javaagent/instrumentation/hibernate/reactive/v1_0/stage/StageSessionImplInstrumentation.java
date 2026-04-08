@@ -15,10 +15,12 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class StageSessionImplInstrumentation implements TypeInstrumentation {
+class StageSessionImplInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return namedOneOf(
@@ -31,20 +33,21 @@ public class StageSessionImplInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("withTransaction")
             .and(takesArgument(0, Function.class).and(returns(CompletionStage.class))),
-        this.getClass().getName() + "$WithTransactionAdvice");
+        getClass().getName() + "$WithTransactionAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class WithTransactionAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(value = 0, readOnly = false) Function<?, ?> function) {
-      function = FunctionWrapper.wrap(function);
+    @AssignReturned.ToArguments(@ToArgument(0))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Function<?, ?> onEnter(@Advice.Argument(0) Function<?, ?> function) {
+      return FunctionWrapper.wrap(function);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(@Advice.Return(readOnly = false) CompletionStage<?> completionStage) {
-      completionStage = CompletionStageWrapper.wrap(completionStage);
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static CompletionStage<?> onExit(@Advice.Return CompletionStage<?> completionStage) {
+      return CompletionStageWrapper.wrap(completionStage);
     }
   }
 }

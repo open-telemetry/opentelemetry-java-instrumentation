@@ -6,18 +6,21 @@
 package io.opentelemetry.javaagent.customchecks;
 
 import static com.google.errorprone.matchers.Description.NO_MATCH;
+import static java.util.Objects.requireNonNull;
 
 import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.ErrorProneFlags;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.bugpatterns.WellKnownKeep;
 import com.google.errorprone.bugpatterns.checkreturnvalue.CanIgnoreReturnValueSuggester;
 import com.google.errorprone.bugpatterns.checkreturnvalue.CanIgnoreReturnValueSuggesterFactory;
 import com.google.errorprone.matchers.Description;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.util.TreePath;
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 @AutoService(BugChecker.class)
@@ -30,12 +33,13 @@ public class OtelCanIgnoreReturnValueSuggester extends BugChecker
 
   private static final long serialVersionUID = 1L;
 
-  private final CanIgnoreReturnValueSuggester delegate;
+  @Nullable private final CanIgnoreReturnValueSuggester delegate;
 
   @Inject
-  OtelCanIgnoreReturnValueSuggester(ErrorProneFlags errorProneFlags) {
+  OtelCanIgnoreReturnValueSuggester(ErrorProneFlags errorProneFlags, WellKnownKeep wellKnownKeep) {
     delegate =
-        CanIgnoreReturnValueSuggesterFactory.createCanIgnoreReturnValueSuggester(errorProneFlags);
+        CanIgnoreReturnValueSuggesterFactory.createCanIgnoreReturnValueSuggester(
+            errorProneFlags, wellKnownKeep);
   }
 
   public OtelCanIgnoreReturnValueSuggester() {
@@ -51,7 +55,8 @@ public class OtelCanIgnoreReturnValueSuggester extends BugChecker
     if (containerClass.getSimpleName().toString().endsWith("Advice")) {
       return NO_MATCH;
     }
-    Description description = delegate.matchMethod(methodTree, visitorState);
+    Description description = requireNonNull(delegate).matchMethod(methodTree, visitorState);
+
     if (description == NO_MATCH) {
       return description;
     }

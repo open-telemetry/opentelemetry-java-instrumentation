@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ArmeriaServerCallInstrumentation implements TypeInstrumentation {
+class ArmeriaServerCallInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return namedOneOf(
@@ -27,8 +27,7 @@ public class ArmeriaServerCallInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isConstructor(), this.getClass().getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
   }
 
   @SuppressWarnings("unused")

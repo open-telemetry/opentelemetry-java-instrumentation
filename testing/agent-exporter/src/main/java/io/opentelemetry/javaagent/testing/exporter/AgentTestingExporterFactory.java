@@ -5,21 +5,26 @@
 
 package io.opentelemetry.javaagent.testing.exporter;
 
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
-public final class AgentTestingExporterFactory {
+import java.util.List;
+
+public class AgentTestingExporterFactory {
 
   static final OtlpInMemorySpanExporter spanExporter = new OtlpInMemorySpanExporter();
   static final OtlpInMemoryMetricExporter metricExporter = new OtlpInMemoryMetricExporter();
   static final OtlpInMemoryLogRecordExporter logExporter = new OtlpInMemoryLogRecordExporter();
+
+  static {
+    TestExportersUtil.initTestExporters();
+  }
 
   public static List<byte[]> getSpanExportRequests() {
     return spanExporter.getCollectedExportRequests();
   }
 
   public static List<byte[]> getMetricExportRequests() {
-    AgentTestingCustomizer.metricReader.forceFlush().join(10, TimeUnit.SECONDS);
+    AgentTestingCustomizer.metricReader.forceFlush().join(10, SECONDS);
     return metricExporter.getCollectedExportRequests();
   }
 
@@ -29,7 +34,7 @@ public final class AgentTestingExporterFactory {
 
   public static void reset() {
     // Flush meter provider to remove any lingering measurements
-    AgentTestingCustomizer.metricReader.forceFlush().join(10, TimeUnit.SECONDS);
+    AgentTestingCustomizer.metricReader.forceFlush().join(10, SECONDS);
     spanExporter.reset();
     metricExporter.reset();
     logExporter.reset();

@@ -6,25 +6,29 @@
 package io.opentelemetry.javaagent.instrumentation.mongoasync.v3_3;
 
 import com.mongodb.event.CommandListener;
+import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.mongo.v3_1.MongoTelemetry;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrumenterFactory;
+import io.opentelemetry.instrumentation.mongo.v3_1.internal.TracingCommandListener;
 
-public final class MongoInstrumentationSingletons {
+public class MongoInstrumentationSingletons {
 
-  public static final CommandListener LISTENER =
-      MongoTelemetry.builder(GlobalOpenTelemetry.get())
-          .setStatementSanitizationEnabled(
-              AgentInstrumentationConfig.get()
-                  .getBoolean(
-                      "otel.instrumentation.mongo.statement-sanitizer.enabled",
-                      AgentCommonConfig.get().isStatementSanitizationEnabled()))
-          .build()
-          .newCommandListener();
+  private static final Instrumenter<CommandStartedEvent, Void> instrumenter =
+      MongoInstrumenterFactory.createInstrumenter(
+          GlobalOpenTelemetry.get(),
+          "io.opentelemetry.mongo-async-3.3",
+          DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "mongo"));
 
-  public static boolean isTracingListener(CommandListener listener) {
-    return listener.getClass().getName().equals(LISTENER.getClass().getName());
+  private static final CommandListener tracingListener = new TracingCommandListener(instrumenter);
+
+  public static CommandListener tracingListener() {
+    return tracingListener;
+  }
+
+  public static boolean isTracingListener(CommandListener commandListener) {
+    return commandListener.getClass().getName().equals(tracingListener.getClass().getName());
   }
 
   private MongoInstrumentationSingletons() {}

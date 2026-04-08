@@ -95,9 +95,8 @@ public class IndyModuleRegistry {
    * modules from the same module group (see {@link #getModuleGroup(InstrumentationModule)}) will
    * not be installed in this class loader.
    */
-  public static InstrumentationModuleClassLoader
-      createInstrumentationClassLoaderWithoutRegistration(
-          InstrumentationModule module, ClassLoader instrumentedClassLoader) {
+  public static InstrumentationModuleClassLoader createInstrumentationClassLoaderForMuzzle(
+      InstrumentationModule module, ClassLoader instrumentedClassLoader) {
     // TODO: remove this method and replace usages with a custom TypePool implementation instead
     ClassLoader agentOrExtensionCl = module.getClass().getClassLoader();
     InstrumentationModuleClassLoader cl =

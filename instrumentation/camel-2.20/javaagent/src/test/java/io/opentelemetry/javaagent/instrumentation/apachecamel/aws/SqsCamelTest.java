@@ -16,7 +16,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class SqsCamelTest {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private static final AwsConnector awsConnector = AwsConnector.elasticMq();
 

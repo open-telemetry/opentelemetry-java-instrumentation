@@ -7,10 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.zio.v2_0
 
 import io.opentelemetry.instrumentation.testing.junit._
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName
+import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable
 import io.opentelemetry.javaagent.instrumentation.zio.v2_0.ZioTestFixtures._
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.{Test, TestInstance}
+import zio.{Trace, Unsafe, ZIO}
 
 import java.util.function.Consumer
 
@@ -116,6 +118,57 @@ class ZioRuntimeInstrumentationTest {
         trace.hasSpansSatisfyingExactly(
           assertSpan(_.hasName("fiber_3_span_1").hasNoParent),
           assertSpan(_.hasName("fiber_3_span_2").hasParent(trace.getSpan(0)))
+        )
+      }
+    )
+  }
+
+  @Test
+  def yieldingFiberKeepsParentContextAfterParentScopeCloses(): Unit = {
+    runYieldingFiberAfterParentScopeCloses()
+
+    testing.waitAndAssertTraces(
+      assertTrace { trace =>
+        trace.hasSpansSatisfyingExactly(
+          assertSpan(_.hasName("parent").hasNoParent),
+          assertSpan(_.hasName("child").hasParent(trace.getSpan(0)))
+        )
+      }
+    )
+  }
+
+  def withSpan(name: String, fun: Unit => Unit): Unit = {
+    testing.runWithSpan(
+      name,
+      new ThrowingRunnable[Exception] {
+        override def run(): Unit = {
+          fun.apply()
+        }
+      }
+    )
+  }
+
+  @Test
+  def unsafeRunShouldNotDestroyCallerThreadContext(): Unit = {
+    withSpan(
+      "parent",
+      _ => {
+        withSpan("before", _ => ())
+        Unsafe.unsafe { implicit unsafe =>
+          zio.Runtime.default.unsafe
+            .run(ZIO.succeed("hello"))(Trace.empty, unsafe)
+            .getOrThrowFiberFailure()
+        }
+        withSpan("after", _ => ())
+      }
+    )
+
+    testing.waitAndAssertTraces(
+      assertTrace { trace =>
+        trace.hasSpansSatisfyingExactly(
+          assertSpan(_.hasName("parent").hasNoParent),
+          assertSpan(_.hasName("before").hasParent(trace.getSpan(0))),
+          assertSpan(_.hasName("after").hasParent(trace.getSpan(0)))
         )
       }
     )

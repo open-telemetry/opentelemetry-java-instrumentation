@@ -39,4 +39,9 @@ public class VertxRedisClientInstrumentationModule extends InstrumentationModule
         new RedisConnectionProviderInstrumentation(),
         new CommandImplInstrumentation());
   }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
+  }
 }

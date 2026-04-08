@@ -38,8 +38,8 @@ final class RequestContextAccess {
         if (address instanceof InetSocketAddress) {
           return (InetSocketAddress) address;
         }
-      } catch (Throwable throwable) {
-        throw new IllegalStateException("Failed to get address", throwable);
+      } catch (Throwable t) {
+        throw new IllegalStateException("Failed to get address", t);
       }
     }
     return null;

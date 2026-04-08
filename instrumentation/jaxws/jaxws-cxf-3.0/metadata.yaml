@@ -1,0 +1,13 @@
+display_name: Apache CXF 3.x JAX-WS
+description: >
+  This instrumentation enriches HTTP server spans with route information, and enables controller
+  spans for Apache CXF JAX-WS web services (controller spans are disabled by default).
+library_link: https://cxf.apache.org/
+features:
+  - HTTP_ROUTE
+  - CONTROLLER_SPANS
+configurations:
+  - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+    description: Enables the creation of experimental controller spans.
+    type: boolean
+    default: false

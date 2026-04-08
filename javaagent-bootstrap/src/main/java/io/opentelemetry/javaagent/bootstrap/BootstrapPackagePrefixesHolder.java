@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
+import io.opentelemetry.instrumentation.api.internal.Initializer;
 import java.util.Collections;
 import java.util.List;
 
@@ -20,10 +21,11 @@ public final class BootstrapPackagePrefixesHolder {
 
   private static volatile List<String> bootstrapPackagePrefixes;
 
-  public static List<String> getBoostrapPackagePrefixes() {
+  public static List<String> getBootstrapPackagePrefixes() {
     return bootstrapPackagePrefixes;
   }
 
+  @Initializer
   public static void setBoostrapPackagePrefixes(List<String> prefixes) {
     if (bootstrapPackagePrefixes != null) {
       // Only possible by misuse of this API, just ignore.

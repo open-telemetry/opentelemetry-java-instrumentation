@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.armeria.v1_3;
 
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
@@ -59,6 +60,7 @@ class ArmeriaHttp2Test {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void testHello() throws Exception {
     // verify that spans are created and context is propagated
     AggregatedHttpResponse result = createWebClient(server2).get("/").aggregate().get();
@@ -79,7 +81,8 @@ class ArmeriaHttp2Test {
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, server2.httpPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class))),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(maybeStablePeerService(), "test-peer-service")),
                 span ->
                     span.hasName("GET /")
                         .hasKind(SpanKind.SERVER)
@@ -109,7 +112,8 @@ class ArmeriaHttp2Test {
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, server1.httpPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class))),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(maybeStablePeerService(), "test-peer-service")),
                 span ->
                     span.hasName("GET /")
                         .hasKind(SpanKind.SERVER)

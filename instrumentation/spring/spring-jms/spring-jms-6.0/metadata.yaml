@@ -1,0 +1,16 @@
+display_name: Spring JMS
+description: This instrumentation enables messaging spans for Spring JMS message consumers.
+semantic_conventions:
+  - MESSAGING_SPANS
+library_link: https://docs.spring.io/spring-framework/reference/integration/jms.html
+configurations:
+  - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+    description: >
+      Enables experimental receive telemetry, which will cause consumers to start a new trace, with
+      only a span link connecting it to the producer trace.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.messaging.experimental.capture-headers
+    description: A comma-separated list of header names to capture as span attributes.
+    type: list
+    default: ''

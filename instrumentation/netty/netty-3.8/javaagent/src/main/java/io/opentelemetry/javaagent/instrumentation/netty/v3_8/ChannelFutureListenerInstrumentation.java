@@ -7,22 +7,21 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.VirtualFieldHelper.CONNECTION_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
 
-public class ChannelFutureListenerInstrumentation implements TypeInstrumentation {
+class ChannelFutureListenerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -37,16 +36,16 @@ public class ChannelFutureListenerInstrumentation implements TypeInstrumentation
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("operationComplete"))
+        named("operationComplete")
             .and(takesArgument(0, named("org.jboss.netty.channel.ChannelFuture"))),
-        ChannelFutureListenerInstrumentation.class.getName() + "$OperationCompleteAdvice");
+        getClass().getName() + "$OperationCompleteAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class OperationCompleteAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static Scope activateScope(@Advice.Argument(0) ChannelFuture future) {
       /*
       Idea here is:
@@ -54,14 +53,11 @@ public class ChannelFutureListenerInstrumentation implements TypeInstrumentation
        - To capture scope only in case of error.
        */
       Throwable cause = future.getCause();
-      if (cause == null) {
+      if (cause == null || future.getChannel() == null) {
         return null;
       }
 
-      VirtualField<Channel, NettyConnectionContext> virtualField =
-          VirtualField.find(Channel.class, NettyConnectionContext.class);
-
-      NettyConnectionContext connectionContext = virtualField.get(future.getChannel());
+      NettyConnectionContext connectionContext = CONNECTION_CONTEXT.get(future.getChannel());
       if (connectionContext == null) {
         return null;
       }
@@ -72,7 +68,7 @@ public class ChannelFutureListenerInstrumentation implements TypeInstrumentation
       return parentContext.makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void deactivateScope(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();

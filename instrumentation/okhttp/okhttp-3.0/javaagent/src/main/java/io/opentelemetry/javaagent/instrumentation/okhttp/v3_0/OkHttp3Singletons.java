@@ -10,21 +10,25 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientRequestResendCount;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.ConnectionErrorSpanInterceptor;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpClientInstrumenterBuilderFactory;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.TracingInterceptor;
+import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenters;
 import okhttp3.Interceptor;
 import okhttp3.Response;
 
 /** Holder of singleton interceptors for adding to instrumented clients. */
-public final class OkHttp3Singletons {
+public class OkHttp3Singletons {
 
-  private static final Instrumenter<Interceptor.Chain, Response> INSTRUMENTER =
+  public static final VirtualField<Runnable, PropagatedContext> PROPAGATED_CONTEXT =
+      VirtualField.find(Runnable.class, PropagatedContext.class);
+  private static final Instrumenter<Interceptor.Chain, Response> instrumenter =
       JavaagentHttpClientInstrumenters.create(
           OkHttpClientInstrumenterBuilderFactory.create(GlobalOpenTelemetry.get()));
 
-  public static final Interceptor CONTEXT_INTERCEPTOR =
+  private static final Interceptor contextInterceptor =
       chain -> {
         try (Scope ignored =
             HttpClientRequestResendCount.initialize(Context.current()).makeCurrent()) {
@@ -32,11 +36,23 @@ public final class OkHttp3Singletons {
         }
       };
 
-  public static final Interceptor CONNECTION_ERROR_INTERCEPTOR =
-      new ConnectionErrorSpanInterceptor(INSTRUMENTER);
+  private static final Interceptor connectionErrorInterceptor =
+      new ConnectionErrorSpanInterceptor(instrumenter);
 
-  public static final Interceptor TRACING_INTERCEPTOR =
-      new TracingInterceptor(INSTRUMENTER, GlobalOpenTelemetry.getPropagators());
+  private static final Interceptor tracingInterceptor =
+      new TracingInterceptor(instrumenter, GlobalOpenTelemetry.getPropagators());
+
+  public static Interceptor contextInterceptor() {
+    return contextInterceptor;
+  }
+
+  public static Interceptor connectionErrorInterceptor() {
+    return connectionErrorInterceptor;
+  }
+
+  public static Interceptor tracingInterceptor() {
+    return tracingInterceptor;
+  }
 
   private OkHttp3Singletons() {}
 }

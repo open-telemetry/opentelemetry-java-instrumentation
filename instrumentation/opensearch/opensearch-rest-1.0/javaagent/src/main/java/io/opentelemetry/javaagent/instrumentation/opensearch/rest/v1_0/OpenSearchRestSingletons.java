@@ -8,15 +8,32 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.rest.v1_0;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.instrumentation.opensearch.rest.OpenSearchRestInstrumenterFactory;
 import io.opentelemetry.javaagent.instrumentation.opensearch.rest.OpenSearchRestRequest;
+import io.opentelemetry.javaagent.instrumentation.opensearch.rest.OpenSearchRestResponse;
+import java.net.InetAddress;
 import org.opensearch.client.Response;
 
-public final class OpenSearchRestSingletons {
+public class OpenSearchRestSingletons {
 
-  private static final Instrumenter<OpenSearchRestRequest, Response> INSTRUMENTER =
+  private static final Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> instrumenter =
       OpenSearchRestInstrumenterFactory.create("io.opentelemetry.opensearch-rest-1.0");
 
-  public static Instrumenter<OpenSearchRestRequest, Response> instrumenter() {
-    return INSTRUMENTER;
+  public static Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> instrumenter() {
+    return instrumenter;
+  }
+
+  public static OpenSearchRestResponse convertResponse(Response response) {
+    return new OpenSearchRestResponse() {
+
+      @Override
+      public int getStatusCode() {
+        return response.getStatusLine().getStatusCode();
+      }
+
+      @Override
+      public InetAddress getAddress() {
+        return response.getHost().getAddress();
+      }
+    };
   }
 
   private OpenSearchRestSingletons() {}

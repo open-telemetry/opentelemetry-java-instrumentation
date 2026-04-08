@@ -15,7 +15,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -44,11 +43,8 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
     // this line will make OpenTelemetryMeterRegistryAutoConfiguration available to all
     // classloaders, so that the bean class loader (different from the instrumented class loader)
     // can load it
-    if (!isIndyModule()) {
-      // For indy module the proxy-bytecode will be injected as resource by injectClasses()
-      helperResourceBuilder.registerForAllClassLoaders(
-          "io/opentelemetry/javaagent/instrumentation/spring/actuator/v2_0/OpenTelemetryMeterRegistryAutoConfiguration.class");
-    }
+    helperResourceBuilder.registerForAllClassLoaders(
+        "io/opentelemetry/javaagent/instrumentation/spring/actuator/v2_0/OpenTelemetryMeterRegistryAutoConfiguration.class");
   }
 
   @Override
@@ -56,7 +52,7 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
     injector
         .proxyBuilder(
             "io.opentelemetry.javaagent.instrumentation.spring.actuator.v2_0.OpenTelemetryMeterRegistryAutoConfiguration")
-        .inject(InjectionMode.CLASS_AND_RESOURCE);
+        .inject(InjectionMode.CLASS_ONLY);
   }
 
   @Override
@@ -65,8 +61,13 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
   }
 
   @Override
-  public boolean defaultEnabled(ConfigProperties config) {
+  public boolean defaultEnabled() {
     // produces a lot of metrics that are already captured - e.g. JVM memory usage
     return false;
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

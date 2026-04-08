@@ -12,7 +12,7 @@ import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import javax.faces.component.UIViewRoot;
 import javax.faces.context.FacesContext;
 
-public final class JsfServerSpanNaming {
+public class JsfServerSpanNaming {
 
   public static void updateViewName(Context context, FacesContext facesContext) {
     // just update the server span name, without touching the http.route

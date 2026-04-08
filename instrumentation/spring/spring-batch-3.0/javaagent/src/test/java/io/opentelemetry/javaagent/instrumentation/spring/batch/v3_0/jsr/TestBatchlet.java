@@ -25,12 +25,4 @@ class TestBatchlet implements Batchlet {
 
   @Override
   public void stop() {}
-
-  public String getFail() {
-    return fail;
-  }
-
-  public void setFail(String fail) {
-    this.fail = fail;
-  }
 }

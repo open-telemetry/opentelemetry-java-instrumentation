@@ -54,7 +54,8 @@ class WebMvcHttpServerTest extends AbstractHttpServerTest<ConfigurableApplicatio
           return expectedHttpRoute(endpoint, method);
         });
 
-    options.setResponseCodeOnNonStandardHttpMethod(501);
+    options.setResponseCodeOnNonStandardHttpMethod(
+        Boolean.getBoolean("testLatestDeps") ? 200 : 501);
   }
 
   @Test

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
 import io.opentelemetry.javaagent.tooling.muzzle.references.FieldRef;
@@ -14,7 +16,6 @@ import io.opentelemetry.javaagent.tooling.muzzle.references.Source;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Collection;
-import java.util.Collections;
 import org.objectweb.asm.Type;
 
 /**
@@ -147,7 +148,7 @@ public abstract class Mismatch {
 
     public ReferenceCheckError(
         Exception e, ClassRef referenceBeingChecked, ClassLoader classLoaderBeingChecked) {
-      super(Collections.emptyList());
+      super(emptyList());
       referenceCheckException = e;
       this.referenceBeingChecked = referenceBeingChecked;
       this.classLoaderBeingChecked = classLoaderBeingChecked;
@@ -175,7 +176,7 @@ public abstract class Mismatch {
   public static class InstrumentationModuleClassLoaderMismatch extends Mismatch {
 
     public InstrumentationModuleClassLoaderMismatch() {
-      super(Collections.emptyList());
+      super(emptyList());
     }
 
     @Override
@@ -191,7 +192,7 @@ public abstract class Mismatch {
   public static class HelperClassesInjectionError extends Mismatch {
 
     public HelperClassesInjectionError() {
-      super(Collections.emptyList());
+      super(emptyList());
     }
 
     @Override

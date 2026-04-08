@@ -14,7 +14,7 @@ muzzle {
 }
 
 tasks.withType<Test>().configureEach {
-  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  systemProperty("testLatestDeps", otelProps.testLatestDeps)
   // TODO run tests both with and without experimental span attributes
   jvmArgs("-Dotel.instrumentation.reactor.experimental-span-attributes=true")
 }
@@ -31,6 +31,7 @@ dependencies {
   compileOnly(project(":instrumentation-annotations-support"))
   compileOnly(project(":opentelemetry-api-shaded-for-instrumenting", configuration = "shadow"))
 
+  testInstrumentation(project(":instrumentation:reactor:reactor-3.4:javaagent"))
   testInstrumentation(project(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent"))
 
   testLibrary("io.projectreactor:reactor-core:3.1.0.RELEASE")
@@ -47,18 +48,28 @@ testing {
       dependencies {
         implementation(project(":instrumentation:reactor:reactor-3.1:library"))
         implementation(project(":instrumentation-annotations"))
-        if (findProperty("testLatestDeps") as Boolean) {
-          implementation("io.projectreactor:reactor-test:latest.release")
-        } else {
-          implementation("io.projectreactor:reactor-test:3.1.0.RELEASE")
-        }
+        val version = if (otelProps.testLatestDeps) "latest.release" else "3.1.0.RELEASE"
+        implementation("io.projectreactor:reactor-test:$version")
       }
     }
   }
 }
 
 tasks {
+
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=code")
+  }
+
+  val testBothSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")
+  }
+
   check {
-    dependsOn(testing.suites)
+    dependsOn(testing.suites, testStableSemconv, testBothSemconv)
   }
 }

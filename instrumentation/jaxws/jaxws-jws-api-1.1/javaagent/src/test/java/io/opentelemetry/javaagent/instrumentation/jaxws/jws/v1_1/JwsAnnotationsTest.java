@@ -5,18 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.lang.reflect.Proxy;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class JwsAnnotationsTest {
   @RegisterExtension
   static InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -36,10 +34,7 @@ class JwsAnnotationsTest {
                         .hasNoParent()
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                WebServiceClass.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "doSomethingPublic"))));
+                            codeFunctionAssertions(WebServiceClass.class, "doSomethingPublic"))));
   }
 
   @Test
@@ -57,11 +52,8 @@ class JwsAnnotationsTest {
                         .hasNoParent()
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                WebServiceFromInterface.class.getName()),
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_FUNCTION, "partOfPublicInterface"))));
+                            codeFunctionAssertions(
+                                WebServiceFromInterface.class, "partOfPublicInterface"))));
   }
 
   @Test
@@ -83,10 +75,7 @@ class JwsAnnotationsTest {
                         .hasNoParent()
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                WebServiceFromInterface.class.getName()),
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_FUNCTION, "partOfPublicInterface"))));
+                            codeFunctionAssertions(
+                                WebServiceFromInterface.class, "partOfPublicInterface"))));
   }
 }

@@ -18,18 +18,23 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
+  private static final ContextPropagationOperator tracingOperator =
+      ContextPropagationOperator.create();
+
   @Override
   public InstrumentationExtension testing() {
     return testing;
   }
 
-  static final ContextPropagationOperator tracingOperator = ContextPropagationOperator.create();
-
   @Override
   protected RedisClient createClient(String uri) {
     return RedisClient.create(
         ClientResources.builder()
-            .tracing(LettuceTelemetry.create(testing().getOpenTelemetry()).newTracing())
+            .tracing(
+                LettuceTelemetry.builder(testing().getOpenTelemetry())
+                    .setEncodingSpanEventsEnabled(true)
+                    .build()
+                    .createTracing())
             .build(),
         uri);
   }

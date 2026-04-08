@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import static java.util.Collections.emptyMap;
+
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.lang.ref.WeakReference;
@@ -13,6 +15,7 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -35,6 +38,8 @@ public final class JdbcData {
   private static final VirtualField<PreparedStatement, PreparedStatementBatchInfo>
       preparedStatementBatch =
           VirtualField.find(PreparedStatement.class, PreparedStatementBatchInfo.class);
+  private static final VirtualField<PreparedStatement, Map<String, String>> parameters =
+      VirtualField.find(PreparedStatement.class, Map.class);
 
   private JdbcData() {}
 
@@ -95,23 +100,57 @@ public final class JdbcData {
     return batchInfo != null ? batchInfo.getBatchSize() : null;
   }
 
+  public static void close(Statement statement) {
+    // when statement is closed remove all of our virtual fields in case the JDBC driver reuses the
+    // same statement instance for a subsequent query
+    statementBatch.set(statement, null);
+    if (statement instanceof PreparedStatement) {
+      PreparedStatement prepared = (PreparedStatement) statement;
+      preparedStatement.set(prepared, null);
+      preparedStatementBatch.set(prepared, null);
+      parameters.set(prepared, null);
+    }
+  }
+
+  public static Map<String, String> getParameters(PreparedStatement statement) {
+    Map<String, String> parametersMap = parameters.get(statement);
+    return parametersMap != null ? parametersMap : emptyMap();
+  }
+
+  public static void addParameter(PreparedStatement statement, String key, String value) {
+    if (value == null) {
+      return;
+    }
+
+    Map<String, String> parametersMap = parameters.get(statement);
+    if (parametersMap == null) {
+      parametersMap = new HashMap<>();
+      parameters.set(statement, parametersMap);
+    }
+    parametersMap.put(key, value);
+  }
+
+  public static void clearParameters(PreparedStatement statement) {
+    parameters.set(statement, null);
+  }
+
   /**
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
    * any time.
    */
   public static final class StatementBatchInfo {
-    private final List<String> statements = new ArrayList<>();
+    private final List<String> queryTexts = new ArrayList<>();
 
     void add(String sql) {
-      statements.add(sql);
+      queryTexts.add(sql);
     }
 
-    public Collection<String> getStatements() {
-      return statements;
+    public Collection<String> getQueryTexts() {
+      return queryTexts;
     }
 
     public long getBatchSize() {
-      return statements.size();
+      return queryTexts.size();
     }
   }
 

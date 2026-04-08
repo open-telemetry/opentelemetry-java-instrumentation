@@ -14,9 +14,9 @@ import com.ibm.ws.http.dispatcher.internal.channel.HttpDispatcherLink;
 import com.ibm.wsspi.http.channel.values.StatusCodes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -28,7 +28,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * requested context root or something goes horribly wrong and server responds with Internal Server
  * Error
  */
-public class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation {
+class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -44,51 +44,69 @@ public class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation
             .and(takesArgument(1, named(String.class.getName())))
             .and(takesArgument(2, named(Exception.class.getName())))
             .and(takesArgument(3, named(boolean.class.getName()))),
-        this.getClass().getName() + "$SendResponseAdvice");
+        getClass().getName() + "$SendResponseAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class SendResponseAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.FieldValue("isc") HttpInboundServiceContextImpl isc,
-        @Advice.Local("otelRequest") LibertyRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      request =
-          new LibertyRequest(
-              isc.getRequest(),
-              isc.getLocalAddr(),
-              isc.getLocalPort(),
-              isc.getRemoteAddr(),
-              isc.getRemotePort());
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return;
+    public static class AdviceScope {
+      private final LibertyRequest request;
+      private final Context context;
+      private final Scope scope;
+
+      private AdviceScope(LibertyRequest request, Context context, Scope scope) {
+        this.request = request;
+        this.context = context;
+        this.scope = scope;
       }
-      context = instrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
+
+      @Nullable
+      public static AdviceScope start(HttpInboundServiceContextImpl isc) {
+        Context parentContext = Context.current();
+        LibertyRequest request =
+            new LibertyRequest(
+                isc.getRequest(),
+                isc.getLocalAddr(),
+                isc.getLocalPort(),
+                isc.getRemoteAddr(),
+                isc.getRemotePort());
+        if (!instrumenter().shouldStart(parentContext, request)) {
+          return null;
+        }
+        Context context = instrumenter().start(parentContext, request);
+        return new AdviceScope(request, context, context.makeCurrent());
+      }
+
+      public void end(
+          HttpDispatcherLink httpDispatcherLink,
+          @Nullable Throwable throwable,
+          StatusCodes statusCode,
+          @Nullable Exception failure) {
+        scope.close();
+
+        LibertyResponse response = new LibertyResponse(httpDispatcherLink, statusCode);
+        Throwable t = failure != null ? failure : throwable;
+        instrumenter().end(context, request, response, t);
+      }
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static AdviceScope onEnter(@Advice.FieldValue("isc") HttpInboundServiceContextImpl isc) {
+      return AdviceScope.start(isc);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.This HttpDispatcherLink httpDispatcherLink,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Argument(value = 0) StatusCodes statusCode,
-        @Advice.Argument(value = 2) Exception failure,
-        @Advice.Local("otelRequest") LibertyRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
+        @Advice.Argument(value = 2) @Nullable Exception failure,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+
+      if (adviceScope != null) {
+        adviceScope.end(httpDispatcherLink, throwable, statusCode, failure);
       }
-      scope.close();
-
-      LibertyResponse response = new LibertyResponse(httpDispatcherLink, statusCode);
-
-      Throwable t = failure != null ? failure : throwable;
-      instrumenter().end(context, request, response, t);
     }
   }
 }

@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.instrumenter;
 import static java.util.logging.Level.FINE;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -23,6 +22,8 @@ import java.io.IOException;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.hc.core5.concurrent.FutureCallback;
@@ -52,25 +53,30 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("execute"))
+        named("execute")
             .and(takesArguments(5))
             .and(takesArgument(0, named("org.apache.hc.core5.http.nio.AsyncRequestProducer")))
             .and(takesArgument(1, named("org.apache.hc.core5.http.nio.AsyncResponseConsumer")))
             .and(takesArgument(2, named("org.apache.hc.core5.http.nio.HandlerFactory")))
             .and(takesArgument(3, named("org.apache.hc.core5.http.protocol.HttpContext")))
             .and(takesArgument(4, named("org.apache.hc.core5.concurrent.FutureCallback"))),
-        this.getClass().getName() + "$ClientAdvice");
+        getClass().getName() + "$ClientAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ClientAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(
-        @Advice.Argument(value = 0, readOnly = false) AsyncRequestProducer requestProducer,
-        @Advice.Argument(value = 3, readOnly = false) HttpContext httpContext,
-        @Advice.Argument(value = 4, readOnly = false) FutureCallback<?> futureCallback) {
+    @AssignReturned.ToArguments({
+      @ToArgument(value = 0, index = 0),
+      @ToArgument(value = 3, index = 1),
+      @ToArgument(value = 4, index = 2)
+    })
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Object[] methodEnter(
+        @Advice.Argument(0) AsyncRequestProducer requestProducer,
+        @Advice.Argument(3) HttpContext originalHttpContext,
+        @Advice.Argument(4) FutureCallback<?> futureCallback) {
+      HttpContext httpContext = originalHttpContext;
 
       Context parentContext = currentContext();
       if (httpContext == null) {
@@ -79,9 +85,11 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
       WrappedFutureCallback<?> wrappedFutureCallback =
           new WrappedFutureCallback<>(parentContext, httpContext, futureCallback);
-      requestProducer =
-          new DelegatingRequestProducer(parentContext, requestProducer, wrappedFutureCallback);
-      futureCallback = wrappedFutureCallback;
+      return new Object[] {
+        new DelegatingRequestProducer(parentContext, requestProducer, wrappedFutureCallback),
+        httpContext,
+        wrappedFutureCallback
+      };
     }
   }
 
@@ -189,11 +197,6 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
       instrumenter().end(context, httpRequest, getResponseFromHttpContext(), null);
 
-      if (parentContext == null) {
-        completeDelegate(result);
-        return;
-      }
-
       try (Scope ignored = parentContext.makeCurrent()) {
         completeDelegate(result);
       }
@@ -210,11 +213,6 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
       // end span before calling delegate
       instrumenter().end(context, httpRequest, getResponseFromHttpContext(), ex);
-
-      if (parentContext == null) {
-        failDelegate(ex);
-        return;
-      }
 
       try (Scope ignored = parentContext.makeCurrent()) {
         failDelegate(ex);
@@ -233,11 +231,6 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       // TODO (trask) add "canceled" span attribute
       // end span before calling delegate
       instrumenter().end(context, httpRequest, getResponseFromHttpContext(), null);
-
-      if (parentContext == null) {
-        cancelDelegate();
-        return;
-      }
 
       try (Scope ignored = parentContext.makeCurrent()) {
         cancelDelegate();
@@ -264,6 +257,9 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
     @Nullable
     private HttpResponse getResponseFromHttpContext() {
+      if (httpContext instanceof HttpCoreContext) {
+        return ((HttpCoreContext) httpContext).getResponse();
+      }
       return (HttpResponse) httpContext.getAttribute(HttpCoreContext.HTTP_RESPONSE);
     }
   }

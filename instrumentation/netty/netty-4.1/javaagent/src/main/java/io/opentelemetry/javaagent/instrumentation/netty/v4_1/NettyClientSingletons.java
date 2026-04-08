@@ -10,32 +10,34 @@ import static io.opentelemetry.instrumentation.netty.common.v4_0.internal.client
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyClientInstrumenterBuilderFactory;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyClientInstrumenterFactory;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyConnectionInstrumenter;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettySslInstrumenter;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.NettyClientHandlerFactory;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
-public final class NettyClientSingletons {
+public class NettyClientSingletons {
 
   private static final boolean connectionTelemetryEnabled =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.netty.connection-telemetry.enabled", false);
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "netty")
+          .get("connection_telemetry")
+          .getBoolean("enabled", false);
   private static final boolean sslTelemetryEnabled =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.netty.ssl-telemetry.enabled", false);
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "netty")
+          .get("ssl_telemetry")
+          .getBoolean("enabled", false);
 
-  private static final Instrumenter<HttpRequestAndChannel, HttpResponse> INSTRUMENTER;
-  private static final NettyConnectionInstrumenter CONNECTION_INSTRUMENTER;
-  private static final NettySslInstrumenter SSL_INSTRUMENTER;
-  private static final NettyClientHandlerFactory CLIENT_HANDLER_FACTORY;
+  private static final Instrumenter<NettyCommonRequest, HttpResponse> instrumenter;
+  private static final NettyConnectionInstrumenter connectionInstrumenter;
+  private static final NettySslInstrumenter sslInstrumenter;
+  private static final NettyClientHandlerFactory clientHandlerFactory;
 
   static {
-    DefaultHttpClientInstrumenterBuilder<HttpRequestAndChannel, HttpResponse> builder =
+    DefaultHttpClientInstrumenterBuilder<NettyCommonRequest, HttpResponse> builder =
         NettyClientInstrumenterBuilderFactory.create(
                 "io.opentelemetry.netty-4.1", GlobalOpenTelemetry.get())
             .configure(AgentCommonConfig.get());
@@ -44,28 +46,28 @@ public final class NettyClientSingletons {
             builder,
             enabledOrErrorOnly(connectionTelemetryEnabled),
             enabledOrErrorOnly(sslTelemetryEnabled));
-    INSTRUMENTER = factory.instrumenter();
-    CONNECTION_INSTRUMENTER = factory.createConnectionInstrumenter();
-    SSL_INSTRUMENTER = factory.createSslInstrumenter();
-    CLIENT_HANDLER_FACTORY =
+    instrumenter = factory.instrumenter();
+    connectionInstrumenter = factory.createConnectionInstrumenter(GlobalOpenTelemetry.get());
+    sslInstrumenter = factory.createSslInstrumenter();
+    clientHandlerFactory =
         new NettyClientHandlerFactory(
-            INSTRUMENTER, AgentCommonConfig.get().shouldEmitExperimentalHttpClientTelemetry());
+            instrumenter, AgentCommonConfig.get().shouldEmitExperimentalHttpClientTelemetry());
   }
 
-  public static Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter() {
-    return INSTRUMENTER;
+  public static Instrumenter<NettyCommonRequest, HttpResponse> instrumenter() {
+    return instrumenter;
   }
 
   public static NettyConnectionInstrumenter connectionInstrumenter() {
-    return CONNECTION_INSTRUMENTER;
+    return connectionInstrumenter;
   }
 
   public static NettySslInstrumenter sslInstrumenter() {
-    return SSL_INSTRUMENTER;
+    return sslInstrumenter;
   }
 
   public static NettyClientHandlerFactory clientHandlerFactory() {
-    return CLIENT_HANDLER_FACTORY;
+    return clientHandlerFactory;
   }
 
   private NettyClientSingletons() {}

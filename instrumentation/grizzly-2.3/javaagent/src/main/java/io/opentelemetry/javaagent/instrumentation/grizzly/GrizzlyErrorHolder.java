@@ -16,7 +16,7 @@ public class GrizzlyErrorHolder implements ImplicitContextKeyed {
 
   private static final ContextKey<GrizzlyErrorHolder> KEY = named("opentelemetry-grizzly-error");
 
-  private volatile Throwable error;
+  @Nullable private volatile Throwable error;
 
   public static Context init(Context context) {
     if (context.get(KEY) != null) {
@@ -38,6 +38,9 @@ public class GrizzlyErrorHolder implements ImplicitContextKeyed {
     GrizzlyErrorHolder holder = context.get(KEY);
     if (holder != null) {
       result = holder.error;
+      // clear the stored exception after reading it
+      // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/16129
+      holder.error = null;
     }
     return result == null ? error : result;
   }

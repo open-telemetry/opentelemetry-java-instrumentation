@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.ServiceLoaderUtil;
 import io.opentelemetry.instrumentation.api.internal.cache.weaklockfree.WeakConcurrentMapCleaner;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.AgentStarter;
@@ -57,23 +58,22 @@ public class AgentStarterImpl implements AgentStarter {
       // LauncherHelper was already loaded before we set up transformer
       instrumentation.retransformClasses(clazz);
       return transformer.hookInserted;
-    } catch (ClassNotFoundException | UnmodifiableClassException ignore) {
-      // ignore
+    } catch (ClassNotFoundException | UnmodifiableClassException ignored) {
+      return false;
     } finally {
       instrumentation.removeTransformer(transformer);
     }
-
-    return false;
   }
 
   @Override
   public void start() {
     installTransformers();
 
-    EarlyInitAgentConfig earlyConfig = EarlyInitAgentConfig.create();
-    extensionClassLoader = createExtensionClassLoader(getClass().getClassLoader(), earlyConfig);
+    extensionClassLoader = createExtensionClassLoader(getClass().getClassLoader());
+    // allows loading instrumenter customizers from agent and extensions
+    ServiceLoaderUtil.setLoadFunction(clazz -> ServiceLoader.load(clazz, extensionClassLoader));
 
-    String loggerImplementationName = earlyConfig.getString("otel.javaagent.logging");
+    String loggerImplementationName = EarlyInitAgentConfig.get().getLogging();
     // default to the built-in stderr slf4j-simple logger
     if (loggerImplementationName == null) {
       loggerImplementationName = "simple";
@@ -95,10 +95,10 @@ public class AgentStarterImpl implements AgentStarter {
 
     Throwable startupError = null;
     try {
-      loggingCustomizer.init(earlyConfig);
-      earlyConfig.logEarlyConfigErrorsIfAny();
+      loggingCustomizer.init();
+      EarlyInitAgentConfig.get().logEarlyConfigErrorsIfAny();
 
-      AgentInstaller.installBytebuddyAgent(instrumentation, extensionClassLoader, earlyConfig);
+      AgentInstaller.installBytebuddyAgent(instrumentation, extensionClassLoader);
       WeakConcurrentMapCleaner.start();
 
       // LazyStorage reads system properties. Initialize it here where we have permissions to avoid
@@ -138,10 +138,9 @@ public class AgentStarterImpl implements AgentStarter {
     return extensionClassLoader;
   }
 
-  private ClassLoader createExtensionClassLoader(
-      ClassLoader agentClassLoader, EarlyInitAgentConfig earlyConfig) {
+  private ClassLoader createExtensionClassLoader(ClassLoader agentClassLoader) {
     return ExtensionClassLoader.getInstance(
-        agentClassLoader, javaagentFile, isSecurityManagerSupportEnabled, earlyConfig);
+        agentClassLoader, javaagentFile, isSecurityManagerSupportEnabled);
   }
 
   private static class LaunchHelperClassFileTransformer implements ClassFileTransformer {

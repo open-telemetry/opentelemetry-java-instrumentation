@@ -5,20 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.finatra;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static io.opentelemetry.javaagent.instrumentation.finatra.FinatraSingletons.THROWABLE;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.twitter.finagle.http.Response;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class FinatraExceptionManagerInstrumentation implements TypeInstrumentation {
+class FinatraExceptionManagerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.twitter.finatra.http.exceptions.ExceptionManager");
@@ -27,17 +26,16 @@ public class FinatraExceptionManagerInstrumentation implements TypeInstrumentati
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("toResponse"))
+        named("toResponse")
             .and(takesArgument(1, Throwable.class))
             .and(returns(named("com.twitter.finagle.http.Response"))),
-        this.getClass().getName() + "$HandleExceptionAdvice");
+        getClass().getName() + "$HandleExceptionAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class HandleExceptionAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void handleException(
         @Advice.Return Response response, @Advice.Argument(1) Throwable throwable) {
 
@@ -45,9 +43,7 @@ public class FinatraExceptionManagerInstrumentation implements TypeInstrumentati
         return;
       }
 
-      VirtualField<Response, Throwable> virtualField =
-          VirtualField.find(Response.class, Throwable.class);
-      virtualField.set(response, throwable);
+      THROWABLE.set(response, throwable);
     }
   }
 }

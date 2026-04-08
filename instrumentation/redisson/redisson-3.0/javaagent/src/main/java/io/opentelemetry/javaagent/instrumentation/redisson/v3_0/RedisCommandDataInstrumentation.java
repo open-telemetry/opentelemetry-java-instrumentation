@@ -15,11 +15,13 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.redisson.CompletableFutureWrapper;
 import java.util.concurrent.CompletableFuture;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.redisson.misc.RPromise;
 
-public class RedisCommandDataInstrumentation implements TypeInstrumentation {
+class RedisCommandDataInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -32,29 +34,31 @@ public class RedisCommandDataInstrumentation implements TypeInstrumentation {
     // before 3.16.8
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(0, named("org.redisson.misc.RPromise"))),
-        this.getClass().getName() + "$WrapPromiseAdvice");
+        getClass().getName() + "$WrapPromiseAdvice");
     // since 3.16.8
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(0, CompletableFuture.class)),
-        this.getClass().getName() + "$WrapCompletableFutureAdvice");
+        getClass().getName() + "$WrapCompletableFutureAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class WrapPromiseAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.Argument(value = 0, readOnly = false) RPromise<?> promise) {
-      promise = RedissonPromiseWrapper.wrap(promise);
+    @AssignReturned.ToArguments(@ToArgument(0))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static RPromise<?> onEnter(@Advice.Argument(0) RPromise<?> promise) {
+      return RedissonPromiseWrapper.wrap(promise);
     }
   }
 
   @SuppressWarnings("unused")
   public static class WrapCompletableFutureAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(value = 0, readOnly = false) CompletableFuture<?> completableFuture) {
-      completableFuture = CompletableFutureWrapper.wrap(completableFuture);
+    @AssignReturned.ToArguments(@ToArgument(0))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static CompletableFuture<?> onEnter(
+        @Advice.Argument(0) CompletableFuture<?> completableFuture) {
+      return CompletableFutureWrapper.wrap(completableFuture);
     }
   }
 }

@@ -17,6 +17,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.sdk.trace.data.LinkData;
@@ -24,12 +25,11 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import jakarta.jms.ConnectionFactory;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.jms.core.JmsTemplate;
@@ -82,8 +82,8 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
   }
 
-  @ArgumentsSource(ConfigClasses.class)
   @ParameterizedTest
+  @ValueSource(classes = {AnnotatedListenerConfig.class, ManualListenerConfig.class})
   @SuppressWarnings("unchecked")
   void shouldCaptureHeaders(Class<?> configClass)
       throws ExecutionException, InterruptedException, TimeoutException {
@@ -104,15 +104,15 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                 "spring-jms-listener",
                 message,
                 jmsMessage -> {
-                  jmsMessage.setStringProperty("test_message_header", "test");
-                  jmsMessage.setIntProperty("test_message_int_header", 1234);
+                  jmsMessage.setStringProperty("Test_Message_Header", "test");
+                  jmsMessage.setIntProperty("Test_Message_Int_Header", 1234);
                   return jmsMessage;
                 }));
 
     // then
     CompletableFuture<String> receivedMessage =
         applicationContext.getBean("receivedMessage", CompletableFuture.class);
-    assertThat(receivedMessage.get(10, TimeUnit.SECONDS)).isEqualTo(message);
+    assertThat(receivedMessage.get(10, SECONDS)).isEqualTo(message);
 
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(INTERNAL, CONSUMER),
@@ -129,10 +129,10 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                             equalTo(MESSAGING_OPERATION, "publish"),
                             satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
                             equalTo(
-                                stringArrayKey("messaging.header.test_message_header"),
+                                stringArrayKey("messaging.header.Test_Message_Header"),
                                 singletonList("test")),
                             equalTo(
-                                stringArrayKey("messaging.header.test_message_int_header"),
+                                stringArrayKey("messaging.header.Test_Message_Int_Header"),
                                 singletonList("1234")))),
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -146,10 +146,10 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                             equalTo(MESSAGING_OPERATION, "receive"),
                             satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
                             equalTo(
-                                stringArrayKey("messaging.header.test_message_header"),
+                                stringArrayKey("messaging.header.Test_Message_Header"),
                                 singletonList("test")),
                             equalTo(
-                                stringArrayKey("messaging.header.test_message_int_header"),
+                                stringArrayKey("messaging.header.Test_Message_Int_Header"),
                                 singletonList("1234"))),
                 span ->
                     span.hasName("spring-jms-listener process")
@@ -161,10 +161,10 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                             equalTo(MESSAGING_OPERATION, "process"),
                             satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
                             equalTo(
-                                stringArrayKey("messaging.header.test_message_header"),
+                                stringArrayKey("messaging.header.Test_Message_Header"),
                                 singletonList("test")),
                             equalTo(
-                                stringArrayKey("messaging.header.test_message_int_header"),
+                                stringArrayKey("messaging.header.Test_Message_Int_Header"),
                                 singletonList("1234"))),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
   }

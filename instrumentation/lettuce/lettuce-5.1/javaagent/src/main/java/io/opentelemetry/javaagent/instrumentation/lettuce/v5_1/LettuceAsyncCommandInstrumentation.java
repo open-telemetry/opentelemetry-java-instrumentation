@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_1.LettuceSingletons.CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -12,15 +13,15 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import io.lettuce.core.protocol.AsyncCommand;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
+class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -29,36 +30,36 @@ public class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isConstructor(), LettuceAsyncCommandInstrumentation.class.getName() + "$SaveContextAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$SaveContextAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("complete", "completeExceptionally", "cancel"),
-        LettuceAsyncCommandInstrumentation.class.getName() + "$RestoreContextAdvice");
+        getClass().getName() + "$RestoreContextAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class SaveContextAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void saveContext(@Advice.This AsyncCommand<?, ?, ?> asyncCommand) {
       Context context = Java8BytecodeBridge.currentContext();
-      VirtualField.find(AsyncCommand.class, Context.class).set(asyncCommand, context);
+      CONTEXT.set(asyncCommand, context);
     }
   }
 
   @SuppressWarnings("unused")
   public static class RestoreContextAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.This AsyncCommand<?, ?, ?> asyncCommand, @Advice.Local("otelScope") Scope scope) {
-      Context context = VirtualField.find(AsyncCommand.class, Context.class).get(asyncCommand);
-      scope = context.makeCurrent();
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Scope onEnter(@Advice.This AsyncCommand<?, ?, ?> asyncCommand) {
+      Context context = CONTEXT.get(asyncCommand);
+      return context.makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Local("otelScope") Scope scope) {
-      scope.close();
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
     }
   }
 }

@@ -8,17 +8,19 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.baseUnit;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.statisticInstrumentName;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
+import static java.util.Collections.emptyList;
 
 import io.micrometer.core.instrument.AbstractMeter;
 import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.config.NamingConvention;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-final class OpenTelemetryMeter extends AbstractMeter implements Meter, RemovableMeter {
+final class OpenTelemetryMeter extends AbstractMeter
+    implements Meter, RemovableMeter, OpenTelemetryInstrument {
 
   private final List<AutoCloseable> observableInstruments;
 
@@ -82,7 +84,7 @@ final class OpenTelemetryMeter extends AbstractMeter implements Meter, Removable
   @Override
   public Iterable<Measurement> measure() {
     UnsupportedReadLogger.logWarning();
-    return Collections.emptyList();
+    return emptyList();
   }
 
   @Override

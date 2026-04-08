@@ -1,13 +1,16 @@
 otel:
   instrumentation:
     common:
-      db-statement-sanitizer:
-        enabled: false
+      db:
+        query-sanitization:
+          enabled: false
     kafka:
       experimental-span-attributes: true
     logback-appender:
       experimental:
         capture-code-attributes: true
+    micrometer:
+      enabled: true
     http:
       client:
         emit-experimental-telemetry: true

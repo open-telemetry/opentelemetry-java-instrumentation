@@ -54,7 +54,7 @@ public class CompletableFutureWrapper<T> extends CompletableFuture<T> implements
       // using Class.forName because this class is not available in the redisson version we compile
       // against
       return Class.forName("org.redisson.command.BatchPromise");
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       return null;
     }
   }

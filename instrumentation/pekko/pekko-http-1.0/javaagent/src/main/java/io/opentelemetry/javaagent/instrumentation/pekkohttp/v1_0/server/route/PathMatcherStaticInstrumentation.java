@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route.PekkoRouteUtil.PREFIX;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -21,7 +21,7 @@ import org.apache.pekko.http.scaladsl.model.Uri;
 import org.apache.pekko.http.scaladsl.server.PathMatcher;
 import org.apache.pekko.http.scaladsl.server.PathMatchers;
 
-public class PathMatcherStaticInstrumentation implements TypeInstrumentation {
+class PathMatcherStaticInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return extendsClass(named("org.apache.pekko.http.scaladsl.server.PathMatcher"));
@@ -32,13 +32,13 @@ public class PathMatcherStaticInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("apply")
             .and(takesArgument(0, named("org.apache.pekko.http.scaladsl.model.Uri$Path"))),
-        this.getClass().getName() + "$ApplyAdvice");
+        getClass().getName() + "$ApplyAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ApplyAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This PathMatcher<?> pathMatcher,
         @Advice.Argument(0) Uri.Path path,
@@ -53,7 +53,7 @@ public class PathMatcherStaticInstrumentation implements TypeInstrumentation {
         PathMatcher.Matched<?> match = (PathMatcher.Matched<?>) result;
         // if present use the matched path that was remembered in PathMatcherInstrumentation,
         // otherwise just use a *
-        String prefix = VirtualField.find(PathMatcher.class, String.class).get(pathMatcher);
+        String prefix = PREFIX.get(pathMatcher);
         if (prefix == null) {
           if (PathMatchers.Slash$.class == pathMatcher.getClass()) {
             prefix = "/";

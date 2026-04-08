@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public final class JmsInstrumenterFactory {
+public class JmsInstrumenterFactory {
 
   private final OpenTelemetry openTelemetry;
   private final String instrumentationName;
@@ -40,14 +40,14 @@ public final class JmsInstrumenterFactory {
   }
 
   @CanIgnoreReturnValue
-  public JmsInstrumenterFactory setMessagingReceiveInstrumentationEnabled(
+  public JmsInstrumenterFactory setMessagingReceiveTelemetryEnabled(
       boolean messagingReceiveInstrumentationEnabled) {
     this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
     return this;
   }
 
   public Instrumenter<MessageWithDestination, Void> createProducerInstrumenter() {
-    JmsMessageAttributesGetter getter = JmsMessageAttributesGetter.INSTANCE;
+    JmsMessageAttributesGetter getter = new JmsMessageAttributesGetter();
     MessageOperation operation = MessageOperation.PUBLISH;
 
     return Instrumenter.<MessageWithDestination, Void>builder(
@@ -59,7 +59,7 @@ public final class JmsInstrumenterFactory {
   }
 
   public Instrumenter<MessageWithDestination, Void> createConsumerReceiveInstrumenter() {
-    JmsMessageAttributesGetter getter = JmsMessageAttributesGetter.INSTANCE;
+    JmsMessageAttributesGetter getter = new JmsMessageAttributesGetter();
     MessageOperation operation = MessageOperation.RECEIVE;
 
     InstrumenterBuilder<MessageWithDestination, Void> builder =
@@ -79,7 +79,7 @@ public final class JmsInstrumenterFactory {
 
   public Instrumenter<MessageWithDestination, Void> createConsumerProcessInstrumenter(
       boolean canHaveReceiveInstrumentation) {
-    JmsMessageAttributesGetter getter = JmsMessageAttributesGetter.INSTANCE;
+    JmsMessageAttributesGetter getter = new JmsMessageAttributesGetter();
     MessageOperation operation = MessageOperation.PROCESS;
 
     InstrumenterBuilder<MessageWithDestination, Void> builder =
@@ -94,14 +94,13 @@ public final class JmsInstrumenterFactory {
               openTelemetry.getPropagators().getTextMapPropagator(),
               MessagePropertyGetter.INSTANCE));
       return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
-    } else {
-      return builder.buildConsumerInstrumenter(MessagePropertyGetter.INSTANCE);
     }
+    return builder.buildConsumerInstrumenter(MessagePropertyGetter.INSTANCE);
   }
 
   private AttributesExtractor<MessageWithDestination, Void> createMessagingAttributesExtractor(
       MessageOperation operation) {
-    return MessagingAttributesExtractor.builder(JmsMessageAttributesGetter.INSTANCE, operation)
+    return MessagingAttributesExtractor.builder(new JmsMessageAttributesGetter(), operation)
         .setCapturedHeaders(capturedHeaders)
         .build();
   }

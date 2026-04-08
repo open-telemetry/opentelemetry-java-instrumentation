@@ -10,14 +10,14 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
  * that message is going to be passed to a message listener, that would produce a span for the
  * "process" operation, we are going to suppress the span from the message "receive" operation.
  */
-public final class MessageListenerContext {
+public class MessageListenerContext {
   private static final ThreadLocal<Boolean> processing = new ThreadLocal<>();
 
   private MessageListenerContext() {}
 
   /** Call on entry to a method that will pass the received message to a message listener. */
   public static void startProcessing() {
-    processing.set(Boolean.TRUE);
+    processing.set(true);
   }
 
   public static void endProcessing() {

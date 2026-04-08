@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumenta
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import play.libs.concurrent.HttpExecution;
+import play.mvc.Http;
 import play.mvc.Results;
 import play.routing.RoutingDsl;
 import play.server.Server;
@@ -49,9 +50,7 @@ class PlayAsyncServerTest extends PlayServerTest {
                                 INDEXED_CHILD,
                                 () -> {
                                   INDEXED_CHILD.collectSpanAttributes(
-                                      it ->
-                                          play.mvc.Http.Context.Implicit.request()
-                                              .getQueryString(it));
+                                      it -> Http.Context.Implicit.request().getQueryString(it));
                                   return Results.status(
                                       INDEXED_CHILD.getStatus(), INDEXED_CHILD.getBody());
                                 }),
@@ -84,7 +83,7 @@ class PlayAsyncServerTest extends PlayServerTest {
                                             CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody())
                                         .withHeader(
                                             "X-Test-Response",
-                                            play.mvc.Http.Context.Implicit.request()
+                                            Http.Context.Implicit.request()
                                                 .getHeader("X-Test-Request"))),
                         HttpExecution.defaultContext()))
             .GET(ERROR.getPath())

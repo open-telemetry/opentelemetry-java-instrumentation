@@ -17,6 +17,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -38,23 +39,24 @@ public class ChunkOrientedTaskletInstrumentation implements TypeInstrumentation 
             .and(
                 takesArgument(
                     1, named("org.springframework.batch.core.scope.context.ChunkContext"))),
-        this.getClass().getName() + "$ExecuteAdvice");
+        getClass().getName() + "$ExecuteAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ExecuteAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(1) ChunkContext chunkContext, @Advice.Local("otelScope") Scope scope) {
-      if (shouldTraceItems()) {
-        Context context = startChunk(currentContext(), chunkContext);
-        scope = context.makeCurrent();
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Scope onEnter(@Advice.Argument(1) ChunkContext chunkContext) {
+      if (!shouldTraceItems()) {
+        return null;
       }
+      Context context = startChunk(currentContext(), chunkContext);
+      return context.makeCurrent();
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-    public static void onExit(@Advice.Local("otelScope") Scope scope) {
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

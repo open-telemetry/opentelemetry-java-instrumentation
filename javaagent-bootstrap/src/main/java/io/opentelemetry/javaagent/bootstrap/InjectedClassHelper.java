@@ -5,16 +5,19 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
+import io.opentelemetry.instrumentation.api.internal.Initializer;
+import java.security.ProtectionDomain;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 
 /** Helper class for detecting and loading injected helper classes. */
 public final class InjectedClassHelper {
 
   private InjectedClassHelper() {}
 
-  private static volatile BiPredicate<ClassLoader, String> helperClassDetector;
+  @Nullable private static volatile BiPredicate<ClassLoader, String> helperClassDetector;
 
   /** Sets the {@link Function} for detecting injected helper classes. */
   public static void internalSetHelperClassDetector(
@@ -37,21 +40,29 @@ public final class InjectedClassHelper {
     return helperClassDetector.test(classLoader, className);
   }
 
-  private static volatile BiFunction<ClassLoader, String, Class<?>> helperClassLoader;
+  private static volatile BiFunction<ClassLoader, String, HelperClassInfo> helperClassInfo;
 
-  public static void internalSetHelperClassLoader(
-      BiFunction<ClassLoader, String, Class<?>> helperClassLoader) {
-    if (InjectedClassHelper.helperClassLoader != null) {
+  @Initializer
+  public static void internalSetHelperClassInfo(
+      BiFunction<ClassLoader, String, HelperClassInfo> helperClassInfo) {
+    if (InjectedClassHelper.helperClassInfo != null) {
       // Only possible by misuse of this API, just ignore.
       return;
     }
-    InjectedClassHelper.helperClassLoader = helperClassLoader;
+    InjectedClassHelper.helperClassInfo = helperClassInfo;
   }
 
-  public static Class<?> loadHelperClass(ClassLoader classLoader, String className) {
-    if (helperClassLoader == null) {
+  @Nullable
+  public static HelperClassInfo getHelperClassInfo(ClassLoader classLoader, String className) {
+    if (helperClassInfo == null) {
       return null;
     }
-    return helperClassLoader.apply(classLoader, className);
+    return helperClassInfo.apply(classLoader, className);
+  }
+
+  public interface HelperClassInfo {
+    byte[] getClassBytes();
+
+    ProtectionDomain getProtectionDomain();
   }
 }

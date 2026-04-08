@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import static java.nio.charset.Charset.defaultCharset;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.glassfish.grizzly.memory.Buffers.wrap;
 
@@ -20,7 +21,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -170,7 +170,7 @@ class GrizzlyFilterchainServerTest extends AbstractHttpServerTest<Transport> {
       if (endpoint == INDEXED_CHILD) {
         Parameters parameters = new Parameters();
         parameters.setQuery(request.getQueryStringDC());
-        parameters.setQueryStringEncoding(StandardCharsets.UTF_8);
+        parameters.setQueryStringEncoding(UTF_8);
         parameters.handleQueryParameters();
         closure =
             new Runnable() {

@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.javahttpserver;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static io.opentelemetry.javaagent.instrumentation.javahttpserver.JavaHttpServerSingletons.instrumentationFilters;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HttpServerInstrumentation implements TypeInstrumentation {
+class HttpServerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -27,8 +27,7 @@ public class HttpServerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(named("createContext")),
-        HttpServerInstrumentation.class.getName() + "$BuildAdvice");
+        isPublic().and(named("createContext")), getClass().getName() + "$BuildAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -36,7 +35,7 @@ public class HttpServerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.Return HttpContext httpContext) {
-      httpContext.getFilters().addAll(JavaHttpServerSingletons.FILTERS);
+      httpContext.getFilters().addAll(instrumentationFilters());
     }
   }
 }

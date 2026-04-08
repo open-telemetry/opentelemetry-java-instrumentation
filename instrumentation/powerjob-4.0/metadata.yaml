@@ -1,0 +1,11 @@
+description: This instrumentation enables spans for PowerJob job processor executions.
+display_name: PowerJob
+library_link: https://github.com/PowerJob/PowerJob
+configurations:
+  - name: otel.instrumentation.powerjob.experimental-span-attributes
+    description: >
+      Enables experimental span attributes `job.system`, `scheduling.powerjob.job.id`,
+      `scheduling.powerjob.job.param`, `scheduling.powerjob.job.instance.param`, and
+      `scheduling.powerjob.job.type`.
+    type: boolean
+    default: false

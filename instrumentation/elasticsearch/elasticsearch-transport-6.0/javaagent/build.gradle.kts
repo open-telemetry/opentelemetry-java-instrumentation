@@ -46,13 +46,11 @@ dependencies {
   testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
-
 testing {
   suites {
     val elasticsearch6Test by registering(JvmTestSuite::class) {
       dependencies {
-        if (latestDepTest) {
+        if (otelProps.testLatestDeps) {
           implementation("org.elasticsearch.client:transport:6.4.+")
           implementation("org.elasticsearch.plugin:transport-netty4-client:6.4.+")
         } else {
@@ -66,7 +64,7 @@ testing {
 
     val elasticsearch65Test by registering(JvmTestSuite::class) {
       dependencies {
-        if (latestDepTest) {
+        if (otelProps.testLatestDeps) {
           implementation("org.elasticsearch.client:transport:6.+")
           implementation("org.elasticsearch.plugin:transport-netty4-client:6.+")
         } else {
@@ -80,7 +78,7 @@ testing {
 
     val elasticsearch7Test by registering(JvmTestSuite::class) {
       dependencies {
-        if (latestDepTest) {
+        if (otelProps.testLatestDeps) {
           implementation("org.elasticsearch.client:transport:latest.release")
           implementation("org.elasticsearch.plugin:transport-netty4-client:latest.release")
         } else {
@@ -96,17 +94,40 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-    // TODO run tests both with and without experimental span attributes
-    jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  val testSuites = testing.suites.withType(JvmTestSuite::class)
+
+  val stableSemconvSuites = testSuites.map { suite ->
+    register<Test>("${suite.name}StableSemconv") {
+      testClassesDirs = suite.sources.output.classesDirs
+      classpath = suite.sources.runtimeClasspath
+
+      jvmArgs("-Dotel.semconv-stability.opt-in=database")
+      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+    }
+  }
+
+  val experimentalSuites = testSuites.map { suite ->
+    register<Test>("${suite.name}Experimental") {
+      testClassesDirs = suite.sources.output.classesDirs
+      classpath = suite.sources.runtimeClasspath
+
+      jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
+      systemProperty("metadataConfig", "otel.instrumentation.elasticsearch.experimental-span-attributes=true")
+    }
   }
 
   check {
-    dependsOn(testing.suites)
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites, stableSemconvSuites, experimentalSuites)
+  }
+
+  if (otelProps.denyUnsafe) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
   }
 }

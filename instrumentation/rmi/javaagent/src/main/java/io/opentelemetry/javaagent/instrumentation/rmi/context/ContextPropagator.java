@@ -14,6 +14,7 @@ import java.io.ObjectOutput;
 import java.rmi.NoSuchObjectException;
 import java.rmi.server.ObjID;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import sun.rmi.transport.Connection;
 import sun.rmi.transport.StreamRemoteCall;
 import sun.rmi.transport.TransportConstants;
@@ -22,6 +23,9 @@ public class ContextPropagator {
 
   private static final Logger logger = Logger.getLogger(ContextPropagator.class.getName());
 
+  private static final VirtualField<Connection, Boolean> KNOWN_CONNECTION =
+      VirtualField.find(Connection.class, Boolean.class);
+
   // Internal RMI object ids that we don't want to trace
   private static final ObjID ACTIVATOR_ID = new ObjID(ObjID.ACTIVATOR_ID);
   private static final ObjID DGC_ID = new ObjID(ObjID.DGC_ID);
@@ -29,7 +33,7 @@ public class ContextPropagator {
 
   // RMI object id used to identify agent instrumentation
   public static final ObjID CONTEXT_CALL_ID =
-      new ObjID("io.opentelemetry.javaagent.context-call".hashCode());
+      new ObjID("io.opentelemetry.javaagent.context-call-v2".hashCode());
 
   // Operation id used for checking context propagation is possible
   // RMI expects these operations to have negative identifier, as positive ones mean legacy
@@ -38,7 +42,11 @@ public class ContextPropagator {
   // Seconds step of context propagation which contains actual payload
   private static final int CONTEXT_PAYLOAD_OPERATION_ID = -2;
 
-  public static final ContextPropagator PROPAGATOR = new ContextPropagator();
+  private static final ContextPropagator propagator = new ContextPropagator();
+
+  public static ContextPropagator propagator() {
+    return propagator;
+  }
 
   public boolean isRmiInternalObject(ObjID id) {
     return ACTIVATOR_ID.equals(id) || DGC_ID.equals(id) || REGISTRY_ID.equals(id);
@@ -48,29 +56,28 @@ public class ContextPropagator {
     return operationId == CONTEXT_PAYLOAD_OPERATION_ID;
   }
 
-  public void attemptToPropagateContext(
-      VirtualField<Connection, Boolean> knownConnections, Connection c, Context context) {
-    if (checkIfContextCanBePassed(knownConnections, c)) {
+  public void attemptToPropagateContext(Connection c, Context context) {
+    if (checkIfContextCanBePassed(c)) {
       if (!syntheticCall(c, ContextPayload.from(context), CONTEXT_PAYLOAD_OPERATION_ID)) {
         logger.fine("Couldn't send context payload");
       }
     }
   }
 
-  private static boolean checkIfContextCanBePassed(
-      VirtualField<Connection, Boolean> knownConnections, Connection c) {
-    Boolean storedResult = knownConnections.get(c);
+  private static boolean checkIfContextCanBePassed(Connection c) {
+    Boolean storedResult = KNOWN_CONNECTION.get(c);
     if (storedResult != null) {
       return storedResult;
     }
 
     boolean result = syntheticCall(c, null, CONTEXT_CHECK_CALL_OPERATION_ID);
-    knownConnections.set(c, result);
+    KNOWN_CONNECTION.set(c, result);
     return result;
   }
 
   /** Returns true when no error happened during call. */
-  private static boolean syntheticCall(Connection c, ContextPayload payload, int operationId) {
+  private static boolean syntheticCall(
+      Connection c, @Nullable ContextPayload payload, int operationId) {
     StreamRemoteCall shareContextCall = new StreamRemoteCall(c);
     try {
       c.getOutputStream().write(TransportConstants.Call);

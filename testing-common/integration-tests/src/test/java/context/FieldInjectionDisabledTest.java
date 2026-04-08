@@ -47,7 +47,7 @@ class FieldInjectionDisabledTest {
     boolean hasMarkerInterface = false;
     boolean hasAccessorInterface = false;
     for (Class<?> inter : keyClass.getInterfaces()) {
-      if ("io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker"
+      if ("io.opentelemetry.javaagent.bootstrap.field.VirtualFieldInstalledMarker"
           .equals(inter.getName())) {
         hasMarkerInterface = true;
       }

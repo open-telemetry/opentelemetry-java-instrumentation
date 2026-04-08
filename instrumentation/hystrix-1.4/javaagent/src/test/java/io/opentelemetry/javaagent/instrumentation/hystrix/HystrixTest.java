@@ -5,8 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.hystrix;
 
-import static io.opentelemetry.api.common.AttributeKey.booleanKey;
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.javaagent.instrumentation.hystrix.ExperimentalTestHelper.HYSTRIX_CIRCUIT_OPEN;
+import static io.opentelemetry.javaagent.instrumentation.hystrix.ExperimentalTestHelper.HYSTRIX_COMMAND;
+import static io.opentelemetry.javaagent.instrumentation.hystrix.ExperimentalTestHelper.HYSTRIX_GROUP;
+import static io.opentelemetry.javaagent.instrumentation.hystrix.ExperimentalTestHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
@@ -14,7 +16,6 @@ import static org.junit.jupiter.api.Named.named;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandProperties;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -31,18 +32,18 @@ import org.junit.jupiter.params.provider.MethodSource;
 class HystrixTest {
 
   @RegisterExtension
-  protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @ParameterizedTest
   @MethodSource("provideCommandActionArguments")
   void testCommands(Function<HystrixCommand<String>, String> operation) {
     class TestCommand extends HystrixCommand<String> {
-      protected TestCommand(Setter setter) {
+      TestCommand(Setter setter) {
         super(setter);
       }
 
       @Override
-      protected String run() throws Exception {
+      protected String run() {
         return tracedMethod();
       }
 
@@ -60,25 +61,25 @@ class HystrixTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName("ExampleGroup.TestCommand.execute")
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), "TestCommand"),
-                            equalTo(stringKey("hystrix.group"), "ExampleGroup"),
-                            equalTo(booleanKey("hystrix.circuit_open"), false)),
+                            equalTo(HYSTRIX_COMMAND, experimental("TestCommand")),
+                            equalTo(HYSTRIX_GROUP, experimental("ExampleGroup")),
+                            equalTo(HYSTRIX_CIRCUIT_OPEN, experimental(false))),
                 span ->
                     span.hasName("tracedMethod")
                         .hasParent(trace.getSpan(1))
-                        .hasAttributes(Attributes.empty())));
+                        .hasTotalAttributeCount(0)));
   }
 
   @ParameterizedTest
   @MethodSource("provideCommandActionArguments")
   void testCommandFallbacks(Function<HystrixCommand<String>, String> operation) {
     class TestCommand extends HystrixCommand<String> {
-      protected TestCommand(Setter setter) {
+      TestCommand(Setter setter) {
         super(setter);
       }
 
@@ -101,23 +102,23 @@ class HystrixTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName("ExampleGroup.TestCommand.execute")
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
                         .hasException(new IllegalArgumentException())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), "TestCommand"),
-                            equalTo(stringKey("hystrix.group"), "ExampleGroup"),
-                            equalTo(booleanKey("hystrix.circuit_open"), false)),
+                            equalTo(HYSTRIX_COMMAND, experimental("TestCommand")),
+                            equalTo(HYSTRIX_GROUP, experimental("ExampleGroup")),
+                            equalTo(HYSTRIX_CIRCUIT_OPEN, experimental(false))),
                 span ->
                     span.hasName("ExampleGroup.TestCommand.fallback")
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), "TestCommand"),
-                            equalTo(stringKey("hystrix.group"), "ExampleGroup"),
-                            equalTo(booleanKey("hystrix.circuit_open"), false))));
+                            equalTo(HYSTRIX_COMMAND, experimental("TestCommand")),
+                            equalTo(HYSTRIX_GROUP, experimental("ExampleGroup")),
+                            equalTo(HYSTRIX_CIRCUIT_OPEN, experimental(false)))));
   }
 
   private static Stream<Arguments> provideCommandActionArguments() {

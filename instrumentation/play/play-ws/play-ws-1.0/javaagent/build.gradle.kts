@@ -39,3 +39,15 @@ dependencies {
 
   latestDepTestLibrary("com.typesafe.play:play-ahc-ws-standalone_$scalaVersion:1.+") // see play-ws-2.0 module
 }
+
+tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
+  if (otelProps.denyUnsafe) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
+  }
+}

@@ -25,6 +25,6 @@ class DynamoDbClientTest extends AbstractDynamoDbClientTest {
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
             .setCaptureExperimentalSpanAttributes(true)
             .build()
-            .newRequestHandler());
+            .createRequestHandler());
   }
 }

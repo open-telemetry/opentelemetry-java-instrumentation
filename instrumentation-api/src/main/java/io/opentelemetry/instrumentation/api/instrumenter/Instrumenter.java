@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
@@ -18,7 +20,6 @@ import io.opentelemetry.instrumentation.api.internal.InstrumenterContext;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import java.time.Instant;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
 /**
@@ -78,11 +79,14 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final AttributesExtractor<? super REQUEST, ? super RESPONSE>[] attributesExtractors;
   private final ContextCustomizer<? super REQUEST>[] contextCustomizers;
   private final OperationListener[] operationListeners;
+  private final AttributesExtractor<? super REQUEST, ? super RESPONSE>[]
+      operationListenerAttributesExtractors;
   private final ErrorCauseExtractor errorCauseExtractor;
   private final boolean propagateOperationListenersToOnEnd;
   private final boolean enabled;
   private final SpanSuppressor spanSuppressor;
 
+  // to allow converting generic lists to arrays with toArray
   @SuppressWarnings({"rawtypes", "unchecked"})
   Instrumenter(InstrumenterBuilder<REQUEST, RESPONSE> builder) {
     this.instrumentationName = builder.instrumentationName;
@@ -94,6 +98,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
     this.attributesExtractors = builder.attributesExtractors.toArray(new AttributesExtractor[0]);
     this.contextCustomizers = builder.contextCustomizers.toArray(new ContextCustomizer[0]);
     this.operationListeners = builder.buildOperationListeners().toArray(new OperationListener[0]);
+    this.operationListenerAttributesExtractors =
+        builder.operationListenerAttributesExtractors.toArray(new AttributesExtractor[0]);
     this.errorCauseExtractor = builder.errorCauseExtractor;
     this.propagateOperationListenersToOnEnd = builder.propagateOperationListenersToOnEnd;
     this.enabled = builder.enabled;
@@ -207,11 +213,21 @@ public class Instrumenter<REQUEST, RESPONSE> {
     context = context.with(span);
 
     if (operationListeners.length != 0) {
+      if (operationListenerAttributesExtractors.length != 0) {
+        UnsafeAttributes operationAttributes = new UnsafeAttributes();
+        operationAttributes.putAll(attributes.asMap());
+        for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor :
+            operationListenerAttributesExtractors) {
+          extractor.onStart(operationAttributes, parentContext, request);
+        }
+        attributes = operationAttributes;
+      }
+
       // operation listeners run after span start, so that they have access to the current span
       // for capturing exemplars
       long startNanos = getNanos(startTime);
-      for (int i = 0; i < operationListeners.length; i++) {
-        context = operationListeners[i].onStart(context, attributes, startNanos);
+      for (OperationListener operationListener : operationListeners) {
+        context = operationListener.onStart(context, attributes, startNanos);
       }
     }
     if (propagateOperationListenersToOnEnd || context.get(START_OPERATION_LISTENERS) != null) {
@@ -257,15 +273,26 @@ public class Instrumenter<REQUEST, RESPONSE> {
     if (operationListeners == null) {
       operationListeners = this.operationListeners;
     }
+
+    SpanStatusBuilder spanStatusBuilder = new SpanStatusBuilderImpl(span);
+    spanStatusExtractor.extract(spanStatusBuilder, request, response, error);
+
     if (operationListeners.length != 0) {
+      if (operationListenerAttributesExtractors.length != 0) {
+        UnsafeAttributes operationAttributes = new UnsafeAttributes();
+        operationAttributes.putAll(attributes.asMap());
+        for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor :
+            operationListenerAttributesExtractors) {
+          extractor.onEnd(operationAttributes, context, request, response, error);
+        }
+        attributes = operationAttributes;
+      }
+
       long endNanos = getNanos(endTime);
       for (int i = operationListeners.length - 1; i >= 0; i--) {
         operationListeners[i].onEnd(context, attributes, endNanos);
       }
     }
-
-    SpanStatusBuilder spanStatusBuilder = new SpanStatusBuilderImpl(span);
-    spanStatusExtractor.extract(spanStatusBuilder, request, response, error);
 
     if (endTime != null) {
       span.end(endTime);
@@ -278,7 +305,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     if (time == null) {
       return System.nanoTime();
     }
-    return TimeUnit.SECONDS.toNanos(time.getEpochSecond()) + time.getNano();
+    return SECONDS.toNanos(time.getEpochSecond()) + time.getNano();
   }
 
   static {
@@ -302,8 +329,15 @@ public class Instrumenter<REQUEST, RESPONSE> {
               Instrumenter<REQUEST, RESPONSE> instrumenter,
               Context parentContext,
               REQUEST request) {
-            SpanKind spanKind = instrumenter.spanKindExtractor.extract(request);
+            return suppressSpan(
+                instrumenter, parentContext, instrumenter.spanKindExtractor.extract(request));
+          }
 
+          @Override
+          public <REQUEST, RESPONSE> Context suppressSpan(
+              Instrumenter<REQUEST, RESPONSE> instrumenter,
+              Context parentContext,
+              SpanKind spanKind) {
             return instrumenter.spanSuppressor.storeInContext(
                 parentContext, spanKind, Span.getInvalid());
           }

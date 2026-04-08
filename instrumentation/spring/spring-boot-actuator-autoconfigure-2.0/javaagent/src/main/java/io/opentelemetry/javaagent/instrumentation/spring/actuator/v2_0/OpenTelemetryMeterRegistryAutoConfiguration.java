@@ -5,19 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.actuator.v2_0;
 
+import static java.util.Collections.singletonList;
+
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
 import io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.MicrometerSingletons;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.boot.actuate.autoconfigure.metrics.CompositeMeterRegistryAutoConfiguration;
-import org.springframework.boot.actuate.autoconfigure.metrics.export.simple.SimpleMetricsExportAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -27,11 +26,19 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 // CompositeMeterRegistryAutoConfiguration configures the "final" composite registry
-@AutoConfigureBefore(CompositeMeterRegistryAutoConfiguration.class)
+@AutoConfigureBefore(
+    name = {
+      "org.springframework.boot.actuate.autoconfigure.metrics.CompositeMeterRegistryAutoConfiguration", // Spring Boot 2.x-3.x location
+      "org.springframework.boot.micrometer.metrics.autoconfigure.CompositeMeterRegistryAutoConfiguration" // Spring Boot 4.x location
+    })
 // configure after the SimpleMeterRegistry has initialized; it is normally the last MeterRegistry
 // implementation to be configured, as it's used as a fallback
 // the OTel registry should be added in addition to that fallback and not replace it
-@AutoConfigureAfter(SimpleMetricsExportAutoConfiguration.class)
+@AutoConfigureAfter(
+    name = {
+      "org.springframework.boot.actuate.autoconfigure.metrics.export.simple.SimpleMetricsExportAutoConfiguration", // Spring Boot 2.x-3.x location
+      "org.springframework.boot.micrometer.metrics.autoconfigure.export.simple.SimpleMetricsExportAutoConfiguration" // Spring Boot 4.x location
+    })
 @ConditionalOnBean(Clock.class)
 @ConditionalOnClass(MeterRegistry.class)
 public class OpenTelemetryMeterRegistryAutoConfiguration {
@@ -58,8 +65,7 @@ public class OpenTelemetryMeterRegistryAutoConfiguration {
               Comparator.comparingInt(
                   value -> value == MicrometerSingletons.meterRegistry() ? 1 : 0));
           Set<MeterRegistry> registries = new LinkedHashSet<>(list);
-          return new CompositeMeterRegistry(
-              original.config().clock(), Collections.singletonList(original)) {
+          return new CompositeMeterRegistry(original.config().clock(), singletonList(original)) {
             @Override
             public Set<MeterRegistry> getRegistries() {
               return registries;

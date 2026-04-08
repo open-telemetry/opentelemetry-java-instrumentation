@@ -5,13 +5,14 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.emptyMap;
+import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
@@ -25,6 +26,7 @@ import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
@@ -36,7 +38,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
@@ -59,7 +60,7 @@ class InstrumenterTest {
                   entry("req3", "req3_value"),
                   entry("linkTraceId", LINK_TRACE_ID),
                   entry("linkSpanId", LINK_SPAN_ID))
-              .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+              .collect(toMap(Map.Entry::getKey, Map.Entry::getValue)));
 
   private static final Map<String, String> RESPONSE =
       Collections.unmodifiableMap(
@@ -68,7 +69,7 @@ class InstrumenterTest {
                   entry("resp2", "resp2_value"),
                   entry("resp2_2", "resp2_2_value"),
                   entry("resp3", "resp3_value"))
-              .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+              .collect(toMap(Map.Entry::getKey, Map.Entry::getValue)));
 
   static class AttributesExtractor1
       implements AttributesExtractor<Map<String, String>, Map<String, String>> {
@@ -207,12 +208,12 @@ class InstrumenterTest {
                             .hasStatus(StatusData.unset())
                             .hasLinks(expectedSpanLink())
                             .hasAttributesSatisfyingExactly(
-                                equalTo(AttributeKey.stringKey("req1"), "req1_value"),
-                                equalTo(AttributeKey.stringKey("req2"), "req2_2_value"),
-                                equalTo(AttributeKey.stringKey("req3"), "req3_value"),
-                                equalTo(AttributeKey.stringKey("resp1"), "resp1_value"),
-                                equalTo(AttributeKey.stringKey("resp2"), "resp2_2_value"),
-                                equalTo(AttributeKey.stringKey("resp3"), "resp3_value"))));
+                                equalTo(stringKey("req1"), "req1_value"),
+                                equalTo(stringKey("req2"), "req2_2_value"),
+                                equalTo(stringKey("req3"), "req3_value"),
+                                equalTo(stringKey("resp1"), "resp1_value"),
+                                equalTo(stringKey("resp2"), "resp2_2_value"),
+                                equalTo(stringKey("resp3"), "resp3_value"))));
   }
 
   @Test
@@ -312,12 +313,12 @@ class InstrumenterTest {
                             .hasStatus(StatusData.unset())
                             .hasLinks(expectedSpanLink())
                             .hasAttributesSatisfyingExactly(
-                                equalTo(AttributeKey.stringKey("req1"), "req1_value"),
-                                equalTo(AttributeKey.stringKey("req2"), "req2_2_value"),
-                                equalTo(AttributeKey.stringKey("req3"), "req3_value"),
-                                equalTo(AttributeKey.stringKey("resp1"), "resp1_value"),
-                                equalTo(AttributeKey.stringKey("resp2"), "resp2_2_value"),
-                                equalTo(AttributeKey.stringKey("resp3"), "resp3_value"))));
+                                equalTo(stringKey("req1"), "req1_value"),
+                                equalTo(stringKey("req2"), "req2_2_value"),
+                                equalTo(stringKey("req3"), "req3_value"),
+                                equalTo(stringKey("resp1"), "resp1_value"),
+                                equalTo(stringKey("resp2"), "resp2_2_value"),
+                                equalTo(stringKey("resp3"), "resp3_value"))));
   }
 
   @Test
@@ -501,6 +502,69 @@ class InstrumenterTest {
 
     assertThat(Span.fromContext(startContext.get()).getSpanContext().isValid()).isTrue();
     assertThat(Span.fromContext(endContext.get()).getSpanContext().isValid()).isTrue();
+  }
+
+  @Test
+  void operationListenerAttributeExtractors() {
+    AtomicReference<Attributes> startContext = new AtomicReference<>();
+    AtomicReference<Attributes> endContext = new AtomicReference<>();
+
+    OperationListener operationListener =
+        new OperationListener() {
+          @Override
+          public Context onStart(Context context, Attributes startAttributes, long startNanos) {
+            startContext.set(startAttributes);
+            return context;
+          }
+
+          @Override
+          public void onEnd(Context context, Attributes endAttributes, long endNanos) {
+            endContext.set(endAttributes);
+          }
+        };
+
+    InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .addOperationListener(operationListener)
+            .addAttributesExtractor(new AttributesExtractor1());
+    Experimental.addOperationListenerAttributesExtractor(builder, new AttributesExtractor2());
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        builder.buildServerInstrumenter(new MapGetter());
+
+    Context context = instrumenter.start(Context.root(), REQUEST);
+    SpanContext spanContext = Span.fromContext(context).getSpanContext();
+    instrumenter.end(context, REQUEST, RESPONSE, null);
+
+    otelTesting
+        .assertTraces()
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("span")
+                            .hasKind(SpanKind.SERVER)
+                            .hasInstrumentationScopeInfo(InstrumentationScopeInfo.create("test"))
+                            .hasTraceId(spanContext.getTraceId())
+                            .hasSpanId(spanContext.getSpanId())
+                            .hasParentSpanId(SpanId.getInvalid())
+                            .hasStatus(StatusData.unset())
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(stringKey("req1"), "req1_value"),
+                                equalTo(stringKey("req2"), "req2_value"),
+                                equalTo(stringKey("resp1"), "resp1_value"),
+                                equalTo(stringKey("resp2"), "resp2_value"))));
+
+    assertThat(startContext.get())
+        .hasSize(3)
+        .containsEntry("req1", "req1_value")
+        .containsEntry("req2", "req2_2_value")
+        .containsEntry("req3", "req3_value");
+    assertThat(endContext.get())
+        .hasSize(3)
+        .containsEntry("resp1", "resp1_value")
+        .containsEntry("resp2", "resp2_2_value")
+        .containsEntry("resp3", "resp3_value");
   }
 
   @Test

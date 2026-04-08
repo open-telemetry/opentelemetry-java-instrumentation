@@ -15,10 +15,12 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class StageSessionFactoryInstrumentation implements TypeInstrumentation {
+class StageSessionFactoryInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.hibernate.reactive.stage.impl.StageSessionFactoryImpl");
@@ -28,38 +30,39 @@ public class StageSessionFactoryInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         namedOneOf("withSession", "withStatelessSession").and(takesArgument(0, Function.class)),
-        this.getClass().getName() + "$Function0Advice");
+        getClass().getName() + "$Function0Advice");
     transformer.applyAdviceToMethod(
         namedOneOf("withSession", "withStatelessSession").and(takesArgument(1, Function.class)),
-        this.getClass().getName() + "$Function1Advice");
+        getClass().getName() + "$Function1Advice");
     transformer.applyAdviceToMethod(
         namedOneOf("openSession", "openStatelessSession").and(returns(CompletionStage.class)),
-        this.getClass().getName() + "$OpenSessionAdvice");
+        getClass().getName() + "$OpenSessionAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class Function0Advice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(value = 0, readOnly = false) Function<?, ?> function) {
-      function = FunctionWrapper.wrap(function);
+    @AssignReturned.ToArguments(@ToArgument(0))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Function<?, ?> onEnter(@Advice.Argument(0) Function<?, ?> function) {
+      return FunctionWrapper.wrap(function);
     }
   }
 
   @SuppressWarnings("unused")
   public static class Function1Advice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(value = 1, readOnly = false) Function<?, ?> function) {
-      function = FunctionWrapper.wrap(function);
+    @AssignReturned.ToArguments(@ToArgument(1))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Function<?, ?> onEnter(@Advice.Argument(1) Function<?, ?> function) {
+      return FunctionWrapper.wrap(function);
     }
   }
 
   @SuppressWarnings("unused")
   public static class OpenSessionAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(@Advice.Return(readOnly = false) CompletionStage<?> completionStage) {
-      completionStage = CompletionStageWrapper.wrap(completionStage);
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static CompletionStage<?> onExit(@Advice.Return CompletionStage<?> completionStage) {
+      return CompletionStageWrapper.wrap(completionStage);
     }
   }
 }

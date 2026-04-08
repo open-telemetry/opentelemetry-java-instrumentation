@@ -22,6 +22,11 @@ class TracingHttpClient extends HttpClient {
     this.instrumenter = instrumenter;
   }
 
+  TracingHttpClient(Instrumenter<Request, Response> instrumenter, HttpClientTransport transport) {
+    super(transport);
+    this.instrumenter = instrumenter;
+  }
+
   TracingHttpClient(
       Instrumenter<Request, Response> instrumenter, SslContextFactory.Client sslContextFactory) {
     setSslContextFactory(sslContextFactory);

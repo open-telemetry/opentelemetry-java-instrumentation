@@ -8,7 +8,7 @@ into log context.
 ### Add these dependencies to your project
 
 Replace `OPENTELEMETRY_VERSION` with the [latest
-release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-log4j-context-data-2.17-autoconfigure).
+release]( https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-log4j-context-data-2.17-autoconfigure).
 
 For Maven, add to your `pom.xml` dependencies:
 

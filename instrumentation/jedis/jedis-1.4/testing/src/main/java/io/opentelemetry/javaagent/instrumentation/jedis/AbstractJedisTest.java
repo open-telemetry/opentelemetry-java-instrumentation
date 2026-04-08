@@ -5,13 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -66,14 +72,23 @@ public abstract class AbstractJedisTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SET")
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
+
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.jedis-1.4",
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 
   @Test
@@ -87,23 +102,25 @@ public abstract class AbstractJedisTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SET")
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GET")
+                    span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "GET foo"),
                             equalTo(maybeStable(DB_OPERATION), "GET"),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
   }
@@ -119,23 +136,28 @@ public abstract class AbstractJedisTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SET")
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("RANDOMKEY")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "RANDOMKEY " + host + ":" + port
+                                : "RANDOMKEY")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY"),
                             equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
   }

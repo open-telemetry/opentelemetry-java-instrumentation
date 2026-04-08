@@ -1,5 +1,6 @@
 plugins {
   id("otel.library-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 dependencies {
@@ -16,20 +17,35 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:2.4.0")
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
-
 // spring 6 (which spring-kafka 3.+ uses) requires java 17
-if (latestDepTest) {
+if (otelProps.testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_17)
   }
 }
 
-if (!latestDepTest) {
+if (!otelProps.testLatestDeps) {
   // Spring Boot 2.x requires StaticLoggerBinder which is removed in logback-classic 1.3
   configurations.testRuntimeClasspath {
     resolutionStrategy {
       force("ch.qos.logback:logback-classic:1.2.3")
     }
+  }
+}
+
+tasks {
+  test {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
   }
 }

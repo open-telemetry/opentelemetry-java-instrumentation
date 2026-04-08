@@ -14,6 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -50,10 +51,11 @@ public class VirtualFieldTestInstrumentationModule extends InstrumentationModule
 
   @SuppressWarnings("unused")
   public static class TestAdvice {
-    @Advice.OnMethodExit
-    public static void onExit(@Advice.Return(readOnly = false) boolean result) {
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(inline = false)
+    public static boolean onExit() {
       VirtualFieldTestHelper.test();
-      result = true;
+      return true;
     }
   }
 }

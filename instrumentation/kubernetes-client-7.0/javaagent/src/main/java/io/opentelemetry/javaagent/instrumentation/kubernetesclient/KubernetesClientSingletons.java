@@ -10,21 +10,21 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import okhttp3.Request;
 
 public class KubernetesClientSingletons {
 
-  private static final Instrumenter<Request, ApiResponse<?>> INSTRUMENTER;
+  private static final Instrumenter<Request, ApiResponse<?>> instrumenter;
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.kubernetes-client.experimental-span-attributes", false);
-  private static final ContextPropagators CONTEXT_PROPAGATORS;
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "kubernetes_client")
+          .getBoolean("experimental_span_attributes/development", false);
+  private static final ContextPropagators contextPropagators;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         DefaultHttpClientInstrumenterBuilder.create(
                 "io.opentelemetry.kubernetes-client-7.0",
                 GlobalOpenTelemetry.get(),
@@ -37,20 +37,20 @@ public class KubernetesClientSingletons {
                         new KubernetesExperimentalAttributesExtractor());
                   }
                 })
-            .setSpanNameExtractor(
+            .setSpanNameExtractorCustomizer(
                 requestSpanNameExtractor ->
                     request -> KubernetesRequestDigest.parse(request).toString())
             .build();
 
-    CONTEXT_PROPAGATORS = GlobalOpenTelemetry.getPropagators();
+    contextPropagators = GlobalOpenTelemetry.getPropagators();
   }
 
   public static Instrumenter<Request, ApiResponse<?>> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static void inject(Context context, Request.Builder requestBuilder) {
-    CONTEXT_PROPAGATORS
+    contextPropagators
         .getTextMapPropagator()
         .inject(context, requestBuilder, RequestBuilderHeaderSetter.INSTANCE);
   }

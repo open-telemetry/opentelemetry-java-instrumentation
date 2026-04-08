@@ -5,8 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.component;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +23,6 @@ public class IntervalTask implements Runnable {
   }
 
   public void blockUntilExecute() throws InterruptedException {
-    latch.await(5, TimeUnit.SECONDS);
+    latch.await(5, SECONDS);
   }
 }

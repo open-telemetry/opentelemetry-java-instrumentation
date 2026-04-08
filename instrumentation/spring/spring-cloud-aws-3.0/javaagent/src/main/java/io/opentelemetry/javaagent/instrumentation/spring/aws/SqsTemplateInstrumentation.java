@@ -13,10 +13,11 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.CompletableFuture;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class SqsTemplateInstrumentation implements TypeInstrumentation {
+class SqsTemplateInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -27,14 +28,15 @@ public class SqsTemplateInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("getQueueAttributes").and(returns(CompletableFuture.class)),
-        this.getClass().getName() + "$GetQueueAttributesAdvice");
+        getClass().getName() + "$GetQueueAttributesAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class GetQueueAttributesAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void methodExit(@Advice.Return(readOnly = false) CompletableFuture<?> result) {
-      result = CompletableFutureWrapper.wrap(result, Java8BytecodeBridge.currentContext());
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static CompletableFuture<?> methodExit(@Advice.Return CompletableFuture<?> result) {
+      return CompletableFutureWrapper.wrap(result, Java8BytecodeBridge.currentContext());
     }
   }
 }

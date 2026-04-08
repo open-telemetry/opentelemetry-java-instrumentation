@@ -20,6 +20,7 @@ public final class OsResource {
   private static final AttributeKey<String> OS_DESCRIPTION =
       AttributeKey.stringKey("os.description");
   private static final AttributeKey<String> OS_TYPE = AttributeKey.stringKey("os.type");
+  private static final AttributeKey<String> OS_VERSION = AttributeKey.stringKey("os.version");
 
   private static final Resource INSTANCE = buildResource();
 
@@ -37,7 +38,7 @@ public final class OsResource {
     String os;
     try {
       os = System.getProperty("os.name");
-    } catch (SecurityException t) {
+    } catch (SecurityException ignored) {
       // Security manager enabled, can't provide much os information.
       return Resource.empty();
     }
@@ -49,9 +50,7 @@ public final class OsResource {
     AttributesBuilder attributes = Attributes.builder();
 
     String osName = getOs(os);
-    if (osName != null) {
-      attributes.put(OS_TYPE, osName);
-    }
+    attributes.put(OS_TYPE, osName);
 
     String version = null;
     try {
@@ -59,6 +58,7 @@ public final class OsResource {
     } catch (SecurityException e) {
       // Ignore
     }
+    attributes.put(OS_VERSION, version);
     String osDescription = version != null ? os + ' ' + version : os;
     attributes.put(OS_DESCRIPTION, osDescription);
 
@@ -89,7 +89,7 @@ public final class OsResource {
     } else if (os.startsWith("solaris")) {
       return OsTypeValues.SOLARIS;
     } else if (os.startsWith("z/os")) {
-      return OsTypeValues.Z_OS;
+      return OsTypeValues.ZOS;
     }
     return null;
   }
@@ -108,7 +108,7 @@ public final class OsResource {
     static final String HPUX = "hpux";
     static final String AIX = "aix";
     static final String SOLARIS = "solaris";
-    static final String Z_OS = "z_os";
+    static final String ZOS = "zos";
 
     private OsTypeValues() {}
   }

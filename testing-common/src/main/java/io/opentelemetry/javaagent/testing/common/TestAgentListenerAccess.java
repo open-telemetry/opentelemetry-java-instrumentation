@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public final class TestAgentListenerAccess {
+public class TestAgentListenerAccess {
 
   private static final MethodHandle reset;
   private static final MethodHandle getInstrumentationErrorCount;
@@ -79,7 +79,7 @@ public final class TestAgentListenerAccess {
     }
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // casting MethodHandle.invokeExact result
   public static List<String> getIgnoredButTransformedClassNames() {
     try {
       return (List<String>) getIgnoredButTransformedClassNames.invokeExact();

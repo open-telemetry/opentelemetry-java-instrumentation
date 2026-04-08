@@ -12,7 +12,6 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:wicket-8.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
-  testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
 }
 
 otelJava {

@@ -12,12 +12,15 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.vertx.core.Handler;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /** Propagate context to connection established callback. */
-public class ConnectionManagerInstrumentation implements TypeInstrumentation {
+class ConnectionManagerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -30,40 +33,43 @@ public class ConnectionManagerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("getConnection").and(takesArgument(2, named("io.vertx.core.Handler"))),
-        ConnectionManagerInstrumentation.class.getName() + "$GetConnectionArg2Advice");
+        getClass().getName() + "$GetConnectionArg2Advice");
     transformer.applyAdviceToMethod(
         named("getConnection").and(takesArgument(3, named("io.vertx.core.Handler"))),
-        ConnectionManagerInstrumentation.class.getName() + "$GetConnectionArg3Advice");
+        getClass().getName() + "$GetConnectionArg3Advice");
     // since 4.3.4
     transformer.applyAdviceToMethod(
         named("getConnection").and(takesArgument(4, named("io.vertx.core.Handler"))),
-        ConnectionManagerInstrumentation.class.getName() + "$GetConnectionArg4Advice");
+        getClass().getName() + "$GetConnectionArg4Advice");
   }
 
   @SuppressWarnings("unused")
   public static class GetConnectionArg2Advice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrapHandler(
-        @Advice.Argument(value = 2, readOnly = false) Handler<?> handler) {
-      handler = HandlerWrapper.wrap(handler);
+    @Nullable
+    @AssignReturned.ToArguments(@ToArgument(2))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Handler<?> wrapHandler(@Advice.Argument(2) @Nullable Handler<?> handler) {
+      return HandlerWrapper.wrap(handler);
     }
   }
 
   @SuppressWarnings("unused")
   public static class GetConnectionArg3Advice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrapHandler(
-        @Advice.Argument(value = 3, readOnly = false) Handler<?> handler) {
-      handler = HandlerWrapper.wrap(handler);
+    @Nullable
+    @AssignReturned.ToArguments(@ToArgument(3))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Handler<?> wrapHandler(@Advice.Argument(3) @Nullable Handler<?> handler) {
+      return HandlerWrapper.wrap(handler);
     }
   }
 
   @SuppressWarnings("unused")
   public static class GetConnectionArg4Advice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrapHandler(
-        @Advice.Argument(value = 4, readOnly = false) Handler<?> handler) {
-      handler = HandlerWrapper.wrap(handler);
+    @Nullable
+    @AssignReturned.ToArguments(@ToArgument(4))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Handler<?> wrapHandler(@Advice.Argument(4) @Nullable Handler<?> handler) {
+      return HandlerWrapper.wrap(handler);
     }
   }
 }

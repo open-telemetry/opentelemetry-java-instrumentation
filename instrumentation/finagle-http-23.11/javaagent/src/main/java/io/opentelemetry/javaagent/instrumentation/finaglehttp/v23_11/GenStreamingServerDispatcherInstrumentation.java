@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
@@ -17,7 +16,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class GenStreamingServerDispatcherInstrumentation implements TypeInstrumentation {
+class GenStreamingServerDispatcherInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return hasSuperType(named("com.twitter.finagle.http.GenStreamingSerialServerDispatcher"));
@@ -30,9 +29,7 @@ public class GenStreamingServerDispatcherInstrumentation implements TypeInstrume
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isMethod().and(named("loop")),
-        GenStreamingServerDispatcherInstrumentation.class.getName() + "$LoopAdvice");
+    transformer.applyAdviceToMethod(named("loop"), getClass().getName() + "$LoopAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -51,7 +48,7 @@ public class GenStreamingServerDispatcherInstrumentation implements TypeInstrume
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-    public static void methodExit(@Advice.Thrown Throwable thrown) {
+    public static void methodExit() {
       // always clear this
       Helpers.CONTEXT_LOCAL.clear();
     }

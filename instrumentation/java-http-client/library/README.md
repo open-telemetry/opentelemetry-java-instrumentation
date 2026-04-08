@@ -7,7 +7,7 @@ Provides OpenTelemetry instrumentation for [Java HTTP Client](https://openjdk.or
 ### Add these dependencies to your project
 
 Replace `OPENTELEMETRY_VERSION` with the [latest
-release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-java-http-client).
+release]( https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-java-http-client).
 
 For Maven, add to your `pom.xml` dependencies:
 
@@ -43,7 +43,7 @@ public class JavaHttpClientConfiguration {
 
   //Use this HttpClient implementation for making standard http client calls.
   public HttpClient createTracedClient(OpenTelemetry openTelemetry) {
-    return JavaHttpClientTelemetry.builder(openTelemetry).build().newHttpClient(createClient());
+    return JavaHttpClientTelemetry.builder(openTelemetry).build().wrap(createClient());
   }
 
   //your configuration of the Java HTTP Client goes here:

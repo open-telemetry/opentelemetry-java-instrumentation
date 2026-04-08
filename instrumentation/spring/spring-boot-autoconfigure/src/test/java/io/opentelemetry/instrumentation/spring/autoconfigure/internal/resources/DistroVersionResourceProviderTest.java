@@ -5,19 +5,19 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.resources;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
-import java.util.Collections;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
-public class DistroVersionResourceProviderTest {
+class DistroVersionResourceProviderTest {
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
           .withPropertyValues(
@@ -35,12 +35,11 @@ public class DistroVersionResourceProviderTest {
 
           assertThat(
                   resource
-                      .createResource(DefaultConfigProperties.createFromMap(Collections.emptyMap()))
+                      .createResource(DefaultConfigProperties.createFromMap(emptyMap()))
                       .getAttributes()
                       .asMap())
               .containsEntry(
-                  AttributeKey.stringKey("telemetry.distro.name"),
-                  "opentelemetry-spring-boot-starter")
+                  stringKey("telemetry.distro.name"), "opentelemetry-spring-boot-starter")
               .anySatisfy(
                   (key, val) -> {
                     assertThat(key.getKey()).isEqualTo("telemetry.distro.version");

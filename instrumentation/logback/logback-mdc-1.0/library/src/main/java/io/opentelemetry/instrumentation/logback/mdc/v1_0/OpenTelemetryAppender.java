@@ -31,7 +31,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     try {
       field = LoggingEvent.class.getDeclaredField("mdcPropertyMap");
       field.setAccessible(true);
-    } catch (Exception exception) {
+    } catch (Exception ignored) {
       field = null;
     }
     MDC_MAP_FIELD = field;

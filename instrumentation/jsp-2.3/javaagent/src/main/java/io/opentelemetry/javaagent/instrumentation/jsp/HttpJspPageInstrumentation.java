@@ -14,15 +14,15 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HttpJspPageInstrumentation implements TypeInstrumentation {
+class HttpJspPageInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -41,38 +41,50 @@ public class HttpJspPageInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
             .and(takesArgument(1, named("javax.servlet.http.HttpServletResponse")))
             .and(isPublic()),
-        HttpJspPageInstrumentation.class.getName() + "$HttpJspPageAdvice");
+        getClass().getName() + "$HttpJspPageAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class HttpJspPageAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) HttpServletRequest req,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      if (!instrumenter().shouldStart(parentContext, req)) {
-        return;
+    public static class AdviceScope {
+      private final Context context;
+      private final Scope scope;
+
+      private AdviceScope(Context context, Scope scope) {
+        this.context = context;
+        this.scope = scope;
       }
 
-      context = instrumenter().start(parentContext, req);
-      scope = context.makeCurrent();
+      @Nullable
+      public static AdviceScope start(HttpServletRequest req) {
+        Context parentContext = Context.current();
+        if (!instrumenter().shouldStart(parentContext, req)) {
+          return null;
+        }
+        Context context = instrumenter().start(parentContext, req);
+        return new AdviceScope(context, context.makeCurrent());
+      }
+
+      public void end(HttpServletRequest req, Throwable throwable) {
+        scope.close();
+        instrumenter().end(context, req, null, throwable);
+      }
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static AdviceScope onEnter(@Advice.Argument(0) HttpServletRequest req) {
+      return AdviceScope.start(req);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Argument(0) HttpServletRequest req,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(req, throwable);
       }
-
-      scope.close();
-      instrumenter().end(context, req, null, throwable);
     }
   }
 }

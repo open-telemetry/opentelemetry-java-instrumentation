@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkoactor.v1_0
 
-import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.instrumentation.testing.junit.{
   AgentInstrumentationExtension,
   InstrumentationExtension
@@ -42,7 +41,7 @@ class PekkoActorTest {
                 override def accept(span: SpanDataAssert): Unit = {
                   span
                     .hasName("parent")
-                    .hasAttributes(Attributes.empty())
+                    .hasTotalAttributeCount(0)
                 }
               },
               new Consumer[SpanDataAssert] {
@@ -50,7 +49,7 @@ class PekkoActorTest {
                   span
                     .hasName("Howdy, Pekko")
                     .hasParent(trace.getSpan(0))
-                    .hasAttributes(Attributes.empty())
+                    .hasTotalAttributeCount(0)
                 }
               }
             )
@@ -78,7 +77,7 @@ class PekkoActorTest {
                 override def accept(span: SpanDataAssert): Unit = {
                   span
                     .hasName("parent")
-                    .hasAttributes(Attributes.empty())
+                    .hasTotalAttributeCount(0)
                 }
               },
               new Consumer[SpanDataAssert] {
@@ -86,7 +85,7 @@ class PekkoActorTest {
                   span
                     .hasName("Howdy, Pekko")
                     .hasParent(trace.getSpan(0))
-                    .hasAttributes(Attributes.empty())
+                    .hasTotalAttributeCount(0)
                 }
               }
             )
@@ -114,7 +113,7 @@ class PekkoActorTest {
                 override def accept(span: SpanDataAssert): Unit = {
                   span
                     .hasName("parent")
-                    .hasAttributes(Attributes.empty())
+                    .hasTotalAttributeCount(0)
                 }
               },
               new Consumer[SpanDataAssert] {
@@ -122,7 +121,7 @@ class PekkoActorTest {
                   span
                     .hasName("Hello, Pekko")
                     .hasParent(trace.getSpan(0))
-                    .hasAttributes(Attributes.empty())
+                    .hasTotalAttributeCount(0)
                 }
               }
             )

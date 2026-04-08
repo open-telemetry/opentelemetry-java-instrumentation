@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_1;
 
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+
 import com.couchbase.client.core.env.TimeoutConfig;
 import com.couchbase.client.core.error.DocumentNotFoundException;
 import com.couchbase.client.java.Bucket;
@@ -14,6 +16,7 @@ import com.couchbase.client.java.Collection;
 import com.couchbase.client.java.env.ClusterEnvironment;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.time.Duration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -42,7 +45,7 @@ class CouchbaseClient31Test {
   @BeforeAll
   static void setup() {
     couchbase =
-        new CouchbaseContainer("couchbase/server:6.5.1")
+        new CouchbaseContainer("couchbase/server:7.6.0")
             .withExposedPorts(8091)
             .withEnabledServices(CouchbaseService.KV)
             .withBucket(new BucketDefinition("test"))
@@ -86,6 +89,12 @@ class CouchbaseClient31Test {
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("get"), span -> span.hasName("dispatch_to_server")));
+                span -> {
+                  span.hasKind(INTERNAL) // later version of couchbase gives correct behavior
+                      .hasName("get")
+                      .hasStatus(
+                          StatusData.unset()); // later version of couchbase gives correct behavior
+                },
+                span -> span.hasName("dispatch_to_server")));
   }
 }

@@ -31,6 +31,7 @@ muzzle {
     group.set("com.amazonaws")
     module.set("aws-java-sdk-sqs")
     versions.set("[1.10.33,)")
+    assertInverse.set(true)
   }
 }
 
@@ -41,23 +42,26 @@ dependencies {
 
   library("com.amazonaws:aws-java-sdk-core:1.11.0")
 
-  testLibrary("com.amazonaws:aws-java-sdk-s3:1.11.106")
-  testLibrary("com.amazonaws:aws-java-sdk-rds:1.11.106")
+  testLibrary("com.amazonaws:aws-java-sdk-dynamodb:1.11.106")
   testLibrary("com.amazonaws:aws-java-sdk-ec2:1.11.106")
   testLibrary("com.amazonaws:aws-java-sdk-kinesis:1.11.106")
-  testLibrary("com.amazonaws:aws-java-sdk-dynamodb:1.11.106")
+  testLibrary("com.amazonaws:aws-java-sdk-lambda:1.11.106")
+  testLibrary("com.amazonaws:aws-java-sdk-rds:1.11.106")
+  testLibrary("com.amazonaws:aws-java-sdk-s3:1.11.106")
   testLibrary("com.amazonaws:aws-java-sdk-sns:1.11.106")
+  testLibrary("com.amazonaws:aws-java-sdk-stepfunctions:1.11.106")
 
   testImplementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
 
   // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
+  testInstrumentation(project(":instrumentation:aws-sdk:aws-sdk-2.2:javaagent"))
 
   // needed for kinesis:
   testImplementation("com.fasterxml.jackson.dataformat:jackson-dataformat-cbor")
 
   // needed for SNS
-  testImplementation("org.testcontainers:localstack")
+  testImplementation("org.testcontainers:testcontainers-localstack")
 
   // needed by S3
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
@@ -97,7 +101,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
 
-        if (findProperty("testLatestDeps") as Boolean) {
+        if (otelProps.testLatestDeps) {
           // last version that does not use json protocol
           implementation("com.amazonaws:aws-java-sdk-sqs:1.12.583")
         } else {
@@ -118,7 +122,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
 
-        if (findProperty("testLatestDeps") as Boolean) {
+        if (otelProps.testLatestDeps) {
           // last version that does not use json protocol
           implementation("com.amazonaws:aws-java-sdk-sqs:1.12.583")
         } else {
@@ -130,7 +134,7 @@ testing {
 }
 
 tasks {
-  if (!(findProperty("testLatestDeps") as Boolean)) {
+  if (!otelProps.testLatestDeps) {
     check {
       dependsOn(testing.suites)
     }
@@ -140,14 +144,6 @@ tasks {
     }
   }
 
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
-  }
-
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
@@ -155,11 +151,31 @@ tasks {
   withType<Test>().configureEach {
     // TODO run tests both with and without experimental span attributes
     jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
+
+  if (otelProps.denyUnsafe) {
+    // org.elasticmq:elasticmq-rest-sqs_2.13 uses unsafe. Future versions are likely to fix this.
+    withType<Test>().configureEach {
+      enabled = false
+    }
   }
 }
 
-if (!(findProperty("testLatestDeps") as Boolean)) {
+if (!otelProps.testLatestDeps) {
   configurations.testRuntimeClasspath {
     resolutionStrategy {
       eachDependency {

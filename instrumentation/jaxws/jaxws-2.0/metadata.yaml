@@ -1,0 +1,12 @@
+display_name: JAX-WS
+description: >
+  This instrumentation enables controller spans for JAX-WS Provider implementations (controller
+  spans are disabled by default).
+library_link: https://github.com/jakartaee/jax-ws-api
+features:
+  - CONTROLLER_SPANS
+configurations:
+  - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+    description: Enables the creation of experimental controller spans.
+    type: boolean
+    default: false

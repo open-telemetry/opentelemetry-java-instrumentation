@@ -25,6 +25,8 @@
 
 package io.opentelemetry.instrumentation.api.internal.cache.weaklockfree;
 
+import static java.util.Objects.requireNonNull;
+
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
@@ -81,6 +83,7 @@ abstract class AbstractWeakConcurrentMap<K, V, L> implements Iterable<Map.Entry<
    * @param key The key of the entry.
    * @return The value of the entry or the default value if it did not exist.
    */
+  @Nullable
   public V get(K key) {
     if (key == null) {
       throw new NullPointerException();
@@ -108,6 +111,7 @@ abstract class AbstractWeakConcurrentMap<K, V, L> implements Iterable<Map.Entry<
    * @param key The key of the entry.
    * @return The value of the entry or null if it did not exist.
    */
+  @Nullable
   public V getIfPresent(K key) {
     if (key == null) {
       throw new NullPointerException();
@@ -225,6 +229,7 @@ abstract class AbstractWeakConcurrentMap<K, V, L> implements Iterable<Map.Entry<
    * @return The default value for a key without value or {@code null} for not defining a default
    *     value.
    */
+  @Nullable
   protected V defaultValue(K key) {
     return null;
   }
@@ -328,7 +333,7 @@ abstract class AbstractWeakConcurrentMap<K, V, L> implements Iterable<Map.Entry<
     }
 
     @Override
-    public boolean equals(@Nullable Object other) {
+    public boolean equals(Object other) {
       if (other instanceof WeakKey<?>) {
         return ((WeakKey<?>) other).get() == get();
       } else {
@@ -346,9 +351,9 @@ abstract class AbstractWeakConcurrentMap<K, V, L> implements Iterable<Map.Entry<
 
     private final Iterator<Map.Entry<WeakKey<K>, V>> iterator;
 
-    private Map.Entry<WeakKey<K>, V> nextEntry;
+    @Nullable private Map.Entry<WeakKey<K>, V> nextEntry;
 
-    private K nextKey;
+    @Nullable private K nextKey;
 
     private EntryIterator(Iterator<Map.Entry<WeakKey<K>, V>> iterator) {
       this.iterator = iterator;
@@ -374,11 +379,12 @@ abstract class AbstractWeakConcurrentMap<K, V, L> implements Iterable<Map.Entry<
 
     @Override
     public Map.Entry<K, V> next() {
-      if (nextKey == null) {
+      K key = nextKey;
+      if (key == null) {
         throw new NoSuchElementException();
       }
       try {
-        return new SimpleEntry(nextKey, nextEntry);
+        return new SimpleEntry(key, requireNonNull(nextEntry));
       } finally {
         findNext();
       }

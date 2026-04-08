@@ -112,17 +112,15 @@ class PortAllocator {
     Closeable bind(int port) {
       try {
         return new ServerSocket(port);
-      } catch (IOException exception) {
+      } catch (IOException ignored) {
         return null;
       }
     }
 
     boolean canBind(int port) {
-      try {
-        ServerSocket socket = new ServerSocket(port);
-        socket.close();
+      try (ServerSocket socket = new ServerSocket(port)) {
         return true;
-      } catch (IOException exception) {
+      } catch (IOException ignored) {
         return false;
       }
     }

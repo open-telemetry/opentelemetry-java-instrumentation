@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.tooling.muzzle.references;
 
 import static io.opentelemetry.javaagent.tooling.muzzle.references.ReferenceMergeUtil.mergeFlags;
 import static io.opentelemetry.javaagent.tooling.muzzle.references.ReferenceMergeUtil.mergeSet;
+import static java.util.stream.Collectors.joining;
 
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.objectweb.asm.Type;
 
@@ -95,7 +95,7 @@ public final class FieldRef {
 
   @Override
   public String toString() {
-    String modifiers = flags.stream().map(Flag::toString).collect(Collectors.joining(" "));
+    String modifiers = flags.stream().map(Flag::toString).collect(joining(" "));
     String fieldType = Type.getType(getDescriptor()).getClassName();
     return getClass().getSimpleName() + ": " + modifiers + " " + fieldType + " " + name;
   }

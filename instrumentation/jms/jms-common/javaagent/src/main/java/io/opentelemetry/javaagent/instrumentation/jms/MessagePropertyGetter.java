@@ -5,8 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.context.propagation.TextMapGetter;
-import java.util.Collections;
+import javax.annotation.Nullable;
 
 enum MessagePropertyGetter implements TextMapGetter<MessageWithDestination> {
   INSTANCE;
@@ -16,12 +18,16 @@ enum MessagePropertyGetter implements TextMapGetter<MessageWithDestination> {
     try {
       return message.message().getPropertyNames();
     } catch (Exception e) {
-      return Collections.emptyList();
+      return emptyList();
     }
   }
 
+  @Nullable
   @Override
-  public String get(MessageWithDestination carrier, String key) {
+  public String get(@Nullable MessageWithDestination carrier, String key) {
+    if (carrier == null) {
+      return null;
+    }
     String propName = key.replace("-", MessagePropertySetter.DASH);
     Object value;
     try {
@@ -31,8 +37,7 @@ enum MessagePropertyGetter implements TextMapGetter<MessageWithDestination> {
     }
     if (value instanceof String) {
       return (String) value;
-    } else {
-      return null;
     }
+    return null;
   }
 }

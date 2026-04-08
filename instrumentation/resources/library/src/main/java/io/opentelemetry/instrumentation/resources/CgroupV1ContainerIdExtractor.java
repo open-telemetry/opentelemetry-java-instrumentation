@@ -5,11 +5,12 @@
 
 package io.opentelemetry.instrumentation.resources;
 
+import static java.util.logging.Level.WARNING;
+
 import io.opentelemetry.api.internal.OtelEncodingUtils;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
@@ -20,14 +21,21 @@ final class CgroupV1ContainerIdExtractor {
       Logger.getLogger(CgroupV1ContainerIdExtractor.class.getName());
   static final Path V1_CGROUP_PATH = Paths.get("/proc/self/cgroup");
   private final ContainerResource.Filesystem filesystem;
+  private final Path inputFilePath;
 
   CgroupV1ContainerIdExtractor() {
-    this(ContainerResource.FILESYSTEM_INSTANCE);
+    this(ContainerResource.FILESYSTEM_INSTANCE, V1_CGROUP_PATH);
   }
 
   // Exists for testing
   CgroupV1ContainerIdExtractor(ContainerResource.Filesystem filesystem) {
+    this(filesystem, V1_CGROUP_PATH);
+  }
+
+  // Exists for testing
+  CgroupV1ContainerIdExtractor(ContainerResource.Filesystem filesystem, Path inputFilePath) {
     this.filesystem = filesystem;
+    this.inputFilePath = inputFilePath;
   }
 
   /**
@@ -38,10 +46,10 @@ final class CgroupV1ContainerIdExtractor {
    * @return containerId
    */
   Optional<String> extractContainerId() {
-    if (!filesystem.isReadable(V1_CGROUP_PATH)) {
+    if (!filesystem.isReadable(inputFilePath)) {
       return Optional.empty();
     }
-    try (Stream<String> lines = filesystem.lines(V1_CGROUP_PATH)) {
+    try (Stream<String> lines = filesystem.lines(inputFilePath)) {
       return lines
           .filter(line -> !line.isEmpty())
           .map(CgroupV1ContainerIdExtractor::getIdFromLine)
@@ -49,7 +57,7 @@ final class CgroupV1ContainerIdExtractor {
           .findFirst()
           .orElse(Optional.empty());
     } catch (Exception e) {
-      logger.log(Level.WARNING, "Unable to read file", e);
+      logger.log(WARNING, "Unable to read file", e);
     }
     return Optional.empty();
   }

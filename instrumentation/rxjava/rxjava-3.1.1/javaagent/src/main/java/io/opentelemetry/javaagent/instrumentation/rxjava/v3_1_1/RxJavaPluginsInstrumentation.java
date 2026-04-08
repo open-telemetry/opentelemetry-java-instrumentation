@@ -15,7 +15,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class RxJavaPluginsInstrumentation implements TypeInstrumentation {
+class RxJavaPluginsInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -24,7 +24,7 @@ public class RxJavaPluginsInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(isMethod(), this.getClass().getName() + "$MethodAdvice");
+    transformer.applyAdviceToMethod(isMethod(), getClass().getName() + "$MethodAdvice");
   }
 
   @SuppressWarnings("unused")

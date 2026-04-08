@@ -14,11 +14,11 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExt
 import io.opentelemetry.instrumentation.restlet.v2_0.internal.Experimental;
 import io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletTelemetryBuilderFactory;
 import java.util.Collection;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import org.restlet.Request;
 import org.restlet.Response;
 
-/** A builder of {@link RestletTelemetry}. */
+/** Builder for {@link RestletTelemetry}. */
 public final class RestletTelemetryBuilder {
 
   private final DefaultHttpServerInstrumenterBuilder<Request, Response> builder;
@@ -33,8 +33,8 @@ public final class RestletTelemetryBuilder {
   }
 
   /**
-   * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
-   * items.
+   * Adds an {@link AttributesExtractor} to extract attributes from requests and responses. Executed
+   * after all default extractors.
    */
   @CanIgnoreReturnValue
   public RestletTelemetryBuilder addAttributesExtractor(
@@ -44,9 +44,9 @@ public final class RestletTelemetryBuilder {
   }
 
   /**
-   * Configures the HTTP request headers that will be captured as span attributes.
+   * Configures HTTP request headers to capture as span attributes.
    *
-   * @param requestHeaders A list of HTTP header names.
+   * @param requestHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
   public RestletTelemetryBuilder setCapturedRequestHeaders(Collection<String> requestHeaders) {
@@ -55,9 +55,9 @@ public final class RestletTelemetryBuilder {
   }
 
   /**
-   * Configures the HTTP response headers that will be captured as span attributes.
+   * Configures HTTP response headers to capture as span attributes.
    *
-   * @param responseHeaders A list of HTTP header names.
+   * @param responseHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
   public RestletTelemetryBuilder setCapturedResponseHeaders(Collection<String> responseHeaders) {
@@ -66,16 +66,15 @@ public final class RestletTelemetryBuilder {
   }
 
   /**
-   * Configures the instrumentation to recognize an alternative set of HTTP request methods.
+   * Configures recognized HTTP request methods.
    *
-   * <p>By default, this instrumentation defines "known" methods as the ones listed in <a
-   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and the PATCH
-   * method defined in <a href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>.
+   * <p>By default, recognizes methods from <a
+   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and PATCH from <a
+   * href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>.
    *
-   * <p>Note: calling this method <b>overrides</b> the default known method sets completely; it does
-   * not supplement it.
+   * <p><b>Note:</b> This <b>overrides</b> defaults completely; it does not supplement them.
    *
-   * @param knownMethods A set of recognized HTTP request methods.
+   * @param knownMethods HTTP request methods to recognize.
    * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Collection)
    */
   @CanIgnoreReturnValue
@@ -84,19 +83,15 @@ public final class RestletTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  /** Customizes the {@link SpanNameExtractor} by transforming the default instance. */
   @CanIgnoreReturnValue
-  public RestletTelemetryBuilder setSpanNameExtractor(
-      Function<SpanNameExtractor<Request>, SpanNameExtractor<Request>>
-          spanNameExtractorTransformer) {
-    builder.setSpanNameExtractor(spanNameExtractorTransformer);
+  public RestletTelemetryBuilder setSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<Request>> spanNameExtractorCustomizer) {
+    builder.setSpanNameExtractorCustomizer(spanNameExtractorCustomizer);
     return this;
   }
 
-  /**
-   * Returns a new {@link RestletTelemetry} with the settings of this {@link
-   * RestletTelemetryBuilder}.
-   */
+  /** Returns a new instance with the configured settings. */
   public RestletTelemetry build() {
     return new RestletTelemetry(builder.build());
   }

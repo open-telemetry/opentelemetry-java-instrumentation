@@ -8,10 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.jetty.common;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.instrumentation.servlet.ServletAccessor;
+import io.opentelemetry.instrumentation.servlet.internal.ServletAccessor;
+import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
+import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
-import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
-import io.opentelemetry.javaagent.instrumentation.servlet.ServletResponseContext;
+import javax.annotation.Nullable;
 
 public class JettyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RESPONSE> {
 
@@ -25,13 +26,10 @@ public class JettyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RESPO
       ServletRequestContext<REQUEST> requestContext,
       REQUEST request,
       RESPONSE response,
-      Throwable throwable,
+      @Nullable Throwable throwable,
       Context context,
       Scope scope) {
 
-    if (scope == null) {
-      return;
-    }
     scope.close();
 
     if (throwable == null) {
@@ -46,6 +44,7 @@ public class JettyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RESPO
     }
   }
 
+  @Nullable
   private Throwable errorException(REQUEST request) {
     Object value = accessor.getRequestAttribute(request, errorExceptionAttributeName());
 

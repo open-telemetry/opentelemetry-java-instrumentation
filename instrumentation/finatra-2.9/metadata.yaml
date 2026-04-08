@@ -1,0 +1,12 @@
+description: >
+  This instrumentation enriches HTTP server spans with route information, and enables controller
+  spans for the Finatra web framework (controller spans are disabled by default).
+library_link: https://github.com/twitter/finatra
+features:
+  - HTTP_ROUTE
+  - CONTROLLER_SPANS
+configurations:
+  - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+    description: Enables the creation of experimental controller spans.
+    type: boolean
+    default: false

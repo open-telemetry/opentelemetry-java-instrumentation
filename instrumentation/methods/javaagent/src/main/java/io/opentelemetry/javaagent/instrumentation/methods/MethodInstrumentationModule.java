@@ -6,52 +6,47 @@
 package io.opentelemetry.javaagent.instrumentation.methods;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
-import java.util.Arrays;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @AutoService(InstrumentationModule.class)
-public class MethodInstrumentationModule extends InstrumentationModule {
-
-  private static final String TRACE_METHODS_CONFIG = "otel.instrumentation.methods.include";
+public class MethodInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   private final List<TypeInstrumentation> typeInstrumentations;
 
   public MethodInstrumentationModule() {
     super("methods");
-
-    Map<String, Set<String>> classMethodsToTrace =
-        MethodsConfigurationParser.parse(
-            AgentInstrumentationConfig.get().getString(TRACE_METHODS_CONFIG));
-
-    typeInstrumentations =
-        classMethodsToTrace.entrySet().stream()
-            .filter(e -> !e.getValue().isEmpty())
-            .map(e -> new MethodInstrumentation(e.getKey(), e.getValue()))
-            .collect(Collectors.toList());
+    typeInstrumentations = createInstrumentations();
   }
 
-  // the default configuration has empty "otel.instrumentation.methods.include", and so doesn't
-  // generate any TypeInstrumentation for muzzle to analyze
-  @Override
-  public List<String> getAdditionalHelperClassNames() {
-    return typeInstrumentations.isEmpty()
-        ? emptyList()
-        : Arrays.asList(
-            "io.opentelemetry.javaagent.instrumentation.methods.MethodSingletons",
-            "io.opentelemetry.javaagent.instrumentation.methods.MethodSingletons$BootstrapLoader");
+  private static List<TypeInstrumentation> createInstrumentations() {
+    MethodConfiguration config = new MethodConfiguration(GlobalOpenTelemetry.get());
+    List<TypeInstrumentation> list = config.typeInstrumentations();
+    // ensure that there is at least one instrumentation so that muzzle reference collection could
+    // work
+    if (list.isEmpty()) {
+      return singletonList(
+          new MethodInstrumentation(null, singletonMap(SpanKind.INTERNAL, emptyList())));
+    }
+    return list;
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return typeInstrumentations;
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

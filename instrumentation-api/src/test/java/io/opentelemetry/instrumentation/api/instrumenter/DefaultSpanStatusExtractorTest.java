@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import static java.util.Collections.emptyMap;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import io.opentelemetry.api.trace.StatusCode;
-import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -22,19 +22,14 @@ class DefaultSpanStatusExtractorTest {
 
   @Test
   void noException() {
-    SpanStatusExtractor.getDefault()
-        .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), null);
+    SpanStatusExtractor.getDefault().extract(spanStatusBuilder, emptyMap(), emptyMap(), null);
     verifyNoInteractions(spanStatusBuilder);
   }
 
   @Test
   void exception() {
     SpanStatusExtractor.getDefault()
-        .extract(
-            spanStatusBuilder,
-            Collections.emptyMap(),
-            Collections.emptyMap(),
-            new IllegalStateException("test"));
+        .extract(spanStatusBuilder, emptyMap(), emptyMap(), new IllegalStateException("test"));
     verify(spanStatusBuilder).setStatus(StatusCode.ERROR);
   }
 }

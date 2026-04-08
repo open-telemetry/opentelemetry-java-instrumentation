@@ -8,13 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.sun.jersey.spi.container.servlet.ServletContainer;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
@@ -35,8 +34,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 class JerseyTest extends AbstractHttpServerUsingTest<Server> {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   @BeforeAll
   protected void setUp() {
@@ -122,7 +120,7 @@ class JerseyTest extends AbstractHttpServerUsingTest<Server> {
                     span.hasName(controllerName)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, Resource.class.getName() + "$" + className),
-                            equalTo(CODE_FUNCTION, methodName))));
+                            SemconvCodeStabilityUtil.codeFunctionAssertions(
+                                Resource.class.getName() + "$" + className, methodName))));
   }
 }

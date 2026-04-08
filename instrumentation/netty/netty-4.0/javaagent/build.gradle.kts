@@ -37,17 +37,31 @@ dependencies {
 
 tasks {
   val testConnectionSpan by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("Netty40ConnectionSpanTest")
       includeTestsMatching("Netty40ClientSslTest")
     }
     include("**/Netty40ConnectionSpanTest.*", "**/Netty40ClientSslTest.*")
-
     jvmArgs("-Dotel.instrumentation.netty.connection-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
   }
 
   test {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+
+    filter {
+      excludeTestsMatching("Netty40ConnectionSpanTest")
+      excludeTestsMatching("Netty40ClientSslTest")
+    }
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
     filter {
       excludeTestsMatching("Netty40ConnectionSpanTest")
       excludeTestsMatching("Netty40ClientSslTest")
@@ -55,12 +69,12 @@ tasks {
   }
 
   check {
-    dependsOn(testConnectionSpan)
+    dependsOn(testConnectionSpan, testStableSemconv)
   }
 }
 
 // We need to force the dependency to the earliest supported version because other libraries declare newer versions.
-if (!(findProperty("testLatestDeps") as Boolean)) {
+if (!otelProps.testLatestDeps) {
   configurations.configureEach {
     if (!name.contains("muzzle")) {
       resolutionStrategy {

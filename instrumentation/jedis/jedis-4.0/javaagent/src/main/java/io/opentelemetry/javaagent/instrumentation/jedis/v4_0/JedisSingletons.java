@@ -11,30 +11,27 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 
-public final class JedisSingletons {
+public class JedisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-4.0";
 
-  private static final Instrumenter<JedisRequest, Void> INSTRUMENTER;
+  private static final Instrumenter<JedisRequest, Void> instrumenter;
 
   static {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
-    JedisNetworkAttributesGetter netAttributesGetter = new JedisNetworkAttributesGetter();
 
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<JedisRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 DbClientSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-            .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributesGetter))
             .addOperationMetrics(DbClientMetrics.get())
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   public static Instrumenter<JedisRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private JedisSingletons() {}

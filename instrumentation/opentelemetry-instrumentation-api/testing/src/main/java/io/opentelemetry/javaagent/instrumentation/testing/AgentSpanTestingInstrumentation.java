@@ -11,11 +11,12 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AgentSpanTestingInstrumentation implements TypeInstrumentation {
+class AgentSpanTestingInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -25,30 +26,43 @@ public class AgentSpanTestingInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("runWithHttpServerSpan"), this.getClass().getName() + "$RunWithHttpServerSpanAdvice");
+        named("runWithHttpServerSpan"), getClass().getName() + "$RunWithHttpServerSpanAdvice");
     transformer.applyAdviceToMethod(
-        named("runWithAllSpanKeys"), this.getClass().getName() + "$RunWithAllSpanKeysAdvice");
+        named("runWithAllSpanKeys"), getClass().getName() + "$RunWithAllSpanKeysAdvice");
+  }
+
+  private static class AdviceScope {
+    private final Context context;
+    private final Scope scope;
+
+    private AdviceScope(Context context, Scope scope) {
+      this.context = context;
+      this.scope = scope;
+    }
+
+    private Context getContext() {
+      return context;
+    }
+
+    private void end() {
+      scope.close();
+    }
   }
 
   @SuppressWarnings("unused")
   public static class RunWithHttpServerSpanAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) String spanName,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      context = AgentSpanTestingInstrumenter.startHttpServerSpan(spanName);
-      scope = context.makeCurrent();
+    public static AdviceScope onEnter(@Advice.Argument(0) String spanName) {
+      Context context = AgentSpanTestingInstrumenter.startHttpServerSpan(spanName);
+      return new AdviceScope(context, context.makeCurrent());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      scope.close();
-      AgentSpanTestingInstrumenter.endHttpServer(context, throwable);
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
+      adviceScope.end();
+      AgentSpanTestingInstrumenter.endHttpServer(adviceScope.getContext(), throwable);
     }
   }
 
@@ -56,21 +70,16 @@ public class AgentSpanTestingInstrumentation implements TypeInstrumentation {
   public static class RunWithAllSpanKeysAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) String spanName,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      context = AgentSpanTestingInstrumenter.startSpanWithAllKeys(spanName);
-      scope = context.makeCurrent();
+    public static AdviceScope onEnter(@Advice.Argument(0) String spanName) {
+      Context context = AgentSpanTestingInstrumenter.startSpanWithAllKeys(spanName);
+      return new AdviceScope(context, context.makeCurrent());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      scope.close();
-      AgentSpanTestingInstrumenter.end(context, throwable);
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
+      adviceScope.end();
+      AgentSpanTestingInstrumenter.end(adviceScope.getContext(), throwable);
     }
   }
 }

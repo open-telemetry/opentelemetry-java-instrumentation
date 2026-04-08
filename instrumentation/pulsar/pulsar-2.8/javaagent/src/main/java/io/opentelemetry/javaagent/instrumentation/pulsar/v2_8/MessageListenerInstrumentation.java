@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.consumerProcessInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -17,6 +16,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarRequest;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -25,7 +25,7 @@ import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageListener;
 import org.apache.pulsar.client.impl.conf.ConsumerConfigurationData;
 
-public class MessageListenerInstrumentation implements TypeInstrumentation {
+class MessageListenerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -37,23 +37,19 @@ public class MessageListenerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(named("getMessageListener")),
-        MessageListenerInstrumentation.class.getName() + "$ConsumerConfigurationDataMethodAdvice");
+        isPublic().and(named("getMessageListener")),
+        getClass().getName() + "$ConsumerConfigurationDataMethodAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ConsumerConfigurationDataMethodAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void after(
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static MessageListener<?> after(
         @Advice.This ConsumerConfigurationData<?> data,
-        @Advice.Return(readOnly = false, typing = Assigner.Typing.DYNAMIC)
-            MessageListener<?> listener) {
-      if (listener == null) {
-        return;
-      }
-
-      listener = new MessageListenerWrapper<>(listener);
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) MessageListener<?> listener) {
+      return listener == null ? null : new MessageListenerWrapper<>(listener);
     }
   }
 

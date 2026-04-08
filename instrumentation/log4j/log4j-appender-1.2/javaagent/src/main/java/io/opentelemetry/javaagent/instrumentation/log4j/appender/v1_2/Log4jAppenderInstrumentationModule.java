@@ -10,10 +10,12 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class Log4jAppenderInstrumentationModule extends InstrumentationModule {
+public class Log4jAppenderInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public Log4jAppenderInstrumentationModule() {
     super("log4j-appender", "log4j-appender-1.2");
@@ -22,5 +24,10 @@ public class Log4jAppenderInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new Log4jAppenderInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

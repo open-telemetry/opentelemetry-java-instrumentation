@@ -5,14 +5,16 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import net.bytebuddy.asm.Advice;
 
 @SuppressWarnings("unused")
 public class BadAdvice {
 
   @Advice.OnMethodExit(suppress = Throwable.class)
-  public static void throwAnException(@Advice.Return(readOnly = false) boolean returnVal) {
-    returnVal = true;
+  public static void throwAnException(@Advice.Return AtomicBoolean isInstrumented) {
+    // mark that the advice has been executed
+    isInstrumented.set(true);
     throw new IllegalStateException("Test Exception");
   }
 

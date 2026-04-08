@@ -5,10 +5,12 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -30,7 +32,7 @@ public interface InstrumentationModuleMuzzle {
     if (module instanceof InstrumentationModuleMuzzle) {
       return ((InstrumentationModuleMuzzle) module).getMuzzleReferences();
     } else {
-      return Collections.emptyMap();
+      return emptyMap();
     }
   }
 
@@ -55,7 +57,7 @@ public interface InstrumentationModuleMuzzle {
     List<String> muzzleHelperClassNames =
         module instanceof InstrumentationModuleMuzzle
             ? ((InstrumentationModuleMuzzle) module).getMuzzleHelperClassNames()
-            : Collections.emptyList();
+            : emptyList();
 
     List<String> additionalHelperClassNames = module.getAdditionalHelperClassNames();
 

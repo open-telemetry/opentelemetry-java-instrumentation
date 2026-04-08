@@ -10,6 +10,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
@@ -25,16 +26,16 @@ import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.VirtualFieldStore;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.Messages;
 
-public final class PulsarSingletons {
+public class PulsarSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.pulsar-2.8";
 
   private static final OpenTelemetry TELEMETRY = GlobalOpenTelemetry.get();
@@ -58,17 +59,12 @@ public final class PulsarSingletons {
     return CONSUMER_PROCESS_INSTRUMENTER;
   }
 
-  public static Instrumenter<PulsarRequest, Void> consumerReceiveInstrumenter() {
-    return CONSUMER_RECEIVE_INSTRUMENTER;
-  }
-
   public static Instrumenter<PulsarRequest, Void> producerInstrumenter() {
     return PRODUCER_INSTRUMENTER;
   }
 
   private static Instrumenter<PulsarRequest, Void> createConsumerReceiveInstrumenter() {
-    MessagingAttributesGetter<PulsarRequest, Void> getter =
-        PulsarMessagingAttributesGetter.INSTANCE;
+    MessagingAttributesGetter<PulsarRequest, Void> getter = new PulsarMessagingAttributesGetter();
 
     InstrumenterBuilder<PulsarRequest, Void> instrumenterBuilder =
         Instrumenter.<PulsarRequest, Void>builder(
@@ -92,7 +88,7 @@ public final class PulsarSingletons {
 
   private static Instrumenter<PulsarBatchRequest, Void> createConsumerBatchReceiveInstrumenter() {
     MessagingAttributesGetter<PulsarBatchRequest, Void> getter =
-        PulsarBatchMessagingAttributesGetter.INSTANCE;
+        new PulsarBatchMessagingAttributesGetter();
 
     return Instrumenter.<PulsarBatchRequest, Void>builder(
             TELEMETRY,
@@ -108,8 +104,7 @@ public final class PulsarSingletons {
   }
 
   private static Instrumenter<PulsarRequest, Void> createConsumerProcessInstrumenter() {
-    MessagingAttributesGetter<PulsarRequest, Void> getter =
-        PulsarMessagingAttributesGetter.INSTANCE;
+    MessagingAttributesGetter<PulsarRequest, Void> getter = new PulsarMessagingAttributesGetter();
 
     InstrumenterBuilder<PulsarRequest, Void> instrumenterBuilder =
         Instrumenter.<PulsarRequest, Void>builder(
@@ -129,8 +124,7 @@ public final class PulsarSingletons {
   }
 
   private static Instrumenter<PulsarRequest, Void> createProducerInstrumenter() {
-    MessagingAttributesGetter<PulsarRequest, Void> getter =
-        PulsarMessagingAttributesGetter.INSTANCE;
+    MessagingAttributesGetter<PulsarRequest, Void> getter = new PulsarMessagingAttributesGetter();
 
     InstrumenterBuilder<PulsarRequest, Void> builder =
         Instrumenter.<PulsarRequest, Void>builder(
@@ -143,12 +137,12 @@ public final class PulsarSingletons {
                 ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
             .addOperationMetrics(MessagingProducerMetrics.get());
 
-    if (AgentInstrumentationConfig.get()
-        .getBoolean("otel.instrumentation.pulsar.experimental-span-attributes", false)) {
-      builder.addAttributesExtractor(ExperimentalProducerAttributesExtractor.INSTANCE);
+    if (DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "pulsar")
+        .getBoolean("experimental_span_attributes/development", false)) {
+      builder.addAttributesExtractor(new ExperimentalProducerAttributesExtractor());
     }
 
-    return builder.buildProducerInstrumenter(MessageTextMapSetter.INSTANCE);
+    return builder.buildProducerInstrumenter(new MessageTextMapSetter());
   }
 
   private static <T> AttributesExtractor<T, Void> createMessagingAttributesExtractor(
@@ -158,6 +152,7 @@ public final class PulsarSingletons {
         .build();
   }
 
+  @Nullable
   public static Context startAndEndConsumerReceive(
       Context parent, Message<?> message, Timer timer, Consumer<?> consumer, Throwable throwable) {
     if (message == null) {
@@ -176,16 +171,22 @@ public final class PulsarSingletons {
       }
       parent = PROPAGATOR.extract(parent, request, MessageTextMapGetter.INSTANCE);
     }
-    return InstrumenterUtil.startAndEnd(
-        CONSUMER_RECEIVE_INSTRUMENTER,
-        parent,
-        request,
-        null,
-        throwable,
-        timer.startTime(),
-        timer.now());
+    Context receiveContext =
+        InstrumenterUtil.startAndEnd(
+            CONSUMER_RECEIVE_INSTRUMENTER,
+            parent,
+            request,
+            null,
+            throwable,
+            timer.startTime(),
+            timer.now());
+    // injected context is used in MessageListenerInstrumentation and also in the spring-pulsar
+    // instrumentation
+    VirtualFieldStore.inject(message, receiveContext);
+    return receiveContext;
   }
 
+  @Nullable
   private static Context startAndEndConsumerReceive(
       Context parent,
       Messages<?> messages,
@@ -200,14 +201,19 @@ public final class PulsarSingletons {
     if (!CONSUMER_BATCH_RECEIVE_INSTRUMENTER.shouldStart(parent, request)) {
       return null;
     }
-    return InstrumenterUtil.startAndEnd(
-        CONSUMER_BATCH_RECEIVE_INSTRUMENTER,
-        parent,
-        request,
-        null,
-        throwable,
-        timer.startTime(),
-        timer.now());
+    Context receiveContext =
+        InstrumenterUtil.startAndEnd(
+            CONSUMER_BATCH_RECEIVE_INSTRUMENTER,
+            parent,
+            request,
+            null,
+            throwable,
+            timer.startTime(),
+            timer.now());
+    // injected context is used in MessageListenerInstrumentation and also in the spring-pulsar
+    // instrumentation
+    messages.forEach(message -> VirtualFieldStore.inject(message, receiveContext));
+    return receiveContext;
   }
 
   public static CompletableFuture<Void> wrap(CompletableFuture<Void> future) {
@@ -263,8 +269,6 @@ public final class PulsarSingletons {
         (messages, throwable) -> {
           Context context =
               startAndEndConsumerReceive(parent, messages, timer, consumer, throwable);
-          // injected context is used in the spring-pulsar instrumentation
-          messages.forEach(message -> VirtualFieldStore.inject(message, context));
           runWithContext(
               context,
               () -> {
@@ -279,7 +283,7 @@ public final class PulsarSingletons {
     return result;
   }
 
-  private static void runWithContext(Context context, Runnable runnable) {
+  private static void runWithContext(@Nullable Context context, Runnable runnable) {
     if (context != null) {
       try (Scope ignored = context.makeCurrent()) {
         runnable.run();

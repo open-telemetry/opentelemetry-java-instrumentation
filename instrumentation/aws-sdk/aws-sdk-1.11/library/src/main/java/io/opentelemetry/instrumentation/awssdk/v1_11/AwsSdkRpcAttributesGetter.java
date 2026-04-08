@@ -6,10 +6,10 @@
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import com.amazonaws.Request;
+import com.amazonaws.Response;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesGetter;
 
-enum AwsSdkRpcAttributesGetter implements RpcAttributesGetter<Request<?>> {
-  INSTANCE;
+class AwsSdkRpcAttributesGetter implements RpcAttributesGetter<Request<?>, Response<?>> {
 
   private static final ClassValue<String> OPERATION_NAME =
       new ClassValue<String>() {
@@ -37,6 +37,7 @@ enum AwsSdkRpcAttributesGetter implements RpcAttributesGetter<Request<?>> {
     return request.getServiceName();
   }
 
+  @Deprecated
   @Override
   public String getMethod(Request<?> request) {
     return OPERATION_NAME.get(request.getOriginalRequest().getClass());

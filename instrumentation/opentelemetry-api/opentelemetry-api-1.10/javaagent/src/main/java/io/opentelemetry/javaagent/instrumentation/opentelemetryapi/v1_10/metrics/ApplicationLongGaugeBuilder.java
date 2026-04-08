@@ -5,47 +5,49 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
-import application.io.opentelemetry.api.metrics.LongGaugeBuilder;
-import application.io.opentelemetry.api.metrics.ObservableLongGauge;
-import application.io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.api.metrics.LongGaugeBuilder;
+import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import java.util.function.Consumer;
 
-public class ApplicationLongGaugeBuilder implements LongGaugeBuilder {
+public class ApplicationLongGaugeBuilder
+    implements application.io.opentelemetry.api.metrics.LongGaugeBuilder {
 
-  private final io.opentelemetry.api.metrics.LongGaugeBuilder agentBuilder;
+  private final LongGaugeBuilder agentBuilder;
 
-  protected ApplicationLongGaugeBuilder(
-      io.opentelemetry.api.metrics.LongGaugeBuilder agentBuilder) {
+  protected ApplicationLongGaugeBuilder(LongGaugeBuilder agentBuilder) {
     this.agentBuilder = agentBuilder;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public LongGaugeBuilder setDescription(String description) {
+  public application.io.opentelemetry.api.metrics.LongGaugeBuilder setDescription(
+      String description) {
     agentBuilder.setDescription(description);
     return this;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public LongGaugeBuilder setUnit(String unit) {
+  public application.io.opentelemetry.api.metrics.LongGaugeBuilder setUnit(String unit) {
     agentBuilder.setUnit(unit);
     return this;
   }
 
   @Override
-  public ObservableLongGauge buildWithCallback(
-      Consumer<ObservableLongMeasurement> applicationCallback) {
+  public application.io.opentelemetry.api.metrics.ObservableLongGauge buildWithCallback(
+      Consumer<application.io.opentelemetry.api.metrics.ObservableLongMeasurement>
+          applicationCallback) {
+    Consumer<ObservableLongMeasurement> callback =
+        agentMeasurement ->
+            applicationCallback.accept(new ApplicationObservableLongMeasurement(agentMeasurement));
     return new ApplicationObservableLongGauge(
-        agentBuilder.buildWithCallback(
-            agentMeasurement ->
-                applicationCallback.accept(
-                    new ApplicationObservableLongMeasurement(agentMeasurement))));
+        CallbackAnchor.anchor(agentBuilder::buildWithCallback, callback),
+        CallbackAnchor.releaseOnClose(callback));
   }
 
   // added in 1.15.0
-  public ObservableLongMeasurement buildObserver() {
+  public application.io.opentelemetry.api.metrics.ObservableLongMeasurement buildObserver() {
     return new ApplicationObservableLongMeasurement(agentBuilder.buildObserver());
   }
 }

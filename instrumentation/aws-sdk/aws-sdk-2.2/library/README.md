@@ -12,17 +12,19 @@ To register instrumentation only on a specific SDK client, register the intercep
 AwsSdkTelemetry telemetry = AwsSdkTelemetry.create(openTelemetry).build();
 DynamoDbClient client = DynamoDbClient.builder()
   .overrideConfiguration(ClientOverrideConfiguration.builder()
-    .addExecutionInterceptor(telemetry.newExecutionInterceptor()))
+    .addExecutionInterceptor(telemetry.createExecutionInterceptor()))
     .build())
   .build();
 ```
 
 For SQS an additional step is needed
+
 ```java
 SqsClientBuilder sqsClientBuilder = SqsClient.builder();
 ...
 SqsClient sqsClient = telemetry.wrap(sqsClientBuilder.build());
 ```
+
 ```java
 SqsAsyncClientBuilder sqsAsyncClientBuilder = SqsAsyncClient.builder();
 ...

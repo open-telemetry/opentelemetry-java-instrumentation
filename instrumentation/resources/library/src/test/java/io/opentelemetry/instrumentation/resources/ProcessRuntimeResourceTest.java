@@ -5,12 +5,14 @@
 
 package io.opentelemetry.instrumentation.resources;
 
+import static io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes.PROCESS_RUNTIME_DESCRIPTION;
+import static io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes.PROCESS_RUNTIME_NAME;
+import static io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes.PROCESS_RUNTIME_VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.SchemaUrls;
-import io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes;
 import org.junit.jupiter.api.Test;
 
 class ProcessRuntimeResourceTest {
@@ -22,9 +24,8 @@ class ProcessRuntimeResourceTest {
 
     // then
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
-    assertThat(attributes.get(ProcessIncubatingAttributes.PROCESS_RUNTIME_NAME)).isNotBlank();
-    assertThat(attributes.get(ProcessIncubatingAttributes.PROCESS_RUNTIME_VERSION)).isNotBlank();
-    assertThat(attributes.get(ProcessIncubatingAttributes.PROCESS_RUNTIME_DESCRIPTION))
-        .isNotBlank();
+    assertThat(attributes.get(PROCESS_RUNTIME_NAME)).isNotBlank();
+    assertThat(attributes.get(PROCESS_RUNTIME_VERSION)).isNotBlank();
+    assertThat(attributes.get(PROCESS_RUNTIME_DESCRIPTION)).isNotBlank();
   }
 }

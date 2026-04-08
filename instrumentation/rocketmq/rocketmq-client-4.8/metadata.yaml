@@ -1,0 +1,21 @@
+display_name: Apache RocketMQ Client - Remoting Protocol
+description: >
+  This instrumentation enables messaging spans for Apache RocketMQ message producers and consumers
+  using the Remoting Protocol.
+semantic_conventions:
+  - MESSAGING_SPANS
+library_link: https://rocketmq.apache.org/
+configurations:
+  - name: otel.instrumentation.messaging.experimental.capture-headers
+    description: >
+      Enables capturing messaging headers as span attributes. Provide a comma-separated list of
+      header names to capture.
+    type: list
+    default: ''
+  - name: otel.instrumentation.rocketmq-client.experimental-span-attributes
+    description: >
+      Enables capturing experimental span attributes `messaging.rocketmq.message.tag`,
+      `messaging.rocketmq.broker_address`, `messaging.rocketmq.send_result`,
+      `messaging.rocketmq.queue_id`, and `messaging.rocketmq.queue_offset`.
+    type: boolean
+    default: false

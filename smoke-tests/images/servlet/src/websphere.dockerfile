@@ -1,6 +1,7 @@
-ARG version
+ARG imageName
+ARG imageHash
 
-FROM ibmcom/websphere-traditional:${version}
+FROM ${imageName}@sha256:${imageHash}
 ENV ENABLE_BASIC_LOGGING=true
 COPY --chown=was:root app.war /work/app/
 COPY --chown=was:root installApp.py /work/config/

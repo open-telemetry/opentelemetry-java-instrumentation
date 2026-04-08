@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 class HeadersFactoryTest {
 
   @Test
-  public void shouldReadHeadersFromStream() {
+  void shouldReadHeadersFromStream() {
     // given
     String json =
         "{"
@@ -31,7 +31,7 @@ class HeadersFactoryTest {
     Map<String, String> headers = HeadersFactory.ofStream(inputStream);
     // then
     assertThat(headers).isNotNull();
-    assertThat(headers.size()).isEqualTo(3);
+    assertThat(headers).hasSize(3);
     assertThat(headers)
         .containsOnly(
             entry("X-B3-TraceId", "4fd0b6131f19f39af59518d127b0cafe"),
@@ -40,7 +40,7 @@ class HeadersFactoryTest {
   }
 
   @Test
-  public void shouldReturnNullIfNoHeadersInStream() {
+  void shouldReturnNullIfNoHeadersInStream() {
     // given
     String json = "{\"something\" : \"else\"}";
     InputStream inputStream = new ByteArrayInputStream(json.getBytes(Charset.defaultCharset()));

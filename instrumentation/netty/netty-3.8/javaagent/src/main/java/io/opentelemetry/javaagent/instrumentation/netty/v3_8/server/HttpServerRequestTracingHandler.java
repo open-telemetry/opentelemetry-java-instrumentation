@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.server.Netty
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
+import io.opentelemetry.javaagent.instrumentation.netty.v3_8.NettyRequest;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
@@ -38,8 +38,7 @@ public class HttpServerRequestTracingHandler extends SimpleChannelUpstreamHandle
     }
 
     Context parentContext = Context.current();
-    HttpRequestAndChannel request =
-        HttpRequestAndChannel.create((HttpRequest) message, ctx.getChannel());
+    NettyRequest request = NettyRequest.create((HttpRequest) message, ctx.getChannel());
     if (!instrumenter().shouldStart(parentContext, request)) {
       super.messageReceived(ctx, event);
       return;
@@ -51,9 +50,9 @@ public class HttpServerRequestTracingHandler extends SimpleChannelUpstreamHandle
 
     try (Scope ignored = context.makeCurrent()) {
       super.messageReceived(ctx, event);
-    } catch (Throwable throwable) {
-      instrumenter().end(context, request, null, throwable);
-      throw throwable;
+    } catch (Throwable t) {
+      instrumenter().end(context, request, null, t);
+      throw t;
     }
     // span is ended normally in HttpServerResponseTracingHandler
   }

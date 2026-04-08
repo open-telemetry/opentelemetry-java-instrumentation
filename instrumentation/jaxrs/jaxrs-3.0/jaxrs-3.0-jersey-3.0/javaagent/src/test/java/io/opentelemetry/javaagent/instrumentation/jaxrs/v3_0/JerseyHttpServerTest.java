@@ -68,4 +68,9 @@ class JerseyHttpServerTest extends JaxRsHttpServerTest<Server> {
           return expectedHttpRoute(endpoint, method);
         });
   }
+
+  @Override
+  protected boolean testExperimental() {
+    return Boolean.getBoolean("otel.instrumentation.jaxrs.experimental-span-attributes");
+  }
 }

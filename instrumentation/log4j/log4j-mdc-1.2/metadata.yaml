@@ -1,0 +1,27 @@
+description: >
+  This instrumentation adds trace context (trace ID, span ID, and trace flags) to the Log4j MDC,
+  it does not emit any telemetry on its own.
+display_name: Log4j
+library_link: https://logging.apache.org/log4j/1.2/
+configurations:
+  - name: otel.instrumentation.common.logging.trace-id
+    description: >
+      Specifies the key name used to store the trace ID in the logging context.
+    type: string
+    default: trace_id
+  - name: otel.instrumentation.common.logging.span-id
+    description: >
+      Specifies the key name used to store the span ID in the logging context.
+    type: string
+    default: span_id
+  - name: otel.instrumentation.common.logging.trace-flags
+    description: >
+      Specifies the key name used to store the trace flags in the logging context.
+    type: string
+    default: trace_flags
+  - name: otel.instrumentation.common.mdc.resource-attributes
+    description: >
+      Specifies which resource attributes to add to the logging context as a comma-separated list
+      of attribute keys.
+    type: list
+    default: ''

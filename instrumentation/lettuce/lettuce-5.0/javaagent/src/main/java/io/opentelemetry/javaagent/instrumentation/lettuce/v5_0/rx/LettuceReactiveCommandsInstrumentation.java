@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx;
 
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameEndsWith;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -19,6 +18,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.function.Supplier;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.reactivestreams.Subscription;
@@ -35,25 +35,23 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("createMono"))
+        named("createMono")
             .and(takesArgument(0, Supplier.class))
             .and(returns(named("reactor.core.publisher.Mono"))),
-        LettuceReactiveCommandsInstrumentation.class.getName() + "$CreateMonoAdvice");
+        getClass().getName() + "$CreateMonoAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(nameStartsWith("create"))
+        nameStartsWith("create")
             .and(nameEndsWith("Flux"))
             .and(isPublic())
             .and(takesArgument(0, Supplier.class))
             .and(returns(named("reactor.core.publisher.Flux"))),
-        LettuceReactiveCommandsInstrumentation.class.getName() + "$CreateFluxAdvice");
+        getClass().getName() + "$CreateFluxAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class CreateMonoAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static <K, V, T> RedisCommand<K, V, T> extractCommandName(
         @Advice.Argument(0) Supplier<RedisCommand<K, V, T>> supplier) {
       return supplier.get();
@@ -61,10 +59,11 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
 
     // throwables wouldn't matter here, because no spans have been started due to redis command not
     // being run until the user subscribes to the Mono publisher
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static <K, V, T> void monitorSpan(
-        @Advice.Enter RedisCommand<K, V, T> command,
-        @Advice.Return(readOnly = false) Mono<T> publisher) {
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static <K, V, T> Mono<T> monitorSpan(
+        @Advice.Return Mono<T> originalPublisher, @Advice.Enter RedisCommand<K, V, T> command) {
+      Mono<T> publisher = originalPublisher;
       boolean finishSpanOnClose = !expectsResponse(command);
       LettuceMonoDualConsumer<? super Subscription, T> mdc =
           new LettuceMonoDualConsumer<>(command, finishSpanOnClose);
@@ -73,23 +72,25 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
       if (!finishSpanOnClose) {
         publisher = publisher.doOnSuccessOrError(mdc);
       }
+      return publisher;
     }
   }
 
   @SuppressWarnings("unused")
   public static class CreateFluxAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static <K, V, T> RedisCommand<K, V, T> extractCommandName(
         @Advice.Argument(0) Supplier<RedisCommand<K, V, T>> supplier) {
       return supplier.get();
     }
 
     // if there is an exception thrown, then don't make spans
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static <K, V, T> void monitorSpan(
-        @Advice.Enter RedisCommand<K, V, T> command,
-        @Advice.Return(readOnly = false) Flux<T> publisher) {
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static <K, V, T> Flux<T> monitorSpan(
+        @Advice.Return Flux<T> originalPublisher, @Advice.Enter RedisCommand<K, V, T> command) {
+      Flux<T> publisher = originalPublisher;
 
       boolean expectsResponse = expectsResponse(command);
       LettuceFluxTerminationRunnable handler =
@@ -102,6 +103,7 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
         publisher = publisher.doOnEach(handler);
         publisher = publisher.doOnCancel(handler);
       }
+      return publisher;
     }
   }
 }

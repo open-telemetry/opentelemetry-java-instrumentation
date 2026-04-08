@@ -7,7 +7,8 @@ muzzle {
   pass {
     group.set("io.r2dbc")
     module.set("r2dbc-spi")
-    versions.set("[1.0.0.RELEASE,)")
+    versions.set("[0.9.0.RELEASE,)")
+    assertInverse.set(true)
     extraDependency("io.projectreactor:reactor-core:3.4.12")
   }
 }
@@ -23,7 +24,7 @@ sourceSets {
 }
 
 dependencies {
-  library("io.r2dbc:r2dbc-spi:1.0.0.RELEASE")
+  library("io.r2dbc:r2dbc-spi:0.9.0.RELEASE")
   compileOnly(project(path = ":instrumentation:r2dbc-1.0:library-instrumentation-shaded", configuration = "shadow"))
 
   testImplementation(project(":instrumentation:r2dbc-1.0:testing"))
@@ -33,10 +34,14 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
   }
 
   check {

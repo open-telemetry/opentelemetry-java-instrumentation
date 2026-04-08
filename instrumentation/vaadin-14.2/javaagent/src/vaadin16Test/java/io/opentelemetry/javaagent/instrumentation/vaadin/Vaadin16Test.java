@@ -16,7 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-public class Vaadin16Test extends AbstractVaadinTest {
+class Vaadin16Test extends AbstractVaadinTest {
 
   @Override
   protected void prepareVaadinBaseDir(File baseDir) {

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -14,10 +13,11 @@ import com.datastax.driver.core.Session;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class CassandraManagerInstrumentation implements TypeInstrumentation {
+class CassandraManagerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     // Note: Cassandra has a large driver and we instrument single class in it.
@@ -28,8 +28,8 @@ public class CassandraManagerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isPrivate()).and(named("newSession")).and(takesArguments(0)),
-        this.getClass().getName() + "$NewSessionAdvice");
+        isPrivate().and(named("newSession")).and(takesArguments(0)),
+        getClass().getName() + "$NewSessionAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -42,13 +42,14 @@ public class CassandraManagerInstrumentation implements TypeInstrumentation {
      *
      * @param session The fresh session to patch. This session is replaced with new session
      */
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void injectTracingSession(@Advice.Return(readOnly = false) Session session) {
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static Session injectTracingSession(@Advice.Return Session session) {
       // This should cover ours and OT's TracingSession
       if (session.getClass().getName().endsWith("cassandra.TracingSession")) {
-        return;
+        return session;
       }
-      session = new TracingSession(session);
+      return new TracingSession(session);
     }
   }
 }

@@ -5,6 +5,10 @@
 
 package io.opentelemetry.instrumentation.testing.util;
 
+import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -14,25 +18,25 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
-public final class TelemetryDataUtil {
+public class TelemetryDataUtil {
 
   public static Comparator<List<SpanData>> orderByRootSpanKind(SpanKind... spanKinds) {
-    List<SpanKind> list = Arrays.asList(spanKinds);
+    List<SpanKind> list = asList(spanKinds);
     return Comparator.comparing(span -> list.indexOf(span.get(0).getKind()));
   }
 
   public static Comparator<List<SpanData>> orderByRootSpanName(String... names) {
-    List<String> list = Arrays.asList(names);
+    List<String> list = asList(names);
     return Comparator.comparing(span -> list.indexOf(span.get(0).getName()));
   }
 
@@ -47,7 +51,7 @@ public final class TelemetryDataUtil {
     List<List<SpanData>> traces =
         new ArrayList<>(
             spans.stream()
-                .collect(Collectors.groupingBy(SpanData::getTraceId, LinkedHashMap::new, toList()))
+                .collect(groupingBy(SpanData::getTraceId, LinkedHashMap::new, toList()))
                 .values());
     sortTraces(traces);
     for (int i = 0; i < traces.size(); i++) {
@@ -59,7 +63,7 @@ public final class TelemetryDataUtil {
 
   public static List<List<SpanData>> waitForTraces(Supplier<List<SpanData>> supplier, int number)
       throws InterruptedException, TimeoutException {
-    return waitForTraces(supplier, number, 20, TimeUnit.SECONDS);
+    return waitForTraces(supplier, number, 20, SECONDS);
   }
 
   public static List<List<SpanData>> waitForTraces(
@@ -88,25 +92,25 @@ public final class TelemetryDataUtil {
     return completeTraces;
   }
 
-  // TODO: we should probably move that to InstrumentationTestRunner once we get rid of all groovy
   public static void assertScopeVersion(List<List<SpanData>> traces) {
+    Set<String> missingScopeVersionErrors = new LinkedHashSet<>();
     for (List<SpanData> trace : traces) {
       for (SpanData span : trace) {
         InstrumentationScopeInfo scopeInfo = span.getInstrumentationScopeInfo();
-        if (!scopeInfo.getName().equals("test")) {
-          assertThat(scopeInfo.getVersion())
-              .as(
-                  "Instrumentation version of module %s was empty; make sure that the "
-                      + "instrumentation name matches the gradle module name",
-                  scopeInfo.getName())
-              .isNotNull();
+        if (!scopeInfo.getName().startsWith("test") && scopeInfo.getVersion() == null) {
+          missingScopeVersionErrors.add(
+              "Instrumentation version of module "
+                  + scopeInfo.getName()
+                  + " was empty; make sure that the instrumentation name matches the gradle"
+                  + " module name");
         }
       }
     }
+    assertThat(missingScopeVersionErrors).isEmpty();
   }
 
   private static long elapsedSeconds(long startTime) {
-    return TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - startTime);
+    return NANOSECONDS.toSeconds(System.nanoTime() - startTime);
   }
 
   // must be called under tracesLock

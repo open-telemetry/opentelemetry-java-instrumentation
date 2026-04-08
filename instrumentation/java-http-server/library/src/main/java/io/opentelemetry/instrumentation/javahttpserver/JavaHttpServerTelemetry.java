@@ -14,13 +14,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 /** Entrypoint for instrumenting Java HTTP Server services. */
 public final class JavaHttpServerTelemetry {
 
-  /**
-   * Returns a new {@link JavaHttpServerTelemetry} configured with the given {@link OpenTelemetry}.
-   */
+  /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static JavaHttpServerTelemetry create(OpenTelemetry openTelemetry) {
     return builder(openTelemetry).build();
   }
 
+  /** Returns a builder configured with the given {@link OpenTelemetry} instance. */
   public static JavaHttpServerTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new JavaHttpServerTelemetryBuilder(openTelemetry);
   }
@@ -31,13 +30,13 @@ public final class JavaHttpServerTelemetry {
     this.instrumenter = instrumenter;
   }
 
-  /** Returns a new {@link Filter} for telemetry usage */
-  public Filter newFilter() {
+  /** Returns a {@link Filter} that instruments HTTP requests. */
+  public Filter createFilter() {
     return new OpenTelemetryFilter(instrumenter);
   }
 
-  /** Configures the {@link HttpContext} with OpenTelemetry. */
+  /** Configures the {@link HttpContext} to produce telemetry. */
   public void configure(HttpContext httpContext) {
-    httpContext.getFilters().add(0, newFilter());
+    httpContext.getFilters().add(0, createFilter());
   }
 }

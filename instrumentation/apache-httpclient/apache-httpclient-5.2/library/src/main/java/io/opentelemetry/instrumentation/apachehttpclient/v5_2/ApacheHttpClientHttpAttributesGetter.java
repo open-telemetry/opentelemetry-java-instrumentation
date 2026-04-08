@@ -5,9 +5,11 @@
 
 package io.opentelemetry.instrumentation.apachehttpclient.v5_2;
 
+import static java.util.Collections.emptyList;
+
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.hc.core5.http.Header;
@@ -15,9 +17,8 @@ import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.MessageHeaders;
 import org.apache.hc.core5.http.ProtocolVersion;
 
-enum ApacheHttpClientHttpAttributesGetter
+class ApacheHttpClientHttpAttributesGetter
     implements HttpClientAttributesGetter<ApacheHttpClientRequest, HttpResponse> {
-  INSTANCE;
 
   @Override
   public String getHttpRequestMethod(ApacheHttpClientRequest request) {
@@ -52,13 +53,13 @@ enum ApacheHttpClientHttpAttributesGetter
   }
 
   private static List<String> getHeader(ApacheHttpClientRequest messageHeaders, String name) {
-    return headersToList(messageHeaders.getDelegate().getHeaders(name));
+    return headersToList(messageHeaders.getRequest().getHeaders(name));
   }
 
   // minimize memory overhead by not using streams
   private static List<String> headersToList(Header[] headers) {
     if (headers.length == 0) {
-      return Collections.emptyList();
+      return emptyList();
     }
     List<String> headersList = new ArrayList<>(headers.length);
     for (Header header : headers) {
@@ -95,17 +96,18 @@ enum ApacheHttpClientHttpAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(ApacheHttpClientRequest request) {
-    return request.getDelegate().getAuthority().getHostName();
+    return request.getServerAddress();
   }
 
   @Override
+  @Nullable
   public Integer getServerPort(ApacheHttpClientRequest request) {
-    return request.getDelegate().getAuthority().getPort();
+    return HttpConstants.portOrDefaultFromScheme(request.getServerPort(), request.getScheme());
   }
 
   private static ProtocolVersion getVersion(
       ApacheHttpClientRequest request, @Nullable HttpResponse response) {
-    ProtocolVersion protocolVersion = request.getDelegate().getVersion();
+    ProtocolVersion protocolVersion = request.getRequest().getVersion();
     if (protocolVersion == null && response != null) {
       protocolVersion = response.getVersion();
     }

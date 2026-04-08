@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 public class TestDriver implements Driver {
   @Override
   public Connection connect(String url, Properties info) throws SQLException {
-    return new TestConnection();
+    return new TestConnection(url);
   }
 
   @Override
@@ -47,6 +47,6 @@ public class TestDriver implements Driver {
 
   @Override
   public Logger getParentLogger() throws SQLFeatureNotSupportedException {
-    return null;
+    throw new SQLFeatureNotSupportedException();
   }
 }

@@ -43,20 +43,35 @@ dependencies {
 }
 
 tasks {
+  withType<Test>().configureEach {
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
   val testConnectionSpan by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("Netty41ConnectionSpanTest")
       includeTestsMatching("Netty41ClientSslTest")
     }
     include("**/Netty41ConnectionSpanTest.*", "**/Netty41ClientSslTest.*")
-
     jvmArgs("-Dotel.instrumentation.netty.connection-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
   }
 
   test {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    filter {
+      excludeTestsMatching("Netty41ConnectionSpanTest")
+      excludeTestsMatching("Netty41ClientSslTest")
+    }
+  }
 
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
     filter {
       excludeTestsMatching("Netty41ConnectionSpanTest")
       excludeTestsMatching("Netty41ClientSslTest")
@@ -64,11 +79,11 @@ tasks {
   }
 
   check {
-    dependsOn(testConnectionSpan)
+    dependsOn(testConnectionSpan, testStableSemconv)
   }
 }
 
-if (!(findProperty("testLatestDeps") as Boolean)) {
+if (!otelProps.testLatestDeps) {
   // No BOM for 4.1.0 so we can't use enforcedPlatform to override our transitive version
   // management, so hook into the resolutionStrategy.
   configurations.configureEach {

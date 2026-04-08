@@ -11,6 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
+import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
@@ -20,12 +21,13 @@ import play.libs.typedmap.TypedKey;
 import play.routing.Router;
 import scala.Option;
 
-public final class Play26Singletons {
+public class Play26Singletons {
 
   private static final String SPAN_NAME = "play.request";
-  private static final Instrumenter<Void, Void> INSTRUMENTER =
+  private static final Instrumenter<Void, Void> instrumenter =
       Instrumenter.<Void, Void>builder(
               GlobalOpenTelemetry.get(), "io.opentelemetry.play-mvc-2.6", s -> SPAN_NAME)
+          .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
           .buildInstrumenter();
 
   @Nullable private static final Method typedKeyGetUnderlying;
@@ -50,7 +52,7 @@ public final class Play26Singletons {
   }
 
   public static Instrumenter<Void, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static void updateSpan(Context context, Request<?> request) {
@@ -63,25 +65,24 @@ public final class Play26Singletons {
     HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, route);
   }
 
+  @Nullable
   private static String getRoute(Request<?> request) {
-    if (request != null) {
-      // more about routes here:
-      // https://github.com/playframework/playframework/blob/master/documentation/manual/releases/release26/migration26/Migration26.md
-      Option<HandlerDef> defOption = null;
-      if (typedKeyGetUnderlying != null) { // Should always be non-null but just to make sure
-        try {
-          @SuppressWarnings("unchecked")
-          play.api.libs.typedmap.TypedKey<HandlerDef> handlerDef =
-              (play.api.libs.typedmap.TypedKey<HandlerDef>)
-                  typedKeyGetUnderlying.invoke(Router.Attrs.HANDLER_DEF);
-          defOption = request.attrs().get(handlerDef);
-        } catch (IllegalAccessException | InvocationTargetException ignored) {
-          // Ignore
-        }
+    // more about routes here:
+    // https://github.com/playframework/playframework/blob/master/documentation/manual/releases/release26/migration26/Migration26.md
+    Option<HandlerDef> defOption = null;
+    if (typedKeyGetUnderlying != null) { // Should always be non-null but just to make sure
+      try {
+        @SuppressWarnings("unchecked") // casting reflection result
+        play.api.libs.typedmap.TypedKey<HandlerDef> handlerDef =
+            (play.api.libs.typedmap.TypedKey<HandlerDef>)
+                typedKeyGetUnderlying.invoke(Router.Attrs.HANDLER_DEF);
+        defOption = request.attrs().get(handlerDef);
+      } catch (IllegalAccessException | InvocationTargetException ignored) {
+        // Ignore
       }
-      if (defOption != null && !defOption.isEmpty()) {
-        return defOption.get().path();
-      }
+    }
+    if (defOption != null && !defOption.isEmpty()) {
+      return defOption.get().path();
     }
     return null;
   }

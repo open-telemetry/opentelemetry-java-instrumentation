@@ -1,0 +1,44 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.helidon.v4_3;
+
+import static java.util.Collections.emptyIterator;
+import static java.util.stream.Collectors.toList;
+
+import io.helidon.http.Header;
+import io.helidon.http.HeaderNames;
+import io.helidon.webserver.http.ServerRequest;
+import io.opentelemetry.context.propagation.TextMapGetter;
+import java.util.Iterator;
+import javax.annotation.Nullable;
+
+class HelidonRequestGetter implements TextMapGetter<ServerRequest> {
+
+  @Override
+  public Iterable<String> keys(ServerRequest req) {
+    // Materialize the stream to avoid Helidon's HeaderIterator bug where customHeadersIterator
+    // can be null when iterating through the lazy iterator
+    return req.headers().stream().map(Header::name).collect(toList());
+  }
+
+  @Override
+  public String get(@Nullable ServerRequest carrier, String key) {
+    if (carrier == null) {
+      return null;
+    }
+
+    return carrier.headers().first(HeaderNames.create(key)).orElse(null);
+  }
+
+  @Override
+  public Iterator<String> getAll(@Nullable ServerRequest carrier, String key) {
+    if (carrier == null) {
+      return emptyIterator();
+    }
+
+    return carrier.headers().values(HeaderNames.create(key)).iterator();
+  }
+}

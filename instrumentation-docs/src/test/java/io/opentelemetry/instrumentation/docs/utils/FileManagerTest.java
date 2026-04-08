@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+@SuppressWarnings("NullAway")
 class FileManagerTest {
 
   @TempDir Path tempDir;
@@ -23,7 +24,7 @@ class FileManagerTest {
 
   @BeforeEach
   void setUp() {
-    fileManager = new FileManager(tempDir.toString());
+    fileManager = new FileManager(tempDir.toString() + "/");
   }
 
   @Test
@@ -53,11 +54,32 @@ class FileManagerTest {
   }
 
   @Test
-  void testFindBuildGradleFiles() throws IOException {
-    Path gradleFile = Files.createFile(tempDir.resolve("build.gradle.kts"));
-    Path nonGradleFile = Files.createFile(tempDir.resolve("gradle.properties"));
-    List<String> gradleFiles = fileManager.findBuildGradleFiles(tempDir.toString());
-    assertThat(gradleFiles).contains(gradleFile.toString());
-    assertThat(gradleFiles).doesNotContain(nonGradleFile.toString());
+  void testFindBuildGradleFilesExcludesNestedModules() throws IOException {
+    // mimicking runtime-telemetry with nested instrumentation modules
+    Path runtimeTelemetry = tempDir.resolve("instrumentation/runtime-telemetry");
+    Path javaagent = Files.createDirectories(runtimeTelemetry.resolve("javaagent"));
+    Path library = Files.createDirectories(runtimeTelemetry.resolve("library"));
+    Path nestedJava17 =
+        Files.createDirectories(runtimeTelemetry.resolve("runtime-telemetry-java17/javaagent"));
+    Path nestedJava8 =
+        Files.createDirectories(runtimeTelemetry.resolve("runtime-telemetry-java8/library"));
+
+    Files.createFile(javaagent.resolve("build.gradle.kts"));
+    Files.createFile(library.resolve("build.gradle.kts"));
+    Files.createFile(nestedJava17.resolve("build.gradle.kts"));
+    Files.createFile(nestedJava8.resolve("build.gradle.kts"));
+
+    List<String> gradleFiles =
+        fileManager.findBuildGradleFiles("instrumentation/runtime-telemetry");
+
+    assertThat(gradleFiles).hasSize(2);
+    assertThat(gradleFiles)
+        .containsExactlyInAnyOrder(
+            javaagent.resolve("build.gradle.kts").toString(),
+            library.resolve("build.gradle.kts").toString());
+    assertThat(gradleFiles)
+        .doesNotContain(
+            nestedJava17.resolve("build.gradle.kts").toString(),
+            nestedJava8.resolve("build.gradle.kts").toString());
   }
 }

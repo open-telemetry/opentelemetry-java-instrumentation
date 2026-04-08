@@ -5,11 +5,13 @@
 
 package io.opentelemetry.instrumentation.api.annotation.support;
 
+import static java.util.Objects.requireNonNull;
+
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.util.Objects;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /**
  * Helper class for reflecting over the type hierarchy of parameterized types where the generic type
@@ -33,7 +35,7 @@ final class ParameterizedClass {
   private final Type[] typeArguments;
 
   public static ParameterizedClass of(Type type) {
-    Objects.requireNonNull(type);
+    requireNonNull(type);
     if (type instanceof ParameterizedType) {
       ParameterizedType parameterizedType = (ParameterizedType) type;
       Class<?> rawClass = (Class<?>) parameterizedType.getRawType();
@@ -61,6 +63,7 @@ final class ParameterizedClass {
   }
 
   /** Gets the parameterized superclass of the current parameterized class. */
+  @Nullable
   public ParameterizedClass getParameterizedSuperclass() {
     return resolveSuperTypeActualTypeArguments(rawClass.getGenericSuperclass());
   }
@@ -80,12 +83,12 @@ final class ParameterizedClass {
    * implements the specified super class.
    */
   public Optional<ParameterizedClass> findParameterizedSuperclass(Class<?> superClass) {
-    Objects.requireNonNull(superClass);
+    requireNonNull(superClass);
     return findParameterizedSuperclassImpl(this, superClass);
   }
 
   private static Optional<ParameterizedClass> findParameterizedSuperclassImpl(
-      ParameterizedClass current, Class<?> superClass) {
+      @Nullable ParameterizedClass current, Class<?> superClass) {
 
     if (current == null) {
       return Optional.empty();
@@ -103,6 +106,7 @@ final class ParameterizedClass {
     return findParameterizedSuperclassImpl(current.getParameterizedSuperclass(), superClass);
   }
 
+  @Nullable
   private ParameterizedClass resolveSuperTypeActualTypeArguments(Type superType) {
     if (superType instanceof ParameterizedType) {
       ParameterizedType parameterizedSuperType = (ParameterizedType) superType;

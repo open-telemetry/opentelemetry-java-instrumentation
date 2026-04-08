@@ -19,13 +19,14 @@ import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTra
 import io.opentelemetry.javaagent.bootstrap.spring.SpringSchedulingTaskTracing;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
-public class ListenerConsumerInstrumentation implements TypeInstrumentation {
+class ListenerConsumerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -35,25 +36,24 @@ public class ListenerConsumerInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("run"), this.getClass().getName() + "$RunLoopAdvice");
-    transformer.applyAdviceToMethod(
-        isConstructor(), this.getClass().getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(named("run"), getClass().getName() + "$RunLoopAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
         named("invokeBatchOnMessageWithRecordsOrList")
             .and(takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
-        this.getClass().getName() + "$InvokeBatchAdvice");
+        getClass().getName() + "$InvokeBatchAdvice");
   }
 
   // this advice suppresses the CONSUMER spans created by the kafka-clients instrumentation
   @SuppressWarnings("unused")
   public static class RunLoopAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static boolean onEnter() {
       return KafkaClientsConsumerProcessTracing.setEnabled(false);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter boolean previousValue) {
       KafkaClientsConsumerProcessTracing.setEnabled(previousValue);
     }
@@ -63,12 +63,12 @@ public class ListenerConsumerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static boolean onEnter() {
       return SpringSchedulingTaskTracing.setEnabled(false);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter boolean previousValue) {
       SpringSchedulingTaskTracing.setEnabled(previousValue);
     }
@@ -77,37 +77,54 @@ public class ListenerConsumerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InvokeBatchAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) ConsumerRecords<?, ?> records,
-        @Advice.FieldValue("consumer") Consumer<?, ?> consumer,
-        @Advice.Local("otelRequest") KafkaReceiveRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
-      Context receiveContext = consumerContext.getContext();
+    public static class AdviceScope {
+      private final KafkaReceiveRequest request;
+      private final Context context;
+      private final Scope scope;
 
-      // use the receive CONSUMER span as parent if it's available
-      Context parentContext = receiveContext != null ? receiveContext : Context.current();
+      private AdviceScope(KafkaReceiveRequest request, Context context, Scope scope) {
+        this.request = request;
+        this.context = context;
+        this.scope = scope;
+      }
 
-      request = KafkaReceiveRequest.create(records, consumer);
-      if (batchProcessInstrumenter().shouldStart(parentContext, request)) {
-        context = batchProcessInstrumenter().start(parentContext, request);
-        scope = context.makeCurrent();
+      @Nullable
+      public static AdviceScope enter(ConsumerRecords<?, ?> records, Consumer<?, ?> consumer) {
+        KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
+        Context receiveContext = consumerContext.getContext();
+
+        // use the receive CONSUMER span as parent if it's available
+        Context parentContext = receiveContext != null ? receiveContext : Context.current();
+        KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
+
+        if (!batchProcessInstrumenter().shouldStart(parentContext, request)) {
+          return null;
+        }
+        Context context = batchProcessInstrumenter().start(parentContext, request);
+        return new AdviceScope(request, context, context.makeCurrent());
+      }
+
+      public void exit(@Nullable Throwable throwable) {
+        scope.close();
+        batchProcessInstrumenter().end(context, request, null, throwable);
       }
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
+    public static AdviceScope onEnter(
+        @Advice.Argument(0) ConsumerRecords<?, ?> records,
+        @Advice.FieldValue("consumer") Consumer<?, ?> consumer) {
+      return AdviceScope.enter(records, consumer);
+    }
+
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelRequest") KafkaReceiveRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.exit(throwable);
       }
-      scope.close();
-      batchProcessInstrumenter().end(context, request, null, throwable);
     }
   }
 }

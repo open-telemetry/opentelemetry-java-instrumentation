@@ -6,23 +6,17 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 final class CouchbaseAttributesGetter
     implements DbClientAttributesGetter<CouchbaseRequestInfo, Void> {
 
-  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getDbSystem(CouchbaseRequestInfo couchbaseRequest) {
-    return DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getUser(CouchbaseRequestInfo couchbaseRequest) {
-    return null;
+  public String getDbSystemName(CouchbaseRequestInfo couchbaseRequest) {
+    return DbSystemNameIncubatingValues.COUCHBASE;
   }
 
   @Override
@@ -31,22 +25,41 @@ final class CouchbaseAttributesGetter
     return couchbaseRequest.bucket();
   }
 
-  @Deprecated
   @Override
   @Nullable
-  public String getConnectionString(CouchbaseRequestInfo couchbaseRequest) {
+  public String getDbQueryText(CouchbaseRequestInfo couchbaseRequest) {
+    if (couchbaseRequest.getSqlQueryWithSummary() != null) {
+      return couchbaseRequest.getSqlQueryWithSummary().getQueryText();
+    }
+    if (couchbaseRequest.getSqlQuery() != null) {
+      return couchbaseRequest.getSqlQuery().getQueryText();
+    }
     return null;
   }
 
   @Override
   @Nullable
-  public String getDbQueryText(CouchbaseRequestInfo couchbaseRequest) {
-    return couchbaseRequest.statement();
+  public String getDbQuerySummary(CouchbaseRequestInfo couchbaseRequest) {
+    if (couchbaseRequest.getSqlQueryWithSummary() != null) {
+      return couchbaseRequest.getSqlQueryWithSummary().getQuerySummary();
+    }
+    return null;
   }
 
   @Override
   @Nullable
   public String getDbOperationName(CouchbaseRequestInfo couchbaseRequest) {
     return couchbaseRequest.operation();
+  }
+
+  @Override
+  @Nullable
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
+      CouchbaseRequestInfo request, @Nullable Void unused) {
+    SocketAddress address = request.getPeerAddress();
+    if (address instanceof InetSocketAddress) {
+      return (InetSocketAddress) address;
+    }
+    return null;
   }
 }

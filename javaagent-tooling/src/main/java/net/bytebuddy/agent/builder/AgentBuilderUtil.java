@@ -5,6 +5,8 @@
 
 package net.bytebuddy.agent.builder;
 
+import static java.util.Collections.emptyIterator;
+import static java.util.Collections.singleton;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.javaagent.extension.matcher.internal.DelegatingMatcher;
@@ -13,11 +15,9 @@ import io.opentelemetry.javaagent.tooling.DefineClassHandler;
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder.Default.Transformation;
@@ -49,6 +49,8 @@ public class AgentBuilderUtil {
   private static final Field erasureMatcherField = getField(ErasureMatcher.class, "matcher");
   private static final Field conjunctionMatchersField =
       getField(ElementMatcher.Junction.Conjunction.class, "matchers");
+  private static final Field disjunctionMatchersField =
+      getField(ElementMatcher.Junction.Disjunction.class, "matchers");
   private static final Field stringMatcherValueField = getField(StringMatcher.class, "value");
   private static final Field stringMatcherModeField = getField(StringMatcher.class, "mode");
   private static final Field stringSetMatcherValuesField =
@@ -65,8 +67,8 @@ public class AgentBuilderUtil {
       agentBuilder = agentBuilder.with(new TransformContext());
 
       optimize((AgentBuilder.Default) agentBuilder);
-    } catch (Exception exception) {
-      throw new IllegalStateException("Failed to optimize transformations", exception);
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to optimize transformations", e);
     }
     return agentBuilder;
   }
@@ -108,7 +110,7 @@ public class AgentBuilderUtil {
                     // we already know that loading this class is going to fail, no need to
                     // transform it
                     if (DefineClassHandler.isFailedClass(name)) {
-                      return Collections.emptyIterator();
+                      return emptyIterator();
                     }
                     Set<String> loadingSuperTypes = DefineClassHandler.getSuperTypes();
                     // super types set should contain at least java.lang.Object if this set is
@@ -146,7 +148,7 @@ public class AgentBuilderUtil {
           getDelegateMatcher((AgentBuilder.RawMatcher.ForElementMatchers) matcher);
       Result result = inspect(elementMatcher);
       if (result == null && logger.isLoggable(FINE) && shouldLog(elementMatcher)) {
-        logger.log(Level.FINE, "Could not decompose matcher {0}", elementMatcher);
+        logger.log(FINE, "Could not decompose matcher {0}", elementMatcher);
       }
       return result;
     }
@@ -174,10 +176,36 @@ public class AgentBuilderUtil {
       List<ElementMatcher<?>> matchers =
           getDelegateMatchers((ElementMatcher.Junction.Conjunction<?>) matcher);
       for (ElementMatcher<?> elementMatcher : matchers) {
+        // For conjunction to match all elements need to match, we can return result for any element
+        // here since we are using it as a negative match - if it does not match the whole matcher
+        // can't match.
         Result result = inspect(elementMatcher);
         if (result != null) {
           return result;
         }
+      }
+    } else if (matcher instanceof ElementMatcher.Junction.Disjunction) {
+      List<ElementMatcher<?>> matchers =
+          getDelegateMatchers((ElementMatcher.Junction.Disjunction<?>) matcher);
+      boolean subtype = false;
+      Set<String> names = new HashSet<>();
+      boolean failed = false;
+      for (ElementMatcher<?> elementMatcher : matchers) {
+        // For disjunction to match at least one element needs to match, we need to inspect all
+        // elements and combine results to be able to tell whether the whole matcher could match.
+        Result result = inspect(elementMatcher);
+        if (result == null) {
+          failed = true;
+          break;
+        }
+        // Subtype matcher covers named matcher, if we have at least one subtype matcher we can
+        // treat all named matchers as subtype matchers, if we have only named matchers we can treat
+        // them as named matchers.
+        subtype |= result.subtype;
+        names.addAll(result.names);
+      }
+      if (!failed) {
+        return subtype ? Result.subtype(names) : Result.named(names);
       }
     }
 
@@ -208,19 +236,17 @@ public class AgentBuilderUtil {
       this.subtype = subtype;
     }
 
-    private Result() {
-      this(false);
-    }
-
     @Nullable
     static Result subtype(@Nullable Result value) {
       if (value == null) {
         return null;
       }
+      return subtype(value.names);
+    }
 
-      Result result = new Result(true);
-      result.names.addAll(value.names);
-      return result;
+    @Nullable
+    static Result subtype(@Nullable Set<String> value) {
+      return result(true, value);
     }
 
     @Nullable
@@ -228,17 +254,20 @@ public class AgentBuilderUtil {
       if (value == null) {
         return null;
       }
-      Result result = new Result();
-      result.names.add(value);
-      return result;
+      return named(singleton(value));
     }
 
     @Nullable
     static Result named(@Nullable Set<String> value) {
+      return result(false, value);
+    }
+
+    @Nullable
+    private static Result result(boolean subtype, @Nullable Set<String> value) {
       if (value == null || value.isEmpty()) {
         return null;
       }
-      Result result = new Result();
+      Result result = new Result(subtype);
       result.names.addAll(value);
       return result;
     }
@@ -272,16 +301,22 @@ public class AgentBuilderUtil {
     return (ElementMatcher<?>) erasureMatcherField.get(matcher);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // casting reflection result
   private static List<AgentBuilder.RawMatcher> getDelegateMatchers(AgentBuilder.RawMatcher matcher)
       throws Exception {
     return (List<AgentBuilder.RawMatcher>) rawConjunctionMatchersField.get(matcher);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // casting reflection result
   private static List<ElementMatcher<?>> getDelegateMatchers(
       ElementMatcher.Junction.Conjunction<?> matcher) throws Exception {
     return (List<ElementMatcher<?>>) conjunctionMatchersField.get(matcher);
+  }
+
+  @SuppressWarnings("unchecked") // casting reflection result
+  private static List<ElementMatcher<?>> getDelegateMatchers(
+      ElementMatcher.Junction.Disjunction<?> matcher) throws Exception {
+    return (List<ElementMatcher<?>>) disjunctionMatchersField.get(matcher);
   }
 
   /**
@@ -295,7 +330,7 @@ public class AgentBuilderUtil {
     return mode == StringMatcher.Mode.EQUALS_FULLY ? value : null;
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // casting reflection result
   private static Set<String> getStringSetMatcherValue(StringSetMatcher matcher) throws Exception {
     return (Set<String>) stringSetMatcherValuesField.get(matcher);
   }

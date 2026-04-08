@@ -16,7 +16,7 @@ dependencies {
 }
 
 // restlet registers the first engine that is present on classpath, so we need to enforce the appropriate version
-if (findProperty("testLatestDeps") as Boolean) {
+if (otelProps.testLatestDeps) {
   configurations.configureEach {
     resolutionStrategy {
       eachDependency {
@@ -29,5 +29,5 @@ if (findProperty("testLatestDeps") as Boolean) {
 }
 
 tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  systemProperty("collectMetadata", otelProps.collectMetadata)
 }

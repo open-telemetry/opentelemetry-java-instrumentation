@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQS_QUEUE_URL;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
@@ -25,7 +26,6 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SY
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -54,6 +54,7 @@ import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractAws2SqsBaseTest {
   protected static final StaticCredentialsProvider CREDENTIALS_PROVIDER =
       StaticCredentialsProvider.create(
@@ -129,9 +130,9 @@ public abstract class AbstractAws2SqsBaseTest {
   }
 
   protected boolean isSqsAttributeInjectionEnabled() {
-    // See io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure.TracingExecutionInterceptor
-    return ConfigPropertiesUtil.getBoolean(
-        "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", false);
+    // See io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkTelemetryFactory
+    return Boolean.getBoolean(
+        "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging");
   }
 
   @BeforeAll
@@ -159,7 +160,7 @@ public abstract class AbstractAws2SqsBaseTest {
 
     ReceiveMessageResponse response = client.receiveMessage(receiveMessageRequest);
 
-    assertThat(response.messages().size()).isEqualTo(1);
+    assertThat(response.messages()).hasSize(1);
 
     response.messages().forEach(message -> getTesting().runWithSpan("process child", () -> {}));
     assertSqsTraces(false, false);
@@ -177,7 +178,7 @@ public abstract class AbstractAws2SqsBaseTest {
     ReceiveMessageResponse response =
         getTesting().runWithSpan("parent", () -> client.receiveMessage(receiveMessageRequest));
 
-    assertThat(response.messages().size()).isEqualTo(1);
+    assertThat(response.messages()).hasSize(1);
 
     response.messages().forEach(message -> getTesting().runWithSpan("process child", () -> {}));
     assertSqsTraces(true, false);
@@ -195,7 +196,7 @@ public abstract class AbstractAws2SqsBaseTest {
 
     ReceiveMessageResponse response = client.receiveMessage(receiveMessageRequest).get();
 
-    assertThat(response.messages().size()).isEqualTo(1);
+    assertThat(response.messages()).hasSize(1);
 
     response.messages().forEach(message -> getTesting().runWithSpan("process child", () -> {}));
     assertSqsTraces(false, false);
@@ -216,7 +217,7 @@ public abstract class AbstractAws2SqsBaseTest {
             equalTo(RPC_METHOD, "CreateQueue"),
             equalTo(HTTP_REQUEST_METHOD, "POST"),
             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-            satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
+            satisfies(URL_FULL, val -> val.startsWith("http://localhost:" + sqsPort)),
             equalTo(SERVER_ADDRESS, "localhost"),
             equalTo(SERVER_PORT, sqsPort));
   }
@@ -234,13 +235,13 @@ public abstract class AbstractAws2SqsBaseTest {
             equalTo(RPC_METHOD, "ReceiveMessage"),
             equalTo(HTTP_REQUEST_METHOD, "POST"),
             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-            satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
+            satisfies(URL_FULL, val -> val.startsWith("http://localhost:" + sqsPort)),
             equalTo(SERVER_ADDRESS, "localhost"),
             equalTo(SERVER_PORT, sqsPort),
             equalTo(MESSAGING_SYSTEM, AWS_SQS),
             equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
             equalTo(MESSAGING_OPERATION, "process"),
-            satisfies(MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class)));
+            satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -250,7 +251,7 @@ public abstract class AbstractAws2SqsBaseTest {
         .hasNoParent()
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-            equalTo(stringKey("aws.queue.url"), queueUrl),
+            equalTo(AWS_SQS_QUEUE_URL, queueUrl),
             satisfies(
                 AWS_REQUEST_ID,
                 val -> val.matches("\\s*00000000-0000-0000-0000-000000000000\\s*|UNKNOWN")),
@@ -259,7 +260,7 @@ public abstract class AbstractAws2SqsBaseTest {
             equalTo(RPC_METHOD, rcpMethod),
             equalTo(HTTP_REQUEST_METHOD, "POST"),
             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-            satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
+            satisfies(URL_FULL, val -> val.startsWith("http://localhost:" + sqsPort)),
             equalTo(SERVER_ADDRESS, "localhost"),
             equalTo(SERVER_PORT, sqsPort),
             equalTo(MESSAGING_SYSTEM, AWS_SQS),

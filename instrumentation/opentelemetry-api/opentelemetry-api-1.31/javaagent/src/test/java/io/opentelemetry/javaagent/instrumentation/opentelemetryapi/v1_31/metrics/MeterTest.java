@@ -91,6 +91,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasLongSumSatisfying(
                             sum ->
@@ -99,7 +100,7 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(11)
-                                                .hasAttributesSatisfying(
+                                                .hasAttributesSatisfyingExactly(
                                                     equalTo(stringKey("test"), "test"))))));
   }
 
@@ -128,6 +129,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasDoubleSumSatisfying(
                             sum ->
@@ -136,7 +138,7 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(12.1)
-                                                .hasAttributesSatisfying(
+                                                .hasAttributesSatisfyingExactly(
                                                     equalTo(stringKey("test"), "test"))))));
   }
 
@@ -165,6 +167,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasLongSumSatisfying(
                             sum ->
@@ -173,7 +176,7 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(11)
-                                                .hasAttributesSatisfying(
+                                                .hasAttributesSatisfyingExactly(
                                                     equalTo(stringKey("test"), "test"))))));
   }
 
@@ -203,6 +206,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasDoubleSumSatisfying(
                             sum ->
@@ -211,7 +215,7 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(12.1)
-                                                .hasAttributesSatisfying(
+                                                .hasAttributesSatisfyingExactly(
                                                     equalTo(stringKey("test"), "test"))))));
   }
 
@@ -241,6 +245,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasHistogramSatisfying(
                             histogram ->
@@ -249,7 +254,7 @@ class MeterTest {
                                         point
                                             .hasSum(11.0)
                                             .hasBucketBoundaries(10.0)
-                                            .hasAttributesSatisfying(
+                                            .hasAttributesSatisfyingExactly(
                                                 equalTo(stringKey("test"), "test"))))));
   }
 
@@ -279,6 +284,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasHistogramSatisfying(
                             histogram ->
@@ -287,7 +293,7 @@ class MeterTest {
                                         point
                                             .hasSum(12.1)
                                             .hasBucketBoundaries(10.0)
-                                            .hasAttributesSatisfying(
+                                            .hasAttributesSatisfyingExactly(
                                                 equalTo(stringKey("test"), "test"))))));
   }
 
@@ -316,6 +322,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasLongGaugeSatisfying(
                             gauge ->
@@ -323,7 +330,7 @@ class MeterTest {
                                     point ->
                                         point
                                             .hasValue(123)
-                                            .hasAttributesSatisfying(
+                                            .hasAttributesSatisfyingExactly(
                                                 equalTo(stringKey("test"), "test"))))));
 
     observableGauge.close();
@@ -360,6 +367,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasLongGaugeSatisfying(
                             gauge ->
@@ -368,7 +376,7 @@ class MeterTest {
                                     point ->
                                         point
                                             .hasValue(123)
-                                            .hasAttributesSatisfying(
+                                            .hasAttributesSatisfyingExactly(
                                                 equalTo(stringKey("test"), "test"))))));
 
     // sleep exporter interval
@@ -403,6 +411,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasDoubleGaugeSatisfying(
                             gauge ->
@@ -410,7 +419,7 @@ class MeterTest {
                                     point ->
                                         point
                                             .hasValue(1.23)
-                                            .hasAttributesSatisfying(
+                                            .hasAttributesSatisfyingExactly(
                                                 equalTo(stringKey("test"), "test"))))));
 
     observableGauge.close();
@@ -446,6 +455,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasDoubleGaugeSatisfying(
                             gauge ->
@@ -454,7 +464,7 @@ class MeterTest {
                                     point ->
                                         point
                                             .hasValue(1.23)
-                                            .hasAttributesSatisfying(
+                                            .hasAttributesSatisfyingExactly(
                                                 equalTo(stringKey("test"), "test"))))));
 
     // sleep exporter interval

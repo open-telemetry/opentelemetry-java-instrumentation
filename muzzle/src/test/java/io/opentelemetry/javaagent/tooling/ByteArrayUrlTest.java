@@ -11,7 +11,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import org.junit.jupiter.api.Test;
 
-public class ByteArrayUrlTest {
+class ByteArrayUrlTest {
 
   @Test
   public void testUrlCreation() throws Exception {

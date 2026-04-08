@@ -33,7 +33,7 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class ApacheHttpClientTest {
+class ApacheHttpClientTest {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
@@ -192,7 +192,7 @@ public class ApacheHttpClientTest {
   abstract static class AbstractTest<T extends HttpRequest>
       extends AbstractApacheHttpClientTest<T> {
     @Override
-    final HttpResponse executeRequest(T request, URI uri) throws Exception {
+    HttpResponse executeRequest(T request, URI uri) throws Exception {
       HttpResponse httpResponse = doExecuteRequest(request, uri);
       httpResponse.getEntity().getContent().close();
       return httpResponse;
@@ -211,7 +211,7 @@ public class ApacheHttpClientTest {
   private static class HttpResponseHandler implements ResponseHandler<Void> {
     private final HttpClientResult requestResult;
 
-    public HttpResponseHandler(HttpClientResult requestResult) {
+    HttpResponseHandler(HttpClientResult requestResult) {
       this.requestResult = requestResult;
     }
 

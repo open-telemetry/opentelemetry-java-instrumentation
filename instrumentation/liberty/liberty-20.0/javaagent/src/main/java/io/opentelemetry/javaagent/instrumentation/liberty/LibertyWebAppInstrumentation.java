@@ -11,12 +11,13 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
-import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Accessor;
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3HttpServerResponseMutator;
+import javax.annotation.Nullable;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
@@ -25,7 +26,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class LibertyWebAppInstrumentation implements TypeInstrumentation {
+class LibertyWebAppInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -39,30 +40,29 @@ public class LibertyWebAppInstrumentation implements TypeInstrumentation {
         named("handleRequest")
             .and(takesArgument(0, named("javax.servlet.ServletRequest")))
             .and(takesArgument(1, named("javax.servlet.ServletResponse"))),
-        this.getClass().getName() + "$HandleRequestAdvice");
+        getClass().getName() + "$HandleRequestAdvice");
 
     // isForbidden is called from handleRequest
     transformer.applyAdviceToMethod(
         named("isForbidden").and(takesArgument(0, named(String.class.getName()))),
-        this.getClass().getName() + "$IsForbiddenAdvice");
+        getClass().getName() + "$IsForbiddenAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class HandleRequestAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static boolean onEnter(
         @Advice.Argument(value = 0) ServletRequest request,
-        @Advice.Argument(value = 1) ServletResponse response,
-        @Advice.Local("otelHandled") boolean handled) {
+        @Advice.Argument(value = 1) ServletResponse response) {
 
       // liberty has two handleRequest methods, skip processing when thread local context is already
       // set up
-      handled = ThreadLocalContext.get() == null;
+      boolean handled = ThreadLocalContext.get() == null;
       if (!handled
           || !(request instanceof HttpServletRequest)
           || !(response instanceof HttpServletResponse)) {
-        return;
+        return false;
       }
 
       HttpServletRequest httpServletRequest = (HttpServletRequest) request;
@@ -70,14 +70,15 @@ public class LibertyWebAppInstrumentation implements TypeInstrumentation {
       // some methods on HttpServletRequest will give a NPE
       // just remember the request and use it a bit later to start the span
       ThreadLocalContext.startRequest(httpServletRequest, (HttpServletResponse) response);
+      return true;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Argument(0) ServletRequest servletRequest,
         @Advice.Argument(1) ServletResponse servletResponse,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelHandled") boolean handled) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter boolean handled) {
       if (!handled) {
         return;
       }
@@ -103,7 +104,7 @@ public class LibertyWebAppInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class IsForbiddenAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter() {
       ThreadLocalContext requestInfo = ThreadLocalContext.get();
       if (requestInfo == null || !requestInfo.startSpan()) {
@@ -128,7 +129,7 @@ public class LibertyWebAppInstrumentation implements TypeInstrumentation {
       helper().setAsyncListenerResponse(context, requestInfo.getResponse());
 
       HttpServerResponseCustomizerHolder.getCustomizer()
-          .customize(context, requestInfo.getResponse(), Servlet3Accessor.INSTANCE);
+          .customize(context, requestInfo.getResponse(), new Servlet3HttpServerResponseMutator());
     }
   }
 }

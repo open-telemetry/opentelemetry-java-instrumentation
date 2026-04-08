@@ -49,7 +49,8 @@ import javax.annotation.Nullable;
   "HashCodeToString",
   "MissingSummary",
   "UngroupedOverloads",
-  "FieldMissingNullable"
+  "FieldMissingNullable",
+  "SuppressWarningsWithoutExplanation"
 })
 public class WeakConcurrentMap<K, V>
     extends AbstractWeakConcurrentMap<K, V, WeakConcurrentMap.LookupKey<K>> {
@@ -142,7 +143,7 @@ public class WeakConcurrentMap<K, V>
   // can't use AutoClosable/try-with-resources as this project still supports Java 6
   static final class LookupKey<K> {
 
-    private K key;
+    @Nullable private K key;
     private int hashCode;
 
     @SuppressWarnings("OtelCanIgnoreReturnValueSuggester")
@@ -159,7 +160,7 @@ public class WeakConcurrentMap<K, V>
     }
 
     @Override
-    public boolean equals(@Nullable Object other) {
+    public boolean equals(Object other) {
       if (other instanceof WeakConcurrentMap.LookupKey<?>) {
         return ((LookupKey<?>) other).key == key;
       } else {
@@ -183,12 +184,14 @@ public class WeakConcurrentMap<K, V>
   public static class WithInlinedExpunction<K, V> extends WeakConcurrentMap<K, V> {
 
     @Override
+    @Nullable
     public V get(K key) {
       expungeStaleEntries();
       return super.get(key);
     }
 
     @Override
+    @Nullable
     public V getIfPresent(K key) {
       expungeStaleEntries();
       return super.getIfPresent(key);

@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_40.incubator.metrics;
 
-import application.io.opentelemetry.api.incubator.metrics.ExtendedDoubleGauge;
+import io.opentelemetry.api.incubator.metrics.ExtendedDoubleGauge;
 import io.opentelemetry.api.metrics.DoubleGauge;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_38.metrics.ApplicationDoubleGauge138;
 
 final class ApplicationDoubleGauge140Incubator extends ApplicationDoubleGauge138
-    implements ExtendedDoubleGauge {
+    implements application.io.opentelemetry.api.incubator.metrics.ExtendedDoubleGauge {
 
-  private final io.opentelemetry.api.metrics.DoubleGauge agentDoubleGauge;
+  private final DoubleGauge agentDoubleGauge;
 
   ApplicationDoubleGauge140Incubator(DoubleGauge agentDoubleGauge) {
     super(agentDoubleGauge);
@@ -21,7 +21,6 @@ final class ApplicationDoubleGauge140Incubator extends ApplicationDoubleGauge138
 
   @Override
   public boolean isEnabled() {
-    return ((io.opentelemetry.api.incubator.metrics.ExtendedDoubleGauge) agentDoubleGauge)
-        .isEnabled();
+    return ((ExtendedDoubleGauge) agentDoubleGauge).isEnabled();
   }
 }

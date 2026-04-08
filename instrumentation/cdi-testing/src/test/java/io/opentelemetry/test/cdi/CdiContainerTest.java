@@ -20,16 +20,16 @@ class CdiContainerTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
-  public void cdiContainerStartsWithAgent() {
+  void cdiContainerStartsWithAgent() {
     Weld builder =
         new Weld()
             .disableDiscovery()
             .addDecorator(RunnableDecorator.class)
             .addBeanClass(TestBean.class);
     WeldContainer container = builder.initialize();
-
-    assertThat(container.isRunning()).isTrue();
-    if (container != null) {
+    try {
+      assertThat(container.isRunning()).isTrue();
+    } finally {
       container.shutdown();
     }
   }

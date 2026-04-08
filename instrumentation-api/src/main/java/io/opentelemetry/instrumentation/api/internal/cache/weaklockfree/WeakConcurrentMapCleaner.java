@@ -5,12 +5,14 @@
 
 package io.opentelemetry.instrumentation.api.internal.cache.weaklockfree;
 
+import javax.annotation.Nullable;
+
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
 public final class WeakConcurrentMapCleaner {
-  private static Thread thread;
+  @Nullable private static Thread thread;
 
   private WeakConcurrentMapCleaner() {}
 

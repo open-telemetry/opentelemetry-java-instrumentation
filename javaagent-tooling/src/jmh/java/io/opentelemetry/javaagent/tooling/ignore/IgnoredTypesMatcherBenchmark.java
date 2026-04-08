@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.ignore;
 
-import io.opentelemetry.javaagent.tooling.EmptyConfigProperties;
-import java.util.concurrent.TimeUnit;
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
+
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -20,7 +20,7 @@ import org.openjdk.jmh.annotations.Warmup;
 @Fork(1)
 @Warmup(iterations = 3, time = 1)
 @Measurement(iterations = 10, time = 1)
-@OutputTimeUnit(TimeUnit.MICROSECONDS)
+@OutputTimeUnit(MICROSECONDS)
 @BenchmarkMode(Mode.AverageTime)
 public class IgnoredTypesMatcherBenchmark {
 
@@ -33,8 +33,7 @@ public class IgnoredTypesMatcherBenchmark {
 
   static {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
-    new AdditionalLibraryIgnoredTypesConfigurer()
-        .configure(builder, EmptyConfigProperties.INSTANCE);
+    new AdditionalLibraryIgnoredTypesConfigurer().configureInternal(builder);
     ignoredTypesMatcher = new IgnoredTypesMatcher(builder.buildIgnoredTypesTrie());
   }
 

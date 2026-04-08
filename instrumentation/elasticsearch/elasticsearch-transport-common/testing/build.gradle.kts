@@ -6,5 +6,5 @@ dependencies {
   compileOnly("org.elasticsearch.client:transport:5.3.0")
   compileOnly("org.elasticsearch:elasticsearch:5.3.0")
 
-  implementation(project(":testing-common"))
+  implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
 }

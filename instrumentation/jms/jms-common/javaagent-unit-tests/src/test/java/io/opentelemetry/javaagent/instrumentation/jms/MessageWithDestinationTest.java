@@ -6,8 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jms;
 
 import static io.opentelemetry.javaagent.instrumentation.jms.MessageWithDestination.TIBCO_TMP_PREFIX;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import java.util.stream.Stream;
@@ -114,8 +113,8 @@ class MessageWithDestinationTest {
   private void assertMessage(
       String expectedDestinationName, boolean expectedTemporary, MessageWithDestination actual) {
 
-    assertSame(message, actual.message());
-    assertEquals(expectedDestinationName, actual.destinationName());
-    assertEquals(expectedTemporary, actual.isTemporaryDestination());
+    assertThat(actual.message()).isSameAs(message);
+    assertThat(actual.destinationName()).isEqualTo(expectedDestinationName);
+    assertThat(actual.isTemporaryDestination()).isEqualTo(expectedTemporary);
   }
 }

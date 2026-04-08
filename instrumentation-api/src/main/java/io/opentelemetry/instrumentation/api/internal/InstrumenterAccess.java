@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.time.Instant;
@@ -27,4 +28,7 @@ public interface InstrumenterAccess {
 
   <REQUEST, RESPONSE> Context suppressSpan(
       Instrumenter<REQUEST, RESPONSE> instrumenter, Context parentContext, REQUEST request);
+
+  <REQUEST, RESPONSE> Context suppressSpan(
+      Instrumenter<REQUEST, RESPONSE> instrumenter, Context parentContext, SpanKind spanKind);
 }

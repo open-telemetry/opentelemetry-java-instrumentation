@@ -30,7 +30,7 @@ public class RatpackInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // Only activate when running ratpack 1.7 or later
+    // added in 1.7.0
     return hasClassesNamed("ratpack.exec.util.retry.Delay");
   }
 
@@ -40,5 +40,10 @@ public class RatpackInstrumentationModule extends InstrumentationModule
         new DefaultExecControllerInstrumentation(),
         new HttpClientInstrumentation(),
         new RequestActionSupportInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

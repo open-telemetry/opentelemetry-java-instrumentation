@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.benchmark.jfr;
 
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+
 import java.io.File;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -12,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import jdk.jfr.consumer.RecordedEvent;
 import jdk.jfr.consumer.RecordedFrame;
@@ -31,7 +33,7 @@ public class Analyzer {
     List<RecordedEvent> events =
         RecordingFile.readAllEvents(jfrFile.toPath()).stream()
             .filter(e -> e.getEventType().getName().equals("jdk.ExecutionSample"))
-            .collect(Collectors.toList());
+            .collect(toList());
 
     Set<String> agentCallers = getAgentCallers(events);
 
@@ -59,13 +61,13 @@ public class Analyzer {
     return events.stream()
         .map(e -> getAgentCaller(e.getStackTrace()))
         .filter(Objects::nonNull)
-        .collect(Collectors.toSet());
+        .collect(toSet());
   }
 
   @Nullable
   private static String getAgentCaller(RecordedStackTrace stackTrace) {
     List<RecordedFrame> frames = stackTrace.getFrames();
-    for (int i = frames.size() - 1; i >= 0; i--) {
+    for (int i = frames.size() - 2; i >= 0; i--) {
       RecordedFrame frame = frames.get(i);
       RecordedMethod method = frame.getMethod();
       if (isAgentMethod(method)) {
@@ -171,7 +173,7 @@ public class Analyzer {
     private List<Node> getOrderedChildNodes() {
       return childNodes.values().stream()
           .sorted(Comparator.comparingInt(Node::getCount).reversed())
-          .collect(Collectors.toList());
+          .collect(toList());
     }
 
     private int getCount() {

@@ -23,7 +23,7 @@ import java.nio.charset.StandardCharsets
 class PersistenceConfig {
 
   @Bean
-  fun connectionFactory(): ConnectionFactory? = ConnectionFactories.find(
+  fun connectionFactory(): ConnectionFactory = ConnectionFactories.find(
     ConnectionFactoryOptions.builder()
       .option(ConnectionFactoryOptions.DRIVER, "h2")
       .option(ConnectionFactoryOptions.PROTOCOL, "mem")
@@ -42,8 +42,8 @@ class PersistenceConfig {
     initializer.setDatabasePopulator(
       ResourceDatabasePopulator(
         ByteArrayResource(
-          ("CREATE TABLE customer (id INT PRIMARY KEY, name VARCHAR(100) NOT NULL);" +
-            "INSERT INTO customer (id, name) VALUES ('1', 'Name');")
+          ("CREATE TABLE CUSTOMER (ID INT PRIMARY KEY, NAME VARCHAR(100) NOT NULL);" +
+            "INSERT INTO CUSTOMER (ID, NAME) VALUES ('1', 'Name');")
             .toByteArray(StandardCharsets.UTF_8)
         )
       )

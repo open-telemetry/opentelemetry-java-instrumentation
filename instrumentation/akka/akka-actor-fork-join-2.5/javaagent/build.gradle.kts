@@ -32,3 +32,9 @@ dependencies {
 
   testImplementation(project(":instrumentation:executors:testing"))
 }
+
+if (otelProps.denyUnsafe) {
+  tasks.withType<Test>().configureEach {
+    enabled = false
+  }
+}

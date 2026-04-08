@@ -12,15 +12,12 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:wicket-8.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
-  testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
 
   latestDepTestLibrary("org.apache.wicket:wicket:9.+") // see wicket10-testing module
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
-
 // Wicket 9 requires Java 11
-if (latestDepTest) {
+if (otelProps.testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }

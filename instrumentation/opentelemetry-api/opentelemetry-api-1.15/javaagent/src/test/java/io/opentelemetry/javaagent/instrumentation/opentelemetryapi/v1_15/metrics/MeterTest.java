@@ -5,17 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_15.metrics;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.BatchCallback;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
+import io.opentelemetry.instrumentation.test.utils.GcUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
+import java.lang.ref.WeakReference;
+import java.time.Duration;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,7 +54,7 @@ class MeterTest {
     BatchCallback callback =
         meter.batchCallback(
             () -> {
-              observableMeasurement.record(11, Attributes.of(AttributeKey.stringKey("q"), "r"));
+              observableMeasurement.record(11, Attributes.of(stringKey("q"), "r"));
             },
             observableMeasurement);
 
@@ -67,6 +70,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasLongSumSatisfying(
                             sum ->
@@ -75,8 +79,8 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(11)
-                                                .hasAttributesSatisfying(
-                                                    equalTo(AttributeKey.stringKey("q"), "r"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("q"), "r"))))));
 
     callback.close();
 
@@ -96,7 +100,7 @@ class MeterTest {
     BatchCallback callback =
         meter.batchCallback(
             () -> {
-              observableMeasurement.record(12.1, Attributes.of(AttributeKey.stringKey("q"), "r"));
+              observableMeasurement.record(12.1, Attributes.of(stringKey("q"), "r"));
             },
             observableMeasurement);
 
@@ -112,6 +116,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasDoubleSumSatisfying(
                             sum ->
@@ -120,8 +125,8 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(12.1)
-                                                .hasAttributesSatisfying(
-                                                    equalTo(AttributeKey.stringKey("q"), "r"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("q"), "r"))))));
 
     callback.close();
 
@@ -141,7 +146,7 @@ class MeterTest {
     BatchCallback callback =
         meter.batchCallback(
             () -> {
-              observableMeasurement.record(11, Attributes.of(AttributeKey.stringKey("q"), "r"));
+              observableMeasurement.record(11, Attributes.of(stringKey("q"), "r"));
             },
             observableMeasurement);
 
@@ -157,6 +162,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasLongSumSatisfying(
                             sum ->
@@ -165,8 +171,8 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(11)
-                                                .hasAttributesSatisfying(
-                                                    equalTo(AttributeKey.stringKey("q"), "r"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("q"), "r"))))));
 
     callback.close();
 
@@ -191,7 +197,7 @@ class MeterTest {
     BatchCallback callback =
         meter.batchCallback(
             () -> {
-              observableMeasurement.record(12.1, Attributes.of(AttributeKey.stringKey("q"), "r"));
+              observableMeasurement.record(12.1, Attributes.of(stringKey("q"), "r"));
             },
             observableMeasurement);
 
@@ -207,6 +213,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasDoubleSumSatisfying(
                             sum ->
@@ -215,8 +222,8 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(12.1)
-                                                .hasAttributesSatisfying(
-                                                    equalTo(AttributeKey.stringKey("q"), "r"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("q"), "r"))))));
 
     callback.close();
 
@@ -236,7 +243,7 @@ class MeterTest {
     BatchCallback callback =
         meter.batchCallback(
             () -> {
-              observableMeasurement.record(123, Attributes.of(AttributeKey.stringKey("q"), "r"));
+              observableMeasurement.record(123, Attributes.of(stringKey("q"), "r"));
             },
             observableMeasurement);
 
@@ -252,6 +259,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasLongGaugeSatisfying(
                             gauge ->
@@ -259,8 +267,8 @@ class MeterTest {
                                     point ->
                                         point
                                             .hasValue(123)
-                                            .hasAttributesSatisfying(
-                                                equalTo(AttributeKey.stringKey("q"), "r"))))));
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(stringKey("q"), "r"))))));
 
     callback.close();
 
@@ -280,7 +288,7 @@ class MeterTest {
     BatchCallback callback =
         meter.batchCallback(
             () -> {
-              observableMeasurement.record(1.23, Attributes.of(AttributeKey.stringKey("q"), "r"));
+              observableMeasurement.record(1.23, Attributes.of(stringKey("q"), "r"));
             },
             observableMeasurement);
 
@@ -296,6 +304,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasDoubleGaugeSatisfying(
                             gauge ->
@@ -303,8 +312,8 @@ class MeterTest {
                                     point ->
                                         point
                                             .hasValue(1.23)
-                                            .hasAttributesSatisfying(
-                                                equalTo(AttributeKey.stringKey("q"), "r"))))));
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(stringKey("q"), "r"))))));
 
     callback.close();
 
@@ -314,5 +323,56 @@ class MeterTest {
     Thread.sleep(100);
 
     testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
+  }
+
+  @Test
+  void sharedBatchCallbackSurvivesClosingOneHandleTwice() throws Exception {
+    ObservableLongMeasurement firstMeasurement = meter.counterBuilder("test.first").buildObserver();
+    ObservableLongMeasurement secondMeasurement =
+        meter.counterBuilder("test.second").buildObserver();
+    Runnable callback =
+        new Runnable() {
+          @Override
+          public void run() {}
+        };
+    WeakReference<Runnable> callbackRef = new WeakReference<>(callback);
+
+    BatchCallback firstCallback = meter.batchCallback(callback, firstMeasurement);
+    // Intentionally do not retain the second handle so callback reachability depends on the
+    // remaining anchor, not on another wrapper still holding the callback via its onClose action.
+    meter.batchCallback(callback, secondMeasurement);
+
+    firstCallback.close();
+    firstCallback.close();
+    firstCallback = null;
+    callback = null;
+
+    GcUtils.awaitGc(Duration.ofSeconds(10));
+    assertThat(callbackRef.get()).isNotNull();
+  }
+
+  @Test
+  void sharedBatchCallbackCollectedAfterLastHandleClosed() throws Exception {
+    ObservableLongMeasurement firstMeasurement = meter.counterBuilder("test.first").buildObserver();
+    ObservableLongMeasurement secondMeasurement =
+        meter.counterBuilder("test.second").buildObserver();
+    Runnable callback =
+        new Runnable() {
+          @Override
+          public void run() {}
+        };
+    WeakReference<Runnable> callbackRef = new WeakReference<>(callback);
+
+    BatchCallback firstCallback = meter.batchCallback(callback, firstMeasurement);
+    BatchCallback secondCallback = meter.batchCallback(callback, secondMeasurement);
+
+    firstCallback.close();
+    secondCallback.close();
+    firstCallback = null;
+    secondCallback = null;
+    callback = null;
+
+    GcUtils.awaitGc(callbackRef, Duration.ofSeconds(10));
+    assertThat(callbackRef.get()).isNull();
   }
 }

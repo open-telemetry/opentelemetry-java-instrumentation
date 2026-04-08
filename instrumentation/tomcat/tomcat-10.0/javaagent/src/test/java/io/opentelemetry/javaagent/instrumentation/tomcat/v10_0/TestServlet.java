@@ -18,6 +18,14 @@ class TestServlet extends HttpServlet {
   protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
     String path = req.getServletPath();
 
+    // these are set by servlet instrumentation
+    if (req.getAttribute("trace_id") == null) {
+      throw new IllegalStateException("trace_id attribute not found");
+    }
+    if (req.getAttribute("span_id") == null) {
+      throw new IllegalStateException("span_id attribute not found");
+    }
+
     ServerEndpoint serverEndpoint = ServerEndpoint.forPath(path);
     if (serverEndpoint != null) {
       AbstractHttpServerTest.controller(
@@ -40,14 +48,21 @@ class TestServlet extends HttpServlet {
             if (serverEndpoint == ServerEndpoint.INDEXED_CHILD) {
               ServerEndpoint.INDEXED_CHILD.collectSpanAttributes(req::getParameter);
             }
-            resp.getWriter().print(serverEndpoint.getBody());
-            if (serverEndpoint == ServerEndpoint.REDIRECT) {
-              resp.sendRedirect(serverEndpoint.getBody());
-            } else if (serverEndpoint == ServerEndpoint.ERROR) {
-              resp.sendError(serverEndpoint.getStatus(), serverEndpoint.getBody());
-            } else {
-              resp.setStatus(serverEndpoint.getStatus());
+            String responseBody = serverEndpoint.getBody();
+            if (serverEndpoint == ServerEndpoint.INDEXED_CHILD_FROM_REQUEST_BODY) {
+              responseBody = AbstractHttpServerTest.readRequestBody(req.getInputStream());
+              AbstractHttpServerTest.bodyConsumer(serverEndpoint, responseBody);
             }
+            if (serverEndpoint == ServerEndpoint.REDIRECT) {
+              resp.sendRedirect(responseBody);
+              return null;
+            }
+            if (serverEndpoint == ServerEndpoint.ERROR) {
+              resp.sendError(serverEndpoint.getStatus(), responseBody);
+              return null;
+            }
+            resp.getWriter().print(responseBody);
+            resp.setStatus(serverEndpoint.getStatus());
             return null;
           });
     } else {

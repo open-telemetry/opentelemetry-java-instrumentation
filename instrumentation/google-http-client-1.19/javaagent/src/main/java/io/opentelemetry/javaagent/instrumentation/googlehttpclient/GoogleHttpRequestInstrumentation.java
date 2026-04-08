@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.googlehttpclient.GoogleHttpClientSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -21,11 +20,12 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.Executor;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
+class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     // HttpRequest is a final class.  Only need to instrument it exactly
@@ -37,90 +37,120 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(named("execute")).and(takesArguments(0)),
-        this.getClass().getName() + "$ExecuteAdvice");
+        isPublic().and(named("execute")).and(takesArguments(0)),
+        getClass().getName() + "$ExecuteAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("executeAsync"))
             .and(takesArguments(1))
             .and(takesArgument(0, Executor.class)),
-        this.getClass().getName() + "$ExecuteAsyncAdvice");
+        getClass().getName() + "$ExecuteAsyncAdvice");
+  }
+
+  public static class AdviceScope {
+
+    private static final VirtualField<HttpRequest, Context> HTTP_REQUEST_CONTEXT =
+        VirtualField.find(HttpRequest.class, Context.class);
+    private final Context context;
+    private final Scope scope;
+    private final HttpRequest request;
+
+    public AdviceScope(Context context, Scope scope, HttpRequest request) {
+      this.context = context;
+      this.scope = scope;
+      this.request = request;
+    }
+
+    @Nullable
+    public static AdviceScope start(HttpRequest request) {
+      Context parentContext = currentContext();
+      if (!instrumenter().shouldStart(parentContext, request)) {
+        return null;
+      }
+
+      Context context = instrumenter().start(parentContext, request);
+      return new AdviceScope(context, context.makeCurrent(), request);
+    }
+
+    public void end(HttpResponse response, Throwable throwable) {
+      scope.close();
+      instrumenter().end(context, request, response, throwable);
+    }
+
+    public void endWhenThrown(HttpRequest request, Throwable throwable) {
+      scope.close();
+      if (throwable != null) {
+        instrumenter().end(context, request, null, throwable);
+      }
+    }
+
+    @Nullable
+    public static AdviceScope fromVirtualFieldContext(HttpRequest request) {
+      Context context = HTTP_REQUEST_CONTEXT.get(request);
+      if (context == null) {
+        return null;
+      }
+      return new AdviceScope(context, context.makeCurrent(), request);
+    }
+
+    public void storeContextToVirtualField(HttpRequest request) {
+      HTTP_REQUEST_CONTEXT.set(request, context);
+    }
   }
 
   @SuppressWarnings("unused")
   public static class ExecuteAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(
-        @Advice.This HttpRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static AdviceScope methodEnter(@Advice.This HttpRequest request) {
 
-      context = VirtualField.find(HttpRequest.class, Context.class).get(request);
-      if (context != null) {
+      AdviceScope scope = AdviceScope.fromVirtualFieldContext(request);
+      if (scope != null) {
         // span was created by GoogleHttpClientAsyncAdvice instrumentation below
         // (executeAsync ends up calling execute from a separate thread)
         // so make it current and end it in method exit
-        scope = context.makeCurrent();
-        return;
+        return scope;
       }
-      Context parentContext = currentContext();
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return;
-      }
-      context = instrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
+
+      return AdviceScope.start(request);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
-        @Advice.This HttpRequest request,
         @Advice.Return HttpResponse response,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
-      }
+        @Advice.Enter @Nullable AdviceScope scope) {
 
-      scope.close();
-      instrumenter().end(context, request, response, throwable);
+      if (scope != null) {
+        scope.end(response, throwable);
+      }
     }
   }
 
   @SuppressWarnings("unused")
   public static class ExecuteAsyncAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(
-        @Advice.This HttpRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = currentContext();
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return;
-      }
-      context = instrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static AdviceScope methodEnter(@Advice.This HttpRequest request) {
 
-      VirtualField.find(HttpRequest.class, Context.class).set(request, context);
+      AdviceScope scope = AdviceScope.start(request);
+      if (scope != null) {
+        scope.storeContextToVirtualField(request);
+      }
+      return scope;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.This HttpRequest request,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
-      }
+        @Advice.Enter @Nullable AdviceScope scope) {
 
-      scope.close();
-      if (throwable != null) {
-        instrumenter().end(context, request, null, throwable);
+      if (scope != null) {
+        scope.endWhenThrown(request, throwable);
       }
     }
   }

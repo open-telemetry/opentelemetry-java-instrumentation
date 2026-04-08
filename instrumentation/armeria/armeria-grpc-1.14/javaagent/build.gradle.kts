@@ -24,15 +24,19 @@ dependencies {
   testLibrary("com.linecorp.armeria:armeria-junit5:1.14.0")
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
+tasks.named<Checkstyle>("checkstyleTest") {
+  // exclude generated classes
+  exclude("**/example/**")
+}
+
 protobuf {
   protoc {
-    val protocVersion = if (latestDepTest) "3.25.5" else "3.19.2"
+    val protocVersion = if (otelProps.testLatestDeps) "3.25.5" else "3.19.2"
     artifact = "com.google.protobuf:protoc:$protocVersion"
   }
   plugins {
     id("grpc") {
-      val grpcVersion = if (latestDepTest) "1.43.2" else "1.68.1"
+      val grpcVersion = if (otelProps.testLatestDeps) "1.68.1" else "1.43.2"
       artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
     }
   }
@@ -51,5 +55,35 @@ afterEvaluate {
   dependencies {
     add("compileProtoPath", platform(project(":dependencyManagement")))
     add("testCompileProtoPath", platform(project(":dependencyManagement")))
+  }
+}
+
+tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc")
+  }
+
+  val testBothSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc/dup")
+  }
+
+  check {
+    dependsOn(testStableSemconv, testBothSemconv)
+  }
+}
+
+if (otelProps.denyUnsafe) {
+  tasks.withType<Test>().configureEach {
+    enabled = false
   }
 }

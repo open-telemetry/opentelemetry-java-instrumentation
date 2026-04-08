@@ -18,6 +18,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -26,7 +27,7 @@ import play.api.mvc.Request;
 import play.api.mvc.Result;
 import scala.concurrent.Future;
 
-public class ActionInstrumentation implements TypeInstrumentation {
+class ActionInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("play.api.mvc.Action");
@@ -43,50 +44,71 @@ public class ActionInstrumentation implements TypeInstrumentation {
         named("apply")
             .and(takesArgument(0, named("play.api.mvc.Request")))
             .and(returns(named("scala.concurrent.Future"))),
-        this.getClass().getName() + "$ApplyAdvice");
+        getClass().getName() + "$ApplyAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ApplyAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) Request<?> req,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = currentContext();
-      if (!instrumenter().shouldStart(parentContext, null)) {
-        return;
+    public static class AdviceScope {
+      private final Context context;
+      private final Scope scope;
+
+      public AdviceScope(Context context, Scope scope) {
+        this.context = context;
+        this.scope = scope;
       }
 
-      context = instrumenter().start(parentContext, null);
-      scope = context.makeCurrent();
+      @Nullable
+      public static AdviceScope start(Context parentContext) {
+        if (!instrumenter().shouldStart(parentContext, null)) {
+          return null;
+        }
+
+        Context context = instrumenter().start(parentContext, null);
+        return new AdviceScope(context, context.makeCurrent());
+      }
+
+      public Future<Result> end(
+          @Nullable Throwable throwable,
+          Future<Result> responseFuture,
+          Action<?> thisAction,
+          Request<?> req) {
+        scope.close();
+        updateSpan(context, req);
+
+        if (throwable == null) {
+          // span is finished when future completes
+          // not using responseFuture.onComplete() because that doesn't guarantee this handler span
+          // will be completed before the server span completes
+          responseFuture =
+              ResponseFutureWrapper.wrap(responseFuture, context, thisAction.executionContext());
+        } else {
+          instrumenter().end(context, null, null, throwable);
+        }
+
+        return responseFuture;
+      }
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopTraceOnResponse(
-        @Advice.This Object thisAction,
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static AdviceScope onEnter(@Advice.Argument(0) Request<?> req) {
+      return AdviceScope.start(currentContext());
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @Advice.AssignReturned.ToReturned
+    public static Future<Result> stopTraceOnResponse(
+        @Advice.This Action<?> thisAction,
         @Advice.Thrown Throwable throwable,
         @Advice.Argument(0) Request<?> req,
-        @Advice.Return(readOnly = false) Future<Result> responseFuture,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
+        @Advice.Return Future<Result> responseFuture,
+        @Advice.Enter @Nullable AdviceScope actionScope) {
+      if (actionScope == null) {
+        return responseFuture;
       }
-      scope.close();
 
-      updateSpan(context, req);
-      if (throwable == null) {
-        // span is finished when future completes
-        // not using responseFuture.onComplete() because that doesn't guarantee this handler span
-        // will be completed before the server span completes
-        responseFuture =
-            ResponseFutureWrapper.wrap(
-                responseFuture, context, ((Action<?>) thisAction).executionContext());
-      } else {
-        instrumenter().end(context, null, null, throwable);
-      }
+      return actionScope.end(throwable, responseFuture, thisAction, req);
     }
   }
 }

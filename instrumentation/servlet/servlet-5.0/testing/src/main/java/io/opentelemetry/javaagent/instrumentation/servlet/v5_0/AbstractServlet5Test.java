@@ -16,6 +16,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
@@ -67,8 +68,14 @@ public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttp
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
     options.setTestCaptureRequestParameters(true);
-    options.setHasResponseCustomizer(e -> true);
-    options.setHasResponseSpan(this::hasResponseSpan);
+    if (isAgentTest()) {
+      options.setHasResponseCustomizer(e -> true);
+      options.setHasResponseSpan(this::hasResponseSpan);
+    }
+  }
+
+  protected boolean isAgentTest() {
+    return true;
   }
 
   protected boolean hasResponseSpan(ServerEndpoint endpoint) {
@@ -99,7 +106,7 @@ public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttp
   @Override
   public String expectedHttpRoute(ServerEndpoint endpoint, String method) {
     // no need to compute route if we're not expecting it
-    if (!hasHttpRouteAttribute(endpoint)) {
+    if (!hasHttpRouteAttribute(endpoint) || !isAgentTest()) {
       return null;
     }
 
@@ -146,6 +153,8 @@ public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttp
 
   @Test
   void snippetInjectionWithServletOutputStream() {
+    assumeTrue(isAgentTest());
+
     ExperimentalSnippetHolder.setSnippet(
         "\n  <script type=\"text/javascript\"> Test Test</script>");
     AggregatedHttpRequest request = request(HTML_SERVLET_OUTPUT_STREAM, "GET");
@@ -186,6 +195,8 @@ public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttp
 
   @Test
   void snippetInjectionWithPrintWriter() {
+    assumeTrue(isAgentTest());
+
     ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>");
     AggregatedHttpRequest request = request(HTML_PRINT_WRITER, "GET");
     AggregatedHttpResponse response = client.execute(request).aggregate().join();

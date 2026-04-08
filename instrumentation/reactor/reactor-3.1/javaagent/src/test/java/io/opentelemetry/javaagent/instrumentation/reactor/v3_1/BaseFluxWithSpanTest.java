@@ -5,12 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor.v3_1;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
-
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import io.opentelemetry.javaagent.instrumentation.otelannotations.AbstractWithSpanTest;
 import org.junit.jupiter.api.Test;
 import reactor.core.Scannable;
@@ -18,7 +14,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.UnicastProcessor;
 import reactor.test.StepVerifier;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 abstract class BaseFluxWithSpanTest extends AbstractWithSpanTest<Flux<String>, Flux<String>> {
 
   @Override
@@ -77,13 +72,13 @@ abstract class BaseFluxWithSpanTest extends AbstractWithSpanTest<Flux<String>, F
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
-                                equalTo(CODE_NAMESPACE, traced.getClass().getName()),
-                                equalTo(CODE_FUNCTION, "flux")),
+                                SemconvCodeStabilityUtil.codeFunctionAssertions(
+                                    traced.getClass(), "flux")),
                     span ->
                         span.hasName("inner-manual")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
-                            .hasAttributes(Attributes.empty())));
+                            .hasTotalAttributeCount(0)));
   }
 
   @Test
@@ -113,19 +108,19 @@ abstract class BaseFluxWithSpanTest extends AbstractWithSpanTest<Flux<String>, F
                         span.hasName("parent")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributes(Attributes.empty()),
+                            .hasTotalAttributeCount(0),
                     span ->
                         span.hasName("TracedWithSpan.flux")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(CODE_NAMESPACE, traced.getClass().getName()),
-                                equalTo(CODE_FUNCTION, "flux")),
+                                SemconvCodeStabilityUtil.codeFunctionAssertions(
+                                    traced.getClass(), "flux")),
                     span ->
                         span.hasName("inner-manual")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(1))
-                            .hasAttributes(Attributes.empty())));
+                            .hasTotalAttributeCount(0)));
   }
 
   // While a UnicastProcessor is a Flux and we'd expect a simpler way to access it to provide

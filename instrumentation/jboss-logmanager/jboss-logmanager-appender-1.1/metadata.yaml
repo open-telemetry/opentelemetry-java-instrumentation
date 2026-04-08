@@ -1,0 +1,24 @@
+display_name: JBoss Log Manager
+description: >
+  This instrumentation bridges JBoss LogManager log events to OpenTelemetry logs.
+library_link: https://github.com/jboss-logging/jboss-logmanager
+features:
+  - LOGGING_BRIDGE
+configurations:
+  - name: otel.instrumentation.jboss-logmanager.experimental-log-attributes
+    description: >
+      Enables the capture of experimental log attributes, including thread name and thread ID.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes
+    description: >
+      Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a
+      comma-separated list of specific keys.
+    type: list
+    default: ''
+  - name: otel.instrumentation.jboss-logmanager.experimental.capture-event-name
+    description: >
+      Enables the capture of the event name from the MDC attribute "event.name" and sets it as the
+      log record's event name.
+    type: boolean
+    default: false

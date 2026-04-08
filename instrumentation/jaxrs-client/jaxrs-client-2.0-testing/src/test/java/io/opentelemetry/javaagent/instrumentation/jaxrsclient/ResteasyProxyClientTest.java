@@ -5,12 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Map;
 import javax.ws.rs.core.Response;
@@ -41,7 +42,7 @@ class ResteasyProxyClientTest extends AbstractHttpClientTest<ResteasyProxyResour
         (method + "_" + uri.getPath()).toLowerCase(Locale.ROOT).replace("/", "").replace('-', '_');
 
     String param =
-        URLEncodedUtils.parse(uri, StandardCharsets.UTF_8.name()).stream()
+        URLEncodedUtils.parse(uri, UTF_8.name()).stream()
             .findFirst()
             .map(NameValuePair::getValue)
             .orElse(null);

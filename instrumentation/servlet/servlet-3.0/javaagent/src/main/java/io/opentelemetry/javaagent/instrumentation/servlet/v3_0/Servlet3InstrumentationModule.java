@@ -32,6 +32,7 @@ public class Servlet3InstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 3.0
     return hasClassesNamed("javax.servlet.ServletRegistration");
   }
 
@@ -64,5 +65,10 @@ public class Servlet3InstrumentationModule extends InstrumentationModule
 
   private static String adviceClassName(String suffix) {
     return Servlet3InstrumentationModule.class.getPackage().getName() + suffix;
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

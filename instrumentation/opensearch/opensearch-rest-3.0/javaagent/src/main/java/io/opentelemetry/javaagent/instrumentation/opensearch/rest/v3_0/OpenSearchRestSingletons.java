@@ -1,0 +1,46 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.opensearch.rest.v3_0;
+
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.javaagent.instrumentation.opensearch.rest.OpenSearchRestInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.opensearch.rest.OpenSearchRestRequest;
+import io.opentelemetry.javaagent.instrumentation.opensearch.rest.OpenSearchRestResponse;
+import java.net.InetAddress;
+import javax.annotation.Nullable;
+import org.opensearch.client.Response;
+
+public class OpenSearchRestSingletons {
+
+  private static final Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> instrumenter =
+      OpenSearchRestInstrumenterFactory.create("io.opentelemetry.opensearch-rest-3.0");
+
+  public static Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> instrumenter() {
+    return instrumenter;
+  }
+
+  @Nullable
+  public static OpenSearchRestResponse convertResponse(@Nullable Response response) {
+    if (response == null) {
+      return null;
+    }
+    return new OpenSearchRestResponse() {
+
+      @Override
+      public int getStatusCode() {
+        return response.getStatusLine().getStatusCode();
+      }
+
+      @Override
+      @Nullable
+      public InetAddress getAddress() {
+        return response.getHost().getAddress();
+      }
+    };
+  }
+
+  private OpenSearchRestSingletons() {}
+}

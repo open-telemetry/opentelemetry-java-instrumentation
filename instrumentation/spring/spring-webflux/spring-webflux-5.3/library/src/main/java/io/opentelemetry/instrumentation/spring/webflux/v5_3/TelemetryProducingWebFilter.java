@@ -10,6 +10,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
+import javax.annotation.Nullable;
 import org.reactivestreams.Subscription;
 import org.springframework.core.Ordered;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -17,6 +18,7 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.CoreSubscriber;
+import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Mono;
 import reactor.util.annotation.NonNull;
 
@@ -73,7 +75,7 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
     }
   }
 
-  private static class TelemetryWrappedSubscriber implements CoreSubscriber<Void> {
+  private static class TelemetryWrappedSubscriber extends BaseSubscriber<Void> {
     private final CoreSubscriber<? super Void> actual;
     private final Instrumenter<ServerWebExchange, ServerWebExchange> instrumenter;
     private final Context currentOtelContext;
@@ -96,26 +98,28 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
     }
 
     @Override
-    public void onSubscribe(Subscription s) {
-      actual.onSubscribe(s);
+    protected void hookOnSubscribe(Subscription subscription) {
+      actual.onSubscribe(this);
     }
 
     @Override
-    public void onNext(Void unused) {}
-
-    @Override
-    public void onError(Throwable t) {
-      onTerminal(currentOtelContext, t);
-      actual.onError(t);
+    protected void hookOnError(Throwable throwable) {
+      onTerminal(currentOtelContext, throwable);
+      actual.onError(throwable);
     }
 
     @Override
-    public void onComplete() {
+    protected void hookOnComplete() {
       onTerminal(currentOtelContext, null);
       actual.onComplete();
     }
 
-    private void onTerminal(Context currentContext, Throwable t) {
+    @Override
+    protected void hookOnCancel() {
+      end(currentOtelContext, true, null);
+    }
+
+    private void onTerminal(Context currentContext, @Nullable Throwable t) {
       ServerHttpResponse response = exchange.getResponse();
       if (response.isCommitted()) {
         end(currentContext, t);
@@ -128,15 +132,26 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
       }
     }
 
-    private void end(Context currentContext, Throwable t) {
+    private void end(Context currentContext, @Nullable Throwable t) {
+      end(currentContext, false, t);
+    }
+
+    private void end(Context currentContext, boolean cancel, @Nullable Throwable t) {
       // Update HTTP route now, because during instrumenter.start()
       // the HTTP route isn't available from the exchange attributes, but is afterwards
       HttpServerRoute.update(
           currentContext,
           HttpServerRouteSource.CONTROLLER,
-          (context, exchange) -> WebfluxServerHttpAttributesGetter.INSTANCE.getHttpRoute(exchange),
+          (context, exchange) ->
+              exchange == null
+                  ? null
+                  : WebfluxServerHttpAttributesGetter.INSTANCE.getHttpRoute(exchange),
           exchange);
-      instrumenter.end(currentContext, exchange, exchange, t);
+      instrumenter.end(
+          currentContext,
+          exchange,
+          cancel && !exchange.getResponse().isCommitted() ? null : exchange,
+          t);
     }
   }
 }

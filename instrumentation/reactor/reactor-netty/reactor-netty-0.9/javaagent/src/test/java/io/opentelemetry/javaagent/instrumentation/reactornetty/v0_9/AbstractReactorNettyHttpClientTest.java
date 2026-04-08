@@ -11,6 +11,7 @@ import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Collections.emptySet;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -18,6 +19,7 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
@@ -30,7 +32,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -41,6 +42,9 @@ abstract class AbstractReactorNettyHttpClientTest
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+
+  private static final String UNUSABLE_PORT_URI =
+      "http://localhost:" + PortUtils.UNUSABLE_PORT + "/";
 
   abstract HttpClient createHttpClient(boolean readTimeout);
 
@@ -96,7 +100,7 @@ abstract class AbstractReactorNettyHttpClientTest
     optionsBuilder.setExpectedClientSpanNameMapper(
         (uri, method) -> {
           switch (uri.toString()) {
-            case "http://localhost:61/": // unopened port
+            case UNUSABLE_PORT_URI: // unopened port
             case "https://192.0.2.1/": // non routable address
               return "CONNECT";
             default:
@@ -109,7 +113,7 @@ abstract class AbstractReactorNettyHttpClientTest
         (uri, exception) -> {
           if (exception.getClass().getName().endsWith("ReactiveException")) {
             // unopened port or non routable address
-            if ("http://localhost:61/".equals(uri.toString())
+            if (UNUSABLE_PORT_URI.equals(uri.toString())
                 || "https://192.0.2.1/".equals(uri.toString())) {
               exception = exception.getCause();
             }
@@ -120,7 +124,7 @@ abstract class AbstractReactorNettyHttpClientTest
     optionsBuilder.setHttpAttributes(
         uri -> {
           // unopened port or non routable address
-          if ("http://localhost:61/".equals(uri.toString())
+          if (UNUSABLE_PORT_URI.equals(uri.toString())
               || "https://192.0.2.1/".equals(uri.toString())) {
             return emptySet();
           }
@@ -166,7 +170,7 @@ abstract class AbstractReactorNettyHttpClientTest
                     })
                 .block());
 
-    latch.await(10, TimeUnit.SECONDS);
+    latch.await(10, SECONDS);
 
     testing.waitAndAssertTraces(
         trace -> {
@@ -201,7 +205,7 @@ abstract class AbstractReactorNettyHttpClientTest
                     () ->
                         httpClient
                             .get()
-                            .uri("http://localhost:$UNUSABLE_PORT/")
+                            .uri(UNUSABLE_PORT_URI)
                             .responseSingle(
                                 (resp, content) -> {
                                   // Make sure to consume content since that's when we close the

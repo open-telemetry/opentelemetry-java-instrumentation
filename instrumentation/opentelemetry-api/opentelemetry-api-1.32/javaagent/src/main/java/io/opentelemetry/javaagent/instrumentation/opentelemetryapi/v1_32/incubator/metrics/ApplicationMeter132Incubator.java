@@ -5,20 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_32.incubator.metrics;
 
-import application.io.opentelemetry.api.metrics.DoubleHistogramBuilder;
+import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_31.incubator.metrics.ApplicationMeter131;
 
 class ApplicationMeter132Incubator extends ApplicationMeter131 {
 
-  private final io.opentelemetry.api.metrics.Meter agentMeter;
+  private final Meter agentMeter;
 
-  ApplicationMeter132Incubator(io.opentelemetry.api.metrics.Meter agentMeter) {
+  ApplicationMeter132Incubator(Meter agentMeter) {
     super(agentMeter);
     this.agentMeter = agentMeter;
   }
 
   @Override
-  public DoubleHistogramBuilder histogramBuilder(String name) {
+  public application.io.opentelemetry.api.metrics.DoubleHistogramBuilder histogramBuilder(
+      String name) {
     return new ApplicationDoubleHistogramBuilder132Incubator(agentMeter.histogramBuilder(name));
   }
 }

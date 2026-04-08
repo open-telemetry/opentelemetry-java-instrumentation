@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentCo
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.JaxWsSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -20,12 +19,13 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jaxws.common.JaxWsRequest;
+import javax.annotation.Nullable;
 import javax.xml.ws.Provider;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class WebServiceProviderInstrumentation implements TypeInstrumentation {
+class WebServiceProviderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -40,49 +40,63 @@ public class WebServiceProviderInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(named("invoke")).and(takesArguments(1)),
-        WebServiceProviderInstrumentation.class.getName() + "$InvokeAdvice");
+        isPublic().and(named("invoke")).and(takesArguments(1)),
+        getClass().getName() + "$InvokeAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class InvokeAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void startSpan(
-        @Advice.This Object target,
-        @Advice.Origin("#m") String methodName,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelRequest") JaxWsRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      callDepth = CallDepth.forClass(Provider.class);
-      if (callDepth.getAndIncrement() > 0) {
-        return;
+    public static class AdviceScope {
+      private final CallDepth callDepth;
+      @Nullable private final JaxWsRequest request;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
+
+      private AdviceScope(
+          CallDepth callDepth,
+          @Nullable JaxWsRequest request,
+          @Nullable Context context,
+          @Nullable Scope scope) {
+        this.callDepth = callDepth;
+        this.request = request;
+        this.context = context;
+        this.scope = scope;
       }
 
-      Context parentContext = currentContext();
-      request = new JaxWsRequest(target.getClass(), methodName);
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return;
+      public static AdviceScope start(CallDepth callDepth, Object target, String methodName) {
+        if (callDepth.getAndIncrement() > 0) {
+          return new AdviceScope(callDepth, null, null, null);
+        }
+        Context parentContext = currentContext();
+        JaxWsRequest request = new JaxWsRequest(target.getClass(), methodName);
+        if (!instrumenter().shouldStart(parentContext, request)) {
+          return new AdviceScope(callDepth, null, null, null);
+        }
+        Context context = instrumenter().start(parentContext, request);
+        return new AdviceScope(callDepth, request, context, context.makeCurrent());
       }
 
-      context = instrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
+      public void end(@Nullable Throwable throwable) {
+        if (callDepth.decrementAndGet() > 0 || scope == null) {
+          return;
+        }
+        scope.close();
+        instrumenter().end(context, request, null, throwable);
+      }
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelRequest") JaxWsRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (callDepth.decrementAndGet() > 0 || scope == null) {
-        return;
-      }
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static AdviceScope startSpan(
+        @Advice.This Object target, @Advice.Origin("#m") String methodName) {
+      CallDepth callDepth = CallDepth.forClass(Provider.class);
+      return AdviceScope.start(callDepth, target, methodName);
+    }
 
-      scope.close();
-      instrumenter().end(context, request, null, throwable);
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void stopSpan(
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
+      adviceScope.end(throwable);
     }
   }
 }

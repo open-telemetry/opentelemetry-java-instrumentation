@@ -5,25 +5,51 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQueryAnalyzer;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 
-public final class OperationNameUtil {
+public class OperationNameUtil {
 
-  private static final SqlStatementSanitizer sanitizer =
-      SqlStatementSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+  private static final String FALLBACK_SPAN_NAME = "hibernate";
 
-  public static String getOperationNameForQuery(String query) {
+  private static final SqlQueryAnalyzer analyzer =
+      SqlQueryAnalyzer.create(
+          DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "hibernate"));
+
+  // query could be HQL or SQL
+  public static String getOperationNameForQuery(@Nullable String query) {
+    if (emitStableDatabaseSemconv()) {
+      if (query != null) {
+        // note: summarization is not affected by the choice of dialect
+        SqlQuery info = analyzer.analyzeWithSummary(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+        String summary = info.getQuerySummary();
+        if (summary != null) {
+          return summary;
+        }
+      }
+      return FALLBACK_SPAN_NAME;
+    }
+    return getOperationNameForQueryOldSemconv(query);
+  }
+
+  private static String getOperationNameForQueryOldSemconv(@Nullable String query) {
     // set operation to default value that is used when sql sanitizer fails to extract
     // operation name
     String operation = "Hibernate Query";
-    SqlStatementInfo info = sanitizer.sanitize(query);
-    if (info.getOperation() != null) {
-      operation = info.getOperation();
-      if (info.getMainIdentifier() != null) {
-        operation += " " + info.getMainIdentifier();
+    SqlQuery info = analyzer.analyze(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    if (info.getOperationName() != null) {
+      operation = info.getOperationName();
+      if (info.getCollectionName() != null) {
+        operation += " " + info.getCollectionName();
+      } else if (info.getStoredProcedureName() != null) {
+        operation += " " + info.getStoredProcedureName();
       }
     }
     return operation;
@@ -36,8 +62,12 @@ public final class OperationNameUtil {
     return "Session." + methodName;
   }
 
+  @Nullable
   public static String getEntityName(
-      String descriptor, Object arg0, Object arg1, Function<Object, String> nameFromEntity) {
+      String descriptor,
+      @Nullable Object arg0,
+      @Nullable Object arg1,
+      Function<Object, String> nameFromEntity) {
     String entityName = null;
     // methods like save(String entityName, Object object)
     // that take entity name as first argument and entity as second

@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -26,6 +27,8 @@ dependencies {
 
 tasks {
   val testChunkRootSpan by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("*ChunkRootSpanTest")
     }
@@ -34,6 +37,8 @@ tasks {
   }
 
   val testItemLevelSpan by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("*ItemLevelSpanTest")
       includeTestsMatching("*CustomSpanEventTest")
@@ -48,15 +53,17 @@ tasks {
       excludeTestsMatching("*ItemLevelSpanTest")
       excludeTestsMatching("*CustomSpanEventTest")
     }
+
+    systemProperty("metadataConfig", "otel.instrumentation.spring-batch.experimental-span-attributes=true")
   }
 
   check {
-    dependsOn(testChunkRootSpan)
-    dependsOn(testItemLevelSpan)
+    dependsOn(testChunkRootSpan, testItemLevelSpan)
   }
 
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
     jvmArgs("-Dotel.instrumentation.spring-batch.enabled=true")
     // TODO run tests both with and without experimental span attributes
     jvmArgs("-Dotel.instrumentation.spring-batch.experimental-span-attributes=true")

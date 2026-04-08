@@ -11,15 +11,15 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 // add spans around calls to methods with @ClientCallable annotation
-public class ClientCallableRpcInstrumentation implements TypeInstrumentation {
+class ClientCallableRpcInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -35,42 +35,57 @@ public class ClientCallableRpcInstrumentation implements TypeInstrumentation {
             .and(takesArgument(2, named(String.class.getName())))
             .and(takesArgument(3, named("elemental.json.JsonArray")))
             .and(takesArgument(4, named(int.class.getName()))),
-        this.getClass().getName() + "$InvokeMethodAdvice");
+        getClass().getName() + "$InvokeMethodAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class InvokeMethodAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(1) Class<?> componentClass,
-        @Advice.Argument(2) String methodName,
-        @Advice.Local("otelRequest") VaadinClientCallableRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+    public static class AdviceScope {
+      private final VaadinClientCallableRequest request;
+      private final Context context;
+      private final Scope scope;
 
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      request = VaadinClientCallableRequest.create(componentClass, methodName);
-      if (!clientCallableInstrumenter().shouldStart(parentContext, request)) {
-        return;
+      private AdviceScope(VaadinClientCallableRequest request, Context context, Scope scope) {
+        this.request = request;
+        this.context = context;
+        this.scope = scope;
       }
 
-      context = clientCallableInstrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
+      @Nullable
+      public static AdviceScope start(Class<?> componentClass, String methodName) {
+        Context parentContext = Context.current();
+        VaadinClientCallableRequest request =
+            VaadinClientCallableRequest.create(componentClass, methodName);
+        if (!clientCallableInstrumenter().shouldStart(parentContext, request)) {
+          return null;
+        }
+
+        Context context = clientCallableInstrumenter().start(parentContext, request);
+        return new AdviceScope(request, context, context.makeCurrent());
+      }
+
+      public void end(@Nullable Throwable throwable) {
+        scope.close();
+
+        clientCallableInstrumenter().end(context, request, null, throwable);
+      }
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelRequest") VaadinClientCallableRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
-      }
-      scope.close();
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static AdviceScope onEnter(
+        @Advice.Argument(1) Class<?> componentClass, @Advice.Argument(2) String methodName) {
+      return AdviceScope.start(componentClass, methodName);
+    }
 
-      clientCallableInstrumenter().end(context, request, null, throwable);
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(throwable);
+      }
     }
   }
 }
