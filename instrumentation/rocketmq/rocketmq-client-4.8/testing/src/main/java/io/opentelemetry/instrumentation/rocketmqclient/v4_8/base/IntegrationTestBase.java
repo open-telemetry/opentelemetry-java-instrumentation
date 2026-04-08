@@ -32,7 +32,7 @@ import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class IntegrationTestBase {
+public class IntegrationTestBase {
   private static final Logger logger = LoggerFactory.getLogger(IntegrationTestBase.class);
 
   private static final String BROKER_NAME_PREFIX = "TestBrokerName_";

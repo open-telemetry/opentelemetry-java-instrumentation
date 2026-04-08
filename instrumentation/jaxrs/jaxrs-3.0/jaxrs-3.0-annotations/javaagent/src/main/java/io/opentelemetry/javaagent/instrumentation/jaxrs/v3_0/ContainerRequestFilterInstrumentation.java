@@ -48,7 +48,7 @@ class ContainerRequestFilterInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RequestFilterAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void setFilterClass(
         @Advice.This ContainerRequestFilter filter,
         @Advice.Argument(0) ContainerRequestContext context) {

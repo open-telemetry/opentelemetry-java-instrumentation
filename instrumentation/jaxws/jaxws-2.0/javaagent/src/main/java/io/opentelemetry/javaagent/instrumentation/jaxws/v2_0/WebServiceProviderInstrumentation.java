@@ -86,14 +86,14 @@ class WebServiceProviderInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope startSpan(
         @Advice.This Object target, @Advice.Origin("#m") String methodName) {
       CallDepth callDepth = CallDepth.forClass(Provider.class);
       return AdviceScope.start(callDepth, target, methodName);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
       adviceScope.end(throwable);

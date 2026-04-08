@@ -84,7 +84,7 @@ public abstract class InstrumentationExtension
    * Waits for the assertion applied to all metrics of the given instrumentation and metric name to
    * pass.
    */
-  public final void waitAndAssertMetrics(
+  public void waitAndAssertMetrics(
       String instrumentationName, String metricName, Consumer<ListAssert<MetricData>> assertion) {
     testRunner.waitAndAssertMetrics(instrumentationName, metricName, assertion);
   }
@@ -129,7 +129,7 @@ public abstract class InstrumentationExtension
     testRunner.waitAndAssertSortedTraces(traceComparator, assertions);
   }
 
-  public final void waitAndAssertSortedTraces(
+  public void waitAndAssertSortedTraces(
       Comparator<List<SpanData>> traceComparator,
       Iterable<? extends Consumer<TraceAssert>> assertions) {
     testRunner.waitAndAssertSortedTraces(traceComparator, assertions);
@@ -148,11 +148,11 @@ public abstract class InstrumentationExtension
     testRunner.waitAndAssertTraces(assertions);
   }
 
-  public final void waitAndAssertTraces(Iterable<? extends Consumer<TraceAssert>> assertions) {
+  public void waitAndAssertTraces(Iterable<? extends Consumer<TraceAssert>> assertions) {
     testRunner.waitAndAssertTraces(assertions);
   }
 
-  public final void waitAndAssertLogRecords(
+  public void waitAndAssertLogRecords(
       Iterable<? extends Consumer<LogRecordDataAssert>> assertions) {
     testRunner.waitAndAssertLogRecords(assertions);
   }

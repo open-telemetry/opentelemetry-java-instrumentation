@@ -51,7 +51,7 @@ class HystrixCommandInstrumentation implements TypeInstrumentation {
   public static class ExecuteAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Observable<?> stopSpan(
         @Advice.This HystrixInvokableInfo<?> command,
         @Advice.Return @Nullable Observable<?> result) {
@@ -65,7 +65,7 @@ class HystrixCommandInstrumentation implements TypeInstrumentation {
   public static class FallbackAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Observable<?> stopSpan(
         @Advice.This HystrixInvokableInfo<?> command,
         @Advice.Return @Nullable Observable<?> result) {

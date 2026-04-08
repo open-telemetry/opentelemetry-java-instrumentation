@@ -44,7 +44,7 @@ class ServerErrorHandlerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ErrorAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void captureThrowable(
         @Advice.Argument(0) Context ctx, @Advice.Argument(1) Throwable throwable) {
       Optional<io.opentelemetry.context.Context> otelContext =

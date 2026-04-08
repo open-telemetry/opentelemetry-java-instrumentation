@@ -113,8 +113,8 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
       Method method = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
       method.setAccessible(true);
       return method;
-    } catch (NoSuchMethodException exception) {
-      throw new IllegalStateException(exception);
+    } catch (NoSuchMethodException e) {
+      throw new IllegalStateException(e);
     }
   }
 
@@ -125,8 +125,8 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
   private static Class<?> findLoadedClass(ClassLoader classLoader, String className) {
     try {
       return (Class<?>) findLoadedClassMethod.invoke(classLoader, className);
-    } catch (Exception exception) {
-      throw new IllegalStateException(exception);
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
     }
   }
 

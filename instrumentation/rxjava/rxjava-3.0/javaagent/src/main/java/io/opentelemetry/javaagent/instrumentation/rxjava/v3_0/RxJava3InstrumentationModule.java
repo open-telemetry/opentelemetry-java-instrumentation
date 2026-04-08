@@ -23,6 +23,7 @@ public class RxJava3InstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 3.0.0, removed in 3.1.1
     return hasClassesNamed("io.reactivex.rxjava3.internal.fuseable.ConditionalSubscriber");
   }
 

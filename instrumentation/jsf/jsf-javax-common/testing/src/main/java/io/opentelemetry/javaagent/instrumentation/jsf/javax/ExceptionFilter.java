@@ -22,16 +22,16 @@ public class ExceptionFilter implements Filter {
       throws ServletException, IOException {
     try {
       chain.doFilter(request, response);
-    } catch (ServletException exception) {
+    } catch (ServletException e) {
       // to ease testing unwrap our exception to root cause
-      Throwable tmp = exception;
+      Throwable tmp = e;
       while (tmp.getCause() != null) {
         tmp = tmp.getCause();
       }
       if (tmp instanceof IllegalStateException && "submit exception".equals(tmp.getMessage())) {
         throw (IllegalStateException) tmp;
       }
-      throw exception;
+      throw e;
     }
   }
 

@@ -53,7 +53,7 @@ class BootstrapInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Bootstrap bootstrap) {
       // this is already the default value, but we're calling the resolver() method to invoke its
       // instrumentation
@@ -64,7 +64,7 @@ class BootstrapInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SetResolverAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static AddressResolverGroup<?> onEnter(
         @Advice.Argument(value = 0) AddressResolverGroup<?> resolver) {
@@ -74,7 +74,7 @@ class BootstrapInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ConnectAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static NettyScope startConnect(@Advice.Argument(0) SocketAddress remoteAddress) {
 
       Context parentContext = Java8BytecodeBridge.currentContext();
@@ -86,7 +86,7 @@ class BootstrapInstrumentation implements TypeInstrumentation {
       return NettyScope.startNew(connectionInstrumenter(), parentContext, request);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void endConnect(
         @Advice.Thrown Throwable throwable,
         @Advice.Argument(2) ChannelPromise channelPromise,

@@ -40,7 +40,7 @@ class RoutingContextInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class NextAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void next(@Advice.This RoutingContext routingContext) {
       // calling next tells router to move to the next matching route
       // restore remembered route to remove currently matched route from it

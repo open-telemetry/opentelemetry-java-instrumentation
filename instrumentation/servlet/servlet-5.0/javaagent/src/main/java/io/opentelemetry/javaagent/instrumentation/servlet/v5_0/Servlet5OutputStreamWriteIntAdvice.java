@@ -16,7 +16,10 @@ import net.bytebuddy.asm.Advice;
 @SuppressWarnings("unused")
 public class Servlet5OutputStreamWriteIntAdvice {
 
-  @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class, suppress = Throwable.class)
+  @Advice.OnMethodEnter(
+      skipOn = Advice.OnDefaultValue.class,
+      suppress = Throwable.class,
+      inline = false)
   public static boolean methodEnter(
       @Advice.This ServletOutputStream servletOutputStream, @Advice.Argument(0) int write)
       throws IOException {

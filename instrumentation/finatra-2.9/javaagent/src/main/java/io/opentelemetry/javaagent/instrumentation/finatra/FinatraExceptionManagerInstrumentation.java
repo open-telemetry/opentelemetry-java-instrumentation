@@ -35,7 +35,7 @@ class FinatraExceptionManagerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class HandleExceptionAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void handleException(
         @Advice.Return Response response, @Advice.Argument(1) Throwable throwable) {
 

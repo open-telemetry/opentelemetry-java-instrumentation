@@ -17,7 +17,7 @@ import io.opentelemetry.api.metrics.Meter;
  * copies and injects bridge helpers into the child classloader, including {@link CallbackAnchor}
  * with its own static {@code callbacks} list anchored to the child classloader's lifecycle.
  */
-public final class GaugeRegistrar {
+public class GaugeRegistrar {
 
   public static void register(String instrumentationName, String gaugeName) {
     Meter meter =

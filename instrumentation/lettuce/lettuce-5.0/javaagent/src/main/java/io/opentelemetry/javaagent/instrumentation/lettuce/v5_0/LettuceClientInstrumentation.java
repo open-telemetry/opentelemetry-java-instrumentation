@@ -68,7 +68,7 @@ class LettuceClientInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(1) RedisURI redisUri) {
       Context parentContext = currentContext();
       if (!connectInstrumenter().shouldStart(parentContext, redisUri)) {
@@ -79,7 +79,7 @@ class LettuceClientInstrumentation implements TypeInstrumentation {
       return new AdviceScope(context, context.makeCurrent());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Argument(1) RedisURI redisUri,
         @Advice.Thrown @Nullable Throwable throwable,

@@ -298,7 +298,7 @@ final class ChatCompletionEventsHelper {
         name = lookup.findVirtual(functionClass, "name", MethodType.methodType(String.class));
         arguments =
             lookup.findVirtual(functionClass, "arguments", MethodType.methodType(String.class));
-      } catch (Exception exception) {
+      } catch (Exception ignored) {
         id = null;
         function = null;
         name = null;
@@ -385,7 +385,7 @@ final class ChatCompletionEventsHelper {
         name = lookup.findVirtual(functionClass, "name", MethodType.methodType(String.class));
         arguments =
             lookup.findVirtual(functionClass, "arguments", MethodType.methodType(String.class));
-      } catch (Exception exception) {
+      } catch (Exception ignored) {
         functionToolCall = null;
         id = null;
         function = null;

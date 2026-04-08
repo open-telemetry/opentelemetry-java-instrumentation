@@ -71,7 +71,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       @ToArgument(value = 3, index = 1),
       @ToArgument(value = 4, index = 2)
     })
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] methodEnter(
         @Advice.Argument(0) AsyncRequestProducer requestProducer,
         @Advice.Argument(3) HttpContext originalHttpContext,

@@ -63,7 +63,7 @@ class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
      * need to use that state.
      */
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope enter(@Advice.This ForkJoinTask<?> task) {
       Scope scope =
           TaskAdviceHelper.makePropagatedContextCurrent(FORKJOINTASK_PROPAGATED_CONTEXT, task);
@@ -94,7 +94,7 @@ class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
       return scope;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
@@ -106,7 +106,7 @@ class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
   public static class ForkAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static PropagatedContext enterFork(@Advice.This ForkJoinTask<?> task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
@@ -116,7 +116,7 @@ class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
       return null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exitFork(
         @Advice.This ForkJoinTask<?> task,
         @Advice.Enter @Nullable PropagatedContext propagatedContext,

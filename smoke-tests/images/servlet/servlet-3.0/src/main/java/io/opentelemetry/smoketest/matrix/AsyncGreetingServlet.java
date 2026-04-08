@@ -83,10 +83,10 @@ public class AsyncGreetingServlet extends HttpServlet {
     try {
       ac.dispatch("/greeting");
       System.err.println("async request dispatched");
-    } catch (Throwable throwable) {
+    } catch (Throwable t) {
       System.err.println("dispatching async request failed");
-      throwable.printStackTrace();
-      throw throwable;
+      t.printStackTrace();
+      throw t;
     }
     CountDownLatch latch = (CountDownLatch) ac.getRequest().getAttribute(LATCH_KEY);
     if (latch != null) {

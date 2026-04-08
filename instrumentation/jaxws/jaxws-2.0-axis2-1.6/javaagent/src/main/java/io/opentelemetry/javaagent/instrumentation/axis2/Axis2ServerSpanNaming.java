@@ -44,7 +44,7 @@ public class Axis2ServerSpanNaming {
   private static Class<?> loadClass(String name) {
     try {
       return Class.forName(name);
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       return null;
     }
   }

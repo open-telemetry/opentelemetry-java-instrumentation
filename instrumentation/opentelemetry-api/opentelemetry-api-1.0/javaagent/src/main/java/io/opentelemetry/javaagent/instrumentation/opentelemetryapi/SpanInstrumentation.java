@@ -33,13 +33,13 @@ class SpanInstrumentation implements TypeInstrumentation {
   public static class CreateAdvice {
 
     // We replace the return value completely so don't need to call the method.
-    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class)
+    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class, inline = false)
     public static boolean methodEnter() {
       return false;
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(inline = false)
     public static application.io.opentelemetry.api.trace.Span methodExit(
         @Advice.Argument(0)
             application.io.opentelemetry.api.trace.SpanContext applicationSpanContext) {

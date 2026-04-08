@@ -22,7 +22,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
-public final class HttpServerTestOptions {
+public class HttpServerTestOptions {
 
   public static final Set<AttributeKey<?>> DEFAULT_HTTP_ATTRIBUTES =
       Collections.unmodifiableSet(new HashSet<>(asList(HTTP_ROUTE, SERVER_PORT)));

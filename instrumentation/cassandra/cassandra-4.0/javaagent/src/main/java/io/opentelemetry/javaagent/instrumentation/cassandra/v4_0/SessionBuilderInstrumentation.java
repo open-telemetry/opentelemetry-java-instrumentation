@@ -45,7 +45,7 @@ class SessionBuilderInstrumentation implements TypeInstrumentation {
      *     replaced with new session
      */
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static CompletionStage<?> injectTracingSession(@Advice.Return CompletionStage<?> stage) {
       return stage.thenApply(new CompletionStageFunction());
     }

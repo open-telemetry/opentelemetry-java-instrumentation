@@ -44,7 +44,7 @@ class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Respo
       Class<?> clazz = Class.forName("com.amazonaws.AmazonWebServiceResult");
       clazz.getMethod("getSdkResponseMetadata");
       return true;
-    } catch (ClassNotFoundException | NoSuchMethodException exception) {
+    } catch (ClassNotFoundException | NoSuchMethodException ignored) {
       return false;
     }
   }

@@ -103,7 +103,7 @@ class JmsMessageProducerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ProducerAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.Argument(0) Message message, @Advice.This MessageProducer producer) {
       Destination destination;
@@ -116,7 +116,7 @@ class JmsMessageProducerInstrumentation implements TypeInstrumentation {
       return AdviceScope.start(callDepth, destination, message);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
       adviceScope.end(throwable);
@@ -126,14 +126,14 @@ class JmsMessageProducerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ProducerWithDestinationAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.Argument(0) Destination destination, @Advice.Argument(1) Message message) {
       CallDepth callDepth = CallDepth.forClass(MessageProducer.class);
       return AdviceScope.start(callDepth, destination, message);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
       adviceScope.end(throwable);

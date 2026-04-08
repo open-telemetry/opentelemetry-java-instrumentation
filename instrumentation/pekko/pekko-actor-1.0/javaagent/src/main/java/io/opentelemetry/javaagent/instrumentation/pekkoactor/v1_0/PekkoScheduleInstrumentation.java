@@ -43,7 +43,7 @@ class PekkoScheduleInstrumentation implements TypeInstrumentation {
   public static class ScheduleAdvice {
 
     @Advice.AssignReturned.ToArguments(@ToArgument(2))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Runnable enterSchedule(@Advice.Argument(value = 2) Runnable runnable) {
       return PekkoSchedulerTaskWrapper.wrap(runnable);
     }
@@ -53,7 +53,7 @@ class PekkoScheduleInstrumentation implements TypeInstrumentation {
   public static class ScheduleOnceAdvice {
 
     @Advice.AssignReturned.ToArguments(@ToArgument(1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Runnable enterScheduleOnce(@Advice.Argument(value = 1) Runnable runnable) {
       return PekkoSchedulerTaskWrapper.wrap(runnable);
     }

@@ -51,7 +51,7 @@ class FilterInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class HandleReadAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(
         @Advice.This BaseFilter it, @Advice.Argument(0) FilterChainContext ctx) {
       if (Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
@@ -61,7 +61,7 @@ class FilterInstrumentation implements TypeInstrumentation {
       return context != null ? context.makeCurrent() : null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This BaseFilter it, @Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();

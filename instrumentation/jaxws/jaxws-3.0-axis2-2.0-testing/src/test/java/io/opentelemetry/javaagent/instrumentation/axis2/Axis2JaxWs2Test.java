@@ -19,8 +19,8 @@ class Axis2JaxWs2Test extends AbstractJaxWs3Test {
   static {
     try {
       updateConfiguration();
-    } catch (IOException exception) {
-      throw new IllegalStateException(exception);
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
     }
   }
 

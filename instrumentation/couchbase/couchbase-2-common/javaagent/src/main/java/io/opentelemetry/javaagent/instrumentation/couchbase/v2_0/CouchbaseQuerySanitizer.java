@@ -127,7 +127,7 @@ public class CouchbaseQuerySanitizer {
     }
     try {
       return handle.invoke(query).toString();
-    } catch (Throwable throwable) {
+    } catch (Throwable ignored) {
       return null;
     }
   }

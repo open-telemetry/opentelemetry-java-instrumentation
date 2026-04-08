@@ -25,6 +25,7 @@ public class GatewayWebMvcInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 4.3.0
     return hasClassesNamed(
         "org.springframework.cloud.gateway.server.mvc.handler.GatewayDelegatingRouterFunction");
   }

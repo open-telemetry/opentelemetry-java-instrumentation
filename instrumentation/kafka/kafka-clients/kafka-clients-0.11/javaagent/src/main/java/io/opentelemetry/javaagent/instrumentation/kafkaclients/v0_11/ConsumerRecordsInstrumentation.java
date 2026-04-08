@@ -67,7 +67,7 @@ class ConsumerRecordsInstrumentation implements TypeInstrumentation {
   public static class IterableAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static <K, V> Iterable<ConsumerRecord<K, V>> wrap(
         @Advice.This ConsumerRecords<?, ?> records,
         @Advice.Return Iterable<ConsumerRecord<K, V>> iterable) {
@@ -86,7 +86,7 @@ class ConsumerRecordsInstrumentation implements TypeInstrumentation {
   public static class ListAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static <K, V> List<ConsumerRecord<K, V>> wrap(
         @Advice.This ConsumerRecords<?, ?> records,
         @Advice.Return List<ConsumerRecord<K, V>> list) {
@@ -105,7 +105,7 @@ class ConsumerRecordsInstrumentation implements TypeInstrumentation {
   public static class IteratorAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static <K, V> Iterator<ConsumerRecord<K, V>> wrap(
         @Advice.This ConsumerRecords<?, ?> records,
         @Advice.Return Iterator<ConsumerRecord<K, V>> iterator) {
@@ -124,7 +124,7 @@ class ConsumerRecordsInstrumentation implements TypeInstrumentation {
   public static class ListIteratorAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static <K, V> ListIterator<ConsumerRecord<K, V>> wrap(
         @Advice.This ConsumerRecords<?, ?> records,
         @Advice.Return ListIterator<ConsumerRecord<K, V>> listIterator) {

@@ -36,7 +36,7 @@ class NettyResponseFutureInstrumentation implements TypeInstrumentation {
   public static class WrapFutureAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static CompletableFuture<?> onExit(@Advice.Return CompletableFuture<?> result) {
       return CompletableFutureWrapper.wrap(result, Java8BytecodeBridge.currentContext());
     }

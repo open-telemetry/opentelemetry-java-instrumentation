@@ -197,7 +197,7 @@ class CompletableFutureTest {
                     span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
-  static final class AppendingSupplier implements Supplier<String> {
+  static class AppendingSupplier implements Supplier<String> {
 
     private final String letter;
 

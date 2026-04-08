@@ -53,7 +53,7 @@ class AsyncResultSingleInstrumentation implements TypeInstrumentation {
   public static class ConstructorWithHandlerAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Handler<Handler<AsyncResult<?>>> wrapHandler(
         @Advice.Argument(0) Handler<Handler<AsyncResult<?>>> handler) {
       return AsyncResultHandlerWrapper.wrapIfNeeded(handler, Java8BytecodeBridge.currentContext());
@@ -64,7 +64,7 @@ class AsyncResultSingleInstrumentation implements TypeInstrumentation {
   public static class ConstructorWithConsumerAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Consumer<Handler<AsyncResult<?>>> wrapHandler(
         @Advice.Argument(0) Consumer<Handler<AsyncResult<?>>> handler) {
       return AsyncResultConsumerWrapper.wrapIfNeeded(handler, Java8BytecodeBridge.currentContext());

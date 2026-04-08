@@ -37,12 +37,12 @@ public class SimpleChunkProviderInstrumentation implements TypeInstrumentation {
   public static class ReadAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter() {
       return AdviceScope.enter(ITEM_OPERATION_READ);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable thrown,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

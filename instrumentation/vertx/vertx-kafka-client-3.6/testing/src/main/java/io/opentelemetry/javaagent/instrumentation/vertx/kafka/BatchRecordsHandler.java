@@ -15,7 +15,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
-public final class BatchRecordsHandler implements Handler<KafkaConsumerRecords<String, String>> {
+public class BatchRecordsHandler implements Handler<KafkaConsumerRecords<String, String>> {
 
   public static final BatchRecordsHandler INSTANCE = new BatchRecordsHandler();
 

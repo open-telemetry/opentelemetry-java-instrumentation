@@ -69,7 +69,7 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(0) RedisCommand<?, ?, ?> command) {
 
       Context parentContext = currentContext();
@@ -83,7 +83,7 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
       return new AdviceScope(context, context.makeCurrent());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Argument(0) RedisCommand<?, ?, ?> command,
         @Advice.Thrown @Nullable Throwable throwable,

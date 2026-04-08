@@ -41,7 +41,7 @@ class KotlinCoroutineDispatcherInstrumentation implements TypeInstrumentation {
   public static class StopContextPropagationAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Runnable enter(@Advice.Argument(1) Runnable runnable) {
       return runnable == null ? null : RunnableWrapper.stopPropagation(runnable);
     }

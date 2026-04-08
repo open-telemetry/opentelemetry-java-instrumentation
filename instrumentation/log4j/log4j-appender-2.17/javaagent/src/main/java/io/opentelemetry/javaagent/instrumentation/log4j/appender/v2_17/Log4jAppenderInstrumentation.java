@@ -67,7 +67,7 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class LogAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth methodEnter(
         @Advice.This Logger logger,
         @Advice.Argument(0) Level level,
@@ -85,7 +85,7 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
       return callDepth;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(@Advice.Enter CallDepth callDepth) {
       callDepth.decrementAndGet();
     }
@@ -94,7 +94,7 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class LogMessageAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth methodEnter(
         @Advice.This Logger logger,
         @Advice.Argument(0) String loggerClassName,
@@ -111,7 +111,7 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
       return callDepth;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(@Advice.Enter CallDepth callDepth) {
       callDepth.decrementAndGet();
     }

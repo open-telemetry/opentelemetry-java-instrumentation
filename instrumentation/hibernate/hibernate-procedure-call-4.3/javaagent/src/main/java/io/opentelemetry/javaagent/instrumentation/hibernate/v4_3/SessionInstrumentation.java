@@ -42,7 +42,7 @@ class SessionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetProcedureCallAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void getProcedureCall(
         @Advice.This SharedSessionContract session, @Advice.Return ProcedureCall returned) {
 

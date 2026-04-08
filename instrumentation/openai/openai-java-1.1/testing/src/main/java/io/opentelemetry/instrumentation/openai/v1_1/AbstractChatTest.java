@@ -87,11 +87,11 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  protected final ChatCompletion doCompletions(ChatCompletionCreateParams params) {
+  protected ChatCompletion doCompletions(ChatCompletionCreateParams params) {
     return doCompletions(params, getClient(), getClientAsync());
   }
 
-  protected final ChatCompletion doCompletions(
+  protected ChatCompletion doCompletions(
       ChatCompletionCreateParams params, OpenAIClient client, OpenAIClientAsync clientAsync) {
     switch (testType) {
       case SYNC:
@@ -121,12 +121,11 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
     throw new AssertionError();
   }
 
-  protected final List<ChatCompletionChunk> doCompletionsStreaming(
-      ChatCompletionCreateParams params) {
+  protected List<ChatCompletionChunk> doCompletionsStreaming(ChatCompletionCreateParams params) {
     return doCompletionsStreaming(params, getClient(), getClientAsync());
   }
 
-  protected final List<ChatCompletionChunk> doCompletionsStreaming(
+  protected List<ChatCompletionChunk> doCompletionsStreaming(
       ChatCompletionCreateParams params, OpenAIClient client, OpenAIClientAsync clientAsync) {
     switch (testType) {
       case SYNC:

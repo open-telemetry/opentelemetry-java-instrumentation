@@ -52,7 +52,7 @@ public class DefineClassHandler implements Handler {
         addSuperNames(superNames, clazz);
       }
       context.superDotNames = superNames;
-    } catch (Throwable throwable) {
+    } catch (Throwable ignored) {
       // loading of super class or interface failed
       // mark current class as failed to skip matching and transforming it
       // we'll let defining the class proceed as usual so that it would throw the same exception as

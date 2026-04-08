@@ -447,8 +447,8 @@ public class HelperInjector implements Transformer {
   private static File createTempDir() {
     try {
       return Files.createTempDirectory("opentelemetry-temp-jars").toFile();
-    } catch (IOException exception) {
-      throw new IllegalStateException("Failed to create temporary directory.", exception);
+    } catch (IOException e) {
+      throw new IllegalStateException("Failed to create temporary directory.", e);
     }
   }
 

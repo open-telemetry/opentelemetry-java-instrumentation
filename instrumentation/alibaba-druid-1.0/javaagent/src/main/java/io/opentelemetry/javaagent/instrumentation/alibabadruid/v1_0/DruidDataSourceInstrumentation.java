@@ -38,7 +38,7 @@ class DruidDataSourceInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AddDataSourceAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(0) Object dataSource, @Advice.Return ObjectName objectName) {
       DruidDataSourceMBean druidDataSource = (DruidDataSourceMBean) dataSource;
@@ -51,7 +51,7 @@ class DruidDataSourceInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RemoveDataSourceAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Argument(0) Object dataSource) {
       DruidDataSourceMBean druidDataSource = (DruidDataSourceMBean) dataSource;
       telemetry().unregisterMetrics(druidDataSource);

@@ -90,7 +90,7 @@ class SessionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SessionMethodAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static HibernateOperationScope startMethod(
         @Advice.This SharedSessionContract session,
         @Advice.Origin("#m") String name,
@@ -113,7 +113,7 @@ class SessionInstrumentation implements TypeInstrumentation {
       return HibernateOperationScope.start(hibernateOperation, parentContext, instrumenter());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void endMethod(
         @Advice.Thrown Throwable throwable, @Advice.Enter HibernateOperationScope scope) {
 
@@ -124,7 +124,7 @@ class SessionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetQueryAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void getQuery(
         @Advice.This SharedSessionContract session, @Advice.Return Object queryObject) {
       if (!(queryObject instanceof CommonQueryContract)) {
@@ -140,7 +140,7 @@ class SessionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetTransactionAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void getTransaction(
         @Advice.This SharedSessionContract session, @Advice.Return Transaction transaction) {
 

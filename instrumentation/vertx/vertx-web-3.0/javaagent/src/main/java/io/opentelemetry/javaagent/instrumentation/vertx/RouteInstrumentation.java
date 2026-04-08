@@ -42,7 +42,7 @@ class RouteInstrumentation implements TypeInstrumentation {
   public static class HandlerAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Handler<RoutingContext> wrapHandler(
         @Advice.Argument(0) Handler<RoutingContext> handler) {
       return new RoutingContextHandlerWrapper(handler);

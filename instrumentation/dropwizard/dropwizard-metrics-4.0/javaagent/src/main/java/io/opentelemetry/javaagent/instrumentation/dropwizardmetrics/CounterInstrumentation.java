@@ -34,7 +34,7 @@ class CounterInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class IncAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This Counter counter, @Advice.Argument(0) long increment) {
       metrics().counterAdd(counter, increment);
     }
@@ -43,7 +43,7 @@ class CounterInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class DecAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This Counter counter, @Advice.Argument(0) long decrement) {
       metrics().counterAdd(counter, -decrement);
     }

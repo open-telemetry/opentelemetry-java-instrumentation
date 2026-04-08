@@ -123,8 +123,8 @@ public class JaxRsTestResource {
             BARRIER.await(10, SECONDS);
           } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-          } catch (BrokenBarrierException | TimeoutException exception) {
-            throw new IllegalStateException(exception);
+          } catch (BrokenBarrierException | TimeoutException e) {
+            throw new IllegalStateException(e);
           }
 
           switch (action) {
@@ -155,8 +155,8 @@ public class JaxRsTestResource {
             BARRIER.await(10, SECONDS);
           } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-          } catch (BrokenBarrierException | TimeoutException exception) {
-            throw new IllegalStateException(exception);
+          } catch (BrokenBarrierException | TimeoutException e) {
+            throw new IllegalStateException(e);
           }
 
           switch (action) {

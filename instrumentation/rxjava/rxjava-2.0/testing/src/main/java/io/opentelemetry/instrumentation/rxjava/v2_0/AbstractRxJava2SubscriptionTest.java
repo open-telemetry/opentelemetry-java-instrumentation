@@ -19,7 +19,7 @@ public abstract class AbstractRxJava2SubscriptionTest {
   protected abstract InstrumentationExtension testing();
 
   @Test
-  public void subscriptionSingleTest() throws InterruptedException {
+  void subscriptionSingleTest() throws InterruptedException {
     CountDownLatch countDownLatch = new CountDownLatch(1);
     testing()
         .runWithSpan(

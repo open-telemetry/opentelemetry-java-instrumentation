@@ -42,7 +42,7 @@ class LoggerInstrumentation implements TypeInstrumentation {
   public static class CallAppendersAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static ILoggingEvent onEnter(@Advice.Argument(0) ILoggingEvent event) {
       CONTEXT.set(event, Java8BytecodeBridge.currentContext());
       return event;

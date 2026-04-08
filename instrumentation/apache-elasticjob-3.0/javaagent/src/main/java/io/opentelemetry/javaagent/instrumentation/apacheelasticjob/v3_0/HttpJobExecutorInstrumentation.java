@@ -38,7 +38,7 @@ class HttpJobExecutorInstrumentation implements TypeInstrumentation {
   public static class ProcessAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static ElasticJobHelper.ElasticJobScope onEnter(
         @Advice.Argument(3) ShardingContext shardingContext) {
 
@@ -49,7 +49,7 @@ class HttpJobExecutorInstrumentation implements TypeInstrumentation {
       return helper().startSpan(request);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Enter @Nullable ElasticJobHelper.ElasticJobScope scope,
         @Advice.Thrown @Nullable Throwable throwable) {

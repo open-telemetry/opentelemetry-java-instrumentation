@@ -77,8 +77,7 @@ class ChatTest extends AbstractChatTest {
 
   @Override
   // OpenAI SDK does not expose OkHttp client in a way we can wrap.
-  protected final List<Consumer<SpanDataAssert>> maybeWithTransportSpan(
-      Consumer<SpanDataAssert> span) {
+  protected List<Consumer<SpanDataAssert>> maybeWithTransportSpan(Consumer<SpanDataAssert> span) {
     return singletonList(span);
   }
 

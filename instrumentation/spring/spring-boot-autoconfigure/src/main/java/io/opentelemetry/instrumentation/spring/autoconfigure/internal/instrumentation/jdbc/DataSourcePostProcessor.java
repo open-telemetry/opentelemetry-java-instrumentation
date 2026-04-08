@@ -41,7 +41,7 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
   private static Class<?> getRoutingDataSourceClass() {
     try {
       return Class.forName("org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource");
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       return null;
     }
   }

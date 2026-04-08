@@ -39,7 +39,7 @@ class HttpServerExchangeInstrumentation implements TypeInstrumentation {
   public static class DispatchAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static PropagatedContext enterJobSubmit(@Advice.Argument(1) Runnable task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
@@ -48,7 +48,7 @@ class HttpServerExchangeInstrumentation implements TypeInstrumentation {
       return null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exitJobSubmit(
         @Advice.Argument(1) Runnable task,
         @Advice.Enter @Nullable PropagatedContext propagatedContext,

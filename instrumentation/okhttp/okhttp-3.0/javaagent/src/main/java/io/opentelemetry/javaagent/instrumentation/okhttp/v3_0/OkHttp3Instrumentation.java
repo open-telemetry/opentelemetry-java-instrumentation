@@ -33,14 +33,14 @@ class OkHttp3Instrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth trackCallDepth() {
       CallDepth callDepth = CallDepth.forClass(OkHttpClient.Builder.class);
       callDepth.getAndIncrement();
       return callDepth;
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void addTracingInterceptor(
         @Advice.This OkHttpClient.Builder builder, @Advice.Enter CallDepth callDepth) {
       // No-args constructor is automatically called by constructors with args, but we only want to

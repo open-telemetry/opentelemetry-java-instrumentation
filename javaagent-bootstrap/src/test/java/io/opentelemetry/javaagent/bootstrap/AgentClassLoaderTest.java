@@ -29,8 +29,8 @@ class AgentClassLoaderTest {
       getClassLoadingLockMethod =
           ClassLoader.class.getDeclaredMethod("getClassLoadingLock", String.class);
       getClassLoadingLockMethod.setAccessible(true);
-    } catch (NoSuchMethodException exception) {
-      throw new IllegalStateException(exception);
+    } catch (NoSuchMethodException e) {
+      throw new IllegalStateException(e);
     }
   }
 
@@ -83,8 +83,8 @@ class AgentClassLoaderTest {
   private static Object getClassLoadingLock(ClassLoader classLoader, String className) {
     try {
       return getClassLoadingLockMethod.invoke(classLoader, className);
-    } catch (Exception exception) {
-      throw new IllegalStateException(exception);
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
     }
   }
 

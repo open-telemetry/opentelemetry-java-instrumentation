@@ -44,7 +44,7 @@ class ChannelFutureListenerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class OperationCompleteAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Scope activateScope(@Advice.Argument(0) ChannelFuture future) {
       /*
@@ -68,7 +68,7 @@ class ChannelFutureListenerInstrumentation implements TypeInstrumentation {
       return parentContext.makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void deactivateScope(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();

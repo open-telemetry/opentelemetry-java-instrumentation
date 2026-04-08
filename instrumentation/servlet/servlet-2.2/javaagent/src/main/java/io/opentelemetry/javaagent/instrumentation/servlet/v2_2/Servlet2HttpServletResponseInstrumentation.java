@@ -54,7 +54,7 @@ class Servlet2HttpServletResponseInstrumentation implements TypeInstrumentation 
   @SuppressWarnings("unused")
   public static class Servlet2ResponseRedirectAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This HttpServletResponse response) {
       RESPONSE_STATUS.set(response, 302);
     }
@@ -63,7 +63,7 @@ class Servlet2HttpServletResponseInstrumentation implements TypeInstrumentation 
   @SuppressWarnings("unused")
   public static class Servlet2ResponseStatusAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.This HttpServletResponse response, @Advice.Argument(0) Integer status) {
       RESPONSE_STATUS.set(response, status);

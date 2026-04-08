@@ -48,7 +48,7 @@ class DriverInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class DriverAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void addDbInfo(
         @Advice.Argument(0) String url,
         @Advice.Argument(1) Properties props,

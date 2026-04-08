@@ -42,7 +42,7 @@ class KafkaMetricsProducerInstrumentation implements TypeInstrumentation {
   public static class ConstructorMapAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Map<String, Object> onEnter(
         @Advice.Argument(0) Map<String, Object> originalConfig) {
       // In versions of spring-kafka prior to 2.5.0.RC1, when the `ProducerPerThread`
@@ -70,7 +70,7 @@ class KafkaMetricsProducerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConstructorPropertiesAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) Properties config) {
       enhanceConfig(config);
     }

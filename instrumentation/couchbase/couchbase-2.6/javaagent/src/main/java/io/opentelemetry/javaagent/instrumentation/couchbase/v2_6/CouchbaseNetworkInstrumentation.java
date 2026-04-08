@@ -43,7 +43,7 @@ class CouchbaseNetworkInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CouchbaseNetworkAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void addNetworkTagsToSpan(
         @Advice.FieldValue("localSocket") String localSocket,
         @Advice.Argument(0) ChannelHandlerContext channelHandlerContext,

@@ -32,13 +32,13 @@ class AcknowledgementExecutionContextInstrumentation implements TypeInstrumentat
 
   @SuppressWarnings("unused")
   public static class ExecuteAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Scope methodEnter(@Advice.Argument(0) Collection<Message<?>> messages) {
       return SpringAwsUtil.handleBatch(messages);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();

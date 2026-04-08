@@ -36,7 +36,7 @@ final class WithSpanParameterAttributeNamesExtractor implements ParameterAttribu
     try {
       return AnnotationReflectionHelper.bindAnnotationElementMethod(
           MethodHandles.lookup(), spanAttributeAnnotation, "value", String.class);
-    } catch (Throwable exception) {
+    } catch (Throwable ignored) {
       return annotation -> "";
     }
   }

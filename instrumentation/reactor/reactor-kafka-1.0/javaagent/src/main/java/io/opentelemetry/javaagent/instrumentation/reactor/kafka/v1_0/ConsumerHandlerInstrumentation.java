@@ -35,7 +35,7 @@ class ConsumerHandlerInstrumentation implements TypeInstrumentation {
   public static class ReceiveAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Flux<?> onExit(@Advice.Return Flux<?> flux) {
       if (flux instanceof TracingDisablingKafkaFlux) {
         return flux;

@@ -58,7 +58,7 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(1) Object data) {
       if (!(data instanceof Message)) {
         return null;
@@ -72,7 +72,7 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
       return new AdviceScope(context, context.makeCurrent());
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(1) Object data,
         @Advice.Thrown @Nullable Throwable throwable,

@@ -39,7 +39,7 @@ class JerseyResourceMethodDispatcherInstrumentation implements TypeInstrumentati
   @SuppressWarnings("unused")
   public static class DispatchAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(1) Request request) {
       JerseySpanName.INSTANCE.updateServerSpanName(request);
     }

@@ -134,8 +134,8 @@ class SpymemcachedTest {
       testing.clearData();
 
       return memcached;
-    } catch (Exception exception) {
-      throw new IllegalStateException(exception);
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
     }
   }
 

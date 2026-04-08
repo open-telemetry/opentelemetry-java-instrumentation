@@ -42,7 +42,7 @@ class DelegatingErrorHandlingRunnableInstrumentation implements TypeInstrumentat
   public static class WrapErrorHandlerAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static ErrorHandler onEnter(@Advice.Argument(1) ErrorHandler originalErrorHandler) {
       ErrorHandler errorHandler = originalErrorHandler;
       if (errorHandler != null) {
@@ -55,13 +55,13 @@ class DelegatingErrorHandlingRunnableInstrumentation implements TypeInstrumentat
   @SuppressWarnings("unused")
   public static class RunAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter() {
       Context parentContext = Java8BytecodeBridge.currentContext();
       return TaskContextHolder.init(parentContext).makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();

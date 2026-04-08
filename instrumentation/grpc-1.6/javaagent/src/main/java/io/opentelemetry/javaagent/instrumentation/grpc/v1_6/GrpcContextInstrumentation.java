@@ -35,14 +35,17 @@ class GrpcContextInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ContextBridgeAdvice {
 
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, suppress = Throwable.class)
+    @Advice.OnMethodEnter(
+        skipOn = Advice.OnNonDefaultValue.class,
+        suppress = Throwable.class,
+        inline = false)
     @Nullable
     public static Context.Storage onEnter() {
       return storage();
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Context.Storage onExit(
         @Advice.Return Context.Storage originalStorage, @Advice.Enter Context.Storage ourStorage) {
       return ourStorage != null ? ourStorage : GrpcSingletons.setStorage(originalStorage);

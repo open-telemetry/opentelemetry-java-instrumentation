@@ -50,13 +50,13 @@ public class Tomcat10ServerHandlerAdvice {
   }
 
   @Nullable
-  @Advice.OnMethodEnter(suppress = Throwable.class)
+  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
   public static AdviceScope onEnter(
       @Advice.Argument(0) Request request, @Advice.Argument(1) Response response) {
     return AdviceScope.start(request, response);
   }
 
-  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
   public static void stopSpan(
       @Advice.Argument(0) Request request,
       @Advice.Argument(1) Response response,

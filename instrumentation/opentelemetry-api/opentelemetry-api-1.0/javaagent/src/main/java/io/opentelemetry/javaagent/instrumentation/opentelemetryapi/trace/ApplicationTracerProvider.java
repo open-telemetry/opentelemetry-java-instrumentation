@@ -32,7 +32,7 @@ public class ApplicationTracerProvider
               "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_4.trace.ApplicationTracerProvider14");
       return MethodHandles.lookup()
           .findConstructor(clazz, MethodType.methodType(void.class, TracerProvider.class));
-    } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException exception) {
+    } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException ignored) {
       return null;
     }
   }
@@ -43,8 +43,8 @@ public class ApplicationTracerProvider
       try {
         return (application.io.opentelemetry.api.trace.TracerProvider)
             TRACE_PROVIDER_14.invoke(agentTracerProvider);
-      } catch (Throwable throwable) {
-        throw new IllegalStateException("Failed to create ApplicationTracerProvider", throwable);
+      } catch (Throwable t) {
+        throw new IllegalStateException("Failed to create ApplicationTracerProvider", t);
       }
     }
 

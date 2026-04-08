@@ -56,7 +56,7 @@ class LoggingEventInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetMdcAdvice {
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Map<String, String> onExit(
         @Advice.This ILoggingEvent event,
         @Advice.Return(typing = Typing.DYNAMIC) Map<String, String> contextData) {
