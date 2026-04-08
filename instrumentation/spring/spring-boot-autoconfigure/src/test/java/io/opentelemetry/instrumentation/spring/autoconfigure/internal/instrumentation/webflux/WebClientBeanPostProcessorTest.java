@@ -47,7 +47,7 @@ class WebClientBeanPostProcessorTest {
         underTest.postProcessAfterInitialization(webClient, "testWebClient");
 
     assertThat(processedWebClient).isInstanceOf(WebClient.class).isNotSameAs(webClient);
-    assertFilterCount((WebClient) processedWebClient, 1);
+    assertFilterCount((WebClient) processedWebClient);
   }
 
   @Test
@@ -60,10 +60,10 @@ class WebClientBeanPostProcessorTest {
         (WebClient) underTest.postProcessAfterInitialization(firstProcessed, "testWebClient");
 
     assertThat(secondProcessed).isSameAs(firstProcessed);
-    assertFilterCount(secondProcessed, 1);
+    assertFilterCount(secondProcessed);
   }
 
-  private static void assertFilterCount(WebClient webClient, long expectedCount) {
+  private static void assertFilterCount(WebClient webClient) {
     AtomicLong count = new AtomicLong(0);
     webClient
         .mutate()
@@ -73,7 +73,7 @@ class WebClientBeanPostProcessorTest {
                     filters.stream()
                         .filter(WebClientBeanPostProcessorTest::isOtelExchangeFilter)
                         .count()));
-    assertThat(count.get()).isEqualTo(expectedCount);
+    assertThat(count.get()).isEqualTo(1);
   }
 
   private static boolean isOtelExchangeFilter(ExchangeFilterFunction filter) {
