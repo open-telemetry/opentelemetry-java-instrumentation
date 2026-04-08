@@ -452,3 +452,4 @@ servlet-common:javaagent
 spark-2.3:javaagent
 spring-batch-3.0:javaagent
 spring-boot-autoconfigure:testing
+spring-boot-actuator-autoconfigure-2.0:javaagent
