@@ -201,7 +201,7 @@ class EnduserAttributesCapturerTest {
                 .hasAttribute(ENDUSER_SCOPE, "scope1,scope2"));
   }
 
-  void test(
+  private static void test(
       EnduserAttributesCapturer capturer,
       Authentication authentication,
       Consumer<SpanDataAssert> assertions) {
