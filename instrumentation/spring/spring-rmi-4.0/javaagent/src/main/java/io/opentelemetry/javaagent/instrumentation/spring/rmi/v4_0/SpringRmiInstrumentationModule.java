@@ -27,6 +27,7 @@ public class SpringRmiInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 4.0
     return hasClassesNamed("org.springframework.context.annotation.Condition");
   }
 
