@@ -40,8 +40,8 @@ public class AzureSdkInstrumentationModule extends InstrumentationModule
   @Override
   public List<String> exposedClassNames() {
     return asList(
-        "io.opentelemetry.javaagent.instrumentation.azurecore.v1_14.shaded.com.azure.core.tracing.opentelemetry.OpenTelemetryTracer",
-        "io.opentelemetry.javaagent.instrumentation.azurecore.v1_14.shaded.com.azure.core.tracing.opentelemetry.OpenTelemetryTracerProvider");
+        "io.opentelemetry.javaagent.instrumentation.azurecore.v1_14.shaded.com.azure.core.tracing.opentelemetry.OpenTelemetryHttpPolicy",
+        "io.opentelemetry.javaagent.instrumentation.azurecore.v1_14.shaded.com.azure.core.tracing.opentelemetry.OpenTelemetryTracer");
   }
 
   @Override
