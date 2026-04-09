@@ -84,6 +84,7 @@ public class HelperInjector implements Transformer {
   static {
     InjectedClassHelper.internalSetHelperClassDetector(HelperInjector::isInjectedClass);
     InjectedClassHelper.internalSetHelperClassInfo(HelperInjector::getHelperClassInfo);
+    InjectedClassHelper.internalSetLoadExposedClass(HelperInjector::loadExposedClass);
   }
 
   // Need this because we can't put null into the injectedClassLoaders map.
@@ -98,6 +99,8 @@ public class HelperInjector implements Transformer {
   private static final HelperClass BOOT_CLASS = new HelperClass(null);
 
   private static final Cache<ClassLoader, Map<String, HelperClass>> helperClasses = Cache.weak();
+  private static final Cache<ClassLoader, Map<String, Supplier<Class<?>>>> exposedClasses =
+      Cache.weak();
 
   private final String requestingName;
 
@@ -518,5 +521,32 @@ public class HelperInjector implements Transformer {
     HelperClass(Supplier<byte[]> bytes) {
       this.bytes = bytes;
     }
+  }
+
+  public static void addExposedClass(
+      ClassLoader classLoader, String className, Supplier<Class<?>> classSupplier) {
+    if (classLoader == null) {
+      throw new IllegalStateException("boot loader not supported");
+    }
+
+    Map<String, Supplier<Class<?>>> map =
+        exposedClasses.computeIfAbsent(classLoader, (unused) -> new ConcurrentHashMap<>());
+    map.putIfAbsent(className, classSupplier);
+  }
+
+  private static Class<?> loadExposedClass(ClassLoader classLoader, String className) {
+    if (classLoader == null) {
+      throw new IllegalStateException("boot loader not supported");
+    }
+    Map<String, Supplier<Class<?>>> map = exposedClasses.get(classLoader);
+    if (map == null) {
+      return null;
+    }
+    Supplier<Class<?>> supplier = map.get(className);
+    if (supplier == null) {
+      return null;
+    }
+
+    return supplier.get();
   }
 }

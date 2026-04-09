@@ -16,8 +16,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import java.util.List;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -40,15 +38,10 @@ public class AzureSdkInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public void injectClasses(ClassInjector injector) {
-    injector
-        .proxyBuilder(
-            "io.opentelemetry.javaagent.instrumentation.azurecore.v1_14.shaded.com.azure.core.tracing.opentelemetry.OpenTelemetryHttpPolicy")
-        .inject(InjectionMode.CLASS_ONLY);
-    injector
-        .proxyBuilder(
-            "io.opentelemetry.javaagent.instrumentation.azurecore.v1_14.shaded.com.azure.core.tracing.opentelemetry.OpenTelemetryTracer")
-        .inject(InjectionMode.CLASS_ONLY);
+  public List<String> exposedClassNames() {
+    return asList(
+        "io.opentelemetry.javaagent.instrumentation.azurecore.v1_14.shaded.com.azure.core.tracing.opentelemetry.OpenTelemetryTracer",
+        "io.opentelemetry.javaagent.instrumentation.azurecore.v1_14.shaded.com.azure.core.tracing.opentelemetry.OpenTelemetryTracerProvider");
   }
 
   @Override

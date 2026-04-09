@@ -85,4 +85,18 @@ public interface ExperimentalInstrumentationModule {
   default boolean isIndyReady() {
     return false;
   }
+
+  /**
+   * Returns a list of instrumentation helper classes that are exposed to the application class
+   * loader.
+   *
+   * <p>When using non-inline advice helper classes are loaded into a separate class loader. Classes
+   * from that class loader aren't visible to the instrumented application. This method can be used
+   * to expose some of the helper classes to the application class loader, so that they can be
+   * loaded through the loadClass method of the application class loader. This can for example be
+   * used to add a SPI implementation that can be loaded via the ServiceLoader.
+   */
+  default List<String> exposedClassNames() {
+    return emptyList();
+  }
 }
