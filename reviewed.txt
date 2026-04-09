@@ -522,3 +522,4 @@ vaadin-14.2:testing
 vertx-http-client-4.0:javaagent
 vertx-http-client-common:javaagent
 vertx-http-client-5.0:javaagent
+vertx-kafka-client-3.6:javaagent
