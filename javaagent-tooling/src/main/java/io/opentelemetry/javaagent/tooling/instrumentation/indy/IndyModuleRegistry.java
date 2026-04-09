@@ -107,9 +107,6 @@ public class IndyModuleRegistry {
 
   public static AgentBuilder.Identified.Extendable initializeModuleLoaderOnMatch(
       InstrumentationModule module, AgentBuilder.Identified.Extendable agentBuilder) {
-    if (!module.isIndyModule()) {
-      throw new IllegalArgumentException("Provided module is not an indy module!");
-    }
     String moduleName = module.getClass().getName();
     InstrumentationModule existingRegistration = modulesByClassName.putIfAbsent(moduleName, module);
     if (existingRegistration != null && existingRegistration != module) {
