@@ -8,9 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.tapestry;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteGetter;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 
-public class TapestryServerSpanNaming {
+class TapestryServerSpanNaming {
 
-  public static final HttpServerRouteGetter<String> SERVER_SPAN_NAME =
+  static final HttpServerRouteGetter<String> SERVER_SPAN_NAME =
       (context, pageName) -> {
         if (pageName == null) {
           return null;
