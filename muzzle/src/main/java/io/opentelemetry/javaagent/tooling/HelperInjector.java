@@ -124,7 +124,7 @@ public class HelperInjector implements Transformer {
       String requestingName,
       List<String> helperClassNames,
       List<HelperResource> helperResources,
-      ClassLoader helpersSource,
+      @Nullable ClassLoader helpersSource,
       @Nullable Instrumentation instrumentation) {
     this.requestingName = requestingName;
 
