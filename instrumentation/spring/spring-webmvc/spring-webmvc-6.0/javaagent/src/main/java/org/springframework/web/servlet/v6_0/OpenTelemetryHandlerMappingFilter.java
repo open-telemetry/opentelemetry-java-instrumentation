@@ -114,8 +114,7 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
 
   /**
    * When a HandlerMapping matches a request, it sets HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE
-   * as an attribute on the request. This attribute is read by SpringWebMvcDecorator.onRequest and
-   * set as the resource name.
+   * as an attribute on the request. This attribute is set as the HTTP route.
    */
   private boolean findMapping(HttpServletRequest request) {
     try {
