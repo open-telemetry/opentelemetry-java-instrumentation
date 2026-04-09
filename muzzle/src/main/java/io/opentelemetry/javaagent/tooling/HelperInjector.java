@@ -123,7 +123,7 @@ public class HelperInjector implements Transformer {
       String requestingName,
       List<String> helperClassNames,
       List<HelperResource> helperResources,
-      ClassLoader helpersSource,
+      @Nullable ClassLoader helpersSource,
       Instrumentation instrumentation) {
     this.requestingName = requestingName;
 
@@ -159,7 +159,7 @@ public class HelperInjector implements Transformer {
   public static HelperInjector forDynamicTypes(
       String requestingName,
       Collection<DynamicType.Unloaded<?>> helpers,
-      Instrumentation instrumentation) {
+      @Nullable Instrumentation instrumentation) {
 
     List<HelperClassDefinition> helperDefinitions =
         helpers.stream()
@@ -179,7 +179,7 @@ public class HelperInjector implements Transformer {
   public DynamicType.Builder<?> transform(
       DynamicType.Builder<?> builder,
       TypeDescription typeDescription,
-      ClassLoader classLoader,
+      @Nullable ClassLoader classLoader,
       JavaModule javaModule,
       ProtectionDomain protectionDomain) {
     injectedClassLoaders.computeIfAbsent(
@@ -274,7 +274,8 @@ public class HelperInjector implements Transformer {
     if (classLoader == BOOTSTRAP_CLASSLOADER_PLACEHOLDER && instrumentation == null) {
       logger.log(
           SEVERE,
-          "Cannot inject helpers into the bootstrap class loader without an instance of Instrumentation. Programmer error!");
+          "Cannot inject helpers into the bootstrap class loader without an instance of"
+              + " Instrumentation. Programmer error!");
       return;
     }
     try {
@@ -304,7 +305,8 @@ public class HelperInjector implements Transformer {
       if (logger.isLoggable(SEVERE)) {
         logger.log(
             SEVERE,
-            "Error preparing helpers while processing {0} for {1}. Failed to inject helper classes into instance {2}",
+            "Error preparing helpers while processing {0} for {1}. Failed to inject helper classes"
+                + " into instance {2}",
             new Object[] {typeDescription, requestingName, classLoader},
             e);
       }

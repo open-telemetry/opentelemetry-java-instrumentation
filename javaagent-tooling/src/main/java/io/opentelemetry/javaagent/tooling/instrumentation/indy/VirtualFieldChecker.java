@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.MethodVisitor;
@@ -61,6 +62,7 @@ class VirtualFieldChecker {
         });
   }
 
+  @Nullable
   private static AnnotationNode getAnnotationNode(MethodNode source, Type type) {
     if (source.visibleAnnotations != null) {
       for (AnnotationNode annotationNode : source.visibleAnnotations) {
