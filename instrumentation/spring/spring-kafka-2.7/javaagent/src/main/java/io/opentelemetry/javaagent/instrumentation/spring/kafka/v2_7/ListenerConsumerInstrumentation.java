@@ -65,12 +65,12 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static boolean onEnter() {
-      return SpringSchedulingTaskTracing.setEnabled(false);
+      return SpringSchedulingTaskTracing.setWrappingEnabled(false);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter boolean previousValue) {
-      SpringSchedulingTaskTracing.setEnabled(previousValue);
+      SpringSchedulingTaskTracing.setWrappingEnabled(previousValue);
     }
   }
 
