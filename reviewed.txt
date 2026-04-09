@@ -515,3 +515,4 @@ tapestry-5.4:javaagent
 twilio-6.6:javaagent
 tomcat-jdbc:javaagent
 undertow-1.4:bootstrap
+undertow-1.4:javaagent
