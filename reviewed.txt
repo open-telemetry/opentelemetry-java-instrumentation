@@ -512,3 +512,4 @@ tomcat-10.0:javaagent
 tomcat-7.0:javaagent
 tomcat-common:javaagent
 tapestry-5.4:javaagent
+twilio-6.6:javaagent
