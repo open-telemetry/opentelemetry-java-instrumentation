@@ -17,7 +17,7 @@ class WrapperPropagationDisabledTest extends AbstractWrapperTest {
   }
 
   @Override
-  void assertTraces(boolean testHeaders) {
+  void assertTraces(boolean testHeaders, boolean testExperimental) {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -26,7 +26,8 @@ class WrapperPropagationDisabledTest extends AbstractWrapperTest {
                     span.hasName(SHARED_TOPIC + " publish")
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(sendAttributes(testHeaders)),
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(testHeaders, testExperimental)),
                 span ->
                     span.hasName("producer callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -38,18 +39,22 @@ class WrapperPropagationDisabledTest extends AbstractWrapperTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasLinks()
-                        .hasAttributesSatisfyingExactly(processAttributes(greeting, testHeaders)),
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(greeting, testHeaders, testExperimental)),
                 span ->
                     span.hasName("process child")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
   }
 
-  private static List<AttributeAssertion> sendAttributes(boolean testHeaders) {
-    return WrapperSuppressReceiveSpansTest.sendAttributes(testHeaders);
+  private static List<AttributeAssertion> sendAttributes(
+      boolean testHeaders, boolean testExperimental) {
+    return WrapperSuppressReceiveSpansTest.sendAttributes(testHeaders, testExperimental);
   }
 
-  private static List<AttributeAssertion> processAttributes(String greeting, boolean testHeaders) {
-    return WrapperSuppressReceiveSpansTest.processAttributes(greeting, testHeaders);
+  private static List<AttributeAssertion> processAttributes(
+      String greeting, boolean testHeaders, boolean testExperimental) {
+    return WrapperSuppressReceiveSpansTest.processAttributes(
+        greeting, testHeaders, testExperimental);
   }
 }
