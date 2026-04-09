@@ -25,7 +25,7 @@ public class VertxClientInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // class removed in 4.0
+    // removed in 4.0
     return hasClassesNamed("io.vertx.core.Starter");
   }
 
