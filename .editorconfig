@@ -761,3 +761,16 @@ ij_properties_spaces_around_key_value_delimiter = false
 [{*.yaml, *.yml}]
 ij_yaml_keep_indents_on_empty_lines = false
 ij_yaml_keep_line_breaks = true
+
+# ktlint overrides (mirrors otel.spotless-conventions.gradle.kts)
+[{*.kt, *.kts}]
+max_line_length = 160
+continuation_indent_size = 2
+ktlint_standard_no-wildcard-imports = disabled
+ktlint_standard_package-name = disabled
+ktlint_standard_max-line-length = disabled
+ktlint_standard_trailing-comma-on-call-site = disabled
+ktlint_standard_trailing-comma-on-declaration-site = disabled
+ktlint_standard_wrapping = disabled
+ktlint_standard_property-naming = disabled
+ktlint_standard_function-literal = disabled

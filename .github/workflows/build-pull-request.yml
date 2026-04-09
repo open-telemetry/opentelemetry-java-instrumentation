@@ -40,15 +40,11 @@ jobs:
     with:
       cache-read-only: true
 
-  # this is not a required check to avoid blocking pull requests if external links break
-  markdown-check:
+  lint:
     # release branches are excluded because the README.md javaagent download link has to be updated
     # on release branches before the release download has been published
     if: "!startsWith(github.ref_name, 'release/') && !startsWith(github.base_ref, 'release/')"
-    uses: ./.github/workflows/reusable-link-check.yml
-
-  markdown-lint-check:
-    uses: ./.github/workflows/reusable-markdown-lint-check.yml
+    uses: ./.github/workflows/reusable-lint-check.yml
 
   required-status-check:
     # test-latest-deps is not included in the required status checks
@@ -63,7 +59,7 @@ jobs:
     needs:
       - common
       - muzzle
-      - markdown-lint-check
+      - lint
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -73,7 +69,7 @@ jobs:
             !startsWith(github.base_ref, 'release/') &&
             (
               needs.muzzle.result != 'success' ||
-              needs.markdown-lint-check.result != 'success'
+              needs.lint.result != 'success'
             )
           )
         run: exit 1 # fail
