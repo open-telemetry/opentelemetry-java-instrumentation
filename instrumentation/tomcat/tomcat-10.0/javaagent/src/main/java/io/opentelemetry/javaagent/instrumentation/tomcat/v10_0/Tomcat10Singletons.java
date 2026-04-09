@@ -19,12 +19,12 @@ public class Tomcat10Singletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.tomcat-10.0";
   private static final Instrumenter<Request, Response> instrumenter =
       TomcatInstrumenterFactory.create(INSTRUMENTATION_NAME, Servlet5Accessor.INSTANCE);
-  private static final TomcatHelper<HttpServletRequest, HttpServletResponse> HELPER =
+  private static final TomcatHelper<HttpServletRequest, HttpServletResponse> tomcatHelper =
       new TomcatHelper<>(
           instrumenter, new Tomcat10ServletEntityProvider(), Servlet5Singletons.helper());
 
   public static TomcatHelper<HttpServletRequest, HttpServletResponse> helper() {
-    return HELPER;
+    return tomcatHelper;
   }
 
   private Tomcat10Singletons() {}
