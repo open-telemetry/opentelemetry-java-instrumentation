@@ -25,6 +25,7 @@ public class UndertowInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 1.4.0.Final
     return hasClassesNamed("io.undertow.Undertow$ListenerInfo");
   }
 
