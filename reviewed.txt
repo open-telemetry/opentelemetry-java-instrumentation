@@ -507,3 +507,4 @@ starters:spring-boot-starter
 spring-ws-2.0:testing
 struts-2.3:javaagent
 spymemcached-2.12:javaagent
+struts-7.0:javaagent
