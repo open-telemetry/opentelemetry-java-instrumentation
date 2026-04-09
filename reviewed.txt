@@ -516,3 +516,4 @@ twilio-6.6:javaagent
 tomcat-jdbc:javaagent
 undertow-1.4:bootstrap
 undertow-1.4:javaagent
+vertx-http-client-3.0:javaagent
