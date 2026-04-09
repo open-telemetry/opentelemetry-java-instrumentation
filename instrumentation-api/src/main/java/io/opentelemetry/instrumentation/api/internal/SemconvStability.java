@@ -37,6 +37,11 @@ public final class SemconvStability {
   private static final boolean emitOldRpcSemconv;
   private static final boolean emitStableRpcSemconv;
 
+  private static final boolean emitOldMessagingSemconv;
+  private static final boolean emitStableMessagingSemconv;
+  private static final Map<String, String> dbSystemNameMap = new HashMap<>();
+  private static final Map<String, String> rpcSystemNameMap = new HashMap<>();
+
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.getOrNoop();
     boolean v3Preview =
@@ -54,7 +59,35 @@ public final class SemconvStability {
 
     emitOldRpcSemconv = shouldEmitOld("rpc", v3Preview, optInValues);
     emitStableRpcSemconv = shouldEmitStable("rpc", v3Preview, optInValues);
+
+    emitOldMessagingSemconv = shouldEmitOld("messaging", v3Preview, optInValues);
+    emitStableMessagingSemconv = shouldEmitStable("messaging", v3Preview, optInValues);
   }
+
+  static {
+    dbSystemNameMap.put("adabas", "softwareag.adabas");
+    dbSystemNameMap.put("intersystems_cache", "intersystems.cache");
+    dbSystemNameMap.put("cosmosdb", "azure.cosmosdb");
+    dbSystemNameMap.put("db2", "ibm.db2");
+    dbSystemNameMap.put("dynamodb", "aws.dynamodb");
+    dbSystemNameMap.put("h2", "h2database");
+    dbSystemNameMap.put("hanadb", "sap.hana");
+    dbSystemNameMap.put("informix", "ibm.informix");
+    dbSystemNameMap.put("ingres", "actian.ingres");
+    dbSystemNameMap.put("maxdb", "sap.maxdb");
+    dbSystemNameMap.put("mssql", "microsoft.sql_server");
+    dbSystemNameMap.put("netezza", "ibm.netezza");
+    dbSystemNameMap.put("oracle", "oracle.db");
+    dbSystemNameMap.put("redshift", "aws.redshift");
+    dbSystemNameMap.put("spanner", "gcp.spanner");
+  }
+
+  static {
+    rpcSystemNameMap.put("apache_dubbo", "dubbo");
+    rpcSystemNameMap.put("connect_rpc", "connectrpc");
+  }
+
+  private SemconvStability() {}
 
   private static Set<String> resolveOptInValues(OpenTelemetry openTelemetry) {
     // Try declarative config via GlobalOpenTelemetry first
@@ -90,26 +123,6 @@ public final class SemconvStability {
     return emitStableServicePeerSemconv;
   }
 
-  private static final Map<String, String> dbSystemNameMap = new HashMap<>();
-
-  static {
-    dbSystemNameMap.put("adabas", "softwareag.adabas");
-    dbSystemNameMap.put("intersystems_cache", "intersystems.cache");
-    dbSystemNameMap.put("cosmosdb", "azure.cosmosdb");
-    dbSystemNameMap.put("db2", "ibm.db2");
-    dbSystemNameMap.put("dynamodb", "aws.dynamodb");
-    dbSystemNameMap.put("h2", "h2database");
-    dbSystemNameMap.put("hanadb", "sap.hana");
-    dbSystemNameMap.put("informix", "ibm.informix");
-    dbSystemNameMap.put("ingres", "actian.ingres");
-    dbSystemNameMap.put("maxdb", "sap.maxdb");
-    dbSystemNameMap.put("mssql", "microsoft.sql_server");
-    dbSystemNameMap.put("netezza", "ibm.netezza");
-    dbSystemNameMap.put("oracle", "oracle.db");
-    dbSystemNameMap.put("redshift", "aws.redshift");
-    dbSystemNameMap.put("spanner", "gcp.spanner");
-  }
-
   public static String stableDbSystemName(String oldDbSystem) {
     String dbSystemName = dbSystemNameMap.get(oldDbSystem);
     return dbSystemName != null ? dbSystemName : oldDbSystem;
@@ -131,11 +144,12 @@ public final class SemconvStability {
     return emitStableRpcSemconv;
   }
 
-  private static final Map<String, String> rpcSystemNameMap = new HashMap<>();
+  public static boolean emitOldMessagingSemconv() {
+    return emitOldMessagingSemconv;
+  }
 
-  static {
-    rpcSystemNameMap.put("apache_dubbo", "dubbo");
-    rpcSystemNameMap.put("connect_rpc", "connectrpc");
+  public static boolean emitStableMessagingSemconv() {
+    return emitStableMessagingSemconv;
   }
 
   public static String stableRpcSystemName(String oldRpcSystem) {
@@ -173,6 +187,4 @@ public final class SemconvStability {
         ? ((ExtendedOpenTelemetry) openTelemetry).getInstrumentationConfig(instrumentationName)
         : empty();
   }
-
-  private SemconvStability() {}
 }
