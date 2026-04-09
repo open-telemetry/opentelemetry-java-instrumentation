@@ -9,9 +9,9 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteGetter;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import org.apache.struts2.ActionProxy;
 
-public class StrutsServerSpanNaming {
+class StrutsServerSpanNaming {
 
-  public static final HttpServerRouteGetter<ActionProxy> SERVER_SPAN_NAME =
+  static final HttpServerRouteGetter<ActionProxy> serverSpanName =
       (context, actionProxy) -> {
         // We take name from the config, because it contains the path pattern from the
         // configuration.

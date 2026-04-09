@@ -60,7 +60,7 @@ class ActionInvocationInstrumentation implements TypeInstrumentation {
         HttpServerRoute.update(
             parentContext,
             CONTROLLER,
-            StrutsServerSpanNaming.SERVER_SPAN_NAME,
+            StrutsServerSpanNaming.serverSpanName,
             actionInvocation.getProxy());
 
         if (!instrumenter().shouldStart(parentContext, actionInvocation)) {
