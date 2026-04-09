@@ -31,11 +31,6 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
   }
 
   @Override
-  public boolean isIndyModule() {
-    return true;
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new Instrumentation());
   }
