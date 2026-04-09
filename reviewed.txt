@@ -511,3 +511,4 @@ struts-7.0:javaagent
 tomcat-10.0:javaagent
 tomcat-7.0:javaagent
 tomcat-common:javaagent
+tapestry-5.4:javaagent
