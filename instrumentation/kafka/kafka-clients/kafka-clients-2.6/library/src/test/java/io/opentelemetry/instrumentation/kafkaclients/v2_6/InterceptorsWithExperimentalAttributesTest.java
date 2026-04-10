@@ -7,12 +7,13 @@ package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
 import static java.util.Collections.singletonList;
 
-class InterceptorsTest extends AbstractInterceptorsTest {
+final class InterceptorsWithExperimentalAttributesTest extends AbstractInterceptorsTest {
 
   private static final KafkaTelemetry kafkaTelemetry =
       KafkaTelemetry.builder(testing.getOpenTelemetry())
           .setMessagingReceiveTelemetryEnabled(true)
           .setCapturedHeaders(singletonList("Test-Message-Header"))
+          .setCaptureExperimentalSpanAttributes(true)
           .build();
 
   @Override
@@ -22,6 +23,6 @@ class InterceptorsTest extends AbstractInterceptorsTest {
 
   @Override
   protected boolean captureExperimentalSpanAttributes() {
-    return false;
+    return true;
   }
 }
