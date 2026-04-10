@@ -42,17 +42,18 @@ public class VertxSqlClientSingletons {
     return connectOptionsDbSystem.get(connectOptions);
   }
 
+  @Nullable
   public static SqlConnectOptions getSqlConnectOptions(SqlClientBase<?> sqlClientBase) {
     return connectOptionsField.get(sqlClientBase);
   }
 
   public static void attachConnectOptions(
-      SqlClientBase<?> sqlClientBase, SqlConnectOptions connectOptions) {
+      SqlClientBase<?> sqlClientBase, @Nullable SqlConnectOptions connectOptions) {
     connectOptionsField.set(sqlClientBase, connectOptions);
   }
 
   public static Future<SqlConnection> attachConnectOptions(
-      Future<SqlConnection> future, SqlConnectOptions connectOptions) {
+      Future<SqlConnection> future, @Nullable SqlConnectOptions connectOptions) {
     return future.map(
         sqlConnection -> {
           if (sqlConnection instanceof SqlClientBase) {
