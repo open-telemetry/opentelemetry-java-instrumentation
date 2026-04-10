@@ -86,8 +86,8 @@ class ZioHttpTest {
                 satisfies(
                   USER_AGENT_ORIGINAL,
                   new StringAssertConsumer {
-                    override def accept(t: AbstractStringAssert[_]): Unit =
-                      t.isInstanceOf(classOf[String])
+                    override def accept(`val`: AbstractStringAssert[_]): Unit =
+                      `val`.isInstanceOf(classOf[String])
                   }
                 ),
                 equalTo(HTTP_ROUTE, "/greet/{name}"),
@@ -99,8 +99,8 @@ class ZioHttpTest {
                 satisfies(
                   NETWORK_PEER_PORT,
                   new LongAssertConsumer {
-                    override def accept(t: AbstractLongAssert[_]): Unit =
-                      t.isInstanceOf(classOf[java.lang.Long])
+                    override def accept(`val`: AbstractLongAssert[_]): Unit =
+                      `val`.isInstanceOf(classOf[java.lang.Long])
                   }
                 )
               )
