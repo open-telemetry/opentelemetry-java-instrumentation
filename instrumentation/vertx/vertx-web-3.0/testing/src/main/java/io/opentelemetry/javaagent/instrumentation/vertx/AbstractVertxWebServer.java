@@ -23,7 +23,7 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 
-abstract class AbstractVertxWebServer extends AbstractVerticle {
+public abstract class AbstractVertxWebServer extends AbstractVerticle {
   static final String CONFIG_HTTP_SERVER_PORT = "http.server.port";
 
   abstract void end(HttpServerResponse response, String message);
