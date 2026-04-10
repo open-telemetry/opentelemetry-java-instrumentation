@@ -66,7 +66,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
   }
 
- val testStableSemconv by registering(Test::class) {
+  val testStableSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
