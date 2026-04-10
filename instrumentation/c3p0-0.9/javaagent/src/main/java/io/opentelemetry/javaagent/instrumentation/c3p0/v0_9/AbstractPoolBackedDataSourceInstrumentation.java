@@ -25,8 +25,8 @@ final class AbstractPoolBackedDataSourceInstrumentation implements TypeInstrumen
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("resetPoolManager"), this.getClass().getName() + "$ResetPoolManagerAdvice");
-    transformer.applyAdviceToMethod(named("close"), this.getClass().getName() + "$CloseAdvice");
+        named("resetPoolManager"), getClass().getName() + "$ResetPoolManagerAdvice");
+    transformer.applyAdviceToMethod(named("close"), getClass().getName() + "$CloseAdvice");
   }
 
   @SuppressWarnings("unused")

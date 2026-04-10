@@ -29,7 +29,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -129,12 +128,7 @@ public abstract class AbstractCassandraTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    NETWORK_TYPE,
-                                    val ->
-                                        val.satisfiesAnyOf(
-                                            v -> assertThat(v).isEqualTo("ipv4"),
-                                            v -> assertThat(v).isEqualTo("ipv6"))),
+                                satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6")),
                                 equalTo(SERVER_ADDRESS, cassandraHost),
                                 equalTo(SERVER_PORT, cassandraPort),
                                 equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
@@ -190,12 +184,7 @@ public abstract class AbstractCassandraTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    NETWORK_TYPE,
-                                    val ->
-                                        val.satisfiesAnyOf(
-                                            v -> assertThat(v).isEqualTo("ipv4"),
-                                            v -> assertThat(v).isEqualTo("ipv6"))),
+                                satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6")),
                                 equalTo(SERVER_ADDRESS, cassandraHost),
                                 equalTo(SERVER_PORT, cassandraPort),
                                 equalTo(NETWORK_PEER_ADDRESS, cassandraIp),

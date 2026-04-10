@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.wicket.core.request.handler.IPageClassRequestHandler;
 import org.apache.wicket.request.IRequestHandler;
 
-public class RequestHandlerExecutorInstrumentation implements TypeInstrumentation {
+class RequestHandlerExecutorInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -42,7 +42,7 @@ public class RequestHandlerExecutorInstrumentation implements TypeInstrumentatio
         HttpServerRoute.update(
             Java8BytecodeBridge.currentContext(),
             CONTROLLER,
-            WicketServerSpanNaming.SERVER_SPAN_NAME,
+            WicketServerSpanNaming.serverSpanName,
             (IPageClassRequestHandler) handler);
       }
     }

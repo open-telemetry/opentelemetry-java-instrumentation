@@ -17,7 +17,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import scala.Function1;
 
-public class PromiseMonitoredInstrumentation implements TypeInstrumentation {
+class PromiseMonitoredInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -28,7 +28,7 @@ public class PromiseMonitoredInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(1, named("scala.Function1"))),
-        this.getClass().getName() + "$WrapFunctionAdvice");
+        getClass().getName() + "$WrapFunctionAdvice");
   }
 
   @SuppressWarnings("unused")

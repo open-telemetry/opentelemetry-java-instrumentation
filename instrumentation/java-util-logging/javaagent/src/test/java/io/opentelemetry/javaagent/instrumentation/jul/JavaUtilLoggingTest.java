@@ -121,7 +121,8 @@ class JavaUtilLoggingTest {
                 equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
                 equalTo(EXCEPTION_MESSAGE, "hello"),
                 satisfies(
-                    EXCEPTION_STACKTRACE, v -> v.contains(JavaUtilLoggingTest.class.getName())));
+                    EXCEPTION_STACKTRACE,
+                    val -> val.contains(JavaUtilLoggingTest.class.getName())));
       } else {
         assertThat(log)
             .hasAttributesSatisfyingExactly(

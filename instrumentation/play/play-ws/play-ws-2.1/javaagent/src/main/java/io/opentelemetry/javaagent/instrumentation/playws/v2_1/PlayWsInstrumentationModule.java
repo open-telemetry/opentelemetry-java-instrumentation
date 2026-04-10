@@ -37,7 +37,7 @@ public class PlayWsInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
-        new AsyncHttpClientInstrumentation(this.getClass().getName() + "$ClientAdvice"),
+        new AsyncHttpClientInstrumentation(getClass().getName() + "$ClientAdvice"),
         new HandlerPublisherInstrumentation(),
         new AbstractBootstrapInstrumentation());
   }
@@ -51,7 +51,7 @@ public class PlayWsInstrumentationModule extends InstrumentationModule
   public static class ClientAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(value = 1, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] methodEnter(
         @Advice.Argument(0) Request request,
         @Advice.Argument(1) AsyncHandler<?> originalAsyncHandler) {
@@ -74,7 +74,7 @@ public class PlayWsInstrumentationModule extends InstrumentationModule
       return new Object[] {context, asyncHandler};
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Argument(0) Request request,
         @Advice.Thrown @Nullable Throwable throwable,

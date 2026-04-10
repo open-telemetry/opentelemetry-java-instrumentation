@@ -42,7 +42,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JavaExecutorInstrumentation implements TypeInstrumentation {
+class JavaExecutorInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -140,7 +140,7 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToArguments(@ToArgument(value = 0, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] enterJobSubmit(
         @Advice.This Object executor, @Advice.Argument(0) Runnable task) {
       CallDepth callDepth = CallDepth.forClass(executor.getClass());
@@ -148,7 +148,7 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
       return new Object[] {adviceScope, adviceScope.getTask()};
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exitJobSubmit(
         @Advice.Argument(0) Runnable task,
         @Advice.Thrown @Nullable Throwable throwable,
@@ -162,7 +162,7 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
   public static class SetJavaForkJoinStateAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static PropagatedContext enterJobSubmit(@Advice.Argument(0) ForkJoinTask<?> task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
@@ -172,7 +172,7 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
       return null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exitJobSubmit(
         @Advice.Argument(0) ForkJoinTask<?> task,
         @Advice.Enter @Nullable PropagatedContext propagatedContext,
@@ -231,7 +231,7 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToArguments(@ToArgument(value = 0, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] enterJobSubmit(
         @Advice.This Object executor, @Advice.Argument(0) Runnable task) {
       CallDepth callDepth = CallDepth.forClass(executor.getClass());
@@ -239,7 +239,7 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
       return new Object[] {adviceScope, adviceScope.getTask()};
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exitJobSubmit(
         @Advice.Argument(0) Runnable task,
         @Advice.Thrown @Nullable Throwable throwable,
@@ -300,7 +300,7 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToArguments(@ToArgument(value = 0, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] enterJobSubmit(
         @Advice.This Object executor, @Advice.Argument(0) Callable<?> task) {
       CallDepth callDepth = CallDepth.forClass(executor.getClass());
@@ -308,7 +308,7 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
       return new Object[] {adviceScope, adviceScope.getTask()};
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exitJobSubmit(
         @Advice.Argument(0) Callable<?> task,
         @Advice.Thrown @Nullable Throwable throwable,
@@ -400,7 +400,7 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToArguments(@ToArgument(value = 0, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] submitEnter(
         @Advice.This Object executor, @Advice.Argument(0) Collection<? extends Callable<?>> tasks) {
       if (tasks == null) {
@@ -412,7 +412,7 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
       return new Object[] {adviceScope, adviceScope.getTasks()};
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void submitExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter Object[] enterResult) {
       CallableCollectionAdviceScope adviceScope = (CallableCollectionAdviceScope) enterResult[0];

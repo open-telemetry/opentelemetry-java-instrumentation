@@ -108,6 +108,7 @@ abstract class AbstractKtorHttpServerTest : AbstractHttpServerTest<EmbeddedServe
     assert(Span.current().spanContext.isValid, { "Controller should have a parent span. " })
     if (endpoint == ServerEndpoint.NOT_FOUND) {
       wrapped()
+      return
     }
     val span = getTesting().openTelemetry.getTracer("test").spanBuilder("controller").setSpanKind(SpanKind.INTERNAL).startSpan()
     try {

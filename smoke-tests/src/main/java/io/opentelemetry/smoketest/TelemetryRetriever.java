@@ -123,7 +123,7 @@ public class TelemetryRetriever implements AutoCloseable {
     return content;
   }
 
-  public final WebClient getClient() {
+  public WebClient getClient() {
     return client;
   }
 

@@ -9,8 +9,9 @@ import javax.annotation.Nullable;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.socket.DatagramChannel;
 
-public final class ChannelUtil {
+public class ChannelUtil {
 
+  @Nullable
   public static String getNetworkTransport(@Nullable Channel channel) {
     if (channel == null) {
       return null;

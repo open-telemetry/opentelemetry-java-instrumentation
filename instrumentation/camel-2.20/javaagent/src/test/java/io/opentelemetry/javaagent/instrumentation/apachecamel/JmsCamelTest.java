@@ -94,9 +94,7 @@ class JmsCamelTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_DESTINATION_NAME, "queue:testQueue"),
                             equalTo(stringKey("camel.uri"), experimental("jms://queue:testQueue")),
-                            satisfies(
-                                MESSAGING_MESSAGE_ID,
-                                stringAssert -> stringAssert.isInstanceOf(String.class))),
+                            satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class))),
                 span -> span.hasName("mock").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(2))));
   }
 }

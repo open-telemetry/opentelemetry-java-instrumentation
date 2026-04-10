@@ -28,7 +28,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-public class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumentation {
+class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -78,10 +78,10 @@ public class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumen
       Class<?> clazz = Class.forName("java.lang.invoke.AbstractValidatingLambdaMetafactory");
       clazz.getDeclaredField("interfaceClass");
       return true;
-    } catch (NoSuchFieldException exception) {
+    } catch (NoSuchFieldException ignored) {
       return false;
-    } catch (ClassNotFoundException exception) {
-      throw new IllegalStateException(exception);
+    } catch (ClassNotFoundException e) {
+      throw new IllegalStateException(e);
     }
   }
 

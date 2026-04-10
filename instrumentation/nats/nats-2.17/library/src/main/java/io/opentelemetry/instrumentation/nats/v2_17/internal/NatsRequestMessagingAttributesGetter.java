@@ -20,7 +20,6 @@ final class NatsRequestMessagingAttributesGetter
     return "nats";
   }
 
-  @Nullable
   @Override
   public String getDestination(NatsRequest request) {
     return request.getSubject();

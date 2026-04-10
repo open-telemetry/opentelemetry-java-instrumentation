@@ -34,7 +34,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-public abstract class AbstractIcebergTest {
+abstract class AbstractIcebergTest {
   protected static final int FORMAT_VERSION = 2;
   protected static final Schema SCHEMA =
       new Schema(
@@ -386,8 +386,8 @@ public abstract class AbstractIcebergTest {
                                                 expectedReport.tableName())))));
   }
 
-  static final class SimpleReporter implements MetricsReporter {
-    MetricsReport report;
+  static class SimpleReporter implements MetricsReporter {
+    private MetricsReport report;
 
     @Override
     public void report(MetricsReport report) {

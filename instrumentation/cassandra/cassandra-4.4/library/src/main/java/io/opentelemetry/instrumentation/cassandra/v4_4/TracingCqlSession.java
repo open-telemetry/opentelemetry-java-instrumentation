@@ -92,9 +92,9 @@ final class TracingCqlSession {
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(query);
-    } catch (Throwable exception) {
-      instrumenter.end(context, request, getExecutionInfo(exception), exception);
-      throw exception;
+    } catch (Throwable t) {
+      instrumenter.end(context, request, getExecutionInfo(t), t);
+      throw t;
     }
     instrumenter.end(context, request, resultSet.getExecutionInfo(), null);
     return resultSet;
@@ -108,9 +108,9 @@ final class TracingCqlSession {
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(statement);
-    } catch (Throwable exception) {
-      instrumenter.end(context, request, getExecutionInfo(exception), exception);
-      throw exception;
+    } catch (Throwable t) {
+      instrumenter.end(context, request, getExecutionInfo(t), t);
+      throw t;
     }
     instrumenter.end(context, request, resultSet.getExecutionInfo(), null);
     return resultSet;

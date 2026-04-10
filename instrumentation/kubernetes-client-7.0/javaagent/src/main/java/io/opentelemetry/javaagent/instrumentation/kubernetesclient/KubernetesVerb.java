@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
-public enum KubernetesVerb {
+enum KubernetesVerb {
   GET("get"),
   LIST("list"),
   CREATE("create"),

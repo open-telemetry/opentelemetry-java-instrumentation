@@ -11,7 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import javax.annotation.Nullable;
 
-public final class FiberContext {
+public class FiberContext {
   private Context context;
   @Nullable private Context initialContext;
   @Nullable private Scope scope;

@@ -17,7 +17,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.messaging.Message;
 
-public class MessageHeaderUtilsInstrumentation implements TypeInstrumentation {
+class MessageHeaderUtilsInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -30,13 +30,13 @@ public class MessageHeaderUtilsInstrumentation implements TypeInstrumentation {
         namedOneOf("addHeaderIfAbsent", "addHeadersIfAbsent", "removeHeaderIfPresent")
             .and(returns(named("org.springframework.messaging.Message")))
             .and(takesArgument(0, named("org.springframework.messaging.Message"))),
-        this.getClass().getName() + "$PreserveContextAdvice");
+        getClass().getName() + "$PreserveContextAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class PreserveContextAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Argument(0) Message<?> original, @Advice.Return Message<?> result) {
       SpringAwsUtil.copyTracingState(original, result);

@@ -50,14 +50,11 @@ class JoddHttpHttpAttributesGetterTest {
             .header("multiple", "val1")
             .header("multiple", "val2");
     List<String> headerVals = attributesGetter.getHttpRequestHeader(request, "single");
-    assertThat(headerVals).hasSize(1);
-    assertThat(headerVals.get(0)).isEqualTo("val1");
+    assertThat(headerVals).containsExactly("val1");
     headerVals = attributesGetter.getHttpRequestHeader(request, "multiple");
-    assertThat(headerVals).hasSize(2);
-    assertThat(headerVals.get(0)).isEqualTo("val1");
-    assertThat(headerVals.get(1)).isEqualTo("val2");
+    assertThat(headerVals).containsExactly("val1", "val2");
     headerVals = attributesGetter.getHttpRequestHeader(request, "not-existing");
-    assertThat(headerVals).hasSize(0);
+    assertThat(headerVals).isEmpty();
   }
 
   @Test
@@ -78,13 +75,10 @@ class JoddHttpHttpAttributesGetterTest {
             .header("multiple", "val1")
             .header("multiple", "val2");
     List<String> headerVals = attributesGetter.getHttpResponseHeader(null, response, "single");
-    assertThat(headerVals).hasSize(1);
-    assertThat(headerVals.get(0)).isEqualTo("val1");
+    assertThat(headerVals).containsExactly("val1");
     headerVals = attributesGetter.getHttpResponseHeader(null, response, "multiple");
-    assertThat(headerVals).hasSize(2);
-    assertThat(headerVals.get(0)).isEqualTo("val1");
-    assertThat(headerVals.get(1)).isEqualTo("val2");
+    assertThat(headerVals).containsExactly("val1", "val2");
     headerVals = attributesGetter.getHttpResponseHeader(null, response, "not-existing");
-    assertThat(headerVals).hasSize(0);
+    assertThat(headerVals).isEmpty();
   }
 }

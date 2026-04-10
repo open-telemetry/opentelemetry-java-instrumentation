@@ -20,7 +20,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.jasper.JspCompilationContext;
 
-public class JspCompilationContextInstrumentation implements TypeInstrumentation {
+class JspCompilationContextInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -63,12 +63,12 @@ public class JspCompilationContextInstrumentation implements TypeInstrumentation
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.This JspCompilationContext jspCompilationContext) {
       return AdviceScope.start(jspCompilationContext);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.This JspCompilationContext jspCompilationContext,
         @Advice.Thrown @Nullable Throwable throwable,

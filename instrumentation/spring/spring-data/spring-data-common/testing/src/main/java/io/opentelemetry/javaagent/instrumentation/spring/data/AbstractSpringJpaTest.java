@@ -113,13 +113,13 @@ public abstract class AbstractSpringJpaTest<
         span ->
             span.hasKind(SpanKind.CLIENT)
                 .satisfies(
-                    s -> {
+                    spanData -> {
                       if (emitStableDatabaseSemconv()) {
                         // Hibernate 5.x uses "hibernate_sequence", 6.x+ uses "JpaCustomer_SEQ"
-                        assertThat(s.getName())
+                        assertThat(spanData.getName())
                             .isIn("CALL hibernate_sequence", "CALL JpaCustomer_SEQ");
                       } else {
-                        assertThat(s.getName()).isEqualTo("CALL test");
+                        assertThat(spanData.getName()).isEqualTo("CALL test");
                       }
                     })
                 .hasAttributesSatisfyingExactly(
@@ -173,7 +173,7 @@ public abstract class AbstractSpringJpaTest<
     ENTITY customer = newCustomer("Bob", "Anonymous");
 
     assertThat(id(customer)).isNull();
-    assertThat(repo.findAll().iterator().hasNext()).isFalse();
+    assertThat(repo.findAll()).isEmpty();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -381,7 +381,7 @@ public abstract class AbstractSpringJpaTest<
     String repoClassName = repositoryClass().getName();
     List<ENTITY> customers = findSpecialCustomers(repo);
 
-    assertThat(customers.isEmpty()).isTrue();
+    assertThat(customers).isEmpty();
 
     testing.waitAndAssertTraces(
         trace ->

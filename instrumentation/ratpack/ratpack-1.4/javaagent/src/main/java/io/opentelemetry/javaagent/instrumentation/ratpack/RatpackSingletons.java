@@ -15,16 +15,16 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import ratpack.handling.Context;
 
-public final class RatpackSingletons {
+public class RatpackSingletons {
 
-  private static final Instrumenter<String, Void> INSTRUMENTER =
+  private static final Instrumenter<String, Void> instrumenter =
       Instrumenter.<String, Void>builder(
               GlobalOpenTelemetry.get(), "io.opentelemetry.ratpack-1.4", s -> s)
           .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
           .buildInstrumenter();
 
   public static Instrumenter<String, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static void updateSpanNames(io.opentelemetry.context.Context otelContext, Context ctx) {

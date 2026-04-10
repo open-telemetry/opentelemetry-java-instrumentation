@@ -17,7 +17,7 @@ import java.net.URI;
 import java.util.Locale;
 import java.util.Map;
 
-final class Utils {
+class Utils {
 
   private Utils() {}
 

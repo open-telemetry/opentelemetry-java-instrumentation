@@ -18,7 +18,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HikariPoolInstrumentation implements TypeInstrumentation {
+class HikariPoolInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -33,14 +33,14 @@ public class HikariPoolInstrumentation implements TypeInstrumentation {
         named("setMetricsTrackerFactory")
             .and(takesArguments(1))
             .and(takesArgument(0, named("com.zaxxer.hikari.metrics.MetricsTrackerFactory"))),
-        this.getClass().getName() + "$SetMetricsTrackerFactoryAdvice");
+        getClass().getName() + "$SetMetricsTrackerFactoryAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class SetMetricsTrackerFactoryAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static MetricsTrackerFactory onEnter(
         @Advice.Argument(0) MetricsTrackerFactory userMetricsTracker,
         @Advice.FieldValue("metricsTracker") AutoCloseable existingMetricsTracker)

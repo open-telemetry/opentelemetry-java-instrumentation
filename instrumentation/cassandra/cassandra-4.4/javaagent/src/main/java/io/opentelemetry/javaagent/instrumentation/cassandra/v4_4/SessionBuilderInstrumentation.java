@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class SessionBuilderInstrumentation implements TypeInstrumentation {
+class SessionBuilderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -45,7 +45,7 @@ public class SessionBuilderInstrumentation implements TypeInstrumentation {
      *     replaced with new session
      */
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static CompletionStage<?> injectTracingSession(@Advice.Return CompletionStage<?> stage) {
       return stage.thenApply(new CompletionStageFunction());
     }

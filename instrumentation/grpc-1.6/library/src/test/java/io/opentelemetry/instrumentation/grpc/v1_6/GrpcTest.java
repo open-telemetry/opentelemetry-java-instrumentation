@@ -160,9 +160,8 @@ class GrpcTest extends AbstractGrpcTest {
         @Nullable Throwable error) {
 
       Metadata metadata = grpcRequest.getMetadata();
-      if (metadata != null && metadata.containsKey(CUSTOM_METADATA_KEY)) {
-        String value = metadata.get(CUSTOM_METADATA_KEY);
-        attributes.put(CUSTOM_KEY, value);
+      if (metadata != null) {
+        attributes.put(CUSTOM_KEY, metadata.get(CUSTOM_METADATA_KEY));
       }
     }
   }

@@ -68,7 +68,7 @@ public class ToolingUtils {
 
   public static IncludedBuild includedBuild(final Project project, final String buildName) {
     Gradle currentGradle = project.getRootProject().getGradle();
-    while (null != currentGradle) {
+    while (currentGradle != null) {
       for (IncludedBuild ib : currentGradle.getIncludedBuilds()) {
         if (ib instanceof IncludedRootBuild) {
           continue;

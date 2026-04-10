@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import ratpack.handling.HandlerDecorator;
 import ratpack.registry.Registry;
 
-public class ServerRegistryInstrumentation implements TypeInstrumentation {
+class ServerRegistryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -34,7 +34,7 @@ public class ServerRegistryInstrumentation implements TypeInstrumentation {
   public static class BuildAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Registry injectTracing(@Advice.Return Registry registry) {
       return registry.join(
           Registry.builder().add(HandlerDecorator.prepend(new TracingHandler())).build());

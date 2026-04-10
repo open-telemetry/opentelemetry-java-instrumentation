@@ -92,7 +92,9 @@ public class KafkaProducerTelemetry {
     }
 
     Context context = producerInstrumenter.start(parentContext, request);
-    propagator.inject(context, record.headers(), SETTER);
+    if (producerPropagationEnabled) {
+      propagator.inject(context, record.headers(), SETTER);
+    }
 
     try (Scope ignored = context.makeCurrent()) {
       return sendFn.apply(record, new ProducerCallback(callback, parentContext, context, request));

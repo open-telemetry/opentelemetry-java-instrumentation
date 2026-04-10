@@ -408,8 +408,8 @@ public class HelperInjector implements Transformer {
             // class is loaded and if it is, we ignore the error.
             try {
               Class.forName(className, false, null);
-            } catch (ClassNotFoundException unused) {
-              // throw the original error
+            } catch (ClassNotFoundException e) {
+              error.addSuppressed(e);
               throw error;
             }
           }
@@ -447,8 +447,8 @@ public class HelperInjector implements Transformer {
   private static File createTempDir() {
     try {
       return Files.createTempDirectory("opentelemetry-temp-jars").toFile();
-    } catch (IOException exception) {
-      throw new IllegalStateException("Failed to create temporary directory.", exception);
+    } catch (IOException e) {
+      throw new IllegalStateException("Failed to create temporary directory.", e);
     }
   }
 

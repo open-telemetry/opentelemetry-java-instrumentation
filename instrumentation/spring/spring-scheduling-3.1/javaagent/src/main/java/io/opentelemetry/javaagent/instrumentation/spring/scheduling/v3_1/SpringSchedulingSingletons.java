@@ -14,13 +14,13 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 
-public final class SpringSchedulingSingletons {
+public class SpringSchedulingSingletons {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "spring_scheduling")
           .getBoolean("experimental_span_attributes/development", false);
 
-  private static final Instrumenter<Runnable, Void> INSTRUMENTER;
+  private static final Instrumenter<Runnable, Void> instrumenter;
 
   static {
     SpringSchedulingCodeAttributesGetter codeAttributesGetter =
@@ -38,11 +38,11 @@ public final class SpringSchedulingSingletons {
           AttributesExtractor.constant(AttributeKey.stringKey("job.system"), "spring_scheduling"));
     }
 
-    INSTRUMENTER = builder.buildInstrumenter();
+    instrumenter = builder.buildInstrumenter();
   }
 
   public static Instrumenter<Runnable, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private SpringSchedulingSingletons() {}

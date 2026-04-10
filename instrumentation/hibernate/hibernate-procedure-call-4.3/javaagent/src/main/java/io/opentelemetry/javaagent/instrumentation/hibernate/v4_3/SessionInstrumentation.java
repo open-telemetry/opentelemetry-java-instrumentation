@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.procedure.ProcedureCall;
 
-public class SessionInstrumentation implements TypeInstrumentation {
+class SessionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -42,7 +42,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetProcedureCallAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void getProcedureCall(
         @Advice.This SharedSessionContract session, @Advice.Return ProcedureCall returned) {
 

@@ -22,7 +22,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HandlerInstrumentation implements TypeInstrumentation {
+class HandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderOptimization() {
@@ -40,7 +40,7 @@ public class HandlerInstrumentation implements TypeInstrumentation {
         named("handleRequest")
             .and(takesArgument(0, named("io.undertow.server.HttpServerExchange")))
             .and(isPublic()),
-        this.getClass().getName() + "$HandleRequestAdvice");
+        getClass().getName() + "$HandleRequestAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -88,12 +88,12 @@ public class HandlerInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(0) HttpServerExchange exchange) {
       return AdviceScope.start(exchange);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(0) HttpServerExchange exchange,
         @Advice.Thrown @Nullable Throwable throwable,

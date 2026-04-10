@@ -24,7 +24,7 @@ public class MyFacesInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // javax.faces was renamed to jakarta.faces in JSF 3.0
+    // removed in 3.0 (renamed to jakarta.faces)
     return hasClassesNamed("javax.faces.context.FacesContext");
   }
 

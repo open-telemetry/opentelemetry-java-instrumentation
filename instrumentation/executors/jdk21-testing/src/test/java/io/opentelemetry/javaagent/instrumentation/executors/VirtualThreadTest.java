@@ -52,8 +52,8 @@ class VirtualThreadTest {
               isPropagationDisabled.set(ExecutorAdviceHelper.isPropagationDisabled());
               return null;
             });
-      } catch (Exception exception) {
-        error = exception;
+      } catch (Exception e) {
+        error = e;
       }
     }
   }

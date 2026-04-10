@@ -38,7 +38,7 @@ class HeaderUtil {
   private static MethodHandle findGetHeadersMethod(MethodType methodType) {
     try {
       return MethodHandles.lookup().findVirtual(HttpHeaders.class, "get", methodType);
-    } catch (Throwable t) {
+    } catch (Throwable ignored) {
       return null;
     }
   }
@@ -51,7 +51,7 @@ class HeaderUtil {
         if (result != null) {
           return result;
         }
-      } catch (Throwable t) {
+      } catch (Throwable ignored) {
         // ignore
       }
     }

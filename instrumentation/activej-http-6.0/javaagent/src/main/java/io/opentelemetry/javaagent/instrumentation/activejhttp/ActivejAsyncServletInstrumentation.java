@@ -28,7 +28,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
+class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -45,7 +45,7 @@ public class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("serve")
             .and(takesArguments(1).and(takesArgument(0, named("io.activej.http.HttpRequest")))),
-        this.getClass().getName() + "$ServeAdvice");
+        getClass().getName() + "$ServeAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -85,13 +85,13 @@ public class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope methodEnter(@Advice.Argument(0) HttpRequest request) {
       return AdviceScope.start(request);
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Promise<HttpResponse> methodExit(
         @Advice.Return Promise<HttpResponse> responsePromise,
         @Advice.Thrown Throwable throwable,

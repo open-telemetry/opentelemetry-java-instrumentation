@@ -15,7 +15,7 @@ import reactor.netty.Connection;
 import reactor.netty.http.client.HttpClientRequest;
 import reactor.netty.http.client.HttpClientResponse;
 
-public final class DecoratorFunctions {
+public class DecoratorFunctions {
 
   // ignore already decorated functions
   public static boolean shouldDecorate(Class<?> callbackClass) {

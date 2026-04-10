@@ -48,7 +48,7 @@ public final class KafkaProducerRequest {
       Map<MetricName, ? extends Metric> metrics = producer.metrics();
       Iterator<MetricName> metricIterator = metrics.keySet().iterator();
       return metricIterator.hasNext() ? metricIterator.next().tags().get("client-id") : null;
-    } catch (RuntimeException exception) {
+    } catch (RuntimeException ignored) {
       // ExceptionHandlingTest uses a Producer that throws exception on every method call
       return null;
     }

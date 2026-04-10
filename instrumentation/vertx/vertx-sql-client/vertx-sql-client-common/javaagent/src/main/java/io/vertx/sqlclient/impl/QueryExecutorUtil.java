@@ -10,7 +10,7 @@ import io.vertx.sqlclient.SqlConnectOptions;
 import javax.annotation.Nullable;
 
 // Helper class for accessing virtual field on package private QueryExecutor class.
-public final class QueryExecutorUtil {
+public class QueryExecutorUtil {
   private static final VirtualField<QueryExecutor<?, ?, ?>, SqlConnectOptions> connectOptionsField =
       VirtualField.find(QueryExecutor.class, SqlConnectOptions.class);
 

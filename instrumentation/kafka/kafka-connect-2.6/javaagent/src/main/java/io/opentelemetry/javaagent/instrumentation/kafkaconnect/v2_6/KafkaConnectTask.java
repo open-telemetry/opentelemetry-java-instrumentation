@@ -13,7 +13,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 import org.apache.kafka.connect.sink.SinkRecord;
 
-public final class KafkaConnectTask {
+public class KafkaConnectTask {
 
   private final Collection<SinkRecord> records;
 

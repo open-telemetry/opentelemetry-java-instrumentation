@@ -32,8 +32,7 @@ public class Jetty8HandlerAdvice {
     }
 
     @Nullable
-    public static AdviceScope start(
-        Object source, HttpServletRequest request, HttpServletResponse response) {
+    public static AdviceScope start(HttpServletRequest request, HttpServletResponse response) {
       Context attachedContext = helper().getServerContext(request);
       if (attachedContext != null) {
         // We are inside nested handler, don't create new span
@@ -60,16 +59,15 @@ public class Jetty8HandlerAdvice {
     }
   }
 
-  @Advice.OnMethodEnter(suppress = Throwable.class)
+  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
   @Nullable
   public static AdviceScope onEnter(
-      @Advice.This Object source,
       @Advice.Argument(2) HttpServletRequest request,
       @Advice.Argument(3) HttpServletResponse response) {
-    return AdviceScope.start(source, request, response);
+    return AdviceScope.start(request, response);
   }
 
-  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
   public static void stopSpan(
       @Advice.Argument(2) HttpServletRequest request,
       @Advice.Argument(3) HttpServletResponse response,

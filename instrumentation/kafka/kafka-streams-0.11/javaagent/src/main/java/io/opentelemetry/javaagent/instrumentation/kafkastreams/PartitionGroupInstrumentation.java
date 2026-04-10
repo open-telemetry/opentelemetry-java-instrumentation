@@ -24,7 +24,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.streams.processor.internals.StampedRecord;
 
 // the advice applied by this instrumentation actually starts the span
-public class PartitionGroupInstrumentation implements TypeInstrumentation {
+class PartitionGroupInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -43,7 +43,7 @@ public class PartitionGroupInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class NextRecordAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Return StampedRecord record) {
       if (record == null) {
         return;

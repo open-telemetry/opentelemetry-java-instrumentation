@@ -21,11 +21,15 @@ import javax.annotation.Nullable;
 
 public class JdbcAdviceScope {
   private final CallDepth callDepth;
-  private final DbRequest request;
-  private final Context context;
-  private final Scope scope;
+  @Nullable private final DbRequest request;
+  @Nullable private final Context context;
+  @Nullable private final Scope scope;
 
-  private JdbcAdviceScope(CallDepth callDepth, DbRequest request, Context context, Scope scope) {
+  private JdbcAdviceScope(
+      CallDepth callDepth,
+      @Nullable DbRequest request,
+      @Nullable Context context,
+      @Nullable Scope scope) {
     this.callDepth = callDepth;
     this.request = request;
     this.context = context;

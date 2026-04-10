@@ -13,13 +13,13 @@ import java.net.InetAddress;
 import javax.annotation.Nullable;
 import org.opensearch.client.Response;
 
-public final class OpenSearchRestSingletons {
+public class OpenSearchRestSingletons {
 
-  private static final Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> INSTRUMENTER =
+  private static final Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> instrumenter =
       OpenSearchRestInstrumenterFactory.create("io.opentelemetry.opensearch-rest-3.0");
 
   public static Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   @Nullable
@@ -35,6 +35,7 @@ public final class OpenSearchRestSingletons {
       }
 
       @Override
+      @Nullable
       public InetAddress getAddress() {
         return response.getHost().getAddress();
       }

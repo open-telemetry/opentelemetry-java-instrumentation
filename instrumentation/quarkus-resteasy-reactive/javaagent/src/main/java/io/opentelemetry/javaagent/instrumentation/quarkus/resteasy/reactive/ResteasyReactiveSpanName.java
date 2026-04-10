@@ -11,6 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import javax.annotation.Nullable;
 import org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext;
 import org.jboss.resteasy.reactive.server.mapping.RuntimeResource;
 import org.jboss.resteasy.reactive.server.mapping.URITemplate;
@@ -29,6 +30,7 @@ final class ResteasyReactiveSpanName {
     pathField.set(requestContext, jaxRsName);
   }
 
+  @Nullable
   private static String calculateJaxRsName(ResteasyReactiveRequestContext requestContext) {
     RuntimeResource target = requestContext.getTarget();
     if (target == null) {

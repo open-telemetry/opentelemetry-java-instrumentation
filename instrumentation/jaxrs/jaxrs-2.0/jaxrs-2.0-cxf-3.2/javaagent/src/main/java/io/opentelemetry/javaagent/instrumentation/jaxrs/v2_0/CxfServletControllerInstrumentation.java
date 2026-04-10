@@ -21,7 +21,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class CxfServletControllerInstrumentation implements TypeInstrumentation {
+class CxfServletControllerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -41,7 +41,7 @@ public class CxfServletControllerInstrumentation implements TypeInstrumentation 
   public static class InvokeAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.Argument(0) HttpServletRequest httpServletRequest) {
 
       Context context =
@@ -51,7 +51,7 @@ public class CxfServletControllerInstrumentation implements TypeInstrumentation 
       return context != null ? context.makeCurrent() : null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();

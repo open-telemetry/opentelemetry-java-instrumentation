@@ -14,7 +14,7 @@ import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 
-public final class JavaxMessageAdapter implements MessageAdapter {
+public class JavaxMessageAdapter implements MessageAdapter {
 
   public static MessageAdapter create(Message message) {
     return new JavaxMessageAdapter(message);

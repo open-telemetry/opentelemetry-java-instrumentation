@@ -22,10 +22,10 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
 
   private static final VirtualField<ConsumerRecord<?, ?>, State<KafkaProcessRequest>> stateField =
       VirtualField.find(ConsumerRecord.class, State.class);
+  private static final ThreadLocal<ThreadState> threadLocalState = new ThreadLocal<>();
 
   private final Instrumenter<KafkaProcessRequest, Void> processInstrumenter;
   @Nullable private final RecordInterceptor<K, V> decorated;
-  private static final ThreadLocal<ThreadState> threadLocalState = new ThreadLocal<>();
 
   InstrumentedRecordInterceptor(
       Instrumenter<KafkaProcessRequest, Void> processInstrumenter,

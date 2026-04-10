@@ -27,8 +27,8 @@ public class KafkaTestUtil {
     if (consumerPollDurationMethod != null) {
       try {
         return (ConsumerRecords<K, V>) consumerPollDurationMethod.invoke(consumer, duration);
-      } catch (Exception exception) {
-        throw new IllegalStateException(exception);
+      } catch (Exception e) {
+        throw new IllegalStateException(e);
       }
     }
     // not present in 4.x

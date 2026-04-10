@@ -36,9 +36,9 @@ class HooksTest {
   }
 
   private static class CapturingMono extends Mono<Integer> {
-    final AtomicReference<CoreSubscriber<? super Integer>> subscriber;
+    private final AtomicReference<CoreSubscriber<? super Integer>> subscriber;
 
-    CapturingMono(AtomicReference<CoreSubscriber<? super Integer>> subscriber) {
+    private CapturingMono(AtomicReference<CoreSubscriber<? super Integer>> subscriber) {
       this.subscriber = subscriber;
     }
 

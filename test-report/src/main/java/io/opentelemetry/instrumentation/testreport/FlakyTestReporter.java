@@ -65,9 +65,9 @@ public class FlakyTestReporter {
     try {
       DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
       return builder.parse(testReport.toFile());
-    } catch (Exception exception) {
+    } catch (Exception e) {
       System.err.println("Failed to parse test report " + testReport);
-      exception.printStackTrace();
+      e.printStackTrace();
       return null;
     }
   }

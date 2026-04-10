@@ -20,7 +20,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class RabbitCommandInstrumentation implements TypeInstrumentation {
+class RabbitCommandInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -49,7 +49,7 @@ public class RabbitCommandInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CommandConstructorAdvice {
 
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void setSpanNameAddHeaders(@Advice.This Command command) {
 
       Context context = CURRENT_RABBIT_CONTEXT.get();

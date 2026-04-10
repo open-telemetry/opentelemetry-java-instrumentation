@@ -45,6 +45,6 @@ class SystemMetricsTest extends AbstractSystemMetricsTest {
 
   @Test
   void verifyObservablesAreNotEmpty() {
-    assertThat(observables).as("List of observables").isNotEmpty();
+    assertThat(observables).isNotEmpty();
   }
 }

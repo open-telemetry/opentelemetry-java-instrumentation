@@ -925,9 +925,9 @@ abstract class BaseRxJava2WithSpanTest {
                             .hasAttributesSatisfyingExactly(assertCancelled("publisher"))));
   }
 
-  static class CustomPublisher implements Publisher<String>, Subscription {
+  private static class CustomPublisher implements Publisher<String>, Subscription {
 
-    Subscriber<? super String> subscriber;
+    private Subscriber<? super String> subscriber;
 
     @Override
     public void subscribe(Subscriber<? super String> subscriber) {
@@ -935,11 +935,11 @@ abstract class BaseRxJava2WithSpanTest {
       subscriber.onSubscribe(this);
     }
 
-    void onComplete() {
+    private void onComplete() {
       this.subscriber.onComplete();
     }
 
-    void onError(Throwable exception) {
+    private void onError(Throwable exception) {
       this.subscriber.onError(exception);
     }
 

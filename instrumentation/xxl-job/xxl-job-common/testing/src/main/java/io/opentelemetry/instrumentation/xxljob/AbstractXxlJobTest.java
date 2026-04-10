@@ -95,7 +95,7 @@ public abstract class AbstractXxlJobTest {
   }
 
   @Test
-  public void testMethodJob() {
+  void testMethodJob() {
     // method handle is null if test is not supported by tested version of the library
     Assumptions.assumeTrue(getMethodHandler() != null);
 

@@ -33,7 +33,7 @@ public final class JavaagentDistributionAccessCustomizerProvider
   private static final Logger logger =
       Logger.getLogger(JavaagentDistributionAccessCustomizerProvider.class.getName());
 
-  private static final ObjectMapper MAPPER =
+  private static final ObjectMapper mapper =
       new ObjectMapper()
           .addHandler(
               new DeserializationProblemHandler() {
@@ -65,7 +65,7 @@ public final class JavaagentDistributionAccessCustomizerProvider
       DistributionPropertyModel javaagent = distribution.getAdditionalProperties().get("javaagent");
       if (javaagent != null) {
         try {
-          return MAPPER.convertValue(javaagent, AgentDistributionConfig.class);
+          return mapper.convertValue(javaagent, AgentDistributionConfig.class);
         } catch (IllegalArgumentException e) {
           logger.log(WARNING, "Failed to parse distribution.javaagent configuration", e);
         }

@@ -46,9 +46,9 @@ public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchb
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private static final List<AutoCloseable> cleanup = new ArrayList<>();
-  private static CouchbaseTemplate couchbaseTemplate;
-  private static CouchbaseTemplate memcacheTemplate;
+  private final List<AutoCloseable> cleanup = new ArrayList<>();
+  private CouchbaseTemplate couchbaseTemplate;
+  private CouchbaseTemplate memcacheTemplate;
 
   @BeforeAll
   void setUpTemplates() {
@@ -89,7 +89,7 @@ public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchb
     }
   }
 
-  private static Stream<Arguments> templates() {
+  private Stream<Arguments> templates() {
     return Stream.of(
         Arguments.of(named(bucketCouchbase.type().name(), couchbaseTemplate)),
         Arguments.of(named(bucketMemcache.type().name(), memcacheTemplate)));

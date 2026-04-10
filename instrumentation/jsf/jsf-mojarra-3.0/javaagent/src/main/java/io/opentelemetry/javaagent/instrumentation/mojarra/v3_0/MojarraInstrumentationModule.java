@@ -24,7 +24,7 @@ public class MojarraInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // jakarta.faces was introduced in JSF 3.0, replacing javax.faces
+    // added in 3.0 (renamed from javax.faces)
     return hasClassesNamed("jakarta.faces.context.FacesContext");
   }
 

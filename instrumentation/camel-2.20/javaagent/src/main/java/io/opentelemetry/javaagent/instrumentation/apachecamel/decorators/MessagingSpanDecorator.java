@@ -31,6 +31,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import java.net.URI;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 
@@ -122,6 +123,7 @@ class MessagingSpanDecorator extends BaseSpanDecorator {
    *
    * @return The message id, or null if no id exists for the exchange
    */
+  @Nullable
   protected String getMessageId(Exchange exchange) {
     switch (component) {
       case "aws-sns":

@@ -25,6 +25,7 @@ public class Jetty12InstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 12.0
     return hasClassesNamed("org.eclipse.jetty.server.Request$Handler");
   }
 

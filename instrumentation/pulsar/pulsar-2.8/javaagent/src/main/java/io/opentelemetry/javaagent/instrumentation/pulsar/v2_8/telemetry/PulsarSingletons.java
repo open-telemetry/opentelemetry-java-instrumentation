@@ -35,7 +35,7 @@ import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.Messages;
 
-public final class PulsarSingletons {
+public class PulsarSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.pulsar-2.8";
 
   private static final OpenTelemetry TELEMETRY = GlobalOpenTelemetry.get();
@@ -57,10 +57,6 @@ public final class PulsarSingletons {
 
   public static Instrumenter<PulsarRequest, Void> consumerProcessInstrumenter() {
     return CONSUMER_PROCESS_INSTRUMENTER;
-  }
-
-  public static Instrumenter<PulsarRequest, Void> consumerReceiveInstrumenter() {
-    return CONSUMER_RECEIVE_INSTRUMENTER;
   }
 
   public static Instrumenter<PulsarRequest, Void> producerInstrumenter() {
@@ -175,14 +171,19 @@ public final class PulsarSingletons {
       }
       parent = PROPAGATOR.extract(parent, request, MessageTextMapGetter.INSTANCE);
     }
-    return InstrumenterUtil.startAndEnd(
-        CONSUMER_RECEIVE_INSTRUMENTER,
-        parent,
-        request,
-        null,
-        throwable,
-        timer.startTime(),
-        timer.now());
+    Context receiveContext =
+        InstrumenterUtil.startAndEnd(
+            CONSUMER_RECEIVE_INSTRUMENTER,
+            parent,
+            request,
+            null,
+            throwable,
+            timer.startTime(),
+            timer.now());
+    // injected context is used in MessageListenerInstrumentation and also in the spring-pulsar
+    // instrumentation
+    VirtualFieldStore.inject(message, receiveContext);
+    return receiveContext;
   }
 
   @Nullable
@@ -200,14 +201,19 @@ public final class PulsarSingletons {
     if (!CONSUMER_BATCH_RECEIVE_INSTRUMENTER.shouldStart(parent, request)) {
       return null;
     }
-    return InstrumenterUtil.startAndEnd(
-        CONSUMER_BATCH_RECEIVE_INSTRUMENTER,
-        parent,
-        request,
-        null,
-        throwable,
-        timer.startTime(),
-        timer.now());
+    Context receiveContext =
+        InstrumenterUtil.startAndEnd(
+            CONSUMER_BATCH_RECEIVE_INSTRUMENTER,
+            parent,
+            request,
+            null,
+            throwable,
+            timer.startTime(),
+            timer.now());
+    // injected context is used in MessageListenerInstrumentation and also in the spring-pulsar
+    // instrumentation
+    messages.forEach(message -> VirtualFieldStore.inject(message, receiveContext));
+    return receiveContext;
   }
 
   public static CompletableFuture<Void> wrap(CompletableFuture<Void> future) {
@@ -263,8 +269,6 @@ public final class PulsarSingletons {
         (messages, throwable) -> {
           Context context =
               startAndEndConsumerReceive(parent, messages, timer, consumer, throwable);
-          // injected context is used in the spring-pulsar instrumentation
-          messages.forEach(message -> VirtualFieldStore.inject(message, context));
           runWithContext(
               context,
               () -> {

@@ -21,7 +21,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class BootstrapInstrumentation implements TypeInstrumentation {
+class BootstrapInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.netty.bootstrap.Bootstrap");
@@ -38,7 +38,7 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ConnectAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static NettyScope startConnect(@Advice.Argument(2) SocketAddress remoteAddress) {
 
       Context parentContext = Java8BytecodeBridge.currentContext();
@@ -50,7 +50,7 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
       return NettyScope.startNew(connectionInstrumenter(), parentContext, request);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void endConnect(
         @Advice.Thrown Throwable throwable,
         @Advice.Argument(4) ChannelPromise channelPromise,

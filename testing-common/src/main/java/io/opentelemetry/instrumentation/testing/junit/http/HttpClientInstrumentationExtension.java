@@ -15,7 +15,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
  * A {@link InstrumentationExtension} which sets up infrastructure, such as a test HTTP server, for
  * {@link AbstractHttpClientTest}.
  */
-public final class HttpClientInstrumentationExtension extends InstrumentationExtension {
+public class HttpClientInstrumentationExtension extends InstrumentationExtension {
 
   /**
    * Returns a {@link InstrumentationExtension} to be used with {@link AbstractHttpClientTest} for

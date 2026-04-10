@@ -19,6 +19,7 @@ import io.opentelemetry.javaagent.bootstrap.executors.TaskAdviceHelper;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.Callable;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -29,7 +30,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * <p>Note: There are quite a few separate implementations of {@code ForkJoinTask}/{@code
  * ForkJoinPool}: JVM, Akka, Scala, Netty to name a few. This class handles Akka version.
  */
-public class AkkaForkJoinTaskInstrumentation implements TypeInstrumentation {
+class AkkaForkJoinTaskInstrumentation implements TypeInstrumentation {
   static final String TASK_CLASS_NAME = "akka.dispatch.forkjoin.ForkJoinTask";
 
   @Override
@@ -58,7 +59,8 @@ public class AkkaForkJoinTaskInstrumentation implements TypeInstrumentation {
      * directly. This means state is still stored in {@code Runnable} or {@code Callable} and we
      * need to use that state.
      */
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope enter(@Advice.This ForkJoinTask<?> thiz) {
       Scope scope =
           TaskAdviceHelper.makePropagatedContextCurrent(
@@ -67,8 +69,8 @@ public class AkkaForkJoinTaskInstrumentation implements TypeInstrumentation {
         Scope newScope =
             TaskAdviceHelper.makePropagatedContextCurrent(
                 VirtualFields.RUNNABLE_PROPAGATED_CONTEXT, (Runnable) thiz);
-        if (null != newScope) {
-          if (null != scope) {
+        if (newScope != null) {
+          if (scope != null) {
             newScope.close();
           } else {
             scope = newScope;
@@ -79,8 +81,8 @@ public class AkkaForkJoinTaskInstrumentation implements TypeInstrumentation {
         Scope newScope =
             TaskAdviceHelper.makePropagatedContextCurrent(
                 VirtualFields.CALLABLE_PROPAGATED_CONTEXT, (Callable<?>) thiz);
-        if (null != newScope) {
-          if (null != scope) {
+        if (newScope != null) {
+          if (scope != null) {
             newScope.close();
           } else {
             scope = newScope;
@@ -90,8 +92,8 @@ public class AkkaForkJoinTaskInstrumentation implements TypeInstrumentation {
       return scope;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exit(@Advice.Enter Scope scope) {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void exit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

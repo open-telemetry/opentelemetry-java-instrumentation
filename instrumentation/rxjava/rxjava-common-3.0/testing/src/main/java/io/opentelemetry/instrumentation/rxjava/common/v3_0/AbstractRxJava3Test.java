@@ -873,18 +873,16 @@ public abstract class AbstractRxJava3Test {
                   span ->
                       span.hasName("outer")
                           .hasNoParent()
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(longKey("iteration"), (long) iteration)),
+                          .hasAttributesSatisfyingExactly(equalTo(longKey("iteration"), iteration)),
                   span ->
                       span.hasName("middle")
                           .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(longKey("iteration"), (long) iteration)),
+                          .hasAttributesSatisfyingExactly(equalTo(longKey("iteration"), iteration)),
                   span ->
                       span.hasName("inner")
                           .hasParent(trace.getSpan(1))
                           .hasAttributesSatisfyingExactly(
-                              equalTo(longKey("iteration"), (long) iteration)));
+                              equalTo(longKey("iteration"), iteration)));
     }
     testing()
         .waitAndAssertSortedTraces(

@@ -12,7 +12,7 @@ import com.ibm.wsspi.http.HttpResponse;
 import com.ibm.wsspi.http.channel.values.StatusCodes;
 import java.util.List;
 
-public class LibertyResponse {
+final class LibertyResponse {
   private final HttpDispatcherLink httpDispatcherLink;
   private final StatusCodes code;
 
