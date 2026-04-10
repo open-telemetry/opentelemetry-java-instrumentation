@@ -147,7 +147,7 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void handleResponseExit(@Advice.Enter @Nullable Scope scope) {
+    public static void handleExceptionExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

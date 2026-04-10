@@ -25,6 +25,7 @@ public class VertxClientInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 5.0
     return hasClassesNamed("io.vertx.core.http.impl.HttpClientConnectionInternal");
   }
 
