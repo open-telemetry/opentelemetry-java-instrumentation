@@ -106,7 +106,8 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
           equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
     }
     if (testExperimental) {
-      assertions.add(satisfies(longKey("kafka.record. "), AbstractLongAssert::isNotNegative));
+      assertions.add(
+          satisfies(longKey("kafka.record.queue_time_ms"), AbstractLongAssert::isNotNegative));
     }
     return assertions;
   }
