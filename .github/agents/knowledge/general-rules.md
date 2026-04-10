@@ -77,6 +77,18 @@ Do not flag the following patterns (common false positives):
 
 - FQCN is acceptable when class-name collision makes import impossible.
 
+## [Style] Visibility modifiers
+
+Follow the principle of minimal necessary visibility. Use the most restrictive access modifier that
+still allows the code to function correctly.
+
+**Exception — Single public class**: If a module has only one public class then don't change it to
+package-private. Javadoc task fails when module has no public classes.**
+
+**Exception — Used from advice**: All classes and methods used from methods annotated with
+`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` must be public. These methods are inlined into
+transformed classes and must be accessible from those classes, which may be in different packages.
+
 ## [Style] `@SuppressWarnings` Usage
 
 - Method-level `@SuppressWarnings` is preferred over class-level for tighter scope, but
