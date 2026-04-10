@@ -547,3 +547,4 @@ xxl-job-2.3.0:javaagent
 xxl-job-common:javaagent
 xxl-job-common:testing
 zio-http-3.0:javaagent
+zio-2.0:javaagent
