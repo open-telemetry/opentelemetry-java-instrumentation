@@ -50,9 +50,9 @@ class MethodTest {
             () -> {
               try {
                 context.search("foo", null);
-              } catch (Throwable throwable) {
-                throwableReference.set(throwable);
-                throw throwable;
+              } catch (Throwable t) {
+                throwableReference.set(t);
+                throw t;
               }
             })
         .isInstanceOf(NoInitialContextException.class);
@@ -110,7 +110,7 @@ class MethodTest {
               () -> {
                 try {
                   countDownLatch.await();
-                } catch (InterruptedException exception) {
+                } catch (InterruptedException ignored) {
                   // ignore
                 }
                 completableFuture.complete("Hello!");

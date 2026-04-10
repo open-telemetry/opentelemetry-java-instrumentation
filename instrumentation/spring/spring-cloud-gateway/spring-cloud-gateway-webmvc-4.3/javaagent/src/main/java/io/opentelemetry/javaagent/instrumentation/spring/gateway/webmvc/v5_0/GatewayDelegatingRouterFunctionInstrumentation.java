@@ -18,7 +18,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.web.servlet.function.ServerRequest;
 
-public class GatewayDelegatingRouterFunctionInstrumentation implements TypeInstrumentation {
+class GatewayDelegatingRouterFunctionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -33,7 +33,7 @@ public class GatewayDelegatingRouterFunctionInstrumentation implements TypeInstr
             .and(named("route"))
             .and(takesArgument(0, named("org.springframework.web.servlet.function.ServerRequest")))
             .and(takesArguments(1)),
-        this.getClass().getName() + "$RouteAdvice");
+        getClass().getName() + "$RouteAdvice");
   }
 
   @SuppressWarnings("unused")

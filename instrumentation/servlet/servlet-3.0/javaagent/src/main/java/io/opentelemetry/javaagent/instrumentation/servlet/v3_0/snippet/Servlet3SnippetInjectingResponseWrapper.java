@@ -90,8 +90,8 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
     if ("Content-Length".equalsIgnoreCase(name) && isContentTypeTextHtml()) {
       try {
         contentLength = Long.parseLong(value);
-      } catch (NumberFormatException ex) {
-        logger.log(FINE, "Failed to parse the Content-Length header", ex);
+      } catch (NumberFormatException e) {
+        logger.log(FINE, "Failed to parse the Content-Length header", e);
       }
     }
   }

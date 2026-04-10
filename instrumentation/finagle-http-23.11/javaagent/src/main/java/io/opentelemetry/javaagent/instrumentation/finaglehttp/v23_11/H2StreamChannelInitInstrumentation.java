@@ -16,7 +16,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class H2StreamChannelInitInstrumentation implements TypeInstrumentation {
+class H2StreamChannelInitInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     // scala object instance -- append $ to name

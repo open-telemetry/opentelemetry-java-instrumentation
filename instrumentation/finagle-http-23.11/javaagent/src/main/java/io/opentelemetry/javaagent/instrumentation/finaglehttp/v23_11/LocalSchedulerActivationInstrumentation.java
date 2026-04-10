@@ -18,7 +18,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class LocalSchedulerActivationInstrumentation implements TypeInstrumentation {
+class LocalSchedulerActivationInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -29,7 +29,7 @@ public class LocalSchedulerActivationInstrumentation implements TypeInstrumentat
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("submit").and(takesArguments(Runnable.class)),
-        this.getClass().getName() + "$WrapRunnableAdvice");
+        getClass().getName() + "$WrapRunnableAdvice");
   }
 
   @SuppressWarnings("unused")

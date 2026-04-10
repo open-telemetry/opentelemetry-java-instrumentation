@@ -45,10 +45,7 @@ final class KafkaConsumerAttributesExtractor
       attributes.put(MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true);
     }
 
-    String consumerGroup = request.getConsumerGroup();
-    if (consumerGroup != null) {
-      attributes.put(MESSAGING_KAFKA_CONSUMER_GROUP, consumerGroup);
-    }
+    attributes.put(MESSAGING_KAFKA_CONSUMER_GROUP, request.getConsumerGroup());
   }
 
   private static boolean canSerialize(Class<?> keyClass) {

@@ -31,6 +31,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import org.apache.camel.Exchange;
 import org.apache.camel.Route;
 import org.apache.camel.support.RoutePolicySupport;
@@ -39,6 +40,7 @@ final class CamelRoutePolicy extends RoutePolicySupport {
 
   private static final Logger logger = Logger.getLogger(CamelRoutePolicy.class.getName());
 
+  @Nullable
   private static Context spanOnExchangeBegin(
       Route route, Exchange exchange, SpanDecorator sd, Context parentContext) {
     Span activeSpan = Span.fromContext(parentContext);

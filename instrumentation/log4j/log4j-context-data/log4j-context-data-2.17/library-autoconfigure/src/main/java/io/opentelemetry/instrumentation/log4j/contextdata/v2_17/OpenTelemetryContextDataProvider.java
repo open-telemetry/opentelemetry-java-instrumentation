@@ -26,7 +26,7 @@ import org.apache.logging.log4j.core.util.ContextDataProvider;
  * Implementation of Log4j 2's {@link ContextDataProvider} which is loaded via SPI. {@link
  * #supplyContextData()} is called when a log entry is created.
  */
-public class OpenTelemetryContextDataProvider implements ContextDataProvider {
+public final class OpenTelemetryContextDataProvider implements ContextDataProvider {
 
   private static final boolean configuredResourceAttributeAccessible =
       isConfiguredResourceAttributeAccessible();

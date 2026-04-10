@@ -25,7 +25,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
+class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     // HttpRequest is a final class.  Only need to instrument it exactly
@@ -38,14 +38,14 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isPublic().and(named("execute")).and(takesArguments(0)),
-        this.getClass().getName() + "$ExecuteAdvice");
+        getClass().getName() + "$ExecuteAdvice");
 
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("executeAsync"))
             .and(takesArguments(1))
             .and(takesArgument(0, Executor.class)),
-        this.getClass().getName() + "$ExecuteAsyncAdvice");
+        getClass().getName() + "$ExecuteAsyncAdvice");
   }
 
   public static class AdviceScope {
@@ -85,6 +85,7 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
       }
     }
 
+    @Nullable
     public static AdviceScope fromVirtualFieldContext(HttpRequest request) {
       Context context = HTTP_REQUEST_CONTEXT.get(request);
       if (context == null) {
@@ -102,7 +103,7 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
   public static class ExecuteAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope methodEnter(@Advice.This HttpRequest request) {
 
       AdviceScope scope = AdviceScope.fromVirtualFieldContext(request);
@@ -116,7 +117,7 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
       return AdviceScope.start(request);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Return HttpResponse response,
         @Advice.Thrown Throwable throwable,
@@ -132,7 +133,7 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
   public static class ExecuteAsyncAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope methodEnter(@Advice.This HttpRequest request) {
 
       AdviceScope scope = AdviceScope.start(request);
@@ -142,7 +143,7 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
       return scope;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.This HttpRequest request,
         @Advice.Thrown Throwable throwable,

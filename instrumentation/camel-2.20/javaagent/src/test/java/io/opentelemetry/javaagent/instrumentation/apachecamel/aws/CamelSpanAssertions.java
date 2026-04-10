@@ -51,8 +51,7 @@ class CamelSpanAssertions {
                 experimental(
                     "aws-sqs://" + queueName + "?amazonSQSClient=%23sqsClient&delay=" + delay)),
             equalTo(MESSAGING_DESTINATION_NAME, queueName),
-            satisfies(
-                MESSAGING_MESSAGE_ID, stringAssert -> stringAssert.isInstanceOf(String.class)));
+            satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
   }
 
   static SpanDataAssert snsPublish(SpanDataAssert span, String topicName) {

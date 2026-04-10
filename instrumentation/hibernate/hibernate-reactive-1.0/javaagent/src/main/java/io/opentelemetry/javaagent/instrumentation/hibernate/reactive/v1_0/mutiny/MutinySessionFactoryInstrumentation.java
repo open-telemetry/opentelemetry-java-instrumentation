@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class MutinySessionFactoryInstrumentation implements TypeInstrumentation {
+class MutinySessionFactoryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -30,13 +30,13 @@ public class MutinySessionFactoryInstrumentation implements TypeInstrumentation 
         nameStartsWith("open")
             .or(nameStartsWith("with"))
             .and(returns(named("io.smallrye.mutiny.Uni"))),
-        this.getClass().getName() + "$ContextAdvice");
+        getClass().getName() + "$ContextAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ContextAdvice {
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Uni<?> onExit(@Advice.Return Uni<?> uni) {
       return ContextOperator.plug(uni);
     }

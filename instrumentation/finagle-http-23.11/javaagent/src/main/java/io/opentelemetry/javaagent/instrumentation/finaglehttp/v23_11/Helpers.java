@@ -23,7 +23,7 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientTra
 import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyServerSingletons;
 
-public final class Helpers {
+public class Helpers {
 
   private static final VirtualField<ChannelHandler, ChannelHandler> CHANNEL_HANDLER =
       VirtualField.find(ChannelHandler.class, ChannelHandler.class);

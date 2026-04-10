@@ -22,7 +22,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class PathMatcherStaticInstrumentation implements TypeInstrumentation {
+class PathMatcherStaticInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return extendsClass(named("akka.http.scaladsl.server.PathMatcher"));
@@ -37,13 +37,13 @@ public class PathMatcherStaticInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("apply").and(takesArgument(0, named("akka.http.scaladsl.model.Uri$Path"))),
-        this.getClass().getName() + "$ApplyAdvice");
+        getClass().getName() + "$ApplyAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ApplyAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This PathMatcher<?> pathMatcher,
         @Advice.Argument(0) Uri.Path path,

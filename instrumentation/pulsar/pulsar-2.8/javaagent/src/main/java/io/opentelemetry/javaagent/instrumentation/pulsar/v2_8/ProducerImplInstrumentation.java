@@ -25,7 +25,7 @@ import org.apache.pulsar.client.impl.ProducerImpl;
 import org.apache.pulsar.client.impl.PulsarClientImpl;
 import org.apache.pulsar.client.impl.SendCallback;
 
-public class ProducerImplInstrumentation implements TypeInstrumentation {
+class ProducerImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -50,7 +50,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ProducerImplConstructorAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void intercept(
         @Advice.This ProducerImpl<?> producer, @Advice.Argument(value = 0) PulsarClient client) {
       PulsarClientImpl pulsarClient = (PulsarClientImpl) client;
@@ -63,7 +63,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ProducerSendAsyncMethodAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void before(
         @Advice.This ProducerImpl<?> producer,
         @Advice.Argument(value = 0) Message<?> message,

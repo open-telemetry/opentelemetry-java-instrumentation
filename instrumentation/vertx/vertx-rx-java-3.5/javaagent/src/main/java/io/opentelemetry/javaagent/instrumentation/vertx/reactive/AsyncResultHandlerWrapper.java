@@ -28,11 +28,7 @@ public class AsyncResultHandlerWrapper implements Handler<Handler<AsyncResult<?>
 
   @Override
   public void handle(Handler<AsyncResult<?>> asyncResultHandler) {
-    if (executionContext != null) {
-      try (Scope ignored = executionContext.makeCurrent()) {
-        delegate.handle(asyncResultHandler);
-      }
-    } else {
+    try (Scope ignored = executionContext.makeCurrent()) {
       delegate.handle(asyncResultHandler);
     }
   }

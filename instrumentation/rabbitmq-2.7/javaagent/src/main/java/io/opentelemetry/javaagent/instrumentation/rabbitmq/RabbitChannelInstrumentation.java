@@ -46,7 +46,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class RabbitChannelInstrumentation implements TypeInstrumentation {
+class RabbitChannelInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -129,7 +129,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
         return new ChannelMethodAdviceScope(callDepth, context, context.makeCurrent(), request);
       }
 
-      public void end(Throwable throwable) {
+      public void end(@Nullable Throwable throwable) {
         if (callDepth.decrementAndGet() > 0) {
           return;
         }
@@ -144,13 +144,13 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static ChannelMethodAdviceScope onEnter(
         @Advice.This Channel channel, @Advice.Origin("Channel.#m") String method) {
       return ChannelMethodAdviceScope.start(CallDepth.forClass(Channel.class), channel, method);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter ChannelMethodAdviceScope adviceScope) {
@@ -162,7 +162,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
   public static class ChannelPublishAdvice {
 
     @Advice.AssignReturned.ToArguments(@Advice.AssignReturned.ToArguments.ToArgument(4))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AMQP.BasicProperties setSpanNameAddHeaders(
         @Advice.Argument(0) String exchange,
         @Advice.Argument(1) String routingKey,
@@ -231,7 +231,11 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
         return new ChannelGetAdviceScope(callDepth, timer);
       }
 
-      public void end(Channel channel, String queue, GetResponse response, Throwable throwable) {
+      public void end(
+          Channel channel,
+          String queue,
+          @Nullable GetResponse response,
+          @Nullable Throwable throwable) {
         if (callDepth.decrementAndGet() > 0) {
           return;
         }
@@ -255,17 +259,17 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static ChannelGetAdviceScope takeTimestamp() {
       return ChannelGetAdviceScope.start();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void extractAndStartSpan(
         @Advice.This Channel channel,
         @Advice.Argument(0) String queue,
-        @Advice.Return GetResponse response,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Return @Nullable GetResponse response,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter ChannelGetAdviceScope adviceScope) {
       adviceScope.end(channel, queue, response, throwable);
     }
@@ -275,7 +279,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
   public static class ChannelConsumeAdvice {
 
     @Advice.AssignReturned.ToArguments(@Advice.AssignReturned.ToArguments.ToArgument(6))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object wrapConsumer(
         @Advice.This Channel channel,
         @Advice.Argument(0) String queue,

@@ -1,8 +1,6 @@
-import io.opentelemetry.javaagent.muzzle.generation.ClasspathByteBuddyPlugin
-import io.opentelemetry.javaagent.muzzle.generation.ClasspathTransformation
+import java.net.URLConnection
 import net.bytebuddy.ClassFileVersion
 import net.bytebuddy.build.gradle.ByteBuddySimpleTask
-import net.bytebuddy.build.gradle.Transformation
 
 plugins {
   `java-library`
@@ -28,7 +26,6 @@ plugins {
  */
 
 val LANGUAGES = listOf("java", "scala", "kotlin")
-val pluginName = "io.opentelemetry.javaagent.tooling.muzzle.generation.MuzzleCodeGenerationPlugin"
 
 val codegen by configurations.creating {
   isCanBeConsumed = false
@@ -40,6 +37,10 @@ val inputClasspath = (sourceSet.output.resourcesDir?.let { codegen.plus(project.
   ?: codegen)
   .plus(sourceSet.output.dirs) // needed to support embedding shadowed modules into instrumentation
   .plus(configurations.runtimeClasspath.get())
+
+// disable url connection caching to avoid java.util.zip.ZipException: ZipFile invalid LOC header (bad signature)
+// during byte buddy plugin discovery when muzzle jar has changed
+URLConnection.setDefaultUseCaches("jar", false)
 
 val languageTasks = LANGUAGES.map { language ->
   if (fileTree("src/${sourceSet.name}/${language}").isEmpty) {
@@ -62,31 +63,21 @@ tasks {
 fun createLanguageTask(
   compileTaskProvider: TaskProvider<*>, name: String): TaskProvider<*> {
   return tasks.register<ByteBuddySimpleTask>(name) {
-    setGroup("Byte Buddy")
+    group = "Byte Buddy"
     outputs.cacheIf { true }
     classFileVersion = ClassFileVersion.JAVA_V8
-    var transformationClassPath = inputClasspath
     val compileTask = compileTaskProvider.get()
     // this does not work for kotlin as compile task does not extend AbstractCompile
     if (compileTask is AbstractCompile) {
       val classesDirectory = compileTask.destinationDirectory.asFile.get()
       val rawClassesDirectory: File = File(classesDirectory.parent, "${classesDirectory.name}raw")
         .absoluteFile
-      dependsOn(compileTask)
       compileTask.destinationDirectory.set(rawClassesDirectory)
       source = rawClassesDirectory
       target = classesDirectory
-      classPath = compileTask.classpath.plus(rawClassesDirectory)
-      transformationClassPath = transformationClassPath.plus(files(rawClassesDirectory))
+      classPath = compileTask.classpath.plus(inputClasspath.plus(files(rawClassesDirectory)))
       dependsOn(compileTask, sourceSet.processResourcesTaskName)
+      discoverySet = codegen
     }
-
-    transformations.add(createTransformation(transformationClassPath, pluginName))
-  }
-}
-
-fun createTransformation(classPath: FileCollection, pluginClassName: String): Transformation {
-  return ClasspathTransformation(classPath, pluginClassName).apply {
-    plugin = ClasspathByteBuddyPlugin::class.java
   }
 }

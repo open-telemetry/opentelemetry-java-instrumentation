@@ -33,8 +33,6 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-kafka:latest.release")
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
-
 testing {
   suites {
     val testNoReceiveTelemetry by registering(JvmTestSuite::class) {
@@ -42,13 +40,13 @@ testing {
         implementation(project(":instrumentation:spring:spring-kafka-2.7:testing"))
 
         // the "library" configuration is not recognized by the test suite plugin
-        val springKafkaVersion = if (latestDepTest) "latest.release" else "2.7.0"
-        val springBootVersion = if (latestDepTest) "latest.release" else "2.5.3"
+        val springKafkaVersion = if (otelProps.testLatestDeps) "latest.release" else "2.7.0"
+        val springBootVersion = if (otelProps.testLatestDeps) "latest.release" else "2.5.3"
         implementation("org.springframework.kafka:spring-kafka:$springKafkaVersion")
         implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
         implementation("org.springframework.boot:spring-boot-starter:$springBootVersion")
 
-        if (latestDepTest) {
+        if (otelProps.testLatestDeps) {
           implementation("org.springframework.boot:spring-boot-starter-kafka:latest.release")
         }
       }
@@ -68,8 +66,8 @@ testing {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("testLatestDeps", latestDepTest)
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testExperimental by registering(Test::class) {
@@ -91,14 +89,14 @@ tasks {
 }
 
 // spring 6 (which spring-kafka 3.+ uses) requires java 17
-if (latestDepTest) {
+if (otelProps.testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_17)
   }
 }
 
 // spring 6 uses slf4j 2.0
-if (!latestDepTest) {
+if (!otelProps.testLatestDeps) {
   configurations {
     listOf(
       testRuntimeClasspath,

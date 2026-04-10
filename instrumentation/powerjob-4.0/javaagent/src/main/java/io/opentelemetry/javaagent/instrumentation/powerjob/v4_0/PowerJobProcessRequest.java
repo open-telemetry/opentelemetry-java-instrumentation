@@ -20,7 +20,7 @@ import tech.powerjob.worker.core.processor.sdk.BroadcastProcessor;
 import tech.powerjob.worker.core.processor.sdk.MapProcessor;
 import tech.powerjob.worker.core.processor.sdk.MapReduceProcessor;
 
-public final class PowerJobProcessRequest {
+public class PowerJobProcessRequest {
   private static final List<Class<?>> KNOWN_PROCESSORS =
       asList(
           FileCleanupProcessor.class,

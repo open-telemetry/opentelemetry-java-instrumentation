@@ -21,7 +21,7 @@ import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.ProtocolVersion;
 
-public final class ApacheHttpClientRequest {
+public class ApacheHttpClientRequest {
 
   private static final Logger logger = Logger.getLogger(ApacheHttpClientRequest.class.getName());
 
@@ -127,7 +127,9 @@ public final class ApacheHttpClientRequest {
   private static URI getCalculatedUri(HttpHost httpHost, URI uri) {
     try {
       String path = uri.getPath();
-      if (!path.startsWith("/")) {
+      if (path == null) {
+        path = "/";
+      } else if (!path.startsWith("/")) {
         // elasticsearch RestClient sends relative urls
         // TODO(trask) add test for this and extend to Apache 4, 4.3 and 5
         path = "/" + path;

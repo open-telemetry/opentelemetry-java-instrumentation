@@ -1598,7 +1598,7 @@ public abstract class AbstractGrpcTest {
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(0))));
 
-    assertThat(cancelCalled.get()).isEqualTo(true);
+    assertThat(cancelCalled).isTrue();
   }
 
   @Test
@@ -1703,7 +1703,7 @@ public abstract class AbstractGrpcTest {
           .getClass()
           .getMethod("usePlaintext", boolean.class)
           .invoke(channelBuilder, true);
-    } catch (NoSuchMethodException unused) {
+    } catch (NoSuchMethodException ignored) {
       channelBuilder.getClass().getMethod("usePlaintext").invoke(channelBuilder);
     }
   }
@@ -1738,7 +1738,8 @@ public abstract class AbstractGrpcTest {
                                               point.hasAttributesSatisfyingExactly(
                                                   equalTo(SERVER_ADDRESS, "localhost"),
                                                   satisfies(
-                                                      SERVER_PORT, k -> k.isInstanceOf(Long.class)),
+                                                      SERVER_PORT,
+                                                      val -> val.isInstanceOf(Long.class)),
                                                   equalTo(RPC_METHOD, "SayHello"),
                                                   equalTo(RPC_SERVICE, "example.Greeter"),
                                                   equalTo(RPC_SYSTEM, "grpc"),
@@ -1765,7 +1766,7 @@ public abstract class AbstractGrpcTest {
                                                     equalTo(SERVER_ADDRESS, "localhost"),
                                                     satisfies(
                                                         SERVER_PORT,
-                                                        k -> k.isInstanceOf(Long.class)),
+                                                        val -> val.isInstanceOf(Long.class)),
                                                     equalTo(RPC_METHOD, "SayHello"),
                                                     equalTo(RPC_SERVICE, "example.Greeter"),
                                                     equalTo(RPC_SYSTEM, "grpc"),
@@ -1790,7 +1791,7 @@ public abstract class AbstractGrpcTest {
                                                     equalTo(SERVER_ADDRESS, "localhost"),
                                                     satisfies(
                                                         SERVER_PORT,
-                                                        k -> k.isInstanceOf(Long.class)),
+                                                        val -> val.isInstanceOf(Long.class)),
                                                     equalTo(RPC_METHOD, "SayHello"),
                                                     equalTo(RPC_SERVICE, "example.Greeter"),
                                                     equalTo(RPC_SYSTEM, "grpc"),
@@ -1888,7 +1889,8 @@ public abstract class AbstractGrpcTest {
                                                   equalTo(RPC_SYSTEM_NAME, "grpc"),
                                                   equalTo(SERVER_ADDRESS, "localhost"),
                                                   satisfies(
-                                                      SERVER_PORT, k -> k.isInstanceOf(Long.class)),
+                                                      SERVER_PORT,
+                                                      val -> val.isInstanceOf(Long.class)),
                                                   equalTo(RPC_METHOD, "example.Greeter/SayHello"),
                                                   equalTo(
                                                       RPC_RESPONSE_STATUS_CODE,

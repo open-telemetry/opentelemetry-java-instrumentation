@@ -25,7 +25,7 @@ public class VaadinInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // class added in vaadin 14.2
+    // added in 14.2
     return hasClassesNamed("com.vaadin.flow.server.frontend.installer.NodeInstaller");
   }
 

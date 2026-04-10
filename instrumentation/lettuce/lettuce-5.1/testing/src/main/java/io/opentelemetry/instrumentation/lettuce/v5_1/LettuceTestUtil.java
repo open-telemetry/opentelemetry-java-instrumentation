@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 import io.lettuce.core.ClientOptions;
 import io.lettuce.core.protocol.ProtocolVersion;
 
-final class LettuceTestUtil {
+class LettuceTestUtil {
   static final ClientOptions CLIENT_OPTIONS;
 
   static {

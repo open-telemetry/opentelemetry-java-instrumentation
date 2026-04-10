@@ -11,7 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 
 /** Container used to carry state between enter and exit advices */
-public final class InfluxDbScope {
+public class InfluxDbScope {
   private final InfluxDbRequest influxDbRequest;
   private final Context context;
   private final Scope scope;
@@ -28,10 +28,6 @@ public final class InfluxDbScope {
   }
 
   public void end(Throwable throwable) {
-    if (scope == null) {
-      return;
-    }
-
     scope.close();
 
     instrumenter().end(context, influxDbRequest, null, throwable);

@@ -24,7 +24,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class FutureInstrumentation implements TypeInstrumentation {
+class FutureInstrumentation implements TypeInstrumentation {
   private static final Logger logger = Logger.getLogger(FutureInstrumentation.class.getName());
 
   /**
@@ -98,7 +98,7 @@ public class FutureInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CanceledFutureAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void exit(@Advice.This Future<?> future) {
       // Try to clear parent span even if future was not cancelled:
       // the expectation is that parent span should be cleared after 'cancel'

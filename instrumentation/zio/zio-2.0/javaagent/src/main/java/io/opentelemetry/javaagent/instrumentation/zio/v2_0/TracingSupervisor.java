@@ -16,7 +16,7 @@ import zio.ZIO;
 import zio.ZIO$;
 
 @SuppressWarnings("unchecked") // fine
-public final class TracingSupervisor extends Supervisor<Object> {
+public class TracingSupervisor extends Supervisor<Object> {
 
   public static final TracingSupervisor INSTANCE = new TracingSupervisor();
   private static final VirtualField<Fiber.Runtime<?, ?>, FiberContext> RUNTIME_FIBER_CONTEXT =

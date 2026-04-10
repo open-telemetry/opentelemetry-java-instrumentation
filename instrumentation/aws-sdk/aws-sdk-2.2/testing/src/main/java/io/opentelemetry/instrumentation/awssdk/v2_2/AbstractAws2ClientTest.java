@@ -320,7 +320,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                 // we are using an endpoint override. Previously the sdk was only doing that if
                 // endpoint had "s3" as label in the FQDN. Our test assert both cases so that we
                 // don't need to know what version is being tested.
-                satisfies(SERVER_ADDRESS, v -> v.matches("somebucket.localhost|localhost")),
+                satisfies(SERVER_ADDRESS, val -> val.matches("somebucket.localhost|localhost")),
                 equalTo(SERVER_PORT, server.httpPort()),
                 equalTo(HTTP_REQUEST_METHOD, method),
                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
@@ -909,23 +909,17 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                                 // don't need to know what version is being tested.
                                 satisfies(
                                     SERVER_ADDRESS,
-                                    v -> v.matches("somebucket.localhost|localhost")),
+                                    val -> val.matches("somebucket.localhost|localhost")),
                                 satisfies(
                                     URL_FULL,
                                     val ->
-                                        val.satisfiesAnyOf(
-                                            v ->
-                                                assertThat(v)
-                                                    .isEqualTo(
-                                                        "http://somebucket.localhost:"
-                                                            + server.httpPort()
-                                                            + "/somekey"),
-                                            v ->
-                                                assertThat(v)
-                                                    .isEqualTo(
-                                                        "http://localhost:"
-                                                            + server.httpPort()
-                                                            + "/somebucket/somekey"))),
+                                        val.isIn(
+                                            "http://somebucket.localhost:"
+                                                + server.httpPort()
+                                                + "/somekey",
+                                            "http://localhost:"
+                                                + server.httpPort()
+                                                + "/somebucket/somekey")),
                                 equalTo(SERVER_PORT, server.httpPort()),
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                                 equalTo(RPC_SYSTEM, "aws-api"),

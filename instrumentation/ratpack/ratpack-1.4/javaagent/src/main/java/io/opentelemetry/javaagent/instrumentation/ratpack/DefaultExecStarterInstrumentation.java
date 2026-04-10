@@ -22,7 +22,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import ratpack.func.Action;
 
-public class DefaultExecStarterInstrumentation implements TypeInstrumentation {
+class DefaultExecStarterInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -44,7 +44,7 @@ public class DefaultExecStarterInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class WrapActionAdvice {
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Action<?> wrapAction(@Advice.Argument(0) Action<?> action) {
       return ActionWrapper.wrapIfNeeded(action);
     }
@@ -53,7 +53,7 @@ public class DefaultExecStarterInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class StartAdvice {
     @AssignReturned.ToArguments(@ToArgument(value = 0, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] enter(@Advice.Argument(0) Action<?> action) {
 
       // wrapping method is relying on current context
@@ -65,7 +65,7 @@ public class DefaultExecStarterInstrumentation implements TypeInstrumentation {
       return new Object[] {scope, wrappedAction};
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exit(@Advice.Enter Object[] enterResult) {
       Scope scope = (Scope) enterResult[0];
       if (scope != null) {

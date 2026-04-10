@@ -186,7 +186,10 @@ abstract class AbstractPulsarClientTest {
                             batchReceiveAttributes(topic, null, false))));
 
     assertThat(testing.metrics())
-        .filteredOn(metric -> !metric.getName().startsWith("otel.sdk."))
+        .filteredOn(
+            metric ->
+                !metric.getName().startsWith("otel.sdk.")
+                    && !metric.getName().startsWith("pulsar.client."))
         .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
@@ -463,16 +466,16 @@ abstract class AbstractPulsarClientTest {
   static void acknowledgeMessage(Consumer<String> consumer, Message<String> message) {
     try {
       consumer.acknowledge(message);
-    } catch (PulsarClientException exception) {
-      throw new RuntimeException(exception);
+    } catch (PulsarClientException e) {
+      throw new RuntimeException(e);
     }
   }
 
   static void acknowledgeMessages(Consumer<String> consumer, Messages<String> messages) {
     try {
       consumer.acknowledge(messages);
-    } catch (PulsarClientException exception) {
-      throw new RuntimeException(exception);
+    } catch (PulsarClientException e) {
+      throw new RuntimeException(e);
     }
   }
 }

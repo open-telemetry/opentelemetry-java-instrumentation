@@ -15,7 +15,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class TestTypeInstrumentation implements TypeInstrumentation {
+class TestTypeInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -32,7 +32,7 @@ public class TestTypeInstrumentation implements TypeInstrumentation {
   public static class TestAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(inline = false)
     public static String methodExit(@Advice.This Runnable test) {
       STRING.set(test, "instrumented");
       return "instrumented";
@@ -43,7 +43,7 @@ public class TestTypeInstrumentation implements TypeInstrumentation {
   public static class Test2Advice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(inline = false)
     public static String methodExit(@Advice.This Runnable test) {
       return STRING.get(test);
     }

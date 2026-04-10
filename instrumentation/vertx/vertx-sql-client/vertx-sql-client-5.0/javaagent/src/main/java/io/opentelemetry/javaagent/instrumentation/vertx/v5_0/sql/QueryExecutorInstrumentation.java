@@ -27,7 +27,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class QueryExecutorInstrumentation implements TypeInstrumentation {
+class QueryExecutorInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -45,7 +45,7 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Object queryExecutor) {
       // copy connection options from ThreadLocal to VirtualField
       QueryExecutorUtil.setConnectOptions(queryExecutor, getSqlConnectOptions());
@@ -121,7 +121,7 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
         return new AdviceScope(callDepth, otelRequest, context, context.makeCurrent());
       }
 
-      public void end(Throwable throwable) {
+      public void end(@Nullable Throwable throwable) {
         if (callDepth.decrementAndGet() > 0) {
           return;
         }
@@ -137,13 +137,13 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This Object queryExecutor, @Advice.AllArguments Object[] arguments) {
       return AdviceScope.start(queryExecutor, arguments);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
       adviceScope.end(throwable);

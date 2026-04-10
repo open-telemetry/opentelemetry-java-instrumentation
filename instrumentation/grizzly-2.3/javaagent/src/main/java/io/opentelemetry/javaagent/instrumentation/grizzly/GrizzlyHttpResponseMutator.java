@@ -10,8 +10,7 @@ import org.glassfish.grizzly.http.HttpResponsePacket;
 import org.glassfish.grizzly.http.util.DataChunk;
 import org.glassfish.grizzly.http.util.MimeHeaders;
 
-public final class GrizzlyHttpResponseMutator
-    implements HttpServerResponseMutator<HttpResponsePacket> {
+public class GrizzlyHttpResponseMutator implements HttpServerResponseMutator<HttpResponsePacket> {
 
   @Override
   public void appendHeader(HttpResponsePacket response, String name, String value) {

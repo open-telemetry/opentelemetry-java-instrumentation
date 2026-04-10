@@ -25,7 +25,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -111,7 +110,7 @@ class ProcedureCallTest {
                     span.hasName("parent")
                         .hasKind(INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName("ProcedureCall.getOutputs TEST_PROC")
                         .hasKind(INTERNAL)
@@ -184,7 +183,7 @@ class ProcedureCallTest {
                     span.hasName("parent")
                         .hasKind(INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName("ProcedureCall.getOutputs TEST_PROC")
                         .hasKind(INTERNAL)

@@ -20,7 +20,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
+class CouchbaseCoreInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -39,7 +39,7 @@ public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CouchbaseCoreAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void addOperationIdToSpan(@Advice.Argument(0) CouchbaseRequest request) {
       CouchbaseRequestInfo requestInfo = COUCHBASE_REQUEST_INFO.get(request);
       if (requestInfo != null) {

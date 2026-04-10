@@ -25,7 +25,7 @@ public class Struts2InstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // class is in different package before 7.0
+    // added in 7.0.0
     return hasClassesNamed("org.apache.struts2.config.entities.ActionConfig");
   }
 

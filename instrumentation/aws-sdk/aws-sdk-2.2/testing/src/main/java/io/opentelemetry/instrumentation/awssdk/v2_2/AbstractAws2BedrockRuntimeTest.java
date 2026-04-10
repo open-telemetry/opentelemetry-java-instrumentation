@@ -261,7 +261,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 10),
                                 satisfies(
                                     GEN_AI_REQUEST_TEMPERATURE,
-                                    temp -> temp.isCloseTo(0.8, within(0.0001))),
+                                    val -> val.isCloseTo(0.8, within(0.0001))),
                                 equalTo(GEN_AI_REQUEST_TOP_P, 1.0),
                                 equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, asList("|")),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 8),
@@ -1279,7 +1279,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 5),
                                 satisfies(
                                     GEN_AI_REQUEST_TEMPERATURE,
-                                    temp -> temp.isCloseTo(0.8, within(0.0001))),
+                                    val -> val.isCloseTo(0.8, within(0.0001))),
                                 equalTo(GEN_AI_REQUEST_TOP_P, 1.0),
                                 equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, asList("|")),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 8),
@@ -1362,7 +1362,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 10),
                                 satisfies(
                                     GEN_AI_REQUEST_TEMPERATURE,
-                                    temp -> temp.isCloseTo(0.8, within(0.0001))),
+                                    val -> val.isCloseTo(0.8, within(0.0001))),
                                 equalTo(GEN_AI_REQUEST_TOP_P, 1.0),
                                 equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, asList("|")),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 5),
@@ -1506,7 +1506,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 100),
                                 satisfies(
                                     GEN_AI_REQUEST_TEMPERATURE,
-                                    temp -> temp.isCloseTo(0.8, within(0.0001))),
+                                    val -> val.isCloseTo(0.8, within(0.0001))),
                                 equalTo(GEN_AI_REQUEST_TOP_P, 1.0),
                                 equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, asList("|")),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 7),
@@ -1659,7 +1659,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 10),
                                 satisfies(
                                     GEN_AI_REQUEST_TEMPERATURE,
-                                    temp -> temp.isCloseTo(0.8, within(0.0001))),
+                                    val -> val.isCloseTo(0.8, within(0.0001))),
                                 equalTo(GEN_AI_REQUEST_TOP_P, 1.0),
                                 equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, asList("|")),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 5),
@@ -1823,7 +1823,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 100),
                                 satisfies(
                                     GEN_AI_REQUEST_TEMPERATURE,
-                                    temp -> temp.isCloseTo(0.8, within(0.0001))),
+                                    val -> val.isCloseTo(0.8, within(0.0001))),
                                 equalTo(GEN_AI_REQUEST_TOP_P, 1.0),
                                 equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, asList("|")),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 7),
@@ -1962,7 +1962,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 10),
                                 satisfies(
                                     GEN_AI_REQUEST_TEMPERATURE,
-                                    temp -> temp.isCloseTo(0.8, within(0.0001))),
+                                    val -> val.isCloseTo(0.8, within(0.0001))),
                                 equalTo(GEN_AI_REQUEST_TOP_P, 1.0),
                                 equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, asList("|")),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 14),
@@ -2090,7 +2090,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 10),
                                 satisfies(
                                     GEN_AI_REQUEST_TEMPERATURE,
-                                    temp -> temp.isCloseTo(0.8, within(0.0001))),
+                                    val -> val.isCloseTo(0.8, within(0.0001))),
                                 equalTo(GEN_AI_REQUEST_TOP_P, 1.0),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 5),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 10),
@@ -2146,7 +2146,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 10),
                                 satisfies(
                                     GEN_AI_REQUEST_TEMPERATURE,
-                                    temp -> temp.isCloseTo(0.8, within(0.0001))),
+                                    val -> val.isCloseTo(0.8, within(0.0001))),
                                 equalTo(GEN_AI_REQUEST_TOP_P, 1.0),
                                 equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, asList("|")),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 3),
@@ -2211,7 +2211,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 10),
                                 satisfies(
                                     GEN_AI_REQUEST_TEMPERATURE,
-                                    temp -> temp.isCloseTo(0.8, within(0.0001))),
+                                    val -> val.isCloseTo(0.8, within(0.0001))),
                                 equalTo(GEN_AI_REQUEST_TOP_P, 1.0),
                                 equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, asList("|")),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 3),
@@ -2269,7 +2269,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 10),
                                 satisfies(
                                     GEN_AI_REQUEST_TEMPERATURE,
-                                    temp -> temp.isCloseTo(0.8, within(0.0001))),
+                                    val -> val.isCloseTo(0.8, within(0.0001))),
                                 equalTo(GEN_AI_REQUEST_TOP_P, 1.0),
                                 equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, asList("|")),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 3),
@@ -2358,7 +2358,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 10),
                                 satisfies(
                                     GEN_AI_REQUEST_TEMPERATURE,
-                                    temp -> temp.isCloseTo(0.8, within(0.0001))),
+                                    val -> val.isCloseTo(0.8, within(0.0001))),
                                 equalTo(GEN_AI_REQUEST_TOP_P, 1.0),
                                 equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, asList("|")),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 16),

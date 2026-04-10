@@ -35,7 +35,7 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
 
   @AfterEach
   void resetOpenTelemetry() {
-    OpenTelemetryAppender.install(null);
+    OpenTelemetryAppender.resetForTest();
   }
 
   @Override

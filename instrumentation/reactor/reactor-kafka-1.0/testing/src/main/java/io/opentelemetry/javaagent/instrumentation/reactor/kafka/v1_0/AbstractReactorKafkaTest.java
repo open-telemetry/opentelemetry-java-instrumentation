@@ -66,6 +66,9 @@ public abstract class AbstractReactorKafkaTest {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractReactorKafkaTest.class);
 
+  private static final boolean receiveTelemetryEnabled =
+      Boolean.getBoolean("otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
+
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -91,10 +94,15 @@ public abstract class AbstractReactorKafkaTest {
 
   @AfterAll
   static void tearDownAll() {
-    if (sender != null) {
-      sender.close();
+    try {
+      if (sender != null) {
+        sender.close();
+      }
+    } finally {
+      if (kafka != null) {
+        kafka.stop();
+      }
     }
-    kafka.stop();
   }
 
   @SuppressWarnings("unchecked")
@@ -153,6 +161,14 @@ public abstract class AbstractReactorKafkaTest {
     Flux<?> producer = sender.send(Flux.just(record));
     testing.runWithSpan("producer", () -> producer.blockLast(Duration.ofSeconds(30)));
 
+    if (receiveTelemetryEnabled) {
+      assertWithReceiveTelemetry(record);
+    } else {
+      assertWithoutReceiveTelemetry(record);
+    }
+  }
+
+  private static void assertWithReceiveTelemetry(SenderRecord<String, String, Object> record) {
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
 
     testing.waitAndAssertSortedTraces(
@@ -184,6 +200,24 @@ public abstract class AbstractReactorKafkaTest {
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
   }
 
+  private static void assertWithoutReceiveTelemetry(SenderRecord<String, String, Object> record) {
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("producer"),
+                span ->
+                    span.hasName("testTopic publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(sendAttributes(record)),
+                span ->
+                    span.hasName("testTopic process")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(processAttributes(record)),
+                span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
+  }
+
   @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> sendAttributes(ProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =
@@ -192,9 +226,7 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, record.topic()),
                 equalTo(MESSAGING_OPERATION, "publish"),
-                satisfies(
-                    stringKey("messaging.client_id"),
-                    stringAssert -> stringAssert.startsWith("producer")),
+                satisfies(stringKey("messaging.client_id"), val -> val.startsWith("producer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
     String messageKey = record.key();
@@ -212,9 +244,7 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                 equalTo(MESSAGING_OPERATION, "receive"),
-                satisfies(
-                    stringKey("messaging.client_id"),
-                    stringAssert -> stringAssert.startsWith("consumer")),
+                satisfies(stringKey("messaging.client_id"), val -> val.startsWith("consumer")),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
     if (Boolean.getBoolean("hasConsumerGroup")) {
       assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
@@ -231,9 +261,7 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, record.topic()),
                 equalTo(MESSAGING_OPERATION, "process"),
-                satisfies(
-                    stringKey("messaging.client_id"),
-                    stringAssert -> stringAssert.startsWith("consumer")),
+                satisfies(stringKey("messaging.client_id"), val -> val.startsWith("consumer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
     if (Boolean.getBoolean("hasConsumerGroup")) {

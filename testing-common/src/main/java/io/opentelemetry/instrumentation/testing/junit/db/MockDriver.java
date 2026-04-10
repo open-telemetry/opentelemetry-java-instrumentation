@@ -16,7 +16,7 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.util.Properties;
 import java.util.logging.Logger;
 
-public final class MockDriver implements Driver {
+public class MockDriver implements Driver {
   private static final MockDriver INSTANCE = new MockDriver();
 
   public static void register() throws SQLException {

@@ -234,8 +234,8 @@ class YamlHelperTest {
               - HTTP_ROUTE
               - CONTROLLER_SPANS
             configurations:
-              - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-                description: Enables statement sanitization for database queries.
+              - name: otel.instrumentation.common.db.query-sanitization.enabled
+                description: Enables query sanitization for database queries.
                 type: boolean
                 default: true
             """;
@@ -244,9 +244,8 @@ class YamlHelperTest {
 
     ConfigurationOption config = metadata.getConfigurations().get(0);
     assertThat(config.name())
-        .isEqualTo("otel.instrumentation.common.db-statement-sanitizer.enabled");
-    assertThat(config.description())
-        .isEqualTo("Enables statement sanitization for database queries.");
+        .isEqualTo("otel.instrumentation.common.db.query-sanitization.enabled");
+    assertThat(config.description()).isEqualTo("Enables query sanitization for database queries.");
     assertThat(config.defaultValue()).isEqualTo("true");
 
     assertThat(metadata.getFeatures())
@@ -305,8 +304,8 @@ class YamlHelperTest {
     String input =
         """
             configurations:
-              - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-                description: Enables statement sanitization for database queries.
+              - name: otel.instrumentation.common.db.query-sanitization.enabled
+                description: Enables query sanitization for database queries.
                 type: boolean
                 default: true
         """;
@@ -318,9 +317,8 @@ class YamlHelperTest {
     assertThat(metadata.getDisabledByDefault()).isFalse();
 
     assertThat(config.name())
-        .isEqualTo("otel.instrumentation.common.db-statement-sanitizer.enabled");
-    assertThat(config.description())
-        .isEqualTo("Enables statement sanitization for database queries.");
+        .isEqualTo("otel.instrumentation.common.db.query-sanitization.enabled");
+    assertThat(config.description()).isEqualTo("Enables query sanitization for database queries.");
     assertThat(config.defaultValue()).isEqualTo("true");
     assertThat(config.type()).isEqualTo(ConfigurationType.BOOLEAN);
   }

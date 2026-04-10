@@ -21,7 +21,7 @@ public final class ContextPropagatingCallable<T> implements Callable<T> {
   }
 
   public static <T> Callable<T> propagateContext(Callable<T> task, Context context) {
-    return new ContextPropagatingCallable<T>(task, context);
+    return new ContextPropagatingCallable<>(task, context);
   }
 
   private final Callable<T> delegate;

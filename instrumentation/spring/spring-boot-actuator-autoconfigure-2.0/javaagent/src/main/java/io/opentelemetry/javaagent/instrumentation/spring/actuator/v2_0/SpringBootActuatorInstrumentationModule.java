@@ -43,11 +43,8 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
     // this line will make OpenTelemetryMeterRegistryAutoConfiguration available to all
     // classloaders, so that the bean class loader (different from the instrumented class loader)
     // can load it
-    if (!isIndyModule()) {
-      // For indy module the proxy-bytecode will be injected as resource by injectClasses()
-      helperResourceBuilder.registerForAllClassLoaders(
-          "io/opentelemetry/javaagent/instrumentation/spring/actuator/v2_0/OpenTelemetryMeterRegistryAutoConfiguration.class");
-    }
+    helperResourceBuilder.registerForAllClassLoaders(
+        "io/opentelemetry/javaagent/instrumentation/spring/actuator/v2_0/OpenTelemetryMeterRegistryAutoConfiguration.class");
   }
 
   @Override
@@ -55,7 +52,7 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
     injector
         .proxyBuilder(
             "io.opentelemetry.javaagent.instrumentation.spring.actuator.v2_0.OpenTelemetryMeterRegistryAutoConfiguration")
-        .inject(InjectionMode.CLASS_AND_RESOURCE);
+        .inject(InjectionMode.CLASS_ONLY);
   }
 
   @Override

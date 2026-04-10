@@ -13,7 +13,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ProtoUtf8UnsafeProcessorInstrumentation implements TypeInstrumentation {
+class ProtoUtf8UnsafeProcessorInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -23,7 +23,7 @@ public class ProtoUtf8UnsafeProcessorInstrumentation implements TypeInstrumentat
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("isAvailable"), this.getClass().getName() + "$IsAvailableAdvice");
+        named("isAvailable"), getClass().getName() + "$IsAvailableAdvice");
   }
 
   @SuppressWarnings("unused")

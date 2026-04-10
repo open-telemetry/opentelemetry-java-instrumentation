@@ -13,6 +13,7 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import java.util.Map;
+import javax.annotation.Nullable;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
 /**
@@ -30,7 +31,10 @@ public final class SqsParentContext {
     }
 
     @Override
-    public String get(Map<String, String> map, String s) {
+    public String get(@Nullable Map<String, String> map, String s) {
+      if (map == null) {
+        return null;
+      }
       return map.get(s);
     }
   }
@@ -45,7 +49,7 @@ public final class SqsParentContext {
 
     @Override
     @NoMuzzle
-    public String get(Map<String, MessageAttributeValue> map, String s) {
+    public String get(@Nullable Map<String, MessageAttributeValue> map, String s) {
       if (map == null) {
         return null;
       }

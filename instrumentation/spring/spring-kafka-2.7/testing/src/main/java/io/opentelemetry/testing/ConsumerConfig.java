@@ -72,7 +72,7 @@ public class ConsumerConfig {
       // available since spring 2.8
       Class.forName("org.springframework.kafka.listener.CommonErrorHandler");
       ConsumerConfigUtil.addErrorHandler(factory);
-    } catch (ClassNotFoundException e) {
+    } catch (ClassNotFoundException ignored) {
       // ignore
     }
     customizerProvider.ifAvailable(factory::setContainerCustomizer);

@@ -9,7 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.function.Function;
 
-public final class FunctionWrapper<T, R> implements Function<T, R> {
+public class FunctionWrapper<T, R> implements Function<T, R> {
   private final Function<T, R> delegate;
   private final Context context;
 

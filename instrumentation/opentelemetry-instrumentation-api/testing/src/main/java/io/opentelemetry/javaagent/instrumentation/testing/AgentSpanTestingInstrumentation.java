@@ -16,7 +16,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AgentSpanTestingInstrumentation implements TypeInstrumentation {
+class AgentSpanTestingInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -26,25 +26,25 @@ public class AgentSpanTestingInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("runWithHttpServerSpan"), this.getClass().getName() + "$RunWithHttpServerSpanAdvice");
+        named("runWithHttpServerSpan"), getClass().getName() + "$RunWithHttpServerSpanAdvice");
     transformer.applyAdviceToMethod(
-        named("runWithAllSpanKeys"), this.getClass().getName() + "$RunWithAllSpanKeysAdvice");
+        named("runWithAllSpanKeys"), getClass().getName() + "$RunWithAllSpanKeysAdvice");
   }
 
-  public static class AdviceScope {
+  private static class AdviceScope {
     private final Context context;
     private final Scope scope;
 
-    public AdviceScope(Context context, Scope scope) {
+    private AdviceScope(Context context, Scope scope) {
       this.context = context;
       this.scope = scope;
     }
 
-    public Context getContext() {
+    private Context getContext() {
       return context;
     }
 
-    public void end() {
+    private void end() {
       scope.close();
     }
   }

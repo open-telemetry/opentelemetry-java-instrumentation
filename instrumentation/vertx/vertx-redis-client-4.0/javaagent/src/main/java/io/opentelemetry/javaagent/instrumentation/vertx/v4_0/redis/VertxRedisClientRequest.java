@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Locale;
 import javax.annotation.Nullable;
 
-public final class VertxRedisClientRequest {
+public class VertxRedisClientRequest {
   private final String command;
   private final List<byte[]> args;
   private final RedisURI redisUri;

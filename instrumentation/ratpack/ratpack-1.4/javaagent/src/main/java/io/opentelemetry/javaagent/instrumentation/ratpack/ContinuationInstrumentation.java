@@ -20,7 +20,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import ratpack.func.Block;
 
-public class ContinuationInstrumentation implements TypeInstrumentation {
+class ContinuationInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -44,7 +44,7 @@ public class ContinuationInstrumentation implements TypeInstrumentation {
   public static class ResumeAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Block wrap(@Advice.Argument(0) Block block) {
       return BlockWrapper.wrapIfNeeded(block);
     }

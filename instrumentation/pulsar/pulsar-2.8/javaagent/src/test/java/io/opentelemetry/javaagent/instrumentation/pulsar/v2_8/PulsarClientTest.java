@@ -139,7 +139,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                             receiveAttributes(topic, msgId.toString(), false))));
 
     assertThat(testing.metrics())
-        .filteredOn(metric -> !metric.getName().startsWith("otel.sdk."))
+        .filteredOn(
+            metric ->
+                !metric.getName().startsWith("otel.sdk.")
+                    && !metric.getName().startsWith("pulsar.client."))
         .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
@@ -258,7 +261,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                         .hasParent(trace.getSpan(0))));
 
     assertThat(testing.metrics())
-        .filteredOn(metric -> !metric.getName().startsWith("otel.sdk."))
+        .filteredOn(
+            metric ->
+                !metric.getName().startsWith("otel.sdk.")
+                    && !metric.getName().startsWith("pulsar.client."))
         .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
@@ -364,7 +370,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                             receiveAttributes(topic, msgId.toString(), false))));
 
     assertThat(testing.metrics())
-        .filteredOn(metric -> !metric.getName().startsWith("otel.sdk."))
+        .filteredOn(
+            metric ->
+                !metric.getName().startsWith("otel.sdk.")
+                    && !metric.getName().startsWith("pulsar.client."))
         .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)

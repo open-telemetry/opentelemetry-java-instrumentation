@@ -6,7 +6,7 @@ semantic_conventions:
   - DATABASE_CLIENT_METRICS
 library_link: https://github.com/apache/cassandra-java-driver
 configurations:
-  - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-    description: Enables statement sanitization for database queries.
+  - name: otel.instrumentation.common.db.query-sanitization.enabled
+    description: Enables query sanitization for database queries.
     type: boolean
     default: true

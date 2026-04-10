@@ -10,7 +10,7 @@ import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 
 public class TapestryServerSpanNaming {
 
-  public static final HttpServerRouteGetter<String> SERVER_SPAN_NAME =
+  public static final HttpServerRouteGetter<String> serverSpanName =
       (context, pageName) -> {
         if (pageName == null) {
           return null;

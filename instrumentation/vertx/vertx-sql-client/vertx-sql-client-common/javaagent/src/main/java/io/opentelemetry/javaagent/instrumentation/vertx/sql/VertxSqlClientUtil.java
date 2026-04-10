@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 
-public final class VertxSqlClientUtil {
+public class VertxSqlClientUtil {
 
   private static final ThreadLocal<SqlConnectOptions> connectOptions = new ThreadLocal<>();
   private static final VirtualField<Pool, SqlConnectOptions> poolConnectOptions =

@@ -6,7 +6,7 @@
 package io.opentelemetry.smoketest;
 
 // TODO configure renovate to update these versions
-public final class TestImageVersions {
+public class TestImageVersions {
 
   // smoke-test-spring-boot
   public static final String SPRING_BOOT_VERSION = "20251116.19402383847";

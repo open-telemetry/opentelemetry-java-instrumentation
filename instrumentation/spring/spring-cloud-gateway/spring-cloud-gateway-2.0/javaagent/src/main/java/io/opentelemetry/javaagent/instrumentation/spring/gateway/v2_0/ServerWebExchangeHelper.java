@@ -19,7 +19,7 @@ import javax.annotation.Nullable;
 import org.springframework.cloud.gateway.route.Route;
 import org.springframework.web.server.ServerWebExchange;
 
-public final class ServerWebExchangeHelper {
+public class ServerWebExchangeHelper {
 
   private ServerWebExchangeHelper() {}
 

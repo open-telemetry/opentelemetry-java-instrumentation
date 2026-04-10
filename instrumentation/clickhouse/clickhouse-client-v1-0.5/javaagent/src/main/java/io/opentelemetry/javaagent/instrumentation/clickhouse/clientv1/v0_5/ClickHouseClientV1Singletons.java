@@ -10,13 +10,13 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.common.ClickHouseDbRequest;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.common.ClickHouseInstrumenterFactory;
 
-public final class ClickHouseClientV1Singletons {
+public class ClickHouseClientV1Singletons {
 
   private static final String INSTRUMENTER_NAME = "io.opentelemetry.clickhouse-client-v1-0.5";
-  private static final Instrumenter<ClickHouseDbRequest, Void> INSTRUMENTER;
+  private static final Instrumenter<ClickHouseDbRequest, Void> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         ClickHouseInstrumenterFactory.createInstrumenter(
             INSTRUMENTER_NAME,
             error -> {
@@ -28,7 +28,7 @@ public final class ClickHouseClientV1Singletons {
   }
 
   public static Instrumenter<ClickHouseDbRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private ClickHouseClientV1Singletons() {}

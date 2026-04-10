@@ -313,9 +313,11 @@ public abstract class AbstractGrpcStreamingTest {
                                           point ->
                                               point.hasAttributesSatisfying(
                                                   equalTo(SERVER_ADDRESS, "localhost"),
+                                                  equalTo(SERVER_PORT, server.getPort()),
                                                   equalTo(RPC_METHOD, "Conversation"),
                                                   equalTo(RPC_SERVICE, "example.Greeter"),
                                                   equalTo(RPC_SYSTEM, "grpc"),
+                                                  equalTo(NETWORK_TYPE, "ipv4"),
                                                   equalTo(
                                                       RPC_GRPC_STATUS_CODE,
                                                       (long) Status.Code.OK.value()))))));
@@ -334,9 +336,10 @@ public abstract class AbstractGrpcStreamingTest {
                                   histogram ->
                                       histogram.hasPointsSatisfying(
                                           point ->
-                                              point.hasAttributesSatisfying(
+                                              point.hasAttributesSatisfyingExactly(
                                                   equalTo(RPC_SYSTEM_NAME, "grpc"),
                                                   equalTo(SERVER_ADDRESS, "localhost"),
+                                                  equalTo(SERVER_PORT, server.getPort()),
                                                   equalTo(
                                                       RPC_METHOD, "example.Greeter/Conversation"),
                                                   equalTo(
@@ -497,7 +500,7 @@ public abstract class AbstractGrpcStreamingTest {
           .getClass()
           .getMethod("usePlaintext", boolean.class)
           .invoke(channelBuilder, true);
-    } catch (NoSuchMethodException unused) {
+    } catch (NoSuchMethodException ignored) {
       channelBuilder.getClass().getMethod("usePlaintext").invoke(channelBuilder);
     }
   }

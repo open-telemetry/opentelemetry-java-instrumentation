@@ -16,7 +16,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class TransactionImplInstrumentation implements TypeInstrumentation {
+class TransactionImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -33,7 +33,7 @@ public class TransactionImplInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class WrapHandlerAdvice {
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Handler<?> wrapHandler(@Advice.Return Handler<?> handler) {
       return HandlerWrapper.wrap(handler);
     }

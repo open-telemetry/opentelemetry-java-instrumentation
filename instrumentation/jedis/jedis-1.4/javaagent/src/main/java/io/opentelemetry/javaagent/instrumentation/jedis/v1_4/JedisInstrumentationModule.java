@@ -26,7 +26,7 @@ public class JedisInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // Avoid matching 3.x
+    // added in 3.0
     return not(hasClassesNamed("redis.clients.jedis.commands.ProtocolCommand"));
   }
 

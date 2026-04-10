@@ -53,7 +53,7 @@ public final class ProcessResource {
   static Resource buildResource() {
     try {
       return doBuildResource();
-    } catch (LinkageError t) {
+    } catch (LinkageError ignored) {
       // Will only happen on Android, where these attributes generally don't make much sense
       // anyways.
       return Resource.empty();

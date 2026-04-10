@@ -218,7 +218,7 @@ class Aws0ClientTest {
                               equalTo(SERVER_PORT, server.httpPort()),
                               equalTo(SERVER_ADDRESS, "127.0.0.1"),
                               equalTo(RPC_SYSTEM, "aws-api"),
-                              satisfies(RPC_SERVICE, v -> v.contains(service)),
+                              satisfies(RPC_SERVICE, val -> val.contains(service)),
                               equalTo(RPC_METHOD, operation),
                               equalTo(stringKey("aws.agent"), "java-aws-sdk")));
 

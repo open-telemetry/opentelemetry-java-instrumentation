@@ -30,7 +30,7 @@ import redis.RoundRobinPoolRequest;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
 
-public class RequestInstrumentation implements TypeInstrumentation {
+class RequestInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("redis.Request");
@@ -53,7 +53,7 @@ public class RequestInstrumentation implements TypeInstrumentation {
             .and(named("send"))
             .and(takesArgument(0, named("redis.RedisCommand")))
             .and(returns(named("scala.concurrent.Future"))),
-        this.getClass().getName() + "$SendAdvice");
+        getClass().getName() + "$SendAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -82,8 +82,8 @@ public class RequestInstrumentation implements TypeInstrumentation {
       public void end(
           Object action,
           RedisCommand<?, ?> cmd,
-          Future<Object> responseFuture,
-          Throwable throwable) {
+          @Nullable Future<Object> responseFuture,
+          @Nullable Throwable throwable) {
         scope.close();
 
         ExecutionContext ctx = null;
@@ -97,7 +97,7 @@ public class RequestInstrumentation implements TypeInstrumentation {
           ctx = ((RoundRobinPoolRequest) action).executionContext();
         }
 
-        if (throwable != null) {
+        if (throwable != null || responseFuture == null) {
           instrumenter().end(context, cmd, null, throwable);
         } else {
           responseFuture.onComplete(new OnCompleteHandler(context, cmd), ctx);
@@ -106,12 +106,12 @@ public class RequestInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(0) RedisCommand<?, ?> cmd) {
       return AdviceScope.start(cmd);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This Object action,
         @Advice.Argument(0) RedisCommand<?, ?> cmd,

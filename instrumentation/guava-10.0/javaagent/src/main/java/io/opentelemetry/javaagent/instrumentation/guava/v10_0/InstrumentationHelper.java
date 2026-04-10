@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.guava.v10_0.GuavaAsyncOperationEndStrategy;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 
-public final class InstrumentationHelper {
+public class InstrumentationHelper {
   private static final GuavaAsyncOperationEndStrategy asyncOperationEndStrategy;
 
   public static final VirtualField<Runnable, PropagatedContext> PROPAGATED_CONTEXT =

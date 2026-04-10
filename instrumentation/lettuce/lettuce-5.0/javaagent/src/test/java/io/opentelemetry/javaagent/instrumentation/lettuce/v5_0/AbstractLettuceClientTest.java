@@ -86,9 +86,9 @@ abstract class AbstractLettuceClientTest {
     // client that can cause the shutdown to hang
     try {
       redisClient.shutdownAsync(0, 15, SECONDS).get(15, SECONDS);
-    } catch (InterruptedException exception) {
+    } catch (InterruptedException ignored) {
       Thread.currentThread().interrupt();
-    } catch (Exception exception) {
+    } catch (Exception ignored) {
       // ignore
     }
   }

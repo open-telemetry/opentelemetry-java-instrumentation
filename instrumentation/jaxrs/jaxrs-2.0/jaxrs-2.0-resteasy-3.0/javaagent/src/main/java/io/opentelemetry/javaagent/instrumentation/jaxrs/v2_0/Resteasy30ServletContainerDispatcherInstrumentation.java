@@ -18,7 +18,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class Resteasy30ServletContainerDispatcherInstrumentation implements TypeInstrumentation {
+class Resteasy30ServletContainerDispatcherInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

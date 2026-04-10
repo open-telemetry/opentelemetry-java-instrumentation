@@ -30,8 +30,6 @@ dependencies {
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-jersey-3.0:javaagent"))
-  testInstrumentation(project(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-resteasy-6.0:javaagent"))
-
   testImplementation(project(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-common:testing"))
   testImplementation("org.eclipse.jetty:jetty-webapp:11.0.0")
   testLibrary("org.jboss.resteasy:resteasy-undertow:6.0.0.Final") {
@@ -43,10 +41,10 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testExperimental by registering(Test::class) {
@@ -61,7 +59,7 @@ tasks {
     dependsOn(testExperimental)
   }
 
-  if (findProperty("denyUnsafe") == "true") {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

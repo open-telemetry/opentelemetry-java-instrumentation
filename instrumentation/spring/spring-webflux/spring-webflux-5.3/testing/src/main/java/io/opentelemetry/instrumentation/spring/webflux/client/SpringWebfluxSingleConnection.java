@@ -19,7 +19,7 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-final class SpringWebfluxSingleConnection implements SingleConnection {
+class SpringWebfluxSingleConnection implements SingleConnection {
 
   private final String host;
   private final int port;

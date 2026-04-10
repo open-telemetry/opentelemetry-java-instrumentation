@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.sparkjava;
 
 import spark.Spark;
 
-public class TestSparkJavaApplication {
+class TestSparkJavaApplication {
 
-  public static void initSpark(int port) {
+  static void initSpark(int port) {
     Spark.port(port);
     Spark.get("/", (req, res) -> "Hello World");
 

@@ -40,7 +40,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+        uses: gradle/actions/setup-gradle@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f # v6.0.1
         with:
           cache-read-only: true
 
@@ -64,7 +64,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+        uses: gradle/actions/setup-gradle@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f # v6.0.1
         with:
           cache-read-only: true
 
@@ -105,7 +105,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+        uses: gradle/actions/setup-gradle@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f # v6.0.1
         with:
           cache-read-only: true
 
@@ -193,7 +193,7 @@ jobs:
           sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+        uses: gradle/actions/setup-gradle@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f # v6.0.1
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 
@@ -299,7 +299,7 @@ jobs:
         run: .github/scripts/deadlock-detector.sh
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+        uses: gradle/actions/setup-gradle@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f # v6.0.1
         with:
           cache-read-only: true
 
@@ -439,7 +439,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Set up Gradle cache
-        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+        uses: gradle/actions/setup-gradle@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f # v6.0.1
         with:
           cache-read-only: true
 
@@ -453,7 +453,12 @@ jobs:
       - name: Test
         env:
           DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
-        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }} ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+        run: >
+          ./gradlew
+          :smoke-tests:test
+          -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
+          ${{ inputs.skip-openj9-tests && matrix.smoke-test-suite != 'websphere' && '-PskipOpenJ9SmokeTests=true' || '' }}
+          ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Build scan
         if: ${{ !cancelled() && hashFiles('build-scan.txt') != '' }}
@@ -494,7 +499,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+        uses: gradle/actions/setup-gradle@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f # v6.0.1
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 
@@ -517,7 +522,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Set up Gradle cache
-        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+        uses: gradle/actions/setup-gradle@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f # v6.0.1
         with:
           cache-read-only: true
 

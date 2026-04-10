@@ -17,7 +17,7 @@ import net.bytebuddy.implementation.bytecode.assign.Assigner;
 @SuppressWarnings("unused")
 public class AsyncStartAdvice {
 
-  @Advice.OnMethodEnter(suppress = Throwable.class)
+  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
   public static CallDepth startAsyncEnter() {
     // This allows to detect the outermost invocation of startAsync in method exit
     CallDepth callDepth = CallDepth.forClass(AsyncContext.class);
@@ -25,7 +25,7 @@ public class AsyncStartAdvice {
     return callDepth;
   }
 
-  @Advice.OnMethodExit(suppress = Throwable.class)
+  @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
   public static void startAsyncExit(
       @Advice.This(typing = Assigner.Typing.DYNAMIC) HttpServletRequest request,
       @Advice.Enter CallDepth callDepth) {

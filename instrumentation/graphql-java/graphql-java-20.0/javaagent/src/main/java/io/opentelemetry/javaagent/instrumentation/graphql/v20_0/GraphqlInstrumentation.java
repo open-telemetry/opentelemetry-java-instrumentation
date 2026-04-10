@@ -38,8 +38,7 @@ class GraphqlInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        none(), this.getClass().getName() + "$AddInstrumentationAdvice");
+    transformer.applyAdviceToMethod(none(), getClass().getName() + "$AddInstrumentationAdvice");
 
     transformer.applyTransformer(
         (builder, typeDescription, classLoader, javaModule, protectionDomain) ->
@@ -109,7 +108,7 @@ class GraphqlInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AddInstrumentationAdvice {
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Instrumentation onExit(@Advice.Return Instrumentation instrumentation) {
       // this advice is here only to get GraphqlSingletons injected and checked by muzzle
       return addInstrumentation(instrumentation);
