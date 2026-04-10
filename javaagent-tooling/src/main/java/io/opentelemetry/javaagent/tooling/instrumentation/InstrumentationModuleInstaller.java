@@ -43,6 +43,7 @@ import java.util.function.UnaryOperator;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.utility.JavaModule;
 
@@ -56,9 +57,19 @@ public final class InstrumentationModuleInstaller {
   public static final ElementMatcher.Junction<AnnotationSource> NOT_DECORATOR_MATCHER =
       not(isAnnotatedWith(named("javax.decorator.Decorator")));
 
+  private static final InstrumentationMode INSTRUMENTATION_MODE =
+      AgentDistributionConfig.get().isIndyEnabled()
+          ? InstrumentationMode.INDY
+          : InstrumentationMode.INJECTING;
+
   private final Instrumentation instrumentation;
   private final VirtualFieldImplementationInstallerFactory virtualFieldInstallerFactory =
       VirtualFieldImplementationInstallerFactory.getInstance();
+  private final AdviceInspector adviceInspector =
+      new AdviceInspector(
+          new ClassFileLocator.Compound(
+              ClassFileLocator.ForClassLoader.of(Utils.getAgentClassLoader()),
+              ClassFileLocator.ForClassLoader.of(Utils.getExtensionsClassLoader())));
 
   public InstrumentationModuleInstaller(Instrumentation instrumentation) {
     this.instrumentation = instrumentation;
@@ -79,7 +90,9 @@ public final class InstrumentationModuleInstaller {
       return parentAgentBuilder;
     }
 
-    if (AgentDistributionConfig.get().isIndyEnabled()) {
+    if (INSTRUMENTATION_MODE == InstrumentationMode.INDY
+        || (INSTRUMENTATION_MODE == InstrumentationMode.GUESS
+            && adviceInspector.useIndy(instrumentationModule))) {
       return installIndyModule(instrumentationModule, parentAgentBuilder);
     } else {
       return installInjectingModule(instrumentationModule, parentAgentBuilder);
@@ -281,5 +294,11 @@ public final class InstrumentationModuleInstaller {
         .and(
             (typeDescription, classLoader, module, classBeingRedefined, protectionDomain) ->
                 classLoader == null || NOT_DECORATOR_MATCHER.matches(typeDescription));
+  }
+
+  private enum InstrumentationMode {
+    INJECTING,
+    INDY,
+    GUESS
   }
 }
