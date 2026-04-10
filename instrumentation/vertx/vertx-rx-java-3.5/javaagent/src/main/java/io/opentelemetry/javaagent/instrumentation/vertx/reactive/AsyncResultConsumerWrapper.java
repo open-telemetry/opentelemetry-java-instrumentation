@@ -29,11 +29,7 @@ public class AsyncResultConsumerWrapper implements Consumer<Handler<AsyncResult<
 
   @Override
   public void accept(Handler<AsyncResult<?>> asyncResultHandler) {
-    if (executionContext != null) {
-      try (Scope ignored = executionContext.makeCurrent()) {
-        delegate.accept(asyncResultHandler);
-      }
-    } else {
+    try (Scope ignored = executionContext.makeCurrent()) {
       delegate.accept(asyncResultHandler);
     }
   }
