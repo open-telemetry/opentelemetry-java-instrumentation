@@ -11,15 +11,15 @@ import org.vibur.dbcp.ViburDBCPDataSource;
 /** Entrypoint for instrumenting Vibur database connection pools. */
 public final class ViburTelemetry {
 
-  /** Returns a new {@link ViburTelemetry} configured with the given {@link OpenTelemetry}. */
-  public static ViburTelemetry create(OpenTelemetry openTelemetry) {
-    return new ViburTelemetry(openTelemetry);
-  }
-
   private final OpenTelemetry openTelemetry;
 
   private ViburTelemetry(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
+  }
+
+  /** Returns a new {@link ViburTelemetry} configured with the given {@link OpenTelemetry}. */
+  public static ViburTelemetry create(OpenTelemetry openTelemetry) {
+    return new ViburTelemetry(openTelemetry);
   }
 
   /** Start collecting metrics for given data source. */
