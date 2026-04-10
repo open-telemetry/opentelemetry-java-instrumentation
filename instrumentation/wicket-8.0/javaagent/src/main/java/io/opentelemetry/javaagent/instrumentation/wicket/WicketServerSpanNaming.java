@@ -12,7 +12,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 
 public class WicketServerSpanNaming {
 
-  public static final HttpServerRouteGetter<IPageClassRequestHandler> SERVER_SPAN_NAME =
+  public static final HttpServerRouteGetter<IPageClassRequestHandler> serverSpanName =
       (context, handler) -> {
         // using class name as page name
         String pageName = handler.getPageClass().getName();
