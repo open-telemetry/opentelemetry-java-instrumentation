@@ -59,7 +59,7 @@ class LoadInjectedClassInstrumentation implements TypeInstrumentation {
     // method from the advice that the compiler won't let us call directly. During runtime it is
     // fine since this code is inlined into subclasses of ClassLoader that can call protected
     // methods.
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, inline = false)
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static Class<?> onEnter(
         @Advice.This java.lang.ClassLoader classLoader,
         @Advice.This
@@ -89,7 +89,7 @@ class LoadInjectedClassInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(inline = false)
+    @Advice.OnMethodExit
     public static Class<?> onExit(
         @Advice.Return Class<?> originalResult, @Advice.Enter Class<?> loadedClass) {
       return loadedClass != null ? loadedClass : originalResult;
