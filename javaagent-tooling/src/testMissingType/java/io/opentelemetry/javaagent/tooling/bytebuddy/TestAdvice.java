@@ -12,7 +12,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 public class TestAdvice {
 
   @AssignReturned.ToReturned
-  @Advice.OnMethodExit
+  @Advice.OnMethodExit(inline = false)
   public static boolean returnTrue() {
     return true;
   }

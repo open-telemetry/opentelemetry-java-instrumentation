@@ -67,7 +67,7 @@ class BootDelegationInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class LoadClassAdvice {
 
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, inline = false)
     public static Class<?> onEnter(
         @Advice.This ClassLoader classLoader, @Advice.Argument(0) String name) {
       // must be read before call depth is incremented as setting the call depth prevents the class
@@ -107,7 +107,7 @@ class BootDelegationInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Class<?> onExit(
         @Advice.Return Class<?> originalResult, @Advice.Enter Class<?> resultFromBootstrapLoader) {
       Class<?> result = originalResult;

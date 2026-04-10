@@ -57,7 +57,7 @@ final class PublishingMessageImplInstrumentation implements TypeInstrumentation 
      * Producer#send(Message, Transaction)}. Store the {@link Context} here and fetch it in {@link
      * ProducerImplInstrumentation}.
      */
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This PublishingMessageImpl message) {
       VirtualFieldStore.setContextByMessage(message, Context.current());
     }
@@ -67,7 +67,7 @@ final class PublishingMessageImplInstrumentation implements TypeInstrumentation 
   public static class GetPropertiesAdvice {
     /** Update the message properties to propagate context recorded by {@link MessageMapSetter}. */
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Map<String, String> onExit(
         @Advice.This MessageImpl messageImpl, @Advice.Return Map<String, String> properties) {
       if (!(messageImpl instanceof PublishingMessageImpl)) {

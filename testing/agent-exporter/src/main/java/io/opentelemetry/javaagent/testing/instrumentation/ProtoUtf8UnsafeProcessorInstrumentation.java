@@ -28,13 +28,13 @@ class ProtoUtf8UnsafeProcessorInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class IsAvailableAdvice {
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, suppress = Throwable.class)
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, suppress = Throwable.class, inline = false)
     public static boolean onEnter() {
       return true;
     }
 
     @Advice.AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static boolean onExit() {
       // make isAvailable always return false
       return false;

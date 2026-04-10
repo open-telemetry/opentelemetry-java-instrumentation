@@ -11,7 +11,7 @@ import net.bytebuddy.asm.Advice;
 @SuppressWarnings("unused")
 public class BadAdvice {
 
-  @Advice.OnMethodExit(suppress = Throwable.class)
+  @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
   public static void throwAnException(@Advice.Return AtomicBoolean isInstrumented) {
     // mark that the advice has been executed
     isInstrumented.set(true);
@@ -19,7 +19,7 @@ public class BadAdvice {
   }
 
   public static class NoOpAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void doNothing() {
       System.currentTimeMillis();
     }

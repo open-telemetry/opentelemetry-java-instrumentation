@@ -39,7 +39,7 @@ class DemoServlet3Instrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class DemoServlet3Advice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(value = 1) ServletResponse response) {
       if (!(response instanceof HttpServletResponse)) {
         return;
