@@ -61,11 +61,9 @@ public class VertxSqlClientSingletons {
   }
 
   public static String getConnectOptionsDbSystem(SqlConnectOptions sqlConnectOptions) {
-    if (sqlConnectOptions != null) {
-      String dbSystem = connectOptionsDbSystem.get(sqlConnectOptions);
-      if (dbSystem != null) {
-        return dbSystem;
-      }
+    String dbSystem = connectOptionsDbSystem.get(sqlConnectOptions);
+    if (dbSystem != null) {
+      return dbSystem;
     }
     return OTHER_SQL;
   }
