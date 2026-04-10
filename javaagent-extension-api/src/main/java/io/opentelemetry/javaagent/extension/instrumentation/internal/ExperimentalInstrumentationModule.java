@@ -75,5 +75,4 @@ public interface ExperimentalInstrumentationModule {
   default Map<JavaModule, List<String>> jpmsModulesToOpen() {
     return emptyMap();
   }
-
 }
