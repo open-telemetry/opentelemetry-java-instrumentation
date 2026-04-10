@@ -534,3 +534,4 @@ vertx-sql-client-4.0:javaagent
 vertx-sql-client-common:javaagent
 vertx-web-3.0:javaagent
 vertx-web-3.0:testing
+vibur-dbcp-11.0:testing
