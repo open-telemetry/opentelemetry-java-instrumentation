@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17.internal;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableCodeSemconv;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
@@ -34,27 +35,25 @@ import org.apache.logging.log4j.message.Message;
 public final class LogEventMapper<T> {
 
   // copied from CodeIncubatingAttributes
-  private static final AttributeKey<String> CODE_FILEPATH = AttributeKey.stringKey("code.filepath");
-  private static final AttributeKey<String> CODE_FUNCTION = AttributeKey.stringKey("code.function");
-  private static final AttributeKey<String> CODE_NAMESPACE =
-      AttributeKey.stringKey("code.namespace");
+  private static final AttributeKey<String> CODE_FILEPATH = stringKey("code.filepath");
+  private static final AttributeKey<String> CODE_FUNCTION = stringKey("code.function");
+  private static final AttributeKey<String> CODE_NAMESPACE = stringKey("code.namespace");
   private static final AttributeKey<Long> CODE_LINENO = AttributeKey.longKey("code.lineno");
   // copied from ThreadIncubatingAttributes
   private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
-  private static final AttributeKey<String> THREAD_NAME = AttributeKey.stringKey("thread.name");
+  private static final AttributeKey<String> THREAD_NAME = stringKey("thread.name");
   // copied from EventIncubatingAttributes
-  private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
+  private static final AttributeKey<String> EVENT_NAME = stringKey("event.name");
   // copied from OtelIncubatingAttributes
-  private static final AttributeKey<String> OTEL_EVENT_NAME =
-      AttributeKey.stringKey("otel.event.name");
+  private static final AttributeKey<String> OTEL_EVENT_NAME = stringKey("otel.event.name");
   private static final String SPECIAL_MAP_MESSAGE_ATTRIBUTE = "message";
 
   private static final Cache<String, AttributeKey<String>> contextDataAttributeKeyCache =
       Cache.bounded(100);
-  private static final Cache<String, AttributeKey<String>> mapMessageAttributeKeyCache =
+  private final Cache<String, AttributeKey<String>> mapMessageAttributeKeyCache =
       Cache.bounded(100);
 
-  private static final AttributeKey<String> LOG_MARKER = AttributeKey.stringKey("log4j.marker");
+  private static final AttributeKey<String> LOG_MARKER = stringKey("log4j.marker");
 
   private final ContextDataAccessor<T> contextDataAccessor;
 
@@ -65,6 +64,7 @@ public final class LogEventMapper<T> {
   private final List<AttributeKey<String>> captureContextDataAttributeKeys;
   private final boolean captureAllContextDataAttributes;
   private final boolean captureEventName;
+  private final boolean v3Preview;
 
   public LogEventMapper(
       ContextDataAccessor<T> contextDataAccessor,
@@ -73,7 +73,8 @@ public final class LogEventMapper<T> {
       boolean captureMapMessageAttributes,
       boolean captureMarkerAttribute,
       List<String> captureContextDataAttributes,
-      boolean captureEventName) {
+      boolean captureEventName,
+      boolean v3Preview) {
 
     this.contextDataAccessor = contextDataAccessor;
     this.captureCodeAttributes = captureCodeAttributes;
@@ -95,6 +96,7 @@ public final class LogEventMapper<T> {
       this.captureContextDataAttributeKeys = keys;
     }
     this.captureEventName = captureEventName;
+    this.v3Preview = v3Preview;
   }
 
   /**
@@ -261,8 +263,9 @@ public final class LogEventMapper<T> {
     return contextDataAttributeKeyCache.computeIfAbsent(key, AttributeKey::stringKey);
   }
 
-  public static AttributeKey<String> getMapMessageAttributeKey(String key) {
-    return mapMessageAttributeKeyCache.computeIfAbsent(key, AttributeKey::stringKey);
+  public AttributeKey<String> getMapMessageAttributeKey(String key) {
+    return mapMessageAttributeKeyCache.computeIfAbsent(
+        key, k -> stringKey(v3Preview ? k : "log4j.map_message." + k));
   }
 
   private static Severity levelToSeverity(Level level) {
