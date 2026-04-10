@@ -13,7 +13,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.instrumentation.playws.AbstractBootstrapInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.playws.AsyncHttpClientInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.playws.HandlerPublisherInstrumentation;
@@ -28,8 +27,7 @@ import play.shaded.ahc.org.asynchttpclient.handler.StreamedAsyncHandler;
 import play.shaded.ahc.org.asynchttpclient.ws.WebSocketUpgradeHandler;
 
 @AutoService(InstrumentationModule.class)
-public class PlayWsInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class PlayWsInstrumentationModule extends InstrumentationModule {
   public PlayWsInstrumentationModule() {
     super("play-ws", "play-ws-2.0");
   }
@@ -40,11 +38,6 @@ public class PlayWsInstrumentationModule extends InstrumentationModule
         new AsyncHttpClientInstrumentation(getClass().getName() + "$ClientAdvice"),
         new HandlerPublisherInstrumentation(),
         new AbstractBootstrapInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 
   @SuppressWarnings("unused")

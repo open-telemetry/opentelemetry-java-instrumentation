@@ -10,19 +10,12 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class AkkaActorInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class AkkaActorInstrumentationModule extends InstrumentationModule {
   public AkkaActorInstrumentationModule() {
     super("akka-actor", "akka-actor-2.3");
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 
   @Override
