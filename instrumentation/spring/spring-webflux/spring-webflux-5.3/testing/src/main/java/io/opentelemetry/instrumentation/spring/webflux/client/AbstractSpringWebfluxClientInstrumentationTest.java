@@ -57,6 +57,8 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
 
   protected abstract WebClient.Builder instrument(WebClient.Builder builder);
 
+  protected abstract boolean hasServicePeerName();
+
   @Override
   public int sendRequest(
       WebClient.RequestBodySpec request, String method, URI uri, Map<String, String> headers) {
@@ -205,7 +207,9 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
                             equalTo(URL_FULL, uri.toString()),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, uri.getPort()),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(
+                                maybeStablePeerService(),
+                                hasServicePeerName() ? "test-peer-service" : null),
                             equalTo(ERROR_TYPE, "cancelled")),
                 span ->
                     span.hasName("test-http-server")
