@@ -24,8 +24,6 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:xxl-job:xxl-job-1.9.2:javaagent"))
   testInstrumentation(project(":instrumentation:xxl-job:xxl-job-2.1.2:javaagent"))
-  testInstrumentation(project(":instrumentation:xxl-job:xxl-job-2.3.0:javaagent"))
-
   testImplementation("org.apache.groovy:groovy")
   testImplementation(project(":instrumentation:xxl-job:xxl-job-common:testing"))
 
