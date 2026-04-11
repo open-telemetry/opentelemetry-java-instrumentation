@@ -45,7 +45,10 @@ final class SpanKeyInstrumentation implements TypeInstrumentation {
   public static class StoreInContextAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Advice.OnNonDefaultValue.class, inline = false)
+    @Advice.OnMethodEnter(
+        suppress = Throwable.class,
+        skipOn = Advice.OnNonDefaultValue.class,
+        inline = false)
     public static application.io.opentelemetry.context.Context onEnter(
         @Advice.This
             application.io.opentelemetry.instrumentation.api.internal.SpanKey applicationSpanKey,
@@ -86,7 +89,10 @@ final class SpanKeyInstrumentation implements TypeInstrumentation {
   public static class FromContextOrNullAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Advice.OnNonDefaultValue.class, inline = false)
+    @Advice.OnMethodEnter(
+        suppress = Throwable.class,
+        skipOn = Advice.OnNonDefaultValue.class,
+        inline = false)
     public static application.io.opentelemetry.api.trace.Span onEnter(
         @Advice.This
             application.io.opentelemetry.instrumentation.api.internal.SpanKey applicationSpanKey,

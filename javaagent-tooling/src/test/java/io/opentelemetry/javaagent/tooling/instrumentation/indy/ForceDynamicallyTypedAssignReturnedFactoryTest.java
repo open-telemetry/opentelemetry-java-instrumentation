@@ -26,7 +26,7 @@ class ForceDynamicallyTypedAssignReturnedFactoryTest {
   @AssignReturned.ToThrown(index = 5)
   @AssignReturned.ToThis(index = 6)
   @AssignReturned.ToAllArguments(index = 7)
-  @Advice.OnMethodEnter(inline = false)
+  @Advice.OnMethodEnter
   static void testMethod() {}
 
   @Test

@@ -14,7 +14,7 @@ import net.bytebuddy.asm.Advice;
 public class TestClasses {
 
   public static class MethodBodyAdvice {
-    @Advice.OnMethodEnter(inline = false)
+    @Advice.OnMethodEnter
     @SuppressWarnings("ReturnValueIgnored")
     public static void methodBodyAdvice() {
       Nested.A a = new Nested.A();

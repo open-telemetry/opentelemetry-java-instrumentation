@@ -51,7 +51,10 @@ class ContextExtensionInstrumentation implements TypeInstrumentation {
   public static class ContextAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, suppress = Throwable.class, inline = false)
+    @Advice.OnMethodEnter(
+        skipOn = Advice.OnNonDefaultValue.class,
+        suppress = Throwable.class,
+        inline = false)
     public static CoroutineContext enter(
         @Advice.Argument(0) application.io.opentelemetry.context.Context applicationContext) {
       if (applicationContext != null) {
@@ -74,7 +77,10 @@ class ContextExtensionInstrumentation implements TypeInstrumentation {
   public static class ImplicitContextKeyedAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, suppress = Throwable.class, inline = false)
+    @Advice.OnMethodEnter(
+        skipOn = Advice.OnNonDefaultValue.class,
+        suppress = Throwable.class,
+        inline = false)
     public static CoroutineContext enter(
         @Advice.Argument(0)
             application.io.opentelemetry.context.ImplicitContextKeyed implicitContextKeyed) {
@@ -100,7 +106,10 @@ class ContextExtensionInstrumentation implements TypeInstrumentation {
   public static class GetOpenTelemetryContextAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, suppress = Throwable.class, inline = false)
+    @Advice.OnMethodEnter(
+        skipOn = Advice.OnNonDefaultValue.class,
+        suppress = Throwable.class,
+        inline = false)
     public static application.io.opentelemetry.context.Context enter(
         @Advice.Argument(0) CoroutineContext coroutineContext) {
       if (coroutineContext != null) {
