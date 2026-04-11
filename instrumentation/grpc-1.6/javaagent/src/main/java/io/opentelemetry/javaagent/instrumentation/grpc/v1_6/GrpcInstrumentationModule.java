@@ -10,12 +10,10 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class GrpcInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class GrpcInstrumentationModule extends InstrumentationModule {
   public GrpcInstrumentationModule() {
     super("grpc", "grpc-1.6");
   }
@@ -26,10 +24,5 @@ public class GrpcInstrumentationModule extends InstrumentationModule
         new GrpcClientBuilderBuildInstrumentation(),
         new GrpcContextInstrumentation(),
         new GrpcServerBuilderInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }
