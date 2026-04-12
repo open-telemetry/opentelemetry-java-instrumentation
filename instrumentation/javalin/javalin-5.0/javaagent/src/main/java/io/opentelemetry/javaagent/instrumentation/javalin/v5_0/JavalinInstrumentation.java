@@ -43,7 +43,7 @@ class JavalinInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class HandlerAdapterAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onAfterExecute(@Advice.Argument(0) Context ctx) {
       HttpServerRoute.update(
           io.opentelemetry.context.Context.current(),

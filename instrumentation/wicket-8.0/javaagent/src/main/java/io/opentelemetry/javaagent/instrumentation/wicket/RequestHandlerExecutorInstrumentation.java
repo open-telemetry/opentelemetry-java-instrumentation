@@ -36,7 +36,7 @@ class RequestHandlerExecutorInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ExecuteAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) IRequestHandler handler) {
       if (handler instanceof IPageClassRequestHandler) {
         HttpServerRoute.update(

@@ -36,7 +36,7 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class PreRegisterAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This BasicDataSource dataSource, @Advice.Return ObjectName objectName) {
       String dataSourceName;
@@ -55,7 +55,7 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class PostDeregisterAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This BasicDataSource dataSource) {
       telemetry().unregisterMetrics(dataSource);
     }

@@ -62,7 +62,7 @@ public class SpringDataInstrumentationModule extends InstrumentationModule {
   @SuppressWarnings("unused")
   public static class RepositoryFactorySupportAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onConstruction(
         @Advice.This RepositoryFactorySupport repositoryFactorySupport) {
       repositoryFactorySupport.addRepositoryProxyPostProcessor(
