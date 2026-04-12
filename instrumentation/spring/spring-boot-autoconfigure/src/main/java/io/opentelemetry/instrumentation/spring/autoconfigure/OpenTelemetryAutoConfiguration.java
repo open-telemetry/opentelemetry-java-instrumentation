@@ -41,6 +41,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -270,7 +271,7 @@ public class OpenTelemetryAutoConfiguration {
 
     @Override
     public <T> Iterable<T> load(Class<T> spiClass) {
-      List<T> spi = spiHelper.load(spiClass);
+      List<T> spi = new ArrayList<>(spiHelper.load(spiClass));
       List<T> beans =
           applicationContext.getBeanProvider(spiClass).orderedStream().collect(toList());
       spi.addAll(beans);
