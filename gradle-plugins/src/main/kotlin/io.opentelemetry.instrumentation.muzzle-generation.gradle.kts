@@ -66,6 +66,7 @@ fun createLanguageTask(
     group = "Byte Buddy"
     outputs.cacheIf { true }
     classFileVersion = ClassFileVersion.JAVA_V8
+    isWarnOnEmptyTypeSet = false
     val compileTask = compileTaskProvider.get()
     // this does not work for kotlin as compile task does not extend AbstractCompile
     if (compileTask is AbstractCompile) {
