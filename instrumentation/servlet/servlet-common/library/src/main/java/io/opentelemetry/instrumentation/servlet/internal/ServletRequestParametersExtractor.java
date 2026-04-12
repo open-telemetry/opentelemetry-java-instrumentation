@@ -16,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -74,7 +75,10 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
   private static AttributeKey<List<String>> createKey(String parameterName) {
     // normalize parameter name similarly as is done with header names when header values are
     // captured as span attributes
-    parameterName = parameterName.toLowerCase(Locale.ROOT);
+    if(!AgentCommonConfig.get().isV3Preview())
+    {
+      parameterName = parameterName.toLowerCase(Locale.ROOT);
+    }
     String key = "servlet.request.parameter." + parameterName;
     return AttributeKey.stringArrayKey(key);
   }
