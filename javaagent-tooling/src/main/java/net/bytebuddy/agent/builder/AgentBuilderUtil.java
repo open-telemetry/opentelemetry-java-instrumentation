@@ -9,6 +9,7 @@ import static java.util.Collections.emptyIterator;
 import static java.util.Collections.singleton;
 import static java.util.logging.Level.FINE;
 
+import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.extension.matcher.internal.DelegatingMatcher;
 import io.opentelemetry.javaagent.extension.matcher.internal.DelegatingSuperTypeMatcher;
 import io.opentelemetry.javaagent.tooling.DefineClassHandler;
@@ -346,8 +347,10 @@ public class AgentBuilderUtil {
       field.setAccessible(true);
       // JDK 26 prints a warning when the value of final field is changed with reflection. We avoid
       // this by transforming the class and stripping the final modifier. Here we check that the
-      // final modifier was removed and fail fast if it is not.
-      if (canSet && Modifier.isFinal(field.getModifiers())) {
+      // final modifier was removed and fail fast if it is not, unless running unit tests.
+      if (canSet
+          && Modifier.isFinal(field.getModifiers())
+          && AgentBuilderUtil.class.getClassLoader().getClass() == AgentClassLoader.class) {
         throw new IllegalStateException("Field " + clazz.getName() + "." + name + " is final");
       }
       return field;
