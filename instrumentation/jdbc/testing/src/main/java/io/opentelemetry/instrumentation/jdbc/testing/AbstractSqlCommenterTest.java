@@ -35,10 +35,9 @@ public abstract class AbstractSqlCommenterTest {
   void testSqlCommenterStatement() throws SQLException {
     List<String> executedSql = new ArrayList<>();
     Connection connection = wrap(new TestConnection(executedSql::add));
-    Statement statement = connection.createStatement();
-
-    cleanup.deferCleanup(statement);
     cleanup.deferCleanup(connection);
+    Statement statement = connection.createStatement();
+    cleanup.deferCleanup(statement);
 
     String query = "SELECT 1";
     testing().runWithSpan("parent", () -> statement.execute(query));
@@ -61,10 +60,9 @@ public abstract class AbstractSqlCommenterTest {
   void testSqlCommenterStatementUpdate(boolean largeUpdate) throws SQLException {
     List<String> executedSql = new ArrayList<>();
     Connection connection = wrap(new TestConnection(executedSql::add));
-    Statement statement = connection.createStatement();
-
-    cleanup.deferCleanup(statement);
     cleanup.deferCleanup(connection);
+    Statement statement = connection.createStatement();
+    cleanup.deferCleanup(statement);
 
     String query = "INSERT INTO test VALUES(1)";
     testing()
@@ -97,10 +95,9 @@ public abstract class AbstractSqlCommenterTest {
   void testSqlCommenterStatementBatch(boolean largeUpdate) throws SQLException {
     List<String> executedSql = new ArrayList<>();
     Connection connection = wrap(new TestConnection(executedSql::add));
-    Statement statement = connection.createStatement();
-
-    cleanup.deferCleanup(statement);
     cleanup.deferCleanup(connection);
+    Statement statement = connection.createStatement();
+    cleanup.deferCleanup(statement);
 
     testing()
         .runWithSpan(
@@ -140,8 +137,8 @@ public abstract class AbstractSqlCommenterTest {
             "parent",
             () -> {
               PreparedStatement statement = connection.prepareStatement(query);
-              cleanup.deferCleanup(statement);
               cleanup.deferCleanup(connection);
+              cleanup.deferCleanup(statement);
 
               statement.execute();
             });
@@ -171,8 +168,8 @@ public abstract class AbstractSqlCommenterTest {
             "parent",
             () -> {
               PreparedStatement statement = connection.prepareStatement(query);
-              cleanup.deferCleanup(statement);
               cleanup.deferCleanup(connection);
+              cleanup.deferCleanup(statement);
 
               if (largeUpdate) {
                 statement.executeLargeUpdate();
