@@ -82,3 +82,52 @@ public class InferredSpansComponentProvider implements ComponentProvider {
   }
 }
 ```
+
+## InstrumentationDefaults
+
+`InstrumentationDefaults` lets distribution authors define instrumentation property defaults once
+and have them work in both configuration modes — traditional auto-configuration and declarative
+configuration.
+
+### Usage
+
+```java
+InstrumentationDefaults defaults = new InstrumentationDefaults();
+defaults.setDefault("micrometer", "base_time_unit", "s");
+defaults.setDefault("log4j_appender", "experimental_log_attributes", "true");
+```
+
+Keys use underscore notation (matching the declarative config model). They are translated to
+hyphen notation (`otel.instrumentation.<name>.<key>`) when producing system property keys.
+
+### Auto-configuration (traditional)
+
+Register the defaults as a properties supplier:
+
+```java
+@AutoService(AutoConfigurationCustomizerProvider.class)
+public class MyDistroAutoConfig implements AutoConfigurationCustomizerProvider {
+  @Override
+  public void customize(AutoConfigurationCustomizer autoConfiguration) {
+    autoConfiguration.addPropertiesSupplier(defaults::toConfigProperties);
+  }
+}
+```
+
+### Declarative configuration
+
+Register the defaults as a model customizer:
+
+```java
+@AutoService(DeclarativeConfigurationCustomizerProvider.class)
+public class MyDistroDeclarativeConfig implements DeclarativeConfigurationCustomizerProvider {
+  @Override
+  public void customize(DeclarativeConfigurationCustomizer customizer) {
+    customizer.addModelCustomizer(model -> defaults.applyToModel(model));
+  }
+}
+```
+
+Defaults are injected under `instrumentation/development.java` in the model. Explicit user
+configuration always takes precedence — defaults are only applied for properties not already
+present.
