@@ -30,4 +30,18 @@ class AutoCleanupExtensionTest {
   static void verifyCount() {
     assertThat(count.get()).isEqualTo(1);
   }
+
+  @Test
+  void shouldRunCleanupAfterAll() throws Exception {
+    AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+    AtomicInteger countAfterAll = new AtomicInteger(0);
+
+    cleanup.deferAfterAll(countAfterAll::incrementAndGet);
+
+    assertThat(countAfterAll.get()).isEqualTo(0);
+
+    cleanup.afterAll(null);
+
+    assertThat(countAfterAll.get()).isEqualTo(1);
+  }
 }

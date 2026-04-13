@@ -45,7 +45,6 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
@@ -86,23 +85,12 @@ public abstract class AbstractReactorKafkaTest {
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.Kafka.*Server\\).*", 1))
             .withStartupTimeout(Duration.ofMinutes(1));
+    cleanup.deferAfterAll(kafka::stop);
     kafka.start();
 
     sender = KafkaSender.create(senderOptions());
+    cleanup.deferAfterAll(sender::close);
     receiver = KafkaReceiver.create(receiverOptions());
-  }
-
-  @AfterAll
-  static void tearDownAll() {
-    try {
-      if (sender != null) {
-        sender.close();
-      }
-    } finally {
-      if (kafka != null) {
-        kafka.stop();
-      }
-    }
   }
 
   @SuppressWarnings("unchecked")
