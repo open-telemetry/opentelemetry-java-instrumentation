@@ -53,7 +53,7 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
         if (findMapping(request)) {
           // Name the parent span based on the matching pattern
           // Let the parent span resource name be set with the attribute set in findMapping.
-          return SpringWebMvcServerSpanNaming.SERVER_SPAN_NAME.get(context, request);
+          return SpringWebMvcServerSpanNaming.serverSpanName().get(context, request);
         }
 
         return null;

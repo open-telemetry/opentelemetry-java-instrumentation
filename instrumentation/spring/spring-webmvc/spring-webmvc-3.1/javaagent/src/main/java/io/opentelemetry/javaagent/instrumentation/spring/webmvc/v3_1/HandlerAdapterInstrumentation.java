@@ -79,7 +79,7 @@ class HandlerAdapterInstrumentation implements TypeInstrumentation {
 
         // Name the parent span based on the matching pattern
         HttpServerRoute.update(
-            parentContext, CONTROLLER, SpringWebMvcServerSpanNaming.SERVER_SPAN_NAME, request);
+            parentContext, CONTROLLER, SpringWebMvcServerSpanNaming.serverSpanName(), request);
 
         if (!handlerInstrumenter().shouldStart(parentContext, handler)) {
           return null;
