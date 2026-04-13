@@ -2110,6 +2110,7 @@ public abstract class AbstractJdbcInstrumentationTest {
   @Test
   void testPreparedStatementWrapper() throws SQLException {
     Connection connection = wrap(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
+    cleanup.deferCleanup(connection);
     Connection proxyConnection =
         ProxyStatementFactory.proxy(
             Connection.class,
@@ -2122,7 +2123,6 @@ public abstract class AbstractJdbcInstrumentationTest {
               return method.invoke(connection, args);
             });
     PreparedStatement statement = proxyConnection.prepareStatement("SELECT 3");
-    cleanup.deferCleanup(connection);
     cleanup.deferCleanup(statement);
 
     ResultSet resultSet = testing().runWithSpan("parent", () -> statement.executeQuery());
