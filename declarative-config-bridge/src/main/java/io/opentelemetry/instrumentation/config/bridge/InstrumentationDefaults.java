@@ -69,6 +69,7 @@ public final class InstrumentationDefaults {
    * instrumentation/development.java}. Existing values in the model take precedence; defaults are
    * only set for properties not already present.
    */
+  @CanIgnoreReturnValue
   public OpenTelemetryConfigurationModel applyToModel(OpenTelemetryConfigurationModel model) {
     if (instrumentations.isEmpty()) {
       return model;
