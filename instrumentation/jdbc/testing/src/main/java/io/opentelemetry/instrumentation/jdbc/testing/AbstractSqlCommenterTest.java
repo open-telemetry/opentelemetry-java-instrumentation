@@ -130,6 +130,7 @@ public abstract class AbstractSqlCommenterTest {
   void testSqlCommenterPreparedStatement() throws SQLException {
     List<String> executedSql = new ArrayList<>();
     Connection connection = wrap(new TestConnection(executedSql::add));
+    cleanup.deferCleanup(connection);
 
     String query = "SELECT 1";
     testing()
@@ -137,7 +138,6 @@ public abstract class AbstractSqlCommenterTest {
             "parent",
             () -> {
               PreparedStatement statement = connection.prepareStatement(query);
-              cleanup.deferCleanup(connection);
               cleanup.deferCleanup(statement);
 
               statement.execute();
@@ -161,6 +161,7 @@ public abstract class AbstractSqlCommenterTest {
   void testSqlCommenterPreparedStatementUpdate(boolean largeUpdate) throws SQLException {
     List<String> executedSql = new ArrayList<>();
     Connection connection = wrap(new TestConnection(executedSql::add));
+    cleanup.deferCleanup(connection);
 
     String query = "INSERT INTO test VALUES(1)";
     testing()
@@ -168,7 +169,6 @@ public abstract class AbstractSqlCommenterTest {
             "parent",
             () -> {
               PreparedStatement statement = connection.prepareStatement(query);
-              cleanup.deferCleanup(connection);
               cleanup.deferCleanup(statement);
 
               if (largeUpdate) {
