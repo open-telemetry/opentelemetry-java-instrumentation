@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.config.bridge;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ExperimentalInstrumentationModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ExperimentalLanguageSpecificInstrumentationModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ExperimentalLanguageSpecificInstrumentationPropertyModel;
@@ -41,6 +42,7 @@ public final class InstrumentationDefaults {
    *
    * @return {@code this} for chaining
    */
+  @CanIgnoreReturnValue
   public InstrumentationDefaults setDefault(String instrumentation, String key, String value) {
     instrumentations.computeIfAbsent(instrumentation, k -> new LinkedHashMap<>()).put(key, value);
     return this;
