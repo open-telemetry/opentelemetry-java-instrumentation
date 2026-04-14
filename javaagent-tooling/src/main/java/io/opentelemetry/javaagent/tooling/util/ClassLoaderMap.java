@@ -25,7 +25,7 @@ class ClassLoaderMap {
   private static final Map<Object, Object> bootLoaderData = new ConcurrentHashMap<>();
   private static final HelperInjector helperInjector =
       HelperInjector.forDynamicTypes(ClassLoaderMap.class.getSimpleName(), emptyList(), null);
-  private static Injector defaultInjector =
+  private static final Injector defaultInjector =
       (classLoader, className, bytes) -> {
         helperInjector.injectHelperClasses(classLoader, singletonMap(className, () -> bytes));
         return Class.forName(className, false, classLoader);
