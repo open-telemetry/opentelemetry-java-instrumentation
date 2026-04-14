@@ -1,4 +1,4 @@
-display_name: JSF
+display_name: Apache MyFaces
 description: >
   This instrumentation enables controller spans for Apache MyFaces action listeners (controller
   spans are disabled by default).

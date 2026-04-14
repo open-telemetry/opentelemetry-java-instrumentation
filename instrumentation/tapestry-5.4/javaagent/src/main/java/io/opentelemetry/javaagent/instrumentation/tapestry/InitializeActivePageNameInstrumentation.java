@@ -58,7 +58,7 @@ class InitializeActivePageNameInstrumentation implements TypeInstrumentation {
       HttpServerRoute.update(
           currentContext(),
           CONTROLLER,
-          TapestryServerSpanNaming.serverSpanName,
+          TapestryServerSpanNaming.serverSpanName(),
           parameters.getActivePageName());
     }
   }
@@ -71,7 +71,7 @@ class InitializeActivePageNameInstrumentation implements TypeInstrumentation {
       HttpServerRoute.update(
           currentContext(),
           CONTROLLER,
-          TapestryServerSpanNaming.serverSpanName,
+          TapestryServerSpanNaming.serverSpanName(),
           parameters.getLogicalPageName());
     }
   }

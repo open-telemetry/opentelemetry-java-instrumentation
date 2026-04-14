@@ -240,6 +240,10 @@ Auto-fix boundaries:
   - redundant `if (value != null)` guards around `AttributesBuilder.put()` calls —
     `put` is a no-op for null values, so remove the conditional and pass the value
     directly (same for span, log, and metrics attribute setters).
+    Apply this only when the guarded value can be passed through directly to the
+    attribute setter. If the null check is guarding a dereference or other derived
+    computation, keep the explicit guard instead of rewriting it into a ternary
+    expression just to pass `null` to `put()`.
     **Exception**: when the `AttributeKey` is typed as `Long` and the source value is
     `Integer`, the generic overload cannot match (`Integer ≠ Long`), so Java resolves
     to the `int` convenience overload `put(AttributeKey<Long>, int)` via auto-unboxing.
@@ -248,6 +252,8 @@ Auto-fix boundaries:
     When the value type **matches** the `AttributeKey` type parameter (e.g.,
     `Boolean` → `AttributeKey<Boolean>`, `Long` → `AttributeKey<Long>`), the generic
     `@Nullable T` overload is selected directly, null is safe, and the guard is redundant.
+    For example, keep `if (view != null) { attributes.put(KEY, view.getClass().getName()); }`
+    as-is; do not rewrite it to `attributes.put(KEY, view == null ? null : view.getClass().getName())`.
   - defensive `if (param == null)` checks on parameters not annotated `@Nullable` —
     these contradict the framework's nullability contract; remove the guard. Conversely,
     add `@Nullable` to a parameter only when `null` is actually passed by callers or an

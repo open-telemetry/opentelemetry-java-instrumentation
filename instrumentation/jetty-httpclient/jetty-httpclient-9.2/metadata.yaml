@@ -1,3 +1,4 @@
+display_name: Eclipse Jetty HTTP Client
 description: This instrumentation enables HTTP client spans and HTTP client metrics for Jetty HTTP Client.
 semantic_conventions:
   - HTTP_CLIENT_SPANS

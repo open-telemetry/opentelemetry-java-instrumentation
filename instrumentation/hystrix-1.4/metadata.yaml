@@ -1,3 +1,4 @@
+display_name: Netflix Hystrix
 description: This instrumentation enables spans for Hystrix command executions and fallbacks.
 library_link: https://github.com/Netflix/Hystrix
 configurations:

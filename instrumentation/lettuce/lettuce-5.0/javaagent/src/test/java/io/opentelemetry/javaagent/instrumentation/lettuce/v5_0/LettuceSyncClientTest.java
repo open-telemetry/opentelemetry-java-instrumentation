@@ -89,8 +89,8 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
     testConnectionClient.setOptions(CLIENT_OPTIONS);
 
     StatefulRedisConnection<String, String> testConnection = testConnectionClient.connect();
-    cleanup.deferCleanup(testConnection);
     cleanup.deferCleanup(() -> shutdown(testConnectionClient));
+    cleanup.deferCleanup(testConnection);
 
     testing.waitAndAssertTraces(
         trace ->

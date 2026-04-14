@@ -17,14 +17,19 @@
 - In JUnit tests, when an `AutoCloseable` is intended to remain live for most or all of the test
   and only needs cleanup at test end, prefer `AutoCleanupExtension` with `deferCleanup(...)`
   over wrapping most of the test body in try-with-resources.
+- For resources created in `@BeforeAll` or other class-scoped setup, prefer
+  `AutoCleanupExtension` with `deferAfterAll(...)` over nested `@AfterAll` cleanup
+  chains.
 - Reuse an existing `cleanup` extension when one is already in scope.
   Otherwise, add a `@RegisterExtension` field when the deferred-cleanup pattern improves
   clarity or avoids wrapping most of the test body.
 - Keep try-with-resources for semantically scoped resources whose lifetime must end before the
   rest of the test continues, such as `Scope` / `Context.makeCurrent()`, Mockito
   `MockedStatic`, and short-lived readers, writers, streams, response bodies, or parsers.
-- Do not use `AutoCleanupExtension` in non-JUnit helper methods, `@BeforeAll`, or other shared
-  setup code where cleanup is not tied to a single test method.
+- Keep `AutoCleanupExtension` usage scoped to JUnit-managed test classes; do not introduce it in
+  generic helper utilities or other non-JUnit code.
+- In `@BeforeAll` or other shared setup code where cleanup is not tied to a single test method,
+  use `deferAfterAll(...)` instead of `deferCleanup(...)`.
 - If the test intentionally closes the resource mid-test or asserts behavior around explicit
   close, keep the direct close or try-with-resources in the test body.
 

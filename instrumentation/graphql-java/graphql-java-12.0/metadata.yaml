@@ -1,3 +1,4 @@
+display_name: GraphQL Java
 description: This instrumentation enables spans for GraphQL operations.
 semantic_conventions:
   - GRAPHQL_SERVER_SPANS
