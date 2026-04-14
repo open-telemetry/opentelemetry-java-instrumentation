@@ -5,9 +5,11 @@
 
 package io.opentelemetry.instrumentation.servlet.internal;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.util.Collection;
 import java.util.List;
@@ -16,7 +18,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -75,7 +76,8 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
   private static AttributeKey<List<String>> createKey(String parameterName) {
     // normalize parameter name similarly as is done with header names when header values are
     // captured as span attributes
-    if(!AgentCommonConfig.get().isV3Preview())
+    CommonConfig commonConfig=new CommonConfig(GlobalOpenTelemetry.get());
+    if(!commonConfig.isV3Preview())
     {
       parameterName = parameterName.toLowerCase(Locale.ROOT);
     }
