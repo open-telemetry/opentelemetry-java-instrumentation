@@ -107,16 +107,17 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
               // kafka-clients PRODUCER
               span -> {
                 List<AttributeAssertion> assertions =
-                    asList(
-                        equalTo(MESSAGING_SYSTEM, KAFKA),
-                        equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
-                        equalTo(MESSAGING_OPERATION, "publish"),
-                        satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
-                        satisfies(
-                            MESSAGING_DESTINATION_PARTITION_ID,
-                            val -> val.isInstanceOf(String.class)),
-                        equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
-                        equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"));
+                    new ArrayList<>(
+                        asList(
+                            equalTo(MESSAGING_SYSTEM, KAFKA),
+                            equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
+                            equalTo(MESSAGING_OPERATION, "publish"),
+                            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
+                            satisfies(
+                                MESSAGING_DESTINATION_PARTITION_ID,
+                                val -> val.isInstanceOf(String.class)),
+                            equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
+                            equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10")));
                 if (isExperimental) {
                   assertions.add(
                       equalTo(
@@ -187,15 +188,16 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
               // kafka-clients PRODUCER
               span -> {
                 List<AttributeAssertion> assertions =
-                    asList(
-                        equalTo(MESSAGING_SYSTEM, KAFKA),
-                        equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
-                        equalTo(MESSAGING_OPERATION, "publish"),
-                        satisfies(MESSAGING_CLIENT_ID, val -> val.endsWith("producer")),
-                        satisfies(
-                            MESSAGING_DESTINATION_PARTITION_ID,
-                            val -> val.isInstanceOf(String.class)),
-                        equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0));
+                    new ArrayList<>(
+                        asList(
+                            equalTo(MESSAGING_SYSTEM, KAFKA),
+                            equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
+                            equalTo(MESSAGING_OPERATION, "publish"),
+                            satisfies(MESSAGING_CLIENT_ID, val -> val.endsWith("producer")),
+                            satisfies(
+                                MESSAGING_DESTINATION_PARTITION_ID,
+                                val -> val.isInstanceOf(String.class)),
+                            equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0)));
                 if (isExperimental) {
                   assertions.add(
                       equalTo(

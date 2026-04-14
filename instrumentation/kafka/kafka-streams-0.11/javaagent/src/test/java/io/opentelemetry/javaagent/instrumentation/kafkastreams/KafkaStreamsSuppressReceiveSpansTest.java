@@ -96,16 +96,17 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                 // kafka-clients PRODUCER
                 span -> {
                   List<AttributeAssertion> assertions =
-                      asList(
-                          equalTo(MESSAGING_SYSTEM, KAFKA),
-                          equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
-                          equalTo(MESSAGING_OPERATION, "publish"),
-                          equalTo(MESSAGING_CLIENT_ID, "producer-1"),
-                          satisfies(
-                              MESSAGING_DESTINATION_PARTITION_ID,
-                              val -> val.isInstanceOf(String.class)),
-                          equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
-                          equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"));
+                      new ArrayList<>(
+                          asList(
+                              equalTo(MESSAGING_SYSTEM, KAFKA),
+                              equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
+                              equalTo(MESSAGING_OPERATION, "publish"),
+                              equalTo(MESSAGING_CLIENT_ID, "producer-1"),
+                              satisfies(
+                                  MESSAGING_DESTINATION_PARTITION_ID,
+                                  val -> val.isInstanceOf(String.class)),
+                              equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
+                              equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10")));
                   if (isExperimental) {
                     assertions.add(
                         equalTo(
