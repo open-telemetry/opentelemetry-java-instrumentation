@@ -156,6 +156,11 @@ All `put` / `setAttribute` methods on `AttributesBuilder`, `Span`, `SpanBuilder`
 `LogRecordBuilder` are no-ops when the value is `null` (upstream SDK guarantee).
 Do not wrap these calls in `if (value != null)` guards — pass the value directly.
 
+This rule applies only when the guarded value can be passed through directly to the
+attribute setter. If the null check is guarding a dereference or other derived
+computation, keep the explicit guard instead of rewriting it into a ternary
+expression just to feed `null` to `put()`.
+
 **Exception — `AttributeKey<Long>` with `Integer` value**: the only primitive-typed
 overload on these interfaces is a convenience method that accepts `int`:
 
@@ -188,6 +193,16 @@ Preferred:
 
 ```java
 attributes.put(SOME_KEY, getSomething());
+```
+
+Do **not** flag (the guard is preserving a safe dereference and is clearer than a
+ternary rewrite):
+
+```java
+View view = modelAndView.getView();
+if (view != null) {
+  attributes.put("spring-webmvc.view.type", view.getClass().getName());
+}
 ```
 
 Also flag (the guard is unnecessary — types match, generic overload handles null):
