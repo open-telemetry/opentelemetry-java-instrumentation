@@ -1,3 +1,4 @@
+display_name: ClickHouse Java Client
 description: >
   This instrumentation enables database client spans and database client metrics for the ClickHouse
   Java Client.

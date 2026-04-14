@@ -1,3 +1,4 @@
+display_name: OpenTelemetry Extension Annotations
 classification: custom
 description: >
   Instruments methods annotated with OpenTelemetry extension annotations, such as @WithSpan
