@@ -19,6 +19,7 @@ class ClassLoaderHasClassesNamedMatcher extends ElementMatcher.Junction.Abstract
   // this field is set via reflection from ClassLoaderMatcher
   @SuppressWarnings("FieldCanBeFinal") // set via reflection from muzzle ClassLoaderMatcher
   private static boolean useCache = true;
+
   private static final AtomicInteger counter = new AtomicInteger();
 
   private final String[] resources;
