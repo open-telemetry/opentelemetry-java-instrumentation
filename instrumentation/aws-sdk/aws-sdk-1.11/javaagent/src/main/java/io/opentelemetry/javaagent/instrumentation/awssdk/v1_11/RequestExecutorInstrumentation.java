@@ -46,8 +46,7 @@ class RequestExecutorInstrumentation implements TypeInstrumentation {
         @Advice.Return Response<?> response,
         @Advice.Thrown Throwable throwable) {
       if (throwable instanceof Exception) {
-        TracingRequestHandler.tracingHandler().afterError(
-            request, response, (Exception) throwable);
+        TracingRequestHandler.tracingHandler().afterError(request, response, (Exception) throwable);
       }
       Scope scope = request.getHandlerContext(TracingRequestHandler.SCOPE);
       if (scope != null) {
