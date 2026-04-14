@@ -1,3 +1,4 @@
+display_name: Java HTTP Server
 description: This instrumentation enables HTTP server spans and HTTP server metrics for the Java HTTP server.
 semantic_conventions:
   - HTTP_SERVER_SPANS

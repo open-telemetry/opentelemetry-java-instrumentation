@@ -1,3 +1,4 @@
+display_name: Guava
 description: >
   This instrumentation enables context propagation for Guava ListenableFuture, it does not emit
   any telemetry on its own.
