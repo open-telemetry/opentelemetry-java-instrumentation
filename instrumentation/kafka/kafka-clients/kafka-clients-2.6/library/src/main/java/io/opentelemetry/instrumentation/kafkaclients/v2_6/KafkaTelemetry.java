@@ -42,10 +42,21 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.metrics.MetricsReporter;
 
 public final class KafkaTelemetry {
-
   private final OpenTelemetry openTelemetry;
   private final KafkaProducerTelemetry producerTelemetry;
   private final KafkaConsumerTelemetry consumerTelemetry;
+
+  /** Returns a new {@link KafkaTelemetry} configured with the given {@link OpenTelemetry}. */
+  public static KafkaTelemetry create(OpenTelemetry openTelemetry) {
+    return builder(openTelemetry).build();
+  }
+
+  /**
+   * Returns a new {@link KafkaTelemetryBuilder} configured with the given {@link OpenTelemetry}.
+   */
+  public static KafkaTelemetryBuilder builder(OpenTelemetry openTelemetry) {
+    return new KafkaTelemetryBuilder(openTelemetry);
+  }
 
   KafkaTelemetry(
       OpenTelemetry openTelemetry,
@@ -61,18 +72,6 @@ public final class KafkaTelemetry {
             producerPropagationEnabled);
     this.consumerTelemetry =
         new KafkaConsumerTelemetry(consumerReceiveInstrumenter, consumerProcessInstrumenter);
-  }
-
-  /** Returns a new {@link KafkaTelemetry} configured with the given {@link OpenTelemetry}. */
-  public static KafkaTelemetry create(OpenTelemetry openTelemetry) {
-    return builder(openTelemetry).build();
-  }
-
-  /**
-   * Returns a new {@link KafkaTelemetryBuilder} configured with the given {@link OpenTelemetry}.
-   */
-  public static KafkaTelemetryBuilder builder(OpenTelemetry openTelemetry) {
-    return new KafkaTelemetryBuilder(openTelemetry);
   }
 
   /** Returns a decorated {@link Producer} that emits spans for each sent message. */

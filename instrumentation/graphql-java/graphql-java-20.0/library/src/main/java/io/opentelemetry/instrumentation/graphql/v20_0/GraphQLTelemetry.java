@@ -13,6 +13,9 @@ import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.OpenTeleme
 
 @SuppressWarnings({"AbbreviationAsWordInName", "MemberName"})
 public final class GraphQLTelemetry {
+  private final OpenTelemetryInstrumentationHelper helper;
+  private final Instrumenter<DataFetchingEnvironment, Object> dataFetcherInstrumenter;
+  private final boolean createSpansForTrivialDataFetcher;
 
   /** Returns a new {@link GraphQLTelemetry} configured with the given {@link OpenTelemetry}. */
   public static GraphQLTelemetry create(OpenTelemetry openTelemetry) {
@@ -25,10 +28,6 @@ public final class GraphQLTelemetry {
   public static GraphQLTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new GraphQLTelemetryBuilder(openTelemetry);
   }
-
-  private final OpenTelemetryInstrumentationHelper helper;
-  private final Instrumenter<DataFetchingEnvironment, Object> dataFetcherInstrumenter;
-  private final boolean createSpansForTrivialDataFetcher;
 
   GraphQLTelemetry(
       OpenTelemetry openTelemetry,
