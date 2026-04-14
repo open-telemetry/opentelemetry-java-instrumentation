@@ -17,6 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 class ClassLoaderHasClassesNamedMatcher extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
   // caching is disabled for build time muzzle checks
   // this field is set via reflection from ClassLoaderMatcher
+  @SuppressWarnings("FieldCanBeFinal") // set via reflection from muzzle ClassLoaderMatcher
   private static boolean useCache = true;
   private static final AtomicInteger counter = new AtomicInteger();
 
