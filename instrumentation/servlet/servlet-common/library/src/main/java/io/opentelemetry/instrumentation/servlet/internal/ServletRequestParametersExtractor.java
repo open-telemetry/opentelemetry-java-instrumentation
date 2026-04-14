@@ -76,9 +76,8 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
   private static AttributeKey<List<String>> createKey(String parameterName) {
     // normalize parameter name similarly as is done with header names when header values are
     // captured as span attributes
-    CommonConfig commonConfig=new CommonConfig(GlobalOpenTelemetry.get());
-    if(!commonConfig.isV3Preview())
-    {
+    CommonConfig commonConfig = new CommonConfig(GlobalOpenTelemetry.get());
+    if (!commonConfig.isV3Preview()) {
       parameterName = parameterName.toLowerCase(Locale.ROOT);
     }
     String key = "servlet.request.parameter." + parameterName;
