@@ -26,6 +26,7 @@ import ratpack.http.client.RequestSpec;
  * }</pre>
  */
 public final class RatpackClientTelemetry {
+  private final OpenTelemetryHttpClient httpClientInstrumenter;
 
   /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static RatpackClientTelemetry create(OpenTelemetry openTelemetry) {
@@ -36,8 +37,6 @@ public final class RatpackClientTelemetry {
   public static RatpackClientTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new RatpackClientTelemetryBuilder(openTelemetry);
   }
-
-  private final OpenTelemetryHttpClient httpClientInstrumenter;
 
   RatpackClientTelemetry(Instrumenter<RequestSpec, HttpResponse> clientInstrumenter) {
     httpClientInstrumenter = new OpenTelemetryHttpClient(clientInstrumenter);

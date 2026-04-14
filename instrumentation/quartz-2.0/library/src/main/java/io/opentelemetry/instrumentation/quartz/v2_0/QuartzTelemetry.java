@@ -15,7 +15,6 @@ import org.quartz.impl.matchers.EverythingMatcher;
 
 /** Entrypoint for telemetry instrumentation of Quartz jobs. */
 public final class QuartzTelemetry {
-
   private final JobListener jobListener;
 
   /** Returns a new {@link QuartzTelemetry} configured with the given {@link OpenTelemetry}. */
