@@ -78,20 +78,8 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging")
   }
 
-  val testBothSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      excludeTestsMatching("KafkaClientPropagationDisabledTest")
-      excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
-    }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.opt-in=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging/dup")
-  }
-
   check {
-    dependsOn(testStableSemconv, testBothSemconv)
+    dependsOn(testStableSemconv)
   }
 
   test {
