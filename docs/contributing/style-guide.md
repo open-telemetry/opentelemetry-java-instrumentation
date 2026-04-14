@@ -74,6 +74,10 @@ private static method or a `static {}` block, it is acceptable to place the meth
 immediately after the field to keep initialization logic co-located, even when this contradicts
 the general method ordering above.
 
+**Static factory entry points**: When a class exposes public static factory methods as its primary
+creation API (for example `create*(...)` or `builder(...)`), those methods should be placed below
+fields and above constructors.
+
 **Static utility classes**: Place the private constructor (used to prevent instantiation) after all
 methods.
 
