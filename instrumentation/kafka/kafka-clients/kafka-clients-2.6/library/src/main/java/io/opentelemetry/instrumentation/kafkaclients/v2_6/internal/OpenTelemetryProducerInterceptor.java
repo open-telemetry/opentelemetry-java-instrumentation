@@ -32,7 +32,7 @@ public class OpenTelemetryProducerInterceptor<K, V> implements ProducerIntercept
   @CanIgnoreReturnValue
   public ProducerRecord<K, V> onSend(ProducerRecord<K, V> producerRecord) {
     if (producerTelemetry != null) {
-      producerTelemetry.buildAndInjectSpan(producerRecord, clientId);
+      return producerTelemetry.buildAndInjectSpan(producerRecord, clientId);
     }
     return producerRecord;
   }

@@ -141,9 +141,9 @@ class SpringRabbitMqTest {
   @ValueSource(booleans = {true, false})
   void testContextPropagation(boolean testHeaders) throws Exception {
     Connection connection = connectionFactory.newConnection();
+    cleanup.deferCleanup(connection);
     Channel channel = connection.createChannel();
     cleanup.deferCleanup(channel);
-    cleanup.deferCleanup(connection);
 
     testing.runWithSpan(
         "parent",
@@ -229,9 +229,9 @@ class SpringRabbitMqTest {
   @Test
   void testAnonymousQueueSpanName() throws Exception {
     Connection connection = connectionFactory.newConnection();
+    cleanup.deferCleanup(connection);
     Channel channel = connection.createChannel();
     cleanup.deferCleanup(channel);
-    cleanup.deferCleanup(connection);
 
     String anonymousQueueName = applicationContext.getBean(AnonymousQueue.class).getName();
     applicationContext.getBean(AmqpTemplate.class).convertAndSend(anonymousQueueName, "test");

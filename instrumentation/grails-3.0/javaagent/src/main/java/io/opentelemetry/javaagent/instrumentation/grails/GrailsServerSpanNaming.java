@@ -11,7 +11,7 @@ import org.grails.web.mapping.mvc.GrailsControllerUrlMappingInfo;
 
 public class GrailsServerSpanNaming {
 
-  public static final HttpServerRouteGetter<GrailsControllerUrlMappingInfo> SERVER_SPAN_NAME =
+  private static final HttpServerRouteGetter<GrailsControllerUrlMappingInfo> serverSpanName =
       (context, info) -> {
         String action =
             info.getActionName() != null
@@ -20,6 +20,10 @@ public class GrailsServerSpanNaming {
         // this is not the actual route/mapping, but it's the best thing that we have access to
         return ServletContextPath.prepend(context, "/" + info.getControllerName() + "/" + action);
       };
+
+  public static HttpServerRouteGetter<GrailsControllerUrlMappingInfo> serverSpanName() {
+    return serverSpanName;
+  }
 
   private GrailsServerSpanNaming() {}
 }

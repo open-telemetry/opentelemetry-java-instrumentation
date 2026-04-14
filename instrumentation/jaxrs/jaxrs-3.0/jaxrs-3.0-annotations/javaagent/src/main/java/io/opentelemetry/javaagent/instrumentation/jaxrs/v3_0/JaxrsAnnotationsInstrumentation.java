@@ -114,7 +114,7 @@ class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
         HttpServerRoute.update(
             parentContext,
             HttpServerRouteSource.CONTROLLER,
-            JaxrsServerSpanNaming.SERVER_SPAN_NAME,
+            JaxrsServerSpanNaming.serverSpanName(),
             handlerData);
 
         if (!instrumenter().shouldStart(parentContext, handlerData)) {

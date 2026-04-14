@@ -128,6 +128,10 @@ public class AgentStarterImpl implements AgentStarter {
     // AgentBuilder.Default class to avoid that warning, as we change that field in
     // AgentBuilderUtil.
     instrumentation.addTransformer(new AgentBuilderDefaultClassFileTransformer(), true);
+    // transforms Thread getContextClassLoader and setContextClassLoader calls in
+    // io.opentelemetry.sdk.metrics.internal.state.CallbackRegistration to use doPrivileged so that
+    // security manager wouldn't deny these calls
+    instrumentation.addTransformer(new CallbackRegistrationClassFileTransformer(), true);
   }
 
   @SuppressWarnings("SystemOut")
@@ -276,6 +280,76 @@ public class AgentStarterImpl implements AgentStarter {
                 access &= ~Opcodes.ACC_FINAL;
               }
               return super.visitField(access, name, descriptor, signature, value);
+            }
+          };
+
+      cr.accept(cv, 0);
+
+      return cw.toByteArray();
+    }
+  }
+
+  private static class CallbackRegistrationClassFileTransformer implements ClassFileTransformer {
+
+    @Override
+    public byte[] transform(
+        ClassLoader loader,
+        String className,
+        Class<?> classBeingRedefined,
+        ProtectionDomain protectionDomain,
+        byte[] classfileBuffer) {
+      if (loader != getClass().getClassLoader()
+          || !"io/opentelemetry/sdk/metrics/internal/state/CallbackRegistration"
+              .equals(className)) {
+        return null;
+      }
+      ClassReader cr = new ClassReader(classfileBuffer);
+      ClassWriter cw = new ClassWriter(cr, 0);
+      ClassVisitor cv =
+          new ClassVisitor(AsmApi.VERSION, cw) {
+            @Override
+            public MethodVisitor visitMethod(
+                int access, String name, String descriptor, String signature, String[] exceptions) {
+              MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
+              if (!"invokeCallback".equals(name) && !"<init>".equals(name)) {
+                return mv;
+              }
+              return new MethodVisitor(api, mv) {
+                @Override
+                public void visitMethodInsn(
+                    int opcode,
+                    String ownerClassName,
+                    String methodName,
+                    String descriptor,
+                    boolean isInterface) {
+                  if ("getContextClassLoader".equals(methodName)
+                      && Type.getInternalName(Thread.class).equals(ownerClassName)) {
+                    super.visitMethodInsn(
+                        Opcodes.INVOKESTATIC,
+                        Type.getInternalName(Utils.class),
+                        "getContextClassLoader",
+                        "("
+                            + Type.getDescriptor(Thread.class)
+                            + ")"
+                            + Type.getDescriptor(ClassLoader.class),
+                        false);
+                  } else if ("setContextClassLoader".equals(methodName)
+                      && Type.getInternalName(Thread.class).equals(ownerClassName)) {
+                    super.visitMethodInsn(
+                        Opcodes.INVOKESTATIC,
+                        Type.getInternalName(Utils.class),
+                        "setContextClassLoader",
+                        "("
+                            + Type.getDescriptor(Thread.class)
+                            + Type.getDescriptor(ClassLoader.class)
+                            + ")V",
+                        false);
+                  } else {
+                    super.visitMethodInsn(
+                        opcode, ownerClassName, methodName, descriptor, isInterface);
+                  }
+                }
+              };
             }
           };
 
