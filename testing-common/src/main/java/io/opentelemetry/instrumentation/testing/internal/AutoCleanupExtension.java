@@ -8,9 +8,7 @@ package io.opentelemetry.instrumentation.testing.internal;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -24,7 +22,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
  * at any time.
  */
 public class AutoCleanupExtension implements AfterEachCallback, AfterAllCallback {
-  private final Queue<AutoCloseable> thingsToCleanUp = new ConcurrentLinkedQueue<>();
+  private final Deque<AutoCloseable> thingsToCleanUp = new ConcurrentLinkedDeque<>();
   private final Deque<AutoCloseable> thingsToCleanUpAfterAll = new ConcurrentLinkedDeque<>();
 
   private AutoCleanupExtension() {}
@@ -35,7 +33,7 @@ public class AutoCleanupExtension implements AfterEachCallback, AfterAllCallback
 
   /** Add a {@code cleanupAction} to execute after the test finishes. */
   public void deferCleanup(AutoCloseable cleanupAction) {
-    thingsToCleanUp.add(cleanupAction);
+    thingsToCleanUp.push(cleanupAction);
   }
 
   /** Add a {@code cleanupAction} to execute after the test class finishes. */
@@ -48,7 +46,7 @@ public class AutoCleanupExtension implements AfterEachCallback, AfterAllCallback
     List<Exception> exceptions = new ArrayList<>();
     while (!thingsToCleanUp.isEmpty()) {
       try {
-        thingsToCleanUp.poll().close();
+        thingsToCleanUp.pop().close();
       } catch (Exception e) {
         exceptions.add(e);
       }
