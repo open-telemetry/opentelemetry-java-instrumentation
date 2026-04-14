@@ -176,7 +176,7 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
   public AgentBuilder.Identified.Extendable injectFields(
       AgentBuilder.Identified.Extendable builder) {
 
-    if (fieldInjectionEnabled) {
+    if (fieldInjectionEnabled()) {
       for (Map.Entry<String, String> entry : virtualFieldMappings.entrySet()) {
         /*
          * For each virtual field defined in a current instrumentation we create an agent builder

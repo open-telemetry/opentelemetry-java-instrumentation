@@ -70,7 +70,7 @@ public class UndertowHelper {
   @Nullable
   public Context getServerContext(HttpServerExchange exchange) {
     AttachmentKey<Context> contextKey =
-        (AttachmentKey<Context>) KeyHolder.contextKeys.get(AttachmentKey.class);
+        (AttachmentKey<Context>) KeyHolder.getContextKey(AttachmentKey.class);
     if (contextKey == null) {
       return null;
     }
@@ -81,8 +81,8 @@ public class UndertowHelper {
   private static void attachServerContext(Context context, HttpServerExchange exchange) {
     AttachmentKey<Context> contextKey =
         (AttachmentKey<Context>)
-            KeyHolder.contextKeys.computeIfAbsent(
-                AttachmentKey.class, key -> AttachmentKey.create(Context.class));
+            KeyHolder.computeContextKeyIfAbsent(
+                AttachmentKey.class, () -> AttachmentKey.create(Context.class));
     exchange.putAttachment(contextKey, context);
   }
 
