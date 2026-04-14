@@ -10,7 +10,7 @@ import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 public final class FieldBackedImplementationConfiguration {
   private static boolean fieldInjectionEnabled = true;
 
-  static boolean fieldInjectionEnabled() {
+  static boolean isFieldInjectionEnabled() {
     return fieldInjectionEnabled;
   }
 

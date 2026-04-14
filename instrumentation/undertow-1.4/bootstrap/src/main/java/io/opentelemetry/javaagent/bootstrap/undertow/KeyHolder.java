@@ -33,11 +33,11 @@ import java.util.function.Supplier;
 public final class KeyHolder {
   private static final ConcurrentMap<Class<?>, Object> contextKeys = new ConcurrentHashMap<>();
 
-  public static Object getContextKey(Class<?> keyType) {
+  public static Object get(Class<?> keyType) {
     return contextKeys.get(keyType);
   }
 
-  public static Object computeContextKeyIfAbsent(Class<?> keyType, Supplier<Object> supplier) {
+  public static Object computeIfAbsent(Class<?> keyType, Supplier<Object> supplier) {
     return contextKeys.computeIfAbsent(keyType, unused -> supplier.get());
   }
 
