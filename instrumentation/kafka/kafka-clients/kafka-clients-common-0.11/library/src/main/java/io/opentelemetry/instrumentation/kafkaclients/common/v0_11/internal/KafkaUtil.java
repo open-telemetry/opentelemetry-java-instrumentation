@@ -127,7 +127,9 @@ public final class KafkaUtil {
 
   @Nullable
   public static String extractBootstrapServers(Producer<?, ?> producer) {
-    if (!KafkaProducer.class.equals(producer.getClass())) {
+    if (PRODUCER_CONFIG_FIELD == null
+        || producer == null
+        || !KafkaProducer.class.equals(producer.getClass())) {
       return null;
     }
     try {

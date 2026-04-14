@@ -219,9 +219,7 @@ public abstract class AbstractReactorKafkaTest {
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
     if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
       assertions.add(
-          satisfies(
-              stringKey("messaging.kafka.bootstrap.servers"),
-              val -> val.matches("^localhost:\\d+(,localhost:\\d+)*$")));
+          equalTo(stringKey("messaging.kafka.bootstrap.servers"), kafka.getBootstrapServers()));
     }
     String messageKey = record.key();
     if (messageKey != null) {

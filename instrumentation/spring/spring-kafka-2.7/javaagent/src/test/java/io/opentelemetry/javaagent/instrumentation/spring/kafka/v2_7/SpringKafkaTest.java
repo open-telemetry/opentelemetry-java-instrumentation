@@ -81,25 +81,29 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("producer"),
-              span ->
-                  span.hasName("testSingleTopic publish")
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(MESSAGING_SYSTEM, "kafka"),
-                          equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
-                          equalTo(MESSAGING_OPERATION, "publish"),
-                          satisfies(
-                              MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
-                          satisfies(
-                              MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
-                          equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
-                          satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
-                          equalTo(
-                              stringKey("messaging.kafka.bootstrap.servers"),
-                              EXPERIMENTAL_ATTRIBUTES_ENABLED
-                                  ? kafka.getBootstrapServers()
-                                  : null)));
+              span -> {
+                List<AttributeAssertion> assertions =
+                    asList(
+                        equalTo(MESSAGING_SYSTEM, "kafka"),
+                        equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
+                        equalTo(MESSAGING_OPERATION, "publish"),
+                        satisfies(
+                            MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
+                        satisfies(
+                            MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
+                        equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
+                        satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")));
+                if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+                  assertions.add(
+                      equalTo(
+                          stringKey("messaging.kafka.bootstrap.servers"),
+                          kafka.getBootstrapServers()));
+                }
+                span.hasName("testSingleTopic publish")
+                    .hasKind(SpanKind.PRODUCER)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(assertions);
+              });
 
           producer.set(trace.getSpan(1));
         },
