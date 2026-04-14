@@ -18,10 +18,6 @@ public final class RuntimeMetrics implements AutoCloseable {
 
   private final RuntimeTelemetry delegate;
 
-  RuntimeMetrics(RuntimeTelemetry delegate) {
-    this.delegate = delegate;
-  }
-
   /**
    * Create and start {@link RuntimeMetrics}.
    *
@@ -47,6 +43,10 @@ public final class RuntimeMetrics implements AutoCloseable {
   @Deprecated
   public static RuntimeMetricsBuilder builder(OpenTelemetry openTelemetry) {
     return new RuntimeMetricsBuilder(openTelemetry);
+  }
+
+  RuntimeMetrics(RuntimeTelemetry delegate) {
+    this.delegate = delegate;
   }
 
   /** Stop recording runtime metrics. */

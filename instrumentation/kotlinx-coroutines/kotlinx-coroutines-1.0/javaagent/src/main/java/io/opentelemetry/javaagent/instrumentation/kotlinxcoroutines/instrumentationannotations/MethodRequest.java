@@ -14,6 +14,14 @@ public class MethodRequest {
   @Nullable private final String withSpanValue;
   private final SpanKind spanKind;
 
+  public static MethodRequest create(
+      Class<?> declaringClass,
+      String methodName,
+      @Nullable String withSpanValue,
+      SpanKind spanKind) {
+    return new MethodRequest(declaringClass, methodName, withSpanValue, spanKind);
+  }
+
   private MethodRequest(
       Class<?> declaringClass,
       String methodName,
@@ -23,14 +31,6 @@ public class MethodRequest {
     this.methodName = methodName;
     this.withSpanValue = withSpanValue;
     this.spanKind = spanKind;
-  }
-
-  public static MethodRequest create(
-      Class<?> declaringClass,
-      String methodName,
-      @Nullable String withSpanValue,
-      SpanKind spanKind) {
-    return new MethodRequest(declaringClass, methodName, withSpanValue, spanKind);
   }
 
   public Class<?> getDeclaringClass() {

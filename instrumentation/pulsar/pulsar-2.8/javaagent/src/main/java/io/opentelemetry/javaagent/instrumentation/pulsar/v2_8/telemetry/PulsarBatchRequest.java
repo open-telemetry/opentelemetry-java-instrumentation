@@ -16,13 +16,13 @@ import org.apache.pulsar.common.naming.TopicName;
 public class PulsarBatchRequest extends BasePulsarRequest {
   private final Messages<?> messages;
 
+  public static PulsarBatchRequest create(Messages<?> messages, @Nullable String url) {
+    return new PulsarBatchRequest(messages, getTopicName(messages), parseUrl(url));
+  }
+
   private PulsarBatchRequest(Messages<?> messages, String destination, @Nullable UrlData urlData) {
     super(destination, urlData);
     this.messages = messages;
-  }
-
-  public static PulsarBatchRequest create(Messages<?> messages, @Nullable String url) {
-    return new PulsarBatchRequest(messages, getTopicName(messages), parseUrl(url));
   }
 
   private static String getTopicName(Messages<?> messages) {

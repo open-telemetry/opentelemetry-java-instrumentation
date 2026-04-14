@@ -53,17 +53,6 @@ public final class OpenTelemetryInstrumentationHelper {
   private final boolean sanitizeQuery;
   private final boolean addOperationNameToSpanName;
 
-  private OpenTelemetryInstrumentationHelper(
-      Instrumenter<OpenTelemetryInstrumentationState, ExecutionResult> instrumenter,
-      boolean captureQuery,
-      boolean sanitizeQuery,
-      boolean addOperationNameToSpanName) {
-    this.instrumenter = instrumenter;
-    this.captureQuery = captureQuery;
-    this.sanitizeQuery = sanitizeQuery;
-    this.addOperationNameToSpanName = addOperationNameToSpanName;
-  }
-
   public static OpenTelemetryInstrumentationHelper create(
       OpenTelemetry openTelemetry,
       String instrumentationName,
@@ -90,6 +79,17 @@ public final class OpenTelemetryInstrumentationHelper {
 
     return new OpenTelemetryInstrumentationHelper(
         builder.buildInstrumenter(), captureQuery, sanitizeQuery, addOperationNameToSpanName);
+  }
+
+  private OpenTelemetryInstrumentationHelper(
+      Instrumenter<OpenTelemetryInstrumentationState, ExecutionResult> instrumenter,
+      boolean captureQuery,
+      boolean sanitizeQuery,
+      boolean addOperationNameToSpanName) {
+    this.instrumenter = instrumenter;
+    this.captureQuery = captureQuery;
+    this.sanitizeQuery = sanitizeQuery;
+    this.addOperationNameToSpanName = addOperationNameToSpanName;
   }
 
   public InstrumentationContext<ExecutionResult> beginExecution(

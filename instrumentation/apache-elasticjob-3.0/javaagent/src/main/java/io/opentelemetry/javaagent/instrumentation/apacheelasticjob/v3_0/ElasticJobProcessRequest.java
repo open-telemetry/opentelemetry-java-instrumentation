@@ -18,6 +18,14 @@ public class ElasticJobProcessRequest {
   private final Class<?> userJobClass;
   private final String userMethodName;
 
+  public static ElasticJobProcessRequest create(
+      ShardingContext shardingContext,
+      ElasticJobType jobType,
+      Class<?> userJobClass,
+      String userMethodName) {
+    return new ElasticJobProcessRequest(shardingContext, jobType, userJobClass, userMethodName);
+  }
+
   private ElasticJobProcessRequest(
       ShardingContext shardingContext,
       ElasticJobType jobType,
@@ -36,14 +44,6 @@ public class ElasticJobProcessRequest {
   @Nullable
   private static String emptyToNull(@Nullable String string) {
     return string == null || string.isEmpty() ? null : string;
-  }
-
-  public static ElasticJobProcessRequest create(
-      ShardingContext shardingContext,
-      ElasticJobType jobType,
-      Class<?> userJobClass,
-      String userMethodName) {
-    return new ElasticJobProcessRequest(shardingContext, jobType, userJobClass, userMethodName);
   }
 
   public String getJobName() {
