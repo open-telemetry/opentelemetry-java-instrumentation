@@ -30,7 +30,7 @@ class MetricsInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class StaticInitializerAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit() {
       Metrics.addRegistry(MicrometerSingletons.meterRegistry());
     }

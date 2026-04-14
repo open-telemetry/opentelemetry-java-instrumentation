@@ -13591,6 +13591,10 @@ libraries:
       type: boolean
       default: false
     telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
     - when: otel.instrumentation.spring-batch.experimental-span-attributes=true
       spans:
       - span_kind: INTERNAL

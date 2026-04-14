@@ -44,7 +44,7 @@ public class Tomcat10ServerHandlerAdvice {
       return new AdviceScope(context, scope);
     }
 
-    public void end(Request request, Response response, Throwable throwable) {
+    public void end(Request request, Response response, @Nullable Throwable throwable) {
       helper().end(request, response, throwable, context, scope);
     }
   }

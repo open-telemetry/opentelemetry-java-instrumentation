@@ -14,7 +14,6 @@ import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTra
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.vertx.core.Handler;
-import io.vertx.kafka.client.consumer.impl.KafkaReadStreamImpl;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
@@ -52,7 +51,6 @@ class KafkaReadStreamImplInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static <K, V> Handler<ConsumerRecord<K, V>> onEnter(
-        @Advice.This KafkaReadStreamImpl<K, V> readStream,
         @Advice.Argument(0) Handler<ConsumerRecord<K, V>> handler) {
 
       return new InstrumentedSingleRecordHandler<>(handler);
@@ -65,7 +63,6 @@ class KafkaReadStreamImplInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static <K, V> Handler<ConsumerRecords<K, V>> onEnter(
-        @Advice.This KafkaReadStreamImpl<K, V> readStream,
         @Advice.Argument(0) Handler<ConsumerRecords<K, V>> handler) {
 
       return new InstrumentedBatchRecordsHandler<>(handler);

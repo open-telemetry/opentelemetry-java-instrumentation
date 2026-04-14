@@ -24,13 +24,13 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 
 public abstract class AbstractVertxWebServer extends AbstractVerticle {
-  public static final String CONFIG_HTTP_SERVER_PORT = "http.server.port";
+  static final String CONFIG_HTTP_SERVER_PORT = "http.server.port";
 
-  public abstract void end(HttpServerResponse response, String message);
+  abstract void end(HttpServerResponse response, String message);
 
-  public abstract void end(HttpServerResponse response);
+  abstract void end(HttpServerResponse response);
 
-  public Router buildRouter() {
+  Router buildRouter() {
     Router router = Router.router(vertx);
 
     // verify that calling RoutingContext::next doesn't affect http.route

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.xxljob.v2_1_2;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobConstants.XXL_GLUE_JOB_HANDLER;
 import static io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobConstants.XXL_METHOD_JOB_HANDLER;
@@ -27,6 +28,11 @@ import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class SimpleJobHandlerInstrumentation implements TypeInstrumentation {
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("com.xxl.job.core.handler.IJobHandler");
+  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

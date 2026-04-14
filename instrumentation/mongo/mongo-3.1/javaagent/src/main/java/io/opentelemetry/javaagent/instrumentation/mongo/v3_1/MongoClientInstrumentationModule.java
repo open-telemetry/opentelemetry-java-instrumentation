@@ -61,7 +61,7 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
   @SuppressWarnings("unused")
   public static class MongoClientAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void injectTraceListener(
         @Advice.This MongoClientOptions.Builder builder,
         @Advice.FieldValue("commandListeners") List<CommandListener> commandListeners) {

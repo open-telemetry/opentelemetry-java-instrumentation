@@ -36,7 +36,7 @@ class ResteasyResourceMethodInvokerInstrumentation implements TypeInstrumentatio
   @SuppressWarnings("unused")
   public static class InvokeOnTargetAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This ResourceMethodInvoker resourceInvoker) {
       String name = INVOKER_NAME.get(resourceInvoker);
       ResteasySpanName.INSTANCE.updateServerSpanName(Java8BytecodeBridge.currentContext(), name);

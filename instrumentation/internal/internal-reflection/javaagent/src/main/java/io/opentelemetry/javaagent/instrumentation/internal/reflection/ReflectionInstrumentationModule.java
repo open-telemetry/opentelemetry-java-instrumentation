@@ -43,9 +43,4 @@ public class ReflectionInstrumentationModule extends InstrumentationModule
             "io.opentelemetry.javaagent.instrumentation.internal.reflection.ReflectionHelper")
         .inject(InjectionMode.CLASS_ONLY);
   }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
-  }
 }

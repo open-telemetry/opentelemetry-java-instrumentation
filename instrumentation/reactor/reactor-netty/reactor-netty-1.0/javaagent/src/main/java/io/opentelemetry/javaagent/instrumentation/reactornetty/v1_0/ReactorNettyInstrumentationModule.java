@@ -57,9 +57,4 @@ public class ReactorNettyInstrumentationModule extends InstrumentationModule
         new ResponseReceiverInstrumentation(),
         new TransportConnectorInstrumentation());
   }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
-  }
 }

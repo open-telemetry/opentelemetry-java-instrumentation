@@ -29,7 +29,7 @@ class OpenTelemetryInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings({"ReturnValueIgnored", "unused"})
   public static class InitAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void init() {
       // the sole purpose of this advice is to ensure that ApplicationMeterFactory115 is recognized
       // as helper class and injected into class loader

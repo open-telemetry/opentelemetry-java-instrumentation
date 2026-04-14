@@ -79,7 +79,7 @@ public final class InstrumentationModuleInstaller {
       return parentAgentBuilder;
     }
 
-    if (instrumentationModule.isIndyModule()) {
+    if (AgentDistributionConfig.get().isIndyEnabled()) {
       return installIndyModule(instrumentationModule, parentAgentBuilder);
     } else {
       return installInjectingModule(instrumentationModule, parentAgentBuilder);

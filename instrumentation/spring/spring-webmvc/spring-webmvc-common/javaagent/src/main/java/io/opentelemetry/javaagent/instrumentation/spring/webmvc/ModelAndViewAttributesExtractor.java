@@ -26,9 +26,7 @@ public class ModelAndViewAttributesExtractor implements AttributesExtractor<Mode
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       attributes.put("spring-webmvc.view.name", modelAndView.getViewName());
       View view = modelAndView.getView();
-      if (view != null) {
-        attributes.put("spring-webmvc.view.type", view.getClass().getName());
-      }
+      attributes.put("spring-webmvc.view.type", view == null ? null : view.getClass().getName());
     }
   }
 

@@ -11,13 +11,11 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class XxlJobInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class XxlJobInstrumentationModule extends InstrumentationModule {
 
   public XxlJobInstrumentationModule() {
     super("xxl-job", "xxl-job-2.3.0");
@@ -39,10 +37,5 @@ public class XxlJobInstrumentationModule extends InstrumentationModule
         new ScriptJobHandlerInstrumentation(),
         new SimpleJobHandlerInstrumentation(),
         new GlueJobHandlerInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }
