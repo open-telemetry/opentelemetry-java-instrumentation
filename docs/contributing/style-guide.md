@@ -47,6 +47,9 @@ To run these checks locally:
 Follow the principle of minimal necessary visibility. Use the most restrictive access modifier that
 still allows the code to function correctly.
 
+Static fields should be `private`, except for constant-like static fields with an
+uppercase (`SCREAMING_SNAKE_CASE`) name.
+
 ### Internal packages
 
 Classes in `.internal` packages are not considered public API and may change without notice. These
