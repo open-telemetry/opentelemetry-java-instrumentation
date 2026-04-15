@@ -11,15 +11,7 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_38.metrics
 final class ApplicationDoubleGauge140Incubator extends ApplicationDoubleGauge138
     implements application.io.opentelemetry.api.incubator.metrics.ExtendedDoubleGauge {
 
-  private final DoubleGauge agentDoubleGauge;
-
   ApplicationDoubleGauge140Incubator(DoubleGauge agentDoubleGauge) {
     super(agentDoubleGauge);
-    this.agentDoubleGauge = agentDoubleGauge;
-  }
-
-  @Override
-  public boolean isEnabled() {
-    return agentDoubleGauge.isEnabled();
   }
 }

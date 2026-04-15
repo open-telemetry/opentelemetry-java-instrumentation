@@ -7,14 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_61.metric
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
-import io.opentelemetry.api.incubator.metrics.ExtendedDoubleCounter;
-import io.opentelemetry.api.incubator.metrics.ExtendedDoubleGauge;
-import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogram;
-import io.opentelemetry.api.incubator.metrics.ExtendedDoubleUpDownCounter;
-import io.opentelemetry.api.incubator.metrics.ExtendedLongCounter;
-import io.opentelemetry.api.incubator.metrics.ExtendedLongGauge;
-import io.opentelemetry.api.incubator.metrics.ExtendedLongHistogram;
-import io.opentelemetry.api.incubator.metrics.ExtendedLongUpDownCounter;
 import io.opentelemetry.api.metrics.DoubleCounter;
 import io.opentelemetry.api.metrics.DoubleGauge;
 import io.opentelemetry.api.metrics.DoubleGaugeBuilder;
@@ -48,38 +40,30 @@ class MeterTest {
   private static void testEnabled(Meter meter, boolean expected) {
     LongCounterBuilder counterBuilder = meter.counterBuilder("test");
     LongCounter longCounter = counterBuilder.build();
-    assertThat(longCounter).isInstanceOf(ExtendedLongCounter.class);
-    assertThat(((ExtendedLongCounter) longCounter).isEnabled()).isEqualTo(expected);
+    assertThat(longCounter.isEnabled()).isEqualTo(expected);
 
     DoubleCounter doubleCounter = counterBuilder.ofDoubles().build();
-    assertThat(doubleCounter).isInstanceOf(ExtendedDoubleCounter.class);
-    assertThat(((ExtendedDoubleCounter) doubleCounter).isEnabled()).isEqualTo(expected);
+    assertThat(doubleCounter.isEnabled()).isEqualTo(expected);
 
     LongUpDownCounterBuilder upDownCounterBuilder = meter.upDownCounterBuilder("test");
     LongUpDownCounter longUpDownCounter = upDownCounterBuilder.build();
-    assertThat(longUpDownCounter).isInstanceOf(ExtendedLongUpDownCounter.class);
-    assertThat(((ExtendedLongUpDownCounter) longUpDownCounter).isEnabled()).isEqualTo(expected);
+    assertThat(longUpDownCounter.isEnabled()).isEqualTo(expected);
 
     DoubleUpDownCounter doubleUpDownCounter = upDownCounterBuilder.ofDoubles().build();
-    assertThat(doubleUpDownCounter).isInstanceOf(ExtendedDoubleUpDownCounter.class);
-    assertThat(((ExtendedDoubleUpDownCounter) doubleUpDownCounter).isEnabled()).isEqualTo(expected);
+    assertThat(doubleUpDownCounter.isEnabled()).isEqualTo(expected);
 
     DoubleGaugeBuilder gaugeBuilder = meter.gaugeBuilder("test");
     DoubleGauge doubleGauge = gaugeBuilder.build();
-    assertThat(doubleGauge).isInstanceOf(ExtendedDoubleGauge.class);
-    assertThat(((ExtendedDoubleGauge) doubleGauge).isEnabled()).isEqualTo(expected);
+    assertThat(doubleGauge.isEnabled()).isEqualTo(expected);
 
     LongGauge longGauge = gaugeBuilder.ofLongs().build();
-    assertThat(longGauge).isInstanceOf(ExtendedLongGauge.class);
-    assertThat(((ExtendedLongGauge) longGauge).isEnabled()).isEqualTo(expected);
+    assertThat(longGauge.isEnabled()).isEqualTo(expected);
 
     DoubleHistogramBuilder histogramBuilder = meter.histogramBuilder("test");
     DoubleHistogram doubleHistogram = histogramBuilder.build();
-    assertThat(doubleHistogram).isInstanceOf(ExtendedDoubleHistogram.class);
-    assertThat(((ExtendedDoubleHistogram) doubleHistogram).isEnabled()).isEqualTo(expected);
+    assertThat(doubleHistogram.isEnabled()).isEqualTo(expected);
 
     LongHistogram longHistogram = histogramBuilder.ofLongs().build();
-    assertThat(longHistogram).isInstanceOf(ExtendedLongHistogram.class);
-    assertThat(((ExtendedLongHistogram) longHistogram).isEnabled()).isEqualTo(expected);
+    assertThat(longHistogram.isEnabled()).isEqualTo(expected);
   }
 }

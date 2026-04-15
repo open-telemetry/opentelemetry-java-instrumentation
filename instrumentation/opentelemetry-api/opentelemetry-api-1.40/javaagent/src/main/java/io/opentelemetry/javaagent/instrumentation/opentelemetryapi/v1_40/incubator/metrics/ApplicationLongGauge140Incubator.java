@@ -11,15 +11,7 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_38.metrics
 final class ApplicationLongGauge140Incubator extends ApplicationLongGauge138
     implements application.io.opentelemetry.api.incubator.metrics.ExtendedLongGauge {
 
-  private final LongGauge agentLongGauge;
-
   ApplicationLongGauge140Incubator(LongGauge agentLongGauge) {
     super(agentLongGauge);
-    this.agentLongGauge = agentLongGauge;
-  }
-
-  @Override
-  public boolean isEnabled() {
-    return agentLongGauge.isEnabled();
   }
 }
