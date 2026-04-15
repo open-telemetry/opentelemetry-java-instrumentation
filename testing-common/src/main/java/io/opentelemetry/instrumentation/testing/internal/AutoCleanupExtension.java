@@ -25,11 +25,11 @@ public class AutoCleanupExtension implements AfterEachCallback, AfterAllCallback
   private final Deque<AutoCloseable> thingsToCleanUp = new ConcurrentLinkedDeque<>();
   private final Deque<AutoCloseable> thingsToCleanUpAfterAll = new ConcurrentLinkedDeque<>();
 
-  private AutoCleanupExtension() {}
-
   public static AutoCleanupExtension create() {
     return new AutoCleanupExtension();
   }
+
+  private AutoCleanupExtension() {}
 
   /** Add a {@code cleanupAction} to execute after the test finishes. */
   public void deferCleanup(AutoCloseable cleanupAction) {

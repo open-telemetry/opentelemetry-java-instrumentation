@@ -15,17 +15,17 @@ public class XxlJobHelper {
   private final Instrumenter<XxlJobProcessRequest, Void> instrumenter;
   private final Predicate<Object> failedStatusPredicate;
 
+  public static XxlJobHelper create(
+      Instrumenter<XxlJobProcessRequest, Void> instrumenter,
+      Predicate<Object> failedStatusPredicate) {
+    return new XxlJobHelper(instrumenter, failedStatusPredicate);
+  }
+
   private XxlJobHelper(
       Instrumenter<XxlJobProcessRequest, Void> instrumenter,
       Predicate<Object> failedStatusPredicate) {
     this.instrumenter = instrumenter;
     this.failedStatusPredicate = failedStatusPredicate;
-  }
-
-  public static XxlJobHelper create(
-      Instrumenter<XxlJobProcessRequest, Void> instrumenter,
-      Predicate<Object> failedStatusPredicate) {
-    return new XxlJobHelper(instrumenter, failedStatusPredicate);
   }
 
   @Nullable

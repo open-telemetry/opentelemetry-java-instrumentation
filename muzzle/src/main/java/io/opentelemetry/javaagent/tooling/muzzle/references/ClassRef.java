@@ -30,6 +30,11 @@ public final class ClassRef {
   private final Set<FieldRef> fields;
   private final Set<MethodRef> methods;
 
+  /** Start building a new {@linkplain ClassRef reference}. */
+  public static ClassRefBuilder builder(String className) {
+    return new ClassRefBuilder(className);
+  }
+
   ClassRef(
       Set<Source> sources,
       Set<Flag> flags,
@@ -45,11 +50,6 @@ public final class ClassRef {
     this.interfaceNames = interfaceNames;
     this.fields = fields;
     this.methods = methods;
-  }
-
-  /** Start building a new {@linkplain ClassRef reference}. */
-  public static ClassRefBuilder builder(String className) {
-    return new ClassRefBuilder(className);
   }
 
   /** Returns information about code locations where this class was referenced. */
