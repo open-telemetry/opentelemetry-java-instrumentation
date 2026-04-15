@@ -154,6 +154,10 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
     be Java 8
 * description
   * Short description of what the instrumentation does
+* has_standalone_library
+  * Whether the instrumentation module has a standalone library that can be used outside of the agent
+* has_javaagent
+  * Whether the instrumentation module has a javaagent component that can be used with the OpenTelemetry Java Agent
 * target_versions
   * List of supported versions by the module, broken down by `library` or `javaagent` support
 * scope (See [instrumentation-scope](https://opentelemetry.io/docs/specs/otel/common/instrumentation-scope/)
