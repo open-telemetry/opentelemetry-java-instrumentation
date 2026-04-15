@@ -19,9 +19,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributeType;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.KeyValue;
 import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.Arrays;
@@ -274,6 +276,22 @@ class ValueAttributeTest {
                 span ->
                     span.hasName("test-span")
                         .hasAttributesSatisfyingExactly(equalTo(valueKey("key"), value))));
+  }
+
+  @Test
+  void keyValueListViaSpanBuilderSetAllAttributes() {
+    Value<?> value = Value.of(KeyValue.of("bar", Value.of("baz")));
+    Attributes attributes = Attributes.builder().put(valueKey("foo"), value).build();
+    Tracer tracer = testing.getOpenTelemetry().getTracer("test");
+    Span testSpan = tracer.spanBuilder("test-span").setAllAttributes(attributes).startSpan();
+    testSpan.end();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("test-span")
+                        .hasAttributesSatisfyingExactly(equalTo(valueKey("foo"), value))));
   }
 
   @Test
