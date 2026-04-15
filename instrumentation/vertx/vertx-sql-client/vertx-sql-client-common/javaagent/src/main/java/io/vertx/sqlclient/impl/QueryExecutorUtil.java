@@ -16,12 +16,12 @@ public class QueryExecutorUtil {
 
   public static void setConnectOptions(
       Object queryExecutor, @Nullable SqlConnectOptions connectOptions) {
-    connectOptionsField.set((QueryExecutor) queryExecutor, connectOptions);
+    connectOptionsField.set((QueryExecutor<?, ?, ?>) queryExecutor, connectOptions);
   }
 
   @Nullable
   public static SqlConnectOptions getConnectOptions(Object queryExecutor) {
-    return connectOptionsField.get((QueryExecutor) queryExecutor);
+    return connectOptionsField.get((QueryExecutor<?, ?, ?>) queryExecutor);
   }
 
   private QueryExecutorUtil() {}
