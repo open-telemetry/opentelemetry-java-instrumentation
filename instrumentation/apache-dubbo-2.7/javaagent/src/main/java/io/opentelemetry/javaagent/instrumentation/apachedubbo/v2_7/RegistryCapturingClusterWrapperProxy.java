@@ -10,10 +10,6 @@ import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.cluster.Cluster;
 import org.apache.dubbo.rpc.cluster.Directory;
 
-/**
- * Javaagent proxy for {@link RegistryCapturingClusterWrapper}. Dubbo SPI discovers this class by
- * name, so it must live in the javaagent module (which is not shaded) to keep a stable class name.
- */
 public final class RegistryCapturingClusterWrapperProxy implements Cluster {
 
   private final RegistryCapturingClusterWrapper delegate;

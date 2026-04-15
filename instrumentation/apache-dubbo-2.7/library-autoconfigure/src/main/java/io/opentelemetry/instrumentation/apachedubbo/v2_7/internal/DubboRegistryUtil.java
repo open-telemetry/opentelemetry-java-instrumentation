@@ -184,8 +184,9 @@ public final class DubboRegistryUtil {
       m.setAccessible(true);
       return LOOKUP.unreflect(m);
     } catch (NoSuchMethodException | IllegalAccessException e) {
-      return null;
+      // ignore
     }
+    return null;
   }
 
   @Nullable
@@ -196,7 +197,7 @@ public final class DubboRegistryUtil {
         f.setAccessible(true);
         return LOOKUP.unreflectGetter(f);
       } catch (NoSuchFieldException | IllegalAccessException e) {
-        // continue up the hierarchy
+        // ignore
       }
     }
     return null;
