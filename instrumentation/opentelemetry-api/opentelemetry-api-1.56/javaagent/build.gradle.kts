@@ -12,7 +12,6 @@ dependencies {
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.42:javaagent"))
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.47:javaagent"))
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.50:javaagent"))
-  implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.52:javaagent"))
 
   testImplementation("io.opentelemetry:opentelemetry-api-incubator")
 }
