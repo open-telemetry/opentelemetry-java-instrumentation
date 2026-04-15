@@ -205,6 +205,10 @@ public class GradleParser {
       return;
     }
 
+    if (type.get() == InstrumentationType.JAVAAGENT) {
+      module.setHasJavaAgent(true);
+    }
+
     DependencyInfo dependencyInfo = parseGradleFile(fileContents, type.get());
     versions.addAll(dependencyInfo.versions());
     if (dependencyInfo.minJavaVersionSupported() != null) {
