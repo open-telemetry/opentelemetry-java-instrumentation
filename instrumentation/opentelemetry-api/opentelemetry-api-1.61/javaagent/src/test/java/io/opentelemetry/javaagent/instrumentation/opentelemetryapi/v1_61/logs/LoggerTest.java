@@ -3,11 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_52.incubator.logs;
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_61.logs;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.incubator.logs.ExtendedLogger;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
@@ -29,8 +28,7 @@ class LoggerTest {
   }
 
   private static void testEnabled(Logger logger, boolean expected) {
-    assertThat(((ExtendedLogger) logger).isEnabled(Severity.INFO)).isEqualTo(expected);
-    assertThat(((ExtendedLogger) logger).isEnabled(Severity.INFO, Context.current()))
-        .isEqualTo(expected);
+    assertThat(logger.isEnabled(Severity.INFO)).isEqualTo(expected);
+    assertThat(logger.isEnabled(Severity.INFO, Context.current())).isEqualTo(expected);
   }
 }

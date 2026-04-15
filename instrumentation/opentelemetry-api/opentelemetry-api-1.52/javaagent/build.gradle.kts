@@ -1,17 +1,18 @@
 plugins {
-  id("otel.javaagent-instrumentation")
+  id("otel.javaagent-testing")
 }
 
 dependencies {
-  compileOnly(project(":opentelemetry-api-shaded-for-instrumenting", configuration = "v1_52"))
-  compileOnly("io.opentelemetry:opentelemetry-api-incubator")
-
-  implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
-  implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.27:javaagent"))
-  implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.40:javaagent"))
-  implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.42:javaagent"))
-  implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.47:javaagent"))
-  implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.50:javaagent"))
+  testInstrumentation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.50:javaagent"))
 
   testImplementation("io.opentelemetry:opentelemetry-api-incubator")
+}
+
+configurations.configureEach {
+  if (name.endsWith("testRuntimeClasspath", true) || name.endsWith("testCompileClasspath", true)) {
+    resolutionStrategy {
+      force("io.opentelemetry:opentelemetry-api:1.52.0")
+      force("io.opentelemetry:opentelemetry-api-incubator:1.52.0-alpha")
+    }
+  }
 }

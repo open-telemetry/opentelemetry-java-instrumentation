@@ -17,6 +17,15 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-api-incubator")
 }
 
+configurations.configureEach {
+  if (name.endsWith("testRuntimeClasspath", true) || name.endsWith("testCompileClasspath", true)) {
+    resolutionStrategy {
+      force("io.opentelemetry:opentelemetry-api:1.56.0")
+      force("io.opentelemetry:opentelemetry-api-incubator:1.56.0-alpha")
+    }
+  }
+}
+
 tasks.withType<Test>().configureEach {
   jvmArgs(
     "-Dotel.config.file=$projectDir/src/test/resources/declarative-config.yaml"
