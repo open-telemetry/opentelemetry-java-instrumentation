@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.geode;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.geode.GeodeSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -24,7 +23,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.geode.cache.Region;
 
-public class GeodeRegionInstrumentation implements TypeInstrumentation {
+class GeodeRegionInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("org.apache.geode.cache.Region");
@@ -38,27 +37,16 @@ public class GeodeRegionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(
-                namedOneOf(
-                        "clear",
-                        "create",
-                        "destroy",
-                        "entrySet",
-                        "get",
-                        "getAll",
-                        "invalidate",
-                        "replace")
-                    .or(nameStartsWith("contains"))
-                    .or(nameStartsWith("keySet"))
-                    .or(nameStartsWith("put"))
-                    .or(nameStartsWith("remove"))),
-        this.getClass().getName() + "$SimpleAdvice");
+        namedOneOf(
+                "clear", "create", "destroy", "entrySet", "get", "getAll", "invalidate", "replace")
+            .or(nameStartsWith("contains"))
+            .or(nameStartsWith("keySet"))
+            .or(nameStartsWith("put"))
+            .or(nameStartsWith("remove")),
+        getClass().getName() + "$SimpleAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(namedOneOf("existsValue", "query", "selectValue"))
-            .and(takesArgument(0, String.class)),
-        this.getClass().getName() + "$QueryAdvice");
+        namedOneOf("existsValue", "query", "selectValue").and(takesArgument(0, String.class)),
+        getClass().getName() + "$QueryAdvice");
   }
 
   public static class AdviceScope {
@@ -97,13 +85,13 @@ public class GeodeRegionInstrumentation implements TypeInstrumentation {
   public static class SimpleAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This Region<?, ?> region, @Advice.Origin("#m") String methodName) {
       return AdviceScope.start(region, methodName, null);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
@@ -117,7 +105,7 @@ public class GeodeRegionInstrumentation implements TypeInstrumentation {
   public static class QueryAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This Region<?, ?> region,
         @Advice.Origin("#m") String methodName,
@@ -125,7 +113,7 @@ public class GeodeRegionInstrumentation implements TypeInstrumentation {
       return AdviceScope.start(region, methodName, query);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

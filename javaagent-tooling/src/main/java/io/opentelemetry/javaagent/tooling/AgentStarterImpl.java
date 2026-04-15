@@ -21,6 +21,7 @@ import java.util.ServiceLoader;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -58,13 +59,11 @@ public class AgentStarterImpl implements AgentStarter {
       // LauncherHelper was already loaded before we set up transformer
       instrumentation.retransformClasses(clazz);
       return transformer.hookInserted;
-    } catch (ClassNotFoundException | UnmodifiableClassException ignore) {
-      // ignore
+    } catch (ClassNotFoundException | UnmodifiableClassException ignored) {
+      return false;
     } finally {
       instrumentation.removeTransformer(transformer);
     }
-
-    return false;
   }
 
   @Override
@@ -123,8 +122,16 @@ public class AgentStarterImpl implements AgentStarter {
     // prevents loading InetAddressResolverProvider SPI before agent has started
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/7130
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/10921
-    InetAddressClassFileTransformer transformer = new InetAddressClassFileTransformer();
-    instrumentation.addTransformer(transformer, true);
+    instrumentation.addTransformer(new InetAddressClassFileTransformer(), true);
+    // JDK 26 prints a warning when the value of final field is changed with reflection. Here we
+    // remove the final modifier from the "transformations" field of ByteBuddy's
+    // AgentBuilder.Default class to avoid that warning, as we change that field in
+    // AgentBuilderUtil.
+    instrumentation.addTransformer(new AgentBuilderDefaultClassFileTransformer(), true);
+    // transforms Thread getContextClassLoader and setContextClassLoader calls in
+    // io.opentelemetry.sdk.metrics.internal.state.CallbackRegistration to use doPrivileged so that
+    // security manager wouldn't deny these calls
+    instrumentation.addTransformer(new CallbackRegistrationClassFileTransformer(), true);
   }
 
   @SuppressWarnings("SystemOut")
@@ -245,6 +252,110 @@ public class AgentStarterImpl implements AgentStarter {
       cr.accept(cv, 0);
 
       return hookInserted ? cw.toByteArray() : null;
+    }
+  }
+
+  private static class AgentBuilderDefaultClassFileTransformer implements ClassFileTransformer {
+
+    @Override
+    public byte[] transform(
+        ClassLoader loader,
+        String className,
+        Class<?> classBeingRedefined,
+        ProtectionDomain protectionDomain,
+        byte[] classfileBuffer) {
+      if (loader != getClass().getClassLoader()
+          || !"net/bytebuddy/agent/builder/AgentBuilder$Default".equals(className)) {
+        return null;
+      }
+      ClassReader cr = new ClassReader(classfileBuffer);
+      ClassWriter cw = new ClassWriter(cr, 0);
+      ClassVisitor cv =
+          new ClassVisitor(AsmApi.VERSION, cw) {
+            @Override
+            public FieldVisitor visitField(
+                int access, String name, String descriptor, String signature, Object value) {
+              // remove final modifier
+              if ("transformations".equals(name) && (access & Opcodes.ACC_FINAL) != 0) {
+                access &= ~Opcodes.ACC_FINAL;
+              }
+              return super.visitField(access, name, descriptor, signature, value);
+            }
+          };
+
+      cr.accept(cv, 0);
+
+      return cw.toByteArray();
+    }
+  }
+
+  private static class CallbackRegistrationClassFileTransformer implements ClassFileTransformer {
+
+    @Override
+    public byte[] transform(
+        ClassLoader loader,
+        String className,
+        Class<?> classBeingRedefined,
+        ProtectionDomain protectionDomain,
+        byte[] classfileBuffer) {
+      if (loader != getClass().getClassLoader()
+          || !"io/opentelemetry/sdk/metrics/internal/state/CallbackRegistration"
+              .equals(className)) {
+        return null;
+      }
+      ClassReader cr = new ClassReader(classfileBuffer);
+      ClassWriter cw = new ClassWriter(cr, 0);
+      ClassVisitor cv =
+          new ClassVisitor(AsmApi.VERSION, cw) {
+            @Override
+            public MethodVisitor visitMethod(
+                int access, String name, String descriptor, String signature, String[] exceptions) {
+              MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
+              if (!"invokeCallback".equals(name) && !"<init>".equals(name)) {
+                return mv;
+              }
+              return new MethodVisitor(api, mv) {
+                @Override
+                public void visitMethodInsn(
+                    int opcode,
+                    String ownerClassName,
+                    String methodName,
+                    String descriptor,
+                    boolean isInterface) {
+                  if ("getContextClassLoader".equals(methodName)
+                      && Type.getInternalName(Thread.class).equals(ownerClassName)) {
+                    super.visitMethodInsn(
+                        Opcodes.INVOKESTATIC,
+                        Type.getInternalName(Utils.class),
+                        "getContextClassLoader",
+                        "("
+                            + Type.getDescriptor(Thread.class)
+                            + ")"
+                            + Type.getDescriptor(ClassLoader.class),
+                        false);
+                  } else if ("setContextClassLoader".equals(methodName)
+                      && Type.getInternalName(Thread.class).equals(ownerClassName)) {
+                    super.visitMethodInsn(
+                        Opcodes.INVOKESTATIC,
+                        Type.getInternalName(Utils.class),
+                        "setContextClassLoader",
+                        "("
+                            + Type.getDescriptor(Thread.class)
+                            + Type.getDescriptor(ClassLoader.class)
+                            + ")V",
+                        false);
+                  } else {
+                    super.visitMethodInsn(
+                        opcode, ownerClassName, methodName, descriptor, isInterface);
+                  }
+                }
+              };
+            }
+          };
+
+      cr.accept(cv, 0);
+
+      return cw.toByteArray();
     }
   }
 }

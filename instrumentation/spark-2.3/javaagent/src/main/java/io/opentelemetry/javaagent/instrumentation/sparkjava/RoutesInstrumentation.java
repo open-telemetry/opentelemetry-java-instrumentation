@@ -17,7 +17,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import spark.routematch.RouteMatch;
 
-public class RoutesInstrumentation implements TypeInstrumentation {
+class RoutesInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("spark.route.Routes");
@@ -30,13 +30,13 @@ public class RoutesInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("spark.route.HttpMethod")))
             .and(returns(named("spark.routematch.RouteMatch")))
             .and(isPublic()),
-        this.getClass().getName() + "$FindAdvice");
+        getClass().getName() + "$FindAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class FindAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void routeMatchEnricher(@Advice.Return RouteMatch routeMatch) {
       SparkRouteUpdater.updateHttpRoute(routeMatch);
     }

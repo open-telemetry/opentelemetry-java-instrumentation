@@ -115,8 +115,10 @@ class HttpSpanDecorator extends BaseSpanDecorator {
 
   @Nullable
   protected String getPath(Exchange exchange, Endpoint endpoint) {
-
     String httpUrl = getHttpUrl(exchange, endpoint);
+    if (httpUrl == null) {
+      return null;
+    }
     try {
       URL url = new URL(httpUrl);
       return url.getPath();
@@ -142,6 +144,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
         camelEndpoint);
   }
 
+  @Nullable
   protected String getHttpUrl(Exchange exchange, Endpoint endpoint) {
     Object url = exchange.getIn().getHeader(Exchange.HTTP_URL);
     if (url instanceof String) {

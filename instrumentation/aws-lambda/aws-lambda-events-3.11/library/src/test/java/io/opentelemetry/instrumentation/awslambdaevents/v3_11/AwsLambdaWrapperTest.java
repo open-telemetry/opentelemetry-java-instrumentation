@@ -156,7 +156,7 @@ class AwsLambdaWrapperTest {
                             equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
-  public static final class TestRequestHandlerString implements RequestHandler<String, String> {
+  public static class TestRequestHandlerString implements RequestHandler<String, String> {
 
     @Override
     public String handleRequest(String input, Context context) {
@@ -167,7 +167,7 @@ class AwsLambdaWrapperTest {
     }
   }
 
-  public static final class TestRequestHandlerInteger implements RequestHandler<Integer, String> {
+  public static class TestRequestHandlerInteger implements RequestHandler<Integer, String> {
 
     @Override
     public String handleRequest(Integer input, Context context) {
@@ -201,8 +201,7 @@ class AwsLambdaWrapperTest {
     }
   }
 
-  public static final class TestRequestHandlerCustomType
-      implements RequestHandler<CustomType, String> {
+  public static class TestRequestHandlerCustomType implements RequestHandler<CustomType, String> {
 
     @Override
     public String handleRequest(CustomType input, Context context) {

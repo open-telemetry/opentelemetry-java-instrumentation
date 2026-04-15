@@ -22,6 +22,3 @@ xjc {
   xsdDir.set(layout.projectDirectory.dir("src/main/schema"))
   useJakarta.set(false)
 }
-
-dependencies {
-}

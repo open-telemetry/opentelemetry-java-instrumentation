@@ -1,3 +1,4 @@
+display_name: Apache ShenYu
 description: >
   This instrumentation does not emit telemetry on its own. Instead, it augments existing HTTP server
   spans and HTTP server metrics with the HTTP route and Shenyu specific attributes.

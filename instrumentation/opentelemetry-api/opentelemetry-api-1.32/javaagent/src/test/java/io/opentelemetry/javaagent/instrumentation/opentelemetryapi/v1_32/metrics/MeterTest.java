@@ -86,7 +86,7 @@ class MeterTest {
                                         point
                                             .hasSum(11.0)
                                             .hasBucketBoundaries(10.0)
-                                            .hasAttributesSatisfying(
+                                            .hasAttributesSatisfyingExactly(
                                                 equalTo(stringKey("test"), "test"))))));
   }
 
@@ -122,7 +122,7 @@ class MeterTest {
                                         point
                                             .hasSum(12.1)
                                             .hasBucketBoundaries(10.0)
-                                            .hasAttributesSatisfying(
+                                            .hasAttributesSatisfyingExactly(
                                                 equalTo(stringKey("test"), "test"))))));
   }
 }

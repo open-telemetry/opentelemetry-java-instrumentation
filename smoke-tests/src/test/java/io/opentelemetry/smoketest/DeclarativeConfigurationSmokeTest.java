@@ -23,7 +23,7 @@ class DeclarativeConfigurationSmokeTest extends AbstractSmokeTest<Integer> {
   protected void configure(SmokeTestOptions<Integer> options) {
     options
         .springBoot()
-        .env("OTEL_EXPERIMENTAL_CONFIG_FILE", "declarative-config.yaml")
+        .env("OTEL_CONFIG_FILE", "declarative-config.yaml")
         .extraResources(ResourceMapping.of("declarative-config.yaml", "/declarative-config.yaml"));
   }
 
@@ -44,10 +44,10 @@ class DeclarativeConfigurationSmokeTest extends AbstractSmokeTest<Integer> {
                         resource ->
                             resource
                                 .hasAttribute(SERVICE_NAME, "declarative-config-smoke-test")
-                                .hasAttribute(satisfies(CONTAINER_ID, v -> v.isNotBlank()))
+                                .hasAttribute(satisfies(CONTAINER_ID, val -> val.isNotBlank()))
                                 .hasAttribute(
-                                    satisfies(PROCESS_EXECUTABLE_PATH, v -> v.isNotBlank()))
-                                .hasAttribute(satisfies(HOST_NAME, v -> v.isNotBlank()))
+                                    satisfies(PROCESS_EXECUTABLE_PATH, val -> val.isNotBlank()))
+                                .hasAttribute(satisfies(HOST_NAME, val -> val.isNotBlank()))
                                 .hasAttribute(TELEMETRY_DISTRO_NAME, "opentelemetry-javaagent"))));
   }
 }

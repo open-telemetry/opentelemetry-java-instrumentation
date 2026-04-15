@@ -5,26 +5,18 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java8;
 
-import static java.util.logging.Level.WARNING;
-
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Logger;
+import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetry;
 
-/** The entry point class for runtime metrics support using JMX. */
+/**
+ * The entry point class for runtime metrics support using JMX.
+ *
+ * @deprecated Use {@link RuntimeTelemetry} in the {@code runtime-telemetry} module instead.
+ */
+@Deprecated
 public final class RuntimeMetrics implements AutoCloseable {
 
-  private static final Logger logger = Logger.getLogger(RuntimeMetrics.class.getName());
-
-  private final AtomicBoolean isClosed = new AtomicBoolean();
-  private final List<AutoCloseable> observables;
-
-  RuntimeMetrics(List<AutoCloseable> observables) {
-    this.observables = Collections.unmodifiableList(observables);
-  }
+  private final RuntimeTelemetry delegate;
 
   /**
    * Create and start {@link RuntimeMetrics}.
@@ -33,28 +25,33 @@ public final class RuntimeMetrics implements AutoCloseable {
    * continue until {@link #close()} is called.
    *
    * @param openTelemetry the {@link OpenTelemetry} instance used to record telemetry
+   * @deprecated Use {@link RuntimeTelemetry#create(OpenTelemetry)} in the {@code runtime-telemetry}
+   *     module instead.
    */
+  @Deprecated
   public static RuntimeMetrics create(OpenTelemetry openTelemetry) {
-    return new RuntimeMetricsBuilder(openTelemetry).build();
+    return builder(openTelemetry).build();
   }
 
   /**
    * Create a builder for configuring {@link RuntimeMetrics}.
    *
    * @param openTelemetry the {@link OpenTelemetry} instance used to record telemetry
+   * @deprecated Use {@link RuntimeTelemetry#builder(OpenTelemetry)} in the {@code
+   *     runtime-telemetry} module instead.
    */
+  @Deprecated
   public static RuntimeMetricsBuilder builder(OpenTelemetry openTelemetry) {
     return new RuntimeMetricsBuilder(openTelemetry);
   }
 
-  /** Stop recording JMX metrics. */
+  RuntimeMetrics(RuntimeTelemetry delegate) {
+    this.delegate = delegate;
+  }
+
+  /** Stop recording runtime metrics. */
   @Override
   public void close() {
-    if (!isClosed.compareAndSet(false, true)) {
-      logger.log(WARNING, "RuntimeMetrics is already closed");
-      return;
-    }
-
-    JmxRuntimeMetricsUtil.closeObservers(observables);
+    delegate.close();
   }
 }

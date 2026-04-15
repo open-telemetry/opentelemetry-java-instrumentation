@@ -23,27 +23,27 @@ import io.opentelemetry.instrumentation.xxljob.AbstractXxlJobTest;
 
 class XxlJobTest extends AbstractXxlJobTest {
 
-  private static final MethodJobHandler METHOD_JOB_HANDLER =
+  private static final MethodJobHandler methodJobHandler =
       new MethodJobHandler(
           METHOD_JOB_HANDLER_OBJECT,
           METHOD_JOB_HANDLER_METHOD,
           METHOD_JOB_HANDLER_INIT_METHOD,
           METHOD_JOB_HANDLER_DESTROY_METHOD);
 
-  private static final IJobHandler GROOVY_HANDLER;
+  private static final IJobHandler groovyHandler;
 
   static {
     try {
-      GROOVY_HANDLER = GlueFactory.getInstance().loadNewInstance(GLUE_JOB_GROOVY_SOURCE);
+      groovyHandler = GlueFactory.getInstance().loadNewInstance(GLUE_JOB_GROOVY_SOURCE);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
   }
 
-  private static final GlueJobHandler GLUE_JOB_HANDLER =
-      new GlueJobHandler(GROOVY_HANDLER, DEFAULT_GLUE_UPDATE_TIME);
+  private static final GlueJobHandler glueJobHandler =
+      new GlueJobHandler(groovyHandler, DEFAULT_GLUE_UPDATE_TIME);
 
-  private static final ScriptJobHandler SCRIPT_JOB_HANDLER =
+  private static final ScriptJobHandler scriptJobHandler =
       new ScriptJobHandler(
           2, DEFAULT_GLUE_UPDATE_TIME, GLUE_JOB_SHELL_SCRIPT, GlueTypeEnum.GLUE_SHELL);
 
@@ -54,12 +54,12 @@ class XxlJobTest extends AbstractXxlJobTest {
 
   @Override
   protected IJobHandler getGlueJobHandler() {
-    return GLUE_JOB_HANDLER;
+    return glueJobHandler;
   }
 
   @Override
   protected IJobHandler getScriptJobHandler() {
-    return SCRIPT_JOB_HANDLER;
+    return scriptJobHandler;
   }
 
   @Override
@@ -74,6 +74,6 @@ class XxlJobTest extends AbstractXxlJobTest {
 
   @Override
   protected IJobHandler getMethodHandler() {
-    return METHOD_JOB_HANDLER;
+    return methodJobHandler;
   }
 }

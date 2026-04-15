@@ -9,6 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
+import javax.annotation.Nullable;
 
 public class HibernateOperationScope {
 
@@ -37,6 +38,7 @@ public class HibernateOperationScope {
    * @return operation scope, to be ended with {@link #end(HibernateOperationScope, Throwable)} on
    *     exit advice. Might return {@literal null} when operation should not be captured.
    */
+  @Nullable
   public static HibernateOperationScope start(
       HibernateOperation hibernateOperation,
       Context parentContext,
@@ -69,7 +71,7 @@ public class HibernateOperationScope {
    * @param scope hibernate operation scope or {@literal null} when there is none
    * @param throwable thrown exception
    */
-  public static void end(HibernateOperationScope scope, Throwable throwable) {
+  public static void end(@Nullable HibernateOperationScope scope, @Nullable Throwable throwable) {
 
     CallDepth callDepth = CallDepth.forClass(HibernateOperation.class);
     if (callDepth.decrementAndGet() > 0) {
@@ -81,7 +83,7 @@ public class HibernateOperationScope {
     }
   }
 
-  private void end(Throwable throwable) {
+  private void end(@Nullable Throwable throwable) {
     scope.close();
     instrumenter.end(context, hibernateOperation, null, throwable);
   }

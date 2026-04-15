@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
+import javax.annotation.Nullable;
 
 public class LibertyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RESPONSE> {
 
@@ -26,9 +27,9 @@ public class LibertyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RES
       ServletRequestContext<REQUEST> requestContext,
       REQUEST request,
       RESPONSE response,
-      Throwable throwable,
-      Context context,
-      Scope scope) {
+      @Nullable Throwable throwable,
+      @Nullable Context context,
+      @Nullable Scope scope) {
 
     if (scope == null) {
       return;

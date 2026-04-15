@@ -169,7 +169,7 @@ public final class GrpcTelemetryBuilder {
         new GrpcClientNetworkAttributesGetter();
     GrpcNetworkServerAttributesGetter netServerAttributesGetter =
         new GrpcNetworkServerAttributesGetter();
-    GrpcRpcAttributesGetter rpcAttributesGetter = GrpcRpcAttributesGetter.INSTANCE;
+    GrpcRpcAttributesGetter rpcAttributesGetter = new GrpcRpcAttributesGetter();
 
     clientInstrumenterBuilder
         .setSpanStatusExtractor(GrpcSpanStatusExtractor.CLIENT)
@@ -179,8 +179,7 @@ public final class GrpcTelemetryBuilder {
         .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
         .addAttributesExtractors(additionalClientExtractors)
         .addAttributesExtractor(
-            new GrpcAttributesExtractor(
-                GrpcRpcAttributesGetter.INSTANCE, capturedClientRequestMetadata))
+            new GrpcAttributesExtractor(rpcAttributesGetter, capturedClientRequestMetadata))
         .addOperationMetrics(RpcClientMetrics.get())
         .addContextCustomizer(
             RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
@@ -193,8 +192,7 @@ public final class GrpcTelemetryBuilder {
         .addAttributesExtractor(ServerAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractor(
-            new GrpcAttributesExtractor(
-                GrpcRpcAttributesGetter.INSTANCE, capturedServerRequestMetadata))
+            new GrpcAttributesExtractor(rpcAttributesGetter, capturedServerRequestMetadata))
         .addAttributesExtractors(additionalServerExtractors)
         .addOperationMetrics(RpcServerMetrics.get())
         .addContextCustomizer(
@@ -203,7 +201,7 @@ public final class GrpcTelemetryBuilder {
         serverInstrumenterBuilder, RpcSizeAttributesExtractor.create(rpcAttributesGetter));
 
     return new GrpcTelemetry(
-        serverInstrumenterBuilder.buildServerInstrumenter(GrpcRequestGetter.INSTANCE),
+        serverInstrumenterBuilder.buildServerInstrumenter(new GrpcRequestGetter()),
         // gRPC client interceptors require two phases, one to set up request and one to execute.
         // So we go ahead and inject manually in this instrumentation.
         clientInstrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient()),

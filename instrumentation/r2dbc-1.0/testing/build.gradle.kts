@@ -3,9 +3,9 @@ plugins {
 }
 
 dependencies {
-  implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
-  implementation("io.r2dbc:r2dbc-spi:1.0.0.RELEASE")
+  implementation("io.r2dbc:r2dbc-spi:0.9.0.RELEASE")
 
   implementation(project(":instrumentation-api-incubator"))
   implementation("org.testcontainers:testcontainers-junit-jupiter")

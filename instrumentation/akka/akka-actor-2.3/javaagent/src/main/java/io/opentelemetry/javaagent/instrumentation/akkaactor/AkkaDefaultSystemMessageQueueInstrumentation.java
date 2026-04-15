@@ -21,7 +21,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AkkaDefaultSystemMessageQueueInstrumentation implements TypeInstrumentation {
+class AkkaDefaultSystemMessageQueueInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("akka.dispatch.DefaultSystemMessageQueue"));
@@ -38,13 +38,13 @@ public class AkkaDefaultSystemMessageQueueInstrumentation implements TypeInstrum
         named("systemEnqueue")
             .and(takesArgument(0, named("akka.actor.ActorRef")))
             .and(takesArgument(1, named("akka.dispatch.sysmsg.SystemMessage"))),
-        AkkaDefaultSystemMessageQueueInstrumentation.class.getName() + "$DispatchSystemAdvice");
+        getClass().getName() + "$DispatchSystemAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class DispatchSystemAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static PropagatedContext enter(@Advice.Argument(1) SystemMessage systemMessage) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, systemMessage)) {
@@ -54,7 +54,7 @@ public class AkkaDefaultSystemMessageQueueInstrumentation implements TypeInstrum
       return null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exit(
         @Advice.Argument(1) SystemMessage systemMessage,
         @Advice.Enter PropagatedContext propagatedContext,

@@ -31,7 +31,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JwsAnnotationsInstrumentation implements TypeInstrumentation {
+class JwsAnnotationsInstrumentation implements TypeInstrumentation {
 
   public static final String JWS_WEB_SERVICE_ANNOTATION = "javax.jws.WebService";
 
@@ -57,7 +57,7 @@ public class JwsAnnotationsInstrumentation implements TypeInstrumentation {
             .and(
                 hasSuperMethod(
                     methodIsDeclaredByType(inheritsAnnotation(named(JWS_WEB_SERVICE_ANNOTATION))))),
-        JwsAnnotationsInstrumentation.class.getName() + "$JwsAnnotationsAdvice");
+        getClass().getName() + "$JwsAnnotationsAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -65,11 +65,15 @@ public class JwsAnnotationsInstrumentation implements TypeInstrumentation {
 
     public static class AdviceScope {
       private final CallDepth callDepth;
-      private final JaxWsRequest request;
-      private final Context context;
-      private final Scope scope;
+      @Nullable private final JaxWsRequest request;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
 
-      private AdviceScope(CallDepth callDepth, JaxWsRequest request, Context context, Scope scope) {
+      private AdviceScope(
+          CallDepth callDepth,
+          @Nullable JaxWsRequest request,
+          @Nullable Context context,
+          @Nullable Scope scope) {
         this.callDepth = callDepth;
         this.request = request;
         this.context = context;
@@ -98,14 +102,14 @@ public class JwsAnnotationsInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope startSpan(
         @Advice.This Object target, @Advice.Origin("#m") String methodName) {
       CallDepth callDepth = CallDepth.forClass(WebService.class);
       return AdviceScope.start(callDepth, target, methodName);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
       adviceScope.end(throwable);

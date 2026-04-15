@@ -43,7 +43,9 @@ abstract class AbstractVertxRxHttpServerTest extends AbstractHttpServerTest<Vert
         .onComplete(
             result -> {
               if (!result.succeeded()) {
-                throw new IllegalStateException("Cannot deploy server Verticle", result.cause());
+                future.completeExceptionally(
+                    new IllegalStateException("Cannot deploy server Verticle", result.cause()));
+                return;
               }
               future.complete(null);
             });

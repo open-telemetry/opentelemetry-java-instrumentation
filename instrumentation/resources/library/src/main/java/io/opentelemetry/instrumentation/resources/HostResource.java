@@ -38,12 +38,10 @@ public final class HostResource {
     String hostArch = null;
     try {
       hostArch = System.getProperty("os.arch");
-    } catch (SecurityException t) {
+    } catch (SecurityException ignored) {
       // Ignore
     }
-    if (hostArch != null) {
-      attributes.put(HOST_ARCH, hostArch);
-    }
+    attributes.put(HOST_ARCH, hostArch);
 
     return Resource.create(attributes.build(), SchemaUrls.V1_24_0);
   }

@@ -386,6 +386,7 @@ class KotlinCoroutinesInstrumentationTest {
     assertions.add(equalTo(AttributeKey.doubleKey("floatValue"), 3.0))
     assertions.add(equalTo(AttributeKey.booleanKey("booleanValue"), true))
     assertions.add(equalTo(AttributeKey.stringKey("charValue"), "a"))
+    assertions.add(equalTo(AttributeKey.stringKey("nullableCharValue"), "z"))
     assertions.add(equalTo(AttributeKey.stringKey("stringValue"), "test"))
 
     testing.waitAndAssertTraces(
@@ -411,7 +412,7 @@ class KotlinCoroutinesInstrumentationTest {
   @WithSpan(value = "a1", kind = SpanKind.CLIENT)
   private suspend fun annotated1() {
     delay(10)
-    annotated2(1, true, 'a', 2.0, 3.0f, 4, 5, 6, "test")
+    annotated2(1, true, 'a', 'z', 2.0, 3.0f, 4, 5, 6, "test")
   }
 
   @WithSpan
@@ -419,6 +420,7 @@ class KotlinCoroutinesInstrumentationTest {
     @SpanAttribute byteValue: Byte,
     @SpanAttribute booleanValue: Boolean,
     @SpanAttribute charValue: Char,
+    @SpanAttribute nullableCharValue: Char?,
     @SpanAttribute doubleValue: Double,
     @SpanAttribute floatValue: Float,
     @SpanAttribute intValue: Int,

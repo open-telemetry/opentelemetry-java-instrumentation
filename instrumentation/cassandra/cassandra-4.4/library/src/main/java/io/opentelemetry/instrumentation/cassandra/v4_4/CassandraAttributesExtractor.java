@@ -83,13 +83,12 @@ final class CassandraAttributesExtractor
     if (coordinator != null) {
       updateServerAddressAndPort(attributes, coordinator);
 
-      if (coordinator.getDatacenter() != null) {
-        if (emitStableDatabaseSemconv()) {
-          attributes.put(CASSANDRA_COORDINATOR_DC, coordinator.getDatacenter());
-        }
-        if (emitOldDatabaseSemconv()) {
-          attributes.put(DB_CASSANDRA_COORDINATOR_DC, coordinator.getDatacenter());
-        }
+      String datacenter = coordinator.getDatacenter();
+      if (emitStableDatabaseSemconv()) {
+        attributes.put(CASSANDRA_COORDINATOR_DC, datacenter);
+      }
+      if (emitOldDatabaseSemconv()) {
+        attributes.put(DB_CASSANDRA_COORDINATOR_DC, datacenter);
       }
       if (coordinator.getHostId() != null) {
         if (emitStableDatabaseSemconv()) {

@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -14,7 +15,6 @@ import jakarta.servlet.http.HttpServletResponseWrapper;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.nio.charset.Charset;
 import org.junit.jupiter.api.Test;
 
 class SnippetPrintWriterTest {
@@ -76,7 +76,7 @@ class SnippetPrintWriterTest {
     Servlet5SnippetInjectingResponseWrapper responseWrapper =
         new Servlet5SnippetInjectingResponseWrapper(response, snippet);
 
-    byte[] originalBytes = html.getBytes(Charset.defaultCharset());
+    byte[] originalBytes = html.getBytes(UTF_8);
     for (byte originalByte : originalBytes) {
       responseWrapper.getWriter().write(originalByte);
     }

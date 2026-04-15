@@ -10,12 +10,10 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class CxfInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class CxfInstrumentationModule extends InstrumentationModule {
   public CxfInstrumentationModule() {
     super("cxf", "cxf-3.0", "jaxws");
   }
@@ -23,10 +21,5 @@ public class CxfInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new JaxWsServerFactoryBeanInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

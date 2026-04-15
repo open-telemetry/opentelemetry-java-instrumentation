@@ -32,6 +32,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.ThreadContext;
@@ -72,6 +73,14 @@ public class OpenTelemetryAppender extends AbstractAppender {
    * the {@link LoggerContext}.
    */
   public static void install(OpenTelemetry openTelemetry) {
+    forEachAppender(appender -> appender.setOpenTelemetry(openTelemetry));
+  }
+
+  static void resetForTest() {
+    forEachAppender(OpenTelemetryAppender::resetAppenderForTest);
+  }
+
+  private static void forEachAppender(Consumer<OpenTelemetryAppender> consumer) {
     org.apache.logging.log4j.spi.LoggerContext loggerContextSpi = LogManager.getContext(false);
     if (!(loggerContextSpi instanceof LoggerContext)) {
       return;
@@ -84,7 +93,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
         .forEach(
             appender -> {
               if (appender instanceof OpenTelemetryAppender) {
-                ((OpenTelemetryAppender) appender).setOpenTelemetry(openTelemetry);
+                consumer.accept((OpenTelemetryAppender) appender);
               }
             });
   }
@@ -127,9 +136,21 @@ public class OpenTelemetryAppender extends AbstractAppender {
      *     method name and line number)
      */
     @CanIgnoreReturnValue
-    public B captureCodeAttributes(boolean captureCodeAttributes) {
+    public B setCaptureCodeAttributes(boolean captureCodeAttributes) {
       this.captureCodeAttributes = captureCodeAttributes;
       return asBuilder();
+    }
+
+    /**
+     * Sets whether the code attributes (file name, class name, method name and line number) should
+     * be set to logs.
+     *
+     * @deprecated Use {@link #setCaptureCodeAttributes(boolean)} instead.
+     */
+    @Deprecated
+    @CanIgnoreReturnValue
+    public B captureCodeAttributes(boolean captureCodeAttributes) {
+      return setCaptureCodeAttributes(captureCodeAttributes);
     }
 
     /** Sets whether log4j {@link MapMessage} attributes should be copied to logs. */
@@ -196,6 +217,10 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
     @Override
     public OpenTelemetryAppender build() {
+      if (captureEventName) {
+        LOGGER.warn(
+            "The captureEventName setting is deprecated and will be removed in a future version.");
+      }
       OpenTelemetry openTelemetry = this.openTelemetry;
       return new OpenTelemetryAppender(
           getName(),
@@ -276,6 +301,18 @@ public class OpenTelemetryAppender extends AbstractAppender {
     // now emit
     for (LogEventToReplay eventToReplay : eventsToReplay) {
       emit(openTelemetry, eventToReplay);
+    }
+  }
+
+  private void resetAppenderForTest() {
+    Lock writeLock = lock.writeLock();
+    writeLock.lock();
+    try {
+      openTelemetry = null;
+      eventsToReplay.clear();
+      replayLimitWarningLogged.set(false);
+    } finally {
+      writeLock.unlock();
     }
   }
 

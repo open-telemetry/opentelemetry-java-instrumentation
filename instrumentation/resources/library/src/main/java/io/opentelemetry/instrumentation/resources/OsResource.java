@@ -38,7 +38,7 @@ public final class OsResource {
     String os;
     try {
       os = System.getProperty("os.name");
-    } catch (SecurityException t) {
+    } catch (SecurityException ignored) {
       // Security manager enabled, can't provide much os information.
       return Resource.empty();
     }
@@ -50,9 +50,7 @@ public final class OsResource {
     AttributesBuilder attributes = Attributes.builder();
 
     String osName = getOs(os);
-    if (osName != null) {
-      attributes.put(OS_TYPE, osName);
-    }
+    attributes.put(OS_TYPE, osName);
 
     String version = null;
     try {
@@ -60,9 +58,7 @@ public final class OsResource {
     } catch (SecurityException e) {
       // Ignore
     }
-    if (version != null) {
-      attributes.put(OS_VERSION, version);
-    }
+    attributes.put(OS_VERSION, version);
     String osDescription = version != null ? os + ' ' + version : os;
     attributes.put(OS_DESCRIPTION, osDescription);
 

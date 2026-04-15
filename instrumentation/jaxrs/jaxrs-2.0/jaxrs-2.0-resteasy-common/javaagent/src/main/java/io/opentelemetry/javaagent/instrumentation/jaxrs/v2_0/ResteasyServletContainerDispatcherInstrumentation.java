@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
@@ -19,7 +18,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ResteasyServletContainerDispatcherInstrumentation implements TypeInstrumentation {
+class ResteasyServletContainerDispatcherInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -28,16 +27,14 @@ public class ResteasyServletContainerDispatcherInstrumentation implements TypeIn
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isMethod().and(named("service")),
-        ResteasyServletContainerDispatcherInstrumentation.class.getName() + "$ServiceAdvice");
+    transformer.applyAdviceToMethod(named("service"), getClass().getName() + "$ServiceAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ServiceAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(
         @Advice.FieldValue("servletMappingPrefix") String servletMappingPrefix) {
       Context context =
@@ -45,7 +42,7 @@ public class ResteasyServletContainerDispatcherInstrumentation implements TypeIn
       return context != null ? context.makeCurrent() : null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();

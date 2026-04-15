@@ -11,6 +11,7 @@ import static java.util.Collections.singletonList;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import java.util.List;
+import javax.annotation.Nullable;
 
 public class AkkaHttpUtil {
 
@@ -34,6 +35,7 @@ public class AkkaHttpUtil {
         .orElse(emptyList());
   }
 
+  @Nullable
   public static String protocolName(HttpRequest request) {
     String protocol = request.protocol().value();
     if (protocol.startsWith("HTTP/")) {
@@ -42,6 +44,7 @@ public class AkkaHttpUtil {
     return null;
   }
 
+  @Nullable
   public static String protocolVersion(HttpRequest request) {
     String protocol = request.protocol().value();
     if (protocol.startsWith("HTTP/")) {

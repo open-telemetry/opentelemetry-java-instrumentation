@@ -41,7 +41,6 @@ import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -264,7 +263,7 @@ public abstract class AbstractSqsTracingTest {
                     span ->
                         span.hasName("process child")
                             .hasParent(trace.getSpan(1))
-                            .hasAttributes(Attributes.empty())));
+                            .hasTotalAttributeCount(0)));
   }
 
   @Test
@@ -341,10 +340,7 @@ public abstract class AbstractSqsTracingTest {
               List<Consumer<SpanDataAssert>> assertions =
                   new ArrayList<>(
                       asList(
-                          span ->
-                              span.hasName("parent")
-                                  .hasNoParent()
-                                  .hasAttributes(Attributes.empty()),
+                          span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                           span ->
                               span.hasName("SQS.ReceiveMessage")
                                   .hasKind(SpanKind.CLIENT)
@@ -424,7 +420,7 @@ public abstract class AbstractSqsTracingTest {
                           span ->
                               span.hasName("process child")
                                   .hasParent(processSpan.get())
-                                  .hasAttributes(Attributes.empty())));
+                                  .hasTotalAttributeCount(0)));
 
               // on jdk8 the order of the "SQS.ReceiveMessage" and "testSdkSqs receive"
               // spans can vary
@@ -448,10 +444,10 @@ public abstract class AbstractSqsTracingTest {
     sqsClient.createQueue("testSdkSqs2");
     SendMessageRequest send =
         new SendMessageRequest(
-            "http://localhost:$sqsPort/000000000000/testSdkSqs2", "{\"type\": \"hello\"}");
+            "http://localhost:" + sqsPort + "/000000000000/testSdkSqs2", "{\"type\": \"hello\"}");
     sqsClient.sendMessage(send);
     ReceiveMessageRequest receive =
-        new ReceiveMessageRequest("http://localhost:$sqsPort/000000000000/testSdkSqs2");
+        new ReceiveMessageRequest("http://localhost:" + sqsPort + "/000000000000/testSdkSqs2");
     sqsClient.receiveMessage(receive);
     sqsClient.sendMessage(send);
     sqsClient.receiveMessage(receive);

@@ -26,6 +26,6 @@ class ContextExtensionInstrumentationTest {
     assertThat(context2.get(animalKey)).isEqualTo("cat")
     // instrumentation does not preserve context identity due to conversion between application and
     // agent context
-    assert(context1 != context2) { "Not instrumented" }
+    assertThat(context1).isNotSameAs(context2)
   }
 }

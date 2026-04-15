@@ -12,15 +12,15 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameE
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
-public final class ExternalAnnotationSingletons {
+public class ExternalAnnotationSingletons {
 
-  private static final Instrumenter<ClassAndMethod, Void> INSTRUMENTER;
+  private static final Instrumenter<ClassAndMethod, Void> instrumenter;
 
   static {
     CodeAttributesGetter<ClassAndMethod> codeAttributesGetter =
         ClassAndMethod.codeAttributesGetter();
 
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<ClassAndMethod, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.external-annotations",
@@ -30,7 +30,7 @@ public final class ExternalAnnotationSingletons {
   }
 
   public static Instrumenter<ClassAndMethod, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private ExternalAnnotationSingletons() {}

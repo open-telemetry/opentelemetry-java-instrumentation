@@ -200,20 +200,21 @@ public abstract class AbstractDubboTraceChainTest {
                                     maybeStablePeerService(),
                                     hasServicePeerName() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
-                                satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)),
+                                satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS,
-                                    k -> assertLatestDeps(k, a -> a.isInstanceOf(String.class))),
+                                    val ->
+                                        assertLatestDeps(val, v -> v.isInstanceOf(String.class))),
                                 satisfies(
                                     NETWORK_PEER_PORT,
-                                    k -> assertLatestDeps(k, a -> a.isInstanceOf(Long.class))),
+                                    val -> assertLatestDeps(val, v -> v.isInstanceOf(Long.class))),
                                 satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType)),
                     span ->
                         span.hasName(
                                 "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
                                 equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "dubbo" : null),
                                 equalTo(
@@ -226,8 +227,14 @@ public abstract class AbstractDubboTraceChainTest {
                                     emitStableRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello"
                                         : "hello"),
-                                satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
-                                satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class))),
+                                equalTo(
+                                    maybeStablePeerService(),
+                                    hasServicePeerName() && Boolean.getBoolean("testLatestDeps")
+                                        ? "test-peer-service"
+                                        : null),
+                                satisfies(
+                                    NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
+                                satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class))),
                     span ->
                         span.hasName("org.apache.dubbo.rpc.service.GenericService/$invoke")
                             .hasKind(SpanKind.CLIENT)
@@ -249,20 +256,21 @@ public abstract class AbstractDubboTraceChainTest {
                                     maybeStablePeerService(),
                                     hasServicePeerName() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
-                                satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)),
+                                satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS,
-                                    k -> assertLatestDeps(k, a -> a.isInstanceOf(String.class))),
+                                    val ->
+                                        assertLatestDeps(val, v -> v.isInstanceOf(String.class))),
                                 satisfies(
                                     NETWORK_PEER_PORT,
-                                    k -> assertLatestDeps(k, a -> a.isInstanceOf(Long.class))),
+                                    val -> assertLatestDeps(val, v -> v.isInstanceOf(Long.class))),
                                 satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType)),
                     span ->
                         span.hasName(
                                 "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(3))
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
                                 equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "dubbo" : null),
                                 equalTo(
@@ -275,8 +283,15 @@ public abstract class AbstractDubboTraceChainTest {
                                     emitStableRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"
                                         : "hello"),
-                                satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
-                                satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)))));
+                                equalTo(
+                                    maybeStablePeerService(),
+                                    hasServicePeerName() && Boolean.getBoolean("testLatestDeps")
+                                        ? "test-peer-service"
+                                        : null),
+                                satisfies(
+                                    NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
+                                satisfies(
+                                    NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)))));
 
     if (emitOldRpcSemconv()) {
       testing()
@@ -327,7 +342,8 @@ public abstract class AbstractDubboTraceChainTest {
                                                   equalTo(RPC_METHOD, "$invoke"),
                                                   equalTo(SERVER_ADDRESS, "localhost"),
                                                   satisfies(
-                                                      SERVER_PORT, k -> k.isInstanceOf(Long.class)),
+                                                      SERVER_PORT,
+                                                      val -> val.isInstanceOf(Long.class)),
                                                   satisfies(
                                                       NETWORK_TYPE,
                                                       AbstractDubboTest::assertNetworkType)),
@@ -340,7 +356,8 @@ public abstract class AbstractDubboTraceChainTest {
                                                   equalTo(RPC_METHOD, "$invoke"),
                                                   equalTo(SERVER_ADDRESS, "localhost"),
                                                   satisfies(
-                                                      SERVER_PORT, k -> k.isInstanceOf(Long.class)),
+                                                      SERVER_PORT,
+                                                      val -> val.isInstanceOf(Long.class)),
                                                   satisfies(
                                                       NETWORK_TYPE,
                                                       AbstractDubboTest::assertNetworkType))))));
@@ -393,7 +410,7 @@ public abstract class AbstractDubboTraceChainTest {
                                                   equalTo(SERVER_ADDRESS, "localhost"),
                                                   satisfies(
                                                       SERVER_PORT,
-                                                      k -> k.isInstanceOf(Long.class))),
+                                                      val -> val.isInstanceOf(Long.class))),
                                           point ->
                                               point.hasAttributesSatisfyingExactly(
                                                   equalTo(RPC_SYSTEM_NAME, "dubbo"),
@@ -403,7 +420,7 @@ public abstract class AbstractDubboTraceChainTest {
                                                   equalTo(SERVER_ADDRESS, "localhost"),
                                                   satisfies(
                                                       SERVER_PORT,
-                                                      k -> k.isInstanceOf(Long.class)))))));
+                                                      val -> val.isInstanceOf(Long.class)))))));
     }
   }
 
@@ -477,20 +494,21 @@ public abstract class AbstractDubboTraceChainTest {
                                     maybeStablePeerService(),
                                     hasServicePeerName() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
-                                satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)),
+                                satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS,
-                                    k -> assertLatestDeps(k, a -> a.isInstanceOf(String.class))),
+                                    val ->
+                                        assertLatestDeps(val, v -> v.isInstanceOf(String.class))),
                                 satisfies(
                                     NETWORK_PEER_PORT,
-                                    k -> assertLatestDeps(k, a -> a.isInstanceOf(Long.class))),
+                                    val -> assertLatestDeps(val, v -> v.isInstanceOf(Long.class))),
                                 satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType)),
                     span ->
                         span.hasName(
                                 "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
                                 equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "dubbo" : null),
                                 equalTo(
@@ -503,8 +521,15 @@ public abstract class AbstractDubboTraceChainTest {
                                     emitStableRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello"
                                         : "hello"),
-                                satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
-                                satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)))));
+                                equalTo(
+                                    maybeStablePeerService(),
+                                    hasServicePeerName() && Boolean.getBoolean("testLatestDeps")
+                                        ? "test-peer-service"
+                                        : null),
+                                satisfies(
+                                    NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
+                                satisfies(
+                                    NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)))));
 
     if (emitOldRpcSemconv()) {
       testing()
@@ -548,7 +573,8 @@ public abstract class AbstractDubboTraceChainTest {
                                                   equalTo(RPC_METHOD, "$invoke"),
                                                   equalTo(SERVER_ADDRESS, "localhost"),
                                                   satisfies(
-                                                      SERVER_PORT, k -> k.isInstanceOf(Long.class)),
+                                                      SERVER_PORT,
+                                                      val -> val.isInstanceOf(Long.class)),
                                                   satisfies(
                                                       NETWORK_TYPE,
                                                       AbstractDubboTest::assertNetworkType))))));
@@ -595,7 +621,7 @@ public abstract class AbstractDubboTraceChainTest {
                                                   equalTo(SERVER_ADDRESS, "localhost"),
                                                   satisfies(
                                                       SERVER_PORT,
-                                                      k -> k.isInstanceOf(Long.class)))))));
+                                                      val -> val.isInstanceOf(Long.class)))))));
     }
   }
 }

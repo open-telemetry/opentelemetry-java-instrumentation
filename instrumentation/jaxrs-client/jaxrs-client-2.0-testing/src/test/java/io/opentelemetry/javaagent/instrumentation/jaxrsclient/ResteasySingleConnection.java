@@ -57,7 +57,7 @@ class ResteasySingleConnection implements SingleConnection {
     response.close();
 
     String responseId = response.getHeaderString(REQUEST_ID_HEADER);
-    if (Objects.equals(requestId, responseId)) {
+    if (!Objects.equals(requestId, responseId)) {
       throw new IllegalStateException(
           String.format("Received response with id %s, expected %s", responseId, requestId));
     }

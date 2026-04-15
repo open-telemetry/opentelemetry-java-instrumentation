@@ -1,3 +1,4 @@
+display_name: AWS SDK
 description: >
   This instrumentation covers the AWS SDK 2.2+ client library, enabling messaging and client spans
   and metrics for calls to AWS services including DynamoDB, EC2, Kinesis, Lambda, RDS, S3, SNS/SQS

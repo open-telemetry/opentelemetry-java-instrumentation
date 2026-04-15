@@ -10,16 +10,16 @@ import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.Elasti
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticsearchTransportInstrumenterFactory;
 import org.elasticsearch.action.ActionResponse;
 
-public final class Elasticsearch5TransportSingletons {
+public class Elasticsearch5TransportSingletons {
 
-  private static final Instrumenter<ElasticTransportRequest, ActionResponse> INSTRUMENTER =
+  private static final Instrumenter<ElasticTransportRequest, ActionResponse> instrumenter =
       ElasticsearchTransportInstrumenterFactory.create(
           "io.opentelemetry.elasticsearch-transport-5.0",
           new Elasticsearch5TransportExperimentalAttributesExtractor(),
           new Elasticsearch5TransportAttributesGetter());
 
   public static Instrumenter<ElasticTransportRequest, ActionResponse> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private Elasticsearch5TransportSingletons() {}

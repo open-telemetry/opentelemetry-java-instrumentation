@@ -17,7 +17,7 @@ import java.time.Duration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-public class JmxTelemetryTest {
+class JmxTelemetryTest {
 
   @Test
   void createDefault() {

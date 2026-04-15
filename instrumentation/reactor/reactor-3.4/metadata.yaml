@@ -1,4 +1,7 @@
+display_name: Reactor
 description: >
-  This instrumentation provides a bridge between the agent's OpenTelemetry context and the
-  application's OpenTelemetry context when using Reactor 3.4+ with ContextView API.
-classification: internal
+  This instrumentation enables context propagation for Project Reactor reactive streams, it does
+  not emit any telemetry on its own.
+features:
+  - CONTEXT_PROPAGATION
+library_link: https://projectreactor.io/

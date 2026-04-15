@@ -10,10 +10,10 @@ import io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkTelemetryFact
 
 public final class AwsSdkSingletons {
 
-  private static final AwsSdkTelemetry TELEMETRY = AwsSdkTelemetryFactory.legacyLibraryTelemetry();
+  private static final AwsSdkTelemetry telemetry = AwsSdkTelemetryFactory.legacyLibraryTelemetry();
 
   public static AwsSdkTelemetry telemetry() {
-    return TELEMETRY;
+    return telemetry;
   }
 
   private AwsSdkSingletons() {}

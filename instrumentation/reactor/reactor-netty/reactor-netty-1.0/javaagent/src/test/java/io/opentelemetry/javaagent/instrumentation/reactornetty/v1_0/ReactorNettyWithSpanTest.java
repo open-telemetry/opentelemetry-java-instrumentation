@@ -40,7 +40,7 @@ class ReactorNettyWithSpanTest {
   }
 
   @Test
-  public void testSuccessfulNestedUnderWithSpan() {
+  void testSuccessfulNestedUnderWithSpan() {
     HttpClient httpClient = HttpClient.create();
 
     Mono<Integer> httpRequest =

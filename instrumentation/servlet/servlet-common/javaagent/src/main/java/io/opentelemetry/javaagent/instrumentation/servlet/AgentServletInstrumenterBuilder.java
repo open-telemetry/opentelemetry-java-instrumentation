@@ -24,7 +24,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
+public class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
 
   private static final List<String> CAPTURE_REQUEST_PARAMETERS =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
@@ -32,8 +32,6 @@ public final class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
   private static final boolean CAPTURE_EXPERIMENTAL_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
           .getBoolean("experimental_span_attributes/development", false);
-
-  private AgentServletInstrumenterBuilder() {}
 
   private final List<ContextCustomizer<? super ServletRequestContext<REQUEST>>> contextCustomizers =
       new ArrayList<>();
@@ -43,6 +41,8 @@ public final class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
   public static <REQUEST, RESPONSE> AgentServletInstrumenterBuilder<REQUEST, RESPONSE> create() {
     return new AgentServletInstrumenterBuilder<>();
   }
+
+  private AgentServletInstrumenterBuilder() {}
 
   @CanIgnoreReturnValue
   public AgentServletInstrumenterBuilder<REQUEST, RESPONSE> addContextCustomizer(

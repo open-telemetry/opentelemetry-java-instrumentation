@@ -27,13 +27,11 @@ final class OpenSearchRestAttributesGetter
   }
 
   @Override
-  @Nullable
   public String getDbQueryText(OpenSearchRestRequest request) {
     return request.getMethod() + " " + request.getEndpoint();
   }
 
   @Override
-  @Nullable
   public String getDbOperationName(OpenSearchRestRequest request) {
     return request.getMethod();
   }

@@ -61,18 +61,18 @@ class Netty38ServerTest extends AbstractHttpServerTest<ServerBootstrap> {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
-  static final LoggingHandler LOGGING_HANDLER;
+  static final LoggingHandler loggingHandler;
 
   static {
     InternalLoggerFactory.setDefaultFactory(new Slf4JLoggerFactory());
-    LOGGING_HANDLER =
+    loggingHandler =
         new LoggingHandler(Netty38ServerTest.class.getName(), InternalLogLevel.DEBUG, true);
   }
 
   @Override
   protected ServerBootstrap setupServer() {
     ServerBootstrap bootstrap = new ServerBootstrap(new NioServerSocketChannelFactory());
-    bootstrap.setParentHandler(LOGGING_HANDLER);
+    bootstrap.setParentHandler(loggingHandler);
     bootstrap.setPipelineFactory(Netty38ServerTest::channelPipeline);
 
     InetSocketAddress address = new InetSocketAddress(port);
@@ -101,7 +101,7 @@ class Netty38ServerTest extends AbstractHttpServerTest<ServerBootstrap> {
 
   private static ChannelPipeline channelPipeline() {
     ChannelPipeline channelPipeline = new DefaultChannelPipeline();
-    channelPipeline.addFirst("logger", LOGGING_HANDLER);
+    channelPipeline.addFirst("logger", loggingHandler);
 
     channelPipeline.addLast("http-codec", new HttpServerCodec());
     channelPipeline.addLast(

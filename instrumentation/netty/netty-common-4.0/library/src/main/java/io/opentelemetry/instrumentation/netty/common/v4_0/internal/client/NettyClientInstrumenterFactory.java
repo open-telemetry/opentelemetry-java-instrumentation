@@ -46,12 +46,12 @@ public final class NettyClientInstrumenterFactory {
   // via openTelemetry.getConfigProvider()
   public NettyConnectionInstrumenter createConnectionInstrumenter(OpenTelemetry openTelemetry) {
     if (connectionTelemetryState == NettyConnectionInstrumentationFlag.DISABLED) {
-      return NoopConnectionInstrumenter.INSTANCE;
+      return new NoopConnectionInstrumenter();
     }
 
     boolean connectionTelemetryFullyEnabled =
         connectionTelemetryState == NettyConnectionInstrumentationFlag.ENABLED;
-    NettyConnectHttpAttributesGetter getter = NettyConnectHttpAttributesGetter.INSTANCE;
+    NettyConnectHttpAttributesGetter getter = new NettyConnectHttpAttributesGetter();
 
     InstrumenterBuilder<NettyConnectionRequest, Channel> builder =
         this.builder.instrumenterBuilder(NettyConnectionRequest::spanName);
@@ -84,7 +84,7 @@ public final class NettyClientInstrumenterFactory {
 
   public NettySslInstrumenter createSslInstrumenter() {
     if (sslTelemetryState == NettyConnectionInstrumentationFlag.DISABLED) {
-      return NoopSslInstrumenter.INSTANCE;
+      return new NoopSslInstrumenter();
     }
 
     boolean sslTelemetryFullyEnabled =

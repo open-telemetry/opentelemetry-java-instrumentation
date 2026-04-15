@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.xxljob;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.xxljob.ExperimentalTestHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Arrays.asList;
 
@@ -94,7 +95,7 @@ public abstract class AbstractXxlJobTest {
   }
 
   @Test
-  public void testMethodJob() {
+  void testMethodJob() {
     // method handle is null if test is not supported by tested version of the library
     Assumptions.assumeTrue(getMethodHandler() != null);
 
@@ -164,14 +165,15 @@ public abstract class AbstractXxlJobTest {
       String spanName, StatusData statusData, GlueTypeEnum glueType, int jobId) {
     List<AttributeAssertion> attributeAssertions = new ArrayList<>();
     attributeAssertions.addAll(attributeAssertions(glueType));
-    attributeAssertions.add(equalTo(longKey("scheduling.xxl-job.job.id"), jobId));
+    attributeAssertions.add(
+        equalTo(longKey("scheduling.xxl-job.job.id"), experimental((long) jobId)));
 
     checkXxlJob(spanName, statusData, attributeAssertions);
   }
 
   private static List<AttributeAssertion> attributeAssertions(GlueTypeEnum glueType) {
     return asList(
-        equalTo(stringKey("job.system"), "xxl-job"),
-        equalTo(stringKey("scheduling.xxl-job.glue.type"), glueType.getDesc()));
+        equalTo(stringKey("job.system"), experimental("xxl-job")),
+        equalTo(stringKey("scheduling.xxl-job.glue.type"), experimental(glueType.getDesc())));
   }
 }

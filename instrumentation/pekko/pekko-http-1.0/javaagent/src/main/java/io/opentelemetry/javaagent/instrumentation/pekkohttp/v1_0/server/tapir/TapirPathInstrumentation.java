@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import sttp.tapir.server.interceptor.Interceptor;
 import sttp.tapir.server.pekkohttp.PekkoHttpServerOptions;
 
-public class TapirPathInstrumentation implements TypeInstrumentation {
+class TapirPathInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -28,7 +28,7 @@ public class TapirPathInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("pekkoHttpServerOptions").and(takesArguments(0)),
-        this.getClass().getName() + "$ApplyAdvice");
+        getClass().getName() + "$ApplyAdvice");
   }
 
   @SuppressWarnings({
@@ -37,7 +37,7 @@ public class TapirPathInstrumentation implements TypeInstrumentation {
   }) // options.prependInterceptor takes higher-kinded type, not possible from java
   public static class ApplyAdvice {
     @Advice.AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Object onExit(@Advice.Return PekkoHttpServerOptions options) {
 
       return options.prependInterceptor((Interceptor) TapirRouteHandler.interceptor());

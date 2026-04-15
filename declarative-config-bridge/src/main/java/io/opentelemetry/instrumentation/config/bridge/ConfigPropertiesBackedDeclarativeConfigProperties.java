@@ -47,6 +47,10 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put(
         "general.http.server.response_captured_headers",
         "otel.instrumentation.http.server.capture-response-headers");
+    SPECIAL_MAPPINGS.put(
+        "general.sanitization.url.sensitive_query_parameters/development",
+        "otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters");
+    SPECIAL_MAPPINGS.put("general.semconv_stability.opt_in", "otel.semconv-stability.opt-in");
     // moving common http, database, messaging, and gen_ai configs under common
     SPECIAL_MAPPINGS.put(
         "java.common.http.known_methods", "otel.instrumentation.http.known-methods");
@@ -59,12 +63,6 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put(
         "java.common.http.server.emit_experimental_telemetry/development",
         "otel.instrumentation.http.server.emit-experimental-telemetry");
-    SPECIAL_MAPPINGS.put(
-        "java.common.database.statement_sanitizer.enabled",
-        "otel.instrumentation.common.db-statement-sanitizer.enabled");
-    SPECIAL_MAPPINGS.put(
-        "java.common.database.sqlcommenter/development.enabled",
-        "otel.instrumentation.common.experimental.db-sqlcommenter.enabled");
     SPECIAL_MAPPINGS.put(
         "java.common.messaging.receive_telemetry/development.enabled",
         "otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
@@ -173,6 +171,10 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     }
     List<String> list = configProperties.getList(resolvePropertyKey(name));
     if (list.isEmpty()) {
+      // returning null instead of empty list here has some implications,
+      // such as that there's no way to explicitly set an empty list using env var / sys props,
+      // e.g. for known_methods or sensitive_query_parameters,
+      // but it seems safer to return null and use the default value in these cases
       return null;
     }
     return (List<T>) list;

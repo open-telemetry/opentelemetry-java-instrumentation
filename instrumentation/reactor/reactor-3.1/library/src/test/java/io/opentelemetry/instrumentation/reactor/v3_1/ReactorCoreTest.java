@@ -5,8 +5,10 @@
 
 package io.opentelemetry.instrumentation.reactor.v3_1;
 
+import static io.opentelemetry.api.common.AttributeKey.booleanKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.lang.invoke.MethodType.methodType;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -99,7 +101,7 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
                 span ->
                     span.hasName("inner")
                         .hasParent(trace.getSpan(0))
-                        .hasAttributes(attributeEntry("inner", "foo"))));
+                        .hasAttributesSatisfyingExactly(equalTo(stringKey("inner"), "foo"))));
   }
 
   @Test
@@ -155,7 +157,7 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
                 span ->
                     span.hasName("inner")
                         .hasParent(trace.getSpan(0))
-                        .hasAttributes(attributeEntry("inner", "foo"))));
+                        .hasAttributesSatisfyingExactly(equalTo(stringKey("inner"), "foo"))));
   }
 
   @Test
@@ -191,13 +193,13 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
                 span -> {
                   span.hasName("middle").hasParent(trace.getSpan(0));
                   if (!testLatestDeps) {
-                    span.hasAttributes(attributeEntry("middle", "foo"));
+                    span.hasAttributesSatisfyingExactly(equalTo(stringKey("middle"), "foo"));
                   }
                 },
                 span ->
                     span.hasName("inner")
                         .hasParent(trace.getSpan(1))
-                        .hasAttributes(attributeEntry("inner", "bar"))));
+                        .hasAttributesSatisfyingExactly(equalTo(stringKey("inner"), "bar"))));
   }
 
   @Test
@@ -316,13 +318,13 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
                 span ->
                     span.hasName("inner")
                         .hasNoParent()
-                        .hasAttributes(attributeEntry("onNext", true))),
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("onNext"), true))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("inner")
                         .hasNoParent()
-                        .hasAttributes(attributeEntry("onNext", true))));
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("onNext"), true))));
   }
 
   @Test
@@ -412,11 +414,11 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
                 span ->
                     span.hasName("inner")
                         .hasParent(trace.getSpan(0))
-                        .hasAttributes(attributeEntry("onNext", true)),
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("onNext"), true)),
                 span ->
                     span.hasName("inner")
                         .hasParent(trace.getSpan(0))
-                        .hasAttributes(attributeEntry("onNext", true))));
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("onNext"), true))));
   }
 
   @ParameterizedTest
@@ -527,10 +529,10 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
       Function<Flux<Throwable>, ? extends Publisher<?>> function =
           err -> Flux.create(sink -> sink.next(-1));
       return (Flux<T>) method.invoke(flux, function);
-    } catch (NoSuchMethodException exception) {
+    } catch (NoSuchMethodException ignored) {
       // ignore
-    } catch (Exception exception) {
-      throw new IllegalStateException(exception);
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
     }
 
     try {
@@ -538,10 +540,10 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
       Method retryWhenMethod = Flux.class.getMethod("retryWhen", retryClass);
       Method retrySpecMethod = retryClass.getMethod("indefinitely");
       return (Flux<T>) retryWhenMethod.invoke(flux, retrySpecMethod.invoke(retryClass));
-    } catch (ClassNotFoundException | NoSuchMethodException exception) {
+    } catch (ClassNotFoundException | NoSuchMethodException ignored) {
       // ignore
-    } catch (Exception exception) {
-      throw new IllegalStateException(exception);
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
     }
     throw new IllegalStateException("Could not find retryWhen method");
   }

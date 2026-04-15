@@ -13,12 +13,12 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
-public final class VertxKafkaSingletons {
+public class VertxKafkaSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-kafka-client-3.6";
 
-  private static final Instrumenter<KafkaReceiveRequest, Void> BATCH_PROCESS_INSTRUMENTER;
-  private static final Instrumenter<KafkaProcessRequest, Void> PROCESS_INSTRUMENTER;
+  private static final Instrumenter<KafkaReceiveRequest, Void> batchProcessInstrumenter;
+  private static final Instrumenter<KafkaProcessRequest, Void> processInstrumenter;
 
   static {
     KafkaInstrumenterFactory factory =
@@ -29,16 +29,16 @@ public final class VertxKafkaSingletons {
                     .getBoolean("experimental_span_attributes/development", false))
             .setMessagingReceiveTelemetryEnabled(
                 ExperimentalConfig.get().messagingReceiveInstrumentationEnabled());
-    BATCH_PROCESS_INSTRUMENTER = factory.createBatchProcessInstrumenter();
-    PROCESS_INSTRUMENTER = factory.createConsumerProcessInstrumenter();
+    batchProcessInstrumenter = factory.createBatchProcessInstrumenter();
+    processInstrumenter = factory.createConsumerProcessInstrumenter();
   }
 
   public static Instrumenter<KafkaReceiveRequest, Void> batchProcessInstrumenter() {
-    return BATCH_PROCESS_INSTRUMENTER;
+    return batchProcessInstrumenter;
   }
 
   public static Instrumenter<KafkaProcessRequest, Void> processInstrumenter() {
-    return PROCESS_INSTRUMENTER;
+    return processInstrumenter;
   }
 
   private VertxKafkaSingletons() {}

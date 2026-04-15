@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.netty.common.internal.Timer;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelFutureListener;
 
-public final class ConnectionListener implements ChannelFutureListener {
+public class ConnectionListener implements ChannelFutureListener {
 
   private final Context parentContext;
   private final NettyConnectionRequest request;

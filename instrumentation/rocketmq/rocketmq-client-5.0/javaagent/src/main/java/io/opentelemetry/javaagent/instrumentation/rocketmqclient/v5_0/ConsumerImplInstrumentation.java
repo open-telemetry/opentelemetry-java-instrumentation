@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -31,24 +30,23 @@ final class ConsumerImplInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("receiveMessage"))
+        named("receiveMessage")
             .and(takesArguments(3))
             .and(takesArgument(0, named("apache.rocketmq.v2.ReceiveMessageRequest")))
             .and(takesArgument(1, named("org.apache.rocketmq.client.java.route.MessageQueueImpl")))
             .and(takesArgument(2, named("java.time.Duration"))),
-        ConsumerImplInstrumentation.class.getName() + "$ReceiveMessageAdvice");
+        getClass().getName() + "$ReceiveMessageAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ReceiveMessageAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Timer onStart() {
       return Timer.start();
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(0) ReceiveMessageRequest request,
         @Advice.Enter Timer timer,

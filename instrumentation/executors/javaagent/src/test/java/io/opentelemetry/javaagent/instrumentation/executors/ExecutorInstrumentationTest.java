@@ -52,7 +52,7 @@ abstract class ExecutorInstrumentationTest<T extends ExecutorService>
   }
 
   static class WorkStealingPoolTest extends ExecutorInstrumentationTest<ExecutorService> {
-    public WorkStealingPoolTest() {
+    WorkStealingPoolTest() {
       super(Executors.newWorkStealingPool(2));
     }
   }
@@ -175,7 +175,7 @@ abstract class ExecutorInstrumentationTest<T extends ExecutorService>
 
     @Override
     public boolean isTerminated() {
-      return workerThread.isAlive();
+      return !workerThread.isAlive();
     }
 
     @Override

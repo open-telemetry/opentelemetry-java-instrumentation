@@ -21,7 +21,7 @@ import javax.annotation.Nullable;
  * itself. Its purpose is to catch compatibility issues where underlying library APIs change (e.g.,
  * NoSuchMethodError).
  */
-public final class KeysVerifyingPropagator implements TextMapPropagator {
+public class KeysVerifyingPropagator implements TextMapPropagator {
   private static final KeysVerifyingPropagator INSTANCE = new KeysVerifyingPropagator();
 
   public static KeysVerifyingPropagator getInstance() {

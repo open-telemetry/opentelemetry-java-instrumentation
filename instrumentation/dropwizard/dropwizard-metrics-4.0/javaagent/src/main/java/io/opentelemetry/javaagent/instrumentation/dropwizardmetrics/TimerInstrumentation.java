@@ -16,7 +16,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class TimerInstrumentation implements TypeInstrumentation {
+class TimerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -26,14 +26,13 @@ public class TimerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("update").and(takesArguments(long.class)),
-        this.getClass().getName() + "$UpdateAdvice");
+        named("update").and(takesArguments(long.class)), getClass().getName() + "$UpdateAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class UpdateAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This Timer timer, @Advice.Argument(0) long nanos) {
       metrics().timerUpdate(timer, nanos);
     }

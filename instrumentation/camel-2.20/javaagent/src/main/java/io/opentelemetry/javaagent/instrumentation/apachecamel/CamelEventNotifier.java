@@ -30,6 +30,7 @@ import static java.util.logging.Level.FINE;
 import io.opentelemetry.context.Context;
 import java.util.EventObject;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import org.apache.camel.management.event.ExchangeSendingEvent;
 import org.apache.camel.management.event.ExchangeSentEvent;
 import org.apache.camel.support.EventNotifierSupport;
@@ -69,6 +70,7 @@ final class CamelEventNotifier extends EventNotifierSupport {
     logger.log(FINE, "[Exchange sending] Initiator span started: {0}", context);
   }
 
+  @Nullable
   private static Context startOnExchangeSending(CamelRequest request) {
     Context parentContext = Context.current();
     if (!instrumenter().shouldStart(parentContext, request)) {

@@ -12,9 +12,9 @@ import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsInstrumenterFactory
 import org.jboss.resteasy.core.ResourceLocatorInvoker;
 import org.jboss.resteasy.core.ResourceMethodInvoker;
 
-public final class ResteasySingletons {
+public class ResteasySingletons {
 
-  private static final Instrumenter<HandlerData, Void> INSTANCE =
+  private static final Instrumenter<HandlerData, Void> instrumenter =
       JaxrsInstrumenterFactory.createInstrumenter("io.opentelemetry.jaxrs-3.0-resteasy-6.0");
 
   public static final VirtualField<ResourceMethodInvoker, String> INVOKER_NAME =
@@ -24,7 +24,7 @@ public final class ResteasySingletons {
       VirtualField.find(ResourceLocatorInvoker.class, String.class);
 
   public static Instrumenter<HandlerData, Void> instrumenter() {
-    return INSTANCE;
+    return instrumenter;
   }
 
   private ResteasySingletons() {}

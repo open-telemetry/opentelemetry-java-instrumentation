@@ -100,6 +100,108 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
+  void testCommonDbQuerySanitizationMapping() {
+    DeclarativeConfigProperties config =
+        createConfig("otel.instrumentation.common.db.query-sanitization.enabled", "false");
+
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured("db")
+                .getStructured("query_sanitization")
+                .getBoolean("enabled"))
+        .isFalse();
+  }
+
+  @Test
+  void testDeprecatedCommonDbStatementSanitizerMapping() {
+    DeclarativeConfigProperties config =
+        createConfig("otel.instrumentation.common.db-statement-sanitizer.enabled", "false");
+
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured("db_statement_sanitizer")
+                .getBoolean("enabled"))
+        .isFalse();
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured("database")
+                .getStructured("statement_sanitizer")
+                .getBoolean("enabled"))
+        .isNull();
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured("db")
+                .getStructured("query_sanitization")
+                .getBoolean("enabled"))
+        .isNull();
+  }
+
+  @Test
+  void testCommonDbSqlcommenterPropertyMapping() {
+    DeclarativeConfigProperties config =
+        createConfig("otel.instrumentation.common.experimental.db-sqlcommenter.enabled", "false");
+
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured("db_sqlcommenter/development")
+                .getBoolean("enabled"))
+        .isFalse();
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured("db")
+                .getStructured("sqlcommenter/development")
+                .getBoolean("enabled"))
+        .isNull();
+  }
+
+  @Test
+  void testGraphqlQuerySanitizationMapping() {
+    DeclarativeConfigProperties config =
+        createConfig("otel.instrumentation.graphql.query-sanitization.enabled", "false");
+
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("graphql")
+                .getStructured("query_sanitization")
+                .getBoolean("enabled"))
+        .isFalse();
+  }
+
+  @Test
+  void testDeprecatedGraphqlQuerySanitizerMapping() {
+    DeclarativeConfigProperties config =
+        createConfig("otel.instrumentation.graphql.query-sanitizer.enabled", "false");
+
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("graphql")
+                .getStructured("query_sanitizer")
+                .getBoolean("enabled"))
+        .isFalse();
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("graphql")
+                .getStructured("query_sanitization")
+                .getBoolean("enabled"))
+        .isNull();
+  }
+
+  @Test
   void testJavaCommonServicePeerMapping() {
     DeclarativeConfigProperties config =
         createConfig("otel.instrumentation.common.peer-service-mapping", "1.2.3.4=FooService");

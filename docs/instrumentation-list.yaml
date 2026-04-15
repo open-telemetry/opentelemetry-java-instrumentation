@@ -2,7 +2,7 @@
 # The structure and contents are a work in progress and subject to change.
 # For more information see: https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13468
 
-file_format: 0.2
+file_format: 0.3
 
 libraries:
   activej:
@@ -45,7 +45,8 @@ libraries:
       metrics:
       - name: http.server.request.duration
         description: Duration of HTTP server requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -79,8 +80,6 @@ libraries:
           type: STRING
         - name: url.query
           type: STRING
-        - name: url.query
-          type: VALUE
         - name: url.scheme
           type: STRING
         - name: user_agent.original
@@ -181,7 +180,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -196,7 +196,8 @@ libraries:
           type: LONG
       - name: http.server.request.duration
         description: Duration of HTTP server requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -254,6 +255,85 @@ libraries:
           type: STRING
         - name: user_agent.original
           type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
+        - name: url.full
+          type: STRING
+      - span_kind: SERVER
+        attributes:
+        - name: client.address
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.path
+          type: STRING
+        - name: url.query
+          type: STRING
+        - name: url.scheme
+          type: STRING
+        - name: user_agent.original
+          type: STRING
   alibaba:
   - name: alibaba-druid-1.0
     description: |
@@ -278,38 +358,43 @@ libraries:
       metrics:
       - name: db.client.connections.idle.max
         description: The maximum number of idle open connections allowed.
-        type: LONG_SUM
-        unit: connections
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.idle.min
         description: The minimum number of idle open connections allowed.
-        type: LONG_SUM
-        unit: connections
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.max
         description: The maximum number of open connections allowed.
-        type: LONG_SUM
-        unit: connections
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.pending_requests
         description: The number of pending requests for an open connection, cumulative
           for the entire pool.
-        type: LONG_SUM
-        unit: requests
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{requests}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.usage
         description: The number of connections that are currently in state described
           by the state attribute.
-        type: LONG_SUM
-        unit: connections
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
@@ -320,8 +405,9 @@ libraries:
       - name: db.client.connection.count
         description: The number of connections that are currently in state described
           by the state attribute.
-        type: LONG_SUM
-        unit: connection
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
@@ -329,29 +415,33 @@ libraries:
           type: STRING
       - name: db.client.connection.idle.max
         description: The maximum number of idle open connections allowed.
-        type: LONG_SUM
-        unit: connection
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
       - name: db.client.connection.idle.min
         description: The minimum number of idle open connections allowed.
-        type: LONG_SUM
-        unit: connection
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
       - name: db.client.connection.max
         description: The maximum number of open connections allowed.
-        type: LONG_SUM
-        unit: connection
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
       - name: db.client.connection.pending_requests
         description: The number of current pending requests for an open connection.
-        type: LONG_SUM
-        unit: request
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{request}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
@@ -381,30 +471,34 @@ libraries:
       metrics:
       - name: db.client.connections.idle.max
         description: The maximum number of idle open connections allowed.
-        type: LONG_SUM
-        unit: connections
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.idle.min
         description: The minimum number of idle open connections allowed.
-        type: LONG_SUM
-        unit: connections
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.max
         description: The maximum number of open connections allowed.
-        type: LONG_SUM
-        unit: connections
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.usage
         description: The number of connections that are currently in state described
           by the state attribute.
-        type: LONG_SUM
-        unit: connections
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
@@ -415,8 +509,9 @@ libraries:
       - name: db.client.connection.count
         description: The number of connections that are currently in state described
           by the state attribute.
-        type: LONG_SUM
-        unit: connection
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
@@ -424,22 +519,25 @@ libraries:
           type: STRING
       - name: db.client.connection.idle.max
         description: The maximum number of idle open connections allowed.
-        type: LONG_SUM
-        unit: connection
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
       - name: db.client.connection.idle.min
         description: The minimum number of idle open connections allowed.
-        type: LONG_SUM
-        unit: connection
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
       - name: db.client.connection.max
         description: The maximum number of open connections allowed.
-        type: LONG_SUM
-        unit: connection
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
@@ -469,7 +567,8 @@ libraries:
       metrics:
       - name: rpc.client.duration
         description: The duration of an outbound RPC invocation.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: ms
         attributes:
         - name: rpc.method
@@ -484,7 +583,8 @@ libraries:
           type: LONG
       - name: rpc.server.duration
         description: The duration of an inbound RPC invocation.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: ms
         attributes:
         - name: rpc.method
@@ -519,6 +619,55 @@ libraries:
         - name: rpc.service
           type: STRING
         - name: rpc.system
+          type: STRING
+    - when: otel.semconv-stability.opt-in=rpc,service.peer
+      metrics:
+      - name: rpc.client.call.duration
+        description: Measures the duration of outbound remote procedure calls (RPC).
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.call.duration
+        description: Measures the duration of inbound remote procedure calls (RPC).
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.system.name
+          type: STRING
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
+      - span_kind: SERVER
+        attributes:
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.system.name
           type: STRING
   - name: apache-elasticjob-3.0
     display_name: Apache ElasticJob
@@ -613,7 +762,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -645,6 +795,45 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+        - name: url.full
+          type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
         - name: url.full
           type: STRING
   - name: apache-httpclient-2.0
@@ -694,7 +883,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -724,6 +914,43 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+        - name: url.full
+          type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
         - name: url.full
           type: STRING
   - name: apache-httpclient-4.0
@@ -774,7 +1001,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -808,6 +1036,45 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
+        - name: url.full
+          type: STRING
   - name: apache-httpclient-4.3
     display_name: Apache HttpClient
     description: This instrumentation provides a library integration that enables
@@ -826,7 +1093,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -907,7 +1175,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -941,6 +1210,45 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
+        - name: url.full
+          type: STRING
   - name: apache-httpclient-5.2
     display_name: Apache HttpClient
     description: This instrumentation provides a library integration that enables
@@ -959,7 +1267,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -1075,7 +1384,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -1090,7 +1400,8 @@ libraries:
           type: LONG
       - name: http.server.request.duration
         description: Duration of HTTP server requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -1124,6 +1435,93 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+        - name: url.full
+          type: STRING
+      - span_kind: SERVER
+        attributes:
+        - name: client.address
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.path
+          type: STRING
+        - name: url.query
+          type: STRING
+        - name: url.scheme
+          type: STRING
+        - name: user_agent.original
+          type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
         - name: url.full
           type: STRING
       - span_kind: SERVER
@@ -1196,6 +1594,32 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+    - when: otel.semconv-stability.opt-in=rpc
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.response.status_code
+          type: STRING
+        - name: rpc.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - span_kind: SERVER
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.response.status_code
+          type: STRING
+        - name: rpc.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   async:
   - name: async-http-client-1.8
     display_name: AsyncHttpClient
@@ -1244,7 +1668,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -1272,6 +1697,41 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+        - name: url.full
+          type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
         - name: url.full
           type: STRING
   - name: async-http-client-1.9
@@ -1321,7 +1781,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -1349,6 +1810,41 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+        - name: url.full
+          type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
         - name: url.full
           type: STRING
   - name: async-http-client-2.0
@@ -1398,7 +1894,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -1434,6 +1931,49 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+        - name: url.full
+          type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
         - name: url.full
           type: STRING
   avaje:
@@ -1696,7 +2236,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.operation.name
@@ -1852,7 +2393,8 @@ libraries:
       metrics:
       - name: gen_ai.client.operation.duration
         description: GenAI operation duration.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: gen_ai.operation.name
@@ -1863,8 +2405,9 @@ libraries:
           type: STRING
       - name: gen_ai.client.token.usage
         description: Measures number of input and output tokens used.
-        type: HISTOGRAM
-        unit: token
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: '{token}'
         attributes:
         - name: gen_ai.operation.name
           type: STRING
@@ -2033,7 +2576,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.operation.name
@@ -2243,16 +2787,18 @@ libraries:
       - name: db.client.connections.pending_requests
         description: The number of pending requests for an open connection, cumulative
           for the entire pool.
-        type: LONG_SUM
-        unit: requests
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{requests}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.usage
         description: The number of connections that are currently in state described
           by the state attribute.
-        type: LONG_SUM
-        unit: connections
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
@@ -2263,8 +2809,9 @@ libraries:
       - name: db.client.connection.count
         description: The number of connections that are currently in state described
           by the state attribute.
-        type: LONG_SUM
-        unit: connection
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
@@ -2272,8 +2819,9 @@ libraries:
           type: STRING
       - name: db.client.connection.pending_requests
         description: The number of current pending requests for an open connection.
-        type: LONG_SUM
-        unit: request
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{request}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
@@ -2451,8 +2999,8 @@ libraries:
     javaagent_target_versions:
     - com.datastax.cassandra:cassandra-driver-core:[3.0,4.0)
     configurations:
-    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-      description: Enables statement sanitization for database queries.
+    - name: otel.instrumentation.common.db.query-sanitization.enabled
+      description: Enables query sanitization for database queries.
       type: boolean
       default: true
     telemetry:
@@ -2484,7 +3032,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.query.summary
@@ -2533,8 +3082,8 @@ libraries:
     javaagent_target_versions:
     - com.datastax.oss:java-driver-core:[4.0,4.4)
     configurations:
-    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-      description: Enables statement sanitization for database queries.
+    - name: otel.instrumentation.common.db.query-sanitization.enabled
+      description: Enables query sanitization for database queries.
       type: boolean
       default: true
     telemetry:
@@ -2578,7 +3127,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.query.summary
@@ -2641,8 +3191,8 @@ libraries:
     - org.apache.cassandra:java-driver-core:(,)
     - com.datastax.oss:java-driver-core:[4.4,]
     configurations:
-    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-      description: Enables statement sanitization for database queries.
+    - name: otel.instrumentation.common.db.query-sanitization.enabled
+      description: Enables query sanitization for database queries.
       type: boolean
       default: true
     telemetry:
@@ -2686,7 +3236,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.query.summary
@@ -2746,10 +3297,10 @@ libraries:
     scope:
       name: io.opentelemetry.clickhouse-client-v1-0.5
     javaagent_target_versions:
-    - com.clickhouse.client:clickhouse-client:[0.5.0,)
+    - com.clickhouse:clickhouse-client:[0.5.0,)
     configurations:
-    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-      description: Enables statement sanitization for database queries.
+    - name: otel.instrumentation.common.db.query-sanitization.enabled
+      description: Enables query sanitization for database queries.
       type: boolean
       default: true
     telemetry:
@@ -2773,7 +3324,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.namespace
@@ -2816,8 +3368,8 @@ libraries:
     javaagent_target_versions:
     - com.clickhouse:client-v2:[0.6.4,)
     configurations:
-    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-      description: Enables statement sanitization for database queries.
+    - name: otel.instrumentation.common.db.query-sanitization.enabled
+      description: Enables query sanitization for database queries.
       type: boolean
       default: true
     telemetry:
@@ -2841,7 +3393,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.namespace
@@ -2885,8 +3438,8 @@ libraries:
     javaagent_target_versions:
     - com.couchbase.client:java-client:[2,3)
     configurations:
-    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-      description: Enables statement sanitization for database queries.
+    - name: otel.instrumentation.common.db.query-sanitization.enabled
+      description: Enables query sanitization for database queries.
       type: boolean
       default: true
     telemetry:
@@ -2906,7 +3459,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.operation.name
@@ -2944,8 +3498,8 @@ libraries:
         Enables experimental span attributes `couchbase.operation_id` and `couchbase.local.address`. Different operation types receive different experimental attributes.
       type: boolean
       default: false
-    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-      description: Enables statement sanitization for database queries.
+    - name: otel.instrumentation.common.db.query-sanitization.enabled
+      description: Enables query sanitization for database queries.
       type: boolean
       default: true
     telemetry:
@@ -2993,7 +3547,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.operation.name
@@ -3021,8 +3576,6 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
-        - name: network.type
-          type: STRING
   - name: couchbase-3.1
     description: |
       Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
@@ -3291,7 +3844,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.operation.name
@@ -3364,7 +3918,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.system.name
@@ -3428,7 +3983,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.system.name
@@ -3493,7 +4049,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.system.name
@@ -3590,7 +4147,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.operation.name
@@ -3690,7 +4248,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.operation.name
@@ -3786,7 +4345,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.operation.name
@@ -3806,8 +4366,6 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
-        - name: network.type
-          type: STRING
   executors:
   - name: executors
     display_name: Java Executors
@@ -3844,8 +4402,9 @@ libraries:
       metrics:
       - name: failsafe.circuit_breaker.execution.count
         description: Count of circuit breaker executions.
-        type: LONG_SUM
-        unit: execution
+        instrument: counter
+        data_type: LONG_SUM
+        unit: '{execution}'
         attributes:
         - name: failsafe.circuit_breaker.name
           type: STRING
@@ -3853,8 +4412,9 @@ libraries:
           type: STRING
       - name: failsafe.circuit_breaker.state_change.count
         description: Count of circuit breaker state changes.
-        type: LONG_SUM
-        unit: execution
+        instrument: counter
+        data_type: LONG_SUM
+        unit: '{execution}'
         attributes:
         - name: failsafe.circuit_breaker.name
           type: STRING
@@ -3862,8 +4422,9 @@ libraries:
           type: STRING
       - name: failsafe.retry_policy.attempts
         description: Number of attempts for each execution.
-        type: HISTOGRAM
-        unit: attempt
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: '{attempt}'
         attributes:
         - name: failsafe.retry_policy.name
           type: STRING
@@ -3872,8 +4433,9 @@ libraries:
       - name: failsafe.retry_policy.execution.count
         description: Count of execution attempts processed by the retry policy, where
           one execution represents the total number of attempts.
-        type: LONG_SUM
-        unit: execution
+        instrument: counter
+        data_type: LONG_SUM
+        unit: '{execution}'
         attributes:
         - name: failsafe.retry_policy.name
           type: STRING
@@ -3934,8 +4496,8 @@ libraries:
     javaagent_target_versions:
     - org.apache.geode:geode-core:[1.4.0,)
     configurations:
-    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-      description: Enables statement sanitization for database queries.
+    - name: otel.instrumentation.common.db.query-sanitization.enabled
+      description: Enables query sanitization for database queries.
       type: boolean
       default: true
     telemetry:
@@ -3955,7 +4517,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.namespace
@@ -4022,7 +4585,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -4090,12 +4654,12 @@ libraries:
     javaagent_target_versions:
     - com.graphql-java:graphql-java:[12,20)
     configurations:
-    - name: otel.instrumentation.graphql.query-sanitizer.enabled
+    - name: otel.instrumentation.graphql.query-sanitization.enabled
       description: Enables sanitization of sensitive information from queries so they
         aren't added as span attributes.
       type: boolean
       default: true
-    - name: otel.instrumentation.graphql.add-operation-name-to-span-name.enabled
+    - name: otel.instrumentation.graphql.operation-name-in-span-name.enabled
       description: |
         Whether GraphQL operation name is added to the span name. WARNING: The GraphQL operation name is provided by the client and can have high cardinality. Use only when the server is not exposed to malicious clients.
       type: boolean
@@ -4117,19 +4681,18 @@ libraries:
     - GRAPHQL_SERVER_SPANS
     library_link: https://www.graphql-java.com/
     source_path: instrumentation/graphql-java/graphql-java-20.0
-    minimum_java_version: 11
     scope:
       name: io.opentelemetry.graphql-java-20.0
     has_standalone_library: true
     javaagent_target_versions:
     - com.graphql-java:graphql-java:[20,)
     configurations:
-    - name: otel.instrumentation.graphql.query-sanitizer.enabled
+    - name: otel.instrumentation.graphql.query-sanitization.enabled
       description: Enables sanitization of sensitive information from queries so they
         aren't added as span attributes.
       type: boolean
       default: true
-    - name: otel.instrumentation.graphql.add-operation-name-to-span-name.enabled
+    - name: otel.instrumentation.graphql.operation-name-in-span-name.enabled
       description: |
         Whether GraphQL operation name is added to the span name. WARNING: The GraphQL operation name is provided by the client and can have high cardinality. Use only when the server is not exposed to malicious clients.
       type: boolean
@@ -4207,7 +4770,8 @@ libraries:
       metrics:
       - name: http.server.request.duration
         description: Duration of HTTP server requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -4292,7 +4856,8 @@ libraries:
       metrics:
       - name: rpc.client.duration
         description: The duration of an outbound RPC invocation.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: ms
         attributes:
         - name: rpc.grpc.status_code
@@ -4309,7 +4874,8 @@ libraries:
           type: LONG
       - name: rpc.client.request.size
         description: Measures the size of RPC request messages (uncompressed).
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: By
         attributes:
         - name: rpc.grpc.status_code
@@ -4326,7 +4892,8 @@ libraries:
           type: LONG
       - name: rpc.client.response.size
         description: Measures the size of RPC response messages (uncompressed).
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: By
         attributes:
         - name: rpc.grpc.status_code
@@ -4343,7 +4910,8 @@ libraries:
           type: LONG
       - name: rpc.server.duration
         description: The duration of an inbound RPC invocation.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: ms
         attributes:
         - name: network.type
@@ -4362,7 +4930,8 @@ libraries:
           type: LONG
       - name: rpc.server.request.size
         description: Measures the size of RPC request messages (uncompressed).
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: By
         attributes:
         - name: network.type
@@ -4381,7 +4950,8 @@ libraries:
           type: LONG
       - name: rpc.server.response.size
         description: Measures the size of RPC response messages (uncompressed).
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: By
         attributes:
         - name: network.type
@@ -4437,7 +5007,8 @@ libraries:
       metrics:
       - name: rpc.client.duration
         description: The duration of an outbound RPC invocation.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: ms
         attributes:
         - name: rpc.grpc.status_code
@@ -4454,7 +5025,8 @@ libraries:
           type: LONG
       - name: rpc.client.request.size
         description: Measures the size of RPC request messages (uncompressed).
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: By
         attributes:
         - name: rpc.grpc.status_code
@@ -4471,7 +5043,8 @@ libraries:
           type: LONG
       - name: rpc.client.response.size
         description: Measures the size of RPC response messages (uncompressed).
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: By
         attributes:
         - name: rpc.grpc.status_code
@@ -4488,7 +5061,8 @@ libraries:
           type: LONG
       - name: rpc.server.duration
         description: The duration of an inbound RPC invocation.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: ms
         attributes:
         - name: network.type
@@ -4507,7 +5081,8 @@ libraries:
           type: LONG
       - name: rpc.server.request.size
         description: Measures the size of RPC request messages (uncompressed).
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: By
         attributes:
         - name: network.type
@@ -4526,7 +5101,8 @@ libraries:
           type: LONG
       - name: rpc.server.response.size
         description: Measures the size of RPC response messages (uncompressed).
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: By
         attributes:
         - name: network.type
@@ -4581,6 +5157,75 @@ libraries:
         - name: rpc.service
           type: STRING
         - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=rpc
+      metrics:
+      - name: rpc.client.call.duration
+        description: Measures the duration of outbound remote procedure calls (RPC).
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.response.status_code
+          type: STRING
+        - name: rpc.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.call.duration
+        description: Measures the duration of inbound remote procedure calls (RPC).
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.response.status_code
+          type: STRING
+        - name: rpc.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: rpc.method
+          type: STRING
+        - name: rpc.response.status_code
+          type: STRING
+        - name: rpc.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - span_kind: SERVER
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: rpc.method
+          type: STRING
+        - name: rpc.response.status_code
+          type: STRING
+        - name: rpc.system.name
           type: STRING
         - name: server.address
           type: STRING
@@ -4671,7 +5316,8 @@ libraries:
       metrics:
       - name: http.server.request.duration
         description: Duration of HTTP server requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -4711,8 +5357,6 @@ libraries:
           type: STRING
         - name: url.query
           type: STRING
-        - name: url.query
-          type: VALUE
         - name: url.scheme
           type: STRING
         - name: user_agent.original
@@ -4846,46 +5490,52 @@ libraries:
       metrics:
       - name: db.client.connections.create_time
         description: The time it took to create a new connection.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: ms
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.idle.min
         description: The minimum number of idle open connections allowed.
-        type: LONG_SUM
-        unit: connections
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.max
         description: The maximum number of open connections allowed.
-        type: LONG_SUM
-        unit: connections
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.pending_requests
         description: The number of pending requests for an open connection, cumulative
           for the entire pool.
-        type: LONG_SUM
-        unit: requests
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{requests}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.timeouts
         description: The number of connection timeouts that have occurred trying to
           obtain a connection from the pool.
-        type: LONG_SUM
-        unit: timeouts
+        instrument: counter
+        data_type: LONG_SUM
+        unit: '{timeouts}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.usage
         description: The number of connections that are currently in state described
           by the state attribute.
-        type: LONG_SUM
-        unit: connections
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
@@ -4894,14 +5544,16 @@ libraries:
       - name: db.client.connections.use_time
         description: The time between borrowing a connection and returning it to the
           pool.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: ms
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.wait_time
         description: The time it took to obtain an open connection from the pool.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: ms
         attributes:
         - name: pool.name
@@ -4911,8 +5563,9 @@ libraries:
       - name: db.client.connection.count
         description: The number of connections that are currently in state described
           by the state attribute.
-        type: LONG_SUM
-        unit: connection
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
@@ -4920,51 +5573,58 @@ libraries:
           type: STRING
       - name: db.client.connection.create_time
         description: The time it took to create a new connection.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
       - name: db.client.connection.idle.min
         description: The minimum number of idle open connections allowed.
-        type: LONG_SUM
-        unit: connection
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
       - name: db.client.connection.max
         description: The maximum number of open connections allowed.
-        type: LONG_SUM
-        unit: connection
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
       - name: db.client.connection.pending_requests
         description: The number of current pending requests for an open connection.
-        type: LONG_SUM
-        unit: request
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{request}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
       - name: db.client.connection.timeouts
         description: The number of connection timeouts that have occurred trying to
           obtain a connection from the pool.
-        type: LONG_SUM
-        unit: timeout
+        instrument: counter
+        data_type: LONG_SUM
+        unit: '{timeout}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
       - name: db.client.connection.use_time
         description: The time between borrowing a connection and returning it to the
           pool.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
       - name: db.client.connection.wait_time
         description: The time it took to obtain an open connection from the pool.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.client.connection.pool.name
@@ -5017,7 +5677,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -5095,8 +5756,9 @@ libraries:
       metrics:
       - name: iceberg.scan.data_files.count
         description: The number of data files.
-        type: LONG_SUM
-        unit: file
+        instrument: counter
+        data_type: LONG_SUM
+        unit: '{file}'
         attributes:
         - name: iceberg.scan.state
           type: STRING
@@ -5106,7 +5768,8 @@ libraries:
           type: STRING
       - name: iceberg.scan.data_files.size
         description: The total size of all scanned data files.
-        type: LONG_SUM
+        instrument: counter
+        data_type: LONG_SUM
         unit: By
         attributes:
         - name: iceberg.schema.id
@@ -5115,8 +5778,9 @@ libraries:
           type: STRING
       - name: iceberg.scan.data_manifests.count
         description: The number of data manifests.
-        type: LONG_SUM
-        unit: file
+        instrument: counter
+        data_type: LONG_SUM
+        unit: '{file}'
         attributes:
         - name: iceberg.scan.state
           type: STRING
@@ -5126,8 +5790,9 @@ libraries:
           type: STRING
       - name: iceberg.scan.delete_files.count
         description: The number of delete files.
-        type: LONG_SUM
-        unit: file
+        instrument: counter
+        data_type: LONG_SUM
+        unit: '{file}'
         attributes:
         - name: iceberg.delete_file.type
           type: STRING
@@ -5139,7 +5804,8 @@ libraries:
           type: STRING
       - name: iceberg.scan.delete_files.size
         description: The total size of all scanned delete files.
-        type: LONG_SUM
+        instrument: counter
+        data_type: LONG_SUM
         unit: By
         attributes:
         - name: iceberg.schema.id
@@ -5148,8 +5814,9 @@ libraries:
           type: STRING
       - name: iceberg.scan.delete_manifests.count
         description: The number of delete manifests.
-        type: LONG_SUM
-        unit: file
+        instrument: counter
+        data_type: LONG_SUM
+        unit: '{file}'
         attributes:
         - name: iceberg.scan.state
           type: STRING
@@ -5159,7 +5826,8 @@ libraries:
           type: STRING
       - name: iceberg.scan.planning.duration
         description: The total duration needed to plan the scan.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: iceberg.schema.id
@@ -5181,8 +5849,8 @@ libraries:
     javaagent_target_versions:
     - org.influxdb:influxdb-java:[2.4,)
     configurations:
-    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-      description: Enables or disables statement sanitization for database queries.
+    - name: otel.instrumentation.common.db.query-sanitization.enabled
+      description: Enables or disables query sanitization for database queries.
       type: boolean
       default: true
     telemetry:
@@ -5206,7 +5874,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.namespace
@@ -5285,7 +5954,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -5362,7 +6032,8 @@ libraries:
       metrics:
       - name: http.server.request.duration
         description: Duration of HTTP server requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -5904,7 +6575,7 @@ libraries:
     scope:
       name: io.opentelemetry.jaxws-metro-2.2
     javaagent_target_versions:
-    - com.sun.xml.ws:jaxws-rt:[2.2.0.1,)
+    - com.sun.xml.ws:jaxws-rt:[2.2,)
     configurations:
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
       description: Enables the creation of experimental controller spans.
@@ -5970,13 +6641,13 @@ libraries:
     javaagent_target_versions:
     - Java 8+
     configurations:
-    - name: otel.instrumentation.jdbc.statement-sanitizer.enabled
-      description: Enables statement sanitization for database queries. Takes precedent
-        to otel.instrumentation.common.db-statement-sanitizer.enabled.
+    - name: otel.instrumentation.jdbc.query-sanitization.enabled
+      description: Enables query sanitization for database queries. Takes precedence
+        over otel.instrumentation.common.db.query-sanitization.enabled.
       type: boolean
       default: true
-    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-      description: Enables statement sanitization for database queries.
+    - name: otel.instrumentation.common.db.query-sanitization.enabled
+      description: Enables query sanitization for database queries.
       type: boolean
       default: true
     - name: otel.instrumentation.jdbc.experimental.transaction.enabled
@@ -6044,7 +6715,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.namespace
@@ -6098,8 +6770,8 @@ libraries:
     javaagent_target_versions:
     - redis.clients:jedis:[1.4.0,3.0.0)
     configurations:
-    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-      description: Enables statement sanitization for database queries.
+    - name: otel.instrumentation.common.db.query-sanitization.enabled
+      description: Enables query sanitization for database queries.
       type: boolean
       default: true
     - name: otel.instrumentation.common.peer-service-mapping
@@ -6128,7 +6800,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.operation.name
@@ -6167,8 +6840,8 @@ libraries:
     javaagent_target_versions:
     - redis.clients:jedis:[3.0.0,4)
     configurations:
-    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-      description: Enables statement sanitization for database queries.
+    - name: otel.instrumentation.common.db.query-sanitization.enabled
+      description: Enables query sanitization for database queries.
       type: boolean
       default: true
     - name: otel.instrumentation.common.peer-service-mapping
@@ -6203,7 +6876,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.operation.name
@@ -6231,8 +6905,6 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
-        - name: network.type
-          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -6252,8 +6924,8 @@ libraries:
     javaagent_target_versions:
     - redis.clients:jedis:[4.0.0-beta1,)
     configurations:
-    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-      description: Enables statement sanitization for database queries.
+    - name: otel.instrumentation.common.db.query-sanitization.enabled
+      description: Enables query sanitization for database queries.
       type: boolean
       default: true
     telemetry:
@@ -6277,7 +6949,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.operation.name
@@ -6301,8 +6974,6 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
-        - name: network.type
-          type: STRING
   jetty:
   - name: jetty-8.0
     description: This instrumentation enables HTTP server spans and HTTP server metrics
@@ -6343,7 +7014,8 @@ libraries:
       metrics:
       - name: http.server.request.duration
         description: Duration of HTTP server requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -6423,7 +7095,8 @@ libraries:
       metrics:
       - name: http.server.request.duration
         description: Duration of HTTP server requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -6503,7 +7176,8 @@ libraries:
       metrics:
       - name: http.server.request.duration
         description: Duration of HTTP server requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -6592,7 +7266,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -6624,6 +7299,45 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+        - name: url.full
+          type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
         - name: url.full
           type: STRING
   - name: jetty-httpclient-12.0
@@ -6674,7 +7388,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -6706,6 +7421,45 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+        - name: url.full
+          type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
         - name: url.full
           type: STRING
   jfinal:
@@ -6852,7 +7606,7 @@ libraries:
       name: io.opentelemetry.jodd-http-4.2
       schema_url: https://opentelemetry.io/schemas/1.37.0
     javaagent_target_versions:
-    - org.jodd:jodd-http:[4.2.0,)
+    - org.jodd:jodd-http:[4.1.1,)
     configurations:
     - name: otel.instrumentation.http.known-methods
       description: |
@@ -6886,7 +7640,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -7221,6 +7976,8 @@ libraries:
           type: STRING
         - name: messaging.destination.partition.id
           type: STRING
+        - name: messaging.kafka.message.key
+          type: STRING
         - name: messaging.kafka.message.offset
           type: LONG
         - name: messaging.operation
@@ -7373,7 +8130,8 @@ libraries:
       metrics:
       - name: http.server.request.duration
         description: Duration of HTTP server requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -7395,8 +8153,6 @@ libraries:
           type: STRING
         - name: http.response.status_code
           type: LONG
-        - name: network.peer.address
-          type: STRING
         - name: network.protocol.version
           type: STRING
         - name: server.address
@@ -7424,8 +8180,6 @@ libraries:
         - name: http.response.status_code
           type: LONG
         - name: http.route
-          type: STRING
-        - name: network.peer.address
           type: STRING
         - name: network.protocol.version
           type: STRING
@@ -7506,7 +8260,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -7521,7 +8276,8 @@ libraries:
           type: LONG
       - name: http.server.request.duration
         description: Duration of HTTP server requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -7670,7 +8426,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -7685,7 +8442,8 @@ libraries:
           type: LONG
       - name: http.server.request.duration
         description: Duration of HTTP server requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -7733,6 +8491,8 @@ libraries:
           type: LONG
         - name: http.route
           type: STRING
+        - name: network.peer.address
+          type: STRING
         - name: network.protocol.version
           type: STRING
         - name: server.address
@@ -7751,7 +8511,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -7766,8 +8527,9 @@ libraries:
           type: LONG
       - name: http.server.active_requests
         description: Number of active HTTP server requests.
-        type: LONG_SUM
-        unit: requests
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{requests}'
         attributes:
         - name: http.request.method
           type: STRING
@@ -7775,7 +8537,8 @@ libraries:
           type: STRING
       - name: http.server.request.duration
         description: Duration of HTTP server requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -7790,7 +8553,8 @@ libraries:
           type: STRING
       - name: http.server.response.body.size
         description: Size of HTTP server response bodies.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: By
         attributes:
         - name: http.request.method
@@ -7837,6 +8601,8 @@ libraries:
         - name: http.response.status_code
           type: LONG
         - name: http.route
+          type: STRING
+        - name: network.peer.address
           type: STRING
         - name: network.protocol.version
           type: STRING
@@ -7905,7 +8671,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -7937,7 +8704,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -8031,7 +8799,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.operation.name
@@ -8075,8 +8844,8 @@ libraries:
         Enables experimental span attributes `lettuce.command.cancelled` and `lettuce.command.results.count`.
       type: boolean
       default: false
-    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-      description: Enables statement sanitization for database queries.
+    - name: otel.instrumentation.common.db.query-sanitization.enabled
+      description: Enables query sanitization for database queries.
       type: boolean
       default: true
     - name: otel.instrumentation.common.peer-service-mapping
@@ -8125,7 +8894,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.operation.name
@@ -8168,8 +8938,8 @@ libraries:
         events.
       type: boolean
       default: false
-    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-      description: Enables statement sanitization for database queries.
+    - name: otel.instrumentation.common.db.query-sanitization.enabled
+      description: Enables query sanitization for database queries.
       type: boolean
       default: true
     telemetry:
@@ -8199,7 +8969,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.operation.name
@@ -8229,21 +9000,79 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
-        - name: network.type
-          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
           type: LONG
   liberty:
   - name: liberty-20.0
+    display_name: Liberty
+    description: |
+      This instrumentation enables HTTP server spans and metrics for IBM WebSphere Liberty application server.
+    semantic_conventions:
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
+    library_link: https://openliberty.io/
     source_path: instrumentation/liberty/liberty-20.0
     scope:
       name: io.opentelemetry.liberty-20.0
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.server.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.size` and `http.server.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.servlet.experimental-span-attributes
+      description: Enables capturing the experimental `servlet.timeout` span attribute.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.servlet.capture-request-parameters
+      description: List of request parameter names to capture as span attributes.
+      type: list
+      default: ''
   - name: liberty-dispatcher-20.0
+    display_name: Liberty
+    description: |
+      This instrumentation enables HTTP server spans and metrics for the IBM WebSphere Liberty HTTP dispatcher layer.
+    semantic_conventions:
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
+    library_link: https://openliberty.io/
     source_path: instrumentation/liberty/liberty-dispatcher-20.0
     scope:
       name: io.opentelemetry.liberty-dispatcher-20.0
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.server.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.size` and `http.server.response.size` metrics.
+      type: boolean
+      default: false
   log4j:
   - name: log4j-appender-1.2
     display_name: Log4j
@@ -8534,6 +9363,10 @@ libraries:
       default: ''
   micrometer:
   - name: micrometer-1.5
+    display_name: Micrometer
+    description: |
+      This instrumentation enables a Micrometer MeterRegistry that bridges Micrometer metrics to the OpenTelemetry Metrics SDK. It is disabled by default because it may produce metrics that overlap with metrics already captured by other instrumentations.
+    library_link: https://micrometer.io/
     disabled_by_default: true
     source_path: instrumentation/micrometer/micrometer-1.5
     scope:
@@ -8541,6 +9374,22 @@ libraries:
     has_standalone_library: true
     javaagent_target_versions:
     - io.micrometer:micrometer-core:[1.5.0,)
+    configurations:
+    - name: otel.instrumentation.micrometer.prometheus-mode.enabled
+      description: |
+        Simulates the behavior of Micrometer's PrometheusMeterRegistry. The instruments will be renamed to match Micrometer instrument naming, and the base time unit will be set to seconds.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.micrometer.base-time-unit
+      description: |
+        Sets the base time unit for the OpenTelemetry MeterRegistry. Supported values: ns, us, ms, s, min, h, d.
+      type: string
+      default: s
+    - name: otel.instrumentation.micrometer.histogram-gauges.enabled
+      description: |
+        Enables gauge-based Micrometer histograms for DistributionSummary and Timer instruments.
+      type: boolean
+      default: false
   mongo:
   - name: mongo-3.1
     display_name: MongoDB Driver
@@ -8557,13 +9406,13 @@ libraries:
     javaagent_target_versions:
     - org.mongodb:mongo-java-driver:[3.1,)
     configurations:
-    - name: otel.instrumentation.mongo.statement-sanitizer.enabled
+    - name: otel.instrumentation.mongo.query-sanitization.enabled
       description: |
-        Enables statement sanitization for MongoDB queries. Takes precedence over otel.instrumentation.common.db-statement-sanitizer.enabled.
+        Enables query sanitization for MongoDB queries. Takes precedence over otel.instrumentation.common.db.query-sanitization.enabled.
       type: boolean
       default: true
-    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-      description: Enables statement sanitization for database queries.
+    - name: otel.instrumentation.common.db.query-sanitization.enabled
+      description: Enables query sanitization for database queries.
       type: boolean
       default: true
     telemetry:
@@ -8591,7 +9440,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.collection.name
@@ -8638,13 +9488,13 @@ libraries:
     - org.mongodb:mongodb-driver-core:[3.7, 4.0)
     - org.mongodb:mongo-java-driver:[3.7, 4.0)
     configurations:
-    - name: otel.instrumentation.mongo.statement-sanitizer.enabled
+    - name: otel.instrumentation.mongo.query-sanitization.enabled
       description: |
-        Enables statement sanitization for MongoDB queries. Takes precedence over otel.instrumentation.common.db-statement-sanitizer.enabled.
+        Enables query sanitization for MongoDB queries. Takes precedence over otel.instrumentation.common.db.query-sanitization.enabled.
       type: boolean
       default: true
-    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-      description: Enables statement sanitization for database queries.
+    - name: otel.instrumentation.common.db.query-sanitization.enabled
+      description: Enables query sanitization for database queries.
       type: boolean
       default: true
     telemetry:
@@ -8672,7 +9522,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.collection.name
@@ -8718,13 +9569,13 @@ libraries:
     javaagent_target_versions:
     - org.mongodb:mongodb-driver-core:[4.0,)
     configurations:
-    - name: otel.instrumentation.mongo.statement-sanitizer.enabled
+    - name: otel.instrumentation.mongo.query-sanitization.enabled
       description: |
-        Enables statement sanitization for MongoDB queries. Takes precedence over otel.instrumentation.common.db-statement-sanitizer.enabled.
+        Enables query sanitization for MongoDB queries. Takes precedence over otel.instrumentation.common.db.query-sanitization.enabled.
       type: boolean
       default: true
-    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-      description: Enables statement sanitization for database queries.
+    - name: otel.instrumentation.common.db.query-sanitization.enabled
+      description: Enables query sanitization for database queries.
       type: boolean
       default: true
     telemetry:
@@ -8752,7 +9603,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.collection.name
@@ -8798,13 +9650,13 @@ libraries:
     javaagent_target_versions:
     - org.mongodb:mongodb-driver-async:[3.3,)
     configurations:
-    - name: otel.instrumentation.mongo.statement-sanitizer.enabled
+    - name: otel.instrumentation.mongo.query-sanitization.enabled
       description: |
-        Enables statement sanitization for MongoDB queries. Takes precedence over otel.instrumentation.common.db-statement-sanitizer.enabled.
+        Enables query sanitization for MongoDB queries. Takes precedence over otel.instrumentation.common.db.query-sanitization.enabled.
       type: boolean
       default: true
-    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-      description: Enables statement sanitization for database queries.
+    - name: otel.instrumentation.common.db.query-sanitization.enabled
+      description: Enables query sanitization for database queries.
       type: boolean
       default: true
     telemetry:
@@ -8832,7 +9684,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.collection.name
@@ -9002,7 +9855,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -9017,7 +9871,8 @@ libraries:
           type: LONG
       - name: http.server.request.duration
         description: Duration of HTTP server requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -9154,7 +10009,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -9169,7 +10025,8 @@ libraries:
           type: LONG
       - name: http.server.request.duration
         description: Duration of HTTP server requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -9307,7 +10164,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -9322,7 +10180,8 @@ libraries:
           type: LONG
       - name: http.server.request.duration
         description: Duration of HTTP server requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -9435,7 +10294,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -9467,6 +10327,45 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+        - name: url.full
+          type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
         - name: url.full
           type: STRING
   - name: okhttp-3.0
@@ -9517,7 +10416,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -9557,6 +10457,51 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.request.resend_count
+          type: LONG
+        - name: http.response.status_code
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
+        - name: url.full
+          type: STRING
   openai:
   - name: openai-java-1.1
     display_name: OpenAI Java SDK
@@ -9583,7 +10528,8 @@ libraries:
       metrics:
       - name: gen_ai.client.operation.duration
         description: GenAI operation duration.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: gen_ai.operation.name
@@ -9596,8 +10542,9 @@ libraries:
           type: STRING
       - name: gen_ai.client.token.usage
         description: Measures number of input and output tokens used.
-        type: HISTOGRAM
-        unit: token
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: '{token}'
         attributes:
         - name: gen_ai.operation.name
           type: STRING
@@ -9685,7 +10632,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.operation.name
@@ -9729,7 +10677,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.operation.name
@@ -9773,7 +10722,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.operation.name
@@ -9808,24 +10758,27 @@ libraries:
       metrics:
       - name: db.client.connections.max
         description: The maximum number of open connections allowed.
-        type: LONG_SUM
-        unit: connections
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.pending_requests
         description: The number of pending requests for an open connection, cumulative
           for the entire pool.
-        type: LONG_SUM
-        unit: requests
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{requests}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.usage
         description: The number of connections that are currently in state described
           by the state attribute.
-        type: LONG_SUM
-        unit: connections
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
@@ -9836,8 +10789,9 @@ libraries:
       - name: db.client.connection.count
         description: The number of connections that are currently in state described
           by the state attribute.
-        type: LONG_SUM
-        unit: connection
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
@@ -9845,15 +10799,17 @@ libraries:
           type: STRING
       - name: db.client.connection.max
         description: The maximum number of open connections allowed.
-        type: LONG_SUM
-        unit: connection
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
       - name: db.client.connection.pending_requests
         description: The number of current pending requests for an open connection.
-        type: LONG_SUM
-        unit: request
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{request}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
@@ -9870,7 +10826,7 @@ libraries:
       name: io.opentelemetry.oshi
     has_standalone_library: true
     javaagent_target_versions:
-    - com.github.oshi:oshi-core:[5.3.1,)
+    - com.github.oshi:oshi-core:[5.0.0,)
     configurations:
     - name: otel.instrumentation.oshi.experimental-metrics.enabled
       description: Enable the experimental `runtime.java.memory` and `runtime.java.cpu_time`
@@ -9882,7 +10838,8 @@ libraries:
       metrics:
       - name: system.disk.io
         description: System disk IO
-        type: LONG_SUM
+        instrument: counter
+        data_type: LONG_SUM
         unit: By
         attributes:
         - name: device
@@ -9891,8 +10848,9 @@ libraries:
           type: STRING
       - name: system.disk.operations
         description: System disk operations
-        type: LONG_SUM
-        unit: operations
+        instrument: counter
+        data_type: LONG_SUM
+        unit: '{operations}'
         attributes:
         - name: device
           type: STRING
@@ -9900,22 +10858,25 @@ libraries:
           type: STRING
       - name: system.memory.usage
         description: System memory usage
-        type: LONG_SUM
+        instrument: updowncounter
+        data_type: LONG_SUM
         unit: By
         attributes:
         - name: state
           type: STRING
       - name: system.memory.utilization
         description: System memory utilization
-        type: DOUBLE_GAUGE
+        instrument: gauge
+        data_type: DOUBLE_GAUGE
         unit: '1'
         attributes:
         - name: state
           type: STRING
       - name: system.network.errors
         description: System network errors
-        type: LONG_SUM
-        unit: errors
+        instrument: counter
+        data_type: LONG_SUM
+        unit: '{errors}'
         attributes:
         - name: device
           type: STRING
@@ -9923,7 +10884,8 @@ libraries:
           type: STRING
       - name: system.network.io
         description: System network IO
-        type: LONG_SUM
+        instrument: counter
+        data_type: LONG_SUM
         unit: By
         attributes:
         - name: device
@@ -9932,8 +10894,9 @@ libraries:
           type: STRING
       - name: system.network.packets
         description: System network packets
-        type: LONG_SUM
-        unit: packets
+        instrument: counter
+        data_type: LONG_SUM
+        unit: '{packets}'
         attributes:
         - name: device
           type: STRING
@@ -9943,21 +10906,24 @@ libraries:
       metrics:
       - name: runtime.java.cpu_time
         description: Runtime Java CPU time
-        type: LONG_GAUGE
+        instrument: gauge
+        data_type: LONG_GAUGE
         unit: ms
         attributes:
         - name: type
           type: STRING
       - name: runtime.java.memory
         description: Runtime Java memory
-        type: LONG_SUM
+        instrument: updowncounter
+        data_type: LONG_SUM
         unit: By
         attributes:
         - name: type
           type: STRING
       - name: system.disk.io
         description: System disk IO
-        type: LONG_SUM
+        instrument: counter
+        data_type: LONG_SUM
         unit: By
         attributes:
         - name: device
@@ -9966,8 +10932,9 @@ libraries:
           type: STRING
       - name: system.disk.operations
         description: System disk operations
-        type: LONG_SUM
-        unit: operations
+        instrument: counter
+        data_type: LONG_SUM
+        unit: '{operations}'
         attributes:
         - name: device
           type: STRING
@@ -9975,22 +10942,25 @@ libraries:
           type: STRING
       - name: system.memory.usage
         description: System memory usage
-        type: LONG_SUM
+        instrument: updowncounter
+        data_type: LONG_SUM
         unit: By
         attributes:
         - name: state
           type: STRING
       - name: system.memory.utilization
         description: System memory utilization
-        type: DOUBLE_GAUGE
+        instrument: gauge
+        data_type: DOUBLE_GAUGE
         unit: '1'
         attributes:
         - name: state
           type: STRING
       - name: system.network.errors
         description: System network errors
-        type: LONG_SUM
-        unit: errors
+        instrument: counter
+        data_type: LONG_SUM
+        unit: '{errors}'
         attributes:
         - name: device
           type: STRING
@@ -9998,7 +10968,8 @@ libraries:
           type: STRING
       - name: system.network.io
         description: System network IO
-        type: LONG_SUM
+        instrument: counter
+        data_type: LONG_SUM
         unit: By
         attributes:
         - name: device
@@ -10007,8 +10978,9 @@ libraries:
           type: STRING
       - name: system.network.packets
         description: System network packets
-        type: LONG_SUM
-        unit: packets
+        instrument: counter
+        data_type: LONG_SUM
+        unit: '{packets}'
         attributes:
         - name: device
           type: STRING
@@ -10016,6 +10988,10 @@ libraries:
           type: STRING
   payara:
   - name: payara
+    display_name: Payara
+    description: |
+      This instrumentation prevents Payara's built-in OpenTracing integration from interfering with OpenTelemetry server spans, it does not emit any telemetry on its own.
+    library_link: https://www.payara.fish/
     source_path: instrumentation/payara
     scope:
       name: io.opentelemetry.payara
@@ -10103,7 +11079,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -10118,7 +11095,8 @@ libraries:
           type: LONG
       - name: http.server.request.duration
         description: Duration of HTTP server requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -10273,7 +11251,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -10356,7 +11335,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -10438,7 +11418,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -10547,7 +11528,8 @@ libraries:
       metrics:
       - name: messaging.publish.duration
         description: Measures the duration of publish operation.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: messaging.destination.name
@@ -10562,7 +11544,8 @@ libraries:
           type: LONG
       - name: messaging.receive.duration
         description: Measures the duration of receive operation.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: messaging.destination.name
@@ -10577,8 +11560,9 @@ libraries:
           type: LONG
       - name: messaging.receive.messages
         description: Measures the number of received messages.
-        type: LONG_SUM
-        unit: message
+        instrument: counter
+        data_type: LONG_SUM
+        unit: '{message}'
         attributes:
         - name: messaging.destination.name
           type: STRING
@@ -10633,7 +11617,8 @@ libraries:
       metrics:
       - name: messaging.publish.duration
         description: Measures the duration of publish operation.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: messaging.destination.name
@@ -10648,7 +11633,8 @@ libraries:
           type: LONG
       - name: messaging.receive.duration
         description: Measures the duration of receive operation.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: messaging.destination.name
@@ -10663,8 +11649,9 @@ libraries:
           type: LONG
       - name: messaging.receive.messages
         description: Measures the number of received messages.
-        type: LONG_SUM
-        unit: message
+        instrument: counter
+        data_type: LONG_SUM
+        unit: '{message}'
         attributes:
         - name: messaging.destination.name
           type: STRING
@@ -10729,6 +11716,7 @@ libraries:
     scope:
       name: io.opentelemetry.quarkus-resteasy-reactive
     javaagent_target_versions:
+    - io.quarkus:quarkus-rest:[3.9.0,)
     - io.quarkus:quarkus-resteasy-reactive:(,3.9.0)
   quartz:
   - name: quartz-2.0
@@ -10779,15 +11767,15 @@ libraries:
       name: io.opentelemetry.r2dbc-1.0
     has_standalone_library: true
     javaagent_target_versions:
-    - io.r2dbc:r2dbc-spi:[1.0.0.RELEASE,)
+    - io.r2dbc:r2dbc-spi:[0.9.0.RELEASE,)
     configurations:
-    - name: otel.instrumentation.r2dbc.statement-sanitizer.enabled
+    - name: otel.instrumentation.r2dbc.query-sanitization.enabled
       description: |
-        Enables statement sanitization for database queries. Takes precedence over otel.instrumentation.common.db-statement-sanitizer.enabled.
+        Enables query sanitization for database queries. Takes precedence over otel.instrumentation.common.db.query-sanitization.enabled.
       type: boolean
       default: true
-    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-      description: Enables statement sanitization for database queries.
+    - name: otel.instrumentation.common.db.query-sanitization.enabled
+      description: Enables query sanitization for database queries.
       type: boolean
       default: true
     - name: otel.instrumentation.r2dbc.experimental.sqlcommenter.enabled
@@ -10829,7 +11817,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.namespace
@@ -11088,7 +12077,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -11101,7 +12091,8 @@ libraries:
           type: LONG
       - name: http.server.request.duration
         description: Duration of HTTP server requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -11231,6 +12222,28 @@ libraries:
           type: STRING
         - name: messaging.system
           type: STRING
+    - when: otel.instrumentation.kafka.experimental-span-attributes=true
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: kafka.record.queue_time_ms
+          type: LONG
+        - name: messaging.client_id
+          type: STRING
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.destination.partition.id
+          type: STRING
+        - name: messaging.kafka.message.key
+          type: STRING
+        - name: messaging.kafka.message.offset
+          type: LONG
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
   - name: reactor-netty-0.9
     display_name: Reactor Netty
     description: |
@@ -11295,7 +12308,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -11368,7 +12382,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.operation.name
@@ -11445,7 +12460,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.operation.name
@@ -11469,10 +12485,13 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
-        - name: network.type
-          type: STRING
   resources:
   - name: resources
+    display_name: Resource Detectors
+    description: |
+      This instrumentation automatically detects and populates OpenTelemetry resource attributes for the host, OS, process, and container environment. It does not emit any telemetry on its own.
+    features:
+    - RESOURCE_DETECTOR
     source_path: instrumentation/resources
     scope:
       name: io.opentelemetry.resources
@@ -11518,7 +12537,8 @@ libraries:
       metrics:
       - name: http.server.request.duration
         description: Duration of HTTP server requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -11604,7 +12624,8 @@ libraries:
       metrics:
       - name: http.server.request.duration
         description: Duration of HTTP server requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -11844,39 +12865,421 @@ libraries:
         - name: messaging.system
           type: STRING
   runtime:
+  - name: runtime-telemetry
+    description: |
+      This instrumentation enables JVM runtime metrics using JMX (Java 8+) and JFR (Java 17+) to monitor CPU, memory, garbage collection, threads, classes, buffer pools, and file descriptors.
+    semantic_conventions:
+    - JVM_RUNTIME_METRICS
+    library_link: https://github.com/open-telemetry/opentelemetry-java-instrumentation/tree/main/instrumentation/runtime-telemetry
+    source_path: instrumentation/runtime-telemetry
+    scope:
+      name: io.opentelemetry.runtime-telemetry
+    has_standalone_library: true
+    configurations:
+    - name: otel.instrumentation.runtime-telemetry.emit-experimental-metrics
+      description: Enables the capture of experimental JVM runtime metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.runtime-telemetry.experimental.prefer-jfr
+      description: |
+        Prefers JFR over JMX for metrics where both collection methods are available (Java 17+).
+      type: boolean
+      default: false
+    - name: otel.instrumentation.runtime-telemetry.experimental.package-emitter.enabled
+      description: Enables creating events for JAR libraries used by the application.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.runtime-telemetry.experimental.package-emitter.jars-per-second
+      description: The number of JAR files processed per second by the package emitter.
+      type: int
+      default: 10
+    telemetry:
+    - when: Java17
+      metrics:
+      - name: jvm.buffer.count
+        description: Number of buffers in the pool.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{buffer}'
+        attributes:
+        - name: jvm.buffer.pool.name
+          type: STRING
+      - name: jvm.buffer.memory.limit
+        description: Measure of total memory capacity of buffers.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: By
+        attributes:
+        - name: jvm.buffer.pool.name
+          type: STRING
+      - name: jvm.buffer.memory.used
+        description: Measure of memory used by buffers.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: By
+        attributes:
+        - name: jvm.buffer.pool.name
+          type: STRING
+      - name: jvm.class.count
+        description: Number of classes currently loaded.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{class}'
+        attributes: []
+      - name: jvm.class.loaded
+        description: Number of classes loaded since JVM start.
+        instrument: counter
+        data_type: LONG_SUM
+        unit: '{class}'
+        attributes: []
+      - name: jvm.class.unloaded
+        description: Number of classes unloaded since JVM start.
+        instrument: counter
+        data_type: LONG_SUM
+        unit: '{class}'
+        attributes: []
+      - name: jvm.cpu.count
+        description: Number of processors available to the Java virtual machine.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{cpu}'
+        attributes: []
+      - name: jvm.cpu.longlock
+        description: Long lock times
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes: []
+      - name: jvm.cpu.recent_utilization
+        description: Recent CPU utilization for the process as reported by the JVM.
+        instrument: gauge
+        data_type: DOUBLE_GAUGE
+        unit: '1'
+        attributes: []
+      - name: jvm.cpu.time
+        description: CPU time used by the process as reported by the JVM.
+        instrument: counter
+        data_type: DOUBLE_SUM
+        unit: s
+        attributes: []
+      - name: jvm.gc.duration
+        description: Duration of JVM garbage collection actions.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: jvm.gc.action
+          type: STRING
+        - name: jvm.gc.name
+          type: STRING
+      - name: jvm.memory.committed
+        description: Measure of memory committed.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: By
+        attributes:
+        - name: jvm.memory.pool.name
+          type: STRING
+        - name: jvm.memory.type
+          type: STRING
+      - name: jvm.memory.init
+        description: Measure of initial memory requested.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: By
+        attributes:
+        - name: jvm.memory.pool.name
+          type: STRING
+        - name: jvm.memory.type
+          type: STRING
+      - name: jvm.memory.limit
+        description: Measure of max obtainable memory.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: By
+        attributes:
+        - name: jvm.memory.pool.name
+          type: STRING
+        - name: jvm.memory.type
+          type: STRING
+      - name: jvm.memory.used
+        description: Measure of memory used.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: By
+        attributes:
+        - name: jvm.memory.pool.name
+          type: STRING
+        - name: jvm.memory.type
+          type: STRING
+      - name: jvm.memory.used_after_last_gc
+        description: Measure of memory used, as measured after the most recent garbage
+          collection event on this pool.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: By
+        attributes:
+        - name: jvm.memory.pool.name
+          type: STRING
+        - name: jvm.memory.type
+          type: STRING
+      - name: jvm.system.cpu.utilization
+        description: Recent CPU utilization for the whole system as reported by the
+          JVM.
+        instrument: gauge
+        data_type: DOUBLE_GAUGE
+        unit: '1'
+        attributes: []
+      - name: jvm.thread.count
+        description: Number of executing platform threads.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{thread}'
+        attributes:
+        - name: jvm.thread.daemon
+          type: BOOLEAN
+        - name: jvm.thread.state
+          type: STRING
+    - when: default
+      metrics:
+      - name: jvm.buffer.count
+        description: Number of buffers in the pool.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{buffer}'
+        attributes:
+        - name: jvm.buffer.pool.name
+          type: STRING
+      - name: jvm.buffer.memory.limit
+        description: Measure of total memory capacity of buffers.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: By
+        attributes:
+        - name: jvm.buffer.pool.name
+          type: STRING
+      - name: jvm.buffer.memory.used
+        description: Measure of memory used by buffers.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: By
+        attributes:
+        - name: jvm.buffer.pool.name
+          type: STRING
+      - name: jvm.class.count
+        description: Number of classes currently loaded.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{class}'
+        attributes: []
+      - name: jvm.class.loaded
+        description: Number of classes loaded since JVM start.
+        instrument: counter
+        data_type: LONG_SUM
+        unit: '{class}'
+        attributes: []
+      - name: jvm.class.unloaded
+        description: Number of classes unloaded since JVM start.
+        instrument: counter
+        data_type: LONG_SUM
+        unit: '{class}'
+        attributes: []
+      - name: jvm.cpu.count
+        description: Number of processors available to the Java virtual machine.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{cpu}'
+        attributes: []
+      - name: jvm.cpu.recent_utilization
+        description: Recent CPU utilization for the process as reported by the JVM.
+        instrument: gauge
+        data_type: DOUBLE_GAUGE
+        unit: '1'
+        attributes: []
+      - name: jvm.cpu.time
+        description: CPU time used by the process as reported by the JVM.
+        instrument: counter
+        data_type: DOUBLE_SUM
+        unit: s
+        attributes: []
+      - name: jvm.file_descriptor.count
+        description: Number of open file descriptors as reported by the JVM.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{file_descriptor}'
+        attributes: []
+      - name: jvm.file_descriptor.limit
+        description: Measure of max open file descriptors as reported by the JVM.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{file_descriptor}'
+        attributes: []
+      - name: jvm.gc.duration
+        description: Duration of JVM garbage collection actions.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: jvm.gc.action
+          type: STRING
+        - name: jvm.gc.cause
+          type: STRING
+        - name: jvm.gc.name
+          type: STRING
+      - name: jvm.memory.committed
+        description: Measure of memory committed.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: By
+        attributes:
+        - name: jvm.memory.pool.name
+          type: STRING
+        - name: jvm.memory.type
+          type: STRING
+      - name: jvm.memory.init
+        description: Measure of initial memory requested.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: By
+        attributes:
+        - name: jvm.memory.pool.name
+          type: STRING
+        - name: jvm.memory.type
+          type: STRING
+      - name: jvm.memory.limit
+        description: Measure of max obtainable memory.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: By
+        attributes:
+        - name: jvm.memory.pool.name
+          type: STRING
+        - name: jvm.memory.type
+          type: STRING
+      - name: jvm.memory.used
+        description: Measure of memory used.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: By
+        attributes:
+        - name: jvm.memory.pool.name
+          type: STRING
+        - name: jvm.memory.type
+          type: STRING
+      - name: jvm.memory.used_after_last_gc
+        description: Measure of memory used, as measured after the most recent garbage
+          collection event on this pool.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: By
+        attributes:
+        - name: jvm.memory.pool.name
+          type: STRING
+        - name: jvm.memory.type
+          type: STRING
+      - name: jvm.system.cpu.load_1m
+        description: Average CPU load of the whole system for the last minute as reported
+          by the JVM.
+        instrument: gauge
+        data_type: DOUBLE_GAUGE
+        unit: '{run_queue_item}'
+        attributes: []
+      - name: jvm.system.cpu.utilization
+        description: Recent CPU utilization for the whole system as reported by the
+          JVM.
+        instrument: gauge
+        data_type: DOUBLE_GAUGE
+        unit: '1'
+        attributes: []
+      - name: jvm.thread.count
+        description: Number of executing platform threads.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{thread}'
+        attributes:
+        - name: jvm.thread.daemon
+          type: BOOLEAN
+        - name: jvm.thread.state
+          type: STRING
   - name: runtime-telemetry-java17
+    description: |
+      DEPRECATED: This instrumentation enables JVM runtime metrics using JFR (Java 17+). Use the unified runtime-telemetry module instead, which provides both JMX and JFR support.
+    semantic_conventions:
+    - JVM_RUNTIME_METRICS
+    library_link: https://github.com/open-telemetry/opentelemetry-java-instrumentation/tree/main/instrumentation/runtime-telemetry/runtime-telemetry-java17
     source_path: instrumentation/runtime-telemetry/runtime-telemetry-java17
     minimum_java_version: 17
     scope:
       name: io.opentelemetry.runtime-telemetry-java17
     has_standalone_library: true
   - name: runtime-telemetry-java8
+    description: |
+      DEPRECATED: This instrumentation enables JVM runtime metrics using JMX (Java 8+). Use the unified runtime-telemetry module instead, which provides both JMX and JFR support.
+    semantic_conventions:
+    - JVM_RUNTIME_METRICS
+    library_link: https://github.com/open-telemetry/opentelemetry-java-instrumentation/tree/main/instrumentation/runtime-telemetry/runtime-telemetry-java8
     source_path: instrumentation/runtime-telemetry/runtime-telemetry-java8
     scope:
       name: io.opentelemetry.runtime-telemetry-java8
     has_standalone_library: true
   rxjava:
   - name: rxjava-2.0
+    display_name: RxJava
+    description: |
+      This instrumentation enables context propagation for RxJava 2 reactive streams and adds support for @WithSpan annotations on methods that return RxJava 2 types. It does not emit any telemetry on its own.
+    library_link: https://github.com/ReactiveX/RxJava/tree/2.x
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/rxjava/rxjava-2.0
     scope:
       name: io.opentelemetry.rxjava-2.0
     has_standalone_library: true
     javaagent_target_versions:
     - io.reactivex.rxjava2:rxjava:[2.0.6,)
+    configurations:
+    - name: otel.instrumentation.rxjava.experimental-span-attributes
+      description: |
+        Enables the experimental span attribute `rxjava.canceled`.
+      type: boolean
+      default: false
   - name: rxjava-3.0
+    display_name: RxJava
+    description: |
+      This instrumentation enables context propagation for RxJava 3 reactive streams and adds support for @WithSpan annotations on methods that return RxJava 3 types. It does not emit any telemetry on its own.
+    library_link: https://github.com/ReactiveX/RxJava/tree/3.x
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/rxjava/rxjava-3.0
     scope:
       name: io.opentelemetry.rxjava-3.0
     has_standalone_library: true
     javaagent_target_versions:
     - io.reactivex.rxjava3:rxjava:[3.0.0,3.1.0]
+    configurations:
+    - name: otel.instrumentation.rxjava.experimental-span-attributes
+      description: |
+        Enables the experimental span attribute `rxjava.canceled`.
+      type: boolean
+      default: false
   - name: rxjava-3.1.1
+    display_name: RxJava
+    description: |
+      This instrumentation enables context propagation for RxJava 3 reactive streams and adds support for @WithSpan annotations on methods that return RxJava 3 types. It does not emit any telemetry on its own.
+    library_link: https://github.com/ReactiveX/RxJava/tree/3.x
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/rxjava/rxjava-3.1.1
     scope:
       name: io.opentelemetry.rxjava-3.1.1
     has_standalone_library: true
     javaagent_target_versions:
     - io.reactivex.rxjava3:rxjava:[3.1.1,)
+    configurations:
+    - name: otel.instrumentation.rxjava.experimental-span-attributes
+      description: |
+        Enables the experimental span attribute `rxjava.canceled`.
+      type: boolean
+      default: false
   scala:
   - name: scala-fork-join-2.8
     display_name: Scala ForkJoinPool
@@ -11902,6 +13305,7 @@ libraries:
     source_path: instrumentation/servlet/servlet-2.2
     scope:
       name: io.opentelemetry.servlet-2.2
+      schema_url: https://opentelemetry.io/schemas/1.37.0
     javaagent_target_versions:
     - javax.servlet:servlet-api:[2.2, 3.0)
     configurations:
@@ -11909,13 +13313,13 @@ libraries:
       description: Enables capturing the experimental `servlet.timeout` span attribute.
       type: boolean
       default: false
-    - name: otel.instrumentation.servlet.capture-request-parameters
+    - name: otel.instrumentation.servlet.experimental.capture-request-parameters
       description: List of request parameter names to capture as span attributes.
       type: list
       default: ''
-    - name: otel.instrumentation.servlet.add-trace-id-request-attribute
-      description: Adds the trace ID and span ID as a request attributes for downstream
-        servlet access.
+    - name: otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
+      description: Enables adding the trace ID and span ID as request attributes for
+        downstream servlet access.
       type: boolean
       default: true
     telemetry:
@@ -11923,7 +13327,8 @@ libraries:
       metrics:
       - name: http.server.request.duration
         description: Duration of HTTP server requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -11982,6 +13387,7 @@ libraries:
     source_path: instrumentation/servlet/servlet-3.0
     scope:
       name: io.opentelemetry.servlet-3.0
+      schema_url: https://opentelemetry.io/schemas/1.37.0
     has_standalone_library: true
     javaagent_target_versions:
     - javax.servlet:javax.servlet-api:[3.0,)
@@ -11990,13 +13396,13 @@ libraries:
       description: Enables capturing the experimental `servlet.timeout` span attribute.
       type: boolean
       default: false
-    - name: otel.instrumentation.servlet.capture-request-parameters
+    - name: otel.instrumentation.servlet.experimental.capture-request-parameters
       description: List of request parameter names to capture as span attributes.
       type: list
       default: ''
-    - name: otel.instrumentation.servlet.add-trace-id-request-attribute
-      description: Adds the trace ID and span ID as a request attributes for downstream
-        servlet access.
+    - name: otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
+      description: Enables adding the trace ID and span ID as request attributes for
+        downstream servlet access.
       type: boolean
       default: true
     telemetry:
@@ -12004,7 +13410,8 @@ libraries:
       metrics:
       - name: http.server.request.duration
         description: Duration of HTTP server requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -12069,6 +13476,7 @@ libraries:
     source_path: instrumentation/servlet/servlet-5.0
     scope:
       name: io.opentelemetry.servlet-5.0
+      schema_url: https://opentelemetry.io/schemas/1.37.0
     has_standalone_library: true
     javaagent_target_versions:
     - jakarta.servlet:jakarta.servlet-api:[5.0.0,)
@@ -12077,13 +13485,13 @@ libraries:
       description: Enables capturing the experimental `servlet.timeout` span attribute.
       type: boolean
       default: false
-    - name: otel.instrumentation.servlet.capture-request-parameters
+    - name: otel.instrumentation.servlet.experimental.capture-request-parameters
       description: List of request parameter names to capture as span attributes.
       type: list
       default: ''
-    - name: otel.instrumentation.servlet.add-trace-id-request-attribute
-      description: Adds the trace ID and span ID as a request attributes for downstream
-        servlet access.
+    - name: otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
+      description: Enables adding the trace ID and span ID as request attributes for
+        downstream servlet access.
       type: boolean
       default: true
     telemetry:
@@ -12091,7 +13499,8 @@ libraries:
       metrics:
       - name: http.server.request.duration
         description: Duration of HTTP server requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -12184,6 +13593,10 @@ libraries:
       type: boolean
       default: false
     telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
     - when: otel.instrumentation.spring-batch.experimental-span-attributes=true
       spans:
       - span_kind: INTERNAL
@@ -12275,7 +13688,6 @@ libraries:
     features:
     - CONTEXT_PROPAGATION
     source_path: instrumentation/spring/spring-core-2.0
-    minimum_java_version: 17
     scope:
       name: io.opentelemetry.spring-core-2.0
     javaagent_target_versions:
@@ -12686,7 +14098,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -12757,7 +14170,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -12811,7 +14225,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -12824,7 +14239,8 @@ libraries:
           type: LONG
       - name: http.server.request.duration
         description: Duration of HTTP server requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -12945,7 +14361,8 @@ libraries:
       metrics:
       - name: http.server.request.duration
         description: Duration of HTTP server requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -13120,7 +14537,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.operation.name
@@ -13226,61 +14644,255 @@ libraries:
         attributes: []
   tomcat:
   - name: tomcat-7.0
+    display_name: Apache Tomcat
+    description: This instrumentation enables HTTP server spans and HTTP server metrics
+      for Apache Tomcat.
+    semantic_conventions:
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
+    library_link: https://tomcat.apache.org/
+    features:
+    - HTTP_ROUTE
     source_path: instrumentation/tomcat/tomcat-7.0
     scope:
       name: io.opentelemetry.tomcat-7.0
+      schema_url: https://opentelemetry.io/schemas/1.37.0
     javaagent_target_versions:
     - org.apache.tomcat.embed:tomcat-embed-core:[7.0.4, 10)
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.server.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.body.size` and `http.server.response.body.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.servlet.experimental-span-attributes
+      description: Enables capturing the experimental `servlet.timeout` span attribute.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.servlet.capture-request-parameters
+      description: List of request parameter names to capture as span attributes.
+      type: list
+      default: ''
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
+      spans:
+      - span_kind: SERVER
+        attributes:
+        - name: client.address
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.path
+          type: STRING
+        - name: url.query
+          type: STRING
+        - name: url.scheme
+          type: STRING
+        - name: user_agent.original
+          type: STRING
   - name: tomcat-10.0
+    display_name: Apache Tomcat
+    description: This instrumentation enables HTTP server spans and HTTP server metrics
+      for Apache Tomcat.
+    semantic_conventions:
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
+    library_link: https://tomcat.apache.org/
+    features:
+    - HTTP_ROUTE
     source_path: instrumentation/tomcat/tomcat-10.0
-    minimum_java_version: 11
     scope:
       name: io.opentelemetry.tomcat-10.0
+      schema_url: https://opentelemetry.io/schemas/1.37.0
     javaagent_target_versions:
     - org.apache.tomcat.embed:tomcat-embed-core:[10,)
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.server.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.body.size` and `http.server.response.body.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.servlet.experimental-span-attributes
+      description: Enables capturing the experimental `servlet.timeout` span attribute.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.servlet.capture-request-parameters
+      description: List of request parameter names to capture as span attributes.
+      type: list
+      default: ''
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
+      spans:
+      - span_kind: SERVER
+        attributes:
+        - name: client.address
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.path
+          type: STRING
+        - name: url.query
+          type: STRING
+        - name: url.scheme
+          type: STRING
+        - name: user_agent.original
+          type: STRING
   - name: tomcat-jdbc
+    display_name: Tomcat JDBC
+    description: This instrumentation enables database connection pool metrics for
+      Tomcat JDBC.
+    semantic_conventions:
+    - DATABASE_POOL_METRICS
+    library_link: https://tomcat.apache.org/tomcat-8.5-doc/jdbc-pool.html
     source_path: instrumentation/tomcat/tomcat-jdbc
     scope:
       name: io.opentelemetry.tomcat-jdbc
     javaagent_target_versions:
     - org.apache.tomcat:tomcat-jdbc:[8.5.0,)
+    configurations:
+    - name: otel.semconv-stability.opt-in
+      description: |
+        Opt-in to emit stable semantic conventions instead of the old experimental semantic conventions. Accepts a comma-separated list of semantic convention groups (e.g., `database`, `http`, `messaging`). Use `<group>/dup` to emit both old and new conventions simultaneously. Stable semantic conventions will become the default in version 3.0 of the agent.
+      type: list
+      default: ''
     telemetry:
     - when: default
       metrics:
       - name: db.client.connections.idle.max
         description: The maximum number of idle open connections allowed.
-        type: LONG_SUM
-        unit: connections
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.idle.min
         description: The minimum number of idle open connections allowed.
-        type: LONG_SUM
-        unit: connections
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.max
         description: The maximum number of open connections allowed.
-        type: LONG_SUM
-        unit: connections
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.pending_requests
         description: The number of pending requests for an open connection, cumulative
           for the entire pool.
-        type: LONG_SUM
-        unit: requests
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{requests}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.usage
         description: The number of connections that are currently in state described
           by the state attribute.
-        type: LONG_SUM
-        unit: connections
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
@@ -13291,8 +14903,9 @@ libraries:
       - name: db.client.connection.count
         description: The number of connections that are currently in state described
           by the state attribute.
-        type: LONG_SUM
-        unit: connection
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
@@ -13300,29 +14913,33 @@ libraries:
           type: STRING
       - name: db.client.connection.idle.max
         description: The maximum number of idle open connections allowed.
-        type: LONG_SUM
-        unit: connection
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
       - name: db.client.connection.idle.min
         description: The minimum number of idle open connections allowed.
-        type: LONG_SUM
-        unit: connection
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
       - name: db.client.connection.max
         description: The maximum number of open connections allowed.
-        type: LONG_SUM
-        unit: connection
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
       - name: db.client.connection.pending_requests
         description: The number of current pending requests for an open connection.
-        type: LONG_SUM
-        unit: request
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{request}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
@@ -13362,19 +14979,106 @@ libraries:
           type: STRING
   undertow:
   - name: undertow-1.4
+    display_name: Undertow
+    description: This instrumentation enables HTTP server spans and HTTP server metrics
+      for Undertow.
+    semantic_conventions:
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
+    library_link: https://undertow.io/
     source_path: instrumentation/undertow-1.4
     scope:
       name: io.opentelemetry.undertow-1.4
+      schema_url: https://opentelemetry.io/schemas/1.37.0
     javaagent_target_versions:
     - io.undertow:undertow-core:[1.4.0.Final,)
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.server.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.body.size` and `http.server.response.body.size` metrics.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
+      spans:
+      - span_kind: SERVER
+        attributes:
+        - name: client.address
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.path
+          type: STRING
+        - name: url.query
+          type: STRING
+        - name: url.scheme
+          type: STRING
+        - name: user_agent.original
+          type: STRING
   vaadin:
   - name: vaadin-14.2
+    display_name: Vaadin
+    description: |
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for Vaadin applications (controller spans are disabled by default).
+    library_link: https://vaadin.com/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/vaadin-14.2
     scope:
       name: io.opentelemetry.vaadin-14.2
     javaagent_target_versions:
     - com.vaadin:flow-server:[2.2.0,3)
     - com.vaadin:flow-server:[3.1.0,25.0.0)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller spans.
+      type: boolean
+      default: false
   vertx:
   - name: vertx-http-client-3.0
     display_name: Vert.x HTTP Client
@@ -13423,7 +15127,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -13455,7 +15160,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -13530,7 +15236,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -13572,7 +15279,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -13658,7 +15366,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -13700,7 +15409,8 @@ libraries:
       metrics:
       - name: http.client.request.duration
         description: Duration of HTTP client requests.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: http.request.method
@@ -13830,8 +15540,8 @@ libraries:
     javaagent_target_versions:
     - io.vertx:vertx-redis-client:[4.0.0,)
     configurations:
-    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-      description: Enables statement sanitization for database queries.
+    - name: otel.instrumentation.common.db.query-sanitization.enabled
+      description: Enables query sanitization for database queries.
       type: boolean
       default: true
     - name: otel.instrumentation.common.peer-service-mapping
@@ -13866,7 +15576,8 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.namespace
@@ -13930,8 +15641,8 @@ libraries:
     javaagent_target_versions:
     - io.vertx:vertx-sql-client:[4.0.0,5)
     configurations:
-    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-      description: Enables statement sanitization for database queries.
+    - name: otel.instrumentation.common.db.query-sanitization.enabled
+      description: Enables query sanitization for database queries.
       type: boolean
       default: true
     telemetry:
@@ -13959,12 +15670,15 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.namespace
           type: STRING
         - name: db.query.summary
+          type: STRING
+        - name: db.system.name
           type: STRING
         - name: server.address
           type: STRING
@@ -13978,6 +15692,8 @@ libraries:
         - name: db.query.summary
           type: STRING
         - name: db.query.text
+          type: STRING
+        - name: db.system.name
           type: STRING
         - name: error.type
           type: STRING
@@ -14002,8 +15718,8 @@ libraries:
     javaagent_target_versions:
     - io.vertx:vertx-sql-client:[5.0.0,)
     configurations:
-    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-      description: Enables statement sanitization for database queries.
+    - name: otel.instrumentation.common.db.query-sanitization.enabled
+      description: Enables query sanitization for database queries.
       type: boolean
       default: true
     telemetry:
@@ -14031,12 +15747,15 @@ libraries:
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
-        type: HISTOGRAM
+        instrument: histogram
+        data_type: HISTOGRAM
         unit: s
         attributes:
         - name: db.namespace
           type: STRING
         - name: db.query.summary
+          type: STRING
+        - name: db.system.name
           type: STRING
         - name: server.address
           type: STRING
@@ -14050,6 +15769,8 @@ libraries:
         - name: db.query.summary
           type: STRING
         - name: db.query.text
+          type: STRING
+        - name: db.system.name
           type: STRING
         - name: error.type
           type: STRING
@@ -14073,8 +15794,11 @@ libraries:
     - io.vertx:vertx-web:[3.0.0,)
   vibur:
   - name: vibur-dbcp-11.0
-    description: Instrumentation for the vibur-dbcp library, which provides connection
-      pool metrics.
+    display_name: Vibur DBCP
+    description: |
+      This instrumentation enables database connection pool metrics for Vibur DBCP data sources.
+    semantic_conventions:
+    - DATABASE_POOL_METRICS
     library_link: https://www.vibur.org/
     source_path: instrumentation/vibur-dbcp-11.0
     scope:
@@ -14087,16 +15811,18 @@ libraries:
       metrics:
       - name: db.client.connections.max
         description: The maximum number of open connections allowed.
-        type: LONG_SUM
-        unit: connections
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.usage
         description: The number of connections that are currently in state described
           by the state attribute.
-        type: LONG_SUM
-        unit: connections
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
@@ -14107,8 +15833,9 @@ libraries:
       - name: db.client.connection.count
         description: The number of connections that are currently in state described
           by the state attribute.
-        type: LONG_SUM
-        unit: connection
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
@@ -14116,8 +15843,9 @@ libraries:
           type: STRING
       - name: db.client.connection.max
         description: The maximum number of open connections allowed.
-        type: LONG_SUM
-        unit: connection
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
@@ -14136,25 +15864,127 @@ libraries:
     - org.apache.wicket:wicket:[8.0.0,]
   xxl:
   - name: xxl-job-1.9.2
+    display_name: XXL-Job
+    description: This instrumentation enables spans for XXL-Job task executions.
+    library_link: https://github.com/xuxueli/xxl-job
     source_path: instrumentation/xxl-job/xxl-job-1.9.2
     scope:
       name: io.opentelemetry.xxl-job-1.9.2
     javaagent_target_versions:
     - com.xuxueli:xxl-job-core:[1.9.2, 2.1.2)
+    configurations:
+    - name: otel.instrumentation.xxl-job.experimental-span-attributes
+      description: |
+        Enables experimental span attributes `job.system`, `scheduling.xxl-job.glue.type`, and `scheduling.xxl-job.job.id`.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+    - when: otel.instrumentation.xxl-job.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+        - name: job.system
+          type: STRING
+        - name: scheduling.xxl-job.glue.type
+          type: STRING
+        - name: scheduling.xxl-job.job.id
+          type: LONG
   - name: xxl-job-2.1.2
+    display_name: XXL-Job
+    description: This instrumentation enables spans for XXL-Job task executions.
+    library_link: https://github.com/xuxueli/xxl-job
     source_path: instrumentation/xxl-job/xxl-job-2.1.2
     scope:
       name: io.opentelemetry.xxl-job-2.1.2
     javaagent_target_versions:
     - com.xuxueli:xxl-job-core:[2.1.2,2.3.0)
+    configurations:
+    - name: otel.instrumentation.xxl-job.experimental-span-attributes
+      description: |
+        Enables experimental span attributes `job.system`, `scheduling.xxl-job.glue.type`, and `scheduling.xxl-job.job.id`.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+    - when: otel.instrumentation.xxl-job.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+        - name: job.system
+          type: STRING
+        - name: scheduling.xxl-job.glue.type
+          type: STRING
+        - name: scheduling.xxl-job.job.id
+          type: LONG
   - name: xxl-job-2.3.0
+    display_name: XXL-Job
+    description: This instrumentation enables spans for XXL-Job task executions.
+    library_link: https://github.com/xuxueli/xxl-job
     source_path: instrumentation/xxl-job/xxl-job-2.3.0
     scope:
       name: io.opentelemetry.xxl-job-2.3.0
     javaagent_target_versions:
     - com.xuxueli:xxl-job-core:[2.3.0,)
+    configurations:
+    - name: otel.instrumentation.xxl-job.experimental-span-attributes
+      description: |
+        Enables experimental span attributes `job.system`, `scheduling.xxl-job.glue.type`, and `scheduling.xxl-job.job.id`.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+    - when: otel.instrumentation.xxl-job.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+        - name: job.system
+          type: STRING
+        - name: scheduling.xxl-job.glue.type
+          type: STRING
+        - name: scheduling.xxl-job.job.id
+          type: LONG
   zio:
   - name: zio-2.0
+    display_name: ZIO
+    description: |
+      This instrumentation provides context propagation for ZIO fibers, it does not emit any telemetry on its own.
+    library_link: https://zio.dev/
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/zio/zio-2.0
     scope:
       name: io.opentelemetry.zio-2.0
@@ -14163,6 +15993,7 @@ libraries:
     - dev.zio:zio_3:[2.0.0,)
     - dev.zio:zio_2.12:[2.0.0,)
   - name: zio-http-3.0
+    display_name: ZIO HTTP
     description: |
       This instrumentation does not emit telemetry on its own. Instead, it extracts the HTTP route and attaches it to HTTP server spans and HTTP server metrics.
     library_link: https://ziohttp.com/
@@ -14297,6 +16128,12 @@ internal:
   javaagent_target_versions:
   - io.projectreactor:reactor-core:[3.4.0,)
 - name: rxjava-1.0
+  display_name: RxJava
+  description: |
+    This instrumentation enables context propagation for RxJava 1 reactive streams. It does not emit any telemetry on its own.
+  library_link: https://github.com/ReactiveX/RxJava/tree/1.x
+  features:
+  - CONTEXT_PROPAGATION
   source_path: instrumentation/rxjava/rxjava-1.0
   scope:
     name: io.opentelemetry.rxjava-1.0

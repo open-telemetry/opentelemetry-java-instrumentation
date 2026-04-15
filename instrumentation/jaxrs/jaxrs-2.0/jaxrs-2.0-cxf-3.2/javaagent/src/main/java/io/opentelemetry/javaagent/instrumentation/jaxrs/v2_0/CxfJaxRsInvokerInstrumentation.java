@@ -18,7 +18,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.cxf.message.Exchange;
 
-public class CxfJaxRsInvokerInstrumentation implements TypeInstrumentation {
+class CxfJaxRsInvokerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -32,21 +32,21 @@ public class CxfJaxRsInvokerInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("org.apache.cxf.message.Exchange")))
             .and(takesArgument(1, Object.class))
             .and(takesArgument(2, Object.class)),
-        CxfJaxRsInvokerInstrumentation.class.getName() + "$InvokeAdvice");
+        getClass().getName() + "$InvokeAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class InvokeAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.Argument(0) Exchange exchange) {
 
       Context context = CxfSpanName.INSTANCE.updateServerSpanName(exchange);
       return context != null ? context.makeCurrent() : null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();

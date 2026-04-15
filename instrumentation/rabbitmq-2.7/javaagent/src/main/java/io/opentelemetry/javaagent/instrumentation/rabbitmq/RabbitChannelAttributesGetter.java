@@ -12,8 +12,8 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum RabbitChannelAttributesGetter implements MessagingAttributesGetter<ChannelAndMethod, Void> {
-  INSTANCE;
+final class RabbitChannelAttributesGetter
+    implements MessagingAttributesGetter<ChannelAndMethod, Void> {
 
   @Override
   public String getSystem(ChannelAndMethod channelAndMethod) {

@@ -1,5 +1,9 @@
 # Runtime Telemetry Java 17
 
+> **Deprecated:** This module is deprecated. Use
+> [`opentelemetry-runtime-telemetry`](../library/README.md) instead, which provides a unified API
+> for all Java versions including JFR support on Java 17+.
+
 The main entry point is the `RuntimeMetrics` class in the package `io.opentelemetry.instrumentation.runtimemetrics.java17`:
 
 ```java

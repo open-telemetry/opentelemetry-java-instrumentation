@@ -25,7 +25,9 @@ public class OpenTelemetryApiIncubatorInstrumentationModule extends Instrumentat
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return hasClassesNamed(
+        // added in 1.42
         "application.io.opentelemetry.api.common.Value",
+        // removed in 1.57
         "application.io.opentelemetry.api.incubator.ExtendedOpenTelemetry");
   }
 

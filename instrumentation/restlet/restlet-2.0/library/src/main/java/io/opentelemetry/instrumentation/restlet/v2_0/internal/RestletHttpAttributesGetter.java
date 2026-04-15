@@ -16,8 +16,7 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.util.Series;
 
-enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, Response> {
-  INSTANCE;
+final class RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, Response> {
 
   @Override
   public String getHttpRequestMethod(Request request) {

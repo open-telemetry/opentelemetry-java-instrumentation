@@ -96,7 +96,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
-  public void traceRequest(boolean useCache) throws IOException {
+  void traceRequest(boolean useCache) throws IOException {
     URL url = resolveAddress("/success").toURL();
 
     testing.runWithSpan(
@@ -157,7 +157,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
   @ParameterizedTest
   @ValueSource(ints = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
-  public void testBrokenApiUsage() throws IOException {
+  void testBrokenApiUsage() throws IOException {
     URL url = resolveAddress("/success").toURL();
     HttpURLConnection connection =
         testing.runWithSpan(
@@ -197,7 +197,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
   }
 
   @Test
-  public void testPostRequest() throws IOException {
+  void testPostRequest() throws IOException {
     URL url = resolveAddress("/success").toURL();
     testing.runWithSpan(
         "someTrace",
@@ -247,7 +247,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
   }
 
   @Test
-  public void getOutputStreamShouldTransformGetIntoPost() throws IOException {
+  void getOutputStreamShouldTransformGetIntoPost() throws IOException {
     URL url = resolveAddress("/success").toURL();
     testing.runWithSpan(
         "someTrace",
@@ -302,7 +302,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
   @ParameterizedTest
   @ValueSource(strings = {"http", "https"})
-  public void traceRequestWithConnectionFailure(String scheme) {
+  void traceRequestWithConnectionFailure(String scheme) {
     String uri = scheme + "://localhost:" + PortUtils.UNUSABLE_PORT;
 
     Throwable thrown =

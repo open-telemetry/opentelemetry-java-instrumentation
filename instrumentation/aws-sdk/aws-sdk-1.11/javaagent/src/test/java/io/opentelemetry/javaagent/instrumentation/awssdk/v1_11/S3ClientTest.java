@@ -11,6 +11,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_S3_BUCKET;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
@@ -130,6 +131,7 @@ class S3ClientTest extends AbstractS3ClientTest {
                                 equalTo(URL_FULL, "https://s3.amazonaws.com"),
                                 equalTo(HTTP_REQUEST_METHOD, "HEAD"),
                                 equalTo(SERVER_ADDRESS, "s3.amazonaws.com"),
+                                equalTo(SERVER_PORT, 443L),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "Amazon S3"),
                                 equalTo(RPC_METHOD, "HeadBucket"),

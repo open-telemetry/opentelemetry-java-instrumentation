@@ -14,7 +14,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
 
-public final class AdviceUtils {
+public class AdviceUtils {
 
   public static final String ON_SPAN_END = AdviceUtils.class.getName() + ".OnSpanEnd";
   public static final String CONTEXT = AdviceUtils.class.getName() + ".Context";
@@ -41,7 +41,7 @@ public final class AdviceUtils {
     }
   }
 
-  public static <T> Mono<T> wrapMono(Mono<T> mono, Context context) {
+  public static <T> Mono<T> wrapMono(Mono<T> mono, @Nullable Context context) {
     if (context == null) {
       return mono;
     }

@@ -20,10 +20,10 @@ import net.bytebuddy.asm.Advice;
 public class ResponseSendAdvice {
 
   public static class AdviceScope {
-    private final ClassAndMethod classAndMethod;
     private final CallDepth callDepth;
-    private final Context context;
-    private final Scope scope;
+    @Nullable private final ClassAndMethod classAndMethod;
+    @Nullable private final Context context;
+    @Nullable private final Scope scope;
 
     public AdviceScope(CallDepth callDepth, Class<?> declaringClass, String methodName) {
       this.callDepth = callDepth;
@@ -64,8 +64,7 @@ public class ResponseSendAdvice {
     }
   }
 
-  @Nullable
-  @Advice.OnMethodEnter(suppress = Throwable.class)
+  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
   public static AdviceScope start(
       @Advice.This Object response,
       @Advice.Origin("#t") Class<?> declaringClass,
@@ -75,7 +74,7 @@ public class ResponseSendAdvice {
     return new AdviceScope(callDepth, declaringClass, methodName);
   }
 
-  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
   public static void stopSpan(
       @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
     adviceScope.exit(throwable);

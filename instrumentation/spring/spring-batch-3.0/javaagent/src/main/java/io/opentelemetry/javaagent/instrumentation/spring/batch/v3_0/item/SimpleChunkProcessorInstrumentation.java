@@ -31,23 +31,23 @@ public class SimpleChunkProcessorInstrumentation implements TypeInstrumentation 
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isProtected().and(named("doProcess")).and(takesArguments(1)),
-        this.getClass().getName() + "$ProcessAdvice");
+        getClass().getName() + "$ProcessAdvice");
     transformer.applyAdviceToMethod(
         isProtected().and(named("doWrite")).and(takesArguments(1)),
-        this.getClass().getName() + "$WriteAdvice");
+        getClass().getName() + "$WriteAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ProcessAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.FieldValue("itemProcessor") ItemProcessor<?, ?> itemProcessor) {
       return AdviceScope.enter(ITEM_OPERATION_PROCESS);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable thrown,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
@@ -61,12 +61,12 @@ public class SimpleChunkProcessorInstrumentation implements TypeInstrumentation 
   public static class WriteAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.FieldValue("itemWriter") ItemWriter<?> itemWriter) {
       return AdviceScope.enter(ITEM_OPERATION_WRITE);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable thrown,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

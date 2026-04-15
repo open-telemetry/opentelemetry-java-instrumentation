@@ -47,7 +47,8 @@ public class UndertowHelper {
     UndertowActiveHandlers.increment(context);
   }
 
-  public void handlerCompleted(Context context, Throwable throwable, HttpServerExchange exchange) {
+  public void handlerCompleted(
+      Context context, @Nullable Throwable throwable, HttpServerExchange exchange) {
     // end the span when this is the last handler to complete and exchange has
     // been completed
     if (UndertowActiveHandlers.decrementAndGet(context) == 0) {
@@ -68,8 +69,7 @@ public class UndertowHelper {
   @SuppressWarnings("unchecked") // we lose type info with attachments
   @Nullable
   public Context getServerContext(HttpServerExchange exchange) {
-    AttachmentKey<Context> contextKey =
-        (AttachmentKey<Context>) KeyHolder.contextKeys.get(AttachmentKey.class);
+    AttachmentKey<Context> contextKey = (AttachmentKey<Context>) KeyHolder.get(AttachmentKey.class);
     if (contextKey == null) {
       return null;
     }
@@ -80,8 +80,8 @@ public class UndertowHelper {
   private static void attachServerContext(Context context, HttpServerExchange exchange) {
     AttachmentKey<Context> contextKey =
         (AttachmentKey<Context>)
-            KeyHolder.contextKeys.computeIfAbsent(
-                AttachmentKey.class, key -> AttachmentKey.create(Context.class));
+            KeyHolder.computeIfAbsent(
+                AttachmentKey.class, () -> AttachmentKey.create(Context.class));
     exchange.putAttachment(contextKey, context);
   }
 

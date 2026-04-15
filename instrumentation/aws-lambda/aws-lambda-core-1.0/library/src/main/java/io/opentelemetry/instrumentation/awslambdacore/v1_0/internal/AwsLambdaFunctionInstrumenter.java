@@ -62,11 +62,10 @@ public class AwsLambdaFunctionInstrumenter {
     return openTelemetry
         .getPropagators()
         .getTextMapPropagator()
-        .extract(Context.root(), headers, MapGetter.INSTANCE);
+        .extract(Context.root(), headers, new MapGetter());
   }
 
-  private enum MapGetter implements TextMapGetter<Map<String, String>> {
-    INSTANCE;
+  private static class MapGetter implements TextMapGetter<Map<String, String>> {
 
     @Override
     public Iterable<String> keys(Map<String, String> map) {
@@ -74,7 +73,10 @@ public class AwsLambdaFunctionInstrumenter {
     }
 
     @Override
-    public String get(Map<String, String> map, String s) {
+    public String get(@Nullable Map<String, String> map, String s) {
+      if (map == null) {
+        return null;
+      }
       return map.get(s.toLowerCase(Locale.ROOT));
     }
   }

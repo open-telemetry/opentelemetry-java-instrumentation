@@ -1,10 +1,10 @@
 pluginManagement {
   plugins {
-    id("com.github.jk1.dependency-license-report") version "3.0.1"
+    id("com.github.jk1.dependency-license-report") version "3.1.2"
     id("com.google.cloud.tools.jib") version "3.5.3"
-    id("com.gradle.plugin-publish") version "2.1.0"
+    id("com.gradle.plugin-publish") version "2.1.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("org.jetbrains.kotlin.jvm") version "2.2.21"
+    id("org.jetbrains.kotlin.jvm") version "2.3.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.9.0"
     id("org.graalvm.buildtools.native") version "0.11.5"
@@ -14,7 +14,7 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.4.0"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.6.0"
   id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
   // this can't live in pluginManagement currently due to
   // https://github.com/bmuschko/gradle-docker-plugin/issues/1123
@@ -22,7 +22,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:pushLinuxImages -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:pushWindowsImages -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "10.0.0" apply false
-  id("com.gradle.develocity") version "4.3.2"
+  id("com.gradle.develocity") version "4.4.0"
 }
 
 dependencyResolutionManagement {
@@ -430,7 +430,6 @@ include(":instrumentation:ktor:ktor-common-2.0:library")
 include(":instrumentation:ktor:ktor-3.0:javaagent")
 include(":instrumentation:ktor:ktor-3.0:library")
 include(":instrumentation:ktor:ktor-3.0:testing")
-include(":instrumentation:ktor:ktor-common:library")
 include(":instrumentation:kubernetes-client-7.0:javaagent")
 include(":instrumentation:kubernetes-client-7.0:javaagent-unit-tests")
 include(":instrumentation:lettuce:lettuce-4.0:javaagent")
@@ -536,12 +535,15 @@ include(":instrumentation:play:play-ws:play-ws-common:testing")
 include(":instrumentation:powerjob-4.0:javaagent")
 include(":instrumentation:pulsar:pulsar-2.8:javaagent")
 include(":instrumentation:pulsar:pulsar-2.8:javaagent-unit-tests")
-include(":instrumentation:quarkus-resteasy-reactive:common-testing")
 include(":instrumentation:quarkus-resteasy-reactive:javaagent")
-includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus2-plugin")
-include(":instrumentation:quarkus-resteasy-reactive:quarkus2-testing")
-includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus3-plugin")
-include(":instrumentation:quarkus-resteasy-reactive:quarkus3-testing")
+include(":instrumentation:quarkus-resteasy-reactive:quarkus-common-testing")
+includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus-common-plugin")
+includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus-2.0-plugin")
+include(":instrumentation:quarkus-resteasy-reactive:quarkus-2.0-testing")
+includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus-3.0-plugin")
+include(":instrumentation:quarkus-resteasy-reactive:quarkus-3.0-testing")
+includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus-3.9-plugin")
+include(":instrumentation:quarkus-resteasy-reactive:quarkus-3.9-testing")
 include(":instrumentation:quartz-2.0:javaagent")
 include(":instrumentation:quartz-2.0:library")
 include(":instrumentation:quartz-2.0:testing")
@@ -581,10 +583,11 @@ include(":instrumentation:rocketmq:rocketmq-client-4.8:javaagent")
 include(":instrumentation:rocketmq:rocketmq-client-4.8:library")
 include(":instrumentation:rocketmq:rocketmq-client-4.8:testing")
 include(":instrumentation:rocketmq:rocketmq-client-5.0:javaagent")
-include(":instrumentation:rocketmq:rocketmq-client-5.0:testing")
+include(":instrumentation:runtime-telemetry:javaagent")
+include(":instrumentation:runtime-telemetry:library")
+include(":instrumentation:runtime-telemetry:testing")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java8:javaagent")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java8:library")
-include(":instrumentation:runtime-telemetry:runtime-telemetry-java8:testing")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java17:javaagent")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java17:library")
 include(":instrumentation:rxjava:rxjava-1.0:library")

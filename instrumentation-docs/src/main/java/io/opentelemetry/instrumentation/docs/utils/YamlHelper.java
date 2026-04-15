@@ -145,6 +145,10 @@ public class YamlHelper {
       moduleMap.put("has_standalone_library", true);
     }
 
+    if (module.hasJavaAgent()) {
+      moduleMap.put("has_javaagent", true);
+    }
+
     if (module.getAgentTargetVersions() != null && !module.getAgentTargetVersions().isEmpty()) {
       moduleMap.put("javaagent_target_versions", new ArrayList<>(module.getAgentTargetVersions()));
     }
@@ -293,7 +297,8 @@ public class YamlHelper {
     Map<String, Object> innerMetricMap = new LinkedHashMap<>();
     innerMetricMap.put("name", metric.getName());
     innerMetricMap.put("description", metric.getDescription());
-    innerMetricMap.put("type", metric.getType());
+    innerMetricMap.put("instrument", metric.getInstrumentType());
+    innerMetricMap.put("data_type", metric.getType());
     innerMetricMap.put("unit", metric.getUnit());
     innerMetricMap.put("attributes", getSortedAttributeMaps(metric.getAttributes()));
     return innerMetricMap;

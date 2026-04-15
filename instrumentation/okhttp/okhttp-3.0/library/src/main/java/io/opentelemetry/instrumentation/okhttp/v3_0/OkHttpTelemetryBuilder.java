@@ -21,13 +21,13 @@ import okhttp3.Response;
 /** Builder for {@link OkHttpTelemetry}. */
 public final class OkHttpTelemetryBuilder {
 
-  private final DefaultHttpClientInstrumenterBuilder<Interceptor.Chain, Response> builder;
-  private final OpenTelemetry openTelemetry;
-
   static {
     Experimental.internalSetEmitExperimentalTelemetry(
         (builder, emit) -> builder.builder.setEmitExperimentalHttpClientTelemetry(emit));
   }
+
+  private final DefaultHttpClientInstrumenterBuilder<Interceptor.Chain, Response> builder;
+  private final OpenTelemetry openTelemetry;
 
   OkHttpTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder = OkHttpClientInstrumenterBuilderFactory.create(openTelemetry);
