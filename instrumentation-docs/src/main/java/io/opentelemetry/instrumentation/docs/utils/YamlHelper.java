@@ -250,6 +250,9 @@ public class YamlHelper {
   private static Map<String, Object> configurationToMap(ConfigurationOption configuration) {
     Map<String, Object> conf = new LinkedHashMap<>();
     conf.put("name", configuration.name());
+    if (configuration.declarativeName() != null) {
+      conf.put("declarative_name", configuration.declarativeName());
+    }
     conf.put("description", configuration.description());
     conf.put("type", configuration.type().toString());
     if (configuration.type().equals(ConfigurationType.BOOLEAN)) {
@@ -258,6 +261,9 @@ public class YamlHelper {
       conf.put("default", Integer.parseInt(configuration.defaultValue()));
     } else {
       conf.put("default", configuration.defaultValue());
+    }
+    if (configuration.examples() != null && !configuration.examples().isEmpty()) {
+      conf.put("examples", configuration.examples());
     }
     return conf;
   }

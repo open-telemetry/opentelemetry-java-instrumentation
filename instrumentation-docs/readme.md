@@ -169,7 +169,7 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
     about the scope.
 * configuration settings
   * List of settings that are available for the instrumentation module
-  * Each setting has a name, description, type, and default value
+  * Each setting has a name (flat property format), optional declarative_name (YAML path format), description, type, default value, and optional examples
 * metrics
   * List of metrics that the instrumentation module collects, including the metric name, description, type, and attributes.
   * Separate lists for the metrics emitted by default vs via configuration options.
@@ -200,9 +200,13 @@ classification: internal                          # instrumentation classificati
 library_link: https://...                         # URL to the library or framework's main website or documentation
 configurations:
   - name: otel.instrumentation.common.db.query-sanitization.enabled
+    declarative_name: java.common.db.query_sanitization.enabled    # Optional: YAML config path
     description: Enables query sanitization for database queries.
     type: boolean               # boolean | string | list | map
     default: true
+    examples:                   # Optional: Example values for this configuration
+      - "true"
+      - "false"
 override_telemetry: false                         # Set to true to ignore auto-generated .telemetry files
 additional_telemetry:                             # Manually document telemetry metadata
   - when: "default"
