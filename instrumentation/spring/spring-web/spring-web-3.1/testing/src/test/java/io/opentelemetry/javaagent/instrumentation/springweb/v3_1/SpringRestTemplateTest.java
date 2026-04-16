@@ -76,18 +76,19 @@ class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<String>> 
       Map<String, String> headers,
       HttpClientResult httpClientResult) {
     try {
-      restTemplate.execute(
-          uri,
-          HttpMethod.valueOf(method),
-          req -> headers.forEach(req.getHeaders()::add),
-          response -> {
-            byte[] buffer = new byte[1024];
-            try (InputStream inputStream = response.getBody()) {
-              while (inputStream.read(buffer) >= 0) {}
-            }
-            httpClientResult.complete(response.getStatusCode().value());
-            return null;
-          });
+      getClient(uri)
+          .execute(
+              uri,
+              HttpMethod.valueOf(method),
+              req -> headers.forEach(req.getHeaders()::add),
+              response -> {
+                byte[] buffer = new byte[1024];
+                try (InputStream inputStream = response.getBody()) {
+                  while (inputStream.read(buffer) >= 0) {}
+                }
+                httpClientResult.complete(response.getStatusCode().value());
+                return null;
+              });
     } catch (ResourceAccessException e) {
       httpClientResult.complete(e.getCause());
     }
