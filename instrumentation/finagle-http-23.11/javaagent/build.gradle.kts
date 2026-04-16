@@ -40,6 +40,12 @@ dependencies {
   implementation(project(":instrumentation:netty:netty-common-4.0:library"))
 }
 
+tasks.withType<Jar>().configureEach {
+  // Exclude the Promise stub and its nested K class
+  exclude("com/twitter/util/Promise.class")
+  exclude("com/twitter/util/Promise$*.class")
+}
+
 tasks {
   withType<Test>().configureEach {
     systemProperty("collectMetadata", otelProps.collectMetadata)

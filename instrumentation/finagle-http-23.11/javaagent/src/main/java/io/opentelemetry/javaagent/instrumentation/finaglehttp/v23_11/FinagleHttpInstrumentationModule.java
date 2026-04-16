@@ -24,6 +24,7 @@ public class FinagleHttpInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
+        new BijectionsInstrumentation(),
         new GenStreamingServerDispatcherInstrumentation(),
         new ChannelTransportInstrumentation(),
         new H2StreamChannelInitInstrumentation());

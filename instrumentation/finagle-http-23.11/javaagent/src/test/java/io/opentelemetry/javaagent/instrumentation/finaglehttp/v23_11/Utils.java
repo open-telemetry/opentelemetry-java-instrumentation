@@ -13,6 +13,7 @@ import com.twitter.finagle.http.Method;
 import com.twitter.finagle.http.Request;
 import com.twitter.finagle.service.RetryBudget;
 import com.twitter.util.Duration;
+import com.twitter.util.FuturePool;
 import java.net.URI;
 import java.util.Locale;
 import java.util.Map;
@@ -22,6 +23,8 @@ class Utils {
   static Http.Client createClient(ClientType clientType) {
     Http.Client client =
         Http.client()
+            // ensures all work is offloaded to a thread pool -- this is where problems can happen
+            .withExecutionOffloaded(FuturePool.unboundedPool())
             .withNoHttp2()
             .withTransport()
             .readTimeout(Duration.fromMilliseconds(READ_TIMEOUT.toMillis()))

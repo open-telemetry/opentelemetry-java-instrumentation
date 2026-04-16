@@ -5,43 +5,40 @@
 
 package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
-import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
+import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import scala.Function1;
+import scala.Function0;
 
-class PromiseMonitoredInstrumentation implements TypeInstrumentation {
+class FuturePoolInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("com.twitter.util.Promise$Monitored");
+    return named("com.twitter.util.ExecutorServiceFuturePool");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor().and(takesArgument(1, named("scala.Function1"))),
-        getClass().getName() + "$WrapFunctionAdvice");
+        isMethod().and(named("apply").and(takesArgument(0, named("scala.Function0")))),
+        getClass().getName() + "$ApplyAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class WrapFunctionAdvice {
-
+  public static class ApplyAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @Advice.AssignReturned.ToArguments(@ToArgument(1))
-    public static Function1<?, ?> wrap(@Advice.Argument(1) Function1<?, ?> function1) {
-      if (function1 == null) {
-        return null;
+    public static void onApplyEnter(
+        @Advice.Argument(value = 0, readOnly = false) Function0<?> fn) {
+      if (fn != null && Context.current() != Context.root()) {
+        fn = TwitterUtilCoreHelpers.wrap(Context.current(), fn);
       }
-
-      return Function1Wrapper.wrap(function1);
     }
   }
 }

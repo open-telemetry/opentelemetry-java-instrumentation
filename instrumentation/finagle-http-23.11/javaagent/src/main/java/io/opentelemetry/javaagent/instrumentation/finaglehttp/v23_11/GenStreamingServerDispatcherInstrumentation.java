@@ -9,7 +9,9 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
+import com.twitter.finagle.http.Request;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -29,28 +31,27 @@ class GenStreamingServerDispatcherInstrumentation implements TypeInstrumentation
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("loop"), getClass().getName() + "$LoopAdvice");
+    transformer.applyAdviceToMethod(named("dispatch"), getClass().getName() + "$DispatchAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class LoopAdvice {
+  public static class DispatchAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void methodEnter() {
-      // this works bc at this point in the server evaluation, the netty
-      // instrumentation has already gone to work and assigned the context to the
-      // local thread;
-      //
-      // this works specifically in finagle's netty stack bc at this point the loop()
-      // method is running on a netty thread with the necessary access to the
-      // java-native ThreadLocal where the Context is stored
-      Helpers.contextLocal().update(Context.current());
+    public static Scope methodEnter(@Advice.Argument(0) Object req) {
+      if (!(req instanceof Request)) {
+        throw new IllegalArgumentException("unexpected request");
+      }
+      Request request = (Request) req;
+      Context context = request.ctx().apply(Helpers.OTEL_CONTEXT_KEY);
+      return context != null ? context.makeCurrent() : null;
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
-    public static void methodExit() {
-      // always clear this
-      Helpers.contextLocal().clear();
+    public static void methodExit(@Advice.Enter Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
     }
   }
 }

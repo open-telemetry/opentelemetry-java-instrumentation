@@ -8,16 +8,25 @@ package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 import static io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientRequestTracingHandler.HTTP_CLIENT_REQUEST;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons.clientHandlerFactory;
 
+import com.twitter.finagle.ChannelTransportHelpers;
+import com.twitter.finagle.http.Request;
+import com.twitter.finagle.http.Request$;
+import com.twitter.finagle.http.collection.RecordSchema;
 import com.twitter.util.Local;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.OpenTelemetryChannelInitializerDelegate;
+import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http2.Http2StreamFrameToHttpObjectCodec;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContext;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContexts;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerTracingHandler;
@@ -106,5 +115,87 @@ public class Helpers {
     };
   }
 
-  private Helpers() {}
+  public static void mutateHandlerPipeline(Channel ch) {
+    ChannelInboundHandlerAdapter oldHandler = (ChannelInboundHandlerAdapter) ch.pipeline()
+        .get(ChannelTransportHelpers.getHandlerName());
+
+    ch.pipeline().replace(oldHandler, ChannelTransportHelpers.getHandlerName(),
+        new ChannelInboundHandlerAdapter() {
+          @Override
+          public void channelActive(ChannelHandlerContext ctx) throws Exception {
+            oldHandler.channelActive(ctx);
+          }
+
+          @Override
+          public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+            oldHandler.channelReadComplete(ctx);
+          }
+
+          /*
+          Assign the context to the request.
+
+          Part 1/3 for chaining the context from netty to finagle.
+           */
+          @Override
+          public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+            System.out.println("mutation in");
+            ServerContexts serverContexts = ServerContexts.get(ctx.channel());
+            if (serverContexts == null) {
+              oldHandler.channelRead(ctx, msg);
+              return;
+            }
+
+            ServerContext serverContext = serverContexts.peekLast();
+            System.out.println("mutation out: " +  serverContext);
+
+            // type switch courtesy of com.twitter.finagle.netty4.http.Netty4ServerStreamTransport.read()
+            if (msg instanceof FullHttpRequest) {
+              VirtualField.find(FullHttpRequest.class, Context.class)
+                  .set((FullHttpRequest) msg,
+                      serverContext != null ? serverContext.context() : null);
+            } else if (msg instanceof HttpRequest) {
+              VirtualField.find(HttpRequest.class, Context.class)
+                  .set((HttpRequest) msg,
+                      serverContext != null ? serverContext.context() : null);
+            } else {
+              throw new IllegalArgumentException("unexpected request type: " + msg);
+            }
+
+            System.out.println("delegating");
+
+            oldHandler.channelRead(ctx, msg);
+          }
+
+          @Override
+          public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+            oldHandler.channelInactive(ctx);
+          }
+
+          @Override
+          public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+            oldHandler.exceptionCaught(ctx, cause);
+          }
+        });
+  }
+
+  public static final RecordSchema.Field<Context> OTEL_CONTEXT_KEY =
+      Request$.MODULE$.Schema().newField();
+
+  public static void chainContextToFinagle(Object msg, Request request) {
+    Context context;
+    // type switch courtesy of com.twitter.finagle.netty4.http.Netty4ServerStreamTransport.read()
+    if (msg instanceof FullHttpRequest) {
+      context = VirtualField.find(FullHttpRequest.class, Context.class)
+          .get((FullHttpRequest) msg);
+    } else if (msg instanceof HttpRequest) {
+      context = VirtualField.find(HttpRequest.class, Context.class)
+          .get((HttpRequest) msg);
+    } else {
+      throw new IllegalArgumentException("unexpected request type: " + msg);
+    }
+
+    System.out.println("here i am: " + Span.fromContext(context));
+
+    request.ctx().updateAndLock(OTEL_CONTEXT_KEY, context);
+  }
 }
