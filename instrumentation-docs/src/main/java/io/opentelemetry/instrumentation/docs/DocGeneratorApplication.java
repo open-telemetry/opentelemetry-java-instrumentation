@@ -51,7 +51,8 @@ public class DocGeneratorApplication {
     }
 
     try (BufferedWriter configWriter =
-        Files.newBufferedWriter(Paths.get(baseRepoPath + "docs/configuration-example.yaml"))) {
+        Files.newBufferedWriter(
+            Paths.get(baseRepoPath + "docs/declarative-configuration-example.yaml"))) {
       configWriter.write("# This file is generated and should not be manually edited.\n");
       configWriter.write(
           "# It shows all available instrumentation configurations in declarative config format.\n\n");
