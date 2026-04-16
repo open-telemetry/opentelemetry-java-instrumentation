@@ -26,15 +26,15 @@ public class HttpMethodAttributeExtractor<
   private final Set<String> knownMethods;
   private final boolean emitExperimentalHttpClientTelemetry;
 
+  public static AttributesExtractor<? super HttpURLConnection, ? super Integer> create(
+      Set<String> knownMethods) {
+    return new HttpMethodAttributeExtractor<>(knownMethods);
+  }
+
   private HttpMethodAttributeExtractor(Set<String> knownMethods) {
     this.knownMethods = knownMethods;
     emitExperimentalHttpClientTelemetry =
         AgentCommonConfig.get().shouldEmitExperimentalHttpClientTelemetry();
-  }
-
-  public static AttributesExtractor<? super HttpURLConnection, ? super Integer> create(
-      Set<String> knownMethods) {
-    return new HttpMethodAttributeExtractor<>(knownMethods);
   }
 
   @Override

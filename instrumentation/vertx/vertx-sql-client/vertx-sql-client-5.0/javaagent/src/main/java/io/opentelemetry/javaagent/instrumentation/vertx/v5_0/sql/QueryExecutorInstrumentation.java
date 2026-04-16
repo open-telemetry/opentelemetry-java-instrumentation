@@ -121,7 +121,7 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
         return new AdviceScope(callDepth, otelRequest, context, context.makeCurrent());
       }
 
-      public void end(Throwable throwable) {
+      public void end(@Nullable Throwable throwable) {
         if (callDepth.decrementAndGet() > 0) {
           return;
         }

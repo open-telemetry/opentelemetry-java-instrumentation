@@ -44,9 +44,4 @@ public class JerseyInstrumentationModule extends InstrumentationModule
         new JerseyServletContainerInstrumentation(),
         new JerseyResourceMethodDispatcherInstrumentation());
   }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
-  }
 }

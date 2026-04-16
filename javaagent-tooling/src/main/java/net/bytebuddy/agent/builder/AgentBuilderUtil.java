@@ -9,10 +9,12 @@ import static java.util.Collections.emptyIterator;
 import static java.util.Collections.singleton;
 import static java.util.logging.Level.FINE;
 
+import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.extension.matcher.internal.DelegatingMatcher;
 import io.opentelemetry.javaagent.extension.matcher.internal.DelegatingSuperTypeMatcher;
 import io.opentelemetry.javaagent.tooling.DefineClassHandler;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -36,7 +38,7 @@ public class AgentBuilderUtil {
   private static final Logger logger = Logger.getLogger(AgentBuilderUtil.class.getName());
 
   private static final Field agentBuilderTransformationsField =
-      getField(AgentBuilder.Default.class, "transformations");
+      getField(AgentBuilder.Default.class, "transformations", true);
   private static final Field rawConjunctionMatchersField =
       getField(AgentBuilder.RawMatcher.Conjunction.class, "matchers");
   private static final Field forElementMatcherField =
@@ -336,9 +338,21 @@ public class AgentBuilderUtil {
   }
 
   private static Field getField(Class<?> clazz, String name) {
+    return getField(clazz, name, false);
+  }
+
+  private static Field getField(Class<?> clazz, String name, boolean canSet) {
     try {
       Field field = clazz.getDeclaredField(name);
       field.setAccessible(true);
+      // JDK 26 prints a warning when the value of final field is changed with reflection. We avoid
+      // this by transforming the class and stripping the final modifier. Here we check that the
+      // final modifier was removed and fail fast if it is not, unless running unit tests.
+      if (canSet
+          && Modifier.isFinal(field.getModifiers())
+          && AgentBuilderUtil.class.getClassLoader().getClass() == AgentClassLoader.class) {
+        throw new IllegalStateException("Field " + clazz.getName() + "." + name + " is final");
+      }
       return field;
     } catch (NoSuchFieldException e) {
       throw new IllegalStateException(e);

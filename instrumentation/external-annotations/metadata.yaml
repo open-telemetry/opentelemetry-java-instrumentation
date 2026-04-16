@@ -1,3 +1,4 @@
+display_name: External Annotations
 classification: custom
 description: >
   The external-annotations instrumentation acts as a "shim" that automatically instruments methods

@@ -20,6 +20,10 @@ public final class SqlCommenter {
   private final BiFunction<Object, Boolean, TextMapPropagator> propagator;
   private final Predicate<Object> prepend;
 
+  public static SqlCommenterBuilder builder() {
+    return new SqlCommenterBuilder();
+  }
+
   SqlCommenter(
       boolean enabled,
       BiFunction<Object, Boolean, TextMapPropagator> propagator,
@@ -27,10 +31,6 @@ public final class SqlCommenter {
     this.enabled = enabled;
     this.propagator = propagator;
     this.prepend = prepend;
-  }
-
-  public static SqlCommenterBuilder builder() {
-    return new SqlCommenterBuilder();
   }
 
   public static SqlCommenter noop() {

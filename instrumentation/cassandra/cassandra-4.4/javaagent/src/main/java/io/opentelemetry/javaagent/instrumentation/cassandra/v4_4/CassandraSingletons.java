@@ -11,11 +11,15 @@ import io.opentelemetry.instrumentation.cassandra.v4_4.CassandraTelemetry;
 
 final class CassandraSingletons {
 
-  static final CassandraTelemetry telemetry =
+  private static final CassandraTelemetry telemetry =
       CassandraTelemetry.builder(GlobalOpenTelemetry.get())
           .setQuerySanitizationEnabled(
               DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "cassandra"))
           .build();
+
+  static CassandraTelemetry telemetry() {
+    return telemetry;
+  }
 
   private CassandraSingletons() {}
 }

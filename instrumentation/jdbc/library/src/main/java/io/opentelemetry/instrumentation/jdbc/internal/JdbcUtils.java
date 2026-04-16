@@ -84,10 +84,10 @@ public final class JdbcUtils {
     // lock, and computeDbInfo() calls back to the application code via Connection.getMetaData()
     // which could then result in a deadlock
     // (e.g. https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/4188)
-    DbInfo dbInfo = JdbcData.connectionInfo.get(connection);
+    DbInfo dbInfo = JdbcData.CONNECTION_INFO.get(connection);
     if (dbInfo == null) {
       dbInfo = computeDbInfo(connection);
-      JdbcData.connectionInfo.set(connection, JdbcData.intern(dbInfo));
+      JdbcData.CONNECTION_INFO.set(connection, JdbcData.intern(dbInfo));
     }
     return dbInfo;
   }

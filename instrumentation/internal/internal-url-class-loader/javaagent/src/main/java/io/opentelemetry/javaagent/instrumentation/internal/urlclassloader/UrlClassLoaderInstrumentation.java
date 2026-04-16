@@ -41,7 +41,7 @@ class UrlClassLoaderInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class AddUrlAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This URLClassLoader loader) {
       ClassLoaderMatcherCacheHolder.invalidateAllCachesForClassLoader(loader);
     }

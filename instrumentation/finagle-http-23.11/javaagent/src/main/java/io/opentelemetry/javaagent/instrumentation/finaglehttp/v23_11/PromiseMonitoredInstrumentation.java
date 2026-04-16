@@ -34,7 +34,7 @@ class PromiseMonitoredInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class WrapFunctionAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToArguments(@ToArgument(1))
     public static Function1<?, ?> wrap(@Advice.Argument(1) Function1<?, ?> function1) {
       if (function1 == null) {

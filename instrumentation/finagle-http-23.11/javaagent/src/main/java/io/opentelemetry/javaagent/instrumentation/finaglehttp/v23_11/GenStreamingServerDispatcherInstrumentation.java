@@ -35,7 +35,7 @@ class GenStreamingServerDispatcherInstrumentation implements TypeInstrumentation
   @SuppressWarnings("unused")
   public static class LoopAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void methodEnter() {
       // this works bc at this point in the server evaluation, the netty
       // instrumentation has already gone to work and assigned the context to the
@@ -47,7 +47,7 @@ class GenStreamingServerDispatcherInstrumentation implements TypeInstrumentation
       Helpers.CONTEXT_LOCAL.update(Context.current());
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void methodExit() {
       // always clear this
       Helpers.CONTEXT_LOCAL.clear();

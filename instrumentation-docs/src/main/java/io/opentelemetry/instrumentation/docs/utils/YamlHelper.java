@@ -145,6 +145,10 @@ public class YamlHelper {
       moduleMap.put("has_standalone_library", true);
     }
 
+    if (module.hasJavaAgent()) {
+      moduleMap.put("has_javaagent", true);
+    }
+
     if (module.getAgentTargetVersions() != null && !module.getAgentTargetVersions().isEmpty()) {
       moduleMap.put("javaagent_target_versions", new ArrayList<>(module.getAgentTargetVersions()));
     }

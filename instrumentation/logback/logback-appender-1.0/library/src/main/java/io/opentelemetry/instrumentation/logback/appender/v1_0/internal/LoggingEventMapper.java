@@ -713,7 +713,7 @@ public final class LoggingEventMapper {
 
   private static class LogstashFieldReaderHolder {
     // keeping this field in a separate class because ClassValue is missing in some android versions
-    static final ClassValue<FieldReader> valueField =
+    private static final ClassValue<FieldReader> valueField =
         new ClassValue<FieldReader>() {
           @Override
           protected FieldReader computeValue(Class<?> type) {

@@ -46,9 +46,4 @@ public class HibernateInstrumentationModule extends InstrumentationModule
         new SessionInstrumentation(),
         new TransactionInstrumentation());
   }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
-  }
 }

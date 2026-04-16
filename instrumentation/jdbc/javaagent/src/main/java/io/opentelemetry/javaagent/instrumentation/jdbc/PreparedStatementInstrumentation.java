@@ -106,7 +106,7 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
     public static JdbcAdviceScope onEnter(@Advice.This PreparedStatement statement) {
       // skip prepared statements without attached sql, probably a wrapper around the actual
       // prepared statement
-      if (JdbcData.preparedStatement.get(statement) == null) {
+      if (JdbcData.PREPARED_STATEMENT.get(statement) == null) {
         return null;
       }
       if (JdbcSingletons.isWrapper(statement, PreparedStatement.class)) {

@@ -63,9 +63,4 @@ public class AnnotationInstrumentationModule extends InstrumentationModule
             "io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.instrumentationannotations.AnnotationInstrumentationHelper")
         .inject(InjectionMode.CLASS_ONLY);
   }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
-  }
 }
