@@ -28,12 +28,14 @@ public final class UndertowActiveHandlers {
   }
 
   /**
-   * Increment counter. No-op if the counter was never initialized via {@link #init}.
+   * Increment counter.
    *
    * @param context server context
    */
   public static void increment(Context context) {
     AtomicInteger counter = context.get(CONTEXT_KEY);
+    // checking for null because of
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/16128
     if (counter != null) {
       counter.incrementAndGet();
     }
@@ -42,16 +44,15 @@ public final class UndertowActiveHandlers {
   /**
    * Decrement counter.
    *
-   * <p>Returns {@code 1} if the counter was never initialized via {@link #init}, so callers that
-   * check {@code decrementAndGet() == 0} to end a span will safely no-op.
-   *
    * @param context server context
-   * @return value of counter after decrementing it, or {@code 1} if counter is absent
+   * @return value of counter after decrementing it, or {@code -1} if counter is absent
    */
   public static int decrementAndGet(Context context) {
     AtomicInteger counter = context.get(CONTEXT_KEY);
+    // checking for null because of
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/16128
     if (counter == null) {
-      return 1;
+      return -1;
     }
     return counter.decrementAndGet();
   }
