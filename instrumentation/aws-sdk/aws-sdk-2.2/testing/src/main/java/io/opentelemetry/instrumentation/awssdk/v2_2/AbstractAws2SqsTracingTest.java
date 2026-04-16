@@ -167,12 +167,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                         if (captureHeaders) {
                           attributes.add(
                               satisfies(
-<<<<<<< HEAD
                                   headerAttributeKey("Test-Message-Header"),
-=======
-                                  SemconvMessageStabilityUtil.headerAttributeKey(
-                                      "Test-Message-Header"),
->>>>>>> AlchemyDing/feature-messaging-header
                                   val -> val.isEqualTo(ImmutableList.of("test"))));
                         }
 
@@ -212,12 +207,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                         if (captureHeaders) {
                           attributes.add(
                               satisfies(
-<<<<<<< HEAD
                                   headerAttributeKey("Test-Message-Header"),
-=======
-                                  SemconvMessageStabilityUtil.headerAttributeKey(
-                                      "Test-Message-Header"),
->>>>>>> AlchemyDing/feature-messaging-header
                                   val -> val.isEqualTo(singletonList("test"))));
                         }
 
