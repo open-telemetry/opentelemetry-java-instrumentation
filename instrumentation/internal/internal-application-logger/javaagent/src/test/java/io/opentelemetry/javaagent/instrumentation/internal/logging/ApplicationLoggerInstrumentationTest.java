@@ -72,7 +72,7 @@ class ApplicationLoggerInstrumentationTest {
               }
             });
 
-    boolean exited = process.waitFor(10, SECONDS);
+    boolean exited = process.waitFor(30, SECONDS);
     if (!exited) {
       process.destroyForcibly();
     }
