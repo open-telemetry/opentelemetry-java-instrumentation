@@ -72,7 +72,12 @@ class ApplicationLoggerInstrumentationTest {
               }
             });
 
-    process.waitFor(10, SECONDS);
+    boolean exited = process.waitFor(10, SECONDS);
+    if (!exited) {
+      process.destroyForcibly();
+    }
+    assertThat(exited).isTrue();
+    assertThat(process.exitValue()).isZero();
     return output.join();
   }
 }
