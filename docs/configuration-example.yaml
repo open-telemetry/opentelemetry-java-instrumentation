@@ -94,7 +94,7 @@ instrumentation:
           enabled/development: false
 
       # Used to specify a mapping from host names or IP addresses to peer services.
-      peer_service_mapping:
+      peer_service_mapping: {}
       view_telemetry:
         # Enables the creation of experimental view spans.
         enabled/development: false

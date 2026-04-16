@@ -240,20 +240,21 @@ public class DeclarativeConfigYamlGenerator {
       }
       first = false;
 
-      // Handle /development suffix in key
-      String yamlKey = key;
-      if (key.contains("/development")) {
-        yamlKey = key.replace("/development", "") + "/development";
-      }
-
-      // indentation
+      // Write key with indentation
       writer.write("  ".repeat(indent));
-      writer.write(yamlKey);
+      writer.write(key);
       writer.write(":");
 
       if (actualValue instanceof Map) {
-        writer.write("\n");
-        writeYaml((Map<String, Object>) actualValue, writer, indent + 1);
+        // Safe to cast - the tree is built with Map<String, Object> structure
+        @SuppressWarnings("unchecked")
+        Map<String, Object> map = (Map<String, Object>) actualValue;
+        if (map.isEmpty()) {
+          writer.write(" {}\n");
+        } else {
+          writer.write("\n");
+          writeYaml(map, writer, indent + 1);
+        }
       } else if (actualValue instanceof List<?> list) {
         if (list.isEmpty()) {
           writer.write(" []\n");
