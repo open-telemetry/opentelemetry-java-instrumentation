@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.springweb.v3_1;
+package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1.springweb;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Collections.singletonList;
@@ -21,7 +21,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SpringWebInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public SpringWebInstrumentationModule() {
-    super("spring-web", "spring-web-3.1");
+    super("spring-webmvc", "spring-webmvc-3.1");
   }
 
   @Override
