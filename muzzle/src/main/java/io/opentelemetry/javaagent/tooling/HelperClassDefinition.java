@@ -14,13 +14,6 @@ public class HelperClassDefinition {
   private final BytecodeWithUrl bytecode;
   private final InjectionMode injectionMode;
 
-  private HelperClassDefinition(
-      String className, BytecodeWithUrl bytecode, InjectionMode injectionMode) {
-    this.className = className;
-    this.bytecode = bytecode;
-    this.injectionMode = injectionMode;
-  }
-
   public static HelperClassDefinition create(
       String className, BytecodeWithUrl bytecode, InjectionMode injectionMode) {
     return new HelperClassDefinition(className, bytecode, injectionMode);
@@ -37,6 +30,13 @@ public class HelperClassDefinition {
       String className, ClassLoader copyFrom, InjectionMode injectionMode) {
     BytecodeWithUrl code = BytecodeWithUrl.create(className, copyFrom);
     return create(className, code, injectionMode);
+  }
+
+  private HelperClassDefinition(
+      String className, BytecodeWithUrl bytecode, InjectionMode injectionMode) {
+    this.className = className;
+    this.bytecode = bytecode;
+    this.injectionMode = injectionMode;
   }
 
   public String getClassName() {

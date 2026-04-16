@@ -17,10 +17,6 @@ import net.spy.memcached.internal.BulkGetFuture;
 public class BulkGetCompletionListener extends CompletionListener<BulkGetFuture<?>>
     implements net.spy.memcached.internal.BulkGetCompletionListener {
 
-  private BulkGetCompletionListener(Context parentContext, SpymemcachedRequest request) {
-    super(parentContext, request);
-  }
-
   @Nullable
   public static BulkGetCompletionListener create(
       Context parentContext, MemcachedConnection connection, String methodName) {
@@ -29,6 +25,10 @@ public class BulkGetCompletionListener extends CompletionListener<BulkGetFuture<
       return null;
     }
     return new BulkGetCompletionListener(parentContext, request);
+  }
+
+  private BulkGetCompletionListener(Context parentContext, SpymemcachedRequest request) {
+    super(parentContext, request);
   }
 
   @Override

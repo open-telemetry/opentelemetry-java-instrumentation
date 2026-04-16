@@ -18,17 +18,6 @@ public class XxlJobProcessRequest {
   private final GlueTypeEnum glueType;
   private boolean failed;
 
-  private XxlJobProcessRequest(
-      GlueTypeEnum glueType,
-      @Nullable Class<?> declaringClass,
-      @Nullable String methodName,
-      int jobId) {
-    this.glueType = glueType;
-    this.declaringClass = declaringClass;
-    this.methodName = methodName;
-    this.jobId = jobId;
-  }
-
   public static XxlJobProcessRequest createRequestForMethod(
       GlueTypeEnum glueType, Class<?> declaringClass, @Nullable String methodName) {
     return new XxlJobProcessRequest(glueType, declaringClass, methodName, 0);
@@ -50,6 +39,17 @@ public class XxlJobProcessRequest {
       Object target, @Nullable Method method) {
     return createRequestForMethod(
         GlueTypeEnum.BEAN, target.getClass(), method != null ? method.getName() : null);
+  }
+
+  private XxlJobProcessRequest(
+      GlueTypeEnum glueType,
+      @Nullable Class<?> declaringClass,
+      @Nullable String methodName,
+      int jobId) {
+    this.glueType = glueType;
+    this.declaringClass = declaringClass;
+    this.methodName = methodName;
+    this.jobId = jobId;
   }
 
   public void setFailed() {

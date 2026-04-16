@@ -24,12 +24,12 @@ public class HttpSpanDataAssert {
 
   private final SpanDataAssert span;
 
-  private HttpSpanDataAssert(SpanDataAssert span) {
-    this.span = span;
-  }
-
   public static HttpSpanDataAssert create(SpanDataAssert serverSpan) {
     return new HttpSpanDataAssert(serverSpan);
+  }
+
+  private HttpSpanDataAssert(SpanDataAssert span) {
+    this.span = span;
   }
 
   @CanIgnoreReturnValue

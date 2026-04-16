@@ -59,14 +59,15 @@
 values.** Inside a `satisfies(AttributeKey, Consumer)` lambda the parameter (e.g., `taskId`) is
 an `AbstractStringAssert<?>` (for string keys), `AbstractLongAssert<?>` (for long keys), etc.
 Fluent assertion calls like `taskId.contains(jobName)` or `taskId.startsWith(prefix)` are
-already proper AssertJ assertions — they throw on failure. Do **not** wrap them in
+already proper AssertJ assertions - they throw on failure. Do **not** wrap them in
 `assertThat(value.contains(x)).isTrue()`, which degrades the failure message.
 
-- For `satisfies(AttributeKey, lambda)` outer parameters, use `val`.
+- For `satisfies(AttributeKey, lambda)` outer parameters, use `val` in Java.
+  In Scala, use `value` instead, since `val` is a reserved word.
   Do not use short generic alternatives like `k` or `v` for the outer parameter.
 - If an attribute-assertion `satisfies(...)` lambda contains a nested inner lambda and a second
-  parameter name is required, keep the outer parameter as `val` and use `v` for the nested
-  parameter.
+  parameter name is required, keep the outer parameter as `val` in Java or `value` in Scala,
+  and use `v` for the nested parameter.
 - This naming guidance does **not** apply to non-attribute `satisfies(...)` usages such as
   `span.satisfies(...)`, `point.satisfies(...)`, or `assertThat(result).satisfies(...)`.
   In those cases, prefer a descriptive subject name like `spanData`, `pointData`, `resource`,
