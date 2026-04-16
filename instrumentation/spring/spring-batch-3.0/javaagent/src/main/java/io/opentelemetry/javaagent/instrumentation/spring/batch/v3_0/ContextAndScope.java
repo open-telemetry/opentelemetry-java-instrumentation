@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 
-public final class ContextAndScope {
+public class ContextAndScope {
   private final Context context;
   private final Scope scope;
 

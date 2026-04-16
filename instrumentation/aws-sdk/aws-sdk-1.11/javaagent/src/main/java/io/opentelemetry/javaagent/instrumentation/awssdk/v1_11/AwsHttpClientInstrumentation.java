@@ -27,7 +27,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * {@link AmazonClientException} (for example an error thrown by another handler). In these cases
  * {@link RequestHandler2#afterError} is not called.
  */
-public class AwsHttpClientInstrumentation implements TypeInstrumentation {
+class AwsHttpClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -47,13 +47,13 @@ public class AwsHttpClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class HttpClientAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Argument(value = 0) Request<?> request,
         @Advice.Return Response<?> response,
         @Advice.Thrown Throwable throwable) {
       if (throwable instanceof Exception) {
-        TracingRequestHandler.tracingHandler.afterError(request, response, (Exception) throwable);
+        TracingRequestHandler.tracingHandler().afterError(request, response, (Exception) throwable);
       }
       Scope scope = request.getHandlerContext(TracingRequestHandler.SCOPE);
       if (scope != null) {

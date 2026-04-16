@@ -9,7 +9,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.util.List;
 
-public final class AgentTestingExporterFactory {
+public class AgentTestingExporterFactory {
 
   static final OtlpInMemorySpanExporter spanExporter = new OtlpInMemorySpanExporter();
   static final OtlpInMemoryMetricExporter metricExporter = new OtlpInMemoryMetricExporter();

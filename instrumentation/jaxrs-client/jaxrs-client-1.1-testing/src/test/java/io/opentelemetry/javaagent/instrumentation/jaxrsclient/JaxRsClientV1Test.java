@@ -86,8 +86,8 @@ class JaxRsClientV1Test extends AbstractHttpClientTest<WebResource.Builder> {
     String body = "POST".equals(method) || "PUT".equals(method) ? "" : null;
     try {
       return builder.method(method, ClientResponse.class, body).getStatus();
-    } catch (ClientHandlerException exception) {
-      Throwable cause = exception.getCause();
+    } catch (ClientHandlerException e) {
+      Throwable cause = e.getCause();
       if (cause instanceof Exception) {
         throw (Exception) cause;
       }

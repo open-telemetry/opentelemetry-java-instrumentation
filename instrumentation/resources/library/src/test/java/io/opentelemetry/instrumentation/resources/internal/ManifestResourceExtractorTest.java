@@ -58,7 +58,7 @@ class ManifestResourceExtractorTest {
                                       Manifest manifest = new Manifest();
                                       manifest.read(t.input);
                                       return Optional.of(manifest);
-                                    } catch (Exception e) {
+                                    } catch (Exception ignored) {
                                       return Optional.empty();
                                     }
                                   })

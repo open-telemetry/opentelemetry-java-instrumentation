@@ -15,7 +15,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
-public final class BatchRecordsHandler implements Handler<KafkaConsumerRecords<String, String>> {
+public class BatchRecordsHandler implements Handler<KafkaConsumerRecords<String, String>> {
 
   public static final BatchRecordsHandler INSTANCE = new BatchRecordsHandler();
 
@@ -32,7 +32,7 @@ public final class BatchRecordsHandler implements Handler<KafkaConsumerRecords<S
     GlobalTraceUtil.runWithSpan("batch consumer", () -> {});
     for (int i = 0; i < records.size(); ++i) {
       KafkaConsumerRecord<String, String> record = records.recordAt(i);
-      if (record.value().equals("error")) {
+      if ("error".equals(record.value())) {
         throw new IllegalArgumentException("boom");
       }
     }

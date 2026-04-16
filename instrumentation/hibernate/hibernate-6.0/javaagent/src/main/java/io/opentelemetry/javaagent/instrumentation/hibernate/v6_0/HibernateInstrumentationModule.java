@@ -26,7 +26,7 @@ public class HibernateInstrumentationModule extends InstrumentationModule
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return hasClassesNamed(
-        // not present before 6.0
+        // added in 6.0
         "org.hibernate.query.spi.SqmQuery");
   }
 
@@ -42,10 +42,5 @@ public class HibernateInstrumentationModule extends InstrumentationModule
         new SessionFactoryInstrumentation(),
         new SessionInstrumentation(),
         new TransactionInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

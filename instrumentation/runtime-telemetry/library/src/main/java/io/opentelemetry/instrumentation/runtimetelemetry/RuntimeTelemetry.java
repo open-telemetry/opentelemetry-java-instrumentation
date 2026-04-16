@@ -16,17 +16,11 @@ import javax.annotation.Nullable;
 
 /** The entry point class for runtime telemetry support using JMX (Java 8+) and JFR (Java 17+). */
 public final class RuntimeTelemetry implements AutoCloseable {
-
   private static final Logger logger = Logger.getLogger(RuntimeTelemetry.class.getName());
 
   private final AtomicBoolean isClosed = new AtomicBoolean();
   private final List<AutoCloseable> observables;
   @Nullable private final AutoCloseable jfrTelemetry;
-
-  RuntimeTelemetry(List<AutoCloseable> observables, @Nullable AutoCloseable jfrTelemetry) {
-    this.observables = Collections.unmodifiableList(observables);
-    this.jfrTelemetry = jfrTelemetry;
-  }
 
   /**
    * Create and start {@link RuntimeTelemetry}.
@@ -47,6 +41,11 @@ public final class RuntimeTelemetry implements AutoCloseable {
    */
   public static RuntimeTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new RuntimeTelemetryBuilder(openTelemetry);
+  }
+
+  RuntimeTelemetry(List<AutoCloseable> observables, @Nullable AutoCloseable jfrTelemetry) {
+    this.observables = Collections.unmodifiableList(observables);
+    this.jfrTelemetry = jfrTelemetry;
   }
 
   // Only used by tests

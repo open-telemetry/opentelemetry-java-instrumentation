@@ -160,7 +160,7 @@ public abstract class AbstractAws2SqsBaseTest {
 
     ReceiveMessageResponse response = client.receiveMessage(receiveMessageRequest);
 
-    assertThat(response.messages().size()).isEqualTo(1);
+    assertThat(response.messages()).hasSize(1);
 
     response.messages().forEach(message -> getTesting().runWithSpan("process child", () -> {}));
     assertSqsTraces(false, false);
@@ -178,7 +178,7 @@ public abstract class AbstractAws2SqsBaseTest {
     ReceiveMessageResponse response =
         getTesting().runWithSpan("parent", () -> client.receiveMessage(receiveMessageRequest));
 
-    assertThat(response.messages().size()).isEqualTo(1);
+    assertThat(response.messages()).hasSize(1);
 
     response.messages().forEach(message -> getTesting().runWithSpan("process child", () -> {}));
     assertSqsTraces(true, false);
@@ -196,7 +196,7 @@ public abstract class AbstractAws2SqsBaseTest {
 
     ReceiveMessageResponse response = client.receiveMessage(receiveMessageRequest).get();
 
-    assertThat(response.messages().size()).isEqualTo(1);
+    assertThat(response.messages()).hasSize(1);
 
     response.messages().forEach(message -> getTesting().runWithSpan("process child", () -> {}));
     assertSqsTraces(false, false);
@@ -217,7 +217,7 @@ public abstract class AbstractAws2SqsBaseTest {
             equalTo(RPC_METHOD, "CreateQueue"),
             equalTo(HTTP_REQUEST_METHOD, "POST"),
             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-            satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
+            satisfies(URL_FULL, val -> val.startsWith("http://localhost:" + sqsPort)),
             equalTo(SERVER_ADDRESS, "localhost"),
             equalTo(SERVER_PORT, sqsPort));
   }
@@ -235,13 +235,13 @@ public abstract class AbstractAws2SqsBaseTest {
             equalTo(RPC_METHOD, "ReceiveMessage"),
             equalTo(HTTP_REQUEST_METHOD, "POST"),
             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-            satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
+            satisfies(URL_FULL, val -> val.startsWith("http://localhost:" + sqsPort)),
             equalTo(SERVER_ADDRESS, "localhost"),
             equalTo(SERVER_PORT, sqsPort),
             equalTo(MESSAGING_SYSTEM, AWS_SQS),
             equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
             equalTo(MESSAGING_OPERATION, "process"),
-            satisfies(MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class)));
+            satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -260,7 +260,7 @@ public abstract class AbstractAws2SqsBaseTest {
             equalTo(RPC_METHOD, rcpMethod),
             equalTo(HTTP_REQUEST_METHOD, "POST"),
             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-            satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
+            satisfies(URL_FULL, val -> val.startsWith("http://localhost:" + sqsPort)),
             equalTo(SERVER_ADDRESS, "localhost"),
             equalTo(SERVER_PORT, sqsPort),
             equalTo(MESSAGING_SYSTEM, AWS_SQS),

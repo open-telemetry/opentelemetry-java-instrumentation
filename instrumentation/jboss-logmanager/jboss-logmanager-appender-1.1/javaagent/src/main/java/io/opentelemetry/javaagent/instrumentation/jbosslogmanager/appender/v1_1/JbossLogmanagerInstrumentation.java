@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.appender.v1_1;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -21,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.jboss.logmanager.ExtLogRecord;
 import org.jboss.logmanager.Logger;
 
-public class JbossLogmanagerInstrumentation implements TypeInstrumentation {
+class JbossLogmanagerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.jboss.logmanager.Logger");
@@ -30,8 +29,7 @@ public class JbossLogmanagerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("logRaw"))
             .and(takesArguments(1))
             .and(takesArgument(0, named("org.jboss.logmanager.ExtLogRecord"))),
@@ -40,7 +38,7 @@ public class JbossLogmanagerInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class CallLogRawAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth methodEnter(
         @Advice.This Logger logger, @Advice.Argument(0) ExtLogRecord record) {
       // need to track call depth across all loggers in order to avoid double capture when one
@@ -52,7 +50,7 @@ public class JbossLogmanagerInstrumentation implements TypeInstrumentation {
       return callDepth;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(@Advice.Enter CallDepth callDepth) {
       callDepth.decrementAndGet();
     }

@@ -86,7 +86,7 @@ class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationContext> 
       try {
         ServerProperties.class.getDeclaredMethod("getServlet");
         return "server.servlet.contextPath";
-      } catch (NoSuchMethodException ignore) {
+      } catch (NoSuchMethodException ignored) {
         return "server.context-path";
       }
     }
@@ -102,8 +102,8 @@ class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationContext> 
     private static Class<?> load(String name) {
       try {
         return Class.forName(name);
-      } catch (ClassNotFoundException exception) {
-        throw new IllegalStateException(exception);
+      } catch (ClassNotFoundException e) {
+        throw new IllegalStateException(e);
       }
     }
   }

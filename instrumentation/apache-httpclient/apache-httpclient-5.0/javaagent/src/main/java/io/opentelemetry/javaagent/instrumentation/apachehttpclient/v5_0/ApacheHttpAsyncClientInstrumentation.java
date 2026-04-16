@@ -60,7 +60,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
             .and(takesArgument(2, named("org.apache.hc.core5.http.nio.HandlerFactory")))
             .and(takesArgument(3, named("org.apache.hc.core5.http.protocol.HttpContext")))
             .and(takesArgument(4, named("org.apache.hc.core5.concurrent.FutureCallback"))),
-        this.getClass().getName() + "$ClientAdvice");
+        getClass().getName() + "$ClientAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -71,7 +71,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       @ToArgument(value = 3, index = 1),
       @ToArgument(value = 4, index = 2)
     })
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] methodEnter(
         @Advice.Argument(0) AsyncRequestProducer requestProducer,
         @Advice.Argument(3) HttpContext originalHttpContext,
@@ -197,11 +197,6 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
       instrumenter().end(context, httpRequest, getResponseFromHttpContext(), null);
 
-      if (parentContext == null) {
-        completeDelegate(result);
-        return;
-      }
-
       try (Scope ignored = parentContext.makeCurrent()) {
         completeDelegate(result);
       }
@@ -218,11 +213,6 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
       // end span before calling delegate
       instrumenter().end(context, httpRequest, getResponseFromHttpContext(), ex);
-
-      if (parentContext == null) {
-        failDelegate(ex);
-        return;
-      }
 
       try (Scope ignored = parentContext.makeCurrent()) {
         failDelegate(ex);
@@ -241,11 +231,6 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       // TODO (trask) add "canceled" span attribute
       // end span before calling delegate
       instrumenter().end(context, httpRequest, getResponseFromHttpContext(), null);
-
-      if (parentContext == null) {
-        cancelDelegate();
-        return;
-      }
 
       try (Scope ignored = parentContext.makeCurrent()) {
         cancelDelegate();

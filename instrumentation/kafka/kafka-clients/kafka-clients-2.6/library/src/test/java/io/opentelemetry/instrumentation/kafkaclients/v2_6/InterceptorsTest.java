@@ -61,9 +61,7 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                           equalTo(MESSAGING_SYSTEM, "kafka"),
                           equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                           equalTo(MESSAGING_OPERATION, "publish"),
-                          satisfies(
-                              MESSAGING_CLIENT_ID,
-                              stringAssert -> stringAssert.startsWith("producer"))));
+                          satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer"))));
           SpanContext spanContext = trace.getSpan(1).getSpanContext();
           producerSpanContext.set(
               SpanContext.createFromRemoteParent(
@@ -88,9 +86,7 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                             equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                             equalTo(MESSAGING_OPERATION, "receive"),
                             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
-                            satisfies(
-                                MESSAGING_CLIENT_ID,
-                                stringAssert -> stringAssert.startsWith("consumer")),
+                            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)),
                 span ->
                     span.hasName(SHARED_TOPIC + " process")
@@ -112,9 +108,7 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                             satisfies(
                                 MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
                             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
-                            satisfies(
-                                MESSAGING_CLIENT_ID,
-                                stringAssert -> stringAssert.startsWith("consumer"))),
+                            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer"))),
                 span ->
                     span.hasName("process child")
                         .hasKind(SpanKind.INTERNAL)

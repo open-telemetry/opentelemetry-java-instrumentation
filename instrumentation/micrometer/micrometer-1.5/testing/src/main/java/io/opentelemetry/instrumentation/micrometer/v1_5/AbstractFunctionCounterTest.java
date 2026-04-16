@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.micrometer.core.instrument.FunctionCounter;
 import io.micrometer.core.instrument.Metrics;
@@ -58,7 +59,8 @@ public abstract class AbstractFunctionCounterTest {
                                         point ->
                                             point
                                                 .hasValue(12)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "value"))))));
 
     // when
     Metrics.globalRegistry.remove(counter);
@@ -113,7 +115,8 @@ public abstract class AbstractFunctionCounterTest {
                                         point ->
                                             point
                                                 .hasValue(12)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "value"))))));
 
     // when
     Metrics.globalRegistry.remove(counter);
@@ -157,10 +160,12 @@ public abstract class AbstractFunctionCounterTest {
                                             point ->
                                                 point
                                                     .hasValue(12)
-                                                    .hasAttributes(attributeEntry("tag", "1")),
+                                                    .hasAttributesSatisfyingExactly(
+                                                        equalTo(stringKey("tag"), "1")),
                                             point ->
                                                 point
                                                     .hasValue(13)
-                                                    .hasAttributes(attributeEntry("tag", "2"))))));
+                                                    .hasAttributesSatisfyingExactly(
+                                                        equalTo(stringKey("tag"), "2"))))));
   }
 }

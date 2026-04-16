@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0;
 
-public class TomeeArquillianJaxWsTest extends AbstractArquillianJaxWsTest {
+class TomeeArquillianJaxWsTest extends AbstractArquillianJaxWsTest {
 
   @Override
   protected String getServicePath(String service) {

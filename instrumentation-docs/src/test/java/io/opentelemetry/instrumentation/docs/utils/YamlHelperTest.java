@@ -234,8 +234,8 @@ class YamlHelperTest {
               - HTTP_ROUTE
               - CONTROLLER_SPANS
             configurations:
-              - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-                description: Enables statement sanitization for database queries.
+              - name: otel.instrumentation.common.db.query-sanitization.enabled
+                description: Enables query sanitization for database queries.
                 type: boolean
                 default: true
             """;
@@ -244,9 +244,8 @@ class YamlHelperTest {
 
     ConfigurationOption config = metadata.getConfigurations().get(0);
     assertThat(config.name())
-        .isEqualTo("otel.instrumentation.common.db-statement-sanitizer.enabled");
-    assertThat(config.description())
-        .isEqualTo("Enables statement sanitization for database queries.");
+        .isEqualTo("otel.instrumentation.common.db.query-sanitization.enabled");
+    assertThat(config.description()).isEqualTo("Enables query sanitization for database queries.");
     assertThat(config.defaultValue()).isEqualTo("true");
 
     assertThat(metadata.getFeatures())
@@ -305,8 +304,8 @@ class YamlHelperTest {
     String input =
         """
             configurations:
-              - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-                description: Enables statement sanitization for database queries.
+              - name: otel.instrumentation.common.db.query-sanitization.enabled
+                description: Enables query sanitization for database queries.
                 type: boolean
                 default: true
         """;
@@ -318,9 +317,8 @@ class YamlHelperTest {
     assertThat(metadata.getDisabledByDefault()).isFalse();
 
     assertThat(config.name())
-        .isEqualTo("otel.instrumentation.common.db-statement-sanitizer.enabled");
-    assertThat(config.description())
-        .isEqualTo("Enables statement sanitization for database queries.");
+        .isEqualTo("otel.instrumentation.common.db.query-sanitization.enabled");
+    assertThat(config.description()).isEqualTo("Enables query sanitization for database queries.");
     assertThat(config.defaultValue()).isEqualTo("true");
     assertThat(config.type()).isEqualTo(ConfigurationType.BOOLEAN);
   }
@@ -664,6 +662,54 @@ class YamlHelperTest {
                 javaagent_target_versions:
                 - com.example:test-library:[1.0.0,)
             """;
+
+    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+  }
+
+  @Test
+  void testHasJavaAgentFlag() throws Exception {
+    List<InstrumentationModule> modules = new ArrayList<>();
+
+    modules.add(
+        new InstrumentationModule.Builder()
+            .srcPath("instrumentation/runtime-telemetry/runtime-telemetry-java8")
+            .instrumentationName("runtime-telemetry-java8")
+            .namespace("runtime-telemetry")
+            .group("runtime-telemetry")
+            .hasJavaAgent(true)
+            .build());
+
+    modules.add(
+        new InstrumentationModule.Builder()
+            .srcPath("instrumentation/library-only/library-only-1.0")
+            .instrumentationName("library-only-1.0")
+            .namespace("library-only")
+            .group("library-only")
+            .hasStandaloneLibrary(true)
+            .build());
+
+    StringWriter stringWriter = new StringWriter();
+    BufferedWriter writer = new BufferedWriter(stringWriter);
+
+    YamlHelper.generateInstrumentationYaml(modules, writer);
+    writer.flush();
+
+    String expectedYaml =
+        """
+        libraries:
+          library-only:
+          - name: library-only-1.0
+            source_path: instrumentation/library-only/library-only-1.0
+            scope:
+              name: io.opentelemetry.library-only-1.0
+            has_standalone_library: true
+          runtime-telemetry:
+          - name: runtime-telemetry-java8
+            source_path: instrumentation/runtime-telemetry/runtime-telemetry-java8
+            scope:
+              name: io.opentelemetry.runtime-telemetry-java8
+            has_javaagent: true
+        """;
 
     assertThat(expectedYaml).isEqualTo(stringWriter.toString());
   }

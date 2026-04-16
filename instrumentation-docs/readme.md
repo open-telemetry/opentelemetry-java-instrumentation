@@ -154,6 +154,10 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
     be Java 8
 * description
   * Short description of what the instrumentation does
+* has_standalone_library
+  * Whether the instrumentation module has a standalone library that can be used outside of the agent
+* has_javaagent
+  * Whether the instrumentation module has a javaagent component that can be used with the OpenTelemetry Java Agent
 * target_versions
   * List of supported versions by the module, broken down by `library` or `javaagent` support
 * scope (See [instrumentation-scope](https://opentelemetry.io/docs/specs/otel/common/instrumentation-scope/)
@@ -195,8 +199,8 @@ disabled_by_default: true                         # Defaults to `false`
 classification: internal                          # instrumentation classification: library | internal | custom
 library_link: https://...                         # URL to the library or framework's main website or documentation
 configurations:
-  - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-    description: Enables statement sanitization for database queries.
+  - name: otel.instrumentation.common.db.query-sanitization.enabled
+    description: Enables query sanitization for database queries.
     type: boolean               # boolean | string | list | map
     default: true
 override_telemetry: false                         # Set to true to ignore auto-generated .telemetry files

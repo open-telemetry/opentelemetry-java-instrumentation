@@ -18,7 +18,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.log4j.spi.LoggingEvent;
 
-public class CategoryInstrumentation implements TypeInstrumentation {
+class CategoryInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.log4j.Category");
@@ -37,7 +37,7 @@ public class CategoryInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CallAppendersAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) LoggingEvent event) {
       VirtualFieldHelper.CONTEXT.set(event, Java8BytecodeBridge.currentContext());
     }

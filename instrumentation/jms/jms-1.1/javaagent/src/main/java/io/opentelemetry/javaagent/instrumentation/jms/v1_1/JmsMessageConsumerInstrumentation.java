@@ -23,7 +23,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
+class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -54,12 +54,12 @@ public class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConsumerAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Timer onEnter() {
       return Timer.start();
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void stopSpan(@Advice.Enter Timer timer, @Advice.Return Message message) {
       if (message == null) {
         // Do not create span when no message is received

@@ -21,7 +21,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.grails.web.mapping.mvc.GrailsControllerUrlMappingInfo;
 
-public class UrlMappingsInfoHandlerAdapterInstrumentation implements TypeInstrumentation {
+class UrlMappingsInfoHandlerAdapterInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.grails.web.mapping.mvc.UrlMappingsInfoHandlerAdapter");
@@ -40,7 +40,7 @@ public class UrlMappingsInfoHandlerAdapterInstrumentation implements TypeInstrum
   @SuppressWarnings("unused")
   public static class ServerSpanNameAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void nameSpan(@Advice.Argument(2) Object handler) {
 
       if (handler instanceof GrailsControllerUrlMappingInfo) {
@@ -49,7 +49,7 @@ public class UrlMappingsInfoHandlerAdapterInstrumentation implements TypeInstrum
         HttpServerRoute.update(
             parentContext,
             HttpServerRouteSource.CONTROLLER,
-            GrailsServerSpanNaming.SERVER_SPAN_NAME,
+            GrailsServerSpanNaming.serverSpanName(),
             (GrailsControllerUrlMappingInfo) handler);
       }
     }

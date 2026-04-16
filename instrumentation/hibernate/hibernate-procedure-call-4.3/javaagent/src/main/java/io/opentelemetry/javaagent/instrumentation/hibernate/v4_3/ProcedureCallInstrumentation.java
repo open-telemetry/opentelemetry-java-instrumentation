@@ -22,7 +22,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.procedure.ProcedureCall;
 
-public class ProcedureCallInstrumentation implements TypeInstrumentation {
+class ProcedureCallInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -44,7 +44,7 @@ public class ProcedureCallInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ProcedureCallMethodAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static HibernateOperationScope startMethod(
         @Advice.This ProcedureCall call, @Advice.Origin("#m") String name) {
 
@@ -62,7 +62,7 @@ public class ProcedureCallInstrumentation implements TypeInstrumentation {
       return HibernateOperationScope.start(hibernateOperation, parentContext, instrumenter());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void endMethod(
         @Advice.Thrown Throwable throwable, @Advice.Enter HibernateOperationScope scope) {
 

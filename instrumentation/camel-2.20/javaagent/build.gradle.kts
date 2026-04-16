@@ -82,7 +82,7 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
 
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
@@ -107,7 +107,7 @@ tasks {
     dependsOn(testStableSemconv, testExperimental)
   }
 
-  if (findProperty("denyUnsafe") == "true") {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

@@ -1,3 +1,4 @@
+display_name: JVM Runtime Telemetry (JFR)
 description: >
   DEPRECATED: This instrumentation enables JVM runtime metrics using JFR (Java 17+). Use the
   unified runtime-telemetry module instead, which provides both JMX and JFR support.

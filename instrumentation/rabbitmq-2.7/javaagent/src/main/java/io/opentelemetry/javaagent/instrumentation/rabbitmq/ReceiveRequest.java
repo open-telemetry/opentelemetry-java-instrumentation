@@ -13,7 +13,8 @@ import javax.annotation.Nullable;
 @AutoValue
 public abstract class ReceiveRequest {
 
-  public static ReceiveRequest create(String queue, GetResponse response, Connection connection) {
+  public static ReceiveRequest create(
+      String queue, @Nullable GetResponse response, Connection connection) {
     return new AutoValue_ReceiveRequest(queue, response, connection);
   }
 

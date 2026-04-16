@@ -25,7 +25,7 @@ import org.springframework.beans.factory.support.GenericBeanDefinition;
  * This instrumentation adds the OpenTelemetryHandlerMappingFilter definition to the spring context
  * When the context is created, the filter will be added to the beginning of the filter chain.
  */
-public class WebApplicationContextInstrumentation implements TypeInstrumentation {
+class WebApplicationContextInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -55,7 +55,7 @@ public class WebApplicationContextInstrumentation implements TypeInstrumentation
   @SuppressWarnings("unused")
   public static class FilterInjectingAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) ConfigurableListableBeanFactory beanFactory) {
       if (beanFactory instanceof BeanDefinitionRegistry
           && !beanFactory.containsBean("otelAutoDispatcherFilter")) {

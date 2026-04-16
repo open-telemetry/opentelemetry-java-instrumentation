@@ -12,13 +12,11 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class VertxClientInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class VertxClientInstrumentationModule extends InstrumentationModule {
 
   public VertxClientInstrumentationModule() {
     super("vertx-http-client", "vertx-http-client-4.0", "vertx");
@@ -26,10 +24,14 @@ public class VertxClientInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // class removed in 4.0
-    return not(hasClassesNamed("io.vertx.core.Starter"))
-        // class added in 5.0
-        .and(not(hasClassesNamed("io.vertx.core.http.impl.HttpClientConnectionInternal")));
+    return not(hasClassesNamed(
+            // class removed in 4.0
+            "io.vertx.core.Starter"))
+        .and(
+            not(
+                hasClassesNamed(
+                    // class added in 5.0
+                    "io.vertx.core.http.impl.HttpClientConnectionInternal")));
   }
 
   @Override
@@ -38,10 +40,5 @@ public class VertxClientInstrumentationModule extends InstrumentationModule
         new ConnectionManagerInstrumentation(),
         new HttpClientConnectionInstrumentation(),
         new HttpRequestInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

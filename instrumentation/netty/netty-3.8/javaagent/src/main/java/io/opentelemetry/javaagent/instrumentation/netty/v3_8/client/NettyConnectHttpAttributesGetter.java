@@ -51,6 +51,7 @@ enum NettyConnectHttpAttributesGetter
     return emptyList();
   }
 
+  @Nullable
   @Override
   public String getNetworkTransport(NettyConnectionRequest request, @Nullable Channel channel) {
     return ChannelUtil.getNetworkTransport(channel);

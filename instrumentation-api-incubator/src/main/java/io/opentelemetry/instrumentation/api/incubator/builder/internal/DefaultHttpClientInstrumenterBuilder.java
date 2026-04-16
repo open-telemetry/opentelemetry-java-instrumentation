@@ -64,19 +64,6 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   private boolean emitExperimentalHttpClientTelemetry = false;
   private Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer = b -> {};
 
-  private DefaultHttpClientInstrumenterBuilder(
-      String instrumentationName,
-      OpenTelemetry openTelemetry,
-      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-      @Nullable TextMapSetter<REQUEST> headerSetter) {
-    this.instrumentationName = requireNonNull(instrumentationName, "instrumentationName");
-    this.openTelemetry = requireNonNull(openTelemetry, "openTelemetry");
-    this.attributesGetter = requireNonNull(attributesGetter, "attributesGetter");
-    httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(attributesGetter);
-    httpAttributesExtractorBuilder = HttpClientAttributesExtractor.builder(attributesGetter);
-    this.headerSetter = headerSetter;
-  }
-
   public static <REQUEST, RESPONSE> DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> create(
       String instrumentationName,
       OpenTelemetry openTelemetry,
@@ -95,6 +82,19 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
         openTelemetry,
         attributesGetter,
         requireNonNull(headerSetter, "headerSetter"));
+  }
+
+  private DefaultHttpClientInstrumenterBuilder(
+      String instrumentationName,
+      OpenTelemetry openTelemetry,
+      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
+      @Nullable TextMapSetter<REQUEST> headerSetter) {
+    this.instrumentationName = requireNonNull(instrumentationName, "instrumentationName");
+    this.openTelemetry = requireNonNull(openTelemetry, "openTelemetry");
+    this.attributesGetter = requireNonNull(attributesGetter, "attributesGetter");
+    httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(attributesGetter);
+    httpAttributesExtractorBuilder = HttpClientAttributesExtractor.builder(attributesGetter);
+    this.headerSetter = headerSetter;
   }
 
   /**

@@ -16,7 +16,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.util.function.Function;
 import org.elasticsearch.client.Response;
 
-public final class ElasticsearchRestJavaagentInstrumenterFactory {
+public class ElasticsearchRestJavaagentInstrumenterFactory {
 
   private static final boolean CAPTURE_SEARCH_QUERY =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "elasticsearch")

@@ -19,7 +19,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class LettuceConnectInstrumentation implements TypeInstrumentation {
+class LettuceConnectInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -50,7 +50,8 @@ public class LettuceConnectInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static AdviceScope onEnter(@Advice.Argument(1) RedisURI redisUri) {
       Context parentContext = currentContext();
       if (!connectInstrumenter().shouldStart(parentContext, redisUri)) {
@@ -61,7 +62,7 @@ public class LettuceConnectInstrumentation implements TypeInstrumentation {
       return new AdviceScope(context, context.makeCurrent());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(1) RedisURI redisUri,
         @Advice.Thrown @Nullable Throwable throwable,

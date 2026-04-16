@@ -102,15 +102,15 @@ final class OpenTelemetryTracing implements Tracing {
       this.context = Context.current();
     }
 
-    Context getContext() {
+    private Context getContext() {
       return context;
     }
   }
 
-  static class OpenTelemetryEndpoint implements Endpoint {
-    @Nullable final InetSocketAddress address;
+  private static class OpenTelemetryEndpoint implements Endpoint {
+    @Nullable private final InetSocketAddress address;
 
-    OpenTelemetryEndpoint(@Nullable InetSocketAddress address) {
+    private OpenTelemetryEndpoint(@Nullable InetSocketAddress address) {
       this.address = address;
     }
   }

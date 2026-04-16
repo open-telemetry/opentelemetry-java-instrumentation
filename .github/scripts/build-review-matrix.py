@@ -47,10 +47,10 @@ def load_reviewed() -> set[str]:
 
 
 def count_open_prs() -> int:
-    """Count open PRs with the automated-code-review label."""
+    """Count open PRs with the automated code review label."""
     try:
         result = subprocess.run(
-            ["gh", "pr", "list", "--label", "automated-code-review",
+            ["gh", "pr", "list", "--label", "automated code review",
              "--state", "open", "--json", "number", "--jq", "length"],
             capture_output=True, text=True, check=True,
         )

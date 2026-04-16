@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
 
-public final class ApplicationDeclarativeConfigProperties156Incubator
+public class ApplicationDeclarativeConfigProperties156Incubator
     implements application.io.opentelemetry.api.incubator.config.DeclarativeConfigProperties {
   private final DeclarativeConfigProperties instrumentationConfig;
 

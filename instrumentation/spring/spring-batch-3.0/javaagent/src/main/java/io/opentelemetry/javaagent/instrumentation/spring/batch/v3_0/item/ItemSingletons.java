@@ -20,13 +20,13 @@ public class ItemSingletons {
   static final String ITEM_OPERATION_WRITE = "ItemWrite";
   static final String ITEM_OPERATION_PROCESS = "ItemProcess";
 
-  private static final Instrumenter<String, Void> INSTRUMENTER =
+  private static final Instrumenter<String, Void> instrumenter =
       Instrumenter.<String, Void>builder(
               GlobalOpenTelemetry.get(), instrumentationName(), str -> str)
           .buildInstrumenter();
 
   public static Instrumenter<String, Void> itemInstrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static String itemName(ChunkContext chunkContext, String itemOperationName) {

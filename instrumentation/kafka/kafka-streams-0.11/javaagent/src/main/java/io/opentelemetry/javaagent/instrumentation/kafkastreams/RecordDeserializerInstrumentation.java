@@ -23,7 +23,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 
 // in 1.0.0 SourceNodeRecordDeserializer was refactored into RecordDeserializer
-public class RecordDeserializerInstrumentation implements TypeInstrumentation {
+class RecordDeserializerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -45,7 +45,7 @@ public class RecordDeserializerInstrumentation implements TypeInstrumentation {
   public static class DeserializeAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static ConsumerRecord<?, ?> onExit(
         @Advice.Argument(1) ConsumerRecord<?, ?> incoming,
         @Advice.Return ConsumerRecord<?, ?> result) {

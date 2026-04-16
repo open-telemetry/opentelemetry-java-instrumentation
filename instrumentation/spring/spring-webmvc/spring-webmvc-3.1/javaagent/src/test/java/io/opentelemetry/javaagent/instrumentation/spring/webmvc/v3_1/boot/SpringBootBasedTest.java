@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1.boot;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.instrumentation.spring.webmvc.boot.AbstractSpringBootBasedTest;
@@ -13,6 +14,7 @@ import io.opentelemetry.instrumentation.spring.webmvc.boot.AppConfig;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -65,5 +67,15 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
     // older versions of Spring Boot don't properly propagate context to async calls,
     // resulting in a separate trace instead of a single trace
     return Boolean.getBoolean("testLatestDeps");
+  }
+
+  @Test
+  void handlerMappingFilterResourceAvailable() {
+    assertThat(
+            getClass()
+                .getClassLoader()
+                .getResource(
+                    "org/springframework/web/servlet/v3_1/OpenTelemetryHandlerMappingFilter.class"))
+        .isNotNull();
   }
 }

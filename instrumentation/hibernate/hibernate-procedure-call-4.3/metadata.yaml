@@ -1,3 +1,4 @@
+display_name: Hibernate
 description: This instrumentation enables spans for Hibernate stored procedure calls.
 library_link: https://hibernate.org/
 configurations:

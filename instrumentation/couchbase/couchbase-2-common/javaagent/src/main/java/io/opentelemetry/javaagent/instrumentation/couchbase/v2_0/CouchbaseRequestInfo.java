@@ -32,9 +32,9 @@ public abstract class CouchbaseRequestInfo {
         }
       };
 
-  private String localAddress;
-  private String operationId;
-  private SocketAddress peerAddress;
+  @Nullable private String localAddress;
+  @Nullable private String operationId;
+  @Nullable private SocketAddress peerAddress;
 
   public static CouchbaseRequestInfo create(
       @Nullable String bucket, Class<?> declaringClass, String methodName) {
@@ -88,7 +88,7 @@ public abstract class CouchbaseRequestInfo {
     return localAddress;
   }
 
-  public void setLocalAddress(String localAddress) {
+  public void setLocalAddress(@Nullable String localAddress) {
     this.localAddress = localAddress;
   }
 
@@ -97,7 +97,7 @@ public abstract class CouchbaseRequestInfo {
     return operationId;
   }
 
-  public void setOperationId(String operationId) {
+  public void setOperationId(@Nullable String operationId) {
     this.operationId = operationId;
   }
 
@@ -106,7 +106,7 @@ public abstract class CouchbaseRequestInfo {
     return peerAddress;
   }
 
-  public void setPeerAddress(SocketAddress peerAddress) {
+  public void setPeerAddress(@Nullable SocketAddress peerAddress) {
     this.peerAddress = peerAddress;
   }
 }

@@ -19,7 +19,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.wicket.WicketRuntimeException;
 
-public class DefaultExceptionMapperInstrumentation implements TypeInstrumentation {
+class DefaultExceptionMapperInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -36,7 +36,7 @@ public class DefaultExceptionMapperInstrumentation implements TypeInstrumentatio
   @SuppressWarnings("unused")
   public static class ExceptionAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) Exception exception) {
       Span serverSpan = LocalRootSpan.fromContextOrNull(Java8BytecodeBridge.currentContext());
       if (serverSpan != null) {

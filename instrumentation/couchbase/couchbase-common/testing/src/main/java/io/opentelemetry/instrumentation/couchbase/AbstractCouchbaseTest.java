@@ -55,9 +55,9 @@ public abstract class AbstractCouchbaseTest {
   @BeforeAll
   void setUp() throws Exception {
     mock = new CouchbaseMock("127.0.0.1", port, 1, 1);
-    Field httpServerFiled = CouchbaseMock.class.getDeclaredField("httpServer");
-    httpServerFiled.setAccessible(true);
-    HttpServer httpServer = (HttpServer) httpServerFiled.get(mock);
+    Field httpServerField = CouchbaseMock.class.getDeclaredField("httpServer");
+    httpServerField.setAccessible(true);
+    HttpServer httpServer = (HttpServer) httpServerField.get(mock);
     httpServer.register("/query", new QueryServer());
     mock.start();
     logger.info("CouchbaseMock listening on localhost:{}", port);
@@ -81,7 +81,7 @@ public abstract class AbstractCouchbaseTest {
     mock.stop();
   }
 
-  protected DefaultCouchbaseEnvironment.Builder envBuilder(
+  private DefaultCouchbaseEnvironment.Builder envBuilder(
       EnvBuilder envBuilder, BucketSettings bucketSettings) {
     return envBuilder.apply(bucketSettings, mock.getCarrierPort(bucketSettings.name()), port);
   }
@@ -94,7 +94,7 @@ public abstract class AbstractCouchbaseTest {
   }
 
   @FunctionalInterface
-  public interface EnvBuilder {
+  private interface EnvBuilder {
     DefaultCouchbaseEnvironment.Builder apply(
         BucketSettings bucketSettings, int carrierDirectPort, int httpDirectPort);
   }

@@ -33,6 +33,7 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
         .and(
             not(
                 hasClassesNamed(
+                    // added in 1.31
                     "application.io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder")));
   }
 
@@ -44,10 +45,5 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
   @Override
   public String getModuleGroup() {
     return "opentelemetry-api-bridge";
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

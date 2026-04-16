@@ -22,7 +22,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pekko.dispatch.sysmsg.SystemMessage;
 
-public class PekkoDefaultSystemMessageQueueInstrumentation implements TypeInstrumentation {
+class PekkoDefaultSystemMessageQueueInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("org.apache.pekko.dispatch.DefaultSystemMessageQueue"));
@@ -45,7 +45,7 @@ public class PekkoDefaultSystemMessageQueueInstrumentation implements TypeInstru
   @SuppressWarnings("unused")
   public static class DispatchSystemAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static PropagatedContext enter(@Advice.Argument(1) SystemMessage systemMessage) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, systemMessage)) {
@@ -55,7 +55,7 @@ public class PekkoDefaultSystemMessageQueueInstrumentation implements TypeInstru
       return null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exit(
         @Advice.Argument(1) SystemMessage systemMessage,
         @Advice.Enter PropagatedContext propagatedContext,

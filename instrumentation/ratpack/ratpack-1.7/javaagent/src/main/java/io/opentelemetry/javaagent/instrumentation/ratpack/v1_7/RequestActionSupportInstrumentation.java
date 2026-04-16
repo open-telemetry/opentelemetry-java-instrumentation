@@ -17,6 +17,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.ContextHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
@@ -24,7 +25,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import ratpack.exec.Downstream;
 import ratpack.exec.Execution;
 
-public class RequestActionSupportInstrumentation implements TypeInstrumentation {
+class RequestActionSupportInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -55,7 +56,7 @@ public class RequestActionSupportInstrumentation implements TypeInstrumentation 
   @SuppressWarnings("unused")
   public static class SendAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void injectChannelAttribute(
         @Advice.FieldValue("execution") Execution execution, @Advice.Argument(1) Channel channel) {
       RatpackSingletons.propagateContextToChannel(execution, channel);
@@ -65,7 +66,7 @@ public class RequestActionSupportInstrumentation implements TypeInstrumentation 
   @SuppressWarnings("unused")
   public static class ConnectDownstreamAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static Downstream<?> wrapDownstream(@Advice.Argument(0) Downstream<?> downstream) {
       // Propagate the current context to downstream
@@ -77,7 +78,8 @@ public class RequestActionSupportInstrumentation implements TypeInstrumentation 
   @SuppressWarnings("unused")
   public static class ContextAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static Scope injectChannelAttribute(
         @Advice.FieldValue("execution") Execution execution) {
 
@@ -89,8 +91,8 @@ public class RequestActionSupportInstrumentation implements TypeInstrumentation 
           .orElse(null);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exit(@Advice.Enter Scope scope) {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void exit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

@@ -27,6 +27,7 @@ public class SpringWebMvcInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // removed in Servlet 5.0 (renamed to jakarta.servlet)
     return hasClassesNamed("javax.servlet.Filter");
   }
 
@@ -41,7 +42,7 @@ public class SpringWebMvcInstrumentationModule extends InstrumentationModule
   public void injectClasses(ClassInjector injector) {
     injector
         .proxyBuilder("org.springframework.web.servlet.v3_1.OpenTelemetryHandlerMappingFilter")
-        .inject(InjectionMode.CLASS_AND_RESOURCE);
+        .inject(InjectionMode.CLASS_ONLY);
   }
 
   @Override
@@ -52,10 +53,5 @@ public class SpringWebMvcInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new DispatcherServletInstrumentation(), new HandlerAdapterInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

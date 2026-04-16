@@ -20,7 +20,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class RouteInstrumentation implements TypeInstrumentation {
+class RouteInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("io.vertx.ext.web.Route");
@@ -42,7 +42,7 @@ public class RouteInstrumentation implements TypeInstrumentation {
   public static class HandlerAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Handler<RoutingContext> wrapHandler(
         @Advice.Argument(0) Handler<RoutingContext> handler) {
       return new RoutingContextHandlerWrapper(handler);

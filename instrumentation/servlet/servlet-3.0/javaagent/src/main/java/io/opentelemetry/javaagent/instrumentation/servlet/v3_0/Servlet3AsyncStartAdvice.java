@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice;
 @SuppressWarnings("unused")
 public class Servlet3AsyncStartAdvice {
 
-  @Advice.OnMethodEnter(suppress = Throwable.class)
+  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
   public static CallDepth startAsyncEnter() {
     CallDepth callDepth = CallDepth.forClass(AsyncContext.class);
     // This allows to detect the outermost invocation of startAsync in method exit
@@ -25,7 +25,7 @@ public class Servlet3AsyncStartAdvice {
     return callDepth;
   }
 
-  @Advice.OnMethodExit(suppress = Throwable.class)
+  @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
   public static void startAsyncExit(
       @Advice.This ServletRequest servletRequest, @Advice.Enter CallDepth callDepth) {
 

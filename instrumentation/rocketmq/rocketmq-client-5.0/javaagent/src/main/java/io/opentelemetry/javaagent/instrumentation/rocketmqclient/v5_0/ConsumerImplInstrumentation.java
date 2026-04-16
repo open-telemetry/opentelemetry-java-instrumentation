@@ -41,12 +41,12 @@ final class ConsumerImplInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ReceiveMessageAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Timer onStart() {
       return Timer.start();
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(0) ReceiveMessageRequest request,
         @Advice.Enter Timer timer,

@@ -14,12 +14,12 @@ import io.opentelemetry.javaagent.instrumentation.servlet.AgentServletInstrument
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public final class LibertySingletons {
+public class LibertySingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.liberty-20.0";
 
   private static final Instrumenter<
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
-      INSTRUMENTER =
+      instrumenter =
           AgentServletInstrumenterBuilder.<HttpServletRequest, HttpServletResponse>create()
               .addContextCustomizer(
                   (context, request, attributes) ->
@@ -27,11 +27,11 @@ public final class LibertySingletons {
               .propagateOperationListenersToOnEnd()
               .build(INSTRUMENTATION_NAME, Servlet3Accessor.INSTANCE);
 
-  private static final LibertyHelper<HttpServletRequest, HttpServletResponse> HELPER =
-      new LibertyHelper<>(INSTRUMENTER, Servlet3Accessor.INSTANCE);
+  private static final LibertyHelper<HttpServletRequest, HttpServletResponse> helper =
+      new LibertyHelper<>(instrumenter, Servlet3Accessor.INSTANCE);
 
   public static LibertyHelper<HttpServletRequest, HttpServletResponse> helper() {
-    return HELPER;
+    return helper;
   }
 
   private LibertySingletons() {}

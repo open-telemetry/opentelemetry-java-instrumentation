@@ -23,6 +23,7 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.message.SemconvMessageStabilityUtil;
@@ -59,6 +60,9 @@ class SpringRabbitMqTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private static GenericContainer<?> rabbitMqContainer;
   private static ConfigurableApplicationContext applicationContext;
@@ -138,117 +142,118 @@ class SpringRabbitMqTest {
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void testContextPropagation(boolean testHeaders) throws Exception {
-    try (Connection connection = connectionFactory.newConnection()) {
-      try (Channel ignored = connection.createChannel()) {
-        testing.runWithSpan(
-            "parent",
-            () -> {
-              if (testHeaders) {
-                applicationContext
-                    .getBean(AmqpTemplate.class)
-                    .convertAndSend(
-                        ConsumerConfig.TEST_QUEUE,
-                        "test",
-                        message -> {
-                          message.getMessageProperties().setHeader("Test-Message-Header", "test");
-                          return message;
-                        });
-              } else {
-                applicationContext
-                    .getBean(AmqpTemplate.class)
-                    .convertAndSend(ConsumerConfig.TEST_QUEUE, "test");
-              }
-            });
-        testing.waitAndAssertTraces(
-            trace -> {
-              trace.hasSpansSatisfyingExactlyInAnyOrder(
-                  span -> span.hasName("parent"),
-                  span ->
-                      span.hasName("<default> publish")
-                          .hasKind(SpanKind.PRODUCER)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              getAssertions("<default>", "publish", ip, true, testHeaders)),
-                  // spring-cloud-stream-binder-rabbit listener puts all messages into a
-                  // BlockingQueue immediately after receiving
-                  // that's why the rabbitmq CONSUMER span will never have any child span (and
-                  // propagate context, actually)
-                  span ->
-                      span.hasName("testQueue process")
-                          .hasKind(SpanKind.CONSUMER)
-                          .hasParent(trace.getSpan(1))
-                          .hasAttributesSatisfyingExactly(
-                              getAssertions("<default>", "process", ip, true, testHeaders)),
-                  // created by spring-rabbit instrumentation
-                  span ->
-                      span.hasName("testQueue process")
-                          .hasKind(SpanKind.CONSUMER)
-                          .hasParent(trace.getSpan(1))
-                          .hasAttributesSatisfyingExactly(
-                              getAssertions("testQueue", "process", null, false, testHeaders)),
-                  span -> {
-                    // occasionally "testQueue process" spans have their order swapped, usually
-                    // it would be
-                    // 0 - parent
-                    // 1 - <default> publish
-                    // 2 - testQueue process (<default>)
-                    // 3 - testQueue process (testQueue)
-                    // 4 - consumer
-                    // but it could also be
-                    // 0 - parent
-                    // 1 - <default> publish
-                    // 2 - testQueue process (testQueue)
-                    // 3 - consumer
-                    // 4 - testQueue process (<default>)
-                    // determine the correct parent span based on the span name
-                    SpanData parentSpan = trace.getSpan(3);
-                    if (!"testQueue process".equals(parentSpan.getName())) {
-                      parentSpan = trace.getSpan(2);
-                    }
-                    span.hasName("consumer").hasParent(parentSpan);
-                  });
-            },
-            trace -> {
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("basic.ack")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(NETWORK_TYPE, "ipv4"),
-                              equalTo(NETWORK_PEER_ADDRESS, ip),
-                              satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative),
-                              equalTo(MESSAGING_SYSTEM, "rabbitmq")));
-            });
-      }
-    }
+    Connection connection = connectionFactory.newConnection();
+    cleanup.deferCleanup(connection);
+    Channel channel = connection.createChannel();
+    cleanup.deferCleanup(channel);
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          if (testHeaders) {
+            applicationContext
+                .getBean(AmqpTemplate.class)
+                .convertAndSend(
+                    ConsumerConfig.TEST_QUEUE,
+                    "test",
+                    message -> {
+                      message.getMessageProperties().setHeader("Test-Message-Header", "test");
+                      return message;
+                    });
+          } else {
+            applicationContext
+                .getBean(AmqpTemplate.class)
+                .convertAndSend(ConsumerConfig.TEST_QUEUE, "test");
+          }
+        });
+    testing.waitAndAssertTraces(
+        trace -> {
+          trace.hasSpansSatisfyingExactlyInAnyOrder(
+              span -> span.hasName("parent"),
+              span ->
+                  span.hasName("<default> publish")
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          getAssertions("<default>", "publish", ip, true, testHeaders)),
+              // spring-cloud-stream-binder-rabbit listener puts all messages into a
+              // BlockingQueue immediately after receiving
+              // that's why the rabbitmq CONSUMER span will never have any child span (and
+              // propagate context, actually)
+              span ->
+                  span.hasName("testQueue process")
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasParent(trace.getSpan(1))
+                      .hasAttributesSatisfyingExactly(
+                          getAssertions("<default>", "process", ip, true, testHeaders)),
+              // created by spring-rabbit instrumentation
+              span ->
+                  span.hasName("testQueue process")
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasParent(trace.getSpan(1))
+                      .hasAttributesSatisfyingExactly(
+                          getAssertions("testQueue", "process", null, false, testHeaders)),
+              span -> {
+                // occasionally "testQueue process" spans have their order swapped, usually
+                // it would be
+                // 0 - parent
+                // 1 - <default> publish
+                // 2 - testQueue process (<default>)
+                // 3 - testQueue process (testQueue)
+                // 4 - consumer
+                // but it could also be
+                // 0 - parent
+                // 1 - <default> publish
+                // 2 - testQueue process (testQueue)
+                // 3 - consumer
+                // 4 - testQueue process (<default>)
+                // determine the correct parent span based on the span name
+                SpanData parentSpan = trace.getSpan(3);
+                if (!"testQueue process".equals(parentSpan.getName())) {
+                  parentSpan = trace.getSpan(2);
+                }
+                span.hasName("consumer").hasParent(parentSpan);
+              });
+        },
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasName("basic.ack")
+                      .hasKind(SpanKind.CLIENT)
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(NETWORK_TYPE, "ipv4"),
+                          equalTo(NETWORK_PEER_ADDRESS, ip),
+                          satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative),
+                          equalTo(MESSAGING_SYSTEM, "rabbitmq")));
+        });
   }
 
   @Test
   void testAnonymousQueueSpanName() throws Exception {
-    try (Connection connection = connectionFactory.newConnection()) {
-      try (Channel ignored = connection.createChannel()) {
-        String anonymousQueueName = applicationContext.getBean(AnonymousQueue.class).getName();
-        applicationContext.getBean(AmqpTemplate.class).convertAndSend(anonymousQueueName, "test");
-        applicationContext.getBean(AmqpTemplate.class).receive(anonymousQueueName, 5000);
+    Connection connection = connectionFactory.newConnection();
+    cleanup.deferCleanup(connection);
+    Channel channel = connection.createChannel();
+    cleanup.deferCleanup(channel);
 
-        testing.waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("<default> publish"),
-                    // Verify that a constant span name is used instead of the randomly generated
-                    // anonymous queue name
-                    span ->
-                        span.hasName("<generated> process")
-                            .hasAttribute(
-                                equalTo(
-                                    MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
-                                    anonymousQueueName))),
-            trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.qos")),
-            trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.consume")),
-            trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.cancel")),
-            trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.ack")));
-      }
-    }
+    String anonymousQueueName = applicationContext.getBean(AnonymousQueue.class).getName();
+    applicationContext.getBean(AmqpTemplate.class).convertAndSend(anonymousQueueName, "test");
+    applicationContext.getBean(AmqpTemplate.class).receive(anonymousQueueName, 5000);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("<default> publish"),
+                // Verify that a constant span name is used instead of the randomly generated
+                // anonymous queue name
+                span ->
+                    span.hasName("<generated> process")
+                        .hasAttribute(
+                            equalTo(
+                                MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, anonymousQueueName))),
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.qos")),
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.consume")),
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.cancel")),
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.ack")));
   }
 
   @SpringBootConfiguration

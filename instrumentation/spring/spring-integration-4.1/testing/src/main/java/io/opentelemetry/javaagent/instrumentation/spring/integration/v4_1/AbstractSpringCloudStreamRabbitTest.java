@@ -12,7 +12,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class AbstractSpringCloudStreamRabbitTest {
 
-  @RegisterExtension RabbitExtension rabbit;
+  @RegisterExtension final RabbitExtension rabbit;
 
   protected final InstrumentationExtension testing;
 

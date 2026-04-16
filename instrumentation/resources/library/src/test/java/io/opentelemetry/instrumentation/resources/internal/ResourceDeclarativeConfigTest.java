@@ -46,7 +46,8 @@ class ResourceDeclarativeConfigTest {
 
     boolean java8 = "1.8".equals(System.getProperty("java.specification.version"));
     OpenTelemetrySdk openTelemetrySdk =
-        DeclarativeConfiguration.parseAndCreate(new ByteArrayInputStream(yaml.getBytes(UTF_8)));
+        DeclarativeConfiguration.parseAndCreate(new ByteArrayInputStream(yaml.getBytes(UTF_8)))
+            .getSdk();
     assertThat(openTelemetrySdk.getSdkTracerProvider())
         .extracting("sharedState.resource", as(InstanceOfAssertFactories.type(Resource.class)))
         .satisfies(

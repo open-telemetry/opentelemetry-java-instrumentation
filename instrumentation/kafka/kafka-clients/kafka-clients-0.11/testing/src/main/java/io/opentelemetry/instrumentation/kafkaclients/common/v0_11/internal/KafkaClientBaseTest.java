@@ -27,6 +27,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.message.SemconvMessageStabilityUtil;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.time.Duration;
@@ -53,9 +54,9 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -66,6 +67,8 @@ import org.testcontainers.utility.DockerImageName;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class KafkaClientBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(KafkaClientBaseTest.class);
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected static final String SHARED_TOPIC = "shared.topic";
   protected static final AttributeKey<String> MESSAGING_CLIENT_ID =
@@ -90,6 +93,7 @@ public abstract class KafkaClientBaseTest {
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.Kafka.*Server\\).*", 1))
             .withStartupTimeout(Duration.ofMinutes(1));
+    cleanup.deferAfterAll(kafka::stop);
     kafka.start();
 
     // create test topic
@@ -104,8 +108,10 @@ public abstract class KafkaClientBaseTest {
     }
 
     producer = new KafkaProducer<>(producerProps());
+    cleanup.deferAfterAll(producer);
 
     consumer = new KafkaConsumer<>(consumerProps());
+    cleanup.deferAfterAll(consumer);
 
     consumer.subscribe(
         singletonList(SHARED_TOPIC),
@@ -144,17 +150,6 @@ public abstract class KafkaClientBaseTest {
     return props;
   }
 
-  @AfterAll
-  void cleanupClass() {
-    if (producer != null) {
-      producer.close();
-    }
-    if (consumer != null) {
-      consumer.close();
-    }
-    kafka.stop();
-  }
-
   public void awaitUntilConsumerIsReady() throws InterruptedException {
     if (consumerReady.await(0, SECONDS)) {
       return;
@@ -184,7 +179,7 @@ public abstract class KafkaClientBaseTest {
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION, "publish"),
-                satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("producer")),
+                satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
     if (messageKey != null) {
@@ -210,7 +205,7 @@ public abstract class KafkaClientBaseTest {
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION, "receive"),
-                satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer")),
+                satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
                 satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isPositive)));
     // consumer group is not available in version 0.11
     if (Boolean.getBoolean("testLatestDeps")) {
@@ -234,7 +229,7 @@ public abstract class KafkaClientBaseTest {
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION, "process"),
-                satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer")),
+                satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
                 satisfies(

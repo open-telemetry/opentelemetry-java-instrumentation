@@ -62,7 +62,7 @@ public class TestAccessLogValve extends ValveBase implements AccessLog {
         toWait = endTime - System.currentTimeMillis();
       }
 
-      if (toWait <= 0) {
+      if (loggedIds.size() < expected) {
         throw new IllegalStateException(
             "Timeout waiting for " + expected + " access log ids, got " + loggedIds.size());
       }

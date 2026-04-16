@@ -56,7 +56,7 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
     this.context = ctx;
     this.traceContext = ContextPropagationOperator.getOpenTelemetryContext(ctx, contextToPropagate);
     this.hasContextToPropagate =
-        traceContext == null ? false : Span.fromContext(traceContext).getSpanContext().isValid();
+        traceContext != null && Span.fromContext(traceContext).getSpanContext().isValid();
   }
 
   @Override
@@ -116,7 +116,7 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
   private static Class<?> getFluxRetrySubscriberClass() {
     try {
       return Class.forName("reactor.core.publisher.FluxRetry$RetrySubscriber");
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       return null;
     }
   }
@@ -125,7 +125,7 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
   private static Class<?> getFluxRetryWhenSubscriberClass() {
     try {
       return Class.forName("reactor.core.publisher.FluxRetryWhen$RetryWhenMainSubscriber");
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       return null;
     }
   }

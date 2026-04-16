@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class RestoreViewPhaseInstrumentation implements TypeInstrumentation {
+class RestoreViewPhaseInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -34,7 +34,7 @@ public class RestoreViewPhaseInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ExecuteAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Argument(0) FacesContext facesContext) {
       JsfServerSpanNaming.updateViewName(currentContext(), facesContext);
     }

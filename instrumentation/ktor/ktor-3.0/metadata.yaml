@@ -1,3 +1,4 @@
+display_name: Ktor
 description: >
   This instrumentation provides HTTP server spans and HTTP server metrics for the Ktor server,
   and HTTP client spans and HTTP client metrics for the Ktor HTTP client.

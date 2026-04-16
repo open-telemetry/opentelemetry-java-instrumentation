@@ -20,7 +20,7 @@ import org.apache.http.HttpRequest;
 import org.apache.http.ProtocolVersion;
 import org.apache.http.client.methods.HttpUriRequest;
 
-public final class ApacheHttpClientRequest {
+public class ApacheHttpClientRequest {
 
   private static final Logger logger = Logger.getLogger(ApacheHttpClientRequest.class.getName());
 

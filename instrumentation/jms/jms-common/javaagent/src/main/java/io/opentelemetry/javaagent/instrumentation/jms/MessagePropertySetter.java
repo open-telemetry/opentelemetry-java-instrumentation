@@ -9,6 +9,7 @@ import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 enum MessagePropertySetter implements TextMapSetter<MessageWithDestination> {
   INSTANCE;
@@ -18,7 +19,10 @@ enum MessagePropertySetter implements TextMapSetter<MessageWithDestination> {
   static final String DASH = "__dash__";
 
   @Override
-  public void set(MessageWithDestination carrier, String key, String value) {
+  public void set(@Nullable MessageWithDestination carrier, String key, String value) {
+    if (carrier == null) {
+      return;
+    }
     String propName = key.replace("-", DASH);
     try {
       carrier.message().setStringProperty(propName, value);

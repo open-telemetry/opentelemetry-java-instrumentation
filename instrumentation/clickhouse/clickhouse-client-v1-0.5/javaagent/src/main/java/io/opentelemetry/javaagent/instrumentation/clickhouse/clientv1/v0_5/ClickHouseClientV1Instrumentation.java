@@ -26,7 +26,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ClickHouseClientV1Instrumentation implements TypeInstrumentation {
+class ClickHouseClientV1Instrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("com.clickhouse.client.ClickHouseClient"));
@@ -42,12 +42,12 @@ public class ClickHouseClientV1Instrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         namedOneOf("executeAndWait", "execute")
             .and(takesArgument(0, named("com.clickhouse.client.ClickHouseRequest"))),
-        this.getClass().getName() + "$ExecuteAndWaitAdvice");
+        getClass().getName() + "$ExecuteAndWaitAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ExecuteAndWaitAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static ClickHouseScope onEnter(
         @Advice.Argument(0) ClickHouseRequest<?> clickHouseRequest) {
 
@@ -69,7 +69,7 @@ public class ClickHouseClientV1Instrumentation implements TypeInstrumentation {
       return ClickHouseScope.start(instrumenter(), currentContext(), request);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown Throwable throwable, @Advice.Enter ClickHouseScope scope) {
 

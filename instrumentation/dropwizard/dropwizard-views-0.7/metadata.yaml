@@ -1,3 +1,4 @@
+display_name: Dropwizard Views
 description: >
   This instrumentation enables view spans for Dropwizard view template rendering
   (view spans are disabled by default).

@@ -20,10 +20,6 @@ public final class RuntimeMetrics implements AutoCloseable {
 
   private final RuntimeTelemetry delegate;
 
-  RuntimeMetrics(RuntimeTelemetry delegate) {
-    this.delegate = delegate;
-  }
-
   /**
    * Create and start {@link RuntimeMetrics}, configured with the default {@link JfrFeature}s.
    *
@@ -33,7 +29,7 @@ public final class RuntimeMetrics implements AutoCloseable {
    * @param openTelemetry the {@link OpenTelemetry} instance used to record telemetry
    */
   public static RuntimeMetrics create(OpenTelemetry openTelemetry) {
-    return new RuntimeMetricsBuilder(openTelemetry).build();
+    return builder(openTelemetry).build();
   }
 
   /**
@@ -43,6 +39,10 @@ public final class RuntimeMetrics implements AutoCloseable {
    */
   public static RuntimeMetricsBuilder builder(OpenTelemetry openTelemetry) {
     return new RuntimeMetricsBuilder(openTelemetry);
+  }
+
+  RuntimeMetrics(RuntimeTelemetry delegate) {
+    this.delegate = delegate;
   }
 
   // Only used by tests

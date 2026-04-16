@@ -21,7 +21,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 
 // This is necessary because SourceNodeRecordDeserializer drops the headers.  :-(
-public class SourceNodeRecordDeserializerInstrumentation implements TypeInstrumentation {
+class SourceNodeRecordDeserializerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -42,7 +42,7 @@ public class SourceNodeRecordDeserializerInstrumentation implements TypeInstrume
   public static class SaveHeadersAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static ConsumerRecord<?, ?> saveHeaders(
         @Advice.Argument(0) ConsumerRecord<?, ?> incoming,
         @Advice.Return ConsumerRecord<?, ?> result) {

@@ -56,7 +56,7 @@ public class ListAppender extends AbstractAppender {
 
   @PluginFactory
   public static ListAppender createAppender(@PluginAttribute("name") String name) {
-    if (!name.equals("ListAppender")) {
+    if (!"ListAppender".equals(name)) {
       throw new IllegalArgumentException(
           "Use name=\"ListAppender\" in log4j2-test.xml instead of " + name);
     }

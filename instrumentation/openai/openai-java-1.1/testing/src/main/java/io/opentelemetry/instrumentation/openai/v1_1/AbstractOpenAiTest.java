@@ -49,7 +49,7 @@ abstract class AbstractOpenAiTest {
   private OpenAIClient rawClient;
   private OpenAIClientAsync rawClientAsync;
 
-  protected final OpenAIClient getRawClient() {
+  protected OpenAIClient getRawClient() {
     if (rawClient == null) {
       OpenAIOkHttpClient.Builder builder =
           OpenAIOkHttpClient.builder().baseUrl("http://localhost:" + recording.getPort());
@@ -63,7 +63,7 @@ abstract class AbstractOpenAiTest {
     return rawClient;
   }
 
-  protected final OpenAIClientAsync getRawClientAsync() {
+  protected OpenAIClientAsync getRawClientAsync() {
     if (rawClientAsync == null) {
       OpenAIOkHttpClientAsync.Builder builder =
           OpenAIOkHttpClientAsync.builder().baseUrl("http://localhost:" + recording.getPort());
@@ -77,11 +77,11 @@ abstract class AbstractOpenAiTest {
     return rawClientAsync;
   }
 
-  protected final OpenAIClient getClient() {
+  protected OpenAIClient getClient() {
     return wrap(getRawClient());
   }
 
-  protected final OpenAIClientAsync getClientAsync() {
+  protected OpenAIClientAsync getClientAsync() {
     return wrap(getRawClientAsync());
   }
 

@@ -32,11 +32,11 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class MethodInstrumentation implements TypeInstrumentation {
-  private final String className;
+class MethodInstrumentation implements TypeInstrumentation {
+  @Nullable private final String className;
   private final Map<SpanKind, Collection<String>> methodNames;
 
-  public MethodInstrumentation(String className, Map<SpanKind, Collection<String>> methodNames) {
+  MethodInstrumentation(@Nullable String className, Map<SpanKind, Collection<String>> methodNames) {
     this.className = className;
     this.methodNames = methodNames;
   }
@@ -128,7 +128,7 @@ public class MethodInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @MethodSpanKind SpanKind spanKind,
         @Advice.Origin("#t") Class<?> declaringClass,
@@ -137,7 +137,7 @@ public class MethodInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Object stopSpan(
         @MethodReturnType Class<?> methodReturnType,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returnValue,

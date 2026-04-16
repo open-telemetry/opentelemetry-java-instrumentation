@@ -14,7 +14,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class OpenTelemetryIncubatorInstrumentation implements TypeInstrumentation {
+class OpenTelemetryIncubatorInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -28,10 +28,10 @@ public class OpenTelemetryIncubatorInstrumentation implements TypeInstrumentatio
 
   @SuppressWarnings({"ReturnValueIgnored", "unused"})
   public static class InitAdvice {
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(inline = false)
     public static void init() {
-      // the sole purpose of this advice is to ensure that the classes are
-      // recognized as helper class and injected into class loader
+      // the sole purpose of this advice is to ensure that the class is
+      // recognized as a helper class and injected into the class loader
       ApplicationOpenTelemetry156Incubator.class.getName();
     }
   }

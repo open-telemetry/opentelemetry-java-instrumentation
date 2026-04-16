@@ -101,11 +101,7 @@ class JettyHttpClient9HttpCallTest {
       body = buf.toByteArray();
     }
 
-    assertThat(body)
-        .as(
-            "Response body must not be empty — if it is, the OTel proxy is missing "
-                + "DemandedContentListener and Jetty filters it out before delivering content")
-        .isNotEmpty();
+    assertThat(body).isNotEmpty();
     assertThat(new String(body, UTF_8)).isEqualTo(EXPECTED_BODY);
   }
 }

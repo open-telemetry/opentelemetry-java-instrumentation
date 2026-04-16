@@ -172,7 +172,7 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
 
     @Override
     public boolean hasNext() {
-      if (null != it && it.hasNext()) {
+      if (it != null && it.hasNext()) {
         try {
           next = it.next();
           return true;

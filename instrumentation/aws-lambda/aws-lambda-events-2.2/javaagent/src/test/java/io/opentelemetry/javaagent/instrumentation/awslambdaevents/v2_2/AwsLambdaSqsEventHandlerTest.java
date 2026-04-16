@@ -28,7 +28,7 @@ class AwsLambdaSqsEventHandlerTest extends AbstractAwsLambdaSqsEventHandlerTest 
     return testing;
   }
 
-  private static final class TestRequestHandler implements RequestHandler<SQSEvent, Void> {
+  private static class TestRequestHandler implements RequestHandler<SQSEvent, Void> {
     @Override
     public Void handleRequest(SQSEvent input, Context context) {
       return null;

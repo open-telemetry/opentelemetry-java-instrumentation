@@ -19,7 +19,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
  */
 public final class MongoInstrumenterFactory {
 
-  public static final int DEFAULT_MAX_NORMALIZED_QUERY_LENGTH = 32 * 1024;
+  static final int DEFAULT_MAX_NORMALIZED_QUERY_LENGTH = 32 * 1024;
 
   public static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
       OpenTelemetry openTelemetry, String instrumentationName, boolean querySanitizationEnabled) {

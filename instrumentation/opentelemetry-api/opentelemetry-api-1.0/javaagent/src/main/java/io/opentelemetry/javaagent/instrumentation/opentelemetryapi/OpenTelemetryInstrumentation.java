@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
 
 import static java.util.logging.Level.WARNING;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -23,7 +22,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 // Our convention for accessing agent package
 @SuppressWarnings("UnnecessarilyFullyQualified")
-public class OpenTelemetryInstrumentation implements TypeInstrumentation {
+class OpenTelemetryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -33,34 +32,32 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isStatic())
+        isStatic()
             .and(named("get"))
             .and(takesArguments(0))
             .and(returns(named("application.io.opentelemetry.api.OpenTelemetry"))),
         OpenTelemetryInstrumentation.class.getName() + "$GetAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isStatic())
+        isStatic()
             .and(named("set"))
             .and(takesArguments(1))
             .and(takesArgument(0, named("application.io.opentelemetry.api.OpenTelemetry"))),
         OpenTelemetryInstrumentation.class.getName() + "$SetAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(isStatic()).and(named("resetForTest")).and(takesArguments(0)),
+        isStatic().and(named("resetForTest")).and(takesArguments(0)),
         OpenTelemetryInstrumentation.class.getName() + "$ResetForTestAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class GetAdvice {
 
-    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class)
+    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class, inline = false)
     public static Object onEnter() {
       return null;
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static application.io.opentelemetry.api.OpenTelemetry methodExit() {
       return ApplicationOpenTelemetry.INSTANCE;
     }
@@ -69,7 +66,7 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SetAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter() {
       Logger.getLogger(application.io.opentelemetry.api.GlobalOpenTelemetry.class.getName())
           .log(
@@ -84,7 +81,7 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ResetForTestAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter() {
       Logger.getLogger(application.io.opentelemetry.api.GlobalOpenTelemetry.class.getName())
           .log(

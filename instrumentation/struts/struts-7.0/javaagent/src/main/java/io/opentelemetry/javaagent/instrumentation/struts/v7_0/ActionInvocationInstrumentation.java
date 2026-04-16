@@ -23,7 +23,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.struts2.ActionInvocation;
 
-public class ActionInvocationInstrumentation implements TypeInstrumentation {
+class ActionInvocationInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -39,7 +39,7 @@ public class ActionInvocationInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isPublic().and(named("invokeActionOnly")),
-        this.getClass().getName() + "$InvokeActionOnlyAdvice");
+        getClass().getName() + "$InvokeActionOnlyAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -60,7 +60,7 @@ public class ActionInvocationInstrumentation implements TypeInstrumentation {
         HttpServerRoute.update(
             parentContext,
             CONTROLLER,
-            StrutsServerSpanNaming.SERVER_SPAN_NAME,
+            StrutsServerSpanNaming.serverSpanName(),
             actionInvocation.getProxy());
 
         if (!instrumenter().shouldStart(parentContext, actionInvocation)) {
@@ -76,12 +76,12 @@ public class ActionInvocationInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.This ActionInvocation actionInvocation) {
       return AdviceScope.start(actionInvocation);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.This ActionInvocation actionInvocation,

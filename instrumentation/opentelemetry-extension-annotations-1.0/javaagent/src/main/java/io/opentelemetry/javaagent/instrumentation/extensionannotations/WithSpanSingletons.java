@@ -17,22 +17,22 @@ import java.lang.reflect.Method;
 import java.util.logging.Logger;
 
 @SuppressWarnings("deprecation") // instrumenting deprecated class for backwards compatibility
-public final class WithSpanSingletons {
+public class WithSpanSingletons {
 
   private static final String INSTRUMENTATION_NAME =
       "io.opentelemetry.opentelemetry-extension-annotations-1.0";
 
   private static final Logger logger = Logger.getLogger(WithSpanSingletons.class.getName());
-  private static final Instrumenter<Method, Object> INSTRUMENTER = createInstrumenter();
-  private static final Instrumenter<MethodRequest, Object> INSTRUMENTER_WITH_ATTRIBUTES =
+  private static final Instrumenter<Method, Object> instrumenter = createInstrumenter();
+  private static final Instrumenter<MethodRequest, Object> instrumenterWithAttributes =
       createInstrumenterWithAttributes();
 
   public static Instrumenter<Method, Object> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static Instrumenter<MethodRequest, Object> instrumenterWithAttributes() {
-    return INSTRUMENTER_WITH_ATTRIBUTES;
+    return instrumenterWithAttributes;
   }
 
   private static Instrumenter<Method, Object> createInstrumenter() {

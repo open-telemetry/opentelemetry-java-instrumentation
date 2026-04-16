@@ -10,7 +10,7 @@ import com.ning.http.client.Response;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenters;
 
-public final class AsyncHttpClientInstrumenterFactory {
+public class AsyncHttpClientInstrumenterFactory {
 
   public static Instrumenter<Request, Response> create(
       String instrumentationName, AsyncHttpClientHelper helper) {

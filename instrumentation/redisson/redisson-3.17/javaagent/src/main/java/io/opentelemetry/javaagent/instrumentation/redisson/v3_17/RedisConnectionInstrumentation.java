@@ -23,7 +23,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.redisson.client.RedisConnection;
 
-public class RedisConnectionInstrumentation implements TypeInstrumentation {
+class RedisConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.redisson.client.RedisConnection");
@@ -31,7 +31,7 @@ public class RedisConnectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("send"), this.getClass().getName() + "$SendAdvice");
+    transformer.applyAdviceToMethod(named("send"), getClass().getName() + "$SendAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -80,13 +80,13 @@ public class RedisConnectionInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This RedisConnection connection, @Advice.Argument(0) Object arg) {
       return AdviceScope.start(connection, arg);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
