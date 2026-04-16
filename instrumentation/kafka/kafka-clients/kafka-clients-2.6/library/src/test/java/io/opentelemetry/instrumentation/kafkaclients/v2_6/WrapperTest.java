@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.testing.junit.message.SemconvMessageStabilityUtil;
+import io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import java.util.ArrayList;
@@ -97,8 +97,7 @@ class WrapperTest extends AbstractWrapperTest {
     if (testHeaders) {
       assertions.add(
           equalTo(
-              SemconvMessageStabilityUtil.headerAttributeKey("Test-Message-Header"),
-              singletonList("test")));
+              MessageHeaderUtil.headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
     return assertions;
   }
@@ -120,8 +119,7 @@ class WrapperTest extends AbstractWrapperTest {
     if (testHeaders) {
       assertions.add(
           equalTo(
-              SemconvMessageStabilityUtil.headerAttributeKey("Test-Message-Header"),
-              singletonList("test")));
+              MessageHeaderUtil.headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
     return assertions;
   }
@@ -140,8 +138,7 @@ class WrapperTest extends AbstractWrapperTest {
     if (testHeaders) {
       assertions.add(
           equalTo(
-              SemconvMessageStabilityUtil.headerAttributeKey("Test-Message-Header"),
-              singletonList("test")));
+              MessageHeaderUtil.headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
     return assertions;
   }

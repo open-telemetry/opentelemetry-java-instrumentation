@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
+import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -22,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.testing.junit.message.SemconvMessageStabilityUtil;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.api.AbstractLongAssert;
@@ -55,9 +55,7 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
-                          equalTo(
-                              SemconvMessageStabilityUtil.headerAttributeKey("Test-Message-Header"),
-                              singletonList("test")),
+                          equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")),
                           equalTo(MESSAGING_SYSTEM, "kafka"),
                           equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                           equalTo(MESSAGING_OPERATION, "publish"),
@@ -79,9 +77,7 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                         .hasLinksSatisfying(links -> assertThat(links).isEmpty())
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                SemconvMessageStabilityUtil.headerAttributeKey(
-                                    "Test-Message-Header"),
-                                singletonList("test")),
+                                headerAttributeKey("Test-Message-Header"), singletonList("test")),
                             equalTo(MESSAGING_SYSTEM, "kafka"),
                             equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                             equalTo(MESSAGING_OPERATION, "receive"),
@@ -95,9 +91,7 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                         .hasLinks(LinkData.create(producerSpanContext.get()))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                SemconvMessageStabilityUtil.headerAttributeKey(
-                                    "Test-Message-Header"),
-                                singletonList("test")),
+                                headerAttributeKey("Test-Message-Header"), singletonList("test")),
                             equalTo(MESSAGING_SYSTEM, "kafka"),
                             equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                             equalTo(MESSAGING_OPERATION, "process"),

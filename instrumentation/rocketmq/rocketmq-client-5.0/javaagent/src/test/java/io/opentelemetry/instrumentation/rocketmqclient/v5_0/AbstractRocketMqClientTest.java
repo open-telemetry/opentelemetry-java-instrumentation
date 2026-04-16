@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
+import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -28,7 +29,6 @@ import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.message.SemconvMessageStabilityUtil;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -373,9 +373,7 @@ abstract class AbstractRocketMqClientTest {
                               body,
                               sendReceipt,
                               equalTo(
-                                  SemconvMessageStabilityUtil.headerAttributeKey(
-                                      "Test-Message-Header"),
-                                  singletonList("test")))
+                                  headerAttributeKey("Test-Message-Header"), singletonList("test")))
                           .hasParent(trace.getSpan(0)));
               sendSpanData.set(trace.getSpan(1));
             },
@@ -393,8 +391,7 @@ abstract class AbstractRocketMqClientTest {
                                 body,
                                 sendReceipt,
                                 equalTo(
-                                    SemconvMessageStabilityUtil.headerAttributeKey(
-                                        "Test-Message-Header"),
+                                    headerAttributeKey("Test-Message-Header"),
                                     singletonList("test")))
                             // As the child of receive span.
                             .hasParent(trace.getSpan(0)),

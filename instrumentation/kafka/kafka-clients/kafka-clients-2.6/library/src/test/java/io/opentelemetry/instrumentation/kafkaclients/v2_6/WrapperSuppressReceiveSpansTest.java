@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -20,7 +21,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.testing.junit.message.SemconvMessageStabilityUtil;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.ArrayList;
 import java.util.List;
@@ -72,10 +72,7 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
-      assertions.add(
-          equalTo(
-              SemconvMessageStabilityUtil.headerAttributeKey("Test-Message-Header"),
-              singletonList("test")));
+      assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
     return assertions;
   }
@@ -95,10 +92,7 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
                 equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
                 satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer"))));
     if (testHeaders) {
-      assertions.add(
-          equalTo(
-              SemconvMessageStabilityUtil.headerAttributeKey("Test-Message-Header"),
-              singletonList("test")));
+      assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
     return assertions;
   }

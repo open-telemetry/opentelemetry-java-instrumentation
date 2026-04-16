@@ -25,6 +25,8 @@ import java.util.Set;
 @SuppressWarnings("deprecation")
 public final class SemconvStability {
 
+  private static final boolean v3Preview;
+
   private static final boolean emitOldDatabaseSemconv;
   private static final boolean emitStableDatabaseSemconv;
 
@@ -37,13 +39,9 @@ public final class SemconvStability {
   private static final boolean emitOldRpcSemconv;
   private static final boolean emitStableRpcSemconv;
 
-  private static final boolean emitOldMessageSemconv;
-  private static final boolean emitStableMessageSemconv;
-
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.getOrNoop();
-    boolean v3Preview =
-        getInstrumentationConfig(openTelemetry, "common").getBoolean("v3_preview", false);
+    v3Preview = getInstrumentationConfig(openTelemetry, "common").getBoolean("v3_preview", false);
     Set<String> optInValues = resolveOptInValues(openTelemetry);
 
     emitOldDatabaseSemconv = shouldEmitOld("database", v3Preview, optInValues);
@@ -57,9 +55,6 @@ public final class SemconvStability {
 
     emitOldRpcSemconv = shouldEmitOld("rpc", v3Preview, optInValues);
     emitStableRpcSemconv = shouldEmitStable("rpc", v3Preview, optInValues);
-
-    emitOldMessageSemconv = shouldEmitOld("message", v3Preview, optInValues);
-    emitStableMessageSemconv = shouldEmitStable("message", v3Preview, optInValues);
   }
 
   private static Set<String> resolveOptInValues(OpenTelemetry openTelemetry) {
@@ -78,6 +73,10 @@ public final class SemconvStability {
       }
     }
     return values;
+  }
+
+  public static boolean v3Preview() {
+    return v3Preview;
   }
 
   public static boolean emitOldDatabaseSemconv() {
@@ -135,14 +134,6 @@ public final class SemconvStability {
 
   public static boolean emitStableRpcSemconv() {
     return emitStableRpcSemconv;
-  }
-
-  public static boolean emitOldMessageSemconv() {
-    return emitOldMessageSemconv;
-  }
-
-  public static boolean emitStableMessageSemconv() {
-    return emitStableMessageSemconv;
   }
 
   private static final Map<String, String> rpcSystemNameMap = new HashMap<>();

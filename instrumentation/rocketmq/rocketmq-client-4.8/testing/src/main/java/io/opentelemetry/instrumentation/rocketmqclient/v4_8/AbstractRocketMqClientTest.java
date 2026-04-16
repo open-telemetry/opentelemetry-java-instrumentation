@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -23,7 +24,6 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.rocketmqclient.v4_8.base.BaseConf;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.message.SemconvMessageStabilityUtil;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -458,8 +458,7 @@ abstract class AbstractRocketMqClientTest {
                                     stringKey("messaging.rocketmq.send_result"),
                                     experimental("SEND_OK")),
                                 equalTo(
-                                    SemconvMessageStabilityUtil.headerAttributeKey(
-                                        "Test-Message-Header"),
+                                    headerAttributeKey("Test-Message-Header"),
                                     singletonList("test"))),
                     span ->
                         span.hasName(sharedTopic + " process")
@@ -485,8 +484,7 @@ abstract class AbstractRocketMqClientTest {
                                     longKey("messaging.rocketmq.queue_offset"),
                                     val -> experimentalLong(val)),
                                 equalTo(
-                                    SemconvMessageStabilityUtil.headerAttributeKey(
-                                        "Test-Message-Header"),
+                                    headerAttributeKey("Test-Message-Header"),
                                     singletonList("test"))),
                     span ->
                         span.hasName("messageListener")
