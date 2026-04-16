@@ -7,61 +7,11 @@ otelJava {
 }
 
 dependencies {
-  implementation(project(":instrumentation:runtime-telemetry:runtime-telemetry-java8:library"))
+  implementation(project(":instrumentation:runtime-telemetry:library"))
   testImplementation("io.github.netmikey.logunit:logunit-jul:1.1.3")
 }
 
-tasks.register("generateDocs", JavaExec::class) {
-  group = "build"
-  description = "Generate table for README.md"
-  classpath = sourceSets.test.get().runtimeClasspath
-  mainClass.set("io.opentelemetry.instrumentation.runtimemetrics.java17.GenerateDocs")
-  systemProperties.set("jfr.readme.path", project.projectDir.toString() + "/README.md")
-}
-
 tasks {
-  val testG1 by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*G1GcMemoryMetricTest*")
-    }
-    include("**/*G1GcMemoryMetricTest.*")
-    jvmArgs("-XX:+UseG1GC")
-  }
-
-  val testPS by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*PsGcMemoryMetricTest*")
-    }
-    include("**/*PsGcMemoryMetricTest.*")
-    jvmArgs("-XX:+UseParallelGC")
-  }
-
-  val testSerial by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*SerialGcMemoryMetricTest*")
-    }
-    include("**/*SerialGcMemoryMetricTest.*")
-    jvmArgs("-XX:+UseSerialGC")
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("*G1GcMemoryMetricTest")
-      excludeTestsMatching("*SerialGcMemoryMetricTest")
-      excludeTestsMatching("*PsGcMemoryMetricTest")
-    }
-  }
-
-  check {
-    dependsOn(testG1, testPS, testSerial)
-  }
-
   compileJava {
     // We compile this module for java 8 because it is used as a dependency in spring-boot-autoconfigure.
     // If this module is compiled for java 17 then gradle can figure out based on the metadata that

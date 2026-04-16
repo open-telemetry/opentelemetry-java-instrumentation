@@ -14,6 +14,8 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
@@ -25,10 +27,8 @@ import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.File;
 import java.nio.file.Files;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import javax.jms.Connection;
@@ -88,12 +88,10 @@ class Jms2InstrumentationTest {
     config.setSecurityEnabled(false);
     config.setPersistenceEnabled(false);
     config.setQueueConfigurations(
-        Collections.singletonList(
-            new CoreQueueConfiguration("someQueue", "someQueue", null, true)));
+        singletonList(new CoreQueueConfiguration("someQueue", "someQueue", null, true)));
     config.setAcceptorConfigurations(
         new HashSet<>(
-            Collections.singletonList(
-                new TransportConfiguration(InVMAcceptorFactory.class.getName()))));
+            singletonList(new TransportConfiguration(InVMAcceptorFactory.class.getName()))));
 
     server = HornetQServers.newHornetQServer(config);
     server.start();
@@ -219,7 +217,7 @@ class Jms2InstrumentationTest {
     testing.runWithSpan("producer parent", () -> producer.send(destination, sentMessage));
 
     // then
-    TextMessage receivedMessage = receivedMessageFuture.get(10, TimeUnit.SECONDS);
+    TextMessage receivedMessage = receivedMessageFuture.get(10, SECONDS);
     assertThat(receivedMessage.getText()).isEqualTo(sentMessage.getText());
 
     String messageId = receivedMessage.getJMSMessageID();

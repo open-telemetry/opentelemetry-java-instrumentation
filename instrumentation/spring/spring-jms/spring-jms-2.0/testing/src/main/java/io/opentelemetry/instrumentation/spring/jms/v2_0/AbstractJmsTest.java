@@ -16,13 +16,13 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public abstract class AbstractJmsTest {
@@ -52,13 +52,10 @@ public abstract class AbstractJmsTest {
     }
     if (testHeaders) {
       attributeAssertions.add(
-          equalTo(
-              stringArrayKey("messaging.header.Test_Message_Header"),
-              Collections.singletonList("test")));
+          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
       attributeAssertions.add(
           equalTo(
-              stringArrayKey("messaging.header.Test_Message_Int_Header"),
-              Collections.singletonList("1234")));
+              stringArrayKey("messaging.header.Test_Message_Int_Header"), singletonList("1234")));
     }
     return attributeAssertions;
   }
@@ -104,13 +101,10 @@ public abstract class AbstractJmsTest {
     }
     if (testHeaders) {
       attributeAssertions.add(
-          equalTo(
-              stringArrayKey("messaging.header.Test_Message_Header"),
-              Collections.singletonList("test")));
+          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
       attributeAssertions.add(
           equalTo(
-              stringArrayKey("messaging.header.Test_Message_Int_Header"),
-              Collections.singletonList("1234")));
+              stringArrayKey("messaging.header.Test_Message_Int_Header"), singletonList("1234")));
     }
     return attributeAssertions;
   }

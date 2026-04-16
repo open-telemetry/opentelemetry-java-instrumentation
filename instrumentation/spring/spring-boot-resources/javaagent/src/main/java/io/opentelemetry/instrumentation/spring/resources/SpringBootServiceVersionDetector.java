@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.resources;
 
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_VERSION;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.service.AutoService;
@@ -12,7 +13,6 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ServiceAttributes;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
@@ -54,7 +54,7 @@ public class SpringBootServiceVersionDetector implements ResourceProvider {
         .map(
             version -> {
               logger.log(FINE, "Auto-detected Spring Boot service version: {0}", version);
-              return Resource.builder().put(ServiceAttributes.SERVICE_VERSION, version).build();
+              return Resource.builder().put(SERVICE_VERSION, version).build();
             })
         .orElseGet(Resource::empty);
   }

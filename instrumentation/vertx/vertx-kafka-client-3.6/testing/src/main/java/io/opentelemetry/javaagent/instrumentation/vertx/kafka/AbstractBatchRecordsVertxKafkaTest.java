@@ -6,7 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.kafka;
 
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.trace.data.LinkData;
@@ -14,7 +15,6 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
@@ -43,7 +43,7 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
   @Order(1)
   @Test
   void shouldCreateSpansForBatchReceiveAndProcess() throws InterruptedException {
-    assertTrue(consumerReady.await(30, TimeUnit.SECONDS));
+    assertThat(consumerReady.await(30, SECONDS)).isTrue();
 
     KafkaProducerRecord<String, String> record1 =
         KafkaProducerRecord.create("testBatchTopic", "10", "testSpan1");
@@ -116,7 +116,7 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
   @Order(2)
   @Test
   void shouldHandleFailureInKafkaBatchListener() throws InterruptedException {
-    assertTrue(consumerReady.await(30, TimeUnit.SECONDS));
+    assertThat(consumerReady.await(30, SECONDS)).isTrue();
 
     KafkaProducerRecord<String, String> record =
         KafkaProducerRecord.create("testBatchTopic", "10", "error");

@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.DYNAMODB;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static java.util.stream.Collectors.joining;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -18,7 +20,6 @@ import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
-import io.opentelemetry.semconv.HttpAttributes;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -26,7 +27,6 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.time.Instant;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.auth.signer.AwsSignerExecutionAttribute;
 import software.amazon.awssdk.awscore.AwsResponse;
@@ -72,6 +72,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".RequestFinisher");
   static final ExecutionAttribute<TracingList> TRACING_MESSAGES_ATTRIBUTE =
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".TracingMessages");
+  private static final RequestHeaderSetter requestHeaderSetter = new RequestHeaderSetter();
 
   private final Instrumenter<ExecutionAttributes, Response> requestInstrumenter;
   private final Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter;
@@ -215,10 +216,10 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
         executionAttributes.putAttribute(AWS_SDK_REQUEST_ATTRIBUTE, awsSdkRequest);
         fieldMapper.mapToAttributes(request, awsSdkRequest, span);
       }
-    } catch (Throwable throwable) {
-      requestFinisher.finish(otelContext, executionAttributes, null, throwable);
+    } catch (Throwable t) {
+      requestFinisher.finish(otelContext, executionAttributes, null, t);
       clearAttributes(executionAttributes);
-      throw throwable;
+      throw t;
     }
 
     SdkRequest modifiedRequest =
@@ -336,7 +337,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     }
 
     SdkHttpRequest.Builder builder = httpRequest.toBuilder();
-    AwsXrayPropagator.getInstance().inject(otelContext, builder, RequestHeaderSetter.INSTANCE);
+    AwsXrayPropagator.getInstance().inject(otelContext, builder, requestHeaderSetter);
     return builder.build();
   }
 
@@ -421,13 +422,10 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
               new BufferedReader(
                       new InputStreamReader(responseBody.get(), Charset.defaultCharset()))
                   .lines()
-                  .collect(Collectors.joining("\n"));
+                  .collect(joining("\n"));
           Attributes attributes =
               Attributes.of(
-                  HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
-                  Long.valueOf(errorCode),
-                  HTTP_ERROR_MSG,
-                  errorMsg);
+                  HTTP_RESPONSE_STATUS_CODE, Long.valueOf(errorCode), HTTP_ERROR_MSG, errorMsg);
           span.addEvent(HTTP_FAILURE_EVENT, attributes);
           return errorMsg;
         }

@@ -8,14 +8,12 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesGetter;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 
-enum BedrockRuntimeAttributesGetter
+class BedrockRuntimeAttributesGetter
     implements GenAiAttributesGetter<ExecutionAttributes, Response> {
-  INSTANCE;
 
   static final class GenAiProviderNameIncubatingValues {
     static final String AWS_BEDROCK = "aws.bedrock";
@@ -101,7 +99,7 @@ enum BedrockRuntimeAttributesGetter
     }
     List<String> stopReasons = BedrockRuntimeAccess.getStopReasons(executionAttributes, response);
     if (stopReasons == null) {
-      return Collections.emptyList();
+      return emptyList();
     }
     return stopReasons;
   }

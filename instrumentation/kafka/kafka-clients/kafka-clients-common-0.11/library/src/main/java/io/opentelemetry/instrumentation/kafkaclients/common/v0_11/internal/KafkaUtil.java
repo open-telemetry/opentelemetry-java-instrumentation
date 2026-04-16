@@ -5,11 +5,12 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
+import static java.util.Collections.emptyMap;
+
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -68,7 +69,7 @@ public final class KafkaUtil {
 
   private static Map<String, String> getConsumerInfo(Consumer<?, ?> consumer) {
     if (consumer == null) {
-      return Collections.emptyMap();
+      return emptyMap();
     }
     Map<String, String> map = consumerInfoField.get(consumer);
     if (map == null) {
@@ -102,7 +103,7 @@ public final class KafkaUtil {
       Map<MetricName, ? extends Metric> metrics = consumer.metrics();
       Iterator<MetricName> metricIterator = metrics.keySet().iterator();
       return metricIterator.hasNext() ? metricIterator.next().tags().get("client-id") : null;
-    } catch (RuntimeException exception) {
+    } catch (RuntimeException ignored) {
       // ExceptionHandlingTest uses a Consumer that throws exception on every method call
       return null;
     }

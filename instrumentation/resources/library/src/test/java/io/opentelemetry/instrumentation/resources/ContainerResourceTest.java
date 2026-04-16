@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.resources;
 
 import static io.opentelemetry.semconv.incubating.ContainerIncubatingAttributes.CONTAINER_ID;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -14,7 +15,6 @@ import io.opentelemetry.sdk.resources.Resource;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -60,7 +60,7 @@ class ContainerResourceTest {
     String containerId = "ac679f8a8319c8cf7d38e1adf263bc08d231f2ff81abda3915f6e8ba4d64156a";
     String line = "13:name=systemd:/podruntime/docker/kubepods/" + containerId + ".aaaa";
     Charset ibmCharset = Charset.forName("Cp1047");
-    byte[] utf8 = line.getBytes(StandardCharsets.UTF_8);
+    byte[] utf8 = line.getBytes(UTF_8);
     byte[] ibm = line.getBytes(ibmCharset);
     assertThat(ibm).isNotEqualTo(utf8);
 

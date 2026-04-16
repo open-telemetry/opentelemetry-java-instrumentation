@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.logging.application;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.javaagent.bootstrap.InternalLogger;
@@ -15,7 +16,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -45,7 +45,7 @@ class ConcurrentIntegrationTest {
                       .log(Level.INFO, String.valueOf(count.incrementAndGet()), null),
               0,
               1,
-              TimeUnit.MILLISECONDS));
+              MILLISECONDS));
     }
 
     Thread.sleep(100);
@@ -56,12 +56,10 @@ class ConcurrentIntegrationTest {
 
     futures.forEach(f -> f.cancel(true));
 
-    assertThat(logMessages)
-        .as("Verify that the application logger bridge did not lose any messages")
-        .hasSize(count.get());
+    assertThat(logMessages).hasSize(count.get());
   }
 
-  private static final class TestLogger implements InternalLogger {
+  private static class TestLogger implements InternalLogger {
 
     private final String name;
     private final List<Integer> logMessages;

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.reactive.client;
 
+import static java.util.Objects.requireNonNull;
+
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpMethod;
@@ -15,7 +17,6 @@ import io.vertx.reactivex.ext.web.client.HttpRequest;
 import io.vertx.reactivex.ext.web.client.HttpResponse;
 import io.vertx.reactivex.ext.web.client.WebClient;
 import java.util.Map;
-import java.util.Objects;
 
 class VertxRxSingleConnection implements SingleConnection {
   private final WebClient webClient;
@@ -39,7 +40,7 @@ class VertxRxSingleConnection implements SingleConnection {
 
   @Override
   public int doRequest(String path, Map<String, String> headers) {
-    String requestId = Objects.requireNonNull(headers.get(REQUEST_ID_HEADER));
+    String requestId = requireNonNull(headers.get(REQUEST_ID_HEADER));
 
     HttpRequest<Buffer> request = webClient.request(HttpMethod.GET, port, host, path);
     headers.forEach(request::putHeader);

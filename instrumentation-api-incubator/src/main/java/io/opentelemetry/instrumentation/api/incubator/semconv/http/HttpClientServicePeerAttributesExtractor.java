@@ -30,16 +30,6 @@ public final class HttpClientServicePeerAttributesExtractor<REQUEST, RESPONSE>
   private final HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter;
   private final ServicePeerResolver servicePeerResolver;
 
-  // visible for tests
-  HttpClientServicePeerAttributesExtractor(
-      AddressAndPortExtractor<REQUEST> addressAndPortExtractor,
-      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-      ServicePeerResolver servicePeerResolver) {
-    this.addressAndPortExtractor = addressAndPortExtractor;
-    this.attributesGetter = attributesGetter;
-    this.servicePeerResolver = servicePeerResolver;
-  }
-
   /**
    * Returns a new {@link HttpClientServicePeerAttributesExtractor} that will use the passed {@code
    * attributesGetter} to extract server address and port (with fallback to the HTTP Host header).
@@ -49,25 +39,9 @@ public final class HttpClientServicePeerAttributesExtractor<REQUEST, RESPONSE>
    */
   // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
   // via openTelemetry.getConfigProvider()
-  @SuppressWarnings("deprecation") // delegating to deprecated method for now
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter, OpenTelemetry openTelemetry) {
-    return create(attributesGetter, new ServicePeerResolver(openTelemetry));
-  }
-
-  /**
-   * This method is internal and is hence not for public use. Its APIs are unstable and can change
-   * at any time.
-   *
-   * <p>This method only exists to bridge the deprecated {@code
-   * HttpClientPeerServiceAttributesExtractor}.
-   *
-   * @deprecated Use {@link #create(HttpClientAttributesGetter, OpenTelemetry)} instead.
-   */
-  @Deprecated
-  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-      ServicePeerResolver servicePeerResolver) {
+    ServicePeerResolver servicePeerResolver = new ServicePeerResolver(openTelemetry);
     if (servicePeerResolver.isEmpty()) {
       return new EmptyAttributesExtractor<>();
     }
@@ -76,6 +50,16 @@ public final class HttpClientServicePeerAttributesExtractor<REQUEST, RESPONSE>
             attributesGetter, new HostAddressAndPortExtractor<>(attributesGetter));
     return new HttpClientServicePeerAttributesExtractor<>(
         addressAndPortExtractor, attributesGetter, servicePeerResolver);
+  }
+
+  // visible for tests
+  HttpClientServicePeerAttributesExtractor(
+      AddressAndPortExtractor<REQUEST> addressAndPortExtractor,
+      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
+      ServicePeerResolver servicePeerResolver) {
+    this.addressAndPortExtractor = addressAndPortExtractor;
+    this.attributesGetter = attributesGetter;
+    this.servicePeerResolver = servicePeerResolver;
   }
 
   @Override

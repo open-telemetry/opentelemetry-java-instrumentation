@@ -17,10 +17,6 @@ public class SyncCompletionListener extends CompletionListener<Void> {
 
   private static final Logger logger = Logger.getLogger(SyncCompletionListener.class.getName());
 
-  private SyncCompletionListener(Context parentContext, SpymemcachedRequest request) {
-    super(parentContext, request);
-  }
-
   @Nullable
   public static SyncCompletionListener create(
       Context parentContext, MemcachedConnection connection, String methodName) {
@@ -31,12 +27,12 @@ public class SyncCompletionListener extends CompletionListener<Void> {
     return new SyncCompletionListener(parentContext, request);
   }
 
+  private SyncCompletionListener(Context parentContext, SpymemcachedRequest request) {
+    super(parentContext, request);
+  }
+
   @Override
   protected void processResult(Span span, Void future) {
     logger.severe("processResult was called on SyncCompletionListener. This should never happen.");
-  }
-
-  public void done(Throwable thrown) {
-    closeSyncSpan(thrown);
   }
 }

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -12,7 +14,6 @@ import io.vertx.core.VertxOptions;
 import io.vertx.core.json.JsonObject;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 class Vertx5HttpServerTest extends AbstractVertxHttpServerTest {
@@ -23,8 +24,7 @@ class Vertx5HttpServerTest extends AbstractVertxHttpServerTest {
   }
 
   @Override
-  protected Vertx setupServer()
-      throws ExecutionException, InterruptedException, TimeoutException, NoSuchMethodException {
+  protected Vertx setupServer() throws ExecutionException, InterruptedException, TimeoutException {
     Vertx server =
         Vertx.vertx(
             new VertxOptions()
@@ -44,12 +44,14 @@ class Vertx5HttpServerTest extends AbstractVertxHttpServerTest {
         .onComplete(
             res -> {
               if (!res.succeeded()) {
-                throw new IllegalStateException("Cannot deploy server Verticle", res.cause());
+                future.completeExceptionally(
+                    new IllegalStateException("Cannot deploy server Verticle", res.cause()));
+                return;
               }
               future.complete(null);
             });
 
-    future.get(30, TimeUnit.SECONDS);
+    future.get(30, SECONDS);
     return server;
   }
 

@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -49,80 +48,72 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     // type, some methods can share the same advice class. The call depth tracking ensures only 1
     // span is created
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("execute"))
+        named("execute")
             .and(not(isAbstract()))
             .and(takesArguments(1))
             .and(takesArgument(0, named("org.apache.hc.core5.http.ClassicHttpRequest"))),
-        this.getClass().getName() + "$RequestAdvice");
+        getClass().getName() + "$RequestAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("execute"))
+        named("execute")
             .and(not(isAbstract()))
             .and(takesArguments(2))
             .and(takesArgument(0, named("org.apache.hc.core5.http.ClassicHttpRequest")))
             .and(takesArgument(1, named("org.apache.hc.core5.http.protocol.HttpContext"))),
-        this.getClass().getName() + "$RequestAdvice");
+        getClass().getName() + "$RequestAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("execute"))
+        named("execute")
             .and(not(isAbstract()))
             .and(takesArguments(2))
             .and(takesArgument(0, named("org.apache.hc.core5.http.HttpHost")))
             .and(takesArgument(1, named("org.apache.hc.core5.http.ClassicHttpRequest"))),
-        this.getClass().getName() + "$RequestWithHostAdvice");
+        getClass().getName() + "$RequestWithHostAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("execute"))
+        named("execute")
             .and(not(isAbstract()))
             .and(takesArguments(3))
             .and(takesArgument(0, named("org.apache.hc.core5.http.HttpHost")))
             .and(takesArgument(1, named("org.apache.hc.core5.http.ClassicHttpRequest")))
             .and(takesArgument(2, named("org.apache.hc.core5.http.protocol.HttpContext"))),
-        this.getClass().getName() + "$RequestWithHostAdvice");
+        getClass().getName() + "$RequestWithHostAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("execute"))
+        named("execute")
             .and(not(isAbstract()))
             .and(takesArguments(2))
             .and(takesArgument(0, named("org.apache.hc.core5.http.ClassicHttpRequest")))
             .and(takesArgument(1, named("org.apache.hc.core5.http.io.HttpClientResponseHandler"))),
-        this.getClass().getName() + "$RequestWithHandlerAdvice");
+        getClass().getName() + "$RequestWithHandlerAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("execute"))
+        named("execute")
             .and(not(isAbstract()))
             .and(takesArguments(3))
             .and(takesArgument(0, named("org.apache.hc.core5.http.ClassicHttpRequest")))
             .and(takesArgument(1, named("org.apache.hc.core5.http.protocol.HttpContext")))
             .and(takesArgument(2, named("org.apache.hc.core5.http.io.HttpClientResponseHandler"))),
-        this.getClass().getName() + "$RequestWithContextAndHandlerAdvice");
+        getClass().getName() + "$RequestWithContextAndHandlerAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("execute"))
+        named("execute")
             .and(not(isAbstract()))
             .and(takesArguments(3))
             .and(takesArgument(0, named("org.apache.hc.core5.http.HttpHost")))
             .and(takesArgument(1, named("org.apache.hc.core5.http.ClassicHttpRequest")))
             .and(takesArgument(2, named("org.apache.hc.core5.http.io.HttpClientResponseHandler"))),
-        this.getClass().getName() + "$RequestWithHostAndHandlerAdvice");
+        getClass().getName() + "$RequestWithHostAndHandlerAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("execute"))
+        named("execute")
             .and(not(isAbstract()))
             .and(takesArguments(4))
             .and(takesArgument(0, named("org.apache.hc.core5.http.HttpHost")))
             .and(takesArgument(1, named("org.apache.hc.core5.http.ClassicHttpRequest")))
             .and(takesArgument(2, named("org.apache.hc.core5.http.protocol.HttpContext")))
             .and(takesArgument(3, named("org.apache.hc.core5.http.io.HttpClientResponseHandler"))),
-        this.getClass().getName() + "$RequestWithHostAndContextAndHandlerAdvice");
+        getClass().getName() + "$RequestWithHostAndContextAndHandlerAdvice");
   }
 
   public static class AdviceScope {
@@ -170,12 +161,12 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
   public static class RequestAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope methodEnter(@Advice.Argument(0) ClassicHttpRequest request) {
       return AdviceScope.start(request);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Return Object result,
         @Advice.Thrown @Nullable Throwable throwable,
@@ -191,7 +182,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
   public static class RequestWithHandlerAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(value = 1, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] methodEnter(
         @Advice.Argument(0) ClassicHttpRequest request,
         @Advice.Argument(1) HttpClientResponseHandler<?> originalHandler) {
@@ -209,7 +200,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
       return new Object[] {scope, handler};
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Argument(0) ClassicHttpRequest request,
         @Advice.Return @Nullable Object result,
@@ -227,7 +218,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
   public static class RequestWithContextAndHandlerAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(value = 2, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] methodEnter(
         @Advice.Argument(0) ClassicHttpRequest request,
         @Advice.Argument(2) HttpClientResponseHandler<?> originalHandler) {
@@ -245,7 +236,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
       return new Object[] {scope, handler};
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Argument(0) ClassicHttpRequest request,
         @Advice.Return @Nullable Object result,
@@ -263,14 +254,14 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
   public static class RequestWithHostAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope methodEnter(
         @Advice.Argument(0) HttpHost host, @Advice.Argument(1) ClassicHttpRequest request) {
 
       return AdviceScope.start(new RequestWithHost(host, request));
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Return Object result,
         @Advice.Thrown @Nullable Throwable throwable,
@@ -286,7 +277,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
   public static class RequestWithHostAndHandlerAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(value = 2, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] methodEnter(
         @Advice.Argument(0) HttpHost host,
         @Advice.Argument(1) ClassicHttpRequest request,
@@ -306,7 +297,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
       return new Object[] {scope, handler};
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Return @Nullable Object result,
         @Advice.Thrown @Nullable Throwable throwable,
@@ -323,7 +314,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
   public static class RequestWithHostAndContextAndHandlerAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(value = 3, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] methodEnter(
         @Advice.Argument(0) HttpHost host,
         @Advice.Argument(1) ClassicHttpRequest request,
@@ -343,10 +334,10 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
       return new Object[] {scope, handler};
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
-        @Advice.Return Object result,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Return @Nullable Object result,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter Object[] enterResult) {
 
       AdviceScope scope = (AdviceScope) enterResult[0];

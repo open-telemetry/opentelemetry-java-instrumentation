@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jmx;
 
 import static java.util.Collections.emptyList;
+import static java.util.logging.Level.SEVERE;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -15,11 +16,11 @@ import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /** An {@link AgentListener} that enables JMX metrics during agent startup. */
@@ -58,20 +59,22 @@ public class JmxMetricInsightInstaller implements AgentListener {
       builder.addRules(path);
     } catch (RuntimeException e) {
       // for now only log JMX metric configuration errors as they do not prevent agent startup
-      logger.log(Level.SEVERE, "Error while loading JMX configuration from " + path, e);
+      logger.log(SEVERE, "Error while loading JMX configuration from " + path, e);
     }
   }
 
   private static void addClasspathRules(String target, JmxTelemetryBuilder builder) {
     ClassLoader classLoader = JmxTelemetryBuilder.class.getClassLoader();
     String resource = String.format("jmx/rules/%s.yaml", target);
-    InputStream input = classLoader.getResourceAsStream(resource);
-    try {
+    try (InputStream input = classLoader.getResourceAsStream(resource)) {
+      if (input == null) {
+        logger.log(SEVERE, "JMX configuration not found on classpath " + resource);
+        return;
+      }
       builder.addRules(input);
-    } catch (RuntimeException e) {
+    } catch (IOException | RuntimeException e) {
       // for now only log JMX metric configuration errors as they do not prevent agent startup
-      logger.log(
-          Level.SEVERE, "Error while loading JMX configuration from classpath " + resource, e);
+      logger.log(SEVERE, "Error while loading JMX configuration from classpath " + resource, e);
     }
   }
 }

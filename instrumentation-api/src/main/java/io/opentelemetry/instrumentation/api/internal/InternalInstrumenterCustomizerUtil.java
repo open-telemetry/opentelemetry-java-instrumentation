@@ -5,7 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
-import java.util.Collections;
+import static java.util.Collections.emptyList;
+
 import java.util.List;
 
 /**
@@ -14,13 +15,13 @@ import java.util.List;
  */
 public class InternalInstrumenterCustomizerUtil {
   static {
-    instrumenterCustomizerProviders = Collections.emptyList();
+    instrumenterCustomizerProviders = emptyList();
     try {
       // initializing InstrumenterCustomizerUtil will call setInstrumenterCustomizerProviders on
       // this class
       Class.forName(
           "io.opentelemetry.instrumentation.api.incubator.instrumenter.internal.InstrumenterCustomizerUtil");
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       // incubator api not available, ignore
     }
   }

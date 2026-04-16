@@ -75,7 +75,7 @@ class Jetty12HttpAttributesGetter implements HttpServerAttributesGetter<Request,
   @Override
   public String getNetworkProtocolVersion(Request request, @Nullable Response unused) {
     String protocol = request.getConnectionMetaData().getProtocol();
-    if (protocol.startsWith("HTTP/")) {
+    if (protocol != null && protocol.startsWith("HTTP/")) {
       return protocol.substring("HTTP/".length());
     }
     return null;

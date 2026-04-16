@@ -8,22 +8,25 @@ package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
+import javax.annotation.Nullable;
 
-public final class StateHolder {
+public class StateHolder {
   public static final ThreadLocal<StateHolder> HOLDER = new ThreadLocal<>();
 
-  private KafkaProcessRequest request;
-  private Context context;
-  private Scope scope;
+  @Nullable private KafkaProcessRequest request;
+  @Nullable private Context context;
+  @Nullable private Scope scope;
 
   public void closeScope() {
     scope.close();
   }
 
+  @Nullable
   public KafkaProcessRequest getRequest() {
     return request;
   }
 
+  @Nullable
   public Context getContext() {
     return context;
   }

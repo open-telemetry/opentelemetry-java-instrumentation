@@ -5,6 +5,11 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singleton;
+import static java.util.Collections.singletonMap;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
@@ -12,7 +17,6 @@ import java.lang.instrument.Instrumentation;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -98,19 +102,19 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
         ClassInjector.UsingInstrumentation.redefineModule(
             instrumentation,
             javaBase,
-            Collections.emptySet(),
-            Collections.emptyMap(),
-            Collections.singletonMap("java.lang", Collections.singleton(currentModule)),
-            Collections.emptySet(),
-            Collections.emptyMap());
+            emptySet(),
+            emptyMap(),
+            singletonMap("java.lang", singleton(currentModule)),
+            emptySet(),
+            emptyMap());
       }
     }
     try {
       Method method = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
       method.setAccessible(true);
       return method;
-    } catch (NoSuchMethodException exception) {
-      throw new IllegalStateException(exception);
+    } catch (NoSuchMethodException e) {
+      throw new IllegalStateException(e);
     }
   }
 
@@ -121,8 +125,8 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
   private static Class<?> findLoadedClass(ClassLoader classLoader, String className) {
     try {
       return (Class<?>) findLoadedClassMethod.invoke(classLoader, className);
-    } catch (Exception exception) {
-      throw new IllegalStateException(exception);
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
     }
   }
 

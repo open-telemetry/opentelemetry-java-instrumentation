@@ -23,7 +23,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-public class DefaultStreamMessageInstrumentation implements TypeInstrumentation {
+class DefaultStreamMessageInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.opentelemetry.testing.internal.armeria.common.stream.DefaultStreamMessage");

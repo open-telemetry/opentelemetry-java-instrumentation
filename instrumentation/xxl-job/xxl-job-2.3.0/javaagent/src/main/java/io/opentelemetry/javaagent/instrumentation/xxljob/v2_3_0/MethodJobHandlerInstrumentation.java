@@ -21,7 +21,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class MethodJobHandlerInstrumentation implements TypeInstrumentation {
+class MethodJobHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -32,18 +32,19 @@ public class MethodJobHandlerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("execute").and(isPublic()).and(takesNoArguments()),
-        MethodJobHandlerInstrumentation.class.getName() + "$ScheduleAdvice");
+        getClass().getName() + "$ScheduleAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ScheduleAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static XxlJobHelper.XxlJobScope onSchedule(
         @Advice.FieldValue("target") Object target, @Advice.FieldValue("method") Method method) {
       return helper().startSpan(XxlJobProcessRequest.createMethodJobRequest(target, method));
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) @Nullable Object result,
         @Advice.Thrown @Nullable Throwable throwable,

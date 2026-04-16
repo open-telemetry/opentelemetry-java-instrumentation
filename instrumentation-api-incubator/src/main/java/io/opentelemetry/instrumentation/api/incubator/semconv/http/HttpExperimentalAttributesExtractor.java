@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.http;
 
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
-
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -54,7 +52,7 @@ public final class HttpExperimentalAttributesExtractor<REQUEST, RESPONSE>
           (HttpClientAttributesGetter<REQUEST, RESPONSE>) getter;
       String urlTemplate =
           HttpClientUrlTemplateUtil.getUrlTemplate(parentContext, request, clientGetter);
-      internalSet(attributes, URL_TEMPLATE, urlTemplate);
+      attributes.put(URL_TEMPLATE, urlTemplate);
     }
   }
 
@@ -67,11 +65,11 @@ public final class HttpExperimentalAttributesExtractor<REQUEST, RESPONSE>
       @Nullable Throwable error) {
 
     Long requestBodySize = requestBodySize(request);
-    internalSet(attributes, HTTP_REQUEST_BODY_SIZE, requestBodySize);
+    attributes.put(HTTP_REQUEST_BODY_SIZE, requestBodySize);
 
     if (response != null) {
       Long responseBodySize = responseBodySize(request, response);
-      internalSet(attributes, HTTP_RESPONSE_BODY_SIZE, responseBodySize);
+      attributes.put(HTTP_RESPONSE_BODY_SIZE, responseBodySize);
     }
   }
 

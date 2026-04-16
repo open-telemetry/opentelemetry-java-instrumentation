@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -225,6 +226,20 @@ class RedisCommandSanitizerTest {
     assertThat(result).isEqualTo("ACL SETUSER ? ? ? ? ? ?");
   }
 
+  @Test
+  void truncateLongCommand() {
+    List<String> args = new ArrayList<>();
+    args.add("hash");
+    for (int i = 0; i < 10000; i++) {
+      args.add("key" + i);
+      args.add("value" + i);
+    }
+    String result = RedisCommandSanitizer.create(true).sanitize("HMSET", args);
+
+    assertThat(result.length()).isEqualTo(RedisCommandSanitizer.LIMIT);
+    assertThat(result).startsWith("HMSET hash key0 ? key1 ?");
+  }
+
   static Stream<Arguments> sanitizeArgs() {
     return Stream.of(
         // Connection
@@ -304,6 +319,6 @@ class RedisCommandSanitizerTest {
   }
 
   static List<String> list(String... args) {
-    return Arrays.asList(args);
+    return asList(args);
   }
 }

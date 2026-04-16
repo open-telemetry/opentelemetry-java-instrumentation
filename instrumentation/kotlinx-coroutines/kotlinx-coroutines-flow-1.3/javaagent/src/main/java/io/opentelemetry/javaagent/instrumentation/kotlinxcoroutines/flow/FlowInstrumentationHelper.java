@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperat
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import kotlinx.coroutines.flow.Flow;
 
-public final class FlowInstrumentationHelper {
+public class FlowInstrumentationHelper {
   private static final FlowAsyncOperationEndStrategy asyncOperationEndStrategy =
       new FlowAsyncOperationEndStrategy();
 

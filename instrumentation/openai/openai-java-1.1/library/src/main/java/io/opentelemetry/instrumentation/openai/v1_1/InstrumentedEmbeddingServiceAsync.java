@@ -20,7 +20,7 @@ final class InstrumentedEmbeddingServiceAsync
 
   private final Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> instrumenter;
 
-  public InstrumentedEmbeddingServiceAsync(
+  InstrumentedEmbeddingServiceAsync(
       EmbeddingServiceAsync delegate,
       Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> instrumenter) {
     super(delegate);

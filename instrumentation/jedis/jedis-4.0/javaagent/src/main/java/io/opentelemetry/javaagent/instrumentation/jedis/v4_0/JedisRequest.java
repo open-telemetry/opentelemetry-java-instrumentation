@@ -5,14 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.net.Socket;
 import java.net.SocketAddress;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 import redis.clients.jedis.CommandArguments;
 import redis.clients.jedis.Protocol;
 import redis.clients.jedis.args.Rawable;
@@ -22,7 +25,8 @@ import redis.clients.jedis.commands.ProtocolCommand;
 public abstract class JedisRequest {
 
   private static final RedisCommandSanitizer sanitizer =
-      RedisCommandSanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
+      RedisCommandSanitizer.create(
+          DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "jedis"));
 
   public static JedisRequest create(ProtocolCommand command, List<byte[]> args) {
     return new AutoValue_JedisRequest(command, args);
@@ -53,7 +57,7 @@ public abstract class JedisRequest {
     } else {
       // Protocol.Command is the only implementation in the Jedis lib as of 3.1 but this will save
       // us if that changes
-      return new String(command.getRaw(), StandardCharsets.UTF_8);
+      return new String(command.getRaw(), UTF_8);
     }
   }
 
@@ -61,14 +65,15 @@ public abstract class JedisRequest {
     return sanitizer.sanitize(getOperationName(), getArgs());
   }
 
-  private SocketAddress remoteSocketAddress;
+  @Nullable private SocketAddress remoteSocketAddress;
 
-  public void setSocket(Socket socket) {
+  public void setSocket(@Nullable Socket socket) {
     if (socket != null) {
       remoteSocketAddress = socket.getRemoteSocketAddress();
     }
   }
 
+  @Nullable
   public SocketAddress getRemoteSocketAddress() {
     return remoteSocketAddress;
   }

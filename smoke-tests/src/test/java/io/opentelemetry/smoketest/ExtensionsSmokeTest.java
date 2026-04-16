@@ -6,10 +6,10 @@
 package io.opentelemetry.smoketest;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.Arrays.asList;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,8 +83,7 @@ class ExtensionsSmokeTest {
       Thread.sleep(100);
     }
 
-    List<String> appOutput =
-        Arrays.asList(target.getLogs(OutputFrame.OutputType.STDOUT).split("\n"));
+    List<String> appOutput = asList(target.getLogs(OutputFrame.OutputType.STDOUT).split("\n"));
     assertThat(appOutput)
         .describedAs("return value instrumentation")
         .contains("return value has been modified");

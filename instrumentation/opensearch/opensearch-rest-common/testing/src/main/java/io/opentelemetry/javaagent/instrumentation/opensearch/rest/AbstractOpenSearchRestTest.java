@@ -20,18 +20,20 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OPENSEARCH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.opensearch.client.Request;
 import org.opensearch.client.Response;
 import org.opensearch.client.ResponseListener;
@@ -42,6 +44,8 @@ import org.testcontainers.utility.DockerImageName;
 @SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractOpenSearchRestTest {
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected OpensearchContainer opensearch;
   protected RestClient client;
@@ -60,6 +64,7 @@ public abstract class AbstractOpenSearchRestTest {
     opensearch =
         new OpensearchContainer(DockerImageName.parse("opensearchproject/opensearch:1.3.6"))
             .withSecurityEnabled();
+    cleanup.deferAfterAll(opensearch::stop);
     // limit memory usage and disable Log4j JMX to avoid cgroup detection issues in containers
     opensearch.withEnv(
         "OPENSEARCH_JAVA_OPTS",
@@ -68,11 +73,7 @@ public abstract class AbstractOpenSearchRestTest {
     httpHost = URI.create(opensearch.getHttpHostAddress());
 
     client = buildRestClient();
-  }
-
-  @AfterAll
-  void tearDown() {
-    opensearch.stop();
+    cleanup.deferAfterAll(client);
   }
 
   @Test
@@ -88,7 +89,7 @@ public abstract class AbstractOpenSearchRestTest {
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), "opensearch"),
+                                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "GET"),
                                 equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health")),
                     span ->
@@ -159,7 +160,7 @@ public abstract class AbstractOpenSearchRestTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), "opensearch"),
+                                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "GET"),
                                 equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health")),
                     span ->

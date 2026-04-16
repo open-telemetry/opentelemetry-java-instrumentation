@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientBaseTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -48,9 +48,7 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
           ProducerRecord<Integer, String> producerRecord =
               new ProducerRecord<>(SHARED_TOPIC, greeting);
           if (testHeaders) {
-            producerRecord
-                .headers()
-                .add("Test-Message-Header", "test".getBytes(StandardCharsets.UTF_8));
+            producerRecord.headers().add("Test-Message-Header", "test".getBytes(UTF_8));
           }
           wrappedProducer.send(
               producerRecord,

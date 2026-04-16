@@ -2,11 +2,11 @@
 
 ## Settings
 
-| System property                                                            | Type    | Default | Description                                         |
-|----------------------------------------------------------------------------|---------|---------|-----------------------------------------------------|
-| `otel.instrumentation.servlet.experimental-span-attributes`                | Boolean | `false` | Enable the capture of experimental span attributes. |
-| `otel.instrumentation.servlet.experimental.capture-request-parameters`     | List    | Empty   | Request parameters to be captured (experimental).   |
-| `otel.instrumentation.servlet.experimental.add-trace-id-request-attribute` | Boolean | `true`  | Add `trace_id` and `span_id` as request attributes. |
+| System property                                                                | Type    | Default | Description                                                   |
+|--------------------------------------------------------------------------------|---------|---------|---------------------------------------------------------------|
+| `otel.instrumentation.servlet.experimental-span-attributes`                    | Boolean | `false` | Enable the capture of experimental span attributes.           |
+| `otel.instrumentation.servlet.experimental.capture-request-parameters`         | List    | Empty   | Request parameters to be captured (experimental).             |
+| `otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled` | Boolean | `true`  | Enable adding `trace_id` and `span_id` as request attributes. |
 
 ### A word about version
 
@@ -18,7 +18,7 @@ They are divided into the following sub-modules:
 - `servlet-common` contains shared code for both `javax.servlet` and `jakarta.servlet` packages.
 - Version-specific modules contain the version-specific instrumentations and request/response
   accessor.
-  - `servlet-javax-common` contains instrumentations common for Servlet API versions `[2.2, 5)`
+  - `servlet-common-javax` contains instrumentations common for Servlet API versions `[2.2, 5)`
   - `servlet-2.2` contains instrumentation for Servlet API versions `[2.2, 3)`
   - `servlet-3.0` contains instrumentation for Servlet API versions `[3.0, 5)`
   - `servlet-5.0` contains instrumentation for Servlet API versions `[5,)`

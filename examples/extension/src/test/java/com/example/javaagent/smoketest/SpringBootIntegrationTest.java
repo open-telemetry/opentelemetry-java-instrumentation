@@ -5,6 +5,8 @@
 
 package com.example.javaagent.smoketest;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.opentelemetry.api.trace.TraceId;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
 import java.io.IOException;
@@ -14,7 +16,6 @@ import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import okhttp3.Request;
 import okhttp3.Response;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
@@ -76,17 +77,17 @@ class SpringBootIntegrationTest extends IntegrationTest {
 
     Collection<ExportTraceServiceRequest> traces = waitForTraces();
 
-    Assertions.assertNotNull(response.header("X-server-id"));
-    Assertions.assertEquals(1, response.headers("X-server-id").size());
-    Assertions.assertTrue(TraceId.isValid(response.header("X-server-id")));
-    Assertions.assertEquals("Hi!", response.body().string());
-    Assertions.assertEquals(1, countSpansByName(traces, "GET /greeting"));
-    Assertions.assertEquals(0, countSpansByName(traces, "WebController.greeting"));
-    Assertions.assertEquals(1, countSpansByName(traces, "WebController.withSpan"));
-    Assertions.assertEquals(2, countSpansByAttributeValue(traces, "custom", "demo"));
-    Assertions.assertNotEquals(
-        0, countResourcesByValue(traces, "telemetry.distro.version", currentAgentVersion));
-    Assertions.assertNotEquals(0, countResourcesByValue(traces, "custom.resource", "demo"));
-    Assertions.assertEquals(1, countSpansByAttributeValue(traces, "demo.custom", "demo-extension"));
+    assertThat(response.header("X-server-id")).isNotNull();
+    assertThat(response.headers("X-server-id").size()).isEqualTo(1);
+    assertThat(TraceId.isValid(response.header("X-server-id"))).isTrue();
+    assertThat(response.body().string()).isEqualTo("Hi!");
+    assertThat(countSpansByName(traces, "GET /greeting")).isEqualTo(1);
+    assertThat(countSpansByName(traces, "WebController.greeting")).isEqualTo(0);
+    assertThat(countSpansByName(traces, "WebController.withSpan")).isEqualTo(1);
+    assertThat(countSpansByAttributeValue(traces, "custom", "demo")).isEqualTo(2);
+    assertThat(countResourcesByValue(traces, "telemetry.distro.version", currentAgentVersion))
+        .isNotEqualTo(0);
+    assertThat(countResourcesByValue(traces, "custom.resource", "demo")).isNotEqualTo(0);
+    assertThat(countSpansByAttributeValue(traces, "demo.custom", "demo-extension")).isEqualTo(1);
   }
 }

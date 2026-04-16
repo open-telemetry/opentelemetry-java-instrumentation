@@ -5,11 +5,12 @@
 
 package io.opentelemetry.instrumentation.helidon.v4_3;
 
+import static java.util.Collections.singletonList;
+
 import io.helidon.webserver.http.HttpRouting;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
-import java.util.Collections;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class HelidonServerTest extends AbstractHelidonTest {
@@ -21,10 +22,8 @@ class HelidonServerTest extends AbstractHelidonTest {
   protected void configureRoutes(HttpRouting.Builder routing) {
     var feature =
         HelidonTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedRequestHeaders(
-                Collections.singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
-            .setCapturedResponseHeaders(
-                Collections.singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
+            .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
+            .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
             .build();
     routing.addFilter(feature.createFilter());
   }

@@ -23,7 +23,7 @@ testing {
   suites {
     val version20Test by registering(JvmTestSuite::class) {
       dependencies {
-        if (findProperty("testLatestDeps") as Boolean) {
+        if (otelProps.testLatestDeps) {
           implementation("io.kubernetes:client-java-api:latest.release")
         } else {
           implementation("io.kubernetes:client-java-api:20.0.0")
@@ -41,7 +41,7 @@ tasks {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testExperimental by registering(Test::class) {

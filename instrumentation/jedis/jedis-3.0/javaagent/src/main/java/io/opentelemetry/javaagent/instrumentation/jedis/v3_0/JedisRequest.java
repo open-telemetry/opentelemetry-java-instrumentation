@@ -5,10 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Protocol;
@@ -18,7 +20,8 @@ import redis.clients.jedis.commands.ProtocolCommand;
 public abstract class JedisRequest {
 
   private static final RedisCommandSanitizer sanitizer =
-      RedisCommandSanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
+      RedisCommandSanitizer.create(
+          DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "jedis"));
 
   public static JedisRequest create(
       Connection connection, ProtocolCommand command, List<byte[]> args) {
@@ -38,7 +41,7 @@ public abstract class JedisRequest {
     } else {
       // Protocol.Command is the only implementation in the Jedis lib as of 3.1 but this will save
       // us if that changes
-      return new String(command.getRaw(), StandardCharsets.UTF_8);
+      return new String(command.getRaw(), UTF_8);
     }
   }
 

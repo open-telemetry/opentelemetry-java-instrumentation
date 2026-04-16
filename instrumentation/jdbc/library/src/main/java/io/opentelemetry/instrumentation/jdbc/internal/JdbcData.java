@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import static java.util.Collections.emptyMap;
+
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.lang.ref.WeakReference;
@@ -13,7 +15,6 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,9 +29,9 @@ import java.util.WeakHashMap;
 public final class JdbcData {
 
   private static final Map<DbInfo, WeakReference<DbInfo>> dbInfos = new WeakHashMap<>();
-  public static final VirtualField<Connection, DbInfo> connectionInfo =
+  public static final VirtualField<Connection, DbInfo> CONNECTION_INFO =
       VirtualField.find(Connection.class, DbInfo.class);
-  public static final VirtualField<PreparedStatement, String> preparedStatement =
+  public static final VirtualField<PreparedStatement, String> PREPARED_STATEMENT =
       VirtualField.find(PreparedStatement.class, String.class);
   private static final VirtualField<Statement, StatementBatchInfo> statementBatch =
       VirtualField.find(Statement.class, StatementBatchInfo.class);
@@ -105,7 +106,7 @@ public final class JdbcData {
     statementBatch.set(statement, null);
     if (statement instanceof PreparedStatement) {
       PreparedStatement prepared = (PreparedStatement) statement;
-      preparedStatement.set(prepared, null);
+      PREPARED_STATEMENT.set(prepared, null);
       preparedStatementBatch.set(prepared, null);
       parameters.set(prepared, null);
     }
@@ -113,7 +114,7 @@ public final class JdbcData {
 
   public static Map<String, String> getParameters(PreparedStatement statement) {
     Map<String, String> parametersMap = parameters.get(statement);
-    return parametersMap != null ? parametersMap : Collections.emptyMap();
+    return parametersMap != null ? parametersMap : emptyMap();
   }
 
   public static void addParameter(PreparedStatement statement, String key, String value) {

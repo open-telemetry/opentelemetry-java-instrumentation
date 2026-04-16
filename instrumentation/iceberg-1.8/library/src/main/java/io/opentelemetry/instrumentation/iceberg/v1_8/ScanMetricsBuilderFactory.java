@@ -20,10 +20,6 @@ final class ScanMetricsBuilderFactory {
   private static final String DATA_MANIFESTS_COUNT = ROOT + ".data_manifests.count";
   private static final String DELETE_MANIFESTS_COUNT = ROOT + ".delete_manifests.count";
 
-  private ScanMetricsBuilderFactory() {
-    // prevents instantiation
-  }
-
   static DoubleHistogramBuilder totalPlanningDuration(Meter meter, String unit) {
     return meter
         .histogramBuilder(TOTAL_PLANNING_DURATION)
@@ -71,5 +67,9 @@ final class ScanMetricsBuilderFactory {
         .counterBuilder(DELETE_FILES_SIZE)
         .setDescription("The total size of all scanned delete files.")
         .setUnit("By");
+  }
+
+  private ScanMetricsBuilderFactory() {
+    // prevents instantiation
   }
 }

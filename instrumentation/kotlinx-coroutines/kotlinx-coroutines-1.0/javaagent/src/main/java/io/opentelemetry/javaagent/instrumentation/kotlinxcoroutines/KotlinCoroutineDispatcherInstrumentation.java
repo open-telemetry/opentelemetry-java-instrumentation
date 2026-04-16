@@ -18,7 +18,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class KotlinCoroutineDispatcherInstrumentation implements TypeInstrumentation {
+class KotlinCoroutineDispatcherInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -34,14 +34,14 @@ public class KotlinCoroutineDispatcherInstrumentation implements TypeInstrumenta
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("dispatch").and(takesArgument(1, Runnable.class)),
-        this.getClass().getName() + "$StopContextPropagationAdvice");
+        getClass().getName() + "$StopContextPropagationAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class StopContextPropagationAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(1))
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Runnable enter(@Advice.Argument(1) Runnable runnable) {
       return runnable == null ? null : RunnableWrapper.stopPropagation(runnable);
     }

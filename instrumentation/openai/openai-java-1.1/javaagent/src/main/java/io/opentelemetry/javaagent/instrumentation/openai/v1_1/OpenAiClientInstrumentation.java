@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.openai.v1_1;
 
-import static io.opentelemetry.javaagent.instrumentation.openai.v1_1.OpenAiSingletons.TELEMETRY;
+import static io.opentelemetry.javaagent.instrumentation.openai.v1_1.OpenAiSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
@@ -16,7 +16,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class OpenAiClientInstrumentation implements TypeInstrumentation {
+class OpenAiClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.openai.client.okhttp.OpenAIOkHttpClient$Builder");
@@ -26,15 +26,15 @@ public class OpenAiClientInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("build").and(returns(named("com.openai.client.OpenAIClient"))),
-        OpenAiClientInstrumentation.class.getName() + "$BuildAdvice");
+        getClass().getName() + "$BuildAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class BuildAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToReturned
     public static OpenAIClient onExit(@Advice.Return OpenAIClient client) {
-      return TELEMETRY.wrap(client);
+      return telemetry().wrap(client);
     }
   }
 }

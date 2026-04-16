@@ -17,6 +17,8 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ELASTICSEARCH;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -82,16 +84,16 @@ class ElasticsearchRest5Test {
   }
 
   @AfterAll
-  static void cleanUp() {
+  static void cleanUp() throws IOException {
+    client.close();
     elasticsearch.stop();
   }
 
   @Test
-  @SuppressWarnings("rawtypes")
   void elasticsearchStatus() throws IOException {
     Response response = client.performRequest("GET", "_cluster/health");
 
-    Map result = objectMapper.readValue(response.getEntity().getContent(), Map.class);
+    Map<?, ?> result = objectMapper.readValue(response.getEntity().getContent(), Map.class);
 
     // usually this test reports green status, but sometimes it is yellow
     assertThat(result.get("status")).isIn("green", "yellow");
@@ -104,7 +106,7 @@ class ElasticsearchRest5Test {
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "elasticsearch"),
+                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
@@ -131,7 +133,6 @@ class ElasticsearchRest5Test {
   }
 
   @Test
-  @SuppressWarnings("rawtypes")
   void elasticsearchStatusAsync() throws Exception {
     Response[] requestResponse = {null};
     Exception[] exception = {null};
@@ -161,11 +162,12 @@ class ElasticsearchRest5Test {
 
     testing.runWithSpan(
         "parent", () -> client.performRequestAsync("GET", "_cluster/health", responseListener));
-    countDownLatch.await();
+    assertThat(countDownLatch.await(10, SECONDS)).isTrue();
     if (exception[0] != null) {
       throw exception[0];
     }
-    Map result = objectMapper.readValue(requestResponse[0].getEntity().getContent(), Map.class);
+    Map<?, ?> result =
+        objectMapper.readValue(requestResponse[0].getEntity().getContent(), Map.class);
 
     // usually this test reports green status, but sometimes it is yellow
     assertThat(result.get("status")).isIn("green", "yellow");
@@ -179,7 +181,7 @@ class ElasticsearchRest5Test {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "elasticsearch"),
+                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),

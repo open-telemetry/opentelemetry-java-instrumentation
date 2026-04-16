@@ -22,7 +22,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 // add spans around vaadin request handlers
-public class RequestHandlerInstrumentation implements TypeInstrumentation {
+class RequestHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -41,7 +41,7 @@ public class RequestHandlerInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("com.vaadin.flow.server.VaadinSession")))
             .and(takesArgument(1, named("com.vaadin.flow.server.VaadinRequest")))
             .and(takesArgument(2, named("com.vaadin.flow.server.VaadinResponse"))),
-        this.getClass().getName() + "$HandleRequestAdvice");
+        getClass().getName() + "$HandleRequestAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -75,16 +75,16 @@ public class RequestHandlerInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This RequestHandler requestHandler, @Advice.Origin("#m") String methodName) {
 
       return AdviceScope.start(requestHandler.getClass(), methodName);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Thrown Throwable throwable,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Return boolean handled,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {

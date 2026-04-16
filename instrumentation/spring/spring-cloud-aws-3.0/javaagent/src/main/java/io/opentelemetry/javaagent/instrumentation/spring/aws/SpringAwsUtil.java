@@ -21,7 +21,7 @@ import javax.annotation.Nullable;
 import org.springframework.messaging.Message;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 
-public final class SpringAwsUtil {
+public class SpringAwsUtil {
   private static final ThreadLocal<TracingList> context = new ThreadLocal<>();
   private static final VirtualField<Message<?>, TracingContext> tracingContextField =
       VirtualField.find(Message.class, TracingContext.class);
@@ -75,7 +75,7 @@ public final class SpringAwsUtil {
   // restore context from the first message of the batch
   @Nullable
   public static Scope handleBatch(Collection<Message<?>> messages) {
-    if (messages == null || messages.isEmpty()) {
+    if (messages.isEmpty()) {
       return null;
     }
     Message<?> message = messages.iterator().next();

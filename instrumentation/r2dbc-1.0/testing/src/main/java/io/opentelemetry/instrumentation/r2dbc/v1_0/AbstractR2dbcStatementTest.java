@@ -13,6 +13,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -21,7 +22,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static io.r2dbc.spi.ConnectionFactoryOptions.CONNECT_TIMEOUT;
 import static io.r2dbc.spi.ConnectionFactoryOptions.DATABASE;
@@ -40,6 +40,7 @@ import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
@@ -88,7 +89,7 @@ public abstract class AbstractR2dbcStatementTest {
               "MYSQL_PASSWORD", PW_DB,
               "MYSQL_DATABASE", DB);
 
-  private static final Map<String, DbSystemProps> SYSTEMS = new HashMap<>();
+  private static final Map<String, DbSystemProps> SYSTEMS = new LinkedHashMap<>();
 
   static {
     SYSTEMS.put(POSTGRESQL.system, POSTGRESQL);
@@ -134,7 +135,7 @@ public abstract class AbstractR2dbcStatementTest {
     }
   }
 
-  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideParameters")
   void testQueries(Parameter parameter) {
@@ -260,7 +261,6 @@ public abstract class AbstractR2dbcStatementTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // uses deprecated semconv
   void testMetrics() {
     DbSystemProps props = SYSTEMS.get(MARIADB.system);
     startContainer(props);

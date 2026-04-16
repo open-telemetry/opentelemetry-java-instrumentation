@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.webmvc.v6_0;
 
+import static java.util.Collections.emptyIterator;
+
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.internal.EnumerationUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,8 +14,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import javax.annotation.Nullable;
 
-enum JakartaHttpServletRequestGetter implements TextMapGetter<HttpServletRequest> {
-  INSTANCE;
+final class JakartaHttpServletRequestGetter implements TextMapGetter<HttpServletRequest> {
 
   @Override
   public Iterable<String> keys(HttpServletRequest carrier) {
@@ -32,7 +33,7 @@ enum JakartaHttpServletRequestGetter implements TextMapGetter<HttpServletRequest
   @Override
   public Iterator<String> getAll(@Nullable HttpServletRequest carrier, String key) {
     if (carrier == null) {
-      return Collections.emptyIterator();
+      return emptyIterator();
     }
     return EnumerationUtil.asIterator(carrier.getHeaders(key));
   }

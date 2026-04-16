@@ -23,9 +23,6 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
   private final Deque<State> savedStates = new ArrayDeque<>();
 
   public static Context init(Context context) {
-    if (context.get(KEY) != null) {
-      return context;
-    }
     return context.with(new PekkoRouteHolder());
   }
 

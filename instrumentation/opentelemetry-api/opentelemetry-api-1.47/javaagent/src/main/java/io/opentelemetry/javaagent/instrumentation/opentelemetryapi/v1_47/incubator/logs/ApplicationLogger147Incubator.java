@@ -5,28 +5,29 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_47.incubator.logs;
 
-import application.io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
-import application.io.opentelemetry.api.incubator.logs.ExtendedLogger;
+import io.opentelemetry.api.incubator.logs.ExtendedLogger;
+import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs.ApplicationLogger;
 
-class ApplicationLogger147Incubator extends ApplicationLogger implements ExtendedLogger {
+class ApplicationLogger147Incubator extends ApplicationLogger
+    implements application.io.opentelemetry.api.incubator.logs.ExtendedLogger {
 
-  private final io.opentelemetry.api.logs.Logger agentLogger;
+  private final Logger agentLogger;
 
-  ApplicationLogger147Incubator(io.opentelemetry.api.logs.Logger agentLogger) {
+  ApplicationLogger147Incubator(Logger agentLogger) {
     super(agentLogger);
     this.agentLogger = agentLogger;
   }
 
   @Override
   public boolean isEnabled() {
-    return ((io.opentelemetry.api.incubator.logs.ExtendedLogger) agentLogger)
-        .isEnabled(Severity.UNDEFINED_SEVERITY_NUMBER);
+    return ((ExtendedLogger) agentLogger).isEnabled(Severity.UNDEFINED_SEVERITY_NUMBER);
   }
 
   @Override
-  public ExtendedLogRecordBuilder logRecordBuilder() {
+  public application.io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder
+      logRecordBuilder() {
     return new ApplicationLogRecordBuilder147Incubator(agentLogger.logRecordBuilder());
   }
 }

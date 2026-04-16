@@ -35,6 +35,8 @@ dependencies {
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:aws-sdk:aws-sdk-1.11:javaagent"))
 
+  testInstrumentation(project(":instrumentation:cassandra:cassandra-3.0:javaagent"))
+
   testImplementation("org.apache.camel:camel-core:$camelversion")
   testImplementation("org.apache.camel:camel-spring-boot-starter:$camelversion")
   testImplementation("org.apache.camel:camel-jetty-starter:$camelversion")
@@ -80,9 +82,9 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
   val testExperimental by registering(Test::class) {
@@ -105,7 +107,7 @@ tasks {
     dependsOn(testStableSemconv, testExperimental)
   }
 
-  if (findProperty("denyUnsafe") as Boolean) {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

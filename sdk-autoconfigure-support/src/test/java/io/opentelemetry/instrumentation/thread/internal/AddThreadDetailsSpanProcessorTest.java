@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.thread.internal;
 
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -13,7 +15,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.SpanProcessor;
-import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import org.junit.jupiter.api.Test;
 
 class AddThreadDetailsSpanProcessorTest {
@@ -32,8 +33,8 @@ class AddThreadDetailsSpanProcessorTest {
     Thread thread = Thread.currentThread();
     spanProcessor.onStart(Context.root(), span);
 
-    verify(span).setAttribute(ThreadIncubatingAttributes.THREAD_ID, thread.getId());
-    verify(span).setAttribute(ThreadIncubatingAttributes.THREAD_NAME, thread.getName());
+    verify(span).setAttribute(THREAD_ID, thread.getId());
+    verify(span).setAttribute(THREAD_NAME, thread.getName());
     verifyNoMoreInteractions(span);
   }
 }

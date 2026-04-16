@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.genai;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_USAGE_INPUT_TOKENS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_USAGE_OUTPUT_TOKENS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
@@ -25,7 +26,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /**
@@ -35,7 +35,7 @@ import java.util.logging.Logger;
  */
 public final class GenAiClientMetrics implements OperationListener {
 
-  private static final double NANOS_PER_S = TimeUnit.SECONDS.toNanos(1);
+  private static final double NANOS_PER_S = SECONDS.toNanos(1);
 
   private static final ContextKey<State> GEN_AI_CLIENT_METRICS_STATE =
       ContextKey.named("gen-ai-client-metrics-state");

@@ -5,17 +5,18 @@
 
 package io.vertx.redis.client.impl;
 
+import static java.util.Collections.emptyList;
+
 import io.vertx.redis.client.Request;
-import java.util.Collections;
 import java.util.List;
 
-public final class RequestUtil {
+public class RequestUtil {
 
   public static List<byte[]> getArgs(Request request) {
     if (request instanceof RequestImpl) {
       return ((RequestImpl) request).getArgs();
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 
   private RequestUtil() {}

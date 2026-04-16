@@ -16,12 +16,12 @@ import org.apache.rocketmq.client.apis.message.MessageView;
 import org.apache.rocketmq.client.java.impl.producer.SendReceiptImpl;
 import org.apache.rocketmq.client.java.message.PublishingMessageImpl;
 
-public final class RocketMqSingletons {
+public class RocketMqSingletons {
 
-  private static final Instrumenter<PublishingMessageImpl, SendReceiptImpl> PRODUCER_INSTRUMENTER;
+  private static final Instrumenter<PublishingMessageImpl, SendReceiptImpl> producerInstrumenter;
   private static final Instrumenter<ReceiveMessageRequest, List<MessageView>>
-      CONSUMER_RECEIVE_INSTRUMENTER;
-  private static final Instrumenter<MessageView, ConsumeResult> CONSUMER_PROCESS_INSTRUMENTER;
+      consumerReceiveInstrumenter;
+  private static final Instrumenter<MessageView, ConsumeResult> consumerProcessInstrumenter;
 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
@@ -29,27 +29,27 @@ public final class RocketMqSingletons {
     boolean receiveInstrumentationEnabled =
         ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
 
-    PRODUCER_INSTRUMENTER =
+    producerInstrumenter =
         RocketMqInstrumenterFactory.createProducerInstrumenter(openTelemetry, messagingHeaders);
-    CONSUMER_RECEIVE_INSTRUMENTER =
+    consumerReceiveInstrumenter =
         RocketMqInstrumenterFactory.createConsumerReceiveInstrumenter(
             openTelemetry, messagingHeaders, receiveInstrumentationEnabled);
-    CONSUMER_PROCESS_INSTRUMENTER =
+    consumerProcessInstrumenter =
         RocketMqInstrumenterFactory.createConsumerProcessInstrumenter(
             openTelemetry, messagingHeaders, receiveInstrumentationEnabled);
   }
 
   public static Instrumenter<PublishingMessageImpl, SendReceiptImpl> producerInstrumenter() {
-    return PRODUCER_INSTRUMENTER;
+    return producerInstrumenter;
   }
 
   public static Instrumenter<ReceiveMessageRequest, List<MessageView>>
       consumerReceiveInstrumenter() {
-    return CONSUMER_RECEIVE_INSTRUMENTER;
+    return consumerReceiveInstrumenter;
   }
 
   public static Instrumenter<MessageView, ConsumeResult> consumerProcessInstrumenter() {
-    return CONSUMER_PROCESS_INSTRUMENTER;
+    return consumerProcessInstrumenter;
   }
 
   private RocketMqSingletons() {}

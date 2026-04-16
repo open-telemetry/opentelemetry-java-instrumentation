@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6.internal;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.Serializable;
-import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -24,7 +25,7 @@ public class KafkaConsumerTelemetrySupplier
   private final KafkaConsumerTelemetry consumerTelemetry;
 
   public KafkaConsumerTelemetrySupplier(KafkaConsumerTelemetry consumerTelemetry) {
-    this.consumerTelemetry = Objects.requireNonNull(consumerTelemetry);
+    this.consumerTelemetry = requireNonNull(consumerTelemetry);
   }
 
   @Override

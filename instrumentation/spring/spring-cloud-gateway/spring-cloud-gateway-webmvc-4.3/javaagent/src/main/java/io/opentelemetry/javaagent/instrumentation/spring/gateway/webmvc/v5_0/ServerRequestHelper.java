@@ -22,7 +22,7 @@ import org.springframework.web.servlet.function.ServerRequest;
  * Helper class for extracting Spring Cloud Gateway Server WebMVC route information from
  * ServerRequest and adding it to spans.
  */
-public final class ServerRequestHelper {
+public class ServerRequestHelper {
   @Nullable private static final Field routeIdField;
 
   static {
@@ -56,9 +56,7 @@ public final class ServerRequestHelper {
     }
 
     String convergedRouteId = GatewayRouteHelper.convergeRouteId(routeId);
-    if (convergedRouteId != null) {
-      serverSpan.setAttribute(ROUTE_ID_ATTRIBUTE, convergedRouteId);
-    }
+    serverSpan.setAttribute(ROUTE_ID_ATTRIBUTE, convergedRouteId);
 
     request
         .attribute(MvcUtils.GATEWAY_REQUEST_URL_ATTR)

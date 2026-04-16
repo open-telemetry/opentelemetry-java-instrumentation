@@ -1,1 +1,8 @@
+display_name: RxJava
+description: >
+  This instrumentation enables context propagation for RxJava 1 reactive streams. It does not emit
+  any telemetry on its own.
+library_link: https://github.com/ReactiveX/RxJava/tree/1.x
+features:
+  - CONTEXT_PROPAGATION
 classification: internal

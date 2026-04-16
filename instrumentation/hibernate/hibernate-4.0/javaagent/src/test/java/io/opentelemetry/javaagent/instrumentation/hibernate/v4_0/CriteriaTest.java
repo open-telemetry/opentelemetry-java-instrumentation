@@ -23,9 +23,9 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.H2;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.Attributes;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.hibernate.Criteria;
@@ -65,7 +65,7 @@ class CriteriaTest extends AbstractHibernateTest {
                     span.hasName("parent")
                         .hasKind(INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName("Criteria." + methodName + " " + Value.class.getName())
                         .hasKind(INTERNAL)
@@ -79,15 +79,13 @@ class CriteriaTest extends AbstractHibernateTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
                             equalTo(maybeStable(DB_NAME), "db1"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "h2:mem:"),
-                            satisfies(
-                                maybeStable(DB_STATEMENT),
-                                stringAssert -> stringAssert.startsWith("select")),
+                            satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("select")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "SELECT Value" : null),

@@ -11,13 +11,11 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class MongoClientInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class MongoClientInstrumentationModule extends InstrumentationModule {
 
   public MongoClientInstrumentationModule() {
     super("mongo", "mongo-3.7");
@@ -26,7 +24,10 @@ public class MongoClientInstrumentationModule extends InstrumentationModule
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return hasClassesNamed(
-        "com.mongodb.MongoClientSettings$Builder", "com.mongodb.async.SingleResultCallback");
+        // added in 3.7
+        "com.mongodb.MongoClientSettings$Builder",
+        // removed in 4.0 (replaced by com.mongodb.internal.async.SingleResultCallback)
+        "com.mongodb.async.SingleResultCallback");
   }
 
   @Override
@@ -35,10 +36,5 @@ public class MongoClientInstrumentationModule extends InstrumentationModule
         new MongoClientSettingsBuilderInstrumentation(),
         new InternalStreamConnectionInstrumentation(),
         new BaseClusterInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

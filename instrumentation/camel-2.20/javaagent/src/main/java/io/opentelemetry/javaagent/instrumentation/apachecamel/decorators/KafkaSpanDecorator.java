@@ -23,9 +23,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.util.Map;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
@@ -61,29 +63,22 @@ class KafkaSpanDecorator extends MessagingSpanDecorator {
       CamelDirection camelDirection) {
     super.pre(attributes, exchange, endpoint, camelDirection);
 
-    attributes.put(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process");
+    attributes.put(MESSAGING_OPERATION, "process");
 
     Integer partition = exchange.getIn().getHeader(PARTITION, Integer.class);
     if (partition != null) {
-      attributes.put(
-          MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID, partition.toString());
+      attributes.put(MESSAGING_DESTINATION_PARTITION_ID, partition.toString());
     }
 
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       String partitionKey = (String) exchange.getIn().getHeader(PARTITION_KEY);
-      if (partitionKey != null) {
-        attributes.put("camel.kafka.partitionKey", partitionKey);
-      }
+      attributes.put("camel.kafka.partitionKey", partitionKey);
 
       String key = (String) exchange.getIn().getHeader(KEY);
-      if (key != null) {
-        attributes.put("camel.kafka.key", key);
-      }
+      attributes.put("camel.kafka.key", key);
 
       String offset = getValue(exchange, OFFSET, Long.class);
-      if (offset != null) {
-        attributes.put("camel.kafka.offset", offset);
-      }
+      attributes.put("camel.kafka.offset", offset);
     }
   }
 

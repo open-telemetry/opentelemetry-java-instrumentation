@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v6_0;
 
-import java.util.Collections;
+import static java.util.Collections.singleton;
+
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.InternalSettingsPreparer;
 import org.elasticsearch.node.Node;
@@ -16,7 +17,7 @@ class Elasticsearch6NodeFactory implements NodeFactory {
   public Node newNode(Settings settings) {
     return new Node(
         InternalSettingsPreparer.prepareEnvironment(settings, null),
-        Collections.singleton(Netty4Plugin.class)) {
+        singleton(Netty4Plugin.class)) {
 
       @SuppressWarnings({"UnusedMethod", "UnusedVariable", "EffectivelyPrivate"})
       protected void registerDerivedNodeNameWithLogger(String s) {}

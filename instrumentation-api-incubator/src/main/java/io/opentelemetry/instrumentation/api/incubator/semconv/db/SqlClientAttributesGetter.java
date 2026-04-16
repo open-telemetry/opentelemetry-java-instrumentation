@@ -52,6 +52,9 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
     return null;
   }
 
+  /** Returns the SQL dialect used by the database. */
+  SqlDialect getSqlDialect(REQUEST request);
+
   /**
    * Get the raw SQL query texts. The values returned by this method are later sanitized by the
    * {@link SqlClientAttributesExtractor} before being set as span attribute.

@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.dropwizardmetrics;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.logging.Level.WARNING;
+
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
@@ -20,25 +23,23 @@ import io.opentelemetry.api.metrics.ObservableDoubleGauge;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-public final class DropwizardMetricsAdapter implements MetricRegistryListener {
+public class DropwizardMetricsAdapter implements MetricRegistryListener {
 
   private static final Logger logger = Logger.getLogger(DropwizardMetricsAdapter.class.getName());
 
-  private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
+  private static final double NANOS_PER_MS = MILLISECONDS.toNanos(1);
   private static final Pattern INVALID_CHARACTERS = Pattern.compile("[^a-zA-Z0-9._/-]");
 
-  private static final VirtualField<Counter, LongUpDownCounter> otelUpDownCounterField =
+  private static final VirtualField<Counter, LongUpDownCounter> OTEL_LONG_UP_DOWN_COUNTER =
       VirtualField.find(Counter.class, LongUpDownCounter.class);
-  private static final VirtualField<Histogram, LongHistogram> otelHistogramField =
+  private static final VirtualField<Histogram, LongHistogram> OTEL_LONG_HISTOGRAM =
       VirtualField.find(Histogram.class, LongHistogram.class);
-  private static final VirtualField<Meter, LongCounter> otelCounterField =
+  private static final VirtualField<Meter, LongCounter> OTEL_LONG_COUNTER =
       VirtualField.find(Meter.class, LongCounter.class);
-  private static final VirtualField<Timer, DoubleHistogram> otelDoubleHistogramField =
+  private static final VirtualField<Timer, DoubleHistogram> OTEL_DOUBLE_HISTOGRAM =
       VirtualField.find(Timer.class, DoubleHistogram.class);
 
   private final io.opentelemetry.api.metrics.Meter otelMeter;
@@ -70,8 +71,7 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
    */
   private static String sanitizeInstrumentName(String name) {
     if (name == null || name.isEmpty()) {
-      logger.log(
-          Level.WARNING, "Dropwizard metric name is null or empty, skipping instrument creation");
+      logger.log(WARNING, "Dropwizard metric name is null or empty, skipping instrument creation");
       return null;
     }
 
@@ -80,7 +80,7 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
 
     if (sanitized.isEmpty()) {
       logger.log(
-          Level.WARNING,
+          WARNING,
           "Dropwizard metric name ''{0}'' contains no valid characters after sanitization, skipping instrument creation",
           name);
       return null;
@@ -89,7 +89,7 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
     // Ensure the name starts with a letter
     if (!Character.isLetter(sanitized.charAt(0))) {
       logger.log(
-          Level.WARNING,
+          WARNING,
           "Dropwizard metric name ''{0}'' does not start with a letter after sanitization, skipping instrument creation",
           name);
       return null;
@@ -98,7 +98,7 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
     // Ensure max length of 255 characters (OpenTelemetry specification limit)
     if (sanitized.length() > 255) {
       logger.log(
-          Level.WARNING,
+          WARNING,
           "Dropwizard metric name ''{0}'' exceeds 255 character limit, truncating to ''{1}''",
           new Object[] {name, sanitized.substring(0, 255)});
       sanitized = sanitized.substring(0, 255);
@@ -107,7 +107,7 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
     // Log if sanitization changed the name
     if (!sanitized.equals(name)) {
       logger.log(
-          Level.WARNING,
+          WARNING,
           "Dropwizard metric name ''{0}'' has been sanitized to ''{1}''",
           new Object[] {name, sanitized});
     }
@@ -152,7 +152,7 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
     LongUpDownCounter otelCounter =
         otelUpDownCounters.computeIfAbsent(
             name, n -> otelMeter.upDownCounterBuilder(sanitizedName).build());
-    otelUpDownCounterField.set(dropwizardCounter, otelCounter);
+    OTEL_LONG_UP_DOWN_COUNTER.set(dropwizardCounter, otelCounter);
   }
 
   @Override
@@ -160,12 +160,12 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
     Counter dropwizardCounter = dropwizardCounters.remove(name);
     otelUpDownCounters.remove(name);
     if (dropwizardCounter != null) {
-      otelUpDownCounterField.set(dropwizardCounter, null);
+      OTEL_LONG_UP_DOWN_COUNTER.set(dropwizardCounter, null);
     }
   }
 
   public void counterAdd(Counter dropwizardCounter, long increment) {
-    LongUpDownCounter otelCounter = otelUpDownCounterField.get(dropwizardCounter);
+    LongUpDownCounter otelCounter = OTEL_LONG_UP_DOWN_COUNTER.get(dropwizardCounter);
     if (otelCounter != null) {
       otelCounter.add(increment);
     }
@@ -181,7 +181,7 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
     LongHistogram otelHistogram =
         otelHistograms.computeIfAbsent(
             name, n -> otelMeter.histogramBuilder(sanitizedName).ofLongs().build());
-    otelHistogramField.set(dropwizardHistogram, otelHistogram);
+    OTEL_LONG_HISTOGRAM.set(dropwizardHistogram, otelHistogram);
   }
 
   @Override
@@ -189,12 +189,12 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
     Histogram dropwizardHistogram = dropwizardHistograms.remove(name);
     otelHistograms.remove(name);
     if (dropwizardHistogram != null) {
-      otelHistogramField.set(dropwizardHistogram, null);
+      OTEL_LONG_HISTOGRAM.set(dropwizardHistogram, null);
     }
   }
 
   public void histogramUpdate(Histogram dropwizardHistogram, long value) {
-    LongHistogram otelHistogram = otelHistogramField.get(dropwizardHistogram);
+    LongHistogram otelHistogram = OTEL_LONG_HISTOGRAM.get(dropwizardHistogram);
     if (otelHistogram != null) {
       otelHistogram.record(value);
     }
@@ -209,7 +209,7 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
     dropwizardMeters.put(name, dropwizardMeter);
     LongCounter otelCounter =
         otelCounters.computeIfAbsent(name, n -> otelMeter.counterBuilder(sanitizedName).build());
-    otelCounterField.set(dropwizardMeter, otelCounter);
+    OTEL_LONG_COUNTER.set(dropwizardMeter, otelCounter);
   }
 
   @Override
@@ -217,12 +217,12 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
     Meter dropwizardMeter = dropwizardMeters.remove(name);
     otelCounters.remove(name);
     if (dropwizardMeter != null) {
-      otelCounterField.set(dropwizardMeter, null);
+      OTEL_LONG_COUNTER.set(dropwizardMeter, null);
     }
   }
 
   public void meterMark(Meter dropwizardMeter, long increment) {
-    LongCounter otelCounter = otelCounterField.get(dropwizardMeter);
+    LongCounter otelCounter = OTEL_LONG_COUNTER.get(dropwizardMeter);
     if (otelCounter != null) {
       otelCounter.add(increment);
     }
@@ -238,7 +238,7 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
     DoubleHistogram otelHistogram =
         otelDoubleHistograms.computeIfAbsent(
             name, n -> otelMeter.histogramBuilder(sanitizedName).setUnit("ms").build());
-    otelDoubleHistogramField.set(dropwizardTimer, otelHistogram);
+    OTEL_DOUBLE_HISTOGRAM.set(dropwizardTimer, otelHistogram);
   }
 
   @Override
@@ -246,12 +246,12 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
     Timer dropwizardTimer = dropwizardTimers.remove(name);
     otelDoubleHistograms.remove(name);
     if (dropwizardTimer != null) {
-      otelDoubleHistogramField.set(dropwizardTimer, null);
+      OTEL_DOUBLE_HISTOGRAM.set(dropwizardTimer, null);
     }
   }
 
   public void timerUpdate(Timer dropwizardTimer, long nanos) {
-    DoubleHistogram otelHistogram = otelDoubleHistogramField.get(dropwizardTimer);
+    DoubleHistogram otelHistogram = OTEL_DOUBLE_HISTOGRAM.get(dropwizardTimer);
     if (otelHistogram != null) {
       otelHistogram.record(nanos / NANOS_PER_MS);
     }

@@ -18,6 +18,8 @@ import okhttp3.Response;
 
 /** Entrypoint for instrumenting OkHttp clients. */
 public final class OkHttpTelemetry {
+  private final Instrumenter<Interceptor.Chain, Response> instrumenter;
+  private final ContextPropagators propagators;
 
   /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static OkHttpTelemetry create(OpenTelemetry openTelemetry) {
@@ -28,9 +30,6 @@ public final class OkHttpTelemetry {
   public static OkHttpTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new OkHttpTelemetryBuilder(openTelemetry);
   }
-
-  private final Instrumenter<Interceptor.Chain, Response> instrumenter;
-  private final ContextPropagators propagators;
 
   OkHttpTelemetry(
       Instrumenter<Interceptor.Chain, Response> instrumenter, ContextPropagators propagators) {

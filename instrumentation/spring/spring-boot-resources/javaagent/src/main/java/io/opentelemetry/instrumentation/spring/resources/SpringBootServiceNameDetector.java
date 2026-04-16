@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.resources;
 
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.FINER;
 
@@ -14,7 +15,6 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ServiceAttributes;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
@@ -107,7 +107,7 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
         .map(
             serviceName -> {
               logger.log(FINE, "Auto-detected Spring Boot service name: {0}", serviceName);
-              return Resource.builder().put(ServiceAttributes.SERVICE_NAME, serviceName).build();
+              return Resource.builder().put(SERVICE_NAME, serviceName).build();
             })
         .orElseGet(Resource::empty);
   }
@@ -119,8 +119,8 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
     String serviceName = config.getString("otel.service.name");
     Map<String, String> resourceAttributes = config.getMap("otel.resource.attributes");
     return serviceName == null
-        && !resourceAttributes.containsKey(ServiceAttributes.SERVICE_NAME.getKey())
-        && "unknown_service:java".equals(resource.getAttribute(ServiceAttributes.SERVICE_NAME));
+        && !resourceAttributes.containsKey(SERVICE_NAME.getKey())
+        && "unknown_service:java".equals(resource.getAttribute(SERVICE_NAME));
   }
 
   @Override

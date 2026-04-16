@@ -21,7 +21,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
@@ -70,13 +69,13 @@ public final class KafkaInstrumenterFactory {
   }
 
   public Instrumenter<KafkaProducerRequest, RecordMetadata> createProducerInstrumenter() {
-    return createProducerInstrumenter(Collections.emptyList());
+    return createProducerInstrumenter(emptyList());
   }
 
   public Instrumenter<KafkaProducerRequest, RecordMetadata> createProducerInstrumenter(
       Iterable<AttributesExtractor<KafkaProducerRequest, RecordMetadata>> extractors) {
 
-    KafkaProducerAttributesGetter getter = KafkaProducerAttributesGetter.INSTANCE;
+    KafkaProducerAttributesGetter getter = new KafkaProducerAttributesGetter();
     MessageOperation operation = MessageOperation.PUBLISH;
 
     return Instrumenter.<KafkaProducerRequest, RecordMetadata>builder(
@@ -92,12 +91,12 @@ public final class KafkaInstrumenterFactory {
   }
 
   public Instrumenter<KafkaReceiveRequest, Void> createConsumerReceiveInstrumenter() {
-    return createConsumerReceiveInstrumenter(Collections.emptyList());
+    return createConsumerReceiveInstrumenter(emptyList());
   }
 
   public Instrumenter<KafkaReceiveRequest, Void> createConsumerReceiveInstrumenter(
       Iterable<AttributesExtractor<KafkaReceiveRequest, Void>> extractors) {
-    KafkaReceiveAttributesGetter getter = KafkaReceiveAttributesGetter.INSTANCE;
+    KafkaReceiveAttributesGetter getter = new KafkaReceiveAttributesGetter();
     MessageOperation operation = MessageOperation.RECEIVE;
 
     return Instrumenter.<KafkaReceiveRequest, Void>builder(
@@ -106,7 +105,7 @@ public final class KafkaInstrumenterFactory {
             MessagingSpanNameExtractor.create(getter, operation))
         .addAttributesExtractor(
             buildMessagingAttributesExtractor(getter, operation, capturedHeaders))
-        .addAttributesExtractor(KafkaReceiveAttributesExtractor.INSTANCE)
+        .addAttributesExtractor(new KafkaReceiveAttributesExtractor())
         .addAttributesExtractors(extractors)
         .setErrorCauseExtractor(errorCauseExtractor)
         .setEnabled(messagingReceiveInstrumentationEnabled)
@@ -114,12 +113,12 @@ public final class KafkaInstrumenterFactory {
   }
 
   public Instrumenter<KafkaProcessRequest, Void> createConsumerProcessInstrumenter() {
-    return createConsumerProcessInstrumenter(Collections.emptyList());
+    return createConsumerProcessInstrumenter(emptyList());
   }
 
   public Instrumenter<KafkaProcessRequest, Void> createConsumerProcessInstrumenter(
       Iterable<AttributesExtractor<KafkaProcessRequest, Void>> extractors) {
-    KafkaConsumerAttributesGetter getter = KafkaConsumerAttributesGetter.INSTANCE;
+    KafkaConsumerAttributesGetter getter = new KafkaConsumerAttributesGetter();
     MessageOperation operation = MessageOperation.PROCESS;
 
     InstrumenterBuilder<KafkaProcessRequest, Void> builder =
@@ -148,7 +147,7 @@ public final class KafkaInstrumenterFactory {
   }
 
   public Instrumenter<KafkaReceiveRequest, Void> createBatchProcessInstrumenter() {
-    KafkaReceiveAttributesGetter getter = KafkaReceiveAttributesGetter.INSTANCE;
+    KafkaReceiveAttributesGetter getter = new KafkaReceiveAttributesGetter();
     MessageOperation operation = MessageOperation.PROCESS;
 
     return Instrumenter.<KafkaReceiveRequest, Void>builder(
@@ -157,7 +156,7 @@ public final class KafkaInstrumenterFactory {
             MessagingSpanNameExtractor.create(getter, operation))
         .addAttributesExtractor(
             buildMessagingAttributesExtractor(getter, operation, capturedHeaders))
-        .addAttributesExtractor(KafkaReceiveAttributesExtractor.INSTANCE)
+        .addAttributesExtractor(new KafkaReceiveAttributesExtractor())
         .addSpanLinksExtractor(
             new KafkaBatchProcessSpanLinksExtractor(
                 openTelemetry.getPropagators().getTextMapPropagator()))

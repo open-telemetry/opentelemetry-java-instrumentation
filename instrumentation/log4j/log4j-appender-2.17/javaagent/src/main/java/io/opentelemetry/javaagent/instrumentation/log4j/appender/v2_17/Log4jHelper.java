@@ -28,11 +28,14 @@ import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.message.Message;
 
-public final class Log4jHelper {
+public class Log4jHelper {
+
+  private static final java.util.logging.Logger logger =
+      java.util.logging.Logger.getLogger(Log4jHelper.class.getName());
 
   private static final LogEventMapper<Map<String, String>> mapper;
   private static final boolean captureExperimentalAttributes;
-  private static final MethodHandle stackTraceMethodHandle = getStackTraceMethodHandle();
+  @Nullable private static final MethodHandle stackTraceMethodHandle = getStackTraceMethodHandle();
 
   static {
     DeclarativeConfigProperties config =
@@ -48,10 +51,15 @@ public final class Log4jHelper {
     List<String> captureContextDataAttributes =
         config.getScalarList("capture_mdc_attributes/development", String.class, emptyList());
     boolean captureEventName = config.getBoolean("capture_event_name/development", false);
+    if (captureEventName) {
+      logger.warning(
+          "The otel.instrumentation.log4j-appender.experimental.capture-event-name setting is"
+              + " deprecated and will be removed in a future version.");
+    }
 
     mapper =
         new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE,
+            new ContextDataAccessorImpl(),
             captureExperimentalAttributes,
             captureCodeAttributes,
             captureMapMessageAttributes,
@@ -63,7 +71,7 @@ public final class Log4jHelper {
   public static void capture(
       Logger logger,
       String loggerClassName,
-      StackTraceElement location,
+      @Nullable StackTraceElement location,
       Level level,
       Marker marker,
       Message message,
@@ -102,6 +110,7 @@ public final class Log4jHelper {
     builder.emit();
   }
 
+  @Nullable
   private static StackTraceElement getLocation(String loggerClassName) {
     if (stackTraceMethodHandle == null) {
       return null;
@@ -109,24 +118,25 @@ public final class Log4jHelper {
 
     try {
       return (StackTraceElement) stackTraceMethodHandle.invoke(loggerClassName);
-    } catch (Throwable exception) {
+    } catch (Throwable ignored) {
       return null;
     }
   }
 
+  @Nullable
   private static MethodHandle getStackTraceMethodHandle() {
     Class<?> stackTraceClass = null;
     try {
       // since 2.9.0
       stackTraceClass = Class.forName("org.apache.logging.log4j.util.StackLocatorUtil");
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       // ignore
     }
     if (stackTraceClass == null) {
       try {
         // before 2.9.0
         stackTraceClass = Class.forName("org.apache.logging.log4j.core.impl.Log4jLogEvent");
-      } catch (ClassNotFoundException exception) {
+      } catch (ClassNotFoundException ignored) {
         // ignore
       }
     }
@@ -139,13 +149,12 @@ public final class Log4jHelper {
               stackTraceClass,
               "calcLocation",
               MethodType.methodType(StackTraceElement.class, String.class));
-    } catch (Exception exception) {
+    } catch (Exception ignored) {
       return null;
     }
   }
 
-  private enum ContextDataAccessorImpl implements ContextDataAccessor<Map<String, String>> {
-    INSTANCE;
+  private static class ContextDataAccessorImpl implements ContextDataAccessor<Map<String, String>> {
 
     @Override
     @Nullable

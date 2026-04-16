@@ -5,20 +5,23 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
-import application.io.opentelemetry.api.metrics.ObservableLongCounter;
+import io.opentelemetry.api.metrics.ObservableLongCounter;
 
-public final class ApplicationObservableLongCounter implements ObservableLongCounter {
+public class ApplicationObservableLongCounter
+    implements application.io.opentelemetry.api.metrics.ObservableLongCounter {
 
-  private final io.opentelemetry.api.metrics.ObservableLongCounter agentCounter;
+  private final ObservableLongCounter agentCounter;
+  private final Runnable onClose;
 
-  public ApplicationObservableLongCounter(
-      io.opentelemetry.api.metrics.ObservableLongCounter agentCounter) {
+  public ApplicationObservableLongCounter(ObservableLongCounter agentCounter, Runnable onClose) {
     this.agentCounter = agentCounter;
+    this.onClose = onClose;
   }
 
   // not adding @Override because this method was introduced in 1.12
   @SuppressWarnings("unused")
   public void close() {
     agentCounter.close();
+    onClose.run();
   }
 }

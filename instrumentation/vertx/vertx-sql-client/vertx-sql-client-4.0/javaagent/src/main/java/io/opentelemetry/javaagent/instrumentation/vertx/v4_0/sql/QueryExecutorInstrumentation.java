@@ -19,6 +19,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil;
 import io.vertx.core.impl.future.PromiseInternal;
+import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.impl.PreparedStatement;
 import io.vertx.sqlclient.impl.QueryExecutorUtil;
 import javax.annotation.Nullable;
@@ -26,7 +27,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class QueryExecutorInstrumentation implements TypeInstrumentation {
+class QueryExecutorInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -35,17 +36,16 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isConstructor(), QueryExecutorInstrumentation.class.getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("executeSimpleQuery", "executeExtendedQuery", "executeBatchQuery"),
-        QueryExecutorInstrumentation.class.getName() + "$QueryAdvice");
+        getClass().getName() + "$QueryAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Object queryExecutor) {
       // copy connection options from ThreadLocal to VirtualField
       QueryExecutorUtil.setConnectOptions(queryExecutor, getSqlConnectOptions());
@@ -80,7 +80,7 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
         }
 
         // The parameter we need are in different positions, we are not going to have separate
-        // advices for all of them. The method gets the statement either as String or
+        // advices for all of them. The method gets the query either as String or
         // PreparedStatement, use the first argument that is either of these. PromiseInternal is
         // always at the end of the argument list.
         String sql = null;
@@ -102,12 +102,24 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
           return new AdviceScope(callDepth);
         }
 
+        SqlConnectOptions connectOptions = QueryExecutorUtil.getConnectOptions(queryExecutor);
+        // connectOptions is null when the pool was created via JDBCPool which bypasses the
+        // Pool.pool() factory, in that case we skip vertx-sql-client span creation and let JDBC
+        // instrumentation handle it
+        if (connectOptions == null) {
+          return new AdviceScope(callDepth);
+        }
+        // Try db system stored from pool class first (handles generic SqlConnectOptions),
+        // fall back to class name detection on the connect options itself
+        String dbSystem = VertxSqlClientSingletons.getConnectOptionsDbSystem(connectOptions);
+        if (dbSystem == null) {
+          dbSystem = VertxSqlClientUtil.getDbSystemNameFromClassName(connectOptions);
+        }
         VertxSqlClientRequest otelRequest =
-            new VertxSqlClientRequest(
-                sql, QueryExecutorUtil.getConnectOptions(queryExecutor), preparedStatement);
+            new VertxSqlClientRequest(sql, connectOptions, preparedStatement, dbSystem);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, otelRequest)) {
-          return new AdviceScope(callDepth, null, null, null);
+          return new AdviceScope(callDepth);
         }
 
         Context context = instrumenter().start(parentContext, otelRequest);
@@ -131,20 +143,16 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This Object queryExecutor, @Advice.AllArguments Object[] arguments) {
       return AdviceScope.start(queryExecutor, arguments);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter @Nullable AdviceScope adviceScope) {
-
-      if (adviceScope != null) {
-        adviceScope.end(throwable);
-      }
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
+      adviceScope.end(throwable);
     }
   }
 }

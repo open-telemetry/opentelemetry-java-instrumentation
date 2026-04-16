@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.quarkus.resteasy.reactive;
 
 import org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext;
 
-public final class OtelRequestContext {
+public class OtelRequestContext {
   private static final ThreadLocal<OtelRequestContext> contextThreadLocal = new ThreadLocal<>();
   private boolean firstInvoke = true;
 

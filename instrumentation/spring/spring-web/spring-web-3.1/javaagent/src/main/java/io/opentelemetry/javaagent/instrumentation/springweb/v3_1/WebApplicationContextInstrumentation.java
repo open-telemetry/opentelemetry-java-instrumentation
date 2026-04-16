@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.springweb.v3_1;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_SINGLETON;
@@ -26,7 +25,7 @@ import org.springframework.beans.factory.support.GenericBeanDefinition;
  * This instrumentation adds the OpenTelemetryHandlerMappingFilter definition to the spring context
  * When the context is created, the filter will be added to the beginning of the filter chain.
  */
-public class WebApplicationContextInstrumentation implements TypeInstrumentation {
+class WebApplicationContextInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -44,20 +43,19 @@ public class WebApplicationContextInstrumentation implements TypeInstrumentation
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("postProcessBeanFactory"))
+        named("postProcessBeanFactory")
             .and(
                 takesArgument(
                     0,
                     named(
                         "org.springframework.beans.factory.config.ConfigurableListableBeanFactory"))),
-        WebApplicationContextInstrumentation.class.getName() + "$FilterInjectingAdvice");
+        getClass().getName() + "$FilterInjectingAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class FilterInjectingAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) ConfigurableListableBeanFactory beanFactory) {
       if (beanFactory instanceof BeanDefinitionRegistry
           && !beanFactory.containsBean("otelAutoDispatcherFilter")) {

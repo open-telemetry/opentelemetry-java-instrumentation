@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0;
 
 import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0.JettyHttpClientSingletons.JETTY_CLIENT_CONTEXT_KEY;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameContains;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -23,7 +22,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.eclipse.jetty.client.Response;
 import org.eclipse.jetty.client.Result;
 
-public class JettyClient12ResponseListenersInstrumentation implements TypeInstrumentation {
+class JettyClient12ResponseListenersInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -34,30 +33,24 @@ public class JettyClient12ResponseListenersInstrumentation implements TypeInstru
   public void transform(TypeTransformer transformer) {
     // for response listeners
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(
-                nameContains("notify")
-                    .and(isPublic())
-                    .and(takesArgument(0, named("org.eclipse.jetty.client.Response")))),
-        JettyClient12ResponseListenersInstrumentation.class.getName()
-            + "$JettyHttpClient12RespListenersNotifyAdvice");
+        nameContains("notify")
+            .and(isPublic())
+            .and(takesArgument(0, named("org.eclipse.jetty.client.Response"))),
+        getClass().getName() + "$JettyHttpClient12RespListenersNotifyAdvice");
 
     // for complete listeners
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(
-                nameContains("notifyComplete")
-                    .and(isPublic())
-                    .and(takesArgument(0, named("org.eclipse.jetty.client.Result")))),
-        JettyClient12ResponseListenersInstrumentation.class.getName()
-            + "$JettyHttpClient12CompleteListenersNotifyAdvice");
+        nameContains("notifyComplete")
+            .and(isPublic())
+            .and(takesArgument(0, named("org.eclipse.jetty.client.Result"))),
+        getClass().getName() + "$JettyHttpClient12CompleteListenersNotifyAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class JettyHttpClient12RespListenersNotifyAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnterNotify(@Advice.Argument(0) Response response) {
 
       Context context =
@@ -65,7 +58,7 @@ public class JettyClient12ResponseListenersInstrumentation implements TypeInstru
       return context == null ? null : context.makeCurrent();
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExitNotify(
         @Advice.Argument(0) Response response,
         @Advice.Thrown Throwable throwable,
@@ -80,14 +73,15 @@ public class JettyClient12ResponseListenersInstrumentation implements TypeInstru
   @SuppressWarnings("unused")
   public static class JettyHttpClient12CompleteListenersNotifyAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnterComplete(@Advice.Argument(0) Result result) {
 
       Context context = (Context) result.getRequest().getAttributes().get(JETTY_CLIENT_CONTEXT_KEY);
       return context == null ? null : context.makeCurrent();
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExitComplete(
         @Advice.Argument(0) Result result,
         @Advice.Thrown Throwable throwable,

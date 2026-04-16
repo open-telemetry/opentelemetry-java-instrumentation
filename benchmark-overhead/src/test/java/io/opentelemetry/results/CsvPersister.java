@@ -5,6 +5,7 @@
 
 package io.opentelemetry.results;
 
+import static java.util.stream.Collectors.toList;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 import java.io.IOException;
@@ -14,7 +15,6 @@ import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 class CsvPersister implements ResultsPersister {
 
@@ -88,7 +88,7 @@ class CsvPersister implements ResultsPersister {
     // line so that we can create a columnar structure that allows us to more easily compare agent
     // to agent for a given run.
 
-    List<String> agents = results.stream().map(r -> r.agent.getName()).collect(Collectors.toList());
+    List<String> agents = results.stream().map(r -> r.agent.getName()).collect(toList());
     for (FieldSpec field : FIELDS) {
       for (String agent : agents) {
         sb.append(",").append(agent).append(':').append(field.name);

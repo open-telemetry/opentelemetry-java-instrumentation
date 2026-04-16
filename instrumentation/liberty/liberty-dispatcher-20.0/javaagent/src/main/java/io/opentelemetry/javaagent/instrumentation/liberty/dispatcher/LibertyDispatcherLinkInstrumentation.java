@@ -28,7 +28,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * requested context root or something goes horribly wrong and server responds with Internal Server
  * Error
  */
-public class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation {
+class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -44,7 +44,7 @@ public class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation
             .and(takesArgument(1, named(String.class.getName())))
             .and(takesArgument(2, named(Exception.class.getName())))
             .and(takesArgument(3, named(boolean.class.getName()))),
-        this.getClass().getName() + "$SendResponseAdvice");
+        getClass().getName() + "$SendResponseAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -91,17 +91,17 @@ public class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.FieldValue("isc") HttpInboundServiceContextImpl isc) {
       return AdviceScope.start(isc);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.This HttpDispatcherLink httpDispatcherLink,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Argument(value = 0) StatusCodes statusCode,
-        @Advice.Argument(value = 2) Exception failure,
+        @Advice.Argument(value = 2) @Nullable Exception failure,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
 
       if (adviceScope != null) {

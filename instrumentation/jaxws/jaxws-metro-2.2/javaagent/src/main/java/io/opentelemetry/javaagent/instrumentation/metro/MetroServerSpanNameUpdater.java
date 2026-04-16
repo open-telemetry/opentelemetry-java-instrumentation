@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.metro;
 
+import static java.util.Objects.requireNonNull;
+
 import com.sun.xml.ws.api.message.Packet;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
@@ -14,8 +16,8 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.logging.Logger;
+import javax.xml.namespace.QName;
 
 final class MetroServerSpanNameUpdater {
 
@@ -97,8 +99,12 @@ final class MetroServerSpanNameUpdater {
             } else {
               // when pathInfo is null then there is a servlet that is mapped to this exact service
               // servletPath already contains the service name
-              String operationName = packet.getWSDLOperation().getLocalPart();
-              spanName = servletPath + "/" + operationName;
+              QName wsdlOperation = packet.getWSDLOperation();
+              if (wsdlOperation == null) {
+                spanName = servletPath;
+              } else {
+                spanName = servletPath + "/" + wsdlOperation.getLocalPart();
+              }
             }
             break;
           }
@@ -122,8 +128,7 @@ final class MetroServerSpanNameUpdater {
     private HttpServletRequestAdapter(Class<?> httpServletRequestClass)
         throws NoSuchMethodException, IllegalAccessException {
       this.httpServletRequestClass =
-          Objects.requireNonNull(
-              httpServletRequestClass, "httpServletRequestClass must not be null");
+          requireNonNull(httpServletRequestClass, "httpServletRequestClass must not be null");
 
       MethodHandles.Lookup lookup = MethodHandles.lookup();
       this.getServletPathMethodHandle =

@@ -11,8 +11,7 @@ import io.opentelemetry.api.OpenTelemetry;
 /** A builder of {@link MongoTelemetry}. */
 public final class MongoTelemetryBuilder {
 
-  // Visible for testing
-  static final int DEFAULT_MAX_NORMALIZED_QUERY_LENGTH = 32 * 1024;
+  private static final int DEFAULT_MAX_NORMALIZED_QUERY_LENGTH = 32 * 1024;
 
   private final OpenTelemetry openTelemetry;
   private final String instrumentationName;
@@ -35,16 +34,6 @@ public final class MongoTelemetryBuilder {
   public MongoTelemetryBuilder setQuerySanitizationEnabled(boolean querySanitizationEnabled) {
     this.querySanitizationEnabled = querySanitizationEnabled;
     return this;
-  }
-
-  /**
-   * @deprecated Use {@link #setQuerySanitizationEnabled(boolean)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public MongoTelemetryBuilder setStatementSanitizationEnabled(
-      boolean statementSanitizationEnabled) {
-    return setQuerySanitizationEnabled(statementSanitizationEnabled);
   }
 
   /**

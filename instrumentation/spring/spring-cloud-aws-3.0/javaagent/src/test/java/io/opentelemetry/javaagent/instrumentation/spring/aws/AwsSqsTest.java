@@ -9,6 +9,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.HttpAttributes.HttpRequestMethodValues.POST;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
@@ -18,20 +19,19 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.awspring.cloud.sqs.operations.SqsTemplate;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.apache.pekko.http.scaladsl.Http;
 import org.assertj.core.api.AbstractStringAssert;
@@ -70,7 +70,6 @@ class AwsSqsTest {
     }
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void sqsListener() throws InterruptedException, ExecutionException, TimeoutException {
     String messageContent = "hello";
@@ -80,7 +79,7 @@ class AwsSqsTest {
 
     testing.runWithSpan("parent", () -> sqsTemplate.send("test-queue", messageContent));
 
-    String result = messageFuture.get(10, TimeUnit.SECONDS);
+    String result = messageFuture.get(10, SECONDS);
     assertThat(result).isEqualTo(messageContent);
 
     testing.waitAndAssertTraces(
@@ -95,15 +94,14 @@ class AwsSqsTest {
                             equalTo(RPC_SYSTEM, "aws-api"),
                             equalTo(RPC_METHOD, "GetQueueUrl"),
                             equalTo(RPC_SERVICE, "Sqs"),
-                            equalTo(
-                                HTTP_REQUEST_METHOD, HttpAttributes.HttpRequestMethodValues.POST),
+                            equalTo(HTTP_REQUEST_METHOD, POST),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
                             satisfies(
                                 URL_FULL,
-                                v ->
-                                    v.startsWith(
+                                val ->
+                                    val.startsWith(
                                         "http://localhost:" + AwsSqsTestApplication.sqsPort)),
                             satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class))),
                 span ->
@@ -114,20 +112,16 @@ class AwsSqsTest {
                             equalTo(RPC_SYSTEM, "aws-api"),
                             equalTo(RPC_METHOD, "SendMessage"),
                             equalTo(RPC_SERVICE, "Sqs"),
-                            equalTo(
-                                HTTP_REQUEST_METHOD, HttpAttributes.HttpRequestMethodValues.POST),
+                            equalTo(HTTP_REQUEST_METHOD, POST),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
                             satisfies(
                                 URL_FULL,
-                                v ->
-                                    v.startsWith(
+                                val ->
+                                    val.startsWith(
                                         "http://localhost:" + AwsSqsTestApplication.sqsPort)),
-                            equalTo(
-                                MESSAGING_SYSTEM,
-                                MessagingIncubatingAttributes.MessagingSystemIncubatingValues
-                                    .AWS_SQS),
+                            equalTo(MESSAGING_SYSTEM, AWS_SQS),
                             satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
                             equalTo(MESSAGING_OPERATION, "publish"),
                             equalTo(MESSAGING_DESTINATION_NAME, "test-queue"),
@@ -145,20 +139,16 @@ class AwsSqsTest {
                             equalTo(RPC_SYSTEM, "aws-api"),
                             equalTo(RPC_METHOD, "ReceiveMessage"),
                             equalTo(RPC_SERVICE, "Sqs"),
-                            equalTo(
-                                HTTP_REQUEST_METHOD, HttpAttributes.HttpRequestMethodValues.POST),
+                            equalTo(HTTP_REQUEST_METHOD, POST),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
                             satisfies(
                                 URL_FULL,
-                                v ->
-                                    v.startsWith(
+                                val ->
+                                    val.startsWith(
                                         "http://localhost:" + AwsSqsTestApplication.sqsPort)),
-                            equalTo(
-                                MESSAGING_SYSTEM,
-                                MessagingIncubatingAttributes.MessagingSystemIncubatingValues
-                                    .AWS_SQS),
+                            equalTo(MESSAGING_SYSTEM, AWS_SQS),
                             satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
                             equalTo(MESSAGING_OPERATION, "process"),
                             equalTo(MESSAGING_DESTINATION_NAME, "test-queue")),
@@ -172,15 +162,14 @@ class AwsSqsTest {
                             equalTo(RPC_SYSTEM, "aws-api"),
                             equalTo(RPC_METHOD, "DeleteMessageBatch"),
                             equalTo(RPC_SERVICE, "Sqs"),
-                            equalTo(
-                                HTTP_REQUEST_METHOD, HttpAttributes.HttpRequestMethodValues.POST),
+                            equalTo(HTTP_REQUEST_METHOD, POST),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
                             satisfies(
                                 URL_FULL,
-                                v ->
-                                    v.startsWith(
+                                val ->
+                                    val.startsWith(
                                         "http://localhost:" + AwsSqsTestApplication.sqsPort)),
                             equalTo(
                                 AWS_SQS_QUEUE_URL,

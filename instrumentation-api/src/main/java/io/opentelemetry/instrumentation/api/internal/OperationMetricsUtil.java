@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import static java.util.logging.Level.WARNING;
+
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
@@ -14,7 +16,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -42,7 +43,7 @@ public class OperationMetricsUtil {
         factory,
         (s, histogramBuilder) ->
             logger.log(
-                Level.WARNING,
+                WARNING,
                 "Disabling {0} metrics because {1} does not implement {2}. This prevents using "
                     + "metrics advice, which could result in {0} metrics having high cardinality "
                     + "attributes.",

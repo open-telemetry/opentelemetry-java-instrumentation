@@ -209,7 +209,7 @@ class ApacheHttpClientTest {
 
   abstract static class AbstractTest extends AbstractApacheHttpClientTest<ClassicHttpRequest> {
     @Override
-    final HttpResponse executeRequest(ClassicHttpRequest request, URI uri) throws Exception {
+    HttpResponse executeRequest(ClassicHttpRequest request, URI uri) throws Exception {
       ClassicHttpResponse httpResponse = doExecuteRequest(request, uri);
       httpResponse.close();
       return httpResponse;

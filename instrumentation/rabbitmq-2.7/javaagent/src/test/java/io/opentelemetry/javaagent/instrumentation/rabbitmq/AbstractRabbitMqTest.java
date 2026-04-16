@@ -61,7 +61,7 @@ abstract class AbstractRabbitMqTest {
 
   @AfterAll
   static void stopRabbit() {
-    if (null != rabbitMqContainer) {
+    if (rabbitMqContainer != null) {
       rabbitMqContainer.stop();
     }
   }

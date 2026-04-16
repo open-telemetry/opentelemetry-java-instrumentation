@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_57;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -18,7 +17,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class OpenTelemetryInstrumentation implements TypeInstrumentation {
+class OpenTelemetryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -28,25 +27,20 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isStatic())
-            .and(named("isSet"))
-            .and(takesArguments(0))
-            .and(returns(boolean.class)),
-        OpenTelemetryInstrumentation.class.getName() + "$IsSetAdvice");
+        named("isSet").and(isStatic()).and(takesArguments(0)).and(returns(boolean.class)),
+        getClass().getName() + "$IsSetAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
+        named("getOrNoop")
             .and(isStatic())
-            .and(named("getOrNoop"))
             .and(takesArguments(0))
             .and(returns(named("application.io.opentelemetry.api.OpenTelemetry"))),
-        OpenTelemetryInstrumentation.class.getName() + "$GetOrNoopAdvice");
+        getClass().getName() + "$GetOrNoopAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class IsSetAdvice {
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(inline = false)
     public static boolean methodExit() {
       return true;
     }
@@ -55,7 +49,7 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetOrNoopAdvice {
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static application.io.opentelemetry.api.OpenTelemetry methodExit() {
       return application.io.opentelemetry.api.GlobalOpenTelemetry.get();
     }

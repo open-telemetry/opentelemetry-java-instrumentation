@@ -20,7 +20,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HttpRequestImplInstrumentation implements TypeInstrumentation {
+class HttpRequestImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -31,24 +31,24 @@ public class HttpRequestImplInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(2, String.class)).and(takesArgument(3, int.class)),
-        HttpRequestImplInstrumentation.class.getName() + "$Vertx30Advice");
+        getClass().getName() + "$Vertx30Advice");
     transformer.applyAdviceToMethod(
         isConstructor()
             .and(takesArgument(1, boolean.class))
             .and(takesArgument(3, String.class))
             .and(takesArgument(4, int.class)),
-        HttpRequestImplInstrumentation.class.getName() + "$Vertx34Advice");
+        getClass().getName() + "$Vertx34Advice");
     transformer.applyAdviceToMethod(
         isConstructor()
             .and(takesArgument(1, boolean.class))
             .and(takesArgument(4, String.class))
             .and(takesArgument(5, int.class)),
-        HttpRequestImplInstrumentation.class.getName() + "$Vertx37Advice");
+        getClass().getName() + "$Vertx37Advice");
   }
 
   @SuppressWarnings("unused")
   public static class Vertx30Advice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void attachRequestInfo(
         @Advice.This HttpClientRequest request,
         @Advice.Argument(0) HttpClientImpl client,
@@ -64,7 +64,7 @@ public class HttpRequestImplInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class Vertx34Advice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void attachRequestInfo(
         @Advice.This HttpClientRequest request,
         @Advice.Argument(1) boolean ssl,
@@ -76,7 +76,7 @@ public class HttpRequestImplInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class Vertx37Advice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void attachRequestInfo(
         @Advice.This HttpClientRequest request,
         @Advice.Argument(1) boolean ssl,

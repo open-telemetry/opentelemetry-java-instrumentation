@@ -14,7 +14,7 @@ import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.List;
 
-public final class PrettyPrintEqualToJsonStubMappingTransformer extends StubMappingTransformer {
+public class PrettyPrintEqualToJsonStubMappingTransformer extends StubMappingTransformer {
   @Override
   public String getName() {
     return "pretty-print-equal-to-json";

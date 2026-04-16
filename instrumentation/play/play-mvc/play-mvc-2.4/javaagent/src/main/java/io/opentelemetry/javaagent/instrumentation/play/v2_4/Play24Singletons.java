@@ -12,20 +12,21 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import javax.annotation.Nullable;
 import play.api.mvc.Request;
 import scala.Option;
 
-public final class Play24Singletons {
+public class Play24Singletons {
 
   private static final String SPAN_NAME = "play.request";
-  private static final Instrumenter<Void, Void> INSTRUMENTER =
+  private static final Instrumenter<Void, Void> instrumenter =
       Instrumenter.<Void, Void>builder(
               GlobalOpenTelemetry.get(), "io.opentelemetry.play-mvc-2.4", s -> SPAN_NAME)
           .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
           .buildInstrumenter();
 
   public static Instrumenter<Void, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static void updateSpan(Context context, Request<?> request) {
@@ -38,12 +39,11 @@ public final class Play24Singletons {
     HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, route);
   }
 
+  @Nullable
   private static String getRoute(Request<?> request) {
-    if (request != null) {
-      Option<String> pathOption = request.tags().get("ROUTE_PATTERN");
-      if (!pathOption.isEmpty()) {
-        return pathOption.get();
-      }
+    Option<String> pathOption = request.tags().get("ROUTE_PATTERN");
+    if (!pathOption.isEmpty()) {
+      return pathOption.get();
     }
     return null;
   }

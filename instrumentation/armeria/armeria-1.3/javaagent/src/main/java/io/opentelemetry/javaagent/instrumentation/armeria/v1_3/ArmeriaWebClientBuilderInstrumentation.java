@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.armeria.v1_3;
 
+import static io.opentelemetry.javaagent.instrumentation.armeria.v1_3.ArmeriaSingletons.clientDecorator;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -16,7 +17,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ArmeriaWebClientBuilderInstrumentation implements TypeInstrumentation {
+class ArmeriaWebClientBuilderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -33,9 +34,9 @@ public class ArmeriaWebClientBuilderInstrumentation implements TypeInstrumentati
   @SuppressWarnings("unused")
   public static class BuildAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(inline = false)
     public static void build(@Advice.This WebClientBuilder builder) {
-      builder.decorator(ArmeriaSingletons.CLIENT_DECORATOR);
+      builder.decorator(clientDecorator());
     }
   }
 }

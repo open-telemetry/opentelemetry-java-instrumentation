@@ -18,6 +18,8 @@ dependencies {
   library("log4j:log4j:1.2.4")
 
   compileOnly(project(":javaagent-bootstrap"))
+
+  testInstrumentation(project(":instrumentation:log4j:log4j-appender-2.17:javaagent"))
 }
 
 configurations {
@@ -35,5 +37,4 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-code-attributes=true")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-event-name=true")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

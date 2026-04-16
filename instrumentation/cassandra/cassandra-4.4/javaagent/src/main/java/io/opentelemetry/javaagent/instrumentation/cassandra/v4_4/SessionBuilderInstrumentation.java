@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_4;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -18,7 +17,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class SessionBuilderInstrumentation implements TypeInstrumentation {
+class SessionBuilderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -30,8 +29,8 @@ public class SessionBuilderInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(named("buildAsync")).and(takesArguments(0)),
-        SessionBuilderInstrumentation.class.getName() + "$BuildAdvice");
+        isPublic().and(named("buildAsync")).and(takesArguments(0)),
+        getClass().getName() + "$BuildAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -46,7 +45,7 @@ public class SessionBuilderInstrumentation implements TypeInstrumentation {
      *     replaced with new session
      */
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static CompletionStage<?> injectTracingSession(@Advice.Return CompletionStage<?> stage) {
       return stage.thenApply(new CompletionStageFunction());
     }

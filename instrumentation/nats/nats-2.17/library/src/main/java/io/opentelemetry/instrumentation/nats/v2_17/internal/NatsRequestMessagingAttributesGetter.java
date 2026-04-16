@@ -5,22 +5,21 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17.internal;
 
+import static java.util.Collections.emptyList;
+
 import io.nats.client.impl.Headers;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum NatsRequestMessagingAttributesGetter
+final class NatsRequestMessagingAttributesGetter
     implements MessagingAttributesGetter<NatsRequest, Object> {
-  INSTANCE;
 
   @Override
   public String getSystem(NatsRequest request) {
     return "nats";
   }
 
-  @Nullable
   @Override
   public String getDestination(NatsRequest request) {
     return request.getSubject();
@@ -83,9 +82,9 @@ enum NatsRequestMessagingAttributesGetter
   public List<String> getMessageHeader(NatsRequest request, String name) {
     Headers headers = request.getHeaders();
     if (headers == null) {
-      return Collections.emptyList();
+      return emptyList();
     }
     List<String> result = headers.get(name);
-    return result == null ? Collections.emptyList() : result;
+    return result == null ? emptyList() : result;
   }
 }

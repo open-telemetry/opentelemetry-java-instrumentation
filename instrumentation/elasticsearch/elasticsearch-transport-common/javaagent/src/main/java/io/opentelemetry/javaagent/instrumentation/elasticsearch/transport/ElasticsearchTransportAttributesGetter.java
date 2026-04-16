@@ -6,16 +6,16 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 import org.elasticsearch.action.ActionResponse;
 
-final class ElasticsearchTransportAttributesGetter
+public class ElasticsearchTransportAttributesGetter
     implements DbClientAttributesGetter<ElasticTransportRequest, ActionResponse> {
 
   @Override
   public String getDbSystemName(ElasticTransportRequest request) {
-    return DbIncubatingAttributes.DbSystemNameIncubatingValues.ELASTICSEARCH;
+    return DbSystemNameIncubatingValues.ELASTICSEARCH;
   }
 
   @Override

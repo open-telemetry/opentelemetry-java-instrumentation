@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.netty.common.v4_0.internal;
 
 import io.netty.channel.ChannelHandler;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -13,14 +14,16 @@ import io.netty.channel.ChannelHandler;
  */
 public final class HttpSchemeUtil {
 
+  @Nullable
   private static final Class<? extends ChannelHandler> sslHandlerClass = getSslHandlerClass();
 
+  @Nullable
   private static Class<? extends ChannelHandler> getSslHandlerClass() {
     try {
       return Class.forName(
               "io.netty.handler.ssl.SslHandler", false, HttpSchemeUtil.class.getClassLoader())
           .asSubclass(ChannelHandler.class);
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       return null;
     }
   }

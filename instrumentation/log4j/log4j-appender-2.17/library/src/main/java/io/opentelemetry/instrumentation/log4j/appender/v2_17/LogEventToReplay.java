@@ -5,7 +5,8 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
-import java.util.Collections;
+import static java.util.Collections.emptyMap;
+
 import java.util.Map;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.Level;
@@ -76,7 +77,7 @@ class LogEventToReplay implements LogEvent {
   @SuppressWarnings("deprecation") // Override
   @Override
   public Map<String, String> getContextMap() {
-    return Collections.emptyMap();
+    return emptyMap();
   }
 
   @Override

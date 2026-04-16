@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.reactive.client;
 
+import static java.util.Collections.emptySet;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
@@ -21,7 +23,6 @@ import io.vertx.reactivex.ext.web.client.HttpRequest;
 import io.vertx.reactivex.ext.web.client.HttpResponse;
 import io.vertx.reactivex.ext.web.client.WebClient;
 import java.net.URI;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -84,7 +85,7 @@ class VertxRxWebClientTest extends AbstractHttpClientTest<HttpRequest<Buffer>> {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
       case "http://192.0.2.1/": // non routable address
-        return Collections.emptySet();
+        return emptySet();
       default:
         return HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES;
     }

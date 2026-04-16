@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.activejhttp.ActivejHttpServerSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -29,7 +28,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
+class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -44,10 +43,9 @@ public class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("serve"))
+        named("serve")
             .and(takesArguments(1).and(takesArgument(0, named("io.activej.http.HttpRequest")))),
-        this.getClass().getName() + "$ServeAdvice");
+        getClass().getName() + "$ServeAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -74,9 +72,9 @@ public class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
         return new AdviceScope(context, context.makeCurrent(), request);
       }
 
-      public Promise<HttpResponse> end(Promise<HttpResponse> responsePromise, Throwable throwable) {
+      public Promise<HttpResponse> end(
+          Promise<HttpResponse> responsePromise, @Nullable Throwable throwable) {
         scope.close();
-        Promise<HttpResponse> returnValue = responsePromise;
         if (throwable != null) {
           instrumenter().end(context, httpRequest, null, throwable);
           return responsePromise;
@@ -87,13 +85,13 @@ public class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope methodEnter(@Advice.Argument(0) HttpRequest request) {
       return AdviceScope.start(request);
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Promise<HttpResponse> methodExit(
         @Advice.Return Promise<HttpResponse> responsePromise,
         @Advice.Thrown Throwable throwable,

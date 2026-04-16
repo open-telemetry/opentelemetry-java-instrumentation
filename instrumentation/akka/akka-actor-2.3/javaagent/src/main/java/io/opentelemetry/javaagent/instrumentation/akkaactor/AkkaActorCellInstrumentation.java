@@ -18,7 +18,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AkkaActorCellInstrumentation implements TypeInstrumentation {
+class AkkaActorCellInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -29,22 +29,22 @@ public class AkkaActorCellInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("invoke").and(takesArgument(0, named("akka.dispatch.Envelope"))),
-        AkkaActorCellInstrumentation.class.getName() + "$InvokeAdvice");
+        getClass().getName() + "$InvokeAdvice");
     transformer.applyAdviceToMethod(
         named("systemInvoke").and(takesArgument(0, named("akka.dispatch.sysmsg.SystemMessage"))),
-        AkkaActorCellInstrumentation.class.getName() + "$SystemInvokeAdvice");
+        getClass().getName() + "$SystemInvokeAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class InvokeAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope enter(@Advice.Argument(0) Envelope envelope) {
       return TaskAdviceHelper.makePropagatedContextCurrent(
           VirtualFields.ENVELOPE_PROPAGATED_CONTEXT, envelope);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();
@@ -55,13 +55,13 @@ public class AkkaActorCellInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SystemInvokeAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope enter(@Advice.Argument(0) SystemMessage systemMessage) {
       return TaskAdviceHelper.makePropagatedContextCurrent(
           VirtualFields.SYSTEM_MESSAGE_PROPAGATED_CONTEXT, systemMessage);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();

@@ -6,14 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
 import static io.opentelemetry.instrumentation.test.utils.GcUtils.awaitGc;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -23,13 +23,6 @@ import org.apache.commons.lang3.SystemUtils;
 import org.junit.jupiter.api.Test;
 
 class ResourceInjectionTest {
-
-  private static String readLine(URL url) throws Exception {
-    try (BufferedReader reader =
-        new BufferedReader(new InputStreamReader(url.openStream(), StandardCharsets.UTF_8))) {
-      return reader.readLine().trim();
-    }
-  }
 
   @Test
   @SuppressWarnings("UnnecessaryAsync")
@@ -43,18 +36,18 @@ class ResourceInjectionTest {
     assertThat(resourceUrls.hasMoreElements()).isFalse();
     resourceUrls = null;
 
-    URLClassLoader notInjectedLoader = new URLClassLoader(urls, null);
+    try (URLClassLoader notInjectedLoader = new URLClassLoader(urls, null)) {
+      // this triggers resource injection
+      emptyLoader.get().loadClass(SystemUtils.class.getName());
 
-    // this triggers resource injection
-    emptyLoader.get().loadClass(SystemUtils.class.getName());
+      List<URL> resourceList = Collections.list(emptyLoader.get().getResources(resourceName));
 
-    List<URL> resourceList = Collections.list(emptyLoader.get().getResources(resourceName));
+      assertThat(resourceList).hasSize(2);
+      assertThat(readLine(resourceList.get(0))).isEqualTo("Hello world!");
+      assertThat(readLine(resourceList.get(1))).isEqualTo("Hello there");
 
-    assertThat(resourceList.size()).isEqualTo(2);
-    assertThat(readLine(resourceList.get(0))).isEqualTo("Hello world!");
-    assertThat(readLine(resourceList.get(1))).isEqualTo("Hello there");
-
-    assertThat(notInjectedLoader.getResources(resourceName).hasMoreElements()).isFalse();
+      assertThat(notInjectedLoader.getResources(resourceName).hasMoreElements()).isFalse();
+    }
 
     // references to emptyloader are gone
     emptyLoader.get().close(); // cleanup
@@ -64,5 +57,12 @@ class ResourceInjectionTest {
     awaitGc(ref, Duration.ofSeconds(10));
 
     assertThat(ref.get()).isNull();
+  }
+
+  private static String readLine(URL url) throws Exception {
+    try (BufferedReader reader =
+        new BufferedReader(new InputStreamReader(url.openStream(), UTF_8))) {
+      return reader.readLine().trim();
+    }
   }
 }

@@ -5,12 +5,13 @@
 
 package io.opentelemetry.instrumentation.docs.parsers;
 
+import static java.util.Collections.emptySet;
+
 import io.opentelemetry.instrumentation.docs.internal.DependencyInfo;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -50,7 +51,7 @@ public class GradleParser {
   public static DependencyInfo parseGradleFile(
       String gradleFileContents, InstrumentationType type) {
     if (type.equals(InstrumentationType.LIBRARY)) {
-      return new DependencyInfo(Collections.emptySet(), null);
+      return new DependencyInfo(emptySet(), null);
     }
 
     Map<String, String> variables = extractVariables(gradleFileContents);
@@ -202,6 +203,10 @@ public class GradleParser {
     if (type.get() == InstrumentationType.LIBRARY) {
       module.setHasStandaloneLibrary(true);
       return;
+    }
+
+    if (type.get() == InstrumentationType.JAVAAGENT) {
+      module.setHasJavaAgent(true);
     }
 
     DependencyInfo dependencyInfo = parseGradleFile(fileContents, type.get());

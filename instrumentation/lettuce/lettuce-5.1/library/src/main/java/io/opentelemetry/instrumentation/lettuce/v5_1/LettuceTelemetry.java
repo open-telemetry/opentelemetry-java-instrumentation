@@ -7,16 +7,16 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import io.lettuce.core.tracing.Tracing;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.api.trace.TracerBuilder;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
-import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
-import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
 /** Entrypoint for instrumenting Lettuce or clients. */
 public final class LettuceTelemetry {
-
   public static final String INSTRUMENTATION_NAME = "io.opentelemetry.lettuce-5.1";
+
+  private final Instrumenter<LettuceRequest, LettuceResponse> instrumenter;
+  private final RedisCommandSanitizer sanitizer;
+  private final boolean encodingEventsEnabled;
 
   /** Returns a new {@link LettuceTelemetry} configured with the given {@link OpenTelemetry}. */
   public static LettuceTelemetry create(OpenTelemetry openTelemetry) {
@@ -30,24 +30,12 @@ public final class LettuceTelemetry {
     return new LettuceTelemetryBuilder(openTelemetry);
   }
 
-  private final Tracer tracer;
-  private final RedisCommandSanitizer sanitizer;
-  private final OperationListener metrics;
-  private final boolean encodingEventsEnabled;
-
   LettuceTelemetry(
-      OpenTelemetry openTelemetry,
+      Instrumenter<LettuceRequest, LettuceResponse> instrumenter,
       boolean querySanitizationEnabled,
-      boolean encodingEventsEnabled,
-      OperationListener metrics) {
-    this.metrics = metrics;
-    TracerBuilder tracerBuilder = openTelemetry.tracerBuilder(INSTRUMENTATION_NAME);
-    String version = EmbeddedInstrumentationProperties.findVersion(INSTRUMENTATION_NAME);
-    if (version != null) {
-      tracerBuilder.setInstrumentationVersion(version);
-    }
-    tracer = tracerBuilder.build();
-    sanitizer = RedisCommandSanitizer.create(querySanitizationEnabled);
+      boolean encodingEventsEnabled) {
+    this.instrumenter = instrumenter;
+    this.sanitizer = RedisCommandSanitizer.create(querySanitizationEnabled);
     this.encodingEventsEnabled = encodingEventsEnabled;
   }
 
@@ -56,17 +44,6 @@ public final class LettuceTelemetry {
    * io.lettuce.core.resource.ClientResources.Builder#tracing(Tracing)}.
    */
   public Tracing createTracing() {
-    return new OpenTelemetryTracing(tracer, sanitizer, metrics, encodingEventsEnabled);
-  }
-
-  /**
-   * Returns a new {@link Tracing} which can be used with methods like {@link
-   * io.lettuce.core.resource.ClientResources.Builder#tracing(Tracing)}.
-   *
-   * @deprecated Use {@link #createTracing()} instead.
-   */
-  @Deprecated
-  public Tracing newTracing() {
-    return createTracing();
+    return new OpenTelemetryTracing(instrumenter, sanitizer, encodingEventsEnabled);
   }
 }

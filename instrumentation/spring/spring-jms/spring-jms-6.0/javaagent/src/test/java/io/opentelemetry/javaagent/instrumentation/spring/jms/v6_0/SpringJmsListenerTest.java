@@ -17,6 +17,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.sdk.trace.data.LinkData;
@@ -24,7 +25,6 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import jakarta.jms.ConnectionFactory;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.api.AbstractStringAssert;
@@ -112,7 +112,7 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
     // then
     CompletableFuture<String> receivedMessage =
         applicationContext.getBean("receivedMessage", CompletableFuture.class);
-    assertThat(receivedMessage.get(10, TimeUnit.SECONDS)).isEqualTo(message);
+    assertThat(receivedMessage.get(10, SECONDS)).isEqualTo(message);
 
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(INTERNAL, CONSUMER),

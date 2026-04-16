@@ -26,7 +26,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
-public class ListenerConsumerInstrumentation implements TypeInstrumentation {
+class ListenerConsumerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -36,25 +36,24 @@ public class ListenerConsumerInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("run"), this.getClass().getName() + "$RunLoopAdvice");
-    transformer.applyAdviceToMethod(
-        isConstructor(), this.getClass().getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(named("run"), getClass().getName() + "$RunLoopAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
         named("invokeBatchOnMessageWithRecordsOrList")
             .and(takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
-        this.getClass().getName() + "$InvokeBatchAdvice");
+        getClass().getName() + "$InvokeBatchAdvice");
   }
 
   // this advice suppresses the CONSUMER spans created by the kafka-clients instrumentation
   @SuppressWarnings("unused")
   public static class RunLoopAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static boolean onEnter() {
       return KafkaClientsConsumerProcessTracing.setEnabled(false);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter boolean previousValue) {
       KafkaClientsConsumerProcessTracing.setEnabled(previousValue);
     }
@@ -64,14 +63,14 @@ public class ListenerConsumerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static boolean onEnter() {
-      return SpringSchedulingTaskTracing.setEnabled(false);
+      return SpringSchedulingTaskTracing.setWrappingEnabled(false);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter boolean previousValue) {
-      SpringSchedulingTaskTracing.setEnabled(previousValue);
+      SpringSchedulingTaskTracing.setWrappingEnabled(previousValue);
     }
   }
 
@@ -111,7 +110,7 @@ public class ListenerConsumerInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static AdviceScope onEnter(
         @Advice.Argument(0) ConsumerRecords<?, ?> records,
@@ -119,7 +118,7 @@ public class ListenerConsumerInstrumentation implements TypeInstrumentation {
       return AdviceScope.enter(records, consumer);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

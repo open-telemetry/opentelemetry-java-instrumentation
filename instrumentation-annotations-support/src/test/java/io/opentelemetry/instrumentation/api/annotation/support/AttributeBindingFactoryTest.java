@@ -13,12 +13,12 @@ import static io.opentelemetry.api.common.AttributeKey.longArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static java.util.Arrays.asList;
 import static org.mockito.Mockito.verify;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -99,7 +99,7 @@ class AttributeBindingFactoryTest {
   @Test
   void createAttributeBindingForStringArray() {
     String[] value = {"x", "y", "z", null};
-    List<String> expected = Arrays.asList(value);
+    List<String> expected = asList(value);
     AttributeBindingFactory.createBinding("key", String[].class).apply(setter, value);
     verify(setter).put(stringArrayKey("key"), expected);
   }
@@ -107,7 +107,7 @@ class AttributeBindingFactoryTest {
   @Test
   void createAttributeBindingForPrimitiveIntArray() {
     int[] value = {1, 2, 3};
-    List<Long> expected = Arrays.asList(1L, 2L, 3L);
+    List<Long> expected = asList(1L, 2L, 3L);
     AttributeBindingFactory.createBinding("key", int[].class).apply(setter, value);
     verify(setter).put(longArrayKey("key"), expected);
   }
@@ -115,7 +115,7 @@ class AttributeBindingFactoryTest {
   @Test
   void createAttributeBindingForIntegerArray() {
     Integer[] value = {1, 2, 3};
-    List<Long> expected = Arrays.asList(1L, 2L, 3L);
+    List<Long> expected = asList(1L, 2L, 3L);
     AttributeBindingFactory.createBinding("key", Integer[].class).apply(setter, value);
     verify(setter).put(longArrayKey("key"), expected);
   }
@@ -123,7 +123,7 @@ class AttributeBindingFactoryTest {
   @Test
   void createAttributeBindingForPrimitiveLongArray() {
     long[] value = {1, 2, 3};
-    List<Long> expected = Arrays.asList(1L, 2L, 3L);
+    List<Long> expected = asList(1L, 2L, 3L);
     AttributeBindingFactory.createBinding("key", long[].class).apply(setter, value);
     verify(setter).put(longArrayKey("key"), expected);
   }
@@ -131,7 +131,7 @@ class AttributeBindingFactoryTest {
   @Test
   void createAttributeBindingForLongArray() {
     Long[] value = {1L, 2L, 3L};
-    List<Long> expected = Arrays.asList(1L, 2L, 3L);
+    List<Long> expected = asList(1L, 2L, 3L);
     AttributeBindingFactory.createBinding("key", Long[].class).apply(setter, value);
     verify(setter).put(longArrayKey("key"), expected);
   }
@@ -139,7 +139,7 @@ class AttributeBindingFactoryTest {
   @Test
   void createAttributeBindingForPrimitiveFloatArray() {
     float[] value = {1f, 2f, 3f};
-    List<Double> expected = Arrays.asList(1.0, 2.0, 3.0);
+    List<Double> expected = asList(1.0, 2.0, 3.0);
     AttributeBindingFactory.createBinding("key", float[].class).apply(setter, value);
     verify(setter).put(doubleArrayKey("key"), expected);
   }
@@ -147,7 +147,7 @@ class AttributeBindingFactoryTest {
   @Test
   void createAttributeBindingForFloatArray() {
     Float[] value = {1f, 2f, 3f};
-    List<Double> expected = Arrays.asList(1.0, 2.0, 3.0);
+    List<Double> expected = asList(1.0, 2.0, 3.0);
     AttributeBindingFactory.createBinding("key", Float[].class).apply(setter, value);
     verify(setter).put(doubleArrayKey("key"), expected);
   }
@@ -155,7 +155,7 @@ class AttributeBindingFactoryTest {
   @Test
   void createAttributeBindingForPrimitiveDoubleArray() {
     double[] value = {1f, 2f, 3f};
-    List<Double> expected = Arrays.asList(1.0, 2.0, 3.0);
+    List<Double> expected = asList(1.0, 2.0, 3.0);
     AttributeBindingFactory.createBinding("key", double[].class).apply(setter, value);
     verify(setter).put(doubleArrayKey("key"), expected);
   }
@@ -163,7 +163,7 @@ class AttributeBindingFactoryTest {
   @Test
   void createAttributeBindingForDoubleArray() {
     Double[] value = {1.0, 2.0, 3.0};
-    List<Double> expected = Arrays.asList(1.0, 2.0, 3.0);
+    List<Double> expected = asList(1.0, 2.0, 3.0);
     AttributeBindingFactory.createBinding("key", Double[].class).apply(setter, value);
     verify(setter).put(doubleArrayKey("key"), expected);
   }
@@ -171,7 +171,7 @@ class AttributeBindingFactoryTest {
   @Test
   void createAttributeBindingForPrimitiveBooleanArray() {
     boolean[] value = {true, false};
-    List<Boolean> expected = Arrays.asList(true, false);
+    List<Boolean> expected = asList(true, false);
     AttributeBindingFactory.createBinding("key", boolean[].class).apply(setter, value);
     verify(setter).put(booleanArrayKey("key"), expected);
   }
@@ -179,7 +179,7 @@ class AttributeBindingFactoryTest {
   @Test
   void createAttributeBindingForBooleanArray() {
     Boolean[] value = {true, false};
-    List<Boolean> expected = Arrays.asList(true, false);
+    List<Boolean> expected = asList(true, false);
     AttributeBindingFactory.createBinding("key", Boolean[].class).apply(setter, value);
     verify(setter).put(booleanArrayKey("key"), expected);
   }
@@ -193,7 +193,7 @@ class AttributeBindingFactoryTest {
 
   @Test
   void createDefaultAttributeBindingForArray() {
-    List<String> expected = Arrays.asList("TestClass{value = foo}", "TestClass{value = bar}", null);
+    List<String> expected = asList("TestClass{value = foo}", "TestClass{value = bar}", null);
     AttributeBindingFactory.createBinding("key", TestClass[].class)
         .apply(setter, new TestClass[] {new TestClass("foo"), new TestClass("bar"), null});
     verify(setter).put(stringArrayKey("key"), expected);
@@ -201,7 +201,7 @@ class AttributeBindingFactoryTest {
 
   @Test
   void createAttributeBindingForStringList() throws Exception {
-    List<String> value = Arrays.asList("x", "y", "z");
+    List<String> value = asList("x", "y", "z");
     Type type = TestFields.class.getDeclaredField("stringList").getGenericType();
     AttributeBindingFactory.createBinding("key", type).apply(setter, value);
     verify(setter).put(stringArrayKey("key"), value);
@@ -209,8 +209,8 @@ class AttributeBindingFactoryTest {
 
   @Test
   void createAttributeBindingForIntegerList() throws Exception {
-    List<Integer> value = Arrays.asList(1, 2, 3);
-    List<Long> expected = Arrays.asList(1L, 2L, 3L);
+    List<Integer> value = asList(1, 2, 3);
+    List<Long> expected = asList(1L, 2L, 3L);
     Type type = TestFields.class.getDeclaredField("integerList").getGenericType();
     AttributeBindingFactory.createBinding("key", type).apply(setter, value);
     verify(setter).put(longArrayKey("key"), expected);
@@ -218,7 +218,7 @@ class AttributeBindingFactoryTest {
 
   @Test
   void createAttributeBindingForLongList() throws Exception {
-    List<Long> value = Arrays.asList(1L, 2L, 3L);
+    List<Long> value = asList(1L, 2L, 3L);
     Type type = TestFields.class.getDeclaredField("longList").getGenericType();
     AttributeBindingFactory.createBinding("key", type).apply(setter, value);
     verify(setter).put(longArrayKey("key"), value);
@@ -226,8 +226,8 @@ class AttributeBindingFactoryTest {
 
   @Test
   void createAttributeBindingForFloatList() throws Exception {
-    List<Float> value = Arrays.asList(1.0f, 2.0f, 3.0f);
-    List<Double> expected = Arrays.asList(1.0, 2.0, 3.0);
+    List<Float> value = asList(1.0f, 2.0f, 3.0f);
+    List<Double> expected = asList(1.0, 2.0, 3.0);
     Type type = TestFields.class.getDeclaredField("floatList").getGenericType();
     AttributeBindingFactory.createBinding("key", type).apply(setter, value);
     verify(setter).put(doubleArrayKey("key"), expected);
@@ -235,8 +235,8 @@ class AttributeBindingFactoryTest {
 
   @Test
   void createAttributeBindingForDoubleList() throws Exception {
-    List<Double> value = Arrays.asList(1.0, 2.0, 3.0);
-    List<Double> expected = Arrays.asList(1.0, 2.0, 3.0);
+    List<Double> value = asList(1.0, 2.0, 3.0);
+    List<Double> expected = asList(1.0, 2.0, 3.0);
     Type type = TestFields.class.getDeclaredField("doubleList").getGenericType();
     AttributeBindingFactory.createBinding("key", type).apply(setter, value);
     verify(setter).put(doubleArrayKey("key"), expected);
@@ -244,7 +244,7 @@ class AttributeBindingFactoryTest {
 
   @Test
   void createAttributeBindingForBooleanList() throws Exception {
-    List<Boolean> value = Arrays.asList(true, false, null);
+    List<Boolean> value = asList(true, false, null);
     Type type = TestFields.class.getDeclaredField("booleanList").getGenericType();
     AttributeBindingFactory.createBinding("key", type).apply(setter, value);
     verify(setter).put(booleanArrayKey("key"), value);
@@ -252,8 +252,8 @@ class AttributeBindingFactoryTest {
 
   @Test
   void createAttributeBindingForGenericList() throws Exception {
-    List<TestClass> value = Arrays.asList(new TestClass("foo"), new TestClass("bar"));
-    List<String> expected = Arrays.asList("TestClass{value = foo}", "TestClass{value = bar}");
+    List<TestClass> value = asList(new TestClass("foo"), new TestClass("bar"));
+    List<String> expected = asList("TestClass{value = foo}", "TestClass{value = bar}");
     Type type = TestFields.class.getDeclaredField("otherList").getGenericType();
     AttributeBindingFactory.createBinding("key", type).apply(setter, value);
     verify(setter).put(stringArrayKey("key"), expected);
@@ -261,7 +261,7 @@ class AttributeBindingFactoryTest {
 
   @Test
   void createAttributeBindingForLongArrayList() throws Exception {
-    List<Long> value = Arrays.asList(1L, 2L, 3L);
+    List<Long> value = asList(1L, 2L, 3L);
     Type type = TestFields.class.getDeclaredField("longArrayList").getGenericType();
     AttributeBindingFactory.createBinding("key", type).apply(setter, value);
     verify(setter).put(longArrayKey("key"), value);

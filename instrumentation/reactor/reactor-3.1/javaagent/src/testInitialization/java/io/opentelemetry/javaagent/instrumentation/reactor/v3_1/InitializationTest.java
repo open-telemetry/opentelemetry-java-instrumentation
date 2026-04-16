@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor.v3_1;
 
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.annotations.WithSpan;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import reactor.core.Scannable;
 import reactor.core.publisher.Mono;
@@ -25,7 +25,7 @@ class InitializationTest {
     // implementation details.
     // TODO: This should just check actual context propagation instead of implementation
     // but couldn't figure out how.
-    assertThat(((Scannable) mono).parents().collect(Collectors.toList()))
+    assertThat(((Scannable) mono).parents().collect(toList()))
         .anySatisfy(
             op -> {
               assertThat(op.getClass().getSimpleName()).isEqualTo("MonoFlatMap");

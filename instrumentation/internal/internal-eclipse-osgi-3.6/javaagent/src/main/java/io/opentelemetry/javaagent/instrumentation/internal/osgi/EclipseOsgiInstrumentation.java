@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.osgi;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
@@ -37,8 +36,8 @@ class EclipseOsgiInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("isDynamicallyImported")).and(returns(boolean.class)),
-        this.getClass().getName() + "$IsDynamicallyImportedAdvice");
+        named("isDynamicallyImported").and(returns(boolean.class)),
+        getClass().getName() + "$IsDynamicallyImportedAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -46,7 +45,10 @@ class EclipseOsgiInstrumentation implements TypeInstrumentation {
 
     // "skipOn" is used to skip execution of the instrumented method when a ClassLoaderMatcher is
     // currently executing, since we will be returning false regardless in onExit below
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, suppress = Throwable.class)
+    @Advice.OnMethodEnter(
+        skipOn = Advice.OnNonDefaultValue.class,
+        suppress = Throwable.class,
+        inline = false)
     public static boolean onEnter(@Advice.Argument(0) String packageName) {
       // disable dynamic imports for everything except io.opentelemetry classes to allow dynamic
       // import of @WithSpan etc.
@@ -54,7 +56,7 @@ class EclipseOsgiInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static boolean onExit(
         @Advice.Return boolean originalResult, @Advice.Enter boolean inClassLoaderMatcher) {
       return inClassLoaderMatcher ? false : originalResult;

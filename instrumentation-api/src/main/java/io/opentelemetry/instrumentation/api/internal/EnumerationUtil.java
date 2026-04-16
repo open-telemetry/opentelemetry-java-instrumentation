@@ -5,7 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
-import java.util.Collections;
+import static java.util.Collections.emptyIterator;
+
 import java.util.Enumeration;
 import java.util.Iterator;
 import javax.annotation.Nullable;
@@ -18,7 +19,7 @@ public final class EnumerationUtil {
 
   public static <E> Iterator<E> asIterator(@Nullable Enumeration<E> enumeration) {
     if (enumeration == null) {
-      return Collections.emptyIterator();
+      return emptyIterator();
     }
     return new Iterator<E>() {
       @Override

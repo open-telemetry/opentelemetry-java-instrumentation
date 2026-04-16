@@ -19,6 +19,6 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
   jvmArgs(
-    "-Dotel.experimental.config.file=$projectDir/src/test/resources/declarative-config.yaml"
+    "-Dotel.config.file=$projectDir/src/test/resources/declarative-config.yaml"
   )
 }

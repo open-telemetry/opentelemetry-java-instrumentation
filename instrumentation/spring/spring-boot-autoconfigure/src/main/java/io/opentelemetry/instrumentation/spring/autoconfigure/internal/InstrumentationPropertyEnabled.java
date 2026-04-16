@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 import static java.util.Objects.requireNonNull;
 
 import java.util.Map;
-import java.util.Objects;
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.type.AnnotatedTypeMetadata;
@@ -22,7 +21,7 @@ public class InstrumentationPropertyEnabled implements Condition {
   @Override
   public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
     Map<String, Object> attributes =
-        Objects.requireNonNull(
+        requireNonNull(
             metadata.getAnnotationAttributes(ConditionalOnEnabledInstrumentation.class.getName()));
 
     return EarlyConfig.isInstrumentationEnabled(

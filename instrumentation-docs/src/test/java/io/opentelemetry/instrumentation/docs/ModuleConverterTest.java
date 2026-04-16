@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.docs;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -12,7 +13,6 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.parsers.ModuleParser;
 import io.opentelemetry.instrumentation.docs.utils.InstrumentationPath;
-import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -39,7 +39,7 @@ class ModuleConverterTest {
     when(path3.srcPath()).thenReturn("/root/javaagent/baz");
 
     List<InstrumentationModule> modules =
-        ModuleParser.convertToModules("/root", Arrays.asList(path1, path2, path3));
+        ModuleParser.convertToModules("/root", asList(path1, path2, path3));
 
     assertThat(modules.size()).isEqualTo(2);
     assertThat(modules)

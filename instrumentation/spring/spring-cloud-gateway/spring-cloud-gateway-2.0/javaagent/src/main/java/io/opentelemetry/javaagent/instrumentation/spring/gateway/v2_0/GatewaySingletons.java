@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.gateway.v2_0;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteGetter;
 import org.springframework.web.server.ServerWebExchange;
 
-public final class GatewaySingletons {
+public class GatewaySingletons {
 
   private GatewaySingletons() {}
 

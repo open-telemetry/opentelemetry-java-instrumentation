@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy;
 
+import static java.util.logging.Level.FINE;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -16,7 +17,6 @@ import io.opentelemetry.javaagent.bootstrap.ExceptionLogger;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -68,7 +68,7 @@ class ExceptionHandlerTest {
     // keep logger in static field to ensure that it won't get gcd before ExceptionLogger
     // class is initialized which would reset logger back to default configuration
     exceptionLogger = Logger.getLogger(ExceptionLogger.class.getName());
-    exceptionLogger.setLevel(Level.FINE);
+    exceptionLogger.setLevel(FINE);
     exceptionLogger.addHandler(testHandler);
   }
 
@@ -95,7 +95,7 @@ class ExceptionHandlerTest {
         .last()
         .satisfies(
             event -> {
-              assertThat(event.getLevel()).isEqualTo(Level.FINE);
+              assertThat(event.getLevel()).isEqualTo(FINE);
               assertThat(event.getMessage())
                   .startsWith("Failed to handle exception in instrumentation for");
             });

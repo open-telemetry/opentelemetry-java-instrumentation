@@ -25,7 +25,7 @@ public abstract class AbstractSpringWebInstrumentationAutoConfigurationTest {
           .withConfiguration(autoConfigurations());
 
   /**
-   * Tests that users create {@link RestTemplate} bean is instrumented.
+   * Tests that a user-created {@link RestTemplate} bean is instrumented.
    *
    * <pre>{@code
    * @Bean public RestTemplate restTemplate() {
@@ -45,15 +45,11 @@ public abstract class AbstractSpringWebInstrumentationAutoConfigurationTest {
                           "otelRestTemplateBeanPostProcessor", RestTemplateBeanPostProcessor.class))
                   .isNotNull();
 
-              assertThat(
-                      context.getBean(RestTemplate.class).getInterceptors().stream()
-                          .filter(
-                              rti ->
-                                  rti.getClass()
-                                      .getName()
-                                      .startsWith("io.opentelemetry.instrumentation"))
-                          .count())
-                  .isEqualTo(1);
+              assertThat(context.getBean(RestTemplate.class).getInterceptors())
+                  .filteredOn(
+                      rti ->
+                          rti.getClass().getName().startsWith("io.opentelemetry.instrumentation"))
+                  .hasSize(1);
             });
   }
 

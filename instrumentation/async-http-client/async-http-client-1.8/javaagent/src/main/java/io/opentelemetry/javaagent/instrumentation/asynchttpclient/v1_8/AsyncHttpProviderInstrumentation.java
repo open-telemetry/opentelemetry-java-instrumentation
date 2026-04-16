@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_8;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.common.VirtualFieldHelper.ASYNC_HANDLER_DATA;
 import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_8.AsyncHttpClientSingletons.instrumenter;
@@ -25,11 +26,16 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AsyncHttpProviderInstrumentation implements TypeInstrumentation {
+class AsyncHttpProviderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("com.ning.http.client.AsyncHttpProvider"));
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("com.ning.http.client.AsyncHttpProvider");
   }
 
   @Override
@@ -39,14 +45,14 @@ public class AsyncHttpProviderInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("com.ning.http.client.Request")))
             .and(takesArgument(1, named("com.ning.http.client.AsyncHandler")))
             .and(isPublic()),
-        this.getClass().getName() + "$ExecuteAdvice");
+        getClass().getName() + "$ExecuteAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ExecuteAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(
         @Advice.Argument(0) Request request, @Advice.Argument(1) AsyncHandler<?> handler) {
 
@@ -61,7 +67,7 @@ public class AsyncHttpProviderInstrumentation implements TypeInstrumentation {
       return context.makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();

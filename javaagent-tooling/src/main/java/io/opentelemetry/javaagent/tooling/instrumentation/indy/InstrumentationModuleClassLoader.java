@@ -5,6 +5,11 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
+import static java.util.stream.Collectors.toMap;
+
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -26,7 +31,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
@@ -61,7 +65,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   private static final ClassLoader BOOT_LOADER = new ClassLoader() {};
 
   private static final Map<String, BytecodeWithUrl> ALWAYS_INJECTED_CLASSES =
-      Collections.singletonMap(
+      singletonMap(
           LookupExposer.class.getName(), BytecodeWithUrl.create(LookupExposer.class).cached());
   private static final ProtectionDomain PROTECTION_DOMAIN = getProtectionDomain();
   private static final MethodHandle FIND_PACKAGE_METHOD = getFindPackageMethod();
@@ -147,7 +151,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     Map<String, BytecodeWithUrl> classesToInject =
         getClassesToInject(module).stream()
             .collect(
-                Collectors.toMap(
+                toMap(
                     className -> className,
                     className -> BytecodeWithUrl.create(className, agentOrExtensionCl)));
     installInjectedClasses(classesToInject);
@@ -198,8 +202,6 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     return adviceNames;
   }
 
-  public static final Map<String, byte[]> bytecodeOverride = new ConcurrentHashMap<>();
-
   @Override
   public Class<?> loadClass(String name) throws ClassNotFoundException {
     // We explicitly override loadClass from ClassLoader to ensure
@@ -219,10 +221,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
       if (result == null) {
         BytecodeWithUrl injected = getInjectedClass(name);
         if (injected != null) {
-          byte[] bytecode =
-              bytecodeOverride.get(name) != null
-                  ? bytecodeOverride.get(name)
-                  : injected.getBytecode();
+          byte[] bytecode = injected.getBytecode();
           if (System.getSecurityManager() == null) {
             result = defineClassWithPackage(name, bytecode);
           } else {
@@ -301,8 +300,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
       return super.getResources(resourceName);
     }
     URL resource = getResource(resourceName);
-    List<URL> result =
-        resource != null ? Collections.singletonList(resource) : Collections.emptyList();
+    List<URL> result = resource != null ? singletonList(resource) : emptyList();
     return Collections.enumeration(result);
   }
 
@@ -401,10 +399,10 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
       // In Java 8 getDefinedPackage does not exist (HotSpot) or is not accessible (OpenJ9)
       try {
         return lookup.findVirtual(ClassLoader.class, "getPackage", methodType);
-      } catch (NoSuchMethodException ex) {
-        throw new IllegalStateException("expected method to always exist!", ex);
-      } catch (IllegalAccessException ex2) {
-        throw new IllegalStateException("Method should be accessible from here", ex2);
+      } catch (NoSuchMethodException f) {
+        throw new IllegalStateException("expected method to always exist!", f);
+      } catch (IllegalAccessException f) {
+        throw new IllegalStateException("Method should be accessible from here", f);
       }
     }
   }

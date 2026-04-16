@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
@@ -33,7 +34,6 @@ import jakarta.jms.Session;
 import jakarta.jms.TextMessage;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.activemq.artemis.jms.client.ActiveMQDestination;
@@ -129,7 +129,7 @@ abstract class AbstractJms3Test {
     testing.runWithSpan("parent", () -> producer.send(destination, sentMessage));
 
     // then
-    TextMessage receivedMessage = receivedMessageFuture.get(10, TimeUnit.SECONDS);
+    TextMessage receivedMessage = receivedMessageFuture.get(10, SECONDS);
     assertThat(receivedMessage.getText()).isEqualTo(sentMessage.getText());
 
     String actualDestinationName = ((ActiveMQDestination) destination).getName();
@@ -209,7 +209,7 @@ abstract class AbstractJms3Test {
     testing.runWithSpan("parent", () -> producer.send(sentMessage));
 
     // then
-    TextMessage receivedMessage = receivedMessageFuture.get(10, TimeUnit.SECONDS);
+    TextMessage receivedMessage = receivedMessageFuture.get(10, SECONDS);
     assertThat(receivedMessage.getText()).isEqualTo(sentMessage.getText());
 
     String actualDestinationName = ((ActiveMQDestination) destination).getName();

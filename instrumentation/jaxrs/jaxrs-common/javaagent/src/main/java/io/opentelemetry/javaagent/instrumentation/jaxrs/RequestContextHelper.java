@@ -12,8 +12,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import javax.annotation.Nullable;
 
-public final class RequestContextHelper {
+public class RequestContextHelper {
+  @Nullable
   public static <T extends HandlerData> Context createOrUpdateAbortSpan(
       Instrumenter<T, Void> instrumenter, T handlerData) {
 
@@ -24,7 +26,7 @@ public final class RequestContextHelper {
     HttpServerRoute.update(
         parentContext,
         HttpServerRouteSource.CONTROLLER,
-        JaxrsServerSpanNaming.SERVER_SPAN_NAME,
+        JaxrsServerSpanNaming.serverSpanName(),
         handlerData);
 
     if (currentSpan != null && currentSpan != serverSpan) {

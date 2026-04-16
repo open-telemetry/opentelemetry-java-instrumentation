@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.mongoasync.v3_3;
 
+import static io.opentelemetry.javaagent.instrumentation.mongoasync.v3_3.MongoInstrumentationSingletons.tracingListener;
 import static net.bytebuddy.matcher.ElementMatchers.declaresField;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -39,14 +39,14 @@ final class MongoClientSettingsBuildersInstrumentation implements TypeInstrument
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(named("build")).and(takesArguments(0)),
-        this.getClass().getName() + "$BuildAdvice");
+        isPublic().and(named("build")).and(takesArguments(0)),
+        getClass().getName() + "$BuildAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class BuildAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void injectTraceListener(
         @Advice.This MongoClientSettings.Builder builder,
         @Advice.FieldValue("commandListeners") List<CommandListener> commandListeners) {
@@ -55,7 +55,7 @@ final class MongoClientSettingsBuildersInstrumentation implements TypeInstrument
           return;
         }
       }
-      builder.addCommandListener(MongoInstrumentationSingletons.LISTENER);
+      builder.addCommandListener(tracingListener());
     }
   }
 }

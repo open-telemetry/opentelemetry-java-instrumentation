@@ -28,8 +28,8 @@ class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<String>> 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  static RestTemplate restTemplate = buildClient(false);
-  static RestTemplate restTemplateWithReadTimeout = buildClient(true);
+  static final RestTemplate restTemplate = buildClient(false);
+  static final RestTemplate restTemplateWithReadTimeout = buildClient(true);
 
   private static RestTemplate buildClient(boolean readTimeout) {
     SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
@@ -63,8 +63,8 @@ class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<String>> 
           .exchange(uri, HttpMethod.valueOf(method), request, String.class)
           .getStatusCode()
           .value();
-    } catch (ResourceAccessException exception) {
-      throw (Exception) exception.getCause();
+    } catch (ResourceAccessException e) {
+      throw (Exception) e.getCause();
     }
   }
 
@@ -88,8 +88,8 @@ class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<String>> 
             httpClientResult.complete(response.getStatusCode().value());
             return null;
           });
-    } catch (ResourceAccessException exception) {
-      httpClientResult.complete(exception.getCause());
+    } catch (ResourceAccessException e) {
+      httpClientResult.complete(e.getCause());
     }
   }
 

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v6_0;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -16,7 +17,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -83,7 +83,7 @@ abstract class AbstractSpringJmsListenerTest {
     // then
     CompletableFuture<String> receivedMessage =
         applicationContext.getBean("receivedMessage", CompletableFuture.class);
-    assertThat(receivedMessage.get(10, TimeUnit.SECONDS)).isEqualTo(message);
+    assertThat(receivedMessage.get(10, SECONDS)).isEqualTo(message);
 
     assertSpringJmsListener();
   }

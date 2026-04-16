@@ -25,6 +25,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
 import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
@@ -43,7 +44,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Assumptions;
@@ -429,16 +429,10 @@ public abstract class AbstractSpringWebfluxTest {
               satisfies(
                   EXCEPTION_TYPE,
                   val ->
-                      val.satisfiesAnyOf(
-                          v ->
-                              assertThat(v)
-                                  .isEqualTo(
-                                      "org.springframework.web.server.ResponseStatusException"),
+                      val.isIn(
+                          "org.springframework.web.server.ResponseStatusException",
                           // Changed in spring 7+
-                          v ->
-                              assertThat(v)
-                                  .isEqualTo(
-                                      "org.springframework.web.reactive.resource.NoResourceFoundException"))),
+                          "org.springframework.web.reactive.resource.NoResourceFoundException")),
               satisfies(EXCEPTION_MESSAGE, val -> val.contains("404")),
               satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class)));
     }
@@ -627,7 +621,7 @@ public abstract class AbstractSpringWebfluxTest {
     List<AggregatedHttpResponse> responses =
         IntStream.rangeClosed(0, requestsCount - 1)
             .mapToObj(n -> client.get(parameter.urlPath).aggregate().join())
-            .collect(Collectors.toList());
+            .collect(toList());
 
     assertThat(responses)
         .extracting(AggregatedHttpResponse::status)
@@ -707,8 +701,8 @@ public abstract class AbstractSpringWebfluxTest {
             .build();
     try {
       client.get("/slow").aggregate().get();
-    } catch (ExecutionException ignore) {
-      // ignore
+    } catch (ExecutionException ignored) {
+      // this is expected when cancellation occurs
     }
 
     testing.waitAndAssertTraces(

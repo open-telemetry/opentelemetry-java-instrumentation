@@ -95,9 +95,8 @@ public class IndyModuleRegistry {
    * modules from the same module group (see {@link #getModuleGroup(InstrumentationModule)}) will
    * not be installed in this class loader.
    */
-  public static InstrumentationModuleClassLoader
-      createInstrumentationClassLoaderWithoutRegistration(
-          InstrumentationModule module, ClassLoader instrumentedClassLoader) {
+  public static InstrumentationModuleClassLoader createInstrumentationClassLoaderForMuzzle(
+      InstrumentationModule module, ClassLoader instrumentedClassLoader) {
     // TODO: remove this method and replace usages with a custom TypePool implementation instead
     ClassLoader agentOrExtensionCl = module.getClass().getClassLoader();
     InstrumentationModuleClassLoader cl =
@@ -108,9 +107,6 @@ public class IndyModuleRegistry {
 
   public static AgentBuilder.Identified.Extendable initializeModuleLoaderOnMatch(
       InstrumentationModule module, AgentBuilder.Identified.Extendable agentBuilder) {
-    if (!module.isIndyModule()) {
-      throw new IllegalArgumentException("Provided module is not an indy module!");
-    }
     String moduleName = module.getClass().getName();
     InstrumentationModule existingRegistration = modulesByClassName.putIfAbsent(moduleName, module);
     if (existingRegistration != null && existingRegistration != module) {

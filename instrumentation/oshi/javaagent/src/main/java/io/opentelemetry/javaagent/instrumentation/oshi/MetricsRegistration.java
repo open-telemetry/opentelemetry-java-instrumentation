@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public final class MetricsRegistration {
+public class MetricsRegistration {
 
   private static final AtomicBoolean registered = new AtomicBoolean();
 

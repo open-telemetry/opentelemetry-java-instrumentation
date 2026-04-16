@@ -55,7 +55,9 @@ class TelemetryParser {
             entry("io.opentelemetry.couchbase-3.2", singleton("com.couchbase.client.jvm")),
             entry("io.opentelemetry.couchbase-3.4", singleton("com.couchbase.client.jvm")),
             // servlet-5.0 tests use jetty-12.0 instrumentation
-            entry("io.opentelemetry.servlet-5.0", singleton("io.opentelemetry.jetty-12.0")));
+            entry("io.opentelemetry.servlet-5.0", singleton("io.opentelemetry.jetty-12.0")),
+            // runtime-telemetry library tests use a meter named "test"
+            entry("io.opentelemetry.runtime-telemetry", singleton("test")));
   }
 
   /**

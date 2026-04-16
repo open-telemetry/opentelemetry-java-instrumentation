@@ -42,8 +42,12 @@ public final class TraceProxyListener implements ProxyMethodExecutionListener {
   @Override
   public void afterQuery(QueryExecutionInfo queryInfo) {
     DbExecution dbExecution = (DbExecution) queryInfo.getValueStore().get(KEY_DB_EXECUTION);
-    if (dbExecution != null && dbExecution.getContext() != null) {
-      instrumenter.end(dbExecution.getContext(), dbExecution, null, queryInfo.getThrowable());
+    if (dbExecution == null) {
+      return;
+    }
+    Context context = dbExecution.getContext();
+    if (context != null) {
+      instrumenter.end(context, dbExecution, null, queryInfo.getThrowable());
     }
   }
 }

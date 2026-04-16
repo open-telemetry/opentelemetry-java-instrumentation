@@ -10,28 +10,33 @@ rules:
     metricAttribute:
       tomcat.request.processor.name: param(name)
     mapping:
+      # tomcat.error.count
       errorCount:
         metric: error.count
         type: counter
         unit: "{error}"
         desc: The number of errors.
+      # tomcat.request.count
       requestCount:
         metric: request.count
         type: counter
         unit: "{request}"
         desc: The number of requests processed.
+      # tomcat.request.duration.max
       maxTime:
         metric: request.duration.max
         type: gauge
         sourceUnit: ms
         unit: s
         desc: The longest request processing time.
+      # tomcat.request.duration.sum
       processingTime:
         metric: request.duration.sum
         type: counter
         sourceUnit: ms
         unit: s
         desc: Total time of processing all requests.
+      # tomcat.network.io
       bytesReceived:
         metric: &metric network.io
         type: &type counter
@@ -39,6 +44,7 @@ rules:
         desc: &desc The number of bytes transmitted.
         metricAttribute:
           network.io.direction: const(receive)
+      # tomcat.network.io
       bytesSent:
         metric: *metric
         type: *type
@@ -54,13 +60,16 @@ rules:
     metricAttribute:
       tomcat.context: param(context)
     mapping:
+      # tomcat.session.active.count
       activeSessions:
         metric: session.active.count
         type: updowncounter
         unit: "{session}"
         desc: The number of currently active sessions.
+      # tomcat.session.active.limit
       maxActiveSessions:
         metric: session.active.limit
+        dropNegativeValues: true
         type: updowncounter
         unit: "{session}"
         desc: Maximum possible number of active sessions.
@@ -74,12 +83,16 @@ rules:
     metricAttribute:
       tomcat.thread.pool.name: param(name)
     mapping:
+      # tomcat.thread.count
       currentThreadCount:
         metric: count
         desc: Total thread count of the thread pool.
+      # tomcat.thread.limit
       maxThreads:
+        dropNegativeValues: true
         metric: limit
         desc: Maximum possible number of threads in the thread pool.
+      # tomcat.thread.busy.count
       currentThreadsBusy:
         metric: busy.count
         desc: Number of busy threads in the thread pool.

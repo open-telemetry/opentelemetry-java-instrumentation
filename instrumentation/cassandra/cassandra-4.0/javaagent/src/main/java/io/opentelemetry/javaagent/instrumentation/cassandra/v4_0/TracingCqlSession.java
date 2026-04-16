@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraSingletons.instrumenter;
+import static java.util.Arrays.asList;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.DriverException;
@@ -19,7 +20,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -30,14 +30,10 @@ final class TracingCqlSession {
   private TracingCqlSession() {}
 
   static CqlSession wrapSession(CqlSession session) {
-    if (session == null) {
-      return null;
-    }
-
     List<Class<?>> interfaces = new ArrayList<>();
     Class<?> clazz = session.getClass();
     while (clazz != Object.class) {
-      interfaces.addAll(Arrays.asList(clazz.getInterfaces()));
+      interfaces.addAll(asList(clazz.getInterfaces()));
       clazz = clazz.getSuperclass();
     }
     return (CqlSession)
@@ -76,9 +72,9 @@ final class TracingCqlSession {
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(query);
-    } catch (Throwable exception) {
-      instrumenter().end(context, request, getExecutionInfo(exception), exception);
-      throw exception;
+    } catch (Throwable t) {
+      instrumenter().end(context, request, getExecutionInfo(t), t);
+      throw t;
     }
     instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
     return resultSet;
@@ -92,9 +88,9 @@ final class TracingCqlSession {
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(statement);
-    } catch (Throwable exception) {
-      instrumenter().end(context, request, getExecutionInfo(exception), exception);
-      throw exception;
+    } catch (Throwable t) {
+      instrumenter().end(context, request, getExecutionInfo(t), t);
+      throw t;
     }
     instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
     return resultSet;

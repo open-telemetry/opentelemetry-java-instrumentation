@@ -9,7 +9,8 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.awslambdacore.v1_0.AwsLambdaSingletons.flushTimeout;
 import static io.opentelemetry.javaagent.instrumentation.awslambdacore.v1_0.AwsLambdaSingletons.functionInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static java.util.Collections.emptyMap;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -23,14 +24,12 @@ import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AwsLambdaRequestStreamHandlerInstrumentation implements TypeInstrumentation {
+class AwsLambdaRequestStreamHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -51,11 +50,10 @@ public class AwsLambdaRequestStreamHandlerInstrumentation implements TypeInstrum
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("handleRequest"))
             .and(takesArgument(2, named("com.amazonaws.services.lambda.runtime.Context"))),
-        AwsLambdaRequestStreamHandlerInstrumentation.class.getName() + "$HandleRequestAdvice");
+        getClass().getName() + "$HandleRequestAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -77,8 +75,7 @@ public class AwsLambdaRequestStreamHandlerInstrumentation implements TypeInstrum
 
       @Nullable
       public static AdviceScope start(InputStream input, Context context) {
-        AwsLambdaRequest lambdaRequest =
-            AwsLambdaRequest.create(context, input, Collections.emptyMap());
+        AwsLambdaRequest lambdaRequest = AwsLambdaRequest.create(context, input, emptyMap());
         io.opentelemetry.context.Context parentContext =
             functionInstrumenter().extract(lambdaRequest);
 
@@ -95,18 +92,18 @@ public class AwsLambdaRequestStreamHandlerInstrumentation implements TypeInstrum
         scope.close();
         functionInstrumenter().end(context, lambdaRequest, null, throwable);
 
-        OpenTelemetrySdkAccess.forceFlush(flushTimeout().toNanos(), TimeUnit.NANOSECONDS);
+        OpenTelemetrySdkAccess.forceFlush(flushTimeout().toNanos(), NANOSECONDS);
       }
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.Argument(0) InputStream input, @Advice.Argument(2) Context context) {
       return AdviceScope.start(input, context);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

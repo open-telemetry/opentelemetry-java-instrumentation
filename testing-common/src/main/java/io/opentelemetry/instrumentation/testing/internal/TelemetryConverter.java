@@ -10,6 +10,7 @@ import static io.opentelemetry.api.common.AttributeKey.doubleArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.longArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.valueKey;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.common.Attributes;
@@ -74,9 +75,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -305,7 +304,7 @@ public class TelemetryConverter {
         TestLogRecordData.builder()
             .setResource(resource)
             .setInstrumentationScopeInfo(instrumentationScopeInfo)
-            .setTimestamp(logRecord.getTimeUnixNano(), TimeUnit.NANOSECONDS)
+            .setTimestamp(logRecord.getTimeUnixNano(), NANOSECONDS)
             .setSpanContext(
                 SpanContext.create(
                     bytesToHex(logRecord.getTraceId().toByteArray()),
@@ -331,7 +330,7 @@ public class TelemetryConverter {
         TestExtendedLogRecordData.builder()
             .setResource(resource)
             .setInstrumentationScopeInfo(instrumentationScopeInfo)
-            .setTimestamp(logRecord.getTimeUnixNano(), TimeUnit.NANOSECONDS)
+            .setTimestamp(logRecord.getTimeUnixNano(), NANOSECONDS)
             .setSpanContext(
                 SpanContext.create(
                     bytesToHex(logRecord.getTraceId().toByteArray()),
@@ -388,6 +387,8 @@ public class TelemetryConverter {
         return Value.of(value.getBytesValue().toByteArray());
       case VALUE_NOT_SET:
         return EMPTY_VALUE;
+      case STRING_VALUE_STRINDEX:
+        throw new IllegalStateException("Unexpected attribute: " + value.getValueCase());
     }
     throw new IllegalStateException("Unexpected attribute: " + value.getValueCase());
   }
@@ -482,7 +483,7 @@ public class TelemetryConverter {
   private static List<ValueAtQuantile> getValues(SummaryDataPoint point) {
     return point.getQuantileValuesList().stream()
         .map(v -> ImmutableValueAtQuantile.create(v.getQuantile(), v.getValue()))
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   private static AggregationTemporality getTemporality(
@@ -563,6 +564,8 @@ public class TelemetryConverter {
             converted.put(valueKey(key), EMPTY_VALUE);
           }
           break;
+        case STRING_VALUE_STRINDEX:
+          throw new IllegalStateException("Unexpected attribute: " + value.getValueCase());
       }
     }
     return converted.build();
@@ -631,6 +634,8 @@ public class TelemetryConverter {
             converted.put(valueKey(key), EMPTY_VALUE);
           }
           break;
+        case STRING_VALUE_STRINDEX:
+          throw new IllegalStateException("Unexpected attribute: " + value.getValueCase());
       }
     }
     return converted.build();

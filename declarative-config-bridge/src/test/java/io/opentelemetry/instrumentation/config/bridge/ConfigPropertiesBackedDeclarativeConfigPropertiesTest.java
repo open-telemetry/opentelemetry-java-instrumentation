@@ -77,15 +77,6 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
-  void testAgentPrefix() {
-    DeclarativeConfigProperties config = createConfig("otel.javaagent.experimental.indy", "true");
-
-    assertThat(config.getStructured("java").getStructured("agent").getBoolean("indy/development"))
-        .isNotNull()
-        .isTrue();
-  }
-
-  @Test
   void testJmxPrefix() {
     DeclarativeConfigProperties config = createConfig("otel.jmx.enabled", "true");
 
@@ -106,6 +97,108 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
                 .getStructured("client")
                 .getScalarList("request_captured_headers", String.class))
         .containsExactly("header1", "header2");
+  }
+
+  @Test
+  void testCommonDbQuerySanitizationMapping() {
+    DeclarativeConfigProperties config =
+        createConfig("otel.instrumentation.common.db.query-sanitization.enabled", "false");
+
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured("db")
+                .getStructured("query_sanitization")
+                .getBoolean("enabled"))
+        .isFalse();
+  }
+
+  @Test
+  void testDeprecatedCommonDbStatementSanitizerMapping() {
+    DeclarativeConfigProperties config =
+        createConfig("otel.instrumentation.common.db-statement-sanitizer.enabled", "false");
+
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured("db_statement_sanitizer")
+                .getBoolean("enabled"))
+        .isFalse();
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured("database")
+                .getStructured("statement_sanitizer")
+                .getBoolean("enabled"))
+        .isNull();
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured("db")
+                .getStructured("query_sanitization")
+                .getBoolean("enabled"))
+        .isNull();
+  }
+
+  @Test
+  void testCommonDbSqlcommenterPropertyMapping() {
+    DeclarativeConfigProperties config =
+        createConfig("otel.instrumentation.common.experimental.db-sqlcommenter.enabled", "false");
+
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured("db_sqlcommenter/development")
+                .getBoolean("enabled"))
+        .isFalse();
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured("db")
+                .getStructured("sqlcommenter/development")
+                .getBoolean("enabled"))
+        .isNull();
+  }
+
+  @Test
+  void testGraphqlQuerySanitizationMapping() {
+    DeclarativeConfigProperties config =
+        createConfig("otel.instrumentation.graphql.query-sanitization.enabled", "false");
+
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("graphql")
+                .getStructured("query_sanitization")
+                .getBoolean("enabled"))
+        .isFalse();
+  }
+
+  @Test
+  void testDeprecatedGraphqlQuerySanitizerMapping() {
+    DeclarativeConfigProperties config =
+        createConfig("otel.instrumentation.graphql.query-sanitizer.enabled", "false");
+
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("graphql")
+                .getStructured("query_sanitizer")
+                .getBoolean("enabled"))
+        .isFalse();
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("graphql")
+                .getStructured("query_sanitization")
+                .getBoolean("enabled"))
+        .isNull();
   }
 
   @Test
@@ -240,61 +333,6 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
                 .getStructured("kafka")
                 .getStructured("producer_propagation")
                 .getBoolean("enabled"))
-        .isNull();
-  }
-
-  @Test
-  void testAgentInstrumentationMode_getString_booleanTrue() {
-    DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.common.default-enabled", "true");
-
-    assertThat(
-            config.getStructured("java").getStructured("agent").getString("instrumentation_mode"))
-        .isEqualTo("default");
-  }
-
-  @Test
-  void testAgentInstrumentationMode_getString_booleanFalse() {
-    DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.common.default-enabled", "false");
-
-    assertThat(
-            config.getStructured("java").getStructured("agent").getString("instrumentation_mode"))
-        .isEqualTo("none");
-  }
-
-  @Test
-  void testSpringStarterInstrumentationMode_getString_booleanTrue() {
-    DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.common.default-enabled", "true");
-
-    assertThat(
-            config
-                .getStructured("java")
-                .getStructured("spring_starter")
-                .getString("instrumentation_mode"))
-        .isEqualTo("default");
-  }
-
-  @Test
-  void testSpringStarterInstrumentationMode_getString_booleanFalse() {
-    DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.common.default-enabled", "false");
-
-    assertThat(
-            config
-                .getStructured("java")
-                .getStructured("spring_starter")
-                .getString("instrumentation_mode"))
-        .isEqualTo("none");
-  }
-
-  @Test
-  void testAgentInstrumentationMode_notSet() {
-    DeclarativeConfigProperties config = createConfig("some.other.property", "value");
-
-    assertThat(
-            config.getStructured("java").getStructured("agent").getString("instrumentation_mode"))
         .isNull();
   }
 

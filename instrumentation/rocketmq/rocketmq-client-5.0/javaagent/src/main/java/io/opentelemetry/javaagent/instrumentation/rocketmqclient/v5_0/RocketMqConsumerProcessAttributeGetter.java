@@ -5,16 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
 import org.apache.rocketmq.client.apis.message.MessageView;
 
-enum RocketMqConsumerProcessAttributeGetter
+class RocketMqConsumerProcessAttributeGetter
     implements MessagingAttributesGetter<MessageView, ConsumeResult> {
-  INSTANCE;
 
   @Nullable
   @Override
@@ -84,8 +85,8 @@ enum RocketMqConsumerProcessAttributeGetter
   public List<String> getMessageHeader(MessageView messageView, String name) {
     String value = messageView.getProperties().get(name);
     if (value != null) {
-      return Collections.singletonList(value);
+      return singletonList(value);
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 }

@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.CxfSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -37,7 +36,7 @@ import org.apache.cxf.message.Message;
  * </code> which contains <code>MethodInvocationInfo</code>. The matched resource method can be
  * retrieved from that object
  */
-public class CxfRequestContextInstrumentation implements TypeInstrumentation {
+class CxfRequestContextInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -47,11 +46,10 @@ public class CxfRequestContextInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("abortWith"))
+        named("abortWith")
             .and(takesArguments(1))
             .and(takesArgument(0, named("javax.ws.rs.core.Response"))),
-        CxfRequestContextInstrumentation.class.getName() + "$ContainerRequestContextAdvice");
+        getClass().getName() + "$ContainerRequestContextAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -62,26 +60,33 @@ public class CxfRequestContextInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
 
-      public AdviceScope(
-          Class<?> resourceClass, Method method, AbstractRequestContextImpl requestContext) {
-        handlerData = new Jaxrs2HandlerData(resourceClass, method);
-        context =
-            Jaxrs2RequestContextHelper.createOrUpdateAbortSpan(
-                instrumenter(), (ContainerRequestContext) requestContext, handlerData);
-        scope = context != null ? context.makeCurrent() : null;
+      private AdviceScope(Jaxrs2HandlerData handlerData, Context context) {
+        this.handlerData = handlerData;
+        this.context = context;
+        scope = context.makeCurrent();
       }
 
-      public void exit(@Nullable Throwable throwable) {
-        if (scope == null) {
-          return;
+      @Nullable
+      public static AdviceScope start(
+          Class<?> resourceClass, Method method, AbstractRequestContextImpl requestContext) {
+        Jaxrs2HandlerData handlerData = new Jaxrs2HandlerData(resourceClass, method);
+        Context context =
+            Jaxrs2RequestContextHelper.createOrUpdateAbortSpan(
+                instrumenter(), (ContainerRequestContext) requestContext, handlerData);
+        if (context == null) {
+          return null;
         }
+        return new AdviceScope(handlerData, context);
+      }
+
+      public void end(@Nullable Throwable throwable) {
         scope.close();
         instrumenter().end(context, handlerData, null, throwable);
       }
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope decorateAbortSpan(
         @Advice.This AbstractRequestContextImpl requestContext) {
 
@@ -101,14 +106,15 @@ public class CxfRequestContextInstrumentation implements TypeInstrumentation {
       MethodInvocationInfo invocationInfo = resourceInfoStack.peek();
       Method method = invocationInfo.getMethodInfo().getMethodToInvoke();
       Class<?> resourceClass = invocationInfo.getRealClass();
-      return new AdviceScope(resourceClass, method, requestContext);
+      return AdviceScope.start(resourceClass, method, requestContext);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
-        @Advice.Thrown Throwable throwable, @Advice.Enter @Nullable AdviceScope adviceScope) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
-        adviceScope.exit(throwable);
+        adviceScope.end(throwable);
       }
     }
   }

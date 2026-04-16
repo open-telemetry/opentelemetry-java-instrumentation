@@ -20,7 +20,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import ratpack.handling.Context;
 
-public class ServerErrorHandlerInstrumentation implements TypeInstrumentation {
+class ServerErrorHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -38,13 +38,13 @@ public class ServerErrorHandlerInstrumentation implements TypeInstrumentation {
         named("error")
             .and(takesArgument(0, named("ratpack.handling.Context")))
             .and(takesArgument(1, Throwable.class)),
-        ServerErrorHandlerInstrumentation.class.getName() + "$ErrorAdvice");
+        getClass().getName() + "$ErrorAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ErrorAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void captureThrowable(
         @Advice.Argument(0) Context ctx, @Advice.Argument(1) Throwable throwable) {
       Optional<io.opentelemetry.context.Context> otelContext =

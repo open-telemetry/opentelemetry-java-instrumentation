@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
@@ -18,8 +20,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /**
@@ -31,7 +31,7 @@ import java.util.logging.Logger;
  */
 public final class DbClientMetrics implements OperationListener {
 
-  private static final double NANOS_PER_S = TimeUnit.SECONDS.toNanos(1);
+  private static final double NANOS_PER_S = SECONDS.toNanos(1);
 
   private static final ContextKey<State> DB_CLIENT_OPERATION_METRICS_STATE =
       ContextKey.named("db-client-metrics-state");
@@ -45,7 +45,7 @@ public final class DbClientMetrics implements OperationListener {
    * @see InstrumenterBuilder#addOperationMetrics(OperationMetrics)
    */
   public static OperationMetrics get() {
-    if (SemconvStability.emitStableDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv()) {
       return OperationMetricsUtil.create("database client", DbClientMetrics::new);
     }
     return meter -> OperationMetricsUtil.NOOP_OPERATION_LISTENER;

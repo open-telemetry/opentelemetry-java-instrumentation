@@ -38,9 +38,8 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.matcher.ElementMatchers;
 
-public class WithSpanInstrumentation implements TypeInstrumentation {
+class WithSpanInstrumentation implements TypeInstrumentation {
 
   private final ElementMatcher.Junction<AnnotationSource> annotatedMethodMatcher;
   private final ElementMatcher.Junction<MethodDescription> annotatedParametersMatcher;
@@ -79,14 +78,13 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
         tracedMethods.and(not(annotatedParametersMatcher));
 
     transformer.applyAdviceToMethod(
-        tracedMethodsWithoutParameters.and(isMethod()),
-        WithSpanInstrumentation.class.getName() + "$WithSpanAdvice");
+        tracedMethodsWithoutParameters.and(isMethod()), getClass().getName() + "$WithSpanAdvice");
 
     // Only apply advice for tracing parameters as attributes if any of the parameters are annotated
     // with @SpanAttribute to avoid unnecessarily copying the arguments into an array.
     transformer.applyAdviceToMethod(
         tracedMethodsWithParameters.and(isMethod()),
-        WithSpanInstrumentation.class.getName() + "$WithSpanAttributesAdvice");
+        getClass().getName() + "$WithSpanAttributesAdvice");
   }
 
   /*
@@ -102,8 +100,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
                 GlobalOpenTelemetry.get(), "opentelemetry_extension_annotations"));
     for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
       String className = entry.getKey();
-      ElementMatcher.Junction<ByteCodeElement> matcher =
-          isDeclaredBy(ElementMatchers.named(className));
+      ElementMatcher.Junction<ByteCodeElement> matcher = isDeclaredBy(named(className));
 
       Set<String> methodNames = entry.getValue();
       if (!methodNames.isEmpty()) {
@@ -151,7 +148,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static WithSpanAdviceScope onEnter(@Advice.Origin Method originMethod) {
       // Every usage of @Advice.Origin Method is replaced with a call to Class.getMethod, copy it
       // to advice scope so that there would be only one call to Class.getMethod.
@@ -159,7 +156,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Object stopSpan(
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returnValue,
         @Advice.Thrown @Nullable Throwable throwable,
@@ -212,7 +209,8 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static WithSpanAttributesAdviceScope onEnter(
         @Advice.Origin Method originMethod,
         @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] args) {
@@ -222,11 +220,11 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Object stopSpan(
         @Advice.Return @Nullable Object returnValue,
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter WithSpanAttributesAdviceScope adviceScope) {
+        @Advice.Enter @Nullable WithSpanAttributesAdviceScope adviceScope) {
       if (adviceScope != null) {
         return adviceScope.end(returnValue, throwable);
       }

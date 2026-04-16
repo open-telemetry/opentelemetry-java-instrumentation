@@ -5,12 +5,13 @@
 
 package io.opentelemetry.instrumentation.spring.resources;
 
+import static java.util.logging.Level.FINER;
+
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Optional;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 class SystemHelper {
@@ -25,7 +26,7 @@ class SystemHelper {
         contextClassLoader != null ? contextClassLoader : ClassLoader.getSystemClassLoader();
     addBootInfPrefix = classLoader.getResource("BOOT-INF/classes/") != null;
     if (addBootInfPrefix) {
-      logger.log(Level.FINER, "Detected presence of BOOT-INF/classes/");
+      logger.log(FINER, "Detected presence of BOOT-INF/classes/");
     }
   }
 

@@ -6,20 +6,18 @@
 package io.opentelemetry.javaagent.instrumentation.graphql.v12_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import java.util.Collections;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @SuppressWarnings("unused")
 @AutoService(InstrumentationModule.class)
-public class GraphqlInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class GraphqlInstrumentationModule extends InstrumentationModule {
 
   public GraphqlInstrumentationModule() {
     super("graphql-java", "graphql-java-12.0");
@@ -34,11 +32,6 @@ public class GraphqlInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Collections.singletonList(new GraphqlInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
+    return singletonList(new GraphqlInstrumentation());
   }
 }

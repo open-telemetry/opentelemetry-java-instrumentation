@@ -17,15 +17,15 @@ import javax.annotation.Nullable;
 import org.apache.jasper.JspCompilationContext;
 import org.apache.jasper.compiler.Compiler;
 
-public class JspCompilationContextInstrumentationSingletons {
+class JspCompilationContextInstrumentationSingletons {
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jsp")
           .getBoolean("experimental_span_attributes/development", false);
 
-  private static final Instrumenter<JspCompilationContext, Void> INSTRUMENTER;
+  private static final Instrumenter<JspCompilationContext, Void> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<JspCompilationContext, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.jsp-2.3",
@@ -35,12 +35,12 @@ public class JspCompilationContextInstrumentationSingletons {
             .buildInstrumenter(SpanKindExtractor.alwaysInternal());
   }
 
-  public static String spanNameOnCompile(JspCompilationContext jspCompilationContext) {
+  private static String spanNameOnCompile(JspCompilationContext jspCompilationContext) {
     return "Compile " + jspCompilationContext.getJspFile();
   }
 
-  public static Instrumenter<JspCompilationContext, Void> instrumenter() {
-    return INSTRUMENTER;
+  static Instrumenter<JspCompilationContext, Void> instrumenter() {
+    return instrumenter;
   }
 
   private JspCompilationContextInstrumentationSingletons() {}

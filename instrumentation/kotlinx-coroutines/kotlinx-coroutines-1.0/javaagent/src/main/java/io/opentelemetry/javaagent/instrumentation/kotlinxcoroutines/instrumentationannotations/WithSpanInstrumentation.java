@@ -82,8 +82,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        none(), WithSpanInstrumentation.class.getName() + "$InitAdvice");
+    transformer.applyAdviceToMethod(none(), getClass().getName() + "$InitAdvice");
 
     transformer.applyTransformer(
         (builder, typeDescription, classLoader, javaModule, protectionDomain) ->
@@ -127,7 +126,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InitAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter() {
       // this advice is here only to get AnnotationInstrumentationHelper injected
       AnnotationInstrumentationHelper.init();

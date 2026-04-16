@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
+import static java.util.Collections.emptyList;
 import static java.util.logging.Level.FINE;
 
 import java.net.InetAddress;
@@ -12,7 +13,6 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -53,7 +53,7 @@ public final class ApacheHttpClientRequest {
   // minimize memory overhead by not using streams
   static List<String> headersToList(Header[] headers) {
     if (headers.length == 0) {
-      return Collections.emptyList();
+      return emptyList();
     }
     List<String> headersList = new ArrayList<>(headers.length);
     for (int i = 0; i < headers.length; ++i) {
@@ -89,12 +89,35 @@ public final class ApacheHttpClientRequest {
 
   @Nullable
   String getServerAddress() {
-    return uri == null ? null : uri.getHost();
+    if (uri != null) {
+      return uri.getHost();
+    }
+    if (target != null) {
+      return target.getHostName();
+    }
+    return null;
   }
 
   @Nullable
   Integer getServerPort() {
-    return uri == null ? null : uri.getPort();
+    if (uri != null) {
+      return uri.getPort();
+    }
+    if (target != null) {
+      return target.getPort();
+    }
+    return null;
+  }
+
+  @Nullable
+  String getScheme() {
+    if (uri != null) {
+      return uri.getScheme();
+    }
+    if (target != null) {
+      return target.getSchemeName();
+    }
+    return null;
   }
 
   @Nullable
