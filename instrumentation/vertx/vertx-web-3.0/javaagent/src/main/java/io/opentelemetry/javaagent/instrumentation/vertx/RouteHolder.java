@@ -10,6 +10,7 @@ import static io.opentelemetry.context.ContextKey.named;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
+import javax.annotation.Nullable;
 
 public class RouteHolder implements ImplicitContextKeyed {
   private static final ContextKey<RouteHolder> KEY = named("opentelemetry-vertx-route");
@@ -27,6 +28,7 @@ public class RouteHolder implements ImplicitContextKeyed {
     return context.with(new RouteHolder(route));
   }
 
+  @Nullable
   public static String get(Context context) {
     RouteHolder holder = context.get(KEY);
     return holder != null ? holder.route : null;

@@ -17,10 +17,6 @@ import net.spy.memcached.internal.GetFuture;
 public class GetCompletionListener extends CompletionListener<GetFuture<?>>
     implements net.spy.memcached.internal.GetCompletionListener {
 
-  private GetCompletionListener(Context parentContext, SpymemcachedRequest request) {
-    super(parentContext, request);
-  }
-
   @Nullable
   public static GetCompletionListener create(
       Context parentContext, MemcachedConnection connection, String methodName) {
@@ -29,6 +25,10 @@ public class GetCompletionListener extends CompletionListener<GetFuture<?>>
       return null;
     }
     return new GetCompletionListener(parentContext, request);
+  }
+
+  private GetCompletionListener(Context parentContext, SpymemcachedRequest request) {
+    super(parentContext, request);
   }
 
   @Override

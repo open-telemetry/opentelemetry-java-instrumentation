@@ -14,7 +14,7 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.5.0"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.6.0"
   id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
   // this can't live in pluginManagement currently due to
   // https://github.com/bmuschko/gradle-docker-plugin/issues/1123
@@ -507,10 +507,11 @@ include(":instrumentation:opentelemetry-api:opentelemetry-api-1.40:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.42:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.47:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.50:javaagent")
-include(":instrumentation:opentelemetry-api:opentelemetry-api-1.52:javaagent")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-1.52:testing")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.56:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.57:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.59:javaagent")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-1.61:testing")
 include(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent")
 include(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent")
 include(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent")
@@ -654,8 +655,8 @@ include(":instrumentation:spring:spring-scheduling-3.1:bootstrap")
 include(":instrumentation:spring:spring-scheduling-3.1:javaagent")
 include(":instrumentation:spring:spring-security-config-6.0:javaagent")
 include(":instrumentation:spring:spring-security-config-6.0:library")
-include(":instrumentation:spring:spring-web:spring-web-3.1:javaagent")
 include(":instrumentation:spring:spring-web:spring-web-3.1:library")
+include(":instrumentation:spring:spring-web:spring-web-3.1:testing")
 include(":instrumentation:spring:spring-web:spring-web-6.0:javaagent")
 include(":instrumentation:spring:spring-webflux:spring-webflux-5.0:javaagent")
 include(":instrumentation:spring:spring-webflux:spring-webflux-5.0:testing")

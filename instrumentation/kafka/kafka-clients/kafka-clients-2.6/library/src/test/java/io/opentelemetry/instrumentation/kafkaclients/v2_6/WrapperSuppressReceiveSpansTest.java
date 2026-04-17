@@ -6,7 +6,8 @@
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
-import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -35,7 +36,7 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
   }
 
   @Override
-  void assertTraces(boolean testHeaders) {
+  void assertTraces(boolean testHeaders, boolean testExperimental) {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -44,12 +45,14 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
                     span.hasName(SHARED_TOPIC + " publish")
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(sendAttributes(testHeaders)),
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(testHeaders, testExperimental)),
                 span ->
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(processAttributes(greeting, testHeaders)),
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(greeting, testHeaders, testExperimental)),
                 span ->
                     span.hasName("process child")
                         .hasKind(SpanKind.INTERNAL)
@@ -61,7 +64,7 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  static List<AttributeAssertion> sendAttributes(boolean testHeaders) {
+  static List<AttributeAssertion> sendAttributes(boolean testHeaders, boolean testExperimental) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
@@ -72,14 +75,20 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
+      assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
+    }
+    if (testExperimental) {
       assertions.add(
-          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
+          satisfies(
+              stringKey("messaging.kafka.bootstrap.servers"),
+              val -> val.matches("^localhost:\\d+(,localhost:\\d+)*$")));
     }
     return assertions;
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  static List<AttributeAssertion> processAttributes(String greeting, boolean testHeaders) {
+  static List<AttributeAssertion> processAttributes(
+      String greeting, boolean testHeaders, boolean testExperimental) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
@@ -89,12 +98,14 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, greeting.getBytes(UTF_8).length),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
-                satisfies(longKey("kafka.record.queue_time_ms"), AbstractLongAssert::isNotNegative),
                 equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
                 satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer"))));
     if (testHeaders) {
+      assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
+    }
+    if (testExperimental) {
       assertions.add(
-          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
+          satisfies(longKey("kafka.record.queue_time_ms"), AbstractLongAssert::isNotNegative));
     }
     return assertions;
   }

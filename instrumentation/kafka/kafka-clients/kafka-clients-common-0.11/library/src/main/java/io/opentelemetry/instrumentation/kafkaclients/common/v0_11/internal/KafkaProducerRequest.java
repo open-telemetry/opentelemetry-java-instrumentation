@@ -21,18 +21,23 @@ public final class KafkaProducerRequest {
 
   private final ProducerRecord<?, ?> record;
   @Nullable private final String clientId;
+  @Nullable private final String bootstrapServers;
 
-  public static KafkaProducerRequest create(ProducerRecord<?, ?> record, Producer<?, ?> producer) {
-    return create(record, extractClientId(producer));
+  public static KafkaProducerRequest create(
+      ProducerRecord<?, ?> record, Producer<?, ?> producer, String bootstrapServers) {
+    return create(record, extractClientId(producer), bootstrapServers);
   }
 
-  public static KafkaProducerRequest create(ProducerRecord<?, ?> record, String clientId) {
-    return new KafkaProducerRequest(record, clientId);
+  public static KafkaProducerRequest create(
+      ProducerRecord<?, ?> record, String clientId, String bootstrapServers) {
+    return new KafkaProducerRequest(record, clientId, bootstrapServers);
   }
 
-  private KafkaProducerRequest(ProducerRecord<?, ?> record, String clientId) {
+  private KafkaProducerRequest(
+      ProducerRecord<?, ?> record, String clientId, String bootstrapServers) {
     this.record = record;
     this.clientId = clientId;
+    this.bootstrapServers = bootstrapServers;
   }
 
   public ProducerRecord<?, ?> getRecord() {
@@ -41,6 +46,10 @@ public final class KafkaProducerRequest {
 
   public String getClientId() {
     return clientId;
+  }
+
+  public String getBootstrapServers() {
+    return bootstrapServers;
   }
 
   private static String extractClientId(Producer<?, ?> producer) {

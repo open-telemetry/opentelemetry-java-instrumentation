@@ -35,7 +35,6 @@ dependencies {
   testLibrary("org.jboss.resteasy:resteasy-undertow:6.0.0.Final") {
     exclude("org.jboss.resteasy", "resteasy-client")
   }
-  testLibrary("io.undertow:undertow-servlet-jakarta:2.2.17.Final")
   testLibrary("org.jboss.resteasy:resteasy-servlet-initializer:6.0.0.Final")
 }
 

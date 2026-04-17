@@ -48,19 +48,6 @@ import software.amazon.awssdk.services.sqs.SqsClient;
  * }</pre>
  */
 public class AwsSdkTelemetry {
-
-  /** Returns a new {@link AwsSdkTelemetry} configured with the given {@link OpenTelemetry}. */
-  public static AwsSdkTelemetry create(OpenTelemetry openTelemetry) {
-    return builder(openTelemetry).build();
-  }
-
-  /**
-   * Returns a new {@link AwsSdkTelemetryBuilder} configured with the given {@link OpenTelemetry}.
-   */
-  public static AwsSdkTelemetryBuilder builder(OpenTelemetry openTelemetry) {
-    return new AwsSdkTelemetryBuilder(openTelemetry);
-  }
-
   private final Instrumenter<ExecutionAttributes, Response> requestInstrumenter;
   private final Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter;
   private final Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter;
@@ -73,6 +60,18 @@ public class AwsSdkTelemetry {
   private final boolean useXrayPropagator;
   private final boolean recordIndividualHttpError;
   private final boolean genAiCaptureMessageContent;
+
+  /** Returns a new {@link AwsSdkTelemetry} configured with the given {@link OpenTelemetry}. */
+  public static AwsSdkTelemetry create(OpenTelemetry openTelemetry) {
+    return builder(openTelemetry).build();
+  }
+
+  /**
+   * Returns a new {@link AwsSdkTelemetryBuilder} configured with the given {@link OpenTelemetry}.
+   */
+  public static AwsSdkTelemetryBuilder builder(OpenTelemetry openTelemetry) {
+    return new AwsSdkTelemetryBuilder(openTelemetry);
+  }
 
   AwsSdkTelemetry(
       OpenTelemetry openTelemetry,

@@ -84,7 +84,7 @@ class RequestHandlerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Thrown Throwable throwable,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Return boolean handled,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {

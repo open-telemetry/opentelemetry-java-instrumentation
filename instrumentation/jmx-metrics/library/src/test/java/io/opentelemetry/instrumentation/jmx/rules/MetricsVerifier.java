@@ -24,8 +24,6 @@ public class MetricsVerifier {
   private final Map<String, Consumer<Metric>> assertions = new HashMap<>();
   private boolean strictMode = true;
 
-  private MetricsVerifier() {}
-
   /**
    * Create instance of MetricsVerifier configured to fail verification if any metric was not
    * verified because there is no assertion defined for it. This behavior can be changed by calling
@@ -37,6 +35,8 @@ public class MetricsVerifier {
   public static MetricsVerifier create() {
     return new MetricsVerifier();
   }
+
+  private MetricsVerifier() {}
 
   /**
    * Disable strict checks of metric assertions. It means that all metrics checks added after

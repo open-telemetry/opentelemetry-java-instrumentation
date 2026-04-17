@@ -25,6 +25,8 @@ import java.util.Set;
 @SuppressWarnings("deprecation")
 public final class SemconvStability {
 
+  private static final boolean v3Preview;
+
   private static final boolean emitOldDatabaseSemconv;
   private static final boolean emitStableDatabaseSemconv;
 
@@ -39,8 +41,7 @@ public final class SemconvStability {
 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.getOrNoop();
-    boolean v3Preview =
-        getInstrumentationConfig(openTelemetry, "common").getBoolean("v3_preview", false);
+    v3Preview = getInstrumentationConfig(openTelemetry, "common").getBoolean("v3_preview", false);
     Set<String> optInValues = resolveOptInValues(openTelemetry);
 
     emitOldDatabaseSemconv = shouldEmitOld("database", v3Preview, optInValues);
@@ -72,6 +73,10 @@ public final class SemconvStability {
       }
     }
     return values;
+  }
+
+  public static boolean v3Preview() {
+    return v3Preview;
   }
 
   public static boolean emitOldDatabaseSemconv() {

@@ -19,15 +19,7 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.client.NettyClientHa
 
 /** Entrypoint for instrumenting Netty HTTP clients. */
 public final class NettyClientTelemetry {
-
   private final NettyClientHandlerFactory handlerFactory;
-
-  NettyClientTelemetry(
-      Instrumenter<NettyCommonRequest, HttpResponse> instrumenter,
-      boolean emitExperimentalHttpClientEvents) {
-    this.handlerFactory =
-        new NettyClientHandlerFactory(instrumenter, emitExperimentalHttpClientEvents);
-  }
 
   /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static NettyClientTelemetry create(OpenTelemetry openTelemetry) {
@@ -37,6 +29,13 @@ public final class NettyClientTelemetry {
   /** Returns a builder configured with the given {@link OpenTelemetry} instance. */
   public static NettyClientTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new NettyClientTelemetryBuilder(openTelemetry);
+  }
+
+  NettyClientTelemetry(
+      Instrumenter<NettyCommonRequest, HttpResponse> instrumenter,
+      boolean emitExperimentalHttpClientEvents) {
+    this.handlerFactory =
+        new NettyClientHandlerFactory(instrumenter, emitExperimentalHttpClientEvents);
   }
 
   /**

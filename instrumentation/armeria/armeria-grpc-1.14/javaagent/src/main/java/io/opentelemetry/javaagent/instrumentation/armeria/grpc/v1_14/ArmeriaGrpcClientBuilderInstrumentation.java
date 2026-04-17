@@ -33,7 +33,7 @@ class ArmeriaGrpcClientBuilderInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class BuildAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This GrpcClientBuilder builder) {
       builder.intercept(GrpcTelemetry.create(GlobalOpenTelemetry.get()).createClientInterceptor());
     }

@@ -56,7 +56,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AddListenerAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static GenericFutureListener<? extends Future<?>> wrapListener(
         @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>> listenerArg) {
@@ -76,7 +76,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
     // here the AsScalar allows to assign the value of the returned array to the argument value,
     // otherwise it's considered to be an Object[] that contains the arguments/return value/thrown
     // exception assignments that bytebuddy has to do after the advice is invoked.
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.AsScalar
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static GenericFutureListener<?>[] wrapListener(
@@ -100,7 +100,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RemoveListenerAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static GenericFutureListener<? extends Future<?>> wrapListener(
         @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>> listener) {
@@ -114,7 +114,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
     // here the AsScalar allows to assign the value of the returned array to the argument value,
     // otherwise it's considered to be an Object[] that contains the arguments/return value/thrown
     // exception assignments that bytebuddy has to do after the advice is invoked.
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.AsScalar
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static GenericFutureListener<?>[] wrapListener(

@@ -77,16 +77,6 @@ public interface ExperimentalInstrumentationModule {
   }
 
   /**
-   * Signals that the advice in this module is ready to be used with indy instrumentation and the
-   * automatic advice conversion doesn't need to be applied.
-   *
-   * @return true if module is ready to be used with indy instrumentation.
-   */
-  default boolean isIndyReady() {
-    return false;
-  }
-
-  /**
    * Returns a list of instrumentation helper classes that are exposed to the application class
    * loader.
    *

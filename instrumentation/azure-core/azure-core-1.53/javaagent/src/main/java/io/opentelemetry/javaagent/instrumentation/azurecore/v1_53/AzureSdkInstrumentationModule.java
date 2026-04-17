@@ -71,9 +71,4 @@ public class AzureSdkInstrumentationModule extends InstrumentationModule
       // Nothing to instrument, no methods to match
     }
   }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
-  }
 }

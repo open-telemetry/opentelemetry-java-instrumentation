@@ -28,7 +28,7 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
     kafkaConsumer.handler(
         record -> {
           testing().runWithSpan("consumer", () -> {});
-          if (record.value().equals("error")) {
+          if ("error".equals(record.value())) {
             throw new IllegalArgumentException("boom");
           }
         });

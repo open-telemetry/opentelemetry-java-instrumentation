@@ -112,8 +112,8 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
         testConnectionClient.connectAsync(
             StringCodec.UTF8, RedisURI.create("redis://" + host + ":" + port + "?timeout=3s"));
     StatefulRedisConnection<String, String> connection1 = connectionFuture.get();
-    cleanup.deferCleanup(connection1);
     cleanup.deferCleanup(testConnectionClient::shutdown);
+    cleanup.deferCleanup(connection1);
 
     assertThat(connection1).isNotNull();
     if (connectHasSpans()) {

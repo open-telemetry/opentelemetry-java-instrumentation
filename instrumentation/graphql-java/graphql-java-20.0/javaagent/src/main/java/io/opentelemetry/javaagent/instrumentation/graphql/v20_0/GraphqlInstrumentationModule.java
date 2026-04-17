@@ -42,9 +42,4 @@ public class GraphqlInstrumentationModule extends InstrumentationModule
     return singletonList(
         "io.opentelemetry.javaagent.instrumentation.graphql.v20_0.GraphqlSingletons");
   }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
-  }
 }

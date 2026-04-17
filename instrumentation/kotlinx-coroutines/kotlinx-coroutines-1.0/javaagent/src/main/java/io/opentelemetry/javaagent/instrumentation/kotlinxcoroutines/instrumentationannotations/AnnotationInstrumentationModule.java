@@ -55,9 +55,4 @@ public class AnnotationInstrumentationModule extends InstrumentationModule
     return singletonList(
         "io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.instrumentationannotations.AnnotationInstrumentationHelper");
   }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
-  }
 }

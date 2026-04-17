@@ -48,7 +48,7 @@ import net.bytebuddy.utility.JavaModule;
 
 public final class InstrumentationModuleInstaller {
 
-  static final TransformSafeLogger logger =
+  private static final TransformSafeLogger logger =
       TransformSafeLogger.getLogger(InstrumentationModule.class);
 
   // Added here instead of AgentInstaller's ignores because it's relatively
@@ -79,7 +79,7 @@ public final class InstrumentationModuleInstaller {
       return parentAgentBuilder;
     }
 
-    if (instrumentationModule.isIndyModule()) {
+    if (AgentDistributionConfig.get().isIndyEnabled()) {
       return installIndyModule(instrumentationModule, parentAgentBuilder);
     } else {
       return installInjectingModule(instrumentationModule, parentAgentBuilder);

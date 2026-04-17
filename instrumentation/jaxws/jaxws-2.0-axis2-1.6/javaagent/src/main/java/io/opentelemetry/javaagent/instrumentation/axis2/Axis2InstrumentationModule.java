@@ -11,13 +11,11 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class Axis2InstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class Axis2InstrumentationModule extends InstrumentationModule {
   public Axis2InstrumentationModule() {
     super("axis2", "axis2-1.6", "jaxws");
   }
@@ -31,10 +29,5 @@ public class Axis2InstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new InvocationListenerRegistryTypeInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

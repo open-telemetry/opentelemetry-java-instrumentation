@@ -1,3 +1,4 @@
+display_name: Armeria
 description: >
   This instrumentation enables HTTP client spans and metrics for the Armeria HTTP client, and HTTP
   server spans and metrics for the Armeria HTTP server.

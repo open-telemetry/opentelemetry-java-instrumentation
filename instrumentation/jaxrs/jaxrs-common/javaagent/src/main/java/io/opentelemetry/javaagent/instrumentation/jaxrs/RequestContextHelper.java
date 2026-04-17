@@ -26,7 +26,7 @@ public class RequestContextHelper {
     HttpServerRoute.update(
         parentContext,
         HttpServerRouteSource.CONTROLLER,
-        JaxrsServerSpanNaming.SERVER_SPAN_NAME,
+        JaxrsServerSpanNaming.serverSpanName(),
         handlerData);
 
     if (currentSpan != null && currentSpan != serverSpan) {

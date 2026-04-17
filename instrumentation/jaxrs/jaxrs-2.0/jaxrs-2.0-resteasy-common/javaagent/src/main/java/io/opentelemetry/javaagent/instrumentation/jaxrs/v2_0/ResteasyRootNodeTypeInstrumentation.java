@@ -45,7 +45,7 @@ class ResteasyRootNodeTypeInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AddInvokerAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void addInvoker(
         @Advice.Argument(0) String path,
         @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC) Object invoker) {

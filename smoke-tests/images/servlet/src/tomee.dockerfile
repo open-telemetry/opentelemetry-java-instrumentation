@@ -5,7 +5,7 @@ ARG jdkImageHash
 FROM ${jdkImageName}@sha256:${jdkImageHash} as builder
 ARG version
 
-ADD https://archive.apache.org/dist/tomee/tomee-${version}/apache-tomee-${version}-webprofile.tar.gz /server.tgz
+ADD https://repo1.maven.org/maven2/org/apache/tomee/apache-tomee/${version}/apache-tomee-${version}-webprofile.tar.gz /server.tgz
 RUN tar xf server.tgz && ls -al / && mv apache-tomee-webprofile-${version} /server
 
 FROM ${jdkImageName}@sha256:${jdkImageHash}

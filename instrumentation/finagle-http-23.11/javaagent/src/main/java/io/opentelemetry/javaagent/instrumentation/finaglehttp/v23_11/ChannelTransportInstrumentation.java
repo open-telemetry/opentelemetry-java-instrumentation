@@ -30,7 +30,7 @@ class ChannelTransportInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class WriteAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope methodEnter() {
       Option<Context> ref = Helpers.CONTEXT_LOCAL.apply();
       if (ref.isDefined()) {
@@ -39,7 +39,7 @@ class ChannelTransportInstrumentation implements TypeInstrumentation {
       return null;
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void methodExit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();

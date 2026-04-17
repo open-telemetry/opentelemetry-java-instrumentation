@@ -23,15 +23,11 @@ import java.util.List;
  * witness broken traces.
  */
 public class AwsSdkTelemetry {
-
-  /**
-   * Returns the OpenTelemetry {@link Context} stored in the {@link Request}, or {@code null} if
-   * there is no {@link Context}. This is generally not needed unless you are implementing your own
-   * instrumentation that delegates to this one.
-   */
-  public static Context getOpenTelemetryContext(Request<?> request) {
-    return request.getHandlerContext(TracingRequestHandler.CONTEXT);
-  }
+  private final Instrumenter<Request<?>, Response<?>> requestInstrumenter;
+  private final Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter;
+  private final Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter;
+  private final Instrumenter<Request<?>, Response<?>> producerInstrumenter;
+  private final Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter;
 
   /** Returns a new {@link AwsSdkTelemetry} configured with the given {@link OpenTelemetry}. */
   public static AwsSdkTelemetry create(OpenTelemetry openTelemetry) {
@@ -44,12 +40,6 @@ public class AwsSdkTelemetry {
   public static AwsSdkTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new AwsSdkTelemetryBuilder(openTelemetry);
   }
-
-  private final Instrumenter<Request<?>, Response<?>> requestInstrumenter;
-  private final Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter;
-  private final Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter;
-  private final Instrumenter<Request<?>, Response<?>> producerInstrumenter;
-  private final Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter;
 
   AwsSdkTelemetry(
       OpenTelemetry openTelemetry,
@@ -80,5 +70,14 @@ public class AwsSdkTelemetry {
         consumerProcessInstrumenter,
         producerInstrumenter,
         dynamoDbInstrumenter);
+  }
+
+  /**
+   * Returns the OpenTelemetry {@link Context} stored in the {@link Request}, or {@code null} if
+   * there is no {@link Context}. This is generally not needed unless you are implementing your own
+   * instrumentation that delegates to this one.
+   */
+  public static Context getOpenTelemetryContext(Request<?> request) {
+    return request.getHandlerContext(TracingRequestHandler.CONTEXT);
   }
 }

@@ -32,7 +32,7 @@ class AbstractResteasyReactiveContextInstrumentation implements TypeInstrumentat
   @SuppressWarnings("unused")
   public static class RunAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static OtelRequestContext onEnter(
         @Advice.This AbstractResteasyReactiveContext<?, ?> requestContext) {
@@ -43,7 +43,7 @@ class AbstractResteasyReactiveContextInstrumentation implements TypeInstrumentat
       return null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable OtelRequestContext context) {
       if (context != null) {
         context.close();

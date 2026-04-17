@@ -101,7 +101,8 @@ public class VertxReactiveWebServer extends AbstractVerticle {
               .requestHandler(router)
               .listen(port)
               .onComplete(it -> startPromise.complete());
-        });
+        },
+        throwable -> startPromise.fail(throwable));
   }
 
   @SuppressWarnings("CheckReturnValue")
@@ -161,13 +162,14 @@ public class VertxReactiveWebServer extends AbstractVerticle {
     }
   }
 
-  private static void setUpInitialData(Handler<Void> done) {
+  private static void setUpInitialData(Handler<Void> done, Handler<Throwable> onError) {
     client
         .getConnection()
         .onComplete(
             res -> {
               if (res.failed()) {
-                throw new IllegalStateException(res.cause());
+                onError.handle(res.cause());
+                return;
               }
 
               SqlConnection conn = res.result();
@@ -178,7 +180,8 @@ public class VertxReactiveWebServer extends AbstractVerticle {
                   .onComplete(
                       ddl -> {
                         if (ddl.failed()) {
-                          throw new IllegalStateException(ddl.cause());
+                          onError.handle(ddl.cause());
+                          return;
                         }
 
                         conn.query(
@@ -187,7 +190,8 @@ public class VertxReactiveWebServer extends AbstractVerticle {
                             .onComplete(
                                 fixtures -> {
                                   if (fixtures.failed()) {
-                                    throw new IllegalStateException(fixtures.cause());
+                                    onError.handle(fixtures.cause());
+                                    return;
                                   }
 
                                   done.handle(null);

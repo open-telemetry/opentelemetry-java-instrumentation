@@ -17,6 +17,8 @@ import org.springframework.kafka.listener.RecordInterceptor;
 
 /** Entrypoint for instrumenting Spring Kafka listeners. */
 public final class SpringKafkaTelemetry {
+  private final Instrumenter<KafkaProcessRequest, Void> processInstrumenter;
+  private final Instrumenter<KafkaReceiveRequest, Void> batchProcessInstrumenter;
 
   /** Returns a new {@link SpringKafkaTelemetry} configured with the given {@link OpenTelemetry}. */
   public static SpringKafkaTelemetry create(OpenTelemetry openTelemetry) {
@@ -30,9 +32,6 @@ public final class SpringKafkaTelemetry {
   public static SpringKafkaTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new SpringKafkaTelemetryBuilder(openTelemetry);
   }
-
-  private final Instrumenter<KafkaProcessRequest, Void> processInstrumenter;
-  private final Instrumenter<KafkaReceiveRequest, Void> batchProcessInstrumenter;
 
   SpringKafkaTelemetry(
       Instrumenter<KafkaProcessRequest, Void> processInstrumenter,
