@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
-import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -24,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import java.util.ArrayList;
@@ -96,7 +96,8 @@ class WrapperTest extends AbstractWrapperTest {
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
       assertions.add(
-          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
+          equalTo(
+              MessageHeaderUtil.headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
     return assertions;
   }
@@ -117,7 +118,8 @@ class WrapperTest extends AbstractWrapperTest {
                 satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer"))));
     if (testHeaders) {
       assertions.add(
-          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
+          equalTo(
+              MessageHeaderUtil.headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
     return assertions;
   }
@@ -135,7 +137,8 @@ class WrapperTest extends AbstractWrapperTest {
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
     if (testHeaders) {
       assertions.add(
-          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
+          equalTo(
+              MessageHeaderUtil.headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
     return assertions;
   }

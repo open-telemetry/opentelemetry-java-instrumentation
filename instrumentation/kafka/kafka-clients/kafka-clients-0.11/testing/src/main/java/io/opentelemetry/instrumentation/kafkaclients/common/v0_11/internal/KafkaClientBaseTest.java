@@ -6,8 +6,8 @@
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
-import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -189,8 +189,7 @@ public abstract class KafkaClientBaseTest {
       assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true));
     }
     if (testHeaders) {
-      assertions.add(
-          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
+      assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
     return assertions;
   }
@@ -210,8 +209,7 @@ public abstract class KafkaClientBaseTest {
       assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
     }
     if (testHeaders) {
-      assertions.add(
-          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
+      assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
     return assertions;
   }
@@ -247,8 +245,7 @@ public abstract class KafkaClientBaseTest {
       assertions.add(equalTo(MESSAGING_MESSAGE_BODY_SIZE, messageValue.getBytes(UTF_8).length));
     }
     if (testHeaders) {
-      assertions.add(
-          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
+      assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
 
     if (testMultiBaggage) {
