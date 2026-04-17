@@ -40,7 +40,7 @@ public abstract class AbstractSpringKafkaTest {
 
   protected static final AttributeKey<String> MESSAGING_CLIENT_ID =
       AttributeKey.stringKey("messaging.client_id");
-  static KafkaContainer kafka;
+  protected static KafkaContainer kafka;
 
   ConfigurableApplicationContext applicationContext;
   protected KafkaTemplate<String, String> kafkaTemplate;

@@ -79,7 +79,7 @@ public abstract class KafkaClientBaseTest {
   protected Consumer<Integer, String> consumer;
   private final CountDownLatch consumerReady = new CountDownLatch(1);
 
-  static final boolean isExperimentalEnabled =
+  protected static final boolean isExperimentalEnabled =
       Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes");
 
   public static final int partition = 0;
@@ -190,6 +190,12 @@ public abstract class KafkaClientBaseTest {
     }
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
+    }
+    if (isExperimentalEnabled) {
+      assertions.add(
+          satisfies(
+              stringKey("messaging.kafka.bootstrap.servers"),
+              val -> val.matches("^localhost:\\d+(,localhost:\\d+)*$")));
     }
     return assertions;
   }

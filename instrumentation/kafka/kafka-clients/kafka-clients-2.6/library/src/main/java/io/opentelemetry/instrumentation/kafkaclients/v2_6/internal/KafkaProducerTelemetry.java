@@ -44,10 +44,10 @@ public class KafkaProducerTelemetry {
    * @param record the producer record to inject span info.
    */
   public <K, V> ProducerRecord<K, V> buildAndInjectSpan(
-      ProducerRecord<K, V> record, String clientId) {
+      ProducerRecord<K, V> record, String clientId, String bootstrapServers) {
     Context parentContext = Context.current();
 
-    KafkaProducerRequest request = KafkaProducerRequest.create(record, clientId);
+    KafkaProducerRequest request = KafkaProducerRequest.create(record, clientId, bootstrapServers);
     if (!producerInstrumenter.shouldStart(parentContext, request)) {
       return record;
     }
@@ -74,10 +74,11 @@ public class KafkaProducerTelemetry {
       ProducerRecord<K, V> record,
       Producer<K, V> producer,
       Callback callback,
-      BiFunction<ProducerRecord<K, V>, Callback, Future<RecordMetadata>> sendFn) {
+      BiFunction<ProducerRecord<K, V>, Callback, Future<RecordMetadata>> sendFn,
+      String bootstrapServers) {
     Context parentContext = Context.current();
 
-    KafkaProducerRequest request = KafkaProducerRequest.create(record, producer);
+    KafkaProducerRequest request = KafkaProducerRequest.create(record, producer, bootstrapServers);
     if (!producerInstrumenter.shouldStart(parentContext, request)) {
       return sendFn.apply(record, callback);
     }
