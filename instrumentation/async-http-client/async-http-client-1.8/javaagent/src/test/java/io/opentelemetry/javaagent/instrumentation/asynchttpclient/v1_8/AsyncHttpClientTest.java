@@ -30,8 +30,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing =
-      HttpClientInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
   private static final int CONNECTION_TIMEOUT_MS = (int) CONNECTION_TIMEOUT.toMillis();
   private static final int READ_TIMEOUT_MS = (int) READ_TIMEOUT.toMillis();
