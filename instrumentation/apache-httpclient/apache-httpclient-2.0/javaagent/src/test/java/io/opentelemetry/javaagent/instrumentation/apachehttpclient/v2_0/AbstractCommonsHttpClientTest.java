@@ -34,7 +34,7 @@ abstract class AbstractCommonsHttpClientTest extends AbstractHttpClientTest<Http
   private static final HttpClient client = buildClient(false);
   private static final HttpClient clientWithReadTimeout = buildClient(true);
 
-  static HttpClient buildClient(boolean readTimeout) {
+  private static HttpClient buildClient(boolean readTimeout) {
     HttpClient client = new HttpClient(connectionManager);
     client.setConnectionTimeout((int) CONNECTION_TIMEOUT.toMillis());
     if (readTimeout) {
