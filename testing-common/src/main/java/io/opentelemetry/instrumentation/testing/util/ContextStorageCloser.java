@@ -60,7 +60,10 @@ public class ContextStorageCloser {
       } catch (Throwable t) {
         restore();
         if (t instanceof AssertionError) {
-          System.err.println();
+          System.err.println("AssertionError ");
+          for (StackTraceElement stackTraceElement : t.getStackTrace()) {
+            System.err.println("\t" + stackTraceElement);
+          }
           for (Map.Entry<Thread, StackTraceElement[]> threadEntry :
               Thread.getAllStackTraces().entrySet()) {
             System.err.println("Thread " + threadEntry.getKey());

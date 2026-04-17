@@ -18,7 +18,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /** Bridges the Context from Netty request types to finagle request types. */
-class BijectionsInstrumentation implements TypeInstrumentation {
+class BijectionsNettyInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

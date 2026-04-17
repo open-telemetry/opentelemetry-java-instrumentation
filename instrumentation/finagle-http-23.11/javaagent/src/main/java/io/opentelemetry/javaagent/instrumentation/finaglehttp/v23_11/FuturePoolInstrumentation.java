@@ -41,7 +41,7 @@ class FuturePoolInstrumentation implements TypeInstrumentation {
   public static class ApplyAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onApplyEnter(@Advice.Argument(value = 0, readOnly = false) Function0<?> fn) {
-      if (fn != null && Context.current() != Context.root()) {
+      if (fn != null) {
         fn = TwitterUtilCoreHelpers.wrap(Context.current(), fn);
       }
     }

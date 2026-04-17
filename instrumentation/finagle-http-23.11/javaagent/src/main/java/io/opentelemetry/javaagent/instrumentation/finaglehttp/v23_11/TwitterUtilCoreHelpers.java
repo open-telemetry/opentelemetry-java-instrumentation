@@ -28,36 +28,27 @@ public class TwitterUtilCoreHelpers {
 
     @Override
     public boolean isDefinedAt(Throwable x) {
-      Scope scope = context.makeCurrent();
-      try {
+      try (Scope ignored = context.makeCurrent()) {
         // Return true only for inputs this function handles`
         return delegate.isDefinedAt(x);
-      } finally {
-        scope.close();
       }
     }
 
     @Override
     public BoxedUnit apply(Throwable x) {
-      Scope scope = context.makeCurrent();
-      try {
+      try (Scope ignored = context.makeCurrent()) {
         return delegate.apply(x);
-      } finally {
-        scope.close();
       }
     }
   }
 
   public static <T> Function0<T> wrap(Context context, Function0<T> fn) {
-    if (context == Context.current()) {
+    if (context == Context.root()) {
       return fn;
     }
     return () -> {
-      Scope scope = context.makeCurrent();
-      try {
+      try (Scope ignored = context.makeCurrent()) {
         return fn.apply();
-      } finally {
-        scope.close();
       }
     };
   }

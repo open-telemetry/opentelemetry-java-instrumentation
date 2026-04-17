@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpCl
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons.clientHandlerFactory;
 
 import com.twitter.finagle.ChannelTransportHelpers;
+import com.twitter.finagle.Netty4HttpPackageHelpers;
 import com.twitter.finagle.http.Request;
 import com.twitter.finagle.http.Request$;
 import com.twitter.finagle.http.collection.RecordSchema;
@@ -17,8 +18,11 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOutboundHandlerAdapter;
+import io.netty.channel.ChannelPromise;
 import io.netty.channel.OpenTelemetryChannelInitializerDelegate;
 import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http2.Http2StreamFrameToHttpObjectCodec;
 import io.opentelemetry.context.Context;
@@ -37,6 +41,8 @@ public class Helpers {
 
   public static final RecordSchema.Field<Context> OTEL_CONTEXT_KEY =
       Request$.MODULE$.Schema().newField();
+
+  public static final String OTEL_NETTY_HANDLER = "otelFinagleNettyHandler";
 
   private Helpers() {}
 
@@ -123,69 +129,66 @@ public class Helpers {
   Part 1/3 of bridging the otel Context from netty to finagle.
    */
   public static void mutateHandlerPipeline(Channel ch) {
-    ChannelInboundHandlerAdapter oldHandler =
-        (ChannelInboundHandlerAdapter) ch.pipeline().get(ChannelTransportHelpers.getHandlerName());
+    ChannelHandler codec = ch.pipeline().get(Netty4HttpPackageHelpers.getHttpCodecName());
 
-    ch.pipeline()
-        .replace(
-            oldHandler,
-            ChannelTransportHelpers.getHandlerName(),
-            new ChannelInboundHandlerAdapter() {
-              @Override
-              public void channelActive(ChannelHandlerContext ctx) throws Exception {
-                oldHandler.channelActive(ctx);
+    if (codec instanceof HttpClientCodec) {
+      // ensure we capture the client context and assign it to the channel before any processing;
+      // not applicable to servers
+      ch.pipeline().addAfter(ChannelTransportHelpers.getHandlerName(), OTEL_NETTY_HANDLER,
+          new ChannelOutboundHandlerAdapter() {
+            @Override
+            public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise)
+                throws Exception {
+              if (msg instanceof HttpRequest) {
+                Context context = VirtualField.find(HttpRequest.class, Context.class)
+                    .get((HttpRequest) msg);
+                ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT).set(context);
+              } else {
+                throw new IllegalArgumentException("unexpected request type: " + msg);
+              }
+              super.write(ctx, msg, promise);
+            }
+          });
+    } else {
+      // ensure we capture the server context and assign it to the outgoing request before offering to the AsyncQueue;
+      // not applicable to clients
+      ch.pipeline().addBefore(ChannelTransportHelpers.getHandlerName(), OTEL_NETTY_HANDLER,
+          new ChannelInboundHandlerAdapter() {
+            /*
+            Assign the context to the request.
+
+            Part 1/3 for chaining the context from netty to finagle.
+             */
+            @Override
+            public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+              ServerContexts serverContexts = ServerContexts.get(ctx.channel());
+              if (serverContexts == null) {
+                super.channelRead(ctx, msg);
+                return;
               }
 
-              @Override
-              public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-                oldHandler.channelReadComplete(ctx);
+              ServerContext serverContext = serverContexts.peekLast();
+
+              // type switch courtesy of
+              // com.twitter.finagle.netty4.http.Netty4ServerStreamTransport.read()
+              if (msg instanceof FullHttpRequest) {
+                VirtualField.find(FullHttpRequest.class, Context.class)
+                    .set(
+                        (FullHttpRequest) msg,
+                        serverContext != null ? serverContext.context() : null);
+              } else if (msg instanceof HttpRequest) {
+                VirtualField.find(HttpRequest.class, Context.class)
+                    .set(
+                        (HttpRequest) msg,
+                        serverContext != null ? serverContext.context() : null);
+              } else {
+                throw new IllegalArgumentException("unexpected request type: " + msg);
               }
 
-              /*
-              Assign the context to the request.
-
-              Part 1/3 for chaining the context from netty to finagle.
-               */
-              @Override
-              public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-                ServerContexts serverContexts = ServerContexts.get(ctx.channel());
-                if (serverContexts == null) {
-                  oldHandler.channelRead(ctx, msg);
-                  return;
-                }
-
-                ServerContext serverContext = serverContexts.peekLast();
-
-                // type switch courtesy of
-                // com.twitter.finagle.netty4.http.Netty4ServerStreamTransport.read()
-                if (msg instanceof FullHttpRequest) {
-                  VirtualField.find(FullHttpRequest.class, Context.class)
-                      .set(
-                          (FullHttpRequest) msg,
-                          serverContext != null ? serverContext.context() : null);
-                } else if (msg instanceof HttpRequest) {
-                  VirtualField.find(HttpRequest.class, Context.class)
-                      .set(
-                          (HttpRequest) msg,
-                          serverContext != null ? serverContext.context() : null);
-                } else {
-                  throw new IllegalArgumentException("unexpected request type: " + msg);
-                }
-
-                oldHandler.channelRead(ctx, msg);
-              }
-
-              @Override
-              public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-                oldHandler.channelInactive(ctx);
-              }
-
-              @Override
-              public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
-                  throws Exception {
-                oldHandler.exceptionCaught(ctx, cause);
-              }
-            });
+              super.channelRead(ctx, msg);
+            }
+          });
+    }
   }
 
   /*

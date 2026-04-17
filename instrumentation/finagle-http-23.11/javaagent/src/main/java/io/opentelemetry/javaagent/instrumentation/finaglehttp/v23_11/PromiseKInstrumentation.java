@@ -59,7 +59,7 @@ class PromiseKInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ApplyAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onApplyEnter(@Advice.This Promise.K thiz) {
       Context savedContext = VirtualField.find(Promise.K.class, Context.class).get(thiz);
       if (savedContext != null) {
@@ -68,7 +68,7 @@ class PromiseKInstrumentation implements TypeInstrumentation {
       return null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onApplyExit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();
