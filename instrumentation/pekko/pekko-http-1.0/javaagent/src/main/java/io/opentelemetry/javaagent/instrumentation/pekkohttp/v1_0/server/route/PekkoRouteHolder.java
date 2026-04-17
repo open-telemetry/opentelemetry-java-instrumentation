@@ -55,7 +55,9 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
       if (afterMatch.isEmpty()) {
         PekkoFallbackRouteHolder fallback =
             PekkoFallbackRouteHolder.get(Java8BytecodeBridge.currentContext());
-        fallback.setFallback(this);
+        if (fallback != null) {
+          fallback.setFallback(this);
+        }
       }
     }
     lastWasMatched = true;
