@@ -30,6 +30,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Library | TelemetryBuilder/getter/setter patterns | Library instrumentation classes | `library-patterns.md` |
 | API | Deprecation and breaking-change policy | Public API changes | `api-deprecation-policy.md` |
 | Config | Config property stability/renames/removals | `otel.instrumentation.*` property changes, `DeclarativeConfigUtil` or `ConfigProperties` usage | `config-property-stability.md` |
+| Config | metadata.yaml format and declarative_name conversion | `metadata.yaml` changes | `metadata-yaml-format.md` |
 | Build | Gradle conventions, muzzle, test tasks, plugins | `build.gradle.kts`, `settings.gradle.kts` | `gradle-conventions.md` |
 | Build | `testcontainersBuildService` declaration | Testcontainers dependency without `usesService` | `gradle-conventions.md` |
 | Style | Prefer instance creation over singletons for stateless interface impls (except on hot paths or Kotlin `object` declarations) | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`, enum/static singletons | — |
