@@ -11,7 +11,7 @@ Load only files relevant to the current scope to reduce noise and avoid over-con
 | `api-deprecation-policy.md` | Public API removal, rename, or deprecation; stable vs alpha breaking changes |
 | `config-property-stability.md` | `otel.instrumentation.*` property add, remove, rename, or deprecation |
 | `general-rules.md` | Always — review checklist table and core rules enforced on every review |
-| `metadata-yaml-format.md` | `metadata.yaml` changes, declarative config name conversion |
+| `metadata-yaml-format.md` | Always — mandatory review of metadata.yaml for config coverage |
 | `gradle-conventions.md` | `build.gradle.kts` or `settings.gradle.kts` changes, custom test task registration or wiring |
 | `javaagent-advice-patterns.md` | ByteBuddy `@Advice` class or advice-method changes |
 | `javaagent-module-patterns.md` | `InstrumentationModule`, `TypeInstrumentation`, `VirtualField`, `CallDepth` |
