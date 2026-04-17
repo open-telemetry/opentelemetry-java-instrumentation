@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
 import io.opentelemetry.context.Context;
@@ -8,15 +13,15 @@ import scala.runtime.AbstractPartialFunction;
 import scala.runtime.BoxedUnit;
 
 public class TwitterUtilCoreHelpers {
-  private TwitterUtilCoreHelpers () {}
+  private TwitterUtilCoreHelpers() {}
 
-  public static class InterruptibleWithContext extends
-      AbstractPartialFunction<Throwable, BoxedUnit> {
+  public static class InterruptibleWithContext
+      extends AbstractPartialFunction<Throwable, BoxedUnit> {
     private final Context context;
     private final PartialFunction<Throwable, BoxedUnit> delegate;
 
-    public InterruptibleWithContext(Context context,
-        PartialFunction<Throwable, BoxedUnit> delegate) {
+    public InterruptibleWithContext(
+        Context context, PartialFunction<Throwable, BoxedUnit> delegate) {
       this.context = context;
       this.delegate = delegate;
     }

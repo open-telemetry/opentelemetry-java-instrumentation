@@ -18,10 +18,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 import scala.Function0;
 
 /**
- * Instruments the narrow window where a caller, possibly bearing a Context,
- * can push work onto a FuturePool. While the underlying Executor/Service
- * instruments the Runnable, there is possibility for it to leak at the call
- * site in the transition.
+ * Instruments the narrow window where a caller, possibly bearing a Context, can push work onto a
+ * FuturePool. While the underlying Executor/Service instruments the Runnable, there is possibility
+ * for it to leak at the call site in the transition.
  */
 class FuturePoolInstrumentation implements TypeInstrumentation {
 
@@ -41,8 +40,7 @@ class FuturePoolInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ApplyAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onApplyEnter(
-        @Advice.Argument(value = 0, readOnly = false) Function0<?> fn) {
+    public static void onApplyEnter(@Advice.Argument(value = 0, readOnly = false) Function0<?> fn) {
       if (fn != null && Context.current() != Context.root()) {
         fn = TwitterUtilCoreHelpers.wrap(Context.current(), fn);
       }

@@ -19,11 +19,10 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
- * Part 3/3 of bridging the otel Context from netty to finagle.
- * Instruments the dispatch call to extract the Context from the finagle Request
- * context and assert it as current for the duration of the dispatch.
- * This allows the other instrumentations to take over and carry the Context
- * to its next span/s.
+ * Part 3/3 of bridging the otel Context from netty to finagle. Instruments the dispatch call to
+ * extract the Context from the finagle Request context and assert it as current for the duration of
+ * the dispatch. This allows the other instrumentations to take over and carry the Context to its
+ * next span/s.
  */
 class GenStreamingServerDispatcherInstrumentation implements TypeInstrumentation {
   @Override

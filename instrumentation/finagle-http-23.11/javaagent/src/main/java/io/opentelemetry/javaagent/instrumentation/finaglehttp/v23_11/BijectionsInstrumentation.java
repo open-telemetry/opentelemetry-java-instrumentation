@@ -17,9 +17,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/**
- * Bridges the Context from Netty request types to finagle request types.
- */
+/** Bridges the Context from Netty request types to finagle request types. */
 class BijectionsInstrumentation implements TypeInstrumentation {
 
   @Override
@@ -30,8 +28,7 @@ class BijectionsInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("fullRequestToFinagle")),
-        getClass().getName() + "$FullRequestAdvice");
+        isMethod().and(named("fullRequestToFinagle")), getClass().getName() + "$FullRequestAdvice");
     transformer.applyAdviceToMethod(
         isMethod().and(named("chunkedRequestToFinagle")),
         getClass().getName() + "$ChunkedRequestAdvice");
@@ -40,8 +37,8 @@ class BijectionsInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class FullRequestAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onApplyExit(@Advice.Return(readOnly = false) Request ret,
-        @Advice.Argument(0) FullHttpRequest in) {
+    public static void onApplyExit(
+        @Advice.Return(readOnly = false) Request ret, @Advice.Argument(0) FullHttpRequest in) {
       Helpers.chainContextToFinagle(in, ret);
     }
   }
@@ -49,8 +46,8 @@ class BijectionsInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ChunkedRequestAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onApplyExit(@Advice.Return(readOnly = false) Request ret,
-        @Advice.Argument(0) HttpRequest in) {
+    public static void onApplyExit(
+        @Advice.Return(readOnly = false) Request ret, @Advice.Argument(0) HttpRequest in) {
       Helpers.chainContextToFinagle(in, ret);
     }
   }

@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package com.twitter.util;
 
 // public accessible stubs of mirrored types in com.twitter.util to ensure compilation;
@@ -6,9 +11,7 @@ public class Promise {
   private Promise() {}
 
   @SuppressWarnings("ClassNamedLikeTypeParameter")
-  public abstract static class K {
-  }
+  public abstract static class K {}
 
-  public abstract static class Interruptible {
-  }
+  public abstract static class Interruptible {}
 }

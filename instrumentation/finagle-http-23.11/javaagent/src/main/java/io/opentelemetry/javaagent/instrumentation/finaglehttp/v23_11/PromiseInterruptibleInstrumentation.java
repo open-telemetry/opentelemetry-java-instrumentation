@@ -19,8 +19,8 @@ import scala.PartialFunction;
 import scala.runtime.BoxedUnit;
 
 /**
- * Inspired by Kamon's approach, instruments the interruptible such that it has access
- * to the Context active on the Promise.
+ * Inspired by Kamon's approach, instruments the interruptible such that it has access to the
+ * Context active on the Promise.
  */
 class PromiseInterruptibleInstrumentation implements TypeInstrumentation {
 
@@ -31,16 +31,17 @@ class PromiseInterruptibleInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isConstructor(), getClass().getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onEnter(@Advice.This Promise.Interruptible thiz,
-        @Advice.Argument(value = 1, readOnly = false) PartialFunction<Throwable, BoxedUnit> handler) {
+    public static void onEnter(
+        @Advice.This Promise.Interruptible thiz,
+        @Advice.Argument(value = 1, readOnly = false)
+            PartialFunction<Throwable, BoxedUnit> handler) {
       if (!(handler instanceof TwitterUtilCoreHelpers.InterruptibleWithContext)) {
         handler = new TwitterUtilCoreHelpers.InterruptibleWithContext(Context.current(), handler);
       }

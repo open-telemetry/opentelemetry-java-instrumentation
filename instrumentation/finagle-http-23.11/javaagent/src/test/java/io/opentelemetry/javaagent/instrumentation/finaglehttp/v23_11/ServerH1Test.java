@@ -10,7 +10,6 @@ import com.twitter.finagle.Http;
 class ServerH1Test extends AbstractServerTest {
   @Override
   protected Http.Server configureServer(Http.Server in) {
-    return in
-        .withNoHttp2();
+    return in.withNoHttp2();
   }
 }

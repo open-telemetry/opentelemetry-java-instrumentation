@@ -29,7 +29,8 @@ class PromiseKInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     // includes Transformer's two lone derivatives
-    return named("com.twitter.util.Promise$Transformer").or(named("com.twitter.util.Promise$Monitored"));
+    return named("com.twitter.util.Promise$Transformer")
+        .or(named("com.twitter.util.Promise$Monitored"));
   }
 
   @Override
@@ -49,8 +50,8 @@ class PromiseKInstrumentation implements TypeInstrumentation {
     public static void onExit(@Advice.This Promise.K thiz) {
       Context current = Context.current();
       if (current != Context.root()) {
-        VirtualField<Promise.K, Context> contextVirtualField = VirtualField.find(Promise.K.class,
-            Context.class);
+        VirtualField<Promise.K, Context> contextVirtualField =
+            VirtualField.find(Promise.K.class, Context.class);
         contextVirtualField.set(thiz, current);
       }
     }

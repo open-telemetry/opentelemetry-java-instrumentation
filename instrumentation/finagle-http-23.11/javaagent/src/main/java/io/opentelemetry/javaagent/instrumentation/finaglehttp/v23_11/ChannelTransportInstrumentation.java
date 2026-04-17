@@ -16,9 +16,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/**
- * Amends the tail of the Netty pipeline to bridge the netty request to its finagle request.
- */
+/** Amends the tail of the Netty pipeline to bridge the netty request to its finagle request. */
 class ChannelTransportInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -27,8 +25,8 @@ class ChannelTransportInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(isConstructor(),
-        ChannelTransportInstrumentation.class.getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(
+        isConstructor(), ChannelTransportInstrumentation.class.getName() + "$ConstructorAdvice");
   }
 
   @SuppressWarnings("unused")

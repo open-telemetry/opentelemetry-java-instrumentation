@@ -84,7 +84,9 @@ abstract class AbstractClientTest extends AbstractHttpClientTest<Request> {
   private Service<Request, Response> getClient(URI uri, ClientType clientType) {
     return clients.computeIfAbsent(
         clientType,
-        (type) -> configureClient(createClient(type)).newService(uri.getHost() + ":" + Utils.safePort(uri)));
+        (type) ->
+            configureClient(createClient(type))
+                .newService(uri.getHost() + ":" + Utils.safePort(uri)));
   }
 
   private Future<Response> doSendRequest(Request request, URI uri) {

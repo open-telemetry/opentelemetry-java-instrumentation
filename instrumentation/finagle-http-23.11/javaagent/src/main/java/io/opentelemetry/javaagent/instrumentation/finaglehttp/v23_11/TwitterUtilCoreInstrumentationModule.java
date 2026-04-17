@@ -32,7 +32,6 @@ public class TwitterUtilCoreInstrumentationModule extends InstrumentationModule
         new PromiseKInstrumentation(),
         new PromiseInterruptibleInstrumentation(),
         new LocalSchedulerActivationInstrumentation(),
-        new FuturePoolInstrumentation()
-    );
+        new FuturePoolInstrumentation());
   }
 }
