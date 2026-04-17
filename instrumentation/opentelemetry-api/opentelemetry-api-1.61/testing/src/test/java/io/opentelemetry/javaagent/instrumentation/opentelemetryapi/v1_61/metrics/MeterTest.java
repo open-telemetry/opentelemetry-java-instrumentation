@@ -27,7 +27,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class MeterTest {
 
   @RegisterExtension
-  static final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final AgentInstrumentationExtension testing =
+      AgentInstrumentationExtension.create();
 
   @Test
   void isEnabled() {
