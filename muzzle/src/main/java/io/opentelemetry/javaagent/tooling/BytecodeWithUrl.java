@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import javax.annotation.Nullable;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.utility.StreamDrainer;
 
@@ -163,7 +164,7 @@ public abstract class BytecodeWithUrl {
 
     private final byte[] byteCode;
     private final String className;
-    private volatile URL generatedUrl;
+    @Nullable private volatile URL generatedUrl;
 
     private ForDynamicType(String className, byte[] byteCode) {
       this.byteCode = byteCode;

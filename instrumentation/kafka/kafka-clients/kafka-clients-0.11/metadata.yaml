@@ -5,18 +5,22 @@ semantic_conventions:
   - MESSAGING_SPANS
 configurations:
   - name: otel.instrumentation.kafka.producer-propagation.enabled
+    declarative_name: java.kafka.producer_propagation.enabled
     description: Enable context propagation for Kafka message producers.
     type: boolean
     default: true
   - name: otel.instrumentation.kafka.experimental-span-attributes
+    declarative_name: java.kafka.experimental_span_attributes/development
     description: Enables the capture of the experimental consumer attributes `kafka.record.queue_time_ms` and `messaging.kafka.bootstrap.servers`.
     type: boolean
     default: false
   - name: otel.instrumentation.messaging.experimental.capture-headers
+    declarative_name: java.common.messaging.capture_headers/development
     description: A comma-separated list of header names to capture as span attributes.
     type: list
     default: ''
   - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+    declarative_name: java.common.messaging.receive_telemetry/development.enabled
     description: >
       Enables experimental receive telemetry, which will cause consumers to start a new trace, with
       only a span link connecting it to the producer trace.

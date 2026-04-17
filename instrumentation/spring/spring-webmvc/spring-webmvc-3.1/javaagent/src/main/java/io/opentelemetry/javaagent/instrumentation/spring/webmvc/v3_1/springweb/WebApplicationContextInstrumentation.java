@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.web.v6_0;
+package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1.springweb;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
@@ -57,8 +57,9 @@ class WebApplicationContextInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) ConfigurableListableBeanFactory beanFactory) {
-      if (beanFactory instanceof BeanDefinitionRegistry beanDefinitionRegistry
+      if (beanFactory instanceof BeanDefinitionRegistry
           && !beanFactory.containsBean("otelAutoDispatcherFilter")) {
+
         // Explicitly loading classes allows to catch any class-loading issue or deal with cases
         // where the class is not visible.
         try {
@@ -76,12 +77,13 @@ class WebApplicationContextInstrumentation implements TypeInstrumentation {
               dispatcherServletClass
                   .getClassLoader()
                   .loadClass(
-                      "org.springframework.web.servlet.v6_0.OpenTelemetryHandlerMappingFilter");
+                      "org.springframework.web.servlet.v3_1.OpenTelemetryHandlerMappingFilter");
           GenericBeanDefinition beanDefinition = new GenericBeanDefinition();
           beanDefinition.setScope(SCOPE_SINGLETON);
           beanDefinition.setBeanClass(clazz);
 
-          beanDefinitionRegistry.registerBeanDefinition("otelAutoDispatcherFilter", beanDefinition);
+          ((BeanDefinitionRegistry) beanFactory)
+              .registerBeanDefinition("otelAutoDispatcherFilter", beanDefinition);
         } catch (ClassNotFoundException ignored) {
           // Ignore
         }

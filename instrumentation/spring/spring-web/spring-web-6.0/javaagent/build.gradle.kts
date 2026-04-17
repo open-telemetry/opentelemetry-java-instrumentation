@@ -18,7 +18,6 @@ dependencies {
   library("org.springframework:spring-web:6.0.0")
 
   testInstrumentation(project(":instrumentation:http-url-connection:javaagent"))
-  testInstrumentation(project(":instrumentation:spring:spring-web:spring-web-3.1:javaagent"))
 }
 
 // spring 6 requires java 17
@@ -27,16 +26,22 @@ otelJava {
 }
 
 tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
   val testExperimental by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.instrumentation.http.client.emit-experimental-telemetry=true")
+    systemProperty("metadataConfig", "otel.instrumentation.http.client.emit-experimental-telemetry=true")
   }
 
   val testStableSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
   }
 
   check {
