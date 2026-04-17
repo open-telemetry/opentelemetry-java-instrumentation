@@ -50,6 +50,7 @@ public class ResponseInstrumentation implements TypeInstrumentation {
   public static class OnCompletedAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static Scope onEnter(
         @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Response response) {
 
@@ -75,6 +76,7 @@ public class ResponseInstrumentation implements TypeInstrumentation {
   public static class OnThrowableAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static Scope onEnter(
         @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Throwable throwable) {
 
