@@ -69,8 +69,7 @@ public class UndertowHelper {
   @SuppressWarnings("unchecked") // we lose type info with attachments
   @Nullable
   public Context getServerContext(HttpServerExchange exchange) {
-    AttachmentKey<Context> contextKey =
-        (AttachmentKey<Context>) KeyHolder.contextKeys.get(AttachmentKey.class);
+    AttachmentKey<Context> contextKey = (AttachmentKey<Context>) KeyHolder.get(AttachmentKey.class);
     if (contextKey == null) {
       return null;
     }
@@ -81,8 +80,8 @@ public class UndertowHelper {
   private static void attachServerContext(Context context, HttpServerExchange exchange) {
     AttachmentKey<Context> contextKey =
         (AttachmentKey<Context>)
-            KeyHolder.contextKeys.computeIfAbsent(
-                AttachmentKey.class, key -> AttachmentKey.create(Context.class));
+            KeyHolder.computeIfAbsent(
+                AttachmentKey.class, () -> AttachmentKey.create(Context.class));
     exchange.putAttachment(contextKey, context);
   }
 

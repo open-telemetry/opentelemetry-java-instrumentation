@@ -39,7 +39,7 @@ class CamelContextInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class StartAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onContextStart(@Advice.This CamelContext context) throws Exception {
 
       if (context.hasService(CamelTracingService.class) == null) {

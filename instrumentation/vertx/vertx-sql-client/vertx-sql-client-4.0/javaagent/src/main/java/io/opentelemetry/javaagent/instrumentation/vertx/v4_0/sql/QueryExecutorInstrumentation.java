@@ -119,7 +119,7 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
             new VertxSqlClientRequest(sql, connectOptions, preparedStatement, dbSystem);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, otelRequest)) {
-          return new AdviceScope(callDepth, null, null, null);
+          return new AdviceScope(callDepth);
         }
 
         Context context = instrumenter().start(parentContext, otelRequest);
@@ -151,12 +151,8 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter @Nullable AdviceScope adviceScope) {
-
-      if (adviceScope != null) {
-        adviceScope.end(throwable);
-      }
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
+      adviceScope.end(throwable);
     }
   }
 }

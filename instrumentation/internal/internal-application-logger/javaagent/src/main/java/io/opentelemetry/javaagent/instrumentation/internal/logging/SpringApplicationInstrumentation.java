@@ -30,7 +30,7 @@ class SpringApplicationInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class TypeInitAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter() {
       // mark the instrumented application as spring boot app
       ApplicationLoggerFlags.setSpringBootApp();

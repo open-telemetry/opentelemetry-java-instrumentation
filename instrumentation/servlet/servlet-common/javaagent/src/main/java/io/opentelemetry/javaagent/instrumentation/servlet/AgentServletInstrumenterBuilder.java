@@ -38,11 +38,11 @@ public class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
 
   private boolean propagateOperationListenersToOnEnd;
 
-  private AgentServletInstrumenterBuilder() {}
-
   public static <REQUEST, RESPONSE> AgentServletInstrumenterBuilder<REQUEST, RESPONSE> create() {
     return new AgentServletInstrumenterBuilder<>();
   }
+
+  private AgentServletInstrumenterBuilder() {}
 
   @CanIgnoreReturnValue
   public AgentServletInstrumenterBuilder<REQUEST, RESPONSE> addContextCustomizer(

@@ -77,6 +77,18 @@ Do not flag the following patterns (common false positives):
 
 - FQCN is acceptable when class-name collision makes import impossible.
 
+## [Style] Visibility modifiers
+
+Follow the principle of minimal necessary visibility. Use the most restrictive access modifier that
+still allows the code to function correctly.
+
+**Exception — Single public class**: If a module has only one public class then don't change it to
+package-private. Javadoc task fails when module has no public classes.**
+
+**Exception — Used from advice**: All classes and methods used from methods annotated with
+`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` must be public. These methods are inlined into
+transformed classes and must be accessible from those classes, which may be in different packages.
+
 ## [Style] `@SuppressWarnings` Usage
 
 - Method-level `@SuppressWarnings` is preferred over class-level for tighter scope, but
@@ -156,6 +168,11 @@ All `put` / `setAttribute` methods on `AttributesBuilder`, `Span`, `SpanBuilder`
 `LogRecordBuilder` are no-ops when the value is `null` (upstream SDK guarantee).
 Do not wrap these calls in `if (value != null)` guards — pass the value directly.
 
+This rule applies only when the guarded value can be passed through directly to the
+attribute setter. If the null check is guarding a dereference or other derived
+computation, keep the explicit guard instead of rewriting it into a ternary
+expression just to feed `null` to `put()`.
+
 **Exception — `AttributeKey<Long>` with `Integer` value**: the only primitive-typed
 overload on these interfaces is a convenience method that accepts `int`:
 
@@ -188,6 +205,16 @@ Preferred:
 
 ```java
 attributes.put(SOME_KEY, getSomething());
+```
+
+Do **not** flag (the guard is preserving a safe dereference and is clearer than a
+ternary rewrite):
+
+```java
+View view = modelAndView.getView();
+if (view != null) {
+  attributes.put("spring-webmvc.view.type", view.getClass().getName());
+}
 ```
 
 Also flag (the guard is unnecessary — types match, generic overload handles null):

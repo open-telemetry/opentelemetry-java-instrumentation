@@ -27,10 +27,10 @@ class ReflectiveMethodsFactory {
     }
   }
 
-  private static final Object SINGLETON_OBJECT = new ReflectObject();
+  private static final Object singletonObject = new ReflectObject();
 
   static Object getTarget() {
-    return SINGLETON_OBJECT;
+    return singletonObject;
   }
 
   static Method getMethod() {
@@ -47,7 +47,7 @@ class ReflectiveMethodsFactory {
 
   private static Method getRequiredMethod(String name, Class<?>... parameterTypes) {
     try {
-      return SINGLETON_OBJECT.getClass().getMethod(name, parameterTypes);
+      return singletonObject.getClass().getMethod(name, parameterTypes);
     } catch (ReflectiveOperationException e) {
       throw new IllegalStateException("Failed to resolve reflective method: " + name, e);
     }

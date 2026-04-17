@@ -11,14 +11,12 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.instrumentation.jetty.common.JettyHandlerInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class Jetty8InstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class Jetty8InstrumentationModule extends InstrumentationModule {
 
   public Jetty8InstrumentationModule() {
     super("jetty", "jetty-8.0");
@@ -37,10 +35,5 @@ public class Jetty8InstrumentationModule extends InstrumentationModule
             "javax.servlet",
             Jetty8InstrumentationModule.class.getPackage().getName() + ".Jetty8HandlerAdvice"),
         new JettyQueuedThreadPoolInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

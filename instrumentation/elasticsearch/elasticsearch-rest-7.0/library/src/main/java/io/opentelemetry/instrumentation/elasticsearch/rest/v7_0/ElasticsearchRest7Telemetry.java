@@ -13,6 +13,7 @@ import org.elasticsearch.client.RestClient;
 
 /** Entrypoint for instrumenting Apache Elasticsearch Rest clients. */
 public final class ElasticsearchRest7Telemetry {
+  private final Instrumenter<ElasticsearchRestRequest, Response> instrumenter;
 
   /**
    * Returns a new {@link ElasticsearchRest7Telemetry} configured with the given {@link
@@ -29,8 +30,6 @@ public final class ElasticsearchRest7Telemetry {
   public static ElasticsearchRest7TelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new ElasticsearchRest7TelemetryBuilder(openTelemetry);
   }
-
-  private final Instrumenter<ElasticsearchRestRequest, Response> instrumenter;
 
   ElasticsearchRest7Telemetry(Instrumenter<ElasticsearchRestRequest, Response> instrumenter) {
     this.instrumenter = instrumenter;

@@ -12,13 +12,11 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class Log4j27InstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class Log4j27InstrumentationModule extends InstrumentationModule {
   public Log4j27InstrumentationModule() {
     super("log4j-context-data", "log4j-context-data-2.7");
   }
@@ -41,10 +39,5 @@ public class Log4j27InstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ContextDataInjectorFactoryInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

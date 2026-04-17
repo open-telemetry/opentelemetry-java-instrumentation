@@ -189,7 +189,7 @@ final class RequestAccess {
   }
 
   private static class LambdaFunctionConfigurationAccess {
-    static final MethodHandle getLambdaArnFromConfiguration = findGetLambdaArnMethod();
+    private static final MethodHandle getLambdaArnFromConfiguration = findGetLambdaArnMethod();
 
     @Nullable
     private static MethodHandle findGetLambdaArnMethod() {

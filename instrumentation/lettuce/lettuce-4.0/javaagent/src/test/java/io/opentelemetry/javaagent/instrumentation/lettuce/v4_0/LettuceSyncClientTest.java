@@ -119,8 +119,8 @@ class LettuceSyncClientTest {
     testConnectionClient.setOptions(CLIENT_OPTIONS);
 
     StatefulRedisConnection<String, String> testConnection = testConnectionClient.connect();
-    cleanup.deferCleanup(() -> testConnection.close());
     cleanup.deferCleanup(testConnectionClient::shutdown);
+    cleanup.deferCleanup(() -> testConnection.close());
 
     testing.waitAndAssertTraces(
         trace ->
@@ -284,9 +284,9 @@ class LettuceSyncClientTest {
     long serverPort = server.getMappedPort(6379);
     RedisClient client = RedisClient.create("redis://" + host + ":" + serverPort + "/" + DB_INDEX);
     client.setOptions(CLIENT_OPTIONS);
+    cleanup.deferCleanup(client::shutdown);
     StatefulRedisConnection<String, String> connection1 = client.connect();
     cleanup.deferCleanup(connection1);
-    cleanup.deferCleanup(client::shutdown);
 
     RedisCommands<String, String> commands = connection1.sync();
     // 1 connect trace
@@ -318,9 +318,9 @@ class LettuceSyncClientTest {
     RedisClient client =
         RedisClient.create("redis://" + host + ":" + shutdownServerPort + "/" + DB_INDEX);
     client.setOptions(CLIENT_OPTIONS);
+    cleanup.deferCleanup(client::shutdown);
     StatefulRedisConnection<String, String> connection1 = client.connect();
     cleanup.deferCleanup(connection1);
-    cleanup.deferCleanup(client::shutdown);
 
     RedisCommands<String, String> commands = connection1.sync();
     // 1 connect trace

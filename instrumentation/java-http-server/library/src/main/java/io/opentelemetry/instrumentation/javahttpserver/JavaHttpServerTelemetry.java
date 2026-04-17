@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
 /** Entrypoint for instrumenting Java HTTP Server services. */
 public final class JavaHttpServerTelemetry {
+  private final Instrumenter<HttpExchange, HttpExchange> instrumenter;
 
   /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static JavaHttpServerTelemetry create(OpenTelemetry openTelemetry) {
@@ -23,8 +24,6 @@ public final class JavaHttpServerTelemetry {
   public static JavaHttpServerTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new JavaHttpServerTelemetryBuilder(openTelemetry);
   }
-
-  private final Instrumenter<HttpExchange, HttpExchange> instrumenter;
 
   JavaHttpServerTelemetry(Instrumenter<HttpExchange, HttpExchange> instrumenter) {
     this.instrumenter = instrumenter;

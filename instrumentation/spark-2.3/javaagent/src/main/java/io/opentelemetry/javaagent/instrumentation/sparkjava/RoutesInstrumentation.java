@@ -36,7 +36,7 @@ class RoutesInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class FindAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void routeMatchEnricher(@Advice.Return RouteMatch routeMatch) {
       SparkRouteUpdater.updateHttpRoute(routeMatch);
     }

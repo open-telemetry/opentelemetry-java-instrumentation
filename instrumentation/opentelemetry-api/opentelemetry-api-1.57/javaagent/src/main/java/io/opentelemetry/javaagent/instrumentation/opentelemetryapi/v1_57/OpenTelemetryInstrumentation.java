@@ -40,7 +40,7 @@ class OpenTelemetryInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class IsSetAdvice {
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(inline = false)
     public static boolean methodExit() {
       return true;
     }
@@ -49,7 +49,7 @@ class OpenTelemetryInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetOrNoopAdvice {
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static application.io.opentelemetry.api.OpenTelemetry methodExit() {
       return application.io.opentelemetry.api.GlobalOpenTelemetry.get();
     }

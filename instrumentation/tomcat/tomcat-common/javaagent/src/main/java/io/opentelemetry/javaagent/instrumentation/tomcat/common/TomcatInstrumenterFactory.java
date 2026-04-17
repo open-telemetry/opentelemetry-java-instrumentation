@@ -15,9 +15,6 @@ import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 
 public class TomcatInstrumenterFactory {
-
-  private TomcatInstrumenterFactory() {}
-
   public static <REQUEST, RESPONSE> Instrumenter<Request, Response> create(
       String instrumentationName, ServletAccessor<REQUEST, RESPONSE> accessor) {
     return JavaagentHttpServerInstrumenters.create(
@@ -35,4 +32,6 @@ public class TomcatInstrumenterFactory {
                                 .recordException()
                                 .init(context))));
   }
+
+  private TomcatInstrumenterFactory() {}
 }

@@ -837,9 +837,6 @@ targets:
       target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.50:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.52:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.56:javaagent'
     - type: gradle
       path: ./
@@ -1171,9 +1168,6 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:spring:spring-jms:spring-jms-6.0:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:spring:spring-web:spring-web-3.1:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:spring:spring-web:spring-web-3.1:library'

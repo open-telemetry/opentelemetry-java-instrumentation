@@ -11,7 +11,6 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -25,8 +24,7 @@ import reactor.netty.http.client.HttpClient;
  * HttpClient#doOnRequest(BiConsumer)} to pass context from the caller to Reactor to Netty.
  */
 @AutoService(InstrumentationModule.class)
-public class ReactorNettyInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class ReactorNettyInstrumentationModule extends InstrumentationModule {
 
   public ReactorNettyInstrumentationModule() {
     super("reactor-netty", "reactor-netty-0.9");
@@ -41,10 +39,5 @@ public class ReactorNettyInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new HttpClientInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

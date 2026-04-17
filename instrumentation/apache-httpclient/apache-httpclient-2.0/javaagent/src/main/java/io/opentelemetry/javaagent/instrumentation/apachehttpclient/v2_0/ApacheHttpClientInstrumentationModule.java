@@ -10,12 +10,10 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class ApacheHttpClientInstrumentationModule extends InstrumentationModule {
 
   public ApacheHttpClientInstrumentationModule() {
     super("apache-httpclient", "apache-httpclient-2.0");
@@ -24,10 +22,5 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ApacheHttpClientInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

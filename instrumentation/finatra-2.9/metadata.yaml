@@ -1,3 +1,4 @@
+display_name: Finatra
 description: >
   This instrumentation enriches HTTP server spans with route information, and enables controller
   spans for the Finatra web framework (controller spans are disabled by default).

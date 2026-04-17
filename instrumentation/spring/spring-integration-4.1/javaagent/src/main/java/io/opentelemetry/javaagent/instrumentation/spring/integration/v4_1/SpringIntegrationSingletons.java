@@ -16,12 +16,12 @@ import org.springframework.messaging.support.ChannelInterceptor;
 
 public class SpringIntegrationSingletons {
 
-  private static final List<String> PATTERNS =
+  private static final List<String> patterns =
       DeclarativeConfigUtil.getInstrumentationConfig(
               GlobalOpenTelemetry.get(), "spring_integration")
           .getScalarList("global_channel_interceptor_patterns", String.class, singletonList("*"));
 
-  private static final ChannelInterceptor INTERCEPTOR =
+  private static final ChannelInterceptor interceptor =
       SpringIntegrationTelemetry.builder(GlobalOpenTelemetry.get())
           .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
           .setProducerSpanEnabled(
@@ -33,11 +33,11 @@ public class SpringIntegrationSingletons {
           .createChannelInterceptor();
 
   public static String[] patterns() {
-    return PATTERNS.toArray(new String[0]);
+    return patterns.toArray(new String[0]);
   }
 
   public static ChannelInterceptor interceptor() {
-    return INTERCEPTOR;
+    return interceptor;
   }
 
   private SpringIntegrationSingletons() {}

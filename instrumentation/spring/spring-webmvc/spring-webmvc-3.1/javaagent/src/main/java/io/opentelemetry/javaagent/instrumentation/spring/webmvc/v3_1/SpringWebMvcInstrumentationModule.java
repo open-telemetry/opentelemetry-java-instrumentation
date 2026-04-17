@@ -54,9 +54,4 @@ public class SpringWebMvcInstrumentationModule extends InstrumentationModule
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new DispatcherServletInstrumentation(), new HandlerAdapterInstrumentation());
   }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
-  }
 }

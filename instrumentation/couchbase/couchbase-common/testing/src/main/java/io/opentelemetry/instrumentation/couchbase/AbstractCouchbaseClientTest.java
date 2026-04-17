@@ -61,8 +61,8 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
   protected CouchbaseCluster prepareCluster(BucketSettings bucketSettings) {
     CouchbaseEnvironment environment = envBuilder(bucketSettings).build();
     CouchbaseCluster cluster = CouchbaseCluster.create(environment, singletonList("127.0.0.1"));
-    cleanup.deferCleanup(cluster::disconnect);
     cleanup.deferCleanup(environment::shutdown);
+    cleanup.deferCleanup(cluster::disconnect);
 
     return cluster;
   }

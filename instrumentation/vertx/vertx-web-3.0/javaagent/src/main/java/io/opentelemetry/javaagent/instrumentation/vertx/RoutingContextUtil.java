@@ -7,15 +7,17 @@ package io.opentelemetry.javaagent.instrumentation.vertx;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.vertx.ext.web.RoutingContext;
+import javax.annotation.Nullable;
 
 public class RoutingContextUtil {
   private static final VirtualField<RoutingContext, String> routeField =
       VirtualField.find(RoutingContext.class, String.class);
 
-  public static void setRoute(RoutingContext routingContext, String route) {
+  public static void setRoute(RoutingContext routingContext, @Nullable String route) {
     routeField.set(routingContext, route);
   }
 
+  @Nullable
   public static String getRoute(RoutingContext routingContext) {
     return routeField.get(routingContext);
   }

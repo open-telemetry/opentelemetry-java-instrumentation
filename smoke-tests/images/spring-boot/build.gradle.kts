@@ -1,4 +1,6 @@
 import com.google.cloud.tools.jib.gradle.JibTask
+import org.gradle.api.tasks.Sync
+import org.gradle.jvm.tasks.Jar
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -56,15 +58,34 @@ springBoot {
 }
 
 val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
+val bootJarTask = tasks.named<Jar>("bootJar")
+
+val prepareBootJarForImage by tasks.registering(Sync::class) {
+  // Preserve Spring Boot's packaged runtime instead of Jib's default exploded layout so
+  // smoke tests exercise the typical bootJar launcher/classloader behavior used by java -jar.
+  from(bootJarTask)
+  into(layout.buildDirectory.dir("jib-extra/app"))
+  rename { "app.jar" }
+}
 
 jib {
   from.image = "eclipse-temurin:$targetJDK"
   to.image = "ghcr.io/$repo/smoke-test-spring-boot:jdk$targetJDK-$tag"
+  container.entrypoint = listOf("java", "-jar", "/app/app.jar")
   container.ports = listOf("8080")
+  extraDirectories {
+    paths {
+      path {
+        setFrom(layout.buildDirectory.dir("jib-extra").get().asFile.toPath())
+        into = "/"
+      }
+    }
+  }
 }
 
 tasks {
   withType<JibTask>().configureEach {
+    dependsOn(prepareBootJarForImage)
     // Jib tasks access Task.project at execution time which is not compatible with configuration cache
     notCompatibleWithConfigurationCache("Jib task accesses Task.project at execution time")
   }

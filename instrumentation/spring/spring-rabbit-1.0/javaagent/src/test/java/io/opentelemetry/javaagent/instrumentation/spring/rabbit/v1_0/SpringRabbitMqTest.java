@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
-import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -131,8 +131,7 @@ class SpringRabbitMqTest {
           satisfies(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, AbstractStringAssert::isNotBlank));
     }
     if (testHeaders) {
-      assertions.add(
-          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
+      assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
     return assertions;
   }
@@ -141,9 +140,9 @@ class SpringRabbitMqTest {
   @ValueSource(booleans = {true, false})
   void testContextPropagation(boolean testHeaders) throws Exception {
     Connection connection = connectionFactory.newConnection();
+    cleanup.deferCleanup(connection);
     Channel channel = connection.createChannel();
     cleanup.deferCleanup(channel);
-    cleanup.deferCleanup(connection);
 
     testing.runWithSpan(
         "parent",
@@ -229,9 +228,9 @@ class SpringRabbitMqTest {
   @Test
   void testAnonymousQueueSpanName() throws Exception {
     Connection connection = connectionFactory.newConnection();
+    cleanup.deferCleanup(connection);
     Channel channel = connection.createChannel();
     cleanup.deferCleanup(channel);
-    cleanup.deferCleanup(connection);
 
     String anonymousQueueName = applicationContext.getBean(AnonymousQueue.class).getName();
     applicationContext.getBean(AmqpTemplate.class).convertAndSend(anonymousQueueName, "test");
