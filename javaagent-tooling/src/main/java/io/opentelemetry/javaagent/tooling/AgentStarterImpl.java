@@ -261,6 +261,7 @@ public class AgentStarterImpl implements AgentStarter {
 
   private static class AgentBuilderDefaultClassFileTransformer implements ClassFileTransformer {
 
+    @Nullable
     @Override
     public byte[] transform(
         ClassLoader loader,
@@ -295,6 +296,7 @@ public class AgentStarterImpl implements AgentStarter {
 
   private static class CallbackRegistrationClassFileTransformer implements ClassFileTransformer {
 
+    @Nullable
     @Override
     public byte[] transform(
         ClassLoader loader,

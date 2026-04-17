@@ -134,7 +134,11 @@ public class HelperInjector implements Transformer {
             .map(
                 className ->
                     HelperClassDefinition.create(
-                        className, helpersSource, InjectionMode.CLASS_ONLY))
+                        className,
+                        requireNonNull(
+                            helpersSource,
+                            "helpersSource must not be null when helperClassNames is non-empty"),
+                        InjectionMode.CLASS_ONLY))
             .collect(toList());
 
     this.helperClassesGenerator = (cl) -> helpers;
