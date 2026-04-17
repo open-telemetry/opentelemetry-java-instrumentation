@@ -86,7 +86,7 @@ public final class ApacheHttpClientRequest {
       // this can be relative or absolute
       return httpRequest.getUri();
     } catch (URISyntaxException e) {
-      logger.log(FINE, e.getMessage(), e);
+      logger.log(FINE, "Failed to read Apache HttpClient request URI", e);
       return null;
     }
   }
@@ -103,7 +103,7 @@ public final class ApacheHttpClientRequest {
           uri.getQuery(),
           uri.getFragment());
     } catch (URISyntaxException e) {
-      logger.log(FINE, e.getMessage(), e);
+      logger.log(FINE, "Failed to calculate Apache HttpClient request URI", e);
       return null;
     }
   }
