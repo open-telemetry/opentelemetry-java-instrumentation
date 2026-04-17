@@ -17,9 +17,6 @@ muzzle {
     excludeInstrumentationName("aws-sdk-2.2-sqs")
     excludeInstrumentationName("aws-sdk-2.2-sns")
     excludeInstrumentationName("aws-sdk-2.2-lambda")
-
-    // several software.amazon.awssdk artifacts are missing for this version
-    skip("2.17.200")
   }
 
   fail {
@@ -33,9 +30,6 @@ muzzle {
     // "fail" asserts that *all* the instrumentation modules fail to load, but the core one is
     // actually expected to succeed, so exclude it from checks.
     excludeInstrumentationName("aws-sdk-2.2-core")
-
-    // several software.amazon.awssdk artifacts are missing for this version
-    skip("2.17.200")
   }
 
   pass {
@@ -49,9 +43,6 @@ muzzle {
     excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
     excludeInstrumentationName("aws-sdk-2.2-sns")
     excludeInstrumentationName("aws-sdk-2.2-lambda")
-
-    // several software.amazon.awssdk artifacts are missing for this version
-    skip("2.17.200")
   }
 
   pass {
@@ -65,9 +56,6 @@ muzzle {
     excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
     excludeInstrumentationName("aws-sdk-2.2-sqs")
     excludeInstrumentationName("aws-sdk-2.2-lambda")
-
-    // several software.amazon.awssdk artifacts are missing for this version
-    skip("2.17.200")
   }
   pass {
     group.set("software.amazon.awssdk")
@@ -80,9 +68,6 @@ muzzle {
     excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
     excludeInstrumentationName("aws-sdk-2.2-sqs")
     excludeInstrumentationName("aws-sdk-2.2-sns")
-
-    // several software.amazon.awssdk artifacts are missing for this version
-    skip("2.17.200")
   }
   pass {
     group.set("software.amazon.awssdk")
