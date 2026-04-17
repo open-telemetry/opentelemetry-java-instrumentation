@@ -6,8 +6,8 @@
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
-import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -159,7 +159,7 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> publishAttributes(boolean experimental) {
     return asList(
-        equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")),
+        equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")),
         equalTo(MESSAGING_SYSTEM, "kafka"),
         equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
         equalTo(MESSAGING_OPERATION, "publish"),
@@ -176,7 +176,7 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> receiveAttributes() {
     return asList(
-        equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")),
+        equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")),
         equalTo(MESSAGING_SYSTEM, "kafka"),
         equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
         equalTo(MESSAGING_OPERATION, "receive"),
@@ -188,7 +188,7 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> processAttributes(boolean experimental) {
     return asList(
-        equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")),
+        equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")),
         equalTo(MESSAGING_SYSTEM, "kafka"),
         equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
         equalTo(MESSAGING_OPERATION, "process"),

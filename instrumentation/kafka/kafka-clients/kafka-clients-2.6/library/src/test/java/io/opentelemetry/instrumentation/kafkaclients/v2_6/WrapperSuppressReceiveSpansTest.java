@@ -6,8 +6,8 @@
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
-import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -75,8 +75,7 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
-      assertions.add(
-          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
+      assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
     if (testExperimental) {
       assertions.add(
@@ -102,8 +101,7 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
                 equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
                 satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer"))));
     if (testHeaders) {
-      assertions.add(
-          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
+      assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
     if (testExperimental) {
       assertions.add(
