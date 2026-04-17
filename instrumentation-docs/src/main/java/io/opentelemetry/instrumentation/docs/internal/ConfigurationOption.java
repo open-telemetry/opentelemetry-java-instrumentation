@@ -34,10 +34,6 @@ public record ConfigurationOption(
     }
   }
 
-  /**
-   * Convenience constructor for configurations without a declarative name or examples (backwards
-   * compatibility).
-   */
   public ConfigurationOption(
       String name, String description, String defaultValue, ConfigurationType type) {
     this(name, null, description, defaultValue, type, null);

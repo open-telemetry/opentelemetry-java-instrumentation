@@ -11,8 +11,6 @@ import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetadata;
 import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
 import org.junit.jupiter.api.Test;
 
-/** Tests that the examples field in configuration options is properly parsed and serialized. */
-@SuppressWarnings("NullAway")
 class ConfigurationExamplesTest {
 
   @Test

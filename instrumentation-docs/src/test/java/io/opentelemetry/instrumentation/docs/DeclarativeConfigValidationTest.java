@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.fail;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedDeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationOption;
+import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetadata;
 import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
@@ -22,6 +23,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
@@ -29,15 +32,12 @@ import org.junit.jupiter.api.Test;
  * Validates that declarative_name values in metadata.yaml files correctly map to their
  * corresponding flat property names using the actual
  * ConfigPropertiesBackedDeclarativeConfigProperties bridge.
- *
- * <p>For each configuration with a declarative_name, this test: 1. Creates a ConfigProperties with
- * the flat property (name) set to a test value 2. Navigates to the declarative path
- * (declarative_name) using the bridge 3. Verifies that the value can be retrieved at that path
  */
-@SuppressWarnings("NullAway")
 class DeclarativeConfigValidationTest {
 
-  private static final String TEST_VALUE = "test-validation-value";
+  private static final Logger logger =
+      Logger.getLogger(DeclarativeConfigValidationTest.class.getName());
+
   private static final Path INSTRUMENTATION_DIR = Paths.get("../instrumentation");
 
   @Test
@@ -45,7 +45,6 @@ class DeclarativeConfigValidationTest {
     List<ValidationResult> results = new ArrayList<>();
     List<String> errors = new ArrayList<>();
 
-    // Find all metadata.yaml files
     try (Stream<Path> paths = Files.walk(INSTRUMENTATION_DIR)) {
       List<Path> metadataFiles =
           paths.filter(p -> p.getFileName().toString().equals("metadata.yaml")).toList();
@@ -71,9 +70,13 @@ class DeclarativeConfigValidationTest {
     }
 
     long validCount = results.stream().filter(r -> r.valid).count();
-    System.out.printf(
-        "Validated %d declarative names: %d valid, %d invalid%n",
-        results.size(), validCount, results.size() - validCount);
+    logger.info(
+        String.format(
+            Locale.ROOT,
+            "Validated %d declarative names: %d valid, %d invalid",
+            results.size(),
+            validCount,
+            results.size() - validCount));
 
     if (!errors.isEmpty()) {
       fail(
@@ -88,25 +91,44 @@ class DeclarativeConfigValidationTest {
   private static ValidationResult validateConfig(Path metadataFile, ConfigurationOption config) {
     String flatProperty = config.name();
     String declarativePath = config.declarativeName();
+    ConfigurationType type = config.type();
 
-    // Create a ConfigProperties with the flat property set
+    // Create test value appropriate for the type
+    TestValue testValue = createTestValue(type);
+
     Map<String, String> properties = new HashMap<>();
-    properties.put(flatProperty, TEST_VALUE);
+    properties.put(flatProperty, testValue.propertyValue);
     DefaultConfigProperties configProperties = DefaultConfigProperties.createFromMap(properties);
 
-    // Create the bridge
     DeclarativeConfigProperties declarativeConfig =
         ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
             configProperties);
 
-    // Navigate to the declarative path and try to get the value
-    String retrievedValue = navigateAndGetValue(declarativeConfig, declarativePath);
+    Object retrievedValue = navigateAndGetValue(declarativeConfig, declarativePath, type);
 
-    boolean valid = TEST_VALUE.equals(retrievedValue);
+    boolean valid = Objects.equals(testValue.expectedValue, retrievedValue);
 
     return new ValidationResult(
-        metadataFile.toString(), flatProperty, declarativePath, valid, retrievedValue);
+        metadataFile.toString(),
+        flatProperty,
+        declarativePath,
+        type,
+        valid,
+        testValue.expectedValue,
+        retrievedValue);
   }
+
+  private static TestValue createTestValue(ConfigurationType type) {
+    return switch (type) {
+      case BOOLEAN -> new TestValue("true", true);
+      case STRING -> new TestValue("test-validation-value", "test-validation-value");
+      case INT -> new TestValue("42", 42);
+      case LIST -> new TestValue("item1,item2,item3", List.of("item1", "item2", "item3"));
+      case MAP -> new TestValue("key1=value1,key2=value2", "key1=value1,key2=value2");
+    };
+  }
+
+  private record TestValue(String propertyValue, Object expectedValue) {}
 
   /**
    * Navigates through the declarative config using the path segments and retrieves the value.
@@ -114,7 +136,8 @@ class DeclarativeConfigValidationTest {
    * <p>The path format is like "java.grpc.emit_message_events" or
    * "java.logback_appender.capture_code_attributes/development".
    */
-  private static String navigateAndGetValue(DeclarativeConfigProperties config, String path) {
+  private static Object navigateAndGetValue(
+      DeclarativeConfigProperties config, String path, ConfigurationType type) {
     String[] segments = path.split("\\.");
 
     DeclarativeConfigProperties current = config;
@@ -127,30 +150,38 @@ class DeclarativeConfigValidationTest {
       }
     }
 
-    // Get the value from the last segment
     String lastSegment = segments[segments.length - 1];
-    return current.getString(lastSegment);
+    return switch (type) {
+      case BOOLEAN -> current.getBoolean(lastSegment);
+      case STRING -> current.getString(lastSegment);
+      case INT -> current.getInt(lastSegment);
+      case LIST -> current.getScalarList(lastSegment, String.class);
+      case MAP -> current.getString(lastSegment);
+    };
   }
 
   private record ValidationResult(
       String metadataFile,
       String flatProperty,
       String declarativePath,
+      ConfigurationType type,
       boolean valid,
-      String retrievedValue) {
+      Object expectedValue,
+      Object retrievedValue) {
 
     @Override
     public String toString() {
       if (valid) {
-        return String.format("  OK: %s -> %s", flatProperty, declarativePath);
+        return String.format("  OK: %s -> %s (%s)", flatProperty, declarativePath, type);
       } else {
         return String.format(
             "  FAIL in %s:%n"
                 + "    flat property: %s%n"
                 + "    declarative_name: %s%n"
+                + "    type: %s%n"
                 + "    expected: %s%n"
                 + "    got: %s",
-            metadataFile, flatProperty, declarativePath, TEST_VALUE, retrievedValue);
+            metadataFile, flatProperty, declarativePath, type, expectedValue, retrievedValue);
       }
     }
   }
