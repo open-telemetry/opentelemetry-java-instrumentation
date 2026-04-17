@@ -37,6 +37,16 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
       builder;
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
 
+  public static <REQUEST, RESPONSE> ServletInstrumenterBuilder<REQUEST, RESPONSE> create(
+      String instrumentationName,
+      OpenTelemetry openTelemetry,
+      HttpServerAttributesGetter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
+          httpAttributesGetter,
+      ServletAccessor<REQUEST, RESPONSE> accessor) {
+    return new ServletInstrumenterBuilder<>(
+        instrumentationName, openTelemetry, httpAttributesGetter, accessor);
+  }
+
   private ServletInstrumenterBuilder(
       String instrumentationName,
       OpenTelemetry openTelemetry,
@@ -50,16 +60,6 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
             openTelemetry,
             httpAttributesGetter,
             new ServletRequestGetter<>(accessor));
-  }
-
-  public static <REQUEST, RESPONSE> ServletInstrumenterBuilder<REQUEST, RESPONSE> create(
-      String instrumentationName,
-      OpenTelemetry openTelemetry,
-      HttpServerAttributesGetter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
-          httpAttributesGetter,
-      ServletAccessor<REQUEST, RESPONSE> accessor) {
-    return new ServletInstrumenterBuilder<>(
-        instrumentationName, openTelemetry, httpAttributesGetter, accessor);
   }
 
   public DefaultHttpServerInstrumenterBuilder<

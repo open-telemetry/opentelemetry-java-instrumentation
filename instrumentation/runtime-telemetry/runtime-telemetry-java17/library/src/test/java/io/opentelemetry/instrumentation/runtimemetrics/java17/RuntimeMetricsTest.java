@@ -10,6 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import io.github.netmikey.logunit.api.LogCapturer;
 import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetry;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrConfig;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
@@ -26,6 +27,8 @@ class RuntimeMetricsTest {
 
   @RegisterExtension LogCapturer logs = LogCapturer.create().captureForType(RuntimeTelemetry.class);
 
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   private InMemoryMetricReader reader;
   private OpenTelemetrySdk sdk;
 
@@ -33,7 +36,7 @@ class RuntimeMetricsTest {
   void setup() {
     try {
       Class.forName("jdk.jfr.FlightRecorder");
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       Assumptions.abort("JFR not present");
     }
     Assumptions.assumeTrue(FlightRecorder.isAvailable(), "JFR not available");
@@ -54,31 +57,34 @@ class RuntimeMetricsTest {
 
   @Test
   void create_Default() {
-    try (RuntimeMetrics unused = RuntimeMetrics.create(sdk)) {
-      assertThat(reader.collectAllMetrics())
-          .isNotEmpty()
-          .allSatisfy(
-              metric -> {
-                assertThat(metric.getInstrumentationScopeInfo().getName())
-                    .contains("io.opentelemetry.runtime-telemetry-java");
-              });
-    }
+    RuntimeMetrics runtimeMetrics = RuntimeMetrics.create(sdk);
+    cleanup.deferCleanup(runtimeMetrics);
+
+    assertThat(reader.collectAllMetrics())
+        .isNotEmpty()
+        .allSatisfy(
+            metric -> {
+              assertThat(metric.getInstrumentationScopeInfo().getName())
+                  .contains("io.opentelemetry.runtime-telemetry-java");
+            });
   }
 
   @Test
   void create_AllDisabled() {
-    try (RuntimeMetrics unused = RuntimeMetrics.builder(sdk).disableAllMetrics().build()) {
-      assertThat(reader.collectAllMetrics()).isEmpty();
-    }
+    RuntimeMetrics runtimeMetrics = RuntimeMetrics.builder(sdk).disableAllMetrics().build();
+    cleanup.deferCleanup(runtimeMetrics);
+
+    assertThat(reader.collectAllMetrics()).isEmpty();
   }
 
   @Test
   void builder() {
-    try (var jfrTelemetry = RuntimeMetrics.builder(sdk).build()) {
-      assertThat(getJfrRuntimeMetrics(jfrTelemetry).getRecordedEventHandlers())
-          .hasSizeGreaterThan(0)
-          .allSatisfy(handler -> assertThat(isDefaultEnabled(handler.getFeature())).isTrue());
-    }
+    var jfrTelemetry = RuntimeMetrics.builder(sdk).build();
+    cleanup.deferCleanup(jfrTelemetry);
+
+    assertThat(getJfrRuntimeMetrics(jfrTelemetry).getRecordedEventHandlers())
+        .hasSizeGreaterThan(0)
+        .allSatisfy(handler -> assertThat(isDefaultEnabled(handler.getFeature())).isTrue());
   }
 
   @Test
@@ -114,7 +120,7 @@ class RuntimeMetricsTest {
   }
 
   // Java17 legacy defaults: all non-overlapping features
-  // plus CPU_COUNT_METRICS (which is emitted as cpu.count.limit)
+  // plus CPU_COUNT_METRICS (which is emitted as jvm.cpu.limit)
   private static boolean isDefaultEnabled(
       io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature feature) {
     return !feature.overlapsWithJmx()

@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.rxjava.v3_1_1;
 
 import io.opentelemetry.instrumentation.rxjava.common.v3_0.AbstractRxJava3WithSpanTest;
 import io.opentelemetry.instrumentation.rxjava.common.v3_0.AbstractTracedWithSpan;
-import io.opentelemetry.instrumentation.rxjava.common.v3_0.extensionannotation.TracedWithSpan;
+import io.opentelemetry.instrumentation.rxjava.common.v3_0.instrumentationannotation.TracedWithSpan;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;

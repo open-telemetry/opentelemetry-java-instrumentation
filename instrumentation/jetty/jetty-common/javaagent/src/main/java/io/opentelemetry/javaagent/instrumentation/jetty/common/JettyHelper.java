@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.servlet.internal.ServletAccessor;
 import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
+import javax.annotation.Nullable;
 
 public class JettyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RESPONSE> {
 
@@ -25,7 +26,7 @@ public class JettyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RESPO
       ServletRequestContext<REQUEST> requestContext,
       REQUEST request,
       RESPONSE response,
-      Throwable throwable,
+      @Nullable Throwable throwable,
       Context context,
       Scope scope) {
 
@@ -43,6 +44,7 @@ public class JettyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RESPO
     }
   }
 
+  @Nullable
   private Throwable errorException(REQUEST request) {
     Object value = accessor.getRequestAttribute(request, errorExceptionAttributeName());
 

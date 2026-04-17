@@ -30,9 +30,9 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
 
 /**
@@ -56,7 +56,7 @@ final class JarAnalyzer implements ClassFileTransformer {
       AttributeKey.stringKey("package.checksum_algorithm");
   static final AttributeKey<String> PACKAGE_PATH = AttributeKey.stringKey("package.path");
 
-  private final Set<URI> seenUris = new HashSet<>();
+  private final Set<URI> seenUris = ConcurrentHashMap.newKeySet();
   private final BlockingQueue<URL> toProcess = new LinkedBlockingDeque<>();
 
   private JarAnalyzer(OpenTelemetry openTelemetry, String instrumentationName, int jarsPerSecond) {
@@ -77,14 +77,14 @@ final class JarAnalyzer implements ClassFileTransformer {
 
   /** Create {@link JarAnalyzer} and start the worker thread. */
   // TODO can remove instrumentationName parameter in 3.0
-  public static JarAnalyzer create(
+  static JarAnalyzer create(
       OpenTelemetry openTelemetry, String instrumentationName, int jarsPerSecond) {
     return new JarAnalyzer(openTelemetry, instrumentationName, jarsPerSecond);
   }
 
   /**
    * Identify the archive (JAR or WAR) associated with the {@code protectionDomain} and queue it to
-   * be processed if its the first time we've seen it.
+   * be processed if it's the first time we've seen it.
    */
   @Override
   public byte[] transform(
@@ -152,7 +152,7 @@ final class JarAnalyzer implements ClassFileTransformer {
       }
     }
 
-    // Only code locations with .jar and .war extension should make it here
+    // Only code locations with .jar, .war, and .ear extensions should make it here.
     toProcess.add(archiveUrl);
   }
 
@@ -169,7 +169,7 @@ final class JarAnalyzer implements ClassFileTransformer {
     }
 
     /**
-     * Continuously poll the {@link #toProcess} for archive {@link URL}s, and process each wit
+     * Continuously poll the {@link #toProcess} for archive {@link URL}s, and process each with
      * {@link #processUrl(Logger, URL)}.
      */
     @Override
@@ -214,31 +214,11 @@ final class JarAnalyzer implements ClassFileTransformer {
       return;
     }
     AttributesBuilder builder = Attributes.builder();
-
-    String packagePath = jarDetails.packagePath();
-    if (packagePath != null) {
-      builder.put(PACKAGE_PATH, packagePath);
-    }
-
-    String packageType = jarDetails.packageType();
-    if (packageType != null) {
-      builder.put(PACKAGE_TYPE, packageType);
-    }
-
-    String packageName = jarDetails.packageName();
-    if (packageName != null) {
-      builder.put(PACKAGE_NAME, packageName);
-    }
-
-    String packageVersion = jarDetails.version();
-    if (packageVersion != null) {
-      builder.put(PACKAGE_VERSION, packageVersion);
-    }
-
-    String packageDescription = jarDetails.packageDescription();
-    if (packageDescription != null) {
-      builder.put(PACKAGE_DESCRIPTION, packageDescription);
-    }
+    builder.put(PACKAGE_PATH, jarDetails.packagePath());
+    builder.put(PACKAGE_TYPE, jarDetails.packageType());
+    builder.put(PACKAGE_NAME, jarDetails.packageName());
+    builder.put(PACKAGE_VERSION, jarDetails.version());
+    builder.put(PACKAGE_DESCRIPTION, jarDetails.packageDescription());
 
     String packageChecksum = jarDetails.computeSha1();
     builder.put(PACKAGE_CHECKSUM, packageChecksum);

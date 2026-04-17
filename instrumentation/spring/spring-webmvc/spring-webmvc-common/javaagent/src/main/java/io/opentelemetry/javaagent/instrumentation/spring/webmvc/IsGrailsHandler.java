@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webmvc;
 
-public final class IsGrailsHandler {
+public class IsGrailsHandler {
 
   private static final ClassValue<Boolean> cache =
       new ClassValue<Boolean>() {

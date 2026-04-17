@@ -31,6 +31,14 @@ public class VertxWebServer extends AbstractVertxWebServer {
     vertx
         .createHttpServer()
         .requestHandler(mainRouter::accept)
-        .listen(port, it -> startFuture.complete());
+        .listen(
+            port,
+            result -> {
+              if (result.succeeded()) {
+                startFuture.complete();
+              } else {
+                startFuture.fail(result.cause());
+              }
+            });
   }
 }

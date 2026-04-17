@@ -26,7 +26,7 @@ import org.jboss.logmanager.Level;
 import org.jboss.logmanager.Logger;
 import org.jboss.logmanager.MDC;
 
-public final class LoggingEventMapper {
+public class LoggingEventMapper {
 
   private static final java.util.logging.Logger logger =
       java.util.logging.Logger.getLogger(LoggingEventMapper.class.getName());

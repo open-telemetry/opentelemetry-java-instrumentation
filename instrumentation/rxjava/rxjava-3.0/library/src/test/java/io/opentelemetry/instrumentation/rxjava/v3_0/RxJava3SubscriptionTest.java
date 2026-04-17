@@ -16,15 +16,15 @@ class RxJava3SubscriptionTest extends AbstractRxJava3SubscriptionTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
+  static final TracingAssembly tracingAssembly = TracingAssembly.create();
+
   @Override
   protected InstrumentationExtension testing() {
     return testing;
   }
 
-  static TracingAssembly tracingAssembly = TracingAssembly.create();
-
   @BeforeAll
-  public static void setup() {
+  static void setup() {
     tracingAssembly.enable();
   }
 }

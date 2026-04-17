@@ -21,7 +21,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class UrlClassLoaderInstrumentation implements TypeInstrumentation {
+class UrlClassLoaderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -36,12 +36,12 @@ public class UrlClassLoaderInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, URL.class))
             .and(isProtected())
             .and(not(isStatic())),
-        UrlClassLoaderInstrumentation.class.getName() + "$AddUrlAdvice");
+        getClass().getName() + "$AddUrlAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class AddUrlAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This URLClassLoader loader) {
       ClassLoaderMatcherCacheHolder.invalidateAllCachesForClassLoader(loader);
     }

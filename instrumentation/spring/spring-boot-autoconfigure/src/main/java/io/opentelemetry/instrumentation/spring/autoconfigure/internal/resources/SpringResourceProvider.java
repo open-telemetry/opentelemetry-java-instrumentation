@@ -35,10 +35,7 @@ public class SpringResourceProvider implements ResourceProvider {
         .map(BuildProperties::getName)
         .ifPresent(v -> attributesBuilder.put(SERVICE_NAME, v));
 
-    String springApplicationName = configProperties.getString("spring.application.name");
-    if (springApplicationName != null) {
-      attributesBuilder.put(SERVICE_NAME, springApplicationName);
-    }
+    attributesBuilder.put(SERVICE_NAME, configProperties.getString("spring.application.name"));
 
     buildProperties
         .map(BuildProperties::getVersion)

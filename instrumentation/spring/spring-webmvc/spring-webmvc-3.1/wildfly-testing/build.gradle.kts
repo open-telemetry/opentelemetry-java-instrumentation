@@ -22,7 +22,6 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-3.1:javaagent"))
-  testInstrumentation(project(":instrumentation:spring:spring-web:spring-web-3.1:javaagent"))
 
   // wildfly version used to run tests
   testServer("org.wildfly:wildfly-dist:18.0.0.Final@zip")

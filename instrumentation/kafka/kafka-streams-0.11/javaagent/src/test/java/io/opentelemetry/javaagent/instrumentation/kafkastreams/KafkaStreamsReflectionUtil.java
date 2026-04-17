@@ -42,8 +42,8 @@ class KafkaStreamsReflectionUtil {
         // not present in 4.x
         return (ConsumerRecords<K, V>) consumerPollLongMethod.invoke(consumer, duration.toMillis());
       }
-    } catch (Exception exception) {
-      throw new IllegalStateException(exception);
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
     }
     throw new IllegalStateException("poll method not found");
   }
@@ -68,7 +68,7 @@ class KafkaStreamsReflectionUtil {
         method = builder.getClass().getMethod("stream", String[].class);
         String[] topics = new String[] {topic};
         arguments = new Object[] {topics};
-      } catch (Exception exception) {
+      } catch (Exception ignored) {
         // equivalent to:
         // ((org.apache.kafka.streams.StreamsBuilder)builder).stream(STREAM_PENDING);
         method = builder.getClass().getMethod("stream", String.class);
@@ -93,7 +93,7 @@ class KafkaStreamsReflectionUtil {
         Class<?> topologyBuilderClass =
             Class.forName("org.apache.kafka.streams.processor.TopologyBuilder");
         constructor = KafkaStreams.class.getConstructor(topologyBuilderClass, Properties.class);
-      } catch (Exception exception) {
+      } catch (Exception ignored) {
         constructor = null;
       }
       if (constructor != null) {

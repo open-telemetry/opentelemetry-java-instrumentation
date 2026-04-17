@@ -20,9 +20,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:java-util-logging:javaagent"))
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
-
-if (latestDepTest) {
+if (otelProps.testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }

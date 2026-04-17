@@ -16,6 +16,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.assertj.core.api.AbstractBooleanAssert;
@@ -27,6 +28,8 @@ class JavaagentInstrumentationTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @BeforeEach
   void setup() {
@@ -44,6 +47,7 @@ class JavaagentInstrumentationTest {
   void testInterleavedSpansOcFirst() {
     io.opencensus.trace.Tracer ocTracer = Tracing.getTracer();
     Tracer otelTracer = testing.getOpenTelemetry().getTracer("test");
+    cleanup.deferCleanup(() -> Tracing.getExportComponent().shutdown());
 
     io.opencensus.trace.Span outerSpan = ocTracer.spanBuilder("outer-span").startSpan();
     Span midSpan;
@@ -72,8 +76,6 @@ class JavaagentInstrumentationTest {
     } finally {
       outerSpan.end();
     }
-
-    Tracing.getExportComponent().shutdown();
 
     // expecting 1 trace with 3 spans
     testing.waitAndAssertTraces(
@@ -110,6 +112,7 @@ class JavaagentInstrumentationTest {
   void testInterleavedSpansOtelFirst() {
     io.opencensus.trace.Tracer ocTracer = Tracing.getTracer();
     Tracer otelTracer = testing.getOpenTelemetry().getTracer("test");
+    cleanup.deferCleanup(() -> Tracing.getExportComponent().shutdown());
 
     Span outerSpan =
         otelTracer
@@ -141,8 +144,6 @@ class JavaagentInstrumentationTest {
     } finally {
       outerSpan.end();
     }
-
-    Tracing.getExportComponent().shutdown();
 
     // expecting 1 trace with 3 spans
     testing.waitAndAssertTraces(
@@ -179,6 +180,7 @@ class JavaagentInstrumentationTest {
   void testStartingWithOtelSpan() {
     io.opencensus.trace.Tracer ocTracer = Tracing.getTracer();
     Tracer otelTracer = testing.getOpenTelemetry().getTracer("test");
+    cleanup.deferCleanup(() -> Tracing.getExportComponent().shutdown());
 
     Span otelSpan =
         otelTracer
@@ -199,8 +201,6 @@ class JavaagentInstrumentationTest {
     }
     otelSpan.end();
 
-    Tracing.getExportComponent().shutdown();
-
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -218,6 +218,7 @@ class JavaagentInstrumentationTest {
   void testStartingWithOpenCensusSpan() {
     io.opencensus.trace.Tracer ocTracer = Tracing.getTracer();
     Tracer otelTracer = testing.getOpenTelemetry().getTracer("test");
+    cleanup.deferCleanup(() -> Tracing.getExportComponent().shutdown());
 
     io.opencensus.trace.Span ocSpan = ocTracer.spanBuilder("oc-span").startSpan();
 
@@ -232,8 +233,6 @@ class JavaagentInstrumentationTest {
       otelSpan.end();
     }
     ocSpan.end();
-
-    Tracing.getExportComponent().shutdown();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -251,6 +250,7 @@ class JavaagentInstrumentationTest {
   @Test
   void testNestedOpenCensusSpans() {
     io.opencensus.trace.Tracer ocTracer = Tracing.getTracer();
+    cleanup.deferCleanup(() -> Tracing.getExportComponent().shutdown());
 
     io.opencensus.trace.Span outerSpan = ocTracer.spanBuilder("outer-span").startSpan();
     io.opencensus.trace.Span midSpan;
@@ -275,8 +275,6 @@ class JavaagentInstrumentationTest {
     } finally {
       outerSpan.end();
     }
-
-    Tracing.getExportComponent().shutdown();
 
     // expecting 1 trace with 3 spans
     testing.waitAndAssertTraces(

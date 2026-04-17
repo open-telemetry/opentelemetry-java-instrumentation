@@ -115,7 +115,7 @@ class Slf4jToLog4jTest {
                       equalTo(EXCEPTION_MESSAGE, "hello"),
                       satisfies(
                           EXCEPTION_STACKTRACE,
-                          v -> v.contains(Slf4jToLog4jTest.class.getName()))));
+                          val -> val.contains(Slf4jToLog4jTest.class.getName()))));
             }
             logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
           });

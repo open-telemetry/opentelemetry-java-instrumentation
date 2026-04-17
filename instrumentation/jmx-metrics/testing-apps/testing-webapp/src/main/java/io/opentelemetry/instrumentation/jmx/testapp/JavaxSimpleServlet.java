@@ -12,7 +12,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-// servlet that will be used for javax servlet containers
 @WebServlet(urlPatterns = "/javax/*", name = "javaxServlet")
 public class JavaxSimpleServlet extends HttpServlet {
 

@@ -1,3 +1,4 @@
+display_name: JVM Runtime Telemetry (JMX)
 description: >
   DEPRECATED: This instrumentation enables JVM runtime metrics using JMX (Java 8+). Use the
   unified runtime-telemetry module instead, which provides both JMX and JFR support.

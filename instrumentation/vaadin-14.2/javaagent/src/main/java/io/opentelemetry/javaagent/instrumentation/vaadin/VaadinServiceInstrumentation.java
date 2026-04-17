@@ -20,7 +20,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 // add span around vaadin request processing code
-public class VaadinServiceInstrumentation implements TypeInstrumentation {
+class VaadinServiceInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -33,7 +33,7 @@ public class VaadinServiceInstrumentation implements TypeInstrumentation {
         named("handleRequest")
             .and(takesArgument(0, named("com.vaadin.flow.server.VaadinRequest")))
             .and(takesArgument(1, named("com.vaadin.flow.server.VaadinResponse"))),
-        VaadinServiceInstrumentation.class.getName() + "$HandleRequestAdvice");
+        getClass().getName() + "$HandleRequestAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -68,14 +68,14 @@ public class VaadinServiceInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This VaadinService vaadinService, @Advice.Origin("#m") String methodName) {
 
       return AdviceScope.start(vaadinService.getClass(), methodName);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

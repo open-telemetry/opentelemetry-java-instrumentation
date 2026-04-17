@@ -29,7 +29,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 /** {@link Instrumenter}s to use when executing test code. */
-final class TestInstrumenters {
+class TestInstrumenters {
 
   private final Instrumenter<String, Void> instrumenter;
   private final Instrumenter<String, Void> httpClientInstrumenter;
@@ -110,7 +110,7 @@ final class TestInstrumenters {
     return result;
   }
 
-  private static final class SpanKeyAttributesExtractor
+  private static class SpanKeyAttributesExtractor
       implements AttributesExtractor<String, Void>, SpanKeyProvider {
 
     private final SpanKey spanKey;

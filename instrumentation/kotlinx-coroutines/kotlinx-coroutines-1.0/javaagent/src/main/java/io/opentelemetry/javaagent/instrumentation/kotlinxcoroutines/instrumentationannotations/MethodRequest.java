@@ -6,24 +6,31 @@
 package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.instrumentationannotations;
 
 import io.opentelemetry.api.trace.SpanKind;
+import javax.annotation.Nullable;
 
-public final class MethodRequest {
+public class MethodRequest {
   private final Class<?> declaringClass;
   private final String methodName;
-  private final String withSpanValue;
+  @Nullable private final String withSpanValue;
   private final SpanKind spanKind;
 
+  public static MethodRequest create(
+      Class<?> declaringClass,
+      String methodName,
+      @Nullable String withSpanValue,
+      SpanKind spanKind) {
+    return new MethodRequest(declaringClass, methodName, withSpanValue, spanKind);
+  }
+
   private MethodRequest(
-      Class<?> declaringClass, String methodName, String withSpanValue, SpanKind spanKind) {
+      Class<?> declaringClass,
+      String methodName,
+      @Nullable String withSpanValue,
+      SpanKind spanKind) {
     this.declaringClass = declaringClass;
     this.methodName = methodName;
     this.withSpanValue = withSpanValue;
     this.spanKind = spanKind;
-  }
-
-  public static MethodRequest create(
-      Class<?> declaringClass, String methodName, String withSpanValue, SpanKind spanKind) {
-    return new MethodRequest(declaringClass, methodName, withSpanValue, spanKind);
   }
 
   public Class<?> getDeclaringClass() {
@@ -34,6 +41,7 @@ public final class MethodRequest {
     return methodName;
   }
 
+  @Nullable
   public String getWithSpanValue() {
     return withSpanValue;
   }

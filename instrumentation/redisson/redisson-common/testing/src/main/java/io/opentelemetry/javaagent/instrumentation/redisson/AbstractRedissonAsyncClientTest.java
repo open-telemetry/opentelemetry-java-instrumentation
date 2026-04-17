@@ -207,7 +207,7 @@ public abstract class AbstractRedissonAsyncClientTest {
     try {
       // available since 3.7.2
       Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       Assumptions.abort();
     }
     // Don't specify explicit generic type, because `BatchResult` not exist in some versions.

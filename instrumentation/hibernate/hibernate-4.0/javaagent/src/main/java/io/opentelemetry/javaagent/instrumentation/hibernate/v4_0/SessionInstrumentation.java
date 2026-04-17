@@ -9,6 +9,10 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.OperationNameUtil.getEntityName;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.OperationNameUtil.getSessionMethodOperationName;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Hibernate4Singletons.CRITERIA_SESSION_INFO;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Hibernate4Singletons.QUERY_SESSION_INFO;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Hibernate4Singletons.SHARED_SESSION_CONTRACT_SESSION_INFO;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Hibernate4Singletons.TRANSACTION_SESSION_INFO;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Hibernate4Singletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -17,7 +21,6 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -32,7 +35,7 @@ import org.hibernate.Query;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
 
-public class SessionInstrumentation implements TypeInstrumentation {
+class SessionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -90,7 +93,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SessionMethodAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static HibernateOperationScope startMethod(
         @Advice.This SharedSessionContract session,
         @Advice.Origin("#m") String name,
@@ -102,9 +105,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
         return null;
       }
 
-      VirtualField<SharedSessionContract, SessionInfo> virtualField =
-          VirtualField.find(SharedSessionContract.class, SessionInfo.class);
-      SessionInfo sessionInfo = virtualField.get(session);
+      SessionInfo sessionInfo = SHARED_SESSION_CONTRACT_SESSION_INFO.get(session);
 
       Context parentContext = Java8BytecodeBridge.currentContext();
       String entityName =
@@ -115,7 +116,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
       return HibernateOperationScope.start(hibernateOperation, parentContext, instrumenter());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void endMethod(
         @Advice.Thrown Throwable throwable, @Advice.Enter HibernateOperationScope scope) {
 
@@ -126,48 +127,33 @@ public class SessionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetQueryAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void getQuery(
         @Advice.This SharedSessionContract session, @Advice.Return Query query) {
 
-      VirtualField<SharedSessionContract, SessionInfo> sessionVirtualField =
-          VirtualField.find(SharedSessionContract.class, SessionInfo.class);
-      VirtualField<Query, SessionInfo> queryVirtualField =
-          VirtualField.find(Query.class, SessionInfo.class);
-
-      queryVirtualField.set(query, sessionVirtualField.get(session));
+      QUERY_SESSION_INFO.set(query, SHARED_SESSION_CONTRACT_SESSION_INFO.get(session));
     }
   }
 
   @SuppressWarnings("unused")
   public static class GetTransactionAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void getTransaction(
         @Advice.This SharedSessionContract session, @Advice.Return Transaction transaction) {
 
-      VirtualField<SharedSessionContract, SessionInfo> sessionVirtualField =
-          VirtualField.find(SharedSessionContract.class, SessionInfo.class);
-      VirtualField<Transaction, SessionInfo> transactionVirtualField =
-          VirtualField.find(Transaction.class, SessionInfo.class);
-
-      transactionVirtualField.set(transaction, sessionVirtualField.get(session));
+      TRANSACTION_SESSION_INFO.set(transaction, SHARED_SESSION_CONTRACT_SESSION_INFO.get(session));
     }
   }
 
   @SuppressWarnings("unused")
   public static class GetCriteriaAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void getCriteria(
         @Advice.This SharedSessionContract session, @Advice.Return Criteria criteria) {
 
-      VirtualField<SharedSessionContract, SessionInfo> sessionVirtualField =
-          VirtualField.find(SharedSessionContract.class, SessionInfo.class);
-      VirtualField<Criteria, SessionInfo> criteriaVirtualField =
-          VirtualField.find(Criteria.class, SessionInfo.class);
-
-      criteriaVirtualField.set(criteria, sessionVirtualField.get(session));
+      CRITERIA_SESSION_INFO.set(criteria, SHARED_SESSION_CONTRACT_SESSION_INFO.get(session));
     }
   }
 }

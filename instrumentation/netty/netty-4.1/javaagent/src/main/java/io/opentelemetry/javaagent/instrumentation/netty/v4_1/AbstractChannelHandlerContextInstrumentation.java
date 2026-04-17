@@ -24,7 +24,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AbstractChannelHandlerContextInstrumentation implements TypeInstrumentation {
+class AbstractChannelHandlerContextInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -41,7 +41,7 @@ public class AbstractChannelHandlerContextInstrumentation implements TypeInstrum
   @SuppressWarnings("unused")
   public static class InvokeExceptionCaughtAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.This ChannelHandlerContext ctx, @Advice.Argument(0) Throwable throwable) {
 

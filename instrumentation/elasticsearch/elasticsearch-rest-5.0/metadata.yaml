@@ -1,3 +1,4 @@
+display_name: Elasticsearch REST Client
 description: This instrumentation enables database client spans and database client metrics for Elasticsearch REST clients.
 semantic_conventions:
   - DATABASE_CLIENT_SPANS

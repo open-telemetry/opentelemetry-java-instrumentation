@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ServerTubeAssemblerContextInstrumentation implements TypeInstrumentation {
+class ServerTubeAssemblerContextInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.sun.xml.ws.api.pipe.ServerTubeAssemblerContext");
@@ -34,7 +34,7 @@ public class ServerTubeAssemblerContextInstrumentation implements TypeInstrument
   public static class AddTracingAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Tube onExit(
         @Advice.This ServerTubeAssemblerContext context, @Advice.Return Tube tube) {
       return new TracingTube(context.getEndpoint(), tube);

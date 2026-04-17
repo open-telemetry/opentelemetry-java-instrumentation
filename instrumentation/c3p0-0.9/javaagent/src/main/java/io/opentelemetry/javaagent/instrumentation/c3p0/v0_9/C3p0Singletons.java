@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.c3p0.v0_9;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.c3p0.v0_9.C3p0Telemetry;
 
-public final class C3p0Singletons {
+public class C3p0Singletons {
 
   private static final C3p0Telemetry c3p0Telemetry =
       C3p0Telemetry.create(GlobalOpenTelemetry.get());

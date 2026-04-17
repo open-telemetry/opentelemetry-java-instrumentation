@@ -10,13 +10,12 @@ import oracle.ucp.UniversalConnectionPool;
 
 /** Entrypoint for instrumenting Oracle UCP database connection pools. */
 public final class OracleUcpTelemetry {
+  private final OpenTelemetry openTelemetry;
 
   /** Returns a new {@link OracleUcpTelemetry} configured with the given {@link OpenTelemetry}. */
   public static OracleUcpTelemetry create(OpenTelemetry openTelemetry) {
     return new OracleUcpTelemetry(openTelemetry);
   }
-
-  private final OpenTelemetry openTelemetry;
 
   private OracleUcpTelemetry(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;

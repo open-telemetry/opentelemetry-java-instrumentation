@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JedisInstrumentation implements TypeInstrumentation {
+class JedisInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return namedOneOf("redis.clients.jedis.Jedis", "redis.clients.jedis.UnifiedJedis");
@@ -42,18 +42,18 @@ public class JedisInstrumentation implements TypeInstrumentation {
                         "getConnection",
                         "isBroken",
                         "toString"))),
-        this.getClass().getName() + "$JedisMethodAdvice");
+        getClass().getName() + "$JedisMethodAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class JedisMethodAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static JedisRequestContext<JedisRequest> onEnter() {
       return JedisRequestContext.attach();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter JedisRequestContext<JedisRequest> requestContext) {
       if (requestContext != null) {
         requestContext.detachAndEnd();

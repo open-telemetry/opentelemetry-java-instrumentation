@@ -26,7 +26,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ServerInstrumentation implements TypeInstrumentation {
+class ServerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.ktor.server.engine.EmbeddedServer");
@@ -34,14 +34,13 @@ public class ServerInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isConstructor(), this.getClass().getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This EmbeddedServer<?, ?> server, @Advice.Origin MethodHandles.Lookup lookup)
         throws Throwable {
@@ -49,7 +48,7 @@ public class ServerInstrumentation implements TypeInstrumentation {
       try {
         // since 3.0.3
         getter = lookup.findGetter(EmbeddedServer.class, "applicationInstance", Application.class);
-      } catch (NoSuchFieldException exception) {
+      } catch (NoSuchFieldException ignored) {
         // before 3.0.3
         getter = lookup.findGetter(EmbeddedServer.class, "_applicationInstance", Application.class);
       }

@@ -23,7 +23,7 @@ public class WicketInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // missing before 8.0
+    // added in 8.0
     return hasClassesNamed("org.apache.wicket.request.RequestHandlerExecutor");
   }
 

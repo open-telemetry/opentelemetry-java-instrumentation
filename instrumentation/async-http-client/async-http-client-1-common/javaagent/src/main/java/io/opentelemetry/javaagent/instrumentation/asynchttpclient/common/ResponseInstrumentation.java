@@ -17,6 +17,7 @@ import com.ning.http.client.Response;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -39,16 +40,16 @@ public class ResponseInstrumentation implements TypeInstrumentation {
         named("onCompleted")
             .and(takesArgument(0, named("com.ning.http.client.Response")))
             .and(isPublic()),
-        this.getClass().getName() + "$OnCompletedAdvice");
+        getClass().getName() + "$OnCompletedAdvice");
     transformer.applyAdviceToMethod(
         named("onThrowable").and(takesArgument(0, Throwable.class)).and(isPublic()),
-        this.getClass().getName() + "$OnThrowableAdvice");
+        getClass().getName() + "$OnThrowableAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class OnCompletedAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(
         @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Response response) {
 
@@ -62,9 +63,9 @@ public class ResponseInstrumentation implements TypeInstrumentation {
       return data.getParentContext().makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Enter Scope scope) {
-      if (null != scope) {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
         scope.close();
       }
     }
@@ -73,7 +74,7 @@ public class ResponseInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class OnThrowableAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(
         @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Throwable throwable) {
 
@@ -87,9 +88,9 @@ public class ResponseInstrumentation implements TypeInstrumentation {
       return data.getParentContext().makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Enter Scope scope) {
-      if (null != scope) {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
         scope.close();
       }
     }

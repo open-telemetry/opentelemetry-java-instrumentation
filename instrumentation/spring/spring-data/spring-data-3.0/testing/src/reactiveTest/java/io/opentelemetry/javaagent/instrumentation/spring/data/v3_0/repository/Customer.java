@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.data.v3_0.repository;
 
 import java.util.Locale;
 import java.util.Objects;
-import javax.annotation.Nullable;
 import org.springframework.data.annotation.Id;
 
 public class Customer {
@@ -55,7 +54,7 @@ public class Customer {
   }
 
   @Override
-  public boolean equals(@Nullable Object obj) {
+  public boolean equals(Object obj) {
     if (obj == this) {
       return true;
     }

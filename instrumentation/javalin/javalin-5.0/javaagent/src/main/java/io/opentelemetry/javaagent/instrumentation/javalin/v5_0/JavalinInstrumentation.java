@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.javalin.v5_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -20,7 +21,12 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JavalinInstrumentation implements TypeInstrumentation {
+class JavalinInstrumentation implements TypeInstrumentation {
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("io.javalin.http.Handler");
+  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -31,13 +37,13 @@ public class JavalinInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("handle").and(takesArgument(0, named("io.javalin.http.Context"))),
-        this.getClass().getName() + "$HandlerAdapterAdvice");
+        getClass().getName() + "$HandlerAdapterAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class HandlerAdapterAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onAfterExecute(@Advice.Argument(0) Context ctx) {
       HttpServerRoute.update(
           io.opentelemetry.context.Context.current(),

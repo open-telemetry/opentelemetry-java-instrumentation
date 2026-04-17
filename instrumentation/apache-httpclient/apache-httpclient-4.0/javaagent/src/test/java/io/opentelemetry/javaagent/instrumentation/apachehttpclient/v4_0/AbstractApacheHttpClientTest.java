@@ -41,8 +41,8 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
       HttpClientResult requestResult) {
     try {
       executeRequestWithCallback(request, uri, requestResult);
-    } catch (Throwable throwable) {
-      requestResult.complete(throwable);
+    } catch (Throwable t) {
+      requestResult.complete(t);
     }
   }
 

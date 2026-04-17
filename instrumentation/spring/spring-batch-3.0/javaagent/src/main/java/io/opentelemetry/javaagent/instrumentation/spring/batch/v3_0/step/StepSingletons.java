@@ -13,13 +13,13 @@ import org.springframework.batch.core.StepExecution;
 
 public class StepSingletons {
 
-  private static final Instrumenter<StepExecution, Void> INSTRUMENTER =
+  private static final Instrumenter<StepExecution, Void> instrumenter =
       Instrumenter.<StepExecution, Void>builder(
               GlobalOpenTelemetry.get(), instrumentationName(), StepSingletons::spanName)
           .buildInstrumenter();
 
   public static Instrumenter<StepExecution, Void> stepInstrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private static String spanName(StepExecution stepExecution) {

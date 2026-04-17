@@ -22,7 +22,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import reactor.util.context.ContextView;
 
-public class ContextPropagationOperator34Instrumentation implements TypeInstrumentation {
+class ContextPropagationOperator34Instrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named(
@@ -43,13 +43,13 @@ public class ContextPropagationOperator34Instrumentation implements TypeInstrume
 
   @SuppressWarnings("unused")
   public static class GetContextViewAdvice {
-    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class)
+    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class, inline = false)
     public static boolean methodEnter() {
       return false;
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static application.io.opentelemetry.context.Context methodExit(
         @Advice.Argument(0) ContextView reactorContext,
         @Advice.Argument(1) application.io.opentelemetry.context.Context defaultContext) {

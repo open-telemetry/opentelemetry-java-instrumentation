@@ -36,7 +36,7 @@ public class TestInstrumentationModule2 extends InstrumentationModule {
     return className.equals("instrumentation.TestFailableCallable");
   }
 
-  public static class TestTypeInstrumentation implements TypeInstrumentation {
+  static class TestTypeInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("org.apache.commons.lang3.function.FailableCallable");
@@ -54,7 +54,7 @@ public class TestInstrumentationModule2 extends InstrumentationModule {
 
     @SuppressWarnings("unused")
     public static class TestAdvice {
-      @Advice.OnMethodEnter(suppress = Throwable.class)
+      @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
       public static String onEnter() {
         return TestFailableCallable.class.getName();
       }

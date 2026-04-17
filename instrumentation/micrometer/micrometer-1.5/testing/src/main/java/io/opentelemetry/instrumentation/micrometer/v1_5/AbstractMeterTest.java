@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Arrays.asList;
 
 import io.micrometer.core.instrument.Measurement;
@@ -63,8 +64,8 @@ public abstract class AbstractMeterTest {
                                             point ->
                                                 point
                                                     .hasValue(12345)
-                                                    .hasAttributes(
-                                                        attributeEntry("tag", "value"))))));
+                                                    .hasAttributesSatisfyingExactly(
+                                                        equalTo(stringKey("tag"), "value"))))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -82,8 +83,8 @@ public abstract class AbstractMeterTest {
                                             point ->
                                                 point
                                                     .hasValue(12345)
-                                                    .hasAttributes(
-                                                        attributeEntry("tag", "value"))))));
+                                                    .hasAttributesSatisfyingExactly(
+                                                        equalTo(stringKey("tag"), "value"))))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -101,8 +102,8 @@ public abstract class AbstractMeterTest {
                                             point ->
                                                 point
                                                     .hasValue(12345)
-                                                    .hasAttributes(
-                                                        attributeEntry("tag", "value"))))));
+                                                    .hasAttributesSatisfyingExactly(
+                                                        equalTo(stringKey("tag"), "value"))))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -120,8 +121,8 @@ public abstract class AbstractMeterTest {
                                             point ->
                                                 point
                                                     .hasValue(12345)
-                                                    .hasAttributes(
-                                                        attributeEntry("tag", "value"))))));
+                                                    .hasAttributesSatisfyingExactly(
+                                                        equalTo(stringKey("tag"), "value"))))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -138,7 +139,8 @@ public abstract class AbstractMeterTest {
                                         point ->
                                             point
                                                 .hasValue(12345)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "value"))))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -155,7 +157,8 @@ public abstract class AbstractMeterTest {
                                         point ->
                                             point
                                                 .hasValue(12345)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "value"))))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -172,7 +175,8 @@ public abstract class AbstractMeterTest {
                                         point ->
                                             point
                                                 .hasValue(12345)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "value"))))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -189,7 +193,8 @@ public abstract class AbstractMeterTest {
                                         point ->
                                             point
                                                 .hasValue(12345)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "value"))))));
 
     // when
     Metrics.globalRegistry.remove(meter);

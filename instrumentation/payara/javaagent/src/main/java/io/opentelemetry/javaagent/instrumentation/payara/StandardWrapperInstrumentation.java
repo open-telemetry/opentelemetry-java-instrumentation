@@ -24,7 +24,7 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-public class StandardWrapperInstrumentation implements TypeInstrumentation {
+class StandardWrapperInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.catalina.core.StandardWrapper");

@@ -67,12 +67,12 @@ class ThreadsTest {
                                         point ->
                                             point
                                                 .hasValue(2)
-                                                .hasAttributesSatisfying(
+                                                .hasAttributesSatisfyingExactly(
                                                     equalTo(JVM_THREAD_DAEMON, true)),
                                         point ->
                                             point
                                                 .hasValue(5)
-                                                .hasAttributesSatisfying(
+                                                .hasAttributesSatisfyingExactly(
                                                     equalTo(JVM_THREAD_DAEMON, false))))));
   }
 
@@ -103,13 +103,13 @@ class ThreadsTest {
                                         point ->
                                             point
                                                 .hasValue(1)
-                                                .hasAttributesSatisfying(
+                                                .hasAttributesSatisfyingExactly(
                                                     equalTo(JVM_THREAD_DAEMON, false),
                                                     equalTo(JVM_THREAD_STATE, "runnable")),
                                         point ->
                                             point
                                                 .hasValue(1)
-                                                .hasAttributesSatisfying(
+                                                .hasAttributesSatisfyingExactly(
                                                     equalTo(JVM_THREAD_DAEMON, true),
                                                     equalTo(JVM_THREAD_STATE, "waiting"))))));
   }
@@ -147,13 +147,13 @@ class ThreadsTest {
                                         point ->
                                             point
                                                 .hasValue(1)
-                                                .hasAttributesSatisfying(
+                                                .hasAttributesSatisfyingExactly(
                                                     equalTo(JVM_THREAD_DAEMON, false),
                                                     equalTo(JVM_THREAD_STATE, "runnable")),
                                         point ->
                                             point
                                                 .hasValue(1)
-                                                .hasAttributesSatisfying(
+                                                .hasAttributesSatisfyingExactly(
                                                     equalTo(JVM_THREAD_DAEMON, true),
                                                     equalTo(JVM_THREAD_STATE, "waiting"))))));
   }
@@ -165,7 +165,7 @@ class ThreadsTest {
     assertThat(set).contains(Thread.currentThread());
   }
 
-  static final class ThreadInfoAnswer implements Answer<Object> {
+  static class ThreadInfoAnswer implements Answer<Object> {
 
     private final boolean isDaemon;
     private final Thread.State state;

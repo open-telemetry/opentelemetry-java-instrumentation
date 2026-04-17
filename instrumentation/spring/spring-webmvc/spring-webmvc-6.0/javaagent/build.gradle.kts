@@ -22,6 +22,7 @@ dependencies {
   compileOnly("jakarta.servlet:jakarta.servlet-api:5.0.0")
 
   // Include servlet instrumentation for verifying the tomcat requests
+  testInstrumentation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
   testInstrumentation(project(":instrumentation:tomcat:tomcat-10.0:javaagent"))
   testInstrumentation(project(":instrumentation:spring:spring-core-2.0:javaagent"))
@@ -47,8 +48,8 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
   val testExperimental by registering(Test::class) {

@@ -19,7 +19,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 // TomEE specific instrumentation
-public class CxfRsHttpListenerInstrumentation implements TypeInstrumentation {
+class CxfRsHttpListenerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -35,13 +35,13 @@ public class CxfRsHttpListenerInstrumentation implements TypeInstrumentation {
   public static class InvokeAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.FieldValue("pattern") String pattern) {
       Context context = JaxrsContextPath.init(Java8BytecodeBridge.currentContext(), pattern);
       return context != null ? context.makeCurrent() : null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();

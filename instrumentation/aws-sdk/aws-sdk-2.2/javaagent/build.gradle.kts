@@ -115,14 +115,11 @@ dependencies {
   testLibrary("software.amazon.awssdk:sqs:2.2.0")
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
-
 testing {
   suites {
     val s3PresignerTest by registering(JvmTestSuite::class) {
       dependencies {
-        val version = if (latestDepTest) "latest.release" else "2.10.12"
+        val version = if (otelProps.testLatestDeps) "latest.release" else "2.10.12"
         implementation("software.amazon.awssdk:s3:$version")
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
       }
@@ -130,10 +127,18 @@ testing {
 
     val s3CrtTest by registering(JvmTestSuite::class) {
       dependencies {
-        implementation("software.amazon.awssdk:s3:" + if (latestDepTest) "latest.release" else "2.27.21")
-        implementation("software.amazon.awssdk.crt:aws-crt:" + if (latestDepTest) "latest.release" else "0.30.11")
+        implementation("software.amazon.awssdk:s3:" + if (otelProps.testLatestDeps) "latest.release" else "2.27.21")
+        implementation("software.amazon.awssdk.crt:aws-crt:" + if (otelProps.testLatestDeps) "latest.release" else "0.30.11")
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
         implementation("org.testcontainers:testcontainers-localstack")
+      }
+
+      targets {
+        all {
+          testTask.configure {
+            usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+          }
+        }
       }
     }
 
@@ -141,7 +146,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
         // 2.25.63 is the first release with Converse API
-        val version = if (latestDepTest) "latest.release" else "2.25.63"
+        val version = if (otelProps.testLatestDeps) "latest.release" else "2.25.63"
         implementation("software.amazon.awssdk:bedrockruntime:$version")
       }
 
@@ -150,7 +155,6 @@ testing {
           testTask.configure {
             // TODO run tests both with and without genai message capture
             systemProperty("otel.instrumentation.genai.capture-message-content", "true")
-            systemProperty("collectMetadata", collectMetadata)
           }
         }
       }
@@ -198,7 +202,6 @@ tasks {
       excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
     }
     systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
-    systemProperty("collectMetadata", collectMetadata)
   }
 
   check {
@@ -209,8 +212,8 @@ tasks {
     // TODO run tests both with and without experimental span attributes
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
     systemProperty("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", "true")
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   withType<ShadowJar>().configureEach {
@@ -223,7 +226,7 @@ tasks {
     }
   }
 
-  if (findProperty("denyUnsafe") as Boolean) {
+  if (otelProps.denyUnsafe) {
     // Aws2SqsTracingTest uses org.elasticmq:elasticmq-rest-sqs_2.13 that uses unsafe. Future
     // versions are likely to fix this.
     withType<Test>().configureEach {

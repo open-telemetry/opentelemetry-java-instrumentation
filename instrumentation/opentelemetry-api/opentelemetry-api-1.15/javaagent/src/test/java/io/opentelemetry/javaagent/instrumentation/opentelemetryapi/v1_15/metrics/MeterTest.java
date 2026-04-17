@@ -14,8 +14,11 @@ import io.opentelemetry.api.metrics.BatchCallback;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
+import io.opentelemetry.instrumentation.test.utils.GcUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
+import java.lang.ref.WeakReference;
+import java.time.Duration;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -320,5 +323,56 @@ class MeterTest {
     Thread.sleep(100);
 
     testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
+  }
+
+  @Test
+  void sharedBatchCallbackSurvivesClosingOneHandleTwice() throws Exception {
+    ObservableLongMeasurement firstMeasurement = meter.counterBuilder("test.first").buildObserver();
+    ObservableLongMeasurement secondMeasurement =
+        meter.counterBuilder("test.second").buildObserver();
+    Runnable callback =
+        new Runnable() {
+          @Override
+          public void run() {}
+        };
+    WeakReference<Runnable> callbackRef = new WeakReference<>(callback);
+
+    BatchCallback firstCallback = meter.batchCallback(callback, firstMeasurement);
+    // Intentionally do not retain the second handle so callback reachability depends on the
+    // remaining anchor, not on another wrapper still holding the callback via its onClose action.
+    meter.batchCallback(callback, secondMeasurement);
+
+    firstCallback.close();
+    firstCallback.close();
+    firstCallback = null;
+    callback = null;
+
+    GcUtils.awaitGc(Duration.ofSeconds(10));
+    assertThat(callbackRef.get()).isNotNull();
+  }
+
+  @Test
+  void sharedBatchCallbackCollectedAfterLastHandleClosed() throws Exception {
+    ObservableLongMeasurement firstMeasurement = meter.counterBuilder("test.first").buildObserver();
+    ObservableLongMeasurement secondMeasurement =
+        meter.counterBuilder("test.second").buildObserver();
+    Runnable callback =
+        new Runnable() {
+          @Override
+          public void run() {}
+        };
+    WeakReference<Runnable> callbackRef = new WeakReference<>(callback);
+
+    BatchCallback firstCallback = meter.batchCallback(callback, firstMeasurement);
+    BatchCallback secondCallback = meter.batchCallback(callback, secondMeasurement);
+
+    firstCallback.close();
+    secondCallback.close();
+    firstCallback = null;
+    secondCallback = null;
+    callback = null;
+
+    GcUtils.awaitGc(callbackRef, Duration.ofSeconds(10));
+    assertThat(callbackRef.get()).isNull();
   }
 }

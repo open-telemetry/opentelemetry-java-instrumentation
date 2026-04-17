@@ -23,8 +23,8 @@ public class ResteasyStartupListener implements ServletContextListener {
           .onStartup(
               singleton(JaxRsApplicationPathTestApplication.class),
               servletContextEvent.getServletContext());
-    } catch (ServletException exception) {
-      throw new IllegalStateException(exception);
+    } catch (ServletException e) {
+      throw new IllegalStateException(e);
     }
   }
 

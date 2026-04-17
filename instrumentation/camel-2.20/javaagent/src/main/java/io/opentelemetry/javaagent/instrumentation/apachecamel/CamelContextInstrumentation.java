@@ -18,7 +18,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.camel.CamelContext;
 
-public class CamelContextInstrumentation implements TypeInstrumentation {
+class CamelContextInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("org.apache.camel.CamelContext");
@@ -33,13 +33,13 @@ public class CamelContextInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("start").and(isPublic()).and(takesArguments(0)),
-        this.getClass().getName() + "$StartAdvice");
+        getClass().getName() + "$StartAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class StartAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onContextStart(@Advice.This CamelContext context) throws Exception {
 
       if (context.hasService(CamelTracingService.class) == null) {

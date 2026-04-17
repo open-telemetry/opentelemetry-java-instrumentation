@@ -50,18 +50,18 @@ public class Tomcat7ServerHandlerAdvice {
   }
 
   @Nullable
-  @Advice.OnMethodEnter(suppress = Throwable.class)
+  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
   public static AdviceScope onEnter(
       @Advice.Argument(0) Request request, @Advice.Argument(1) Response response) {
     return AdviceScope.start(request, response);
   }
 
-  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
   public static void stopSpan(
       @Advice.Argument(0) Request request,
       @Advice.Argument(1) Response response,
       @Advice.Thrown @Nullable Throwable throwable,
-      @Advice.Enter AdviceScope adviceScope) {
+      @Advice.Enter @Nullable AdviceScope adviceScope) {
     if (adviceScope != null) {
       adviceScope.end(request, response, throwable);
     }

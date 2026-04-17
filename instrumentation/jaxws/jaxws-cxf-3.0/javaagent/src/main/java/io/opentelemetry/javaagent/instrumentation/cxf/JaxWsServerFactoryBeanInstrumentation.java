@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.cxf.endpoint.Endpoint;
 import org.apache.cxf.endpoint.Server;
 
-public class JaxWsServerFactoryBeanInstrumentation implements TypeInstrumentation {
+class JaxWsServerFactoryBeanInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -35,7 +35,7 @@ public class JaxWsServerFactoryBeanInstrumentation implements TypeInstrumentatio
   @SuppressWarnings("unused")
   public static class CreateAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Return Server server) {
       Endpoint endpoint = server.getEndpoint();
       endpoint.getInInterceptors().add(new TracingStartInInterceptor());

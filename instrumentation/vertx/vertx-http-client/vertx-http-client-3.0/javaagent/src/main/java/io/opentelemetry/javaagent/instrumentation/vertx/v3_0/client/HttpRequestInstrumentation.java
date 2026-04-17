@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.instrumentation.vertx.v3_0.client.VertxClientSingletons.CONTEXTS;
 import static io.opentelemetry.javaagent.instrumentation.vertx.v3_0.client.VertxClientSingletons.REQUEST_INFO;
 import static io.opentelemetry.javaagent.instrumentation.vertx.v3_0.client.VertxClientSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -46,7 +45,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * the http call and the Netty Channel that will perform that operation. The main result of this
  * transfer is a suppression of Netty CLIENT span.
  */
-public class HttpRequestInstrumentation implements TypeInstrumentation {
+class HttpRequestInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -61,26 +60,21 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(nameStartsWith("end").or(named("sendHead"))),
-        HttpRequestInstrumentation.class.getName() + "$EndRequestAdvice");
+        nameStartsWith("end").or(named("sendHead")), getClass().getName() + "$EndRequestAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod().and(named("handleException")),
-        HttpRequestInstrumentation.class.getName() + "$HandleExceptionAdvice");
+        named("handleException"), getClass().getName() + "$HandleExceptionAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod().and(named("handleResponse")),
-        HttpRequestInstrumentation.class.getName() + "$HandleResponseAdvice");
+        named("handleResponse"), getClass().getName() + "$HandleResponseAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod().and(isPrivate()).and(nameStartsWith("write").or(nameStartsWith("connected"))),
-        HttpRequestInstrumentation.class.getName() + "$MountContextAdvice");
+        isPrivate().and(nameStartsWith("write").or(nameStartsWith("connected"))),
+        getClass().getName() + "$MountContextAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("exceptionHandler"))
-            .and(takesArgument(0, named("io.vertx.core.Handler"))),
-        HttpRequestInstrumentation.class.getName() + "$ExceptionHandlerAdvice");
+        named("exceptionHandler").and(takesArgument(0, named("io.vertx.core.Handler"))),
+        getClass().getName() + "$ExceptionHandlerAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -120,12 +114,12 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope attachContext(@Advice.This HttpClientRequest request) {
       return AdviceScope.startAndAttachContext(request);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void endScope(
         @Advice.This HttpClientRequest request,
         @Advice.Thrown @Nullable Throwable throwable,
@@ -140,7 +134,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
   public static class HandleExceptionAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope handleException(
         @Advice.This HttpClientRequest request, @Advice.Argument(0) Throwable t) {
 
@@ -154,8 +148,8 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
       return contexts.parentContext.makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void handleResponseExit(@Advice.Enter @Nullable Scope scope) {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void handleExceptionExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }
@@ -166,7 +160,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
   public static class HandleResponseAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope handleResponseEnter(
         @Advice.This HttpClientRequest request, @Advice.Argument(0) HttpClientResponse response) {
 
@@ -180,7 +174,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
       return contexts.parentContext.makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void handleResponseExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
@@ -192,7 +186,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
   public static class MountContextAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope mountContext(@Advice.This HttpClientRequest request) {
       Contexts contexts = CONTEXTS.get(request);
       if (contexts == null) {
@@ -201,7 +195,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
       return contexts.context.makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void unmountContext(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
@@ -214,7 +208,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Handler<Throwable> wrapExceptionHandler(
         @Advice.This HttpClientRequest request,
         @Advice.Argument(0) @Nullable Handler<Throwable> handler) {

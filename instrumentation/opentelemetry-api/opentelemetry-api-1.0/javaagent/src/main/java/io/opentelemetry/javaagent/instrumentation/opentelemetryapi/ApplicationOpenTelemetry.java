@@ -12,7 +12,6 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Applica
 import javax.annotation.Nullable;
 
 public class ApplicationOpenTelemetry implements application.io.opentelemetry.api.OpenTelemetry {
-
   public static final application.io.opentelemetry.api.OpenTelemetry INSTANCE;
 
   static {
@@ -74,7 +73,7 @@ public class ApplicationOpenTelemetry implements application.io.opentelemetry.ap
     try {
       Class<?> clazz = Class.forName(className);
       return (application.io.opentelemetry.api.OpenTelemetry) clazz.getField("INSTANCE").get(null);
-    } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException exception) {
+    } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException ignored) {
       return null;
     }
   }

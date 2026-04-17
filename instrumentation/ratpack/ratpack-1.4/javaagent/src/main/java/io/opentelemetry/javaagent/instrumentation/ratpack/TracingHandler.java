@@ -16,7 +16,7 @@ import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import ratpack.handling.Context;
 import ratpack.handling.Handler;
 
-public final class TracingHandler implements Handler {
+public class TracingHandler implements Handler {
 
   private static final String INITIAL_SPAN_NAME = "ratpack.handler";
 

@@ -1,3 +1,4 @@
+display_name: Java HTTP Client
 description: This instrumentation enables HTTP client spans and HTTP client metrics for requests made using the Java HTTP client.
 semantic_conventions:
   - HTTP_CLIENT_SPANS

@@ -24,7 +24,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /** This instrumentation allows span context propagation across Vert.x reactive executions. */
-public class AsyncResultSingleInstrumentation implements TypeInstrumentation {
+class AsyncResultSingleInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     // Different versions of Vert.x has this class in different packages
@@ -43,17 +43,17 @@ public class AsyncResultSingleInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(0, named("io.vertx.core.Handler"))),
-        this.getClass().getName() + "$ConstructorWithHandlerAdvice");
+        getClass().getName() + "$ConstructorWithHandlerAdvice");
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(0, Consumer.class)),
-        this.getClass().getName() + "$ConstructorWithConsumerAdvice");
+        getClass().getName() + "$ConstructorWithConsumerAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ConstructorWithHandlerAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Handler<Handler<AsyncResult<?>>> wrapHandler(
         @Advice.Argument(0) Handler<Handler<AsyncResult<?>>> handler) {
       return AsyncResultHandlerWrapper.wrapIfNeeded(handler, Java8BytecodeBridge.currentContext());
@@ -64,7 +64,7 @@ public class AsyncResultSingleInstrumentation implements TypeInstrumentation {
   public static class ConstructorWithConsumerAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Consumer<Handler<AsyncResult<?>>> wrapHandler(
         @Advice.Argument(0) Consumer<Handler<AsyncResult<?>>> handler) {
       return AsyncResultConsumerWrapper.wrapIfNeeded(handler, Java8BytecodeBridge.currentContext());

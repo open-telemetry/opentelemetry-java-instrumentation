@@ -21,7 +21,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ContextPropagationOperatorInstrumentation implements TypeInstrumentation {
+class ContextPropagationOperatorInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named(
@@ -60,13 +60,16 @@ public class ContextPropagationOperatorInstrumentation implements TypeInstrument
 
   @SuppressWarnings("unused")
   public static class StoreAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Advice.OnDefaultValue.class)
+    @Advice.OnMethodEnter(
+        suppress = Throwable.class,
+        skipOn = Advice.OnDefaultValue.class,
+        inline = false)
     public static boolean methodEnter() {
       return false;
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static reactor.util.context.Context methodExit(
         @Advice.Argument(0) reactor.util.context.Context reactorContext,
         @Advice.Argument(1) application.io.opentelemetry.context.Context applicationContext) {
@@ -77,13 +80,13 @@ public class ContextPropagationOperatorInstrumentation implements TypeInstrument
 
   @SuppressWarnings("unused")
   public static class GetAdvice {
-    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class)
+    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class, inline = false)
     public static boolean methodEnter() {
       return false;
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static application.io.opentelemetry.context.Context methodExit(
         @Advice.Argument(0) reactor.util.context.Context reactorContext,
         @Advice.Argument(1) application.io.opentelemetry.context.Context defaultContext) {
@@ -100,7 +103,7 @@ public class ContextPropagationOperatorInstrumentation implements TypeInstrument
 
   @SuppressWarnings("unused")
   public static class RunWithAdvice {
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(inline = false)
     @Advice.AssignReturned.ToFields(@Advice.AssignReturned.ToFields.ToField("enabled"))
     public static boolean methodEnter() {
       return true;

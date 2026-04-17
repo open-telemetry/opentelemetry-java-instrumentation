@@ -10,10 +10,14 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
+import javax.annotation.Nullable;
 import org.apache.axis2.jaxws.core.MessageContext;
 
-public final class Axis2ServerSpanNaming {
+public class Axis2ServerSpanNaming {
+  @Nullable
   private static final Class<?> JAVAX_REQUEST = loadClass("javax.servlet.http.HttpServletRequest");
+
+  @Nullable
   private static final Class<?> JAKARTA_REQUEST =
       loadClass("jakarta.servlet.http.HttpServletRequest");
 
@@ -36,15 +40,17 @@ public final class Axis2ServerSpanNaming {
     serverSpan.updateName(ServletContextPath.prepend(context, spanName));
   }
 
+  @Nullable
   private static Class<?> loadClass(String name) {
     try {
       return Class.forName(name);
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       return null;
     }
   }
 
   @NoMuzzle
+  @Nullable
   private static String getServletPath(Object request) {
     if (JAVAX_REQUEST != null && JAVAX_REQUEST.isInstance(request)) {
       return ((javax.servlet.http.HttpServletRequest) request).getServletPath();

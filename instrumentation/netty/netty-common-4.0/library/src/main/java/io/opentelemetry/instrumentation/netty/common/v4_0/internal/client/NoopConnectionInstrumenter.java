@@ -28,6 +28,6 @@ final class NoopConnectionInstrumenter implements NettyConnectionInstrumenter {
   public void end(
       Context context,
       NettyConnectionRequest request,
-      Channel channel,
+      @Nullable Channel channel,
       @Nullable Throwable error) {}
 }

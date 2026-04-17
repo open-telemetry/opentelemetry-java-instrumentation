@@ -1,3 +1,4 @@
+display_name: Ratpack
 description: >
   This instrumentation enables HTTP server spans and HTTP server metrics for Ratpack servers,
   HTTP client spans and HTTP client metrics for Ratpack HTTP clients, and enables controller spans

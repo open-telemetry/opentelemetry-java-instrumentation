@@ -16,6 +16,14 @@ Keep scoped language or file-type rules in `.github/instructions/*.instructions.
 - Style guide and core conventions: `docs/contributing/style-guide.md`
 - Review and implementation knowledge by topic: `.github/agents/knowledge/README.md`
 
+## Knowledge Loading
+
+For coding, fix, and refactoring tasks, consult `.github/agents/knowledge/README.md`
+before making substantial changes.
+
+Use the knowledge index to load only the article(s) relevant to the current task.
+Do not load the entire knowledge folder by default.
+
 ## Gradle Execution Rules
 
 Never use `--rerun-tasks`. Use `--rerun` when needed.

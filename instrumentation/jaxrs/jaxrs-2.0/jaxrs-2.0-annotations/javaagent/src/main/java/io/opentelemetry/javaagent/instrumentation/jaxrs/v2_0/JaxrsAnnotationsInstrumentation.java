@@ -39,7 +39,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
+class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -116,7 +116,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
         HttpServerRoute.update(
             parentContext,
             HttpServerRouteSource.CONTROLLER,
-            JaxrsServerSpanNaming.SERVER_SPAN_NAME,
+            JaxrsServerSpanNaming.serverSpanName(),
             handlerData);
 
         if (!instrumenter().shouldStart(parentContext, handlerData)) {
@@ -128,7 +128,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
         context = instrumenter().start(parentContext, handlerData);
         scope = context.makeCurrent();
 
-        if (ASYNC_RESPONSE_DATA != null && asyncResponse != null) {
+        if (asyncResponse != null) {
           ASYNC_RESPONSE_DATA.set(asyncResponse, AsyncResponseData.create(context, handlerData));
         }
       }
@@ -164,7 +164,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope nameSpan(
         @Advice.This Object target,
         @Advice.Origin Method method,
@@ -173,7 +173,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Object stopSpan(
         @Advice.Return(typing = Typing.DYNAMIC) Object returnValue,
         @Advice.Thrown Throwable throwable,

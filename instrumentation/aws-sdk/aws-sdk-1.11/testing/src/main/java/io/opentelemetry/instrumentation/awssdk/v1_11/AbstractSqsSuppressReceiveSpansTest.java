@@ -36,7 +36,6 @@ import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -170,7 +169,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                     span ->
                         span.hasName("process child")
                             .hasParent(trace.getSpan(1))
-                            .hasAttributes(Attributes.empty())));
+                            .hasTotalAttributeCount(0)));
   }
 
   @Test
@@ -267,7 +266,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                     span ->
                         span.hasName("process child")
                             .hasParent(trace.getSpan(1))
-                            .hasAttributes(Attributes.empty())),
+                            .hasTotalAttributeCount(0)),
             /*
              * This span represents HTTP "sending of receive message" operation. It's always single, while there can be multiple CONSUMER spans (one per consumed message).
              * This one could be suppressed (by IF in TracingRequestHandler#beforeRequest but then HTTP instrumentation span would appear

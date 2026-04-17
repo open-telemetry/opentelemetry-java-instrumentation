@@ -67,10 +67,9 @@ class JarAnalyzerTest {
                         .hasEntrySatisfying(
                             PACKAGE_PATH,
                             path ->
-                                assertThat(
-                                        path.matches(
-                                            "opentelemetry-javaagent-runtime-telemetry-[0-9a-zA-Z-\\.]+\\.jar"))
-                                    .isTrue())
+                                assertThat(path)
+                                    .matches(
+                                        "opentelemetry-javaagent-runtime-telemetry-[0-9a-zA-Z-\\.]+\\.jar"))
                         .containsEntry(PACKAGE_DESCRIPTION, "javaagent by OpenTelemetry")
                         .containsEntry(PACKAGE_CHECKSUM_ALGORITHM, "SHA1")
                         .hasEntrySatisfying(
@@ -97,8 +96,8 @@ class JarAnalyzerTest {
                         .hasEntrySatisfying(
                             PACKAGE_PATH,
                             path ->
-                                assertThat(path.matches("opentelemetry-api-[0-9a-zA-Z-\\.]+\\.jar"))
-                                    .isTrue())
+                                assertThat(path)
+                                    .matches("opentelemetry-api-[0-9a-zA-Z-\\.]+\\.jar"))
                         .containsEntry(PACKAGE_DESCRIPTION, "all")
                         .containsEntry(PACKAGE_CHECKSUM_ALGORITHM, "SHA1")
                         .hasEntrySatisfying(
@@ -114,9 +113,7 @@ class JarAnalyzerTest {
                         // package.version field?
                         .hasEntrySatisfying(
                             PACKAGE_PATH,
-                            path ->
-                                assertThat(path.matches("spring-web-[0-9a-zA-Z-\\.]+\\.jar"))
-                                    .isTrue())
+                            path -> assertThat(path).matches("spring-web-[0-9a-zA-Z-\\.]+\\.jar"))
                         .containsEntry(PACKAGE_DESCRIPTION, "org.springframework.web")
                         .containsEntry(PACKAGE_CHECKSUM_ALGORITHM, "SHA1")
                         .hasEntrySatisfying(
@@ -130,8 +127,7 @@ class JarAnalyzerTest {
                         .containsEntry(PACKAGE_TYPE, "jar")
                         .hasEntrySatisfying(
                             PACKAGE_PATH,
-                            path ->
-                                assertThat(path.matches("guava-[0-9a-zA-Z-\\.]+\\.jar")).isTrue())
+                            path -> assertThat(path).matches("guava-[0-9a-zA-Z-\\.]+\\.jar"))
                         .containsEntry(PACKAGE_NAME, "com.google.guava:guava")
                         .hasEntrySatisfying(
                             PACKAGE_VERSION, version -> assertThat(version).isNotEmpty())

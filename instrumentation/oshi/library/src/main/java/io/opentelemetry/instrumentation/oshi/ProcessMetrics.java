@@ -16,10 +16,8 @@ import oshi.software.os.OSProcess;
 import oshi.software.os.OperatingSystem;
 
 /** Java Runtime Metrics Utility. */
-public class ProcessMetrics {
+public final class ProcessMetrics {
   private static final AttributeKey<String> TYPE_KEY = AttributeKey.stringKey("type");
-
-  private ProcessMetrics() {}
 
   /** Register observers for java runtime metrics. */
   public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {
@@ -54,4 +52,6 @@ public class ProcessMetrics {
                 }));
     return observables;
   }
+
+  private ProcessMetrics() {}
 }

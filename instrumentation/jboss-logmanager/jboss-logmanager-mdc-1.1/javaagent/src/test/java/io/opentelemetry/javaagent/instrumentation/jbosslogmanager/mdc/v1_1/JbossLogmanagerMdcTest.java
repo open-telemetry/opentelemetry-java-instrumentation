@@ -30,7 +30,7 @@ class JbossLogmanagerMdcTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   static class LogHandler extends Handler {
-    public List<ExtLogRecord> logRecords;
+    private final List<ExtLogRecord> logRecords;
 
     LogHandler(List<ExtLogRecord> logRecords) {
       this.logRecords = logRecords;
@@ -58,7 +58,7 @@ class JbossLogmanagerMdcTest {
 
     logger.info("log message 1");
 
-    assertThat(logRecords.size()).isEqualTo(1);
+    assertThat(logRecords).hasSize(1);
     assertThat(logRecords.get(0).getMessage()).isEqualTo("log message 1");
     assertThat(logRecords.get(0).getMdc("trace_id")).isNull();
     assertThat(logRecords.get(0).getMdc("span_id")).isNull();

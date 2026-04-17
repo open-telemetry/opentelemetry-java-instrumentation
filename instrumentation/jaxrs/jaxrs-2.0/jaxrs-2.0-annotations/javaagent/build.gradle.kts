@@ -20,6 +20,8 @@ dependencies {
 
   implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent"))
 
+  testInstrumentation(project(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-annotations:javaagent"))
+
   compileOnly("javax.ws.rs:javax.ws.rs-api:2.0")
 
   testImplementation("javax.ws.rs:javax.ws.rs-api:2.0")
@@ -29,6 +31,6 @@ tasks {
   withType<Test>().configureEach {
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 }

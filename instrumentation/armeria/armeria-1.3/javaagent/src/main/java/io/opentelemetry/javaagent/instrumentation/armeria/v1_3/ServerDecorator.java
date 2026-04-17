@@ -48,12 +48,12 @@ class ServerDecorator extends SimpleDecoratingHttpService {
 
     try {
       return unwrap().serve(ctx, req);
-    } catch (Throwable throwable) {
+    } catch (Throwable t) {
       Span span = Span.fromContext(otelContext);
       span.setStatus(StatusCode.ERROR);
-      span.recordException(ErrorCauseExtractor.getDefault().extract(throwable));
+      span.recordException(ErrorCauseExtractor.getDefault().extract(t));
 
-      throw throwable;
+      throw t;
     }
   }
 }

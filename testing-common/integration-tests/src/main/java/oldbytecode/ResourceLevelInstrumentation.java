@@ -13,7 +13,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ResourceLevelInstrumentation implements TypeInstrumentation {
+class ResourceLevelInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.ibm.as400.resource.ResourceLevel");
@@ -21,13 +21,12 @@ public class ResourceLevelInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("toString"), this.getClass().getName() + "$ToStringAdvice");
+    transformer.applyAdviceToMethod(named("toString"), getClass().getName() + "$ToStringAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ToStringAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToReturned
     public static String toStringReplace() {
       return "instrumented";

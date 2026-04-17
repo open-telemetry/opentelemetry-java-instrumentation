@@ -18,9 +18,11 @@ import library.MyProxySuperclass;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 @SuppressWarnings({"unused", "MethodCanBeStatic"})
+@EnabledIfSystemProperty(named = "otel.javaagent.experimental.indy", matches = "true")
 class IndyInstrumentationTest {
 
   @RegisterExtension
@@ -65,7 +67,7 @@ class IndyInstrumentationTest {
   }
 
   @AfterEach
-  public void reset() {
+  void reset() {
     privateField = null;
   }
 

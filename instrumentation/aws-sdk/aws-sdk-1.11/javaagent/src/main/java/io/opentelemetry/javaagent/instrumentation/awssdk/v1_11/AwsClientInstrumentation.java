@@ -21,7 +21,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * This instrumentation might work with versions before 1.11.0, but this was the first version that
  * is tested. It could possibly be extended earlier.
  */
-public class AwsClientInstrumentation implements TypeInstrumentation {
+class AwsClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -38,7 +38,7 @@ public class AwsClientInstrumentation implements TypeInstrumentation {
   public static class AwsClientAdvice {
 
     // Since we're instrumenting the constructor, we can't add onThrowable.
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void addHandler(
         @Advice.FieldValue("requestHandler2s") List<RequestHandler2> handlers) {
       boolean hasAgentHandler = false;

@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1;
 
 import static io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1.SpringWebMvcSingletons.modelAndViewInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -27,7 +26,7 @@ import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.v3_1.OpenTelemetryHandlerMappingFilter;
 
-public class DispatcherServletInstrumentation implements TypeInstrumentation {
+class DispatcherServletInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -37,15 +36,13 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isProtected())
+        isProtected()
             .and(named("onRefresh"))
             .and(takesArgument(0, named("org.springframework.context.ApplicationContext")))
             .and(takesArguments(1)),
         DispatcherServletInstrumentation.class.getName() + "$HandlerMappingAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isProtected())
+        isProtected()
             .and(named("render"))
             .and(takesArgument(0, named("org.springframework.web.servlet.ModelAndView"))),
         DispatcherServletInstrumentation.class.getName() + "$RenderAdvice");
@@ -58,7 +55,7 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class HandlerMappingAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void afterRefresh(
         @Advice.Argument(0) ApplicationContext springCtx,
         @Advice.FieldValue("handlerMappings") List<HandlerMapping> handlerMappings) {
@@ -102,12 +99,12 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(0) ModelAndView mv) {
       return AdviceScope.enter(mv);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Argument(0) ModelAndView mv,
         @Advice.Thrown @Nullable Throwable throwable,

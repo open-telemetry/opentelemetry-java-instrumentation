@@ -40,9 +40,4 @@ public class KafkaMetricsInstrumentationModule extends InstrumentationModule
     return asList(
         new KafkaMetricsProducerInstrumentation(), new KafkaMetricsConsumerInstrumentation());
   }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
-  }
 }

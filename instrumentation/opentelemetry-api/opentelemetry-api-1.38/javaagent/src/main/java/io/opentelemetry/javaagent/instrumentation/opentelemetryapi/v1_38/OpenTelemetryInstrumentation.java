@@ -15,7 +15,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class OpenTelemetryInstrumentation implements TypeInstrumentation {
+class OpenTelemetryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -30,7 +30,7 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings({"ReturnValueIgnored", "unused"})
   public static class InitAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void init() {
       // the sole purpose of this advice is to ensure that ApplicationMeterFactory138 is recognized
       // as helper class and injected into class loader

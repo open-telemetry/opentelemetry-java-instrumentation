@@ -26,7 +26,7 @@ class Log4j2Test extends AbstractLog4j2Test {
 
   @AfterAll
   static void cleanup() {
-    OpenTelemetryAppender.install(null);
+    OpenTelemetryAppender.resetForTest();
   }
 
   @Override

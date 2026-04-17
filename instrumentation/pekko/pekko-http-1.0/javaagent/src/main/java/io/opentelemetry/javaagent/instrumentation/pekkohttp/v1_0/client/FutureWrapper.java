@@ -13,7 +13,7 @@ import scala.concurrent.impl.Promise;
 import scala.runtime.AbstractFunction1;
 import scala.util.Try;
 
-public final class FutureWrapper {
+public class FutureWrapper {
 
   public static <T> Future<T> wrap(
       Future<T> future, ExecutionContext executionContext, Context context) {

@@ -16,15 +16,13 @@ dependencies {
   latestDepTestLibrary("io.vertx:vertx-codegen:3.+") // documented limitation
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
-
 testing {
   suites {
     val testNoReceiveTelemetry by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project(":instrumentation:vertx:vertx-kafka-client-3.6:testing"))
 
-        val version = if (latestDepTest) "3.+" else "3.6.0"
+        val version = if (otelProps.testLatestDeps) "3.+" else "3.6.0"
         implementation("io.vertx:vertx-kafka-client:$version")
         implementation("io.vertx:vertx-codegen:$version")
       }
@@ -32,9 +30,10 @@ testing {
       targets {
         all {
           testTask.configure {
-            usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-
-            systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+            systemProperty(
+              "metadataConfig",
+              "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=false",
+            )
             jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
             jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
           }
@@ -47,8 +46,8 @@ testing {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-    systemProperty("testLatestDeps", latestDepTest)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
   test {

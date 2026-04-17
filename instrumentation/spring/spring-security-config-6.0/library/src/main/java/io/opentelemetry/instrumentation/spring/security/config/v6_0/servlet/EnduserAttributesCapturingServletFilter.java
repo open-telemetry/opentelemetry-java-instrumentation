@@ -18,7 +18,7 @@ import java.io.IOException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
- * A servlet {@link Filter} that captures {@code endpoint.*} semantic attributes from the {@link
+ * A servlet {@link Filter} that captures {@code enduser.*} semantic attributes from the {@link
  * org.springframework.security.core.Authentication} in the current {@link
  * org.springframework.security.core.context.SecurityContext} retrieved from {@link
  * SecurityContextHolder}.
@@ -27,7 +27,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
  * the filters that populate the {@link org.springframework.security.core.context.SecurityContext}
  * in the {@link org.springframework.security.core.context.SecurityContextHolder}.
  */
-public class EnduserAttributesCapturingServletFilter implements Filter {
+public final class EnduserAttributesCapturingServletFilter implements Filter {
 
   private final EnduserAttributesCapturer capturer;
 

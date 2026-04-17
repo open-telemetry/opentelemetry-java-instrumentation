@@ -19,7 +19,6 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
 import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -59,7 +58,7 @@ class RatpackServerApplicationTest {
                             equalTo(HTTP_ROUTE, "/foo"),
                             equalTo(URL_PATH, "/foo"),
                             equalTo(URL_SCHEME, "http"),
-                            satisfies(SERVER_PORT, v -> v.isInstanceOf(Long.class)),
+                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(URL_QUERY, ""),
@@ -84,7 +83,7 @@ class RatpackServerApplicationTest {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
                             equalTo(URL_PATH, "/bar"),
                             equalTo(URL_SCHEME, "http"),
-                            satisfies(SERVER_PORT, v -> v.isInstanceOf(Long.class)),
+                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(URL_QUERY, "")),
@@ -97,7 +96,7 @@ class RatpackServerApplicationTest {
                             equalTo(URL_FULL, "http://localhost:" + app.getAppPort() + "/other"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                            satisfies(SERVER_PORT, v -> v.isInstanceOf(Long.class)),
+                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
@@ -115,6 +114,6 @@ class RatpackServerApplicationTest {
                     span.hasName("parent")
                         .hasNoParent()
                         .hasKind(SpanKind.INTERNAL)
-                        .hasAttributes(Attributes.empty())));
+                        .hasTotalAttributeCount(0)));
   }
 }
