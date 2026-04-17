@@ -30,7 +30,18 @@ dependencies {
 
   library("com.typesafe.akka:akka-actor_2.11:2.5.0")
 
+  latestDepTestLibrary("com.typesafe.akka:akka-actor_2.13:2.5.+") // fork-join was removed in 2.6
+
   testImplementation(project(":instrumentation:executors:testing"))
+}
+
+if (otelProps.testLatestDeps) {
+  configurations {
+    // akka artifact name is different for regular and latest tests
+    testImplementation {
+      exclude("com.typesafe.akka", "akka-actor_2.11")
+    }
+  }
 }
 
 if (otelProps.denyUnsafe) {
