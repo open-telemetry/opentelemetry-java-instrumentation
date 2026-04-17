@@ -114,10 +114,8 @@ class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentation {
           AwsLambdaSingletons.messageInstrumenter()
               .end(messageContext, (SQSEvent) arg, null, throwable);
         }
-        if (functionScope != null) {
-          functionScope.close();
-          functionInstrumenter().end(functionContext, lambdaRequest, result, throwable);
-        }
+        functionScope.close();
+        functionInstrumenter().end(functionContext, lambdaRequest, result, throwable);
         OpenTelemetrySdkAccess.forceFlush(flushTimeout().toNanos(), NANOSECONDS);
       }
     }
