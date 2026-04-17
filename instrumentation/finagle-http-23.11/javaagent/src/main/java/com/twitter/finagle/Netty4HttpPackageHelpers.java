@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package com.twitter.finagle;
 
 import com.twitter.finagle.netty4.http.package$;

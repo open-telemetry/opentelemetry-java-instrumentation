@@ -37,7 +37,8 @@ class ChannelTransportInstrumentation implements TypeInstrumentation {
       //
       // TODO add extra outbound handler to the end of the ChannelTransport Channel
       //  (or create a duplex one with the existing read-side handler at the end of the pipeline);
-      //  this will allow us to hook the Context attached to the netty HttpRequest (Bijections$finagle$)
+      //  this will allow us to hook the Context attached to the netty HttpRequest
+      // (Bijections$finagle$)
       //  to the netty pipeline (need to look up how the netty client side handles things)
       //
       Helpers.mutateHandlerPipeline(ch);

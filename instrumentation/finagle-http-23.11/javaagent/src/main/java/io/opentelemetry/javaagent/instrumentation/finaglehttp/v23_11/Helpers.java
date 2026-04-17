@@ -134,60 +134,67 @@ public class Helpers {
     if (codec instanceof HttpClientCodec) {
       // ensure we capture the client context and assign it to the channel before any processing;
       // not applicable to servers
-      ch.pipeline().addAfter(ChannelTransportHelpers.getHandlerName(), OTEL_NETTY_HANDLER,
-          new ChannelOutboundHandlerAdapter() {
-            @Override
-            public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise)
-                throws Exception {
-              if (msg instanceof HttpRequest) {
-                Context context = VirtualField.find(HttpRequest.class, Context.class)
-                    .get((HttpRequest) msg);
-                ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT).set(context);
-              } else {
-                throw new IllegalArgumentException("unexpected request type: " + msg);
-              }
-              super.write(ctx, msg, promise);
-            }
-          });
+      ch.pipeline()
+          .addAfter(
+              ChannelTransportHelpers.getHandlerName(),
+              OTEL_NETTY_HANDLER,
+              new ChannelOutboundHandlerAdapter() {
+                @Override
+                public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise)
+                    throws Exception {
+                  if (msg instanceof HttpRequest) {
+                    Context context =
+                        VirtualField.find(HttpRequest.class, Context.class).get((HttpRequest) msg);
+                    ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT).set(context);
+                  } else {
+                    throw new IllegalArgumentException("unexpected request type: " + msg);
+                  }
+                  super.write(ctx, msg, promise);
+                }
+              });
     } else {
-      // ensure we capture the server context and assign it to the outgoing request before offering to the AsyncQueue;
+      // ensure we capture the server context and assign it to the outgoing request before offering
+      // to the AsyncQueue;
       // not applicable to clients
-      ch.pipeline().addBefore(ChannelTransportHelpers.getHandlerName(), OTEL_NETTY_HANDLER,
-          new ChannelInboundHandlerAdapter() {
-            /*
-            Assign the context to the request.
+      ch.pipeline()
+          .addBefore(
+              ChannelTransportHelpers.getHandlerName(),
+              OTEL_NETTY_HANDLER,
+              new ChannelInboundHandlerAdapter() {
+                /*
+                Assign the context to the request.
 
-            Part 1/3 for chaining the context from netty to finagle.
-             */
-            @Override
-            public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-              ServerContexts serverContexts = ServerContexts.get(ctx.channel());
-              if (serverContexts == null) {
-                super.channelRead(ctx, msg);
-                return;
-              }
+                Part 1/3 for chaining the context from netty to finagle.
+                 */
+                @Override
+                public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+                  ServerContexts serverContexts = ServerContexts.get(ctx.channel());
+                  if (serverContexts == null) {
+                    super.channelRead(ctx, msg);
+                    return;
+                  }
 
-              ServerContext serverContext = serverContexts.peekLast();
+                  ServerContext serverContext = serverContexts.peekLast();
 
-              // type switch courtesy of
-              // com.twitter.finagle.netty4.http.Netty4ServerStreamTransport.read()
-              if (msg instanceof FullHttpRequest) {
-                VirtualField.find(FullHttpRequest.class, Context.class)
-                    .set(
-                        (FullHttpRequest) msg,
-                        serverContext != null ? serverContext.context() : null);
-              } else if (msg instanceof HttpRequest) {
-                VirtualField.find(HttpRequest.class, Context.class)
-                    .set(
-                        (HttpRequest) msg,
-                        serverContext != null ? serverContext.context() : null);
-              } else {
-                throw new IllegalArgumentException("unexpected request type: " + msg);
-              }
+                  // type switch courtesy of
+                  // com.twitter.finagle.netty4.http.Netty4ServerStreamTransport.read()
+                  if (msg instanceof FullHttpRequest) {
+                    VirtualField.find(FullHttpRequest.class, Context.class)
+                        .set(
+                            (FullHttpRequest) msg,
+                            serverContext != null ? serverContext.context() : null);
+                  } else if (msg instanceof HttpRequest) {
+                    VirtualField.find(HttpRequest.class, Context.class)
+                        .set(
+                            (HttpRequest) msg,
+                            serverContext != null ? serverContext.context() : null);
+                  } else {
+                    throw new IllegalArgumentException("unexpected request type: " + msg);
+                  }
 
-              super.channelRead(ctx, msg);
-            }
-          });
+                  super.channelRead(ctx, msg);
+                }
+              });
     }
   }
 
