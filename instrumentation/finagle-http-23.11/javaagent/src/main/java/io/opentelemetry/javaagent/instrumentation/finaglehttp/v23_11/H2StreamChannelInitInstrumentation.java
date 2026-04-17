@@ -16,6 +16,11 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
+/**
+ * Bridges the instrumented netty instrumentation to finagle's http/2 netty integrations.
+ * Without this the link is broken as the netty ServerContexts don't pass through to the
+ * last handler in the pipeline where it's needed.
+ */
 class H2StreamChannelInitInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

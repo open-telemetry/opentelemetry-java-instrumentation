@@ -17,7 +17,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
- * Amends the tail of the Netty pipeline to
+ * Amends the tail of the Netty pipeline to bridge the netty request to its finagle request.
  */
 class ChannelTransportInstrumentation implements TypeInstrumentation {
   @Override

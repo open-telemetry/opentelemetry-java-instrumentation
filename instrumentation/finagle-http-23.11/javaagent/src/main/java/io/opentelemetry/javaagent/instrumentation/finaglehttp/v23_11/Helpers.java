@@ -12,7 +12,6 @@ import com.twitter.finagle.ChannelTransportHelpers;
 import com.twitter.finagle.http.Request;
 import com.twitter.finagle.http.Request$;
 import com.twitter.finagle.http.collection.RecordSchema;
-import com.twitter.util.Local;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -22,7 +21,6 @@ import io.netty.channel.OpenTelemetryChannelInitializerDelegate;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http2.Http2StreamFrameToHttpObjectCodec;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
@@ -36,12 +34,15 @@ public class Helpers {
 
   private static final VirtualField<ChannelHandler, ChannelHandler> CHANNEL_HANDLER =
       VirtualField.find(ChannelHandler.class, ChannelHandler.class);
-  private static final Local<Context> contextLocal = new Local<>();
 
-  public static Local<Context> contextLocal() {
-    return contextLocal;
-  }
+  public static final RecordSchema.Field<Context> OTEL_CONTEXT_KEY =
+      Request$.MODULE$.Schema().newField();
 
+  private Helpers() {}
+
+  /*
+  Bridges the netty instrumentation to the finagle-netty integration.
+   */
   public static <C extends Channel> ChannelInitializer<C> wrapServer(ChannelInitializer<C> inner) {
     return new OpenTelemetryChannelInitializerDelegate<C>(inner) {
 
@@ -78,6 +79,9 @@ public class Helpers {
     };
   }
 
+  /*
+  Bridges the netty instrumentation to the finagle-netty integration.
+   */
   public static <C extends Channel> ChannelInitializer<C> wrapClient(ChannelInitializer<C> inner) {
     return new OpenTelemetryChannelInitializerDelegate<C>(inner) {
 
@@ -115,6 +119,9 @@ public class Helpers {
     };
   }
 
+  /*
+  Part 1/3 of bridging the otel Context from netty to finagle.
+   */
   public static void mutateHandlerPipeline(Channel ch) {
     ChannelInboundHandlerAdapter oldHandler = (ChannelInboundHandlerAdapter) ch.pipeline()
         .get(ChannelTransportHelpers.getHandlerName());
@@ -138,7 +145,6 @@ public class Helpers {
            */
           @Override
           public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-            System.out.println("mutation in");
             ServerContexts serverContexts = ServerContexts.get(ctx.channel());
             if (serverContexts == null) {
               oldHandler.channelRead(ctx, msg);
@@ -146,7 +152,6 @@ public class Helpers {
             }
 
             ServerContext serverContext = serverContexts.peekLast();
-            System.out.println("mutation out: " +  serverContext);
 
             // type switch courtesy of com.twitter.finagle.netty4.http.Netty4ServerStreamTransport.read()
             if (msg instanceof FullHttpRequest) {
@@ -160,8 +165,6 @@ public class Helpers {
             } else {
               throw new IllegalArgumentException("unexpected request type: " + msg);
             }
-
-            System.out.println("delegating");
 
             oldHandler.channelRead(ctx, msg);
           }
@@ -178,9 +181,9 @@ public class Helpers {
         });
   }
 
-  public static final RecordSchema.Field<Context> OTEL_CONTEXT_KEY =
-      Request$.MODULE$.Schema().newField();
-
+  /*
+  Part 2/3 of bridging the otel Context from netty to finagle.
+   */
   public static void chainContextToFinagle(Object msg, Request request) {
     Context context;
     // type switch courtesy of com.twitter.finagle.netty4.http.Netty4ServerStreamTransport.read()
@@ -191,11 +194,11 @@ public class Helpers {
       context = VirtualField.find(HttpRequest.class, Context.class)
           .get((HttpRequest) msg);
     } else {
+      // shouldn't practically reach here
       throw new IllegalArgumentException("unexpected request type: " + msg);
     }
 
-    System.out.println("here i am: " + Span.fromContext(context));
-
+    // hook the Context from netty's request up to finagle's request
     request.ctx().updateAndLock(OTEL_CONTEXT_KEY, context);
   }
 }

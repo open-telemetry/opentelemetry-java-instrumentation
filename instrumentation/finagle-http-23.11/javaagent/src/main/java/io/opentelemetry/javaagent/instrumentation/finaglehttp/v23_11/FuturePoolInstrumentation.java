@@ -17,10 +17,17 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import scala.Function0;
 
+/**
+ * Instruments the narrow window where a caller, possibly bearing a Context,
+ * can push work onto a FuturePool. While the underlying Executor/Service
+ * instruments the Runnable, there is possibility for it to leak at the call
+ * site in the transition.
+ */
 class FuturePoolInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
+    // also covers InterruptibleExecutorServiceFuturePool (extension)
     return named("com.twitter.util.ExecutorServiceFuturePool");
   }
 

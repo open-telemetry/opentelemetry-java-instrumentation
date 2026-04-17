@@ -1,6 +1,5 @@
 package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import scala.Function0;
@@ -51,7 +50,6 @@ public class TwitterUtilCoreHelpers {
     return () -> {
       Scope scope = context.makeCurrent();
       try {
-        System.out.println("func0: " + Span.fromContext(context));
         return fn.apply();
       } finally {
         scope.close();

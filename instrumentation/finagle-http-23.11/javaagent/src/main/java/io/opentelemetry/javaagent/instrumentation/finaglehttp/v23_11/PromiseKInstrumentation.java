@@ -21,12 +21,14 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
- * Instruments the Promise state machine so that all Fibers are correctly attributed.
+ * Instruments the Promise state machine so that all chains in the Futures/Fibers are
+ * otel-Context-coherent.
  */
 class PromiseKInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
+    // includes Transformer's two lone derivatives
     return named("com.twitter.util.Promise$Transformer").or(named("com.twitter.util.Promise$Monitored"));
   }
 

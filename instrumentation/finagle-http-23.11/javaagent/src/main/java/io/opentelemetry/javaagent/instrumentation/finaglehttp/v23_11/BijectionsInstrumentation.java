@@ -18,7 +18,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
- * Bridges the Context from Netty land to finagle land.
+ * Bridges the Context from Netty request types to finagle request types.
  */
 class BijectionsInstrumentation implements TypeInstrumentation {
 

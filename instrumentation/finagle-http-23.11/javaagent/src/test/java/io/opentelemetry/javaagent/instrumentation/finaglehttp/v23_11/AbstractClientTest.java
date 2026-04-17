@@ -13,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.twitter.finagle.ConnectionFailedException;
 import com.twitter.finagle.Failure;
+import com.twitter.finagle.Http;
 import com.twitter.finagle.ReadTimedOutException;
 import com.twitter.finagle.Service;
 import com.twitter.finagle.http.Request;
@@ -56,7 +57,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
  */
 // todo implement http/2-specific tests;
 //  otel test framework doesn't support an http/2 server out of the box
-class ClientTest extends AbstractHttpClientTest<Request> {
+abstract class AbstractClientTest extends AbstractHttpClientTest<Request> {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
@@ -83,7 +84,7 @@ class ClientTest extends AbstractHttpClientTest<Request> {
   private Service<Request, Response> getClient(URI uri, ClientType clientType) {
     return clients.computeIfAbsent(
         clientType,
-        (type) -> createClient(type).newService(uri.getHost() + ":" + Utils.safePort(uri)));
+        (type) -> configureClient(createClient(type)).newService(uri.getHost() + ":" + Utils.safePort(uri)));
   }
 
   private Future<Response> doSendRequest(Request request, URI uri) {
@@ -100,6 +101,10 @@ class ClientTest extends AbstractHttpClientTest<Request> {
                 throw new RuntimeException(e);
               }
             });
+  }
+
+  protected Http.Client configureClient(Http.Client client) {
+    return client;
   }
 
   @Override
@@ -119,8 +124,8 @@ class ClientTest extends AbstractHttpClientTest<Request> {
           };
         });
 
-    optionsBuilder.setHttpAttributes(ClientTest::getHttpAttributes);
-    optionsBuilder.setExpectedClientSpanNameMapper(ClientTest::getExpectedClientSpanName);
+    optionsBuilder.setHttpAttributes(AbstractClientTest::getHttpAttributes);
+    optionsBuilder.setExpectedClientSpanNameMapper(AbstractClientTest::getExpectedClientSpanName);
     optionsBuilder.disableTestRedirects();
     optionsBuilder.spanEndsAfterBody();
     optionsBuilder.setClientSpanErrorMapper(

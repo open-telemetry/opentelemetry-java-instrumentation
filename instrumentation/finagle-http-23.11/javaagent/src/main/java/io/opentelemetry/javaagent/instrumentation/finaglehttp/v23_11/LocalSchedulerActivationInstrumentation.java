@@ -18,6 +18,10 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
+/**
+ * Instruments the local scheduler Activations as the other Schedulers are transitively
+ * instrumented by Executor instrumentation.
+ */
 class LocalSchedulerActivationInstrumentation implements TypeInstrumentation {
 
   @Override

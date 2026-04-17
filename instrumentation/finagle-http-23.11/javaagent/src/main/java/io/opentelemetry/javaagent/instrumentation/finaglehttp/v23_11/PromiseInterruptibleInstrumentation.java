@@ -18,6 +18,10 @@ import net.bytebuddy.matcher.ElementMatcher;
 import scala.PartialFunction;
 import scala.runtime.BoxedUnit;
 
+/**
+ * Inspired by Kamon's approach, instruments the interruptible such that it has access
+ * to the Context active on the Promise.
+ */
 class PromiseInterruptibleInstrumentation implements TypeInstrumentation {
 
   @Override

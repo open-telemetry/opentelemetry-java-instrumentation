@@ -18,6 +18,13 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
+/**
+ * Part 3/3 of bridging the otel Context from netty to finagle.
+ * Instruments the dispatch call to extract the Context from the finagle Request
+ * context and assert it as current for the duration of the dispatch.
+ * This allows the other instrumentations to take over and carry the Context
+ * to its next span/s.
+ */
 class GenStreamingServerDispatcherInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -39,12 +46,13 @@ class GenStreamingServerDispatcherInstrumentation implements TypeInstrumentation
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope methodEnter(@Advice.Argument(0) Object req) {
-      if (!(req instanceof Request)) {
-        throw new IllegalArgumentException("unexpected request");
+      if (req instanceof Request) {
+        // practically this will always be a Request, from HttpServerDispatcher
+        Request request = (Request) req;
+        Context context = request.ctx().apply(Helpers.OTEL_CONTEXT_KEY);
+        return context != null ? context.makeCurrent() : null;
       }
-      Request request = (Request) req;
-      Context context = request.ctx().apply(Helpers.OTEL_CONTEXT_KEY);
-      return context != null ? context.makeCurrent() : null;
+      return null;
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)

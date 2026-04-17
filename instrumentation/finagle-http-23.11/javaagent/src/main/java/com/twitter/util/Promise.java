@@ -1,7 +1,7 @@
 package com.twitter.util;
 
-// public accessible stubs to ensure compilation;
-// these must be stripped out at jar construction
+// public accessible stubs of mirrored types in com.twitter.util to ensure compilation;
+// these must be stripped out at jar construction -- see build.gradle.kts
 public class Promise {
   private Promise() {}
 

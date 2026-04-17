@@ -41,7 +41,10 @@ dependencies {
 }
 
 tasks.withType<Jar>().configureEach {
-  // Exclude the Promise stub and its nested K class
+  // Exclude the Promise stub and its nested classes;
+  // this allows us to compile against these types in the instrumentation
+  // despite them being private in their original inner class;
+  // this is required for VirtualField to have a concrete type to find/get/set on.
   exclude("com/twitter/util/Promise.class")
   exclude("com/twitter/util/Promise$*.class")
 }
