@@ -18,7 +18,6 @@ import com.twitter.finagle.http.Response;
 import com.twitter.finagle.http2.param.PriorKnowledge;
 import com.twitter.util.Await;
 import com.twitter.util.Duration;
-import com.twitter.util.FuturePool;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolSpecificEvent;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
@@ -40,8 +39,6 @@ class ServerH2Test extends AbstractServerTest {
   @Override
   protected Http.Server configureServer(Http.Server in) {
     return in
-        // ensures all work is single threaded (simple case)
-        .withExecutionOffloaded(FuturePool.immediatePool())
         // when enabled, supports protocol h1 & h2, the latter with upgrade
         .withHttp2()
         // todo implement http/2-specific tests

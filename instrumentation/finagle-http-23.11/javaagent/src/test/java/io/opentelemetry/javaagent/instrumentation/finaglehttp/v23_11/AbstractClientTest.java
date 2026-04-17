@@ -39,7 +39,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import org.assertj.core.api.AbstractThrowableAssert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -117,10 +116,6 @@ abstract class AbstractClientTest extends AbstractHttpClientTest<Request> {
     optionsBuilder.spanEndsAfterBody();
     optionsBuilder.setClientSpanErrorMapper(
         (uri, error) -> {
-          // all errors should be wrapped in RuntimeExceptions due to how we run things in
-          // doSendRequest()
-          AbstractThrowableAssert<?, ?> clientWrapAssert =
-              assertThat(error).isInstanceOf(RuntimeException.class);
           if ("http://localhost:61/".equals(uri.toString())
               || "https://192.0.2.1/".equals(uri.toString())) {
             // finagle handles all these in com.twitter.finagle.netty4.ConnectionBuilder.build();
@@ -130,18 +125,21 @@ abstract class AbstractClientTest extends AbstractHttpClientTest<Request> {
             // ConnectionFailedException
             // and then with a twitter Failure.rejected() call, resulting in the multiple nestings
             // of the root exception
-            clientWrapAssert
-                .cause()
+            assertThat(error)
                 .isInstanceOf(Failure.class)
                 .cause()
                 .isInstanceOf(ConnectionFailedException.class)
                 .cause()
                 // On Linux: ConnectException, On Windows: ClosedChannelException
-                .isInstanceOfAny(ConnectException.class, ClosedChannelException.class);
-            error = error.getCause().getCause().getCause();
+                .satisfies(
+                    cause -> {
+                      assertThat(cause)
+                          .isInstanceOfAny(ConnectException.class, ClosedChannelException.class);
+                    });
+            error = error.getCause().getCause();
           } else if (uri.getPath().endsWith("/read-timeout")) {
             // not a connect() exception like the above, so is not wrapped as above;
-            clientWrapAssert.cause().isInstanceOf(ReadTimedOutException.class);
+            assertThat(error).isInstanceOf(ReadTimedOutException.class);
             // however, this specific case results in a mapping from netty's ReadTimeoutException
             // to finagle's ReadTimedOutException in the finagle client code, losing all trace of
             // the original exception; so we must construct it manually here

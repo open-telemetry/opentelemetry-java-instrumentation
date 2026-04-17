@@ -60,7 +60,7 @@ public class ContextStorageCloser {
       } catch (Throwable t) {
         restore();
         if (t instanceof AssertionError) {
-          System.err.println("AssertionError ");
+          System.err.println("AssertionError " + t);
           for (StackTraceElement stackTraceElement : t.getStackTrace()) {
             System.err.println("\t" + stackTraceElement);
           }
