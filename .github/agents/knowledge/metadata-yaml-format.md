@@ -104,11 +104,13 @@ Match type and default value with actual code usage.
 ```
 
 This validates round-trip conversion (flat property → bridge → declarative path) and catches:
+
 - Wrong flat property names (e.g., missing `experimental.`)
 - Wrong declarative paths
 - Type mismatches
 
 Example failure when flat name is wrong:
+
 ```
 FAIL in ../instrumentation/liberty/liberty-20.0/metadata.yaml:
   flat property: otel.instrumentation.servlet.capture-request-parameters
