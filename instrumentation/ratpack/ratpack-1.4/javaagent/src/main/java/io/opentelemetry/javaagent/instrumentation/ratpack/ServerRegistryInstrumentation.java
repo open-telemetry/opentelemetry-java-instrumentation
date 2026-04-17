@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.ratpack;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -18,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import ratpack.handling.HandlerDecorator;
 import ratpack.registry.Registry;
 
-public class ServerRegistryInstrumentation implements TypeInstrumentation {
+class ServerRegistryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -28,18 +27,17 @@ public class ServerRegistryInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isStatic()).and(named("buildBaseRegistry")),
-        ServerRegistryInstrumentation.class.getName() + "$BuildAdvice");
+        isStatic().and(named("buildBaseRegistry")), getClass().getName() + "$BuildAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class BuildAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Registry injectTracing(@Advice.Return Registry registry) {
       return registry.join(
-          Registry.builder().add(HandlerDecorator.prepend(TracingHandler.INSTANCE)).build());
+          Registry.builder().add(HandlerDecorator.prepend(new TracingHandler())).build());
     }
   }
 }

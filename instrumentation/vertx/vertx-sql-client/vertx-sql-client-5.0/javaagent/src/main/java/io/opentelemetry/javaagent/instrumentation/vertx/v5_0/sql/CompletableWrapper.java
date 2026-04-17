@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.v5_0.sql;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.vertx.core.Completable;
+import javax.annotation.Nullable;
 
 public class CompletableWrapper<T> implements Completable<T> {
   private final Completable<T> delegate;
@@ -18,7 +19,8 @@ public class CompletableWrapper<T> implements Completable<T> {
     this.context = context;
   }
 
-  public static <T> Completable<T> wrap(Completable<T> handler) {
+  @Nullable
+  public static <T> Completable<T> wrap(@Nullable Completable<T> handler) {
     Context current = Context.current();
     if (handler != null && !(handler instanceof CompletableWrapper) && current != Context.root()) {
       handler = new CompletableWrapper<>(handler, current);

@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGet
 import java.util.List;
 import javax.annotation.Nullable;
 
-public class LibertyDispatcherHttpAttributesGetter
+final class LibertyDispatcherHttpAttributesGetter
     implements HttpServerAttributesGetter<LibertyRequest, LibertyResponse> {
 
   @Override
@@ -93,7 +93,6 @@ public class LibertyDispatcherHttpAttributesGetter
     return request.getServerSocketAddress();
   }
 
-  @Nullable
   @Override
   public Integer getNetworkLocalPort(LibertyRequest request, @Nullable LibertyResponse response) {
     return request.getServerSocketPort();

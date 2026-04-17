@@ -10,7 +10,7 @@ import io.opentelemetry.javaagent.bootstrap.LambdaTransformer;
 import io.opentelemetry.javaagent.bootstrap.LambdaTransformerHolder;
 
 /** Helper class for transforming lambda class bytes. */
-public final class LambdaTransformerHelper {
+public class LambdaTransformerHelper {
 
   private LambdaTransformerHelper() {}
 
@@ -34,7 +34,7 @@ public final class LambdaTransformerHelper {
       if (result != null) {
         classBytes = result;
       }
-    } catch (Throwable throwable) {
+    } catch (Throwable ignored) {
       // sun.instrument.TransformerManager catches Throwable from ClassFileTransformer and ignores
       // it, we do the same.
     }

@@ -27,7 +27,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
+class JmsMessageProducerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -43,13 +43,13 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("send").and(takesArgument(0, named("javax.jms.Message"))).and(isPublic()),
-        JmsMessageProducerInstrumentation.class.getName() + "$ProducerAdvice");
+        getClass().getName() + "$ProducerAdvice");
     transformer.applyAdviceToMethod(
         named("send")
             .and(takesArgument(0, named("javax.jms.Destination")))
             .and(takesArgument(1, named("javax.jms.Message")))
             .and(isPublic()),
-        JmsMessageProducerInstrumentation.class.getName() + "$ProducerWithDestinationAdvice");
+        getClass().getName() + "$ProducerWithDestinationAdvice");
   }
 
   public static class AdviceScope {
@@ -69,7 +69,8 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
       this.scope = scope;
     }
 
-    public static AdviceScope start(CallDepth callDepth, Destination destination, Message message) {
+    public static AdviceScope start(
+        CallDepth callDepth, @Nullable Destination destination, Message message) {
       if (callDepth.getAndIncrement() > 0) {
         return new AdviceScope(callDepth, null, null, null);
       }
@@ -77,7 +78,8 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
 
       MessageWithDestination messageWithDestination =
           MessageWithDestination.create(
-              JavaxMessageAdapter.create(message), JavaxDestinationAdapter.create(destination));
+              JavaxMessageAdapter.create(message),
+              destination == null ? null : JavaxDestinationAdapter.create(destination));
       if (!producerInstrumenter().shouldStart(parentContext, messageWithDestination)) {
         return new AdviceScope(callDepth, null, null, null);
       }
@@ -102,7 +104,7 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ProducerAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.Argument(0) Message message, @Advice.This MessageProducer producer) {
       Destination destination;
@@ -115,9 +117,9 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
       return AdviceScope.start(callDepth, destination, message);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
-        @Advice.Thrown Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
       adviceScope.end(throwable);
     }
   }
@@ -125,14 +127,14 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ProducerWithDestinationAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.Argument(0) Destination destination, @Advice.Argument(1) Message message) {
       CallDepth callDepth = CallDepth.forClass(MessageProducer.class);
       return AdviceScope.start(callDepth, destination, message);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
       adviceScope.end(throwable);

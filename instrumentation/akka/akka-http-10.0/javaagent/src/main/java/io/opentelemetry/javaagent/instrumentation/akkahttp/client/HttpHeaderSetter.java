@@ -10,6 +10,7 @@ import akka.http.scaladsl.model.HttpRequest;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapSetter;
+import javax.annotation.Nullable;
 
 public class HttpHeaderSetter implements TextMapSetter<HttpHeaderSetter.AkkaHttpHeaders> {
 
@@ -20,7 +21,10 @@ public class HttpHeaderSetter implements TextMapSetter<HttpHeaderSetter.AkkaHttp
   }
 
   @Override
-  public void set(AkkaHttpHeaders carrier, String key, String value) {
+  public void set(@Nullable AkkaHttpHeaders carrier, String key, String value) {
+    if (carrier == null) {
+      return;
+    }
     HttpRequest request = carrier.getRequest();
     if (request != null) {
       // It looks like this cast is only needed in Java, Scala would have figured it out

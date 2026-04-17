@@ -20,7 +20,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JettyQueuedThreadPoolInstrumentation implements TypeInstrumentation {
+class JettyQueuedThreadPoolInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -31,13 +31,13 @@ public class JettyQueuedThreadPoolInstrumentation implements TypeInstrumentation
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("dispatch").and(takesArguments(1)).and(takesArgument(0, Runnable.class)),
-        this.getClass().getName() + "$DispatchAdvice");
+        getClass().getName() + "$DispatchAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class DispatchAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static PropagatedContext enterJobSubmit(@Advice.Argument(0) Runnable task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
@@ -46,7 +46,7 @@ public class JettyQueuedThreadPoolInstrumentation implements TypeInstrumentation
       return null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exitJobSubmit(
         @Advice.Argument(0) Runnable task,
         @Advice.Enter PropagatedContext propagatedContext,

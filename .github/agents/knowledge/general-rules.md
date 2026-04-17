@@ -15,22 +15,29 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | --- | --- | --- | --- |
 | General | Logic, correctness, reliability, safety, copy/paste mistakes, incorrect comments | Always | — |
 | Style | Style guide | Always | — |
+| Style | Uppercase field names should reflect semantic constants or immutable value constants such as `Duration` timeouts/intervals, not simply `static final` | Always | — |
 | Naming | Getter naming (`get` / `is`) | Always | — |
+| Style | Prefer `e` for used exceptions, prefer `f` for used exceptions in nested catch clauses when an outer catch already uses `e`, allow `error` for specific `*Error` catch types, prefer `t` for used `Throwable` catch values, prefer `ignored` for intentionally unused catch parameters, and use `ignore` for nested intentionally unused catch parameters when `ignored` would shadow an outer catch variable | Catch clauses | — |
 | Naming | Module/package naming | New or renamed modules/packages | `module-naming.md` |
 | Javaagent | Advice patterns | `@Advice` classes | `javaagent-advice-patterns.md` |
-| Javaagent | Module structure patterns | `InstrumentationModule`, `TypeInstrumentation`, `Singletons` | `javaagent-module-patterns.md` |
-| Javaagent | Missing `classLoaderMatcher()` | `InstrumentationModule` without `classLoaderMatcher()` override | `javaagent-module-patterns.md` |
+| Javaagent | Module structure patterns | `InstrumentationModule`, `TypeInstrumentation` | `javaagent-module-patterns.md` |
+| Javaagent | Singletons patterns | `*Singletons` holder classes, singleton accessors, callers of singleton accessors/fields | `javaagent-singletons-patterns.md` |
+| Javaagent | Incorrect `classLoaderMatcher()` | `classLoaderMatcher()` override that is redundant (muzzle already handles it) or missing when needed (muzzle cannot distinguish version range) | `javaagent-module-patterns.md` |
 | Semconv | Library vs javaagent semconv constant usage | Semconv constants/assertions | — |
 | Semconv | Dual semconv testing | `SemconvStability`, `maybeStable`, semconv Gradle tasks | `testing-semconv-stability.md` |
+| Testing | General test patterns | Test files in scope — assertion style, resource cleanup, attribute assertions | `testing-general-patterns.md` |
 | Testing | Experimental flag tests | `testExperimental`, experimental attribute assertions, `experimental` flags in JVM args or system properties | `testing-experimental-flags.md` |
 | Library | TelemetryBuilder/getter/setter patterns | Library instrumentation classes | `library-patterns.md` |
 | API | Deprecation and breaking-change policy | Public API changes | `api-deprecation-policy.md` |
 | Config | Config property stability/renames/removals | `otel.instrumentation.*` property changes, `DeclarativeConfigUtil` or `ConfigProperties` usage | `config-property-stability.md` |
 | Build | Gradle conventions, muzzle, test tasks, plugins | `build.gradle.kts`, `settings.gradle.kts` | `gradle-conventions.md` |
 | Build | `testcontainersBuildService` declaration | Testcontainers dependency without `usesService` | `gradle-conventions.md` |
-| Style | Prefer instance creation over singletons for stateless interface impls | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`, enum/static singletons | — |
+| Style | Prefer instance creation over singletons for stateless interface impls (except on hot paths or Kotlin `object` declarations) | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`, enum/static singletons | — |
+| Style | Prefer `value == null` / `value != null` over `null == value` / `null != value` | Null comparisons | — |
+| Style | No unnecessary explicit type witnesses on generic method calls (`Collections.<String>emptyList()`) | Java generic method calls with explicit type parameters | — |
 | Style | Remove redundant null guards on attribute puts | `AttributesBuilder.put`, `onStart`, `onEnd`, attribute extraction methods | — |
-| Style | Nullability correctness — no guards for non-nullable params; add `@Nullable` when null is actually passed/returned | `*AttributesGetter`, `*Extractor` implementations, null checks, missing `@Nullable` | — |
+| General | No redundant `ByteBuffer.duplicate()` on `Value.getValue()` | `Value.getValue()` with `BYTES` type, `ByteBuffer` handling | — |
+| Style | Nullability correctness — no guards for non-nullable params; add `@Nullable` when null is actually passed/returned/stored; respect upstream SDK `@Nullable` contracts for `TextMapGetter`/`TextMapSetter` | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `*Extractor` implementations, null checks, missing `@Nullable`, fields assigned from `@Nullable` sources | — |
 | Architecture | Library vs javaagent boundaries | Always | — |
 | NewModule | New instrumentation module checklist | New modules | _(inline below)_ |
 
@@ -50,53 +57,140 @@ Flag real defects, including:
 
 Only flag substantive problems, not stylistic preference.
 
+## [Javaagent] Best-Effort Suppressed Failures
+
+When javaagent runtime code intentionally suppresses a `Throwable` to avoid breaking the
+application, do not silently swallow it unless the failure is an expected optional probe.
+
+- In ordinary instrumentation implementation code, local JUL `logger.log(FINE, ...)` is an
+  established pattern and preserves module / class logger identity.
+- Silent suppression is acceptable for expected optional-probe paths, such as classpath or
+  version-detection lookups where failure is routine and logging would be noisy.
+- Keep the message action-oriented and specific (for example, "Failed to customize Netty 4.1
+  HTTP server response").
+
 ## [Style] Style Guide
 
 Read and apply `docs/contributing/style-guide.md`.
 
-Exceptions:
+Do not flag the following patterns (common false positives):
 
 - FQCN is acceptable when class-name collision makes import impossible.
-- `@SuppressWarnings` at method level is preferred over class level for tighter scope, but
+
+## [Style] Visibility modifiers
+
+Follow the principle of minimal necessary visibility. Use the most restrictive access modifier that
+still allows the code to function correctly.
+
+**Exception — Single public class**: If a module has only one public class then don't change it to
+package-private. Javadoc task fails when module has no public classes.**
+
+**Exception — Used from advice**: All classes and methods used from methods annotated with
+`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` must be public. These methods are inlined into
+transformed classes and must be accessible from those classes, which may be in different packages.
+
+## [Style] `@SuppressWarnings` Usage
+
+- Method-level `@SuppressWarnings` is preferred over class-level for tighter scope, but
   if more than one method in the class needs the same suppression, class-level is fine.
   Do not flag class-level `@SuppressWarnings` when multiple methods use the suppressed API.
 - **Do not add `@SuppressWarnings("deprecation")` unless the build fails without it.**
   The project disables javac's `-Xlint:deprecation` globally and uses a custom Error Prone
   check (`OtelDeprecatedApiUsage`) instead. Only add the annotation when it is actually
   required to fix an Error Prone error — not speculatively.
-- Per Google Java Style, `UPPER_CASE` naming is only for true constants (deeply immutable
-  values). `static final` fields holding mutable objects should be `camelCase`.
+- Preserve concise explanatory comments attached to existing `@SuppressWarnings` annotations
+  when they explain why the suppression exists (for example `// using deprecated semconv`
+  or `// using deprecated config property`). This repository has established precedent for
+  such comments, and test code disables Error Prone's `SuppressWarningsWithoutExplanation`
+  check only because enforcing it everywhere causes too many failures, not because these
+  comments are undesirable.
+- When normalizing or moving an existing `@SuppressWarnings`, keep any accurate explanatory
+  comment with it. Remove the comment only if it is incorrect, obsolete, or contradicted by
+  the code after your change.
 
 ## [Naming] Getter Naming
 
 Public API getters should use `get*` (or `is*` for booleans).
 
+## [Style] Catch Exception Variable Naming
+
+Prefer `e` as the exception variable name in catch clauses when the exception is
+used.
+
+For nested catch clauses, when an outer catch already uses `e`, prefer `f` as the
+inner exception variable name when the exception is used.
+
+`error` is also acceptable when the caught type is a specific `*Error` subtype.
+
+Prefer `t` for used `Throwable` catch values, including `catch (Throwable t)`.
+
+Do not apply these catch-variable naming preferences to method parameters,
+lambda parameters, fields, or other non-catch identifiers.
+
+If a catch parameter is intentionally unused, prefer `ignored` over `ignore`.
+
+For nested catch clauses, if `ignored` would shadow an outer catch variable,
+prefer `ignore` for the inner intentionally unused catch parameter.
+
+Both `ignored` and `ignore` are recognized by IntelliJ's `CatchMayIgnoreException`
+inspection as intentional unused-catch names. In test sources, IntelliJ also
+recognizes `expected` and `ok`.
+
 ## [Style] Prefer Instance Creation Over Singletons
 
 Stateless implementations of telemetry interfaces — `TextMapGetter`, `TextMapSetter`,
 `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`,
-`HttpServerResponseMutator` — should use instance creation (`new MyGetter()`) at the
-usage site instead of singleton patterns.
+`HttpServerResponseMutator` — should use instance creation (`new MyGetter()`) instead of
+singleton patterns.
 
-Flag both forms:
+Replace every singleton reference (`MyGetter.INSTANCE`, `MyGetter.getInstance()`) with
+`new MyGetter()`. Do not restructure surrounding code — if the original used a local
+variable (`MyGetter g = MyGetter.INSTANCE`), keep the variable and only change the
+right-hand side to `new MyGetter()`.
 
-- **Enum singletons**: `enum MyGetter implements TextMapGetter<T> { INSTANCE; ... }`
-  referenced as `MyGetter.INSTANCE`.
-- **Classical singletons**: `private static final MyGetter INSTANCE = new MyGetter();`
-  with a static accessor, referenced as `MyGetter.getInstance()`.
+Convert the class declaration from `enum` / singleton-holder to a plain `class`.
+If the implementation is a private nested class, omit the `final` keyword.
 
-Preferred replacement: pass `new MyImpl()` directly where the implementation is consumed
-(e.g., as an argument to a builder or `Instrumenter` factory method). These are tiny
-stateless objects, so creating a fresh instance at each initialization site is fine even
-if the class is referenced from more than one place.
-If the implementation is a private nested class, marking it as `final` is not
-necessary and it is preferred to omit the `final` keyword.
+**Exception — Kotlin `object` declarations**: Kotlin `object` is an idiomatic
+language-level singleton. Do not convert `object` declarations to `class`. This
+rule targets Java `enum` singletons and static `INSTANCE` fields only.
+
+**Exception — hot paths**: when the getter/setter is used in a per-request or
+per-message code path (e.g., inside `propagator.extract()` or `propagator.inject()`
+called at request time), keep the singleton instance (`INSTANCE` field) to avoid
+allocating on every invocation. The instance-creation style is intended for
+registration-time call sites such as `Instrumenter` builder chains and `Singletons`
+initialization — not for code that runs on every request.
 
 ## [Style] No Redundant Null Guards on Attribute Puts
 
 All `put` / `setAttribute` methods on `AttributesBuilder`, `Span`, `SpanBuilder`, and
 `LogRecordBuilder` are no-ops when the value is `null` (upstream SDK guarantee).
 Do not wrap these calls in `if (value != null)` guards — pass the value directly.
+
+This rule applies only when the guarded value can be passed through directly to the
+attribute setter. If the null check is guarding a dereference or other derived
+computation, keep the explicit guard instead of rewriting it into a ternary
+expression just to feed `null` to `put()`.
+
+**Exception — `AttributeKey<Long>` with `Integer` value**: the only primitive-typed
+overload on these interfaces is a convenience method that accepts `int`:
+
+- `AttributesBuilder.put(AttributeKey<Long> key, int value)`
+- `Span.setAttribute(AttributeKey<Long> key, int value)`
+
+When the `AttributeKey` is typed as `Long` and the source value is `Integer`, Java
+cannot bind `Integer` to `T = Long` in the generic overload (type mismatch), so it
+resolves to the `int` convenience overload via auto-unboxing (`Integer` → `int`). If
+the `Integer` is `null`, this auto-unboxing causes a `NullPointerException` **before**
+`put()` / `setAttribute()` is reached. In this case the null guard is **required** — do
+not remove it.
+
+When the value type **matches** the `AttributeKey` type parameter (e.g.,
+`Boolean` → `AttributeKey<Boolean>`, `Long` → `AttributeKey<Long>`,
+`Double` → `AttributeKey<Double>`), the generic `@Nullable T` overload is selected
+directly — no auto-unboxing occurs and `null` is safe. Do **not** add a null guard in
+this case.
 
 Flag patterns like:
 
@@ -113,12 +207,159 @@ Preferred:
 attributes.put(SOME_KEY, getSomething());
 ```
 
+Do **not** flag (the guard is preserving a safe dereference and is clearer than a
+ternary rewrite):
+
+```java
+View view = modelAndView.getView();
+if (view != null) {
+  attributes.put("spring-webmvc.view.type", view.getClass().getName());
+}
+```
+
+Also flag (the guard is unnecessary — types match, generic overload handles null):
+
+```java
+Boolean enabled = metadata.getEnabled();       // may return null
+if (enabled != null) {
+  span.setAttribute(META_ENABLED, enabled);    // AttributeKey<Boolean> + Boolean → generic overload
+}
+```
+
+Preferred:
+
+```java
+span.setAttribute(META_ENABLED, metadata.getEnabled()); // null is a no-op
+```
+
+Do **not** flag (the guard is required — type mismatch forces `int` overload):
+
+```java
+Integer statusCode = response.getStatusCode(); // may return null
+if (statusCode != null) {
+  attributes.put(HTTP_RESPONSE_STATUS_CODE, statusCode); // AttributeKey<Long> + Integer → put(int)
+}
+```
+
 ## [Style] Nullability Correctness
 
 Use `@Nullable` annotations accurately throughout the codebase:
 
+- **Fields**: annotate `@Nullable` if and only if the field can hold `null` at any point
+  after construction (e.g., it is assigned from a `@Nullable` method, set to `null`
+  explicitly, or left uninitialized). If the field is always non-null after the
+  constructor completes, do not annotate it.
 - **Parameters**: annotate `@Nullable` if and only if `null` is actually passed by callers.
+  When justifying `@Nullable` on a parameter, cite the concrete caller behavior or
+  upstream contract that allows `null`; do **not** justify it merely because the method
+  guards against null.
 - **Return types**: annotate `@Nullable` if and only if the method actually returns `null`.
+  Even when an interface or superclass declares a return type as `@Nullable`, do **not** add
+  `@Nullable` to the overriding method if the implementation never returns `null`. The
+  interface annotation permits null, but an implementation that always returns a non-null
+  value is more precise without it.
+  When justifying `@Nullable` on a return type, cite the concrete reason the implementation
+  can return null (e.g., it delegates to a `@Nullable`-returning method without adding a
+  non-null guarantee), not merely that an interface or upstream contract permits null.
+- **Test files**: do **not** add `@Nullable` in test code.
+  If a PR adds `@Nullable` to test files, flag it for removal.
+- **External interface contracts**: interfaces from the OpenTelemetry SDK
+  (`io.opentelemetry.context.propagation`) declare `@Nullable` on certain parameters.
+  These annotations are not visible in this repository because the interfaces live in the
+  upstream `opentelemetry-java` SDK. Implementations **must** propagate the upstream
+  `@Nullable` annotation to overriding parameter declarations and include appropriate
+  null checks. If an implementation is missing `@Nullable` on the parameter or is missing
+  a null check for a parameter that is `@Nullable` in the upstream interface, add both
+  the annotation and the null guard.
+
+  Upstream nullability contracts:
+
+  | Interface | Method | `@Nullable` Parameters |
+  | --- | --- | --- |
+  | `TextMapGetter<CarrierT>` | `get(CarrierT, String)` | `carrier` is `@Nullable` |
+  | `TextMapGetter<CarrierT>` | `getAll(CarrierT, String)` | `carrier` is `@Nullable` |
+  | `TextMapGetter<CarrierT>` | `keys(CarrierT)` | none |
+  | `TextMapSetter<CarrierT>` | `set(CarrierT, String, String)` | `carrier` is `@Nullable` |
+
+  **Exception — pure delegation**: when the entire body of the overriding method is a
+  single delegation to another `TextMapGetter` or `TextMapSetter` instance (i.e., the
+  implementation contains no carrier-specific logic and simply calls
+  `delegate.get(carrier, key)`, `delegate.getAll(carrier, key)`, or
+  `delegate.set(carrier, key, value)`), do **not** add a null guard for `carrier`.
+  The delegate is itself a `TextMapGetter`/`TextMapSetter` and must handle `null` carrier
+  per the same contract. Just annotate the parameter with `@Nullable` and pass
+  `carrier` straight through:
+
+  ```java
+  // CORRECT — pure delegation, no null guard needed
+  @Override
+  @Nullable
+  public String get(@Nullable C carrier, String key) {
+    return delegate.get(carrier, key);
+  }
+
+  // WRONG — redundant null guard before delegation
+  @Override
+  @Nullable
+  public String get(@Nullable C carrier, String key) {
+    if (carrier == null) {
+      return null;
+    }
+    return delegate.get(carrier, key);
+  }
+  ```
+
+## [General] No Redundant `ByteBuffer.duplicate()` on `Value.getValue()`
+
+The upstream `Value<ByteBuffer>` implementation (`ValueBytes` in `opentelemetry-java`)
+returns a **new read-only `ByteBuffer`** on every call to `getValue()`:
+
+```java
+// opentelemetry-java ValueBytes.getValue()
+return ByteBuffer.wrap(raw).asReadOnlyBuffer();
+```
+
+Do not wrap the result in `.duplicate()` — each `getValue()` call already yields a fresh
+buffer with independent position/limit state. A `.duplicate()` adds overhead for no safety
+benefit.
+
+Flag:
+
+```java
+ByteBuffer byteBuffer = ((ByteBuffer) value.getValue()).duplicate();
+```
+
+Preferred:
+
+```java
+ByteBuffer byteBuffer = (ByteBuffer) value.getValue();
+```
+
+## [Style] No Unnecessary Explicit Type Parameters on Method Calls
+
+Since Java 5, the compiler infers generic type arguments in virtually all contexts.
+Explicit type witnesses on method calls (e.g., `Collections.<String>emptyList()`) are
+almost never needed and add visual noise.
+
+Flag any explicit type witness that is not required for compilation:
+
+```java
+// BAD — type witness is unnecessary
+return Collections.<String>emptyList().iterator();
+Iterator<String> it = Collections.<String>emptyList().iterator();
+```
+
+Preferred:
+
+```java
+// GOOD — compiler infers the type argument
+return Collections.emptyList().iterator();
+Iterator<String> it = Collections.emptyList().iterator();
+```
+
+**Exception**: an explicit type witness is acceptable only when the compiler cannot infer
+the type without it (e.g., the call is used as a method argument where the target type is
+ambiguous and the cast would otherwise be required). Do not flag those cases.
 
 ## [Semconv] Constants by Module Type
 
@@ -159,10 +400,4 @@ declarative API. Do not flag `DeclarativeConfigUtil` usage as incorrect.
 
 ## [Testing] General Test Patterns
 
-- JUnit 5, AssertJ assertions (not JUnit `assertEquals`/`assertTrue`).
-- Test classes and methods should be package-private (no `public`).
-- Use `span.hasAttributesSatisfyingExactly(...)` with `equalTo(...)`/`satisfies(...)` for
-  attribute checks. Prefer `hasAttributesSatisfyingExactly` over `hasAttributesSatisfying`
-  because it is more precise — the non-exact variant silently ignores unexpected attributes.
-  Prefer `hasAttributesSatisfyingExactly` over non-empty `hasAttributes(...)` for consistency.
-  `hasAttributes(Attributes.empty())` is acceptable.
+See `testing-general-patterns.md` (loaded when test files are in scope).

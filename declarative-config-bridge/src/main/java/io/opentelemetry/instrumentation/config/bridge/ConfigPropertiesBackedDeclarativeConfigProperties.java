@@ -50,6 +50,7 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put(
         "general.sanitization.url.sensitive_query_parameters/development",
         "otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters");
+    SPECIAL_MAPPINGS.put("general.semconv_stability.opt_in", "otel.semconv-stability.opt-in");
     // moving common http, database, messaging, and gen_ai configs under common
     SPECIAL_MAPPINGS.put(
         "java.common.http.known_methods", "otel.instrumentation.http.known-methods");
@@ -62,12 +63,6 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put(
         "java.common.http.server.emit_experimental_telemetry/development",
         "otel.instrumentation.http.server.emit-experimental-telemetry");
-    SPECIAL_MAPPINGS.put(
-        "java.common.database.statement_sanitizer.enabled",
-        "otel.instrumentation.common.db-statement-sanitizer.enabled");
-    SPECIAL_MAPPINGS.put(
-        "java.common.database.sqlcommenter/development.enabled",
-        "otel.instrumentation.common.experimental.db-sqlcommenter.enabled");
     SPECIAL_MAPPINGS.put(
         "java.common.messaging.receive_telemetry/development.enabled",
         "otel.instrumentation.messaging.experimental.receive-telemetry.enabled");

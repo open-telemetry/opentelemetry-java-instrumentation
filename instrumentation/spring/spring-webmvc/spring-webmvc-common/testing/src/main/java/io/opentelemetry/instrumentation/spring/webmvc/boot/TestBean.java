@@ -27,7 +27,7 @@ public class TestBean {
       // for the deferred result. This is needed to ensure that the test deferred result handler
       // span has the expected parent span. Without sleeping here the test can be flaky.
       Thread.sleep(1_000);
-    } catch (InterruptedException exception) {
+    } catch (InterruptedException ignored) {
       Thread.currentThread().interrupt();
     }
     Span span = tracer.spanBuilder("async-call-child").startSpan();

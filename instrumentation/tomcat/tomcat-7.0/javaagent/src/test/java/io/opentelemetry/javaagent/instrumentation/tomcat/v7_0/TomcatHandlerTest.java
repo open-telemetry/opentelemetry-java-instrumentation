@@ -12,6 +12,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD_FROM_REQUEST_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.LOGIN;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
@@ -58,7 +59,8 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
           AUTH_REQUIRED,
           LOGIN,
           AUTH_ERROR,
-          INDEXED_CHILD);
+          INDEXED_CHILD,
+          INDEXED_CHILD_FROM_REQUEST_BODY);
 
   @Override
   public Tomcat setupServer() throws Exception {
@@ -98,6 +100,7 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
     options.setContextPath("/app");
     options.setHasResponseCustomizer(serverEndpoint -> true);
     options.setTestCaptureRequestParameters(true);
+    options.setTestHttpBodyPipelining(true);
     options.setTestErrorBody(false);
 
     options.setHasResponseSpan(

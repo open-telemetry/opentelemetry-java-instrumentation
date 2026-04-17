@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
-import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -136,6 +136,7 @@ abstract class AbstractPulsarClientTest {
     pulsar.close();
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testConsumeNonPartitionedTopicUsingBatchReceive() throws Exception {
     String topic = "persistent://public/default/testConsumeNonPartitionedTopicCallBatchReceive";
@@ -185,7 +186,10 @@ abstract class AbstractPulsarClientTest {
                             batchReceiveAttributes(topic, null, false))));
 
     assertThat(testing.metrics())
-        .filteredOn(metric -> !metric.getName().startsWith("otel.sdk."))
+        .filteredOn(
+            metric ->
+                !metric.getName().startsWith("otel.sdk.")
+                    && !metric.getName().startsWith("pulsar.client."))
         .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
@@ -198,9 +202,10 @@ abstract class AbstractPulsarClientTest {
                                 point ->
                                     point
                                         .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(MESSAGING_OPERATION, "receive"),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))),
@@ -215,9 +220,10 @@ abstract class AbstractPulsarClientTest {
                                 point ->
                                     point
                                         .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(MESSAGING_OPERATION, "publish"),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))),
@@ -232,13 +238,15 @@ abstract class AbstractPulsarClientTest {
                                 point ->
                                     point
                                         .hasValue(1)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(MESSAGING_OPERATION, "receive"),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost)))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testConsumeNonPartitionedTopicUsingBatchReceiveAsync() throws Exception {
     String topic =
@@ -271,7 +279,7 @@ abstract class AbstractPulsarClientTest {
                           }
                         }));
 
-    assertThat(result.get(1, MINUTES).size()).isEqualTo(1);
+    assertThat(result.get(1, MINUTES)).hasSize(1);
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertTraces(
@@ -316,9 +324,10 @@ abstract class AbstractPulsarClientTest {
                                     point ->
                                         point
                                             .hasSumGreaterThan(0.0)
-                                            .hasAttributesSatisfying(
+                                            .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_SYSTEM, "pulsar"),
                                                 equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                                equalTo(MESSAGING_OPERATION, "receive"),
                                                 equalTo(SERVER_PORT, brokerPort),
                                                 equalTo(SERVER_ADDRESS, brokerHost))
                                             .hasBucketBoundaries(DURATION_BUCKETS)))));
@@ -338,9 +347,10 @@ abstract class AbstractPulsarClientTest {
                                     point ->
                                         point
                                             .hasSumGreaterThan(0.0)
-                                            .hasAttributesSatisfying(
+                                            .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_SYSTEM, "pulsar"),
                                                 equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                                equalTo(MESSAGING_OPERATION, "publish"),
                                                 equalTo(SERVER_PORT, brokerPort),
                                                 equalTo(SERVER_ADDRESS, brokerHost))
                                             .hasBucketBoundaries(DURATION_BUCKETS)))));
@@ -360,9 +370,10 @@ abstract class AbstractPulsarClientTest {
                                     point ->
                                         point
                                             .hasValue(1)
-                                            .hasAttributesSatisfying(
+                                            .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_SYSTEM, "pulsar"),
                                                 equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                                equalTo(MESSAGING_OPERATION, "receive"),
                                                 equalTo(SERVER_PORT, brokerPort),
                                                 equalTo(SERVER_ADDRESS, brokerHost))))));
   }
@@ -383,8 +394,7 @@ abstract class AbstractPulsarClientTest {
                 equalTo(stringKey("messaging.pulsar.message.type"), experimental("normal"))));
 
     if (testHeaders) {
-      assertions.add(
-          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
+      assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
     int partitionIndex = TopicName.getPartitionIndex(destination);
     if (partitionIndex != -1) {
@@ -417,8 +427,7 @@ abstract class AbstractPulsarClientTest {
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
                 satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
-      assertions.add(
-          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
+      assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
     if (isBatch) {
       assertions.add(satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isPositive));
@@ -442,8 +451,7 @@ abstract class AbstractPulsarClientTest {
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
                 satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
-      assertions.add(
-          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
+      assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
     int partitionIndex = TopicName.getPartitionIndex(destination);
     if (partitionIndex != -1) {
@@ -455,16 +463,16 @@ abstract class AbstractPulsarClientTest {
   static void acknowledgeMessage(Consumer<String> consumer, Message<String> message) {
     try {
       consumer.acknowledge(message);
-    } catch (PulsarClientException exception) {
-      throw new RuntimeException(exception);
+    } catch (PulsarClientException e) {
+      throw new RuntimeException(e);
     }
   }
 
   static void acknowledgeMessages(Consumer<String> consumer, Messages<String> messages) {
     try {
       consumer.acknowledge(messages);
-    } catch (PulsarClientException exception) {
-      throw new RuntimeException(exception);
+    } catch (PulsarClientException e) {
+      throw new RuntimeException(e);
     }
   }
 }

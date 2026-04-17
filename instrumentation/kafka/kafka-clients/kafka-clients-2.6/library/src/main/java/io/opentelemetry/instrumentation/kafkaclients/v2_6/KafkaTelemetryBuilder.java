@@ -103,10 +103,20 @@ public final class KafkaTelemetryBuilder {
    * connecting it to the producer trace.
    */
   @CanIgnoreReturnValue
-  public KafkaTelemetryBuilder setMessagingReceiveInstrumentationEnabled(
+  public KafkaTelemetryBuilder setMessagingReceiveTelemetryEnabled(
       boolean messagingReceiveInstrumentationEnabled) {
     this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
     return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setMessagingReceiveTelemetryEnabled(boolean)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public KafkaTelemetryBuilder setMessagingReceiveInstrumentationEnabled(
+      boolean messagingReceiveInstrumentationEnabled) {
+    return setMessagingReceiveTelemetryEnabled(messagingReceiveInstrumentationEnabled);
   }
 
   public KafkaTelemetry build() {

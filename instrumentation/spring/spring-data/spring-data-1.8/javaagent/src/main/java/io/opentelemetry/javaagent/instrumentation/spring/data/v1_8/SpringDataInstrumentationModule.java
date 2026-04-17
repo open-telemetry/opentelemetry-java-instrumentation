@@ -62,7 +62,7 @@ public class SpringDataInstrumentationModule extends InstrumentationModule {
   @SuppressWarnings("unused")
   public static class RepositoryFactorySupportAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onConstruction(
         @Advice.This RepositoryFactorySupport repositoryFactorySupport) {
       repositoryFactorySupport.addRepositoryProxyPostProcessor(
@@ -101,7 +101,7 @@ public class SpringDataInstrumentationModule extends InstrumentationModule {
     private static Class<?> loadClass(String name) {
       try {
         return Class.forName(name);
-      } catch (ClassNotFoundException exception) {
+      } catch (ClassNotFoundException ignored) {
         return null;
       }
     }

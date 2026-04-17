@@ -27,7 +27,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import scala.concurrent.Future;
 
-public class HttpExtClientInstrumentation implements TypeInstrumentation {
+class HttpExtClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("akka.http.scaladsl.HttpExt");
@@ -39,7 +39,7 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         namedOneOf("singleRequest", "singleRequestImpl")
             .and(takesArgument(0, named("akka.http.scaladsl.model.HttpRequest"))),
-        this.getClass().getName() + "$SingleRequestAdvice");
+        getClass().getName() + "$SingleRequestAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -54,6 +54,7 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
         this.scope = scope;
       }
 
+      @Nullable
       public static AdviceScope start(HttpRequest request) {
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
@@ -92,7 +93,7 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToArguments(@ToArgument(value = 0, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] methodEnter(@Advice.Argument(0) HttpRequest request) {
 
       /*
@@ -108,7 +109,7 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Future<HttpResponse> methodExit(
         @Advice.This HttpExt thiz,
         @Advice.Return @Nullable Future<HttpResponse> responseFuture,

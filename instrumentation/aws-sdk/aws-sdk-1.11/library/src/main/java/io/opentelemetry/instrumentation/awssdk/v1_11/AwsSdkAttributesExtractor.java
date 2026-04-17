@@ -44,7 +44,7 @@ class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Respo
       Class<?> clazz = Class.forName("com.amazonaws.AmazonWebServiceResult");
       clazz.getMethod("getSdkResponseMetadata");
       return true;
-    } catch (ClassNotFoundException | NoSuchMethodException exception) {
+    } catch (ClassNotFoundException | NoSuchMethodException ignored) {
       return false;
     }
   }
@@ -104,15 +104,12 @@ class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Respo
 
     ResponseMetadata responseMetadata = getResponseMetadata(response);
     if (responseMetadata != null) {
-      String requestId = responseMetadata.getRequestId();
-      if (requestId != null) {
-        attributes.put(AWS_REQUEST_ID, requestId);
-      }
+      attributes.put(AWS_REQUEST_ID, responseMetadata.getRequestId());
     }
   }
 
   @NoMuzzle
-  private static ResponseMetadata getResponseMetadata(Response<?> response) {
+  private static ResponseMetadata getResponseMetadata(@Nullable Response<?> response) {
     if (CAN_GET_RESPONSE_METADATA
         && response != null
         && response.getAwsResponse() instanceof AmazonWebServiceResult) {
@@ -127,13 +124,11 @@ class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Respo
       AttributeKey<String> key,
       Object carrier,
       Function<Object, String> getter) {
-    String value = getter.apply(carrier);
-    if (value != null) {
-      attributes.put(key, value);
-    }
+    attributes.put(key, getter.apply(carrier));
   }
 
-  private static Object getAwsResponse(Response<?> response) {
+  @Nullable
+  private static Object getAwsResponse(@Nullable Response<?> response) {
     if (response == null) {
       return null;
     }

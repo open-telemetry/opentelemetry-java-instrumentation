@@ -16,7 +16,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class SoapFaultBuilderInstrumentation implements TypeInstrumentation {
+class SoapFaultBuilderInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.sun.xml.ws.fault.SOAPFaultBuilder");
@@ -29,14 +29,14 @@ public class SoapFaultBuilderInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("com.sun.xml.ws.api.SOAPVersion")))
             .and(takesArgument(1, named("com.sun.xml.ws.model.CheckedExceptionImpl")))
             .and(takesArgument(2, named(Throwable.class.getName()))),
-        SoapFaultBuilderInstrumentation.class.getName() + "$CaptureThrowableAdvice");
+        getClass().getName() + "$CaptureThrowableAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class CaptureThrowableAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onEnter(@Advice.Argument(2) Throwable throwable) {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Argument(2) Throwable throwable) {
       if (throwable == null) {
         return;
       }
@@ -45,7 +45,7 @@ public class SoapFaultBuilderInstrumentation implements TypeInstrumentation {
       // if fiber is not attached current() throws IllegalStateException
       try {
         request = Fiber.current().getPacket();
-      } catch (IllegalStateException ignore) {
+      } catch (IllegalStateException ignored) {
         // fiber not available
       }
       if (request != null) {

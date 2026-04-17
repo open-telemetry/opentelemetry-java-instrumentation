@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-public final class ElasticsearchEndpointMap {
+public class ElasticsearchEndpointMap {
 
   private static final Map<String, ElasticsearchEndpointDefinition> routesMap;
 

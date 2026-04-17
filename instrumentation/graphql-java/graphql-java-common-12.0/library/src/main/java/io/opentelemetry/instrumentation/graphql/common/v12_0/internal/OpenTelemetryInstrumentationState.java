@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.graphql.common.v12_0.internal;
 import graphql.execution.instrumentation.InstrumentationState;
 import graphql.language.OperationDefinition.Operation;
 import io.opentelemetry.context.Context;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -19,6 +20,7 @@ public class OpenTelemetryInstrumentationState implements InstrumentationState {
   private String operationName;
   private String query;
 
+  @Nullable
   public Context getContext() {
     return context;
   }
@@ -27,6 +29,7 @@ public class OpenTelemetryInstrumentationState implements InstrumentationState {
     this.context = context;
   }
 
+  @Nullable
   public Operation getOperation() {
     return operation;
   }
@@ -35,6 +38,7 @@ public class OpenTelemetryInstrumentationState implements InstrumentationState {
     this.operation = operation;
   }
 
+  @Nullable
   public String getOperationName() {
     return operationName;
   }
@@ -43,6 +47,7 @@ public class OpenTelemetryInstrumentationState implements InstrumentationState {
     this.operationName = operationName;
   }
 
+  @Nullable
   public String getQuery() {
     return query;
   }

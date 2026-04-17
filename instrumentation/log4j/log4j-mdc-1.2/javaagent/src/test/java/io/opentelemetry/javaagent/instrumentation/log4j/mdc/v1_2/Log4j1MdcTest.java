@@ -37,7 +37,7 @@ class Log4j1MdcTest {
 
     List<LoggingEvent> events = ListAppender.getEvents();
 
-    assertThat(events.size()).isEqualTo(2);
+    assertThat(events).hasSize(2);
     assertThat(events.get(0).getMessage()).isEqualTo("log message 1");
     assertThat(events.get(0).getMDC("trace_id")).isNull();
     assertThat(events.get(0).getMDC("span_id")).isNull();
@@ -71,7 +71,7 @@ class Log4j1MdcTest {
 
     List<LoggingEvent> events = ListAppender.getEvents();
 
-    assertThat(events.size()).isEqualTo(3);
+    assertThat(events).hasSize(3);
     assertThat(events.get(0).getMessage()).isEqualTo("log message 1");
     assertThat(events.get(0).getMDC("trace_id")).isEqualTo(span1.getSpanContext().getTraceId());
     assertThat(events.get(0).getMDC("span_id")).isEqualTo(span1.getSpanContext().getSpanId());
@@ -98,7 +98,7 @@ class Log4j1MdcTest {
 
     List<LoggingEvent> events = ListAppender.getEvents();
 
-    assertThat(events.size()).isEqualTo(1);
+    assertThat(events).hasSize(1);
     assertThat(events.get(0).getMessage()).isEqualTo("log message 1");
     assertThat(events.get(0).getMDC("trace_id")).isNull();
     assertThat(events.get(0).getMDC("span_id")).isNull();

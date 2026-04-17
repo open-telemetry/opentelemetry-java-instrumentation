@@ -32,17 +32,17 @@ final class HttpRouteStateInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("application.io.opentelemetry.context.Context")))
             .and(takesArgument(1, int.class))
             .and(takesArgument(2, String.class)),
-        this.getClass().getName() + "$UpdateAdvice");
+        getClass().getName() + "$UpdateAdvice");
     transformer.applyAdviceToMethod(
         named("updateSpan")
             .and(takesArgument(0, named("application.io.opentelemetry.context.Context")))
             .and(takesArgument(1, named("application.io.opentelemetry.api.trace.Span"))),
-        this.getClass().getName() + "$UpdateSpanAdvice");
+        getClass().getName() + "$UpdateSpanAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class UpdateAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.Argument(0) application.io.opentelemetry.context.Context applicationContext,
         @Advice.Argument(1) int updatedBySourceOrder,
@@ -61,7 +61,7 @@ final class HttpRouteStateInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class UpdateSpanAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.Argument(0) application.io.opentelemetry.context.Context applicationContext,
         @Advice.Argument(1) application.io.opentelemetry.api.trace.Span applicationSpan) {

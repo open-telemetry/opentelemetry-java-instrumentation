@@ -17,17 +17,18 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import javax.annotation.Nullable;
 
-public final class FinatraSingletons {
+public class FinatraSingletons {
 
   public static final VirtualField<Response, Throwable> THROWABLE =
       VirtualField.find(Response.class, Throwable.class);
 
-  private static final Instrumenter<FinatraRequest, Void> INSTRUMENTER;
+  private static final Instrumenter<FinatraRequest, Void> instrumenter;
 
   static {
     FinatraCodeAttributesGetter codeAttributesGetter = new FinatraCodeAttributesGetter();
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<FinatraRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.finatra-2.9",
@@ -41,7 +42,7 @@ public final class FinatraSingletons {
   }
 
   public static Instrumenter<FinatraRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static void updateServerSpanName(Context context, RouteInfo routeInfo) {
@@ -55,6 +56,7 @@ public final class FinatraSingletons {
     callbackClassField.set(route, clazz);
   }
 
+  @Nullable
   public static Class<?> getCallbackClass(Route route) {
     return callbackClassField.get(route);
   }

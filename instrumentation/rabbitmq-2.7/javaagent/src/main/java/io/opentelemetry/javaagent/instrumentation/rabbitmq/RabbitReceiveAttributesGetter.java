@@ -11,11 +11,11 @@ import static java.util.Collections.singletonList;
 import com.rabbitmq.client.GetResponse;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nullable;
 
-enum RabbitReceiveAttributesGetter
+final class RabbitReceiveAttributesGetter
     implements MessagingAttributesGetter<ReceiveRequest, GetResponse> {
-  INSTANCE;
 
   @Override
   public String getSystem(ReceiveRequest request) {
@@ -91,12 +91,17 @@ enum RabbitReceiveAttributesGetter
   @Override
   public List<String> getMessageHeader(ReceiveRequest request, String name) {
     GetResponse response = request.getResponse();
-    if (response != null) {
-      Object value = request.getResponse().getProps().getHeaders().get(name);
-      if (value != null) {
-        return singletonList(value.toString());
-      }
+    if (response == null) {
+      return emptyList();
     }
-    return emptyList();
+    Map<String, Object> headers = response.getProps().getHeaders();
+    if (headers == null) {
+      return emptyList();
+    }
+    Object value = headers.get(name);
+    if (value == null) {
+      return emptyList();
+    }
+    return singletonList(value.toString());
   }
 }

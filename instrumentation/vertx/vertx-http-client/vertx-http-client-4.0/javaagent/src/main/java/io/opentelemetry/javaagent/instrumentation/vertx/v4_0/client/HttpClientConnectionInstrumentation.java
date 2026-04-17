@@ -20,7 +20,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /** Propagate context to stream opened callback. */
-public class HttpClientConnectionInstrumentation implements TypeInstrumentation {
+class HttpClientConnectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -36,13 +36,13 @@ public class HttpClientConnectionInstrumentation implements TypeInstrumentation 
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("createStream").and(takesArgument(1, named("io.vertx.core.Handler"))),
-        HttpClientConnectionInstrumentation.class.getName() + "$CreateStreamAdvice");
+        getClass().getName() + "$CreateStreamAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class CreateStreamAdvice {
     @AssignReturned.ToArguments(@ToArgument(1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Handler<?> wrapHandler(@Advice.Argument(1) Handler<?> handler) {
       return HandlerWrapper.wrap(handler);
     }

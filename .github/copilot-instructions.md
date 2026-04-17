@@ -16,6 +16,14 @@ Keep scoped language or file-type rules in `.github/instructions/*.instructions.
 - Style guide and core conventions: `docs/contributing/style-guide.md`
 - Review and implementation knowledge by topic: `.github/agents/knowledge/README.md`
 
+## Knowledge Loading
+
+For coding, fix, and refactoring tasks, consult `.github/agents/knowledge/README.md`
+before making substantial changes.
+
+Use the knowledge index to load only the article(s) relevant to the current task.
+Do not load the entire knowledge folder by default.
+
 ## Gradle Execution Rules
 
 Never use `--rerun-tasks`. Use `--rerun` when needed.
@@ -23,3 +31,7 @@ Never use `--rerun-tasks`. Use `--rerun` when needed.
 Builds and tests in this repository can take several minutes.
 Run Gradle commands with timeout `0` (no timeout), and wait for completion.
 Do not treat slow output as a hang by default.
+
+Never pipe Gradle output through `tail`, `head`, `grep`, or any other command.
+Piping masks the Gradle exit code — the shell reports the exit code of the last
+pipe segment, not Gradle, so a failing build silently appears to succeed.

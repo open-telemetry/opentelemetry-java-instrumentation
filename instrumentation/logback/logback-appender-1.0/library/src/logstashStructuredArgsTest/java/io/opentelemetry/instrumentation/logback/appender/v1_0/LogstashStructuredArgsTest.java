@@ -41,7 +41,7 @@ class LogstashStructuredArgsTest {
         logRecord ->
             logRecord
                 .hasBody("Basic structured arg: 123")
-                .hasAttributesSatisfying(equalTo(stringKey("customer_id"), "123")));
+                .hasAttributesSatisfyingExactly(equalTo(stringKey("customer_id"), "123")));
   }
 
   @Test
@@ -52,7 +52,7 @@ class LogstashStructuredArgsTest {
         logRecord ->
             logRecord
                 .hasBody("Processing order: order_id=ORD-456")
-                .hasAttributesSatisfying(equalTo(stringKey("order_id"), "ORD-456")));
+                .hasAttributesSatisfyingExactly(equalTo(stringKey("order_id"), "ORD-456")));
   }
 
   @Test
@@ -66,7 +66,7 @@ class LogstashStructuredArgsTest {
         logRecord ->
             logRecord
                 .hasBody("Transaction: 789 amount: 99.99")
-                .hasAttributesSatisfying(
+                .hasAttributesSatisfyingExactly(
                     equalTo(stringKey("customer_id"), "789"), equalTo(doubleKey("amount"), 99.99)));
   }
 
@@ -76,6 +76,21 @@ class LogstashStructuredArgsTest {
 
     testing.waitAndAssertLogRecords(
         logRecord -> logRecord.hasBody("Event occurred: OrderPlaced").hasEventName("OrderPlaced"));
+  }
+
+  @Test
+  void otelEventNameInStructuredArgument() {
+    logger.info(
+        "Event occurred: {}",
+        StructuredArguments.keyValue("key1", "val1"),
+        StructuredArguments.keyValue("otel.event.name", "MyEventName"));
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasBody("Event occurred: key1=val1")
+                .hasEventName("MyEventName")
+                .hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "val1")));
   }
 
   @Test
@@ -89,7 +104,7 @@ class LogstashStructuredArgsTest {
 
     testing.waitAndAssertLogRecords(
         logRecord ->
-            logRecord.hasAttributesSatisfying(
+            logRecord.hasAttributesSatisfyingExactly(
                 equalTo(longKey("user_id"), 12345L),
                 equalTo(longKey("timestamp"), timestamp),
                 equalTo(booleanKey("session_active"), true)));
@@ -105,6 +120,6 @@ class LogstashStructuredArgsTest {
         logRecord ->
             logRecord
                 .hasBody("message: {foo=bar}")
-                .hasAttributesSatisfying(equalTo(stringKey("foo"), "bar")));
+                .hasAttributesSatisfyingExactly(equalTo(stringKey("foo"), "bar")));
   }
 }

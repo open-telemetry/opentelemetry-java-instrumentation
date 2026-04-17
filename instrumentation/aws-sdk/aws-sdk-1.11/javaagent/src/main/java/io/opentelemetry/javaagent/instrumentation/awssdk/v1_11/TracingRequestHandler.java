@@ -33,7 +33,7 @@ public class TracingRequestHandler extends RequestHandler2 {
   public static final HandlerContextKey<Scope> SCOPE =
       new HandlerContextKey<>(Scope.class.getName());
 
-  public static final RequestHandler2 tracingHandler =
+  private static final RequestHandler2 tracingHandler =
       AwsSdkTelemetry.builder(GlobalOpenTelemetry.get())
           .setCaptureExperimentalSpanAttributes(
               DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "aws_sdk")
@@ -43,6 +43,10 @@ public class TracingRequestHandler extends RequestHandler2 {
           .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
           .build()
           .createRequestHandler();
+
+  public static RequestHandler2 tracingHandler() {
+    return tracingHandler;
+  }
 
   @Override
   public void beforeRequest(Request<?> request) {

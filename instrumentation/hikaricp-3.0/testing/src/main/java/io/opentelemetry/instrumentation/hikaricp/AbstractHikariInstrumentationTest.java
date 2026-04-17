@@ -23,7 +23,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
 import java.sql.Connection;
 import java.sql.SQLException;
-import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
@@ -43,8 +42,7 @@ public abstract class AbstractHikariInstrumentationTest {
 
   protected abstract InstrumentationExtension testing();
 
-  protected abstract void configure(
-      HikariConfig poolConfig, @Nullable MetricsTrackerFactory userTracker);
+  protected abstract void configure(HikariConfig poolConfig, MetricsTrackerFactory userTracker);
 
   @Test
   void shouldReportMetrics() throws SQLException, InterruptedException {

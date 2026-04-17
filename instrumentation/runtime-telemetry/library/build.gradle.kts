@@ -69,6 +69,10 @@ dependencies {
 }
 
 tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
   // Configure testJava17 compilation for Java 17
   named<JavaCompile>("compileTestJava17Java") {
     dependsOn("compileJava17Java")
@@ -106,6 +110,7 @@ tasks {
     }
     include("**/*G1GcMemoryMetricTest.*")
     jvmArgs("-XX:+UseG1GC")
+    systemProperty("metadataConfig", "Java17")
   }
 
   val testPS by registering(Test::class) {
@@ -117,6 +122,7 @@ tasks {
     }
     include("**/*PsGcMemoryMetricTest.*")
     jvmArgs("-XX:+UseParallelGC")
+    systemProperty("metadataConfig", "Java17")
   }
 
   val testSerial by registering(Test::class) {
@@ -128,6 +134,7 @@ tasks {
     }
     include("**/*SerialGcMemoryMetricTest.*")
     jvmArgs("-XX:+UseSerialGC")
+    systemProperty("metadataConfig", "Java17")
   }
 
   // Run other Java 17 tests (not GC-specific)
@@ -140,15 +147,14 @@ tasks {
       excludeTestsMatching("*SerialGcMemoryMetricTest")
       excludeTestsMatching("*PsGcMemoryMetricTest")
     }
+    systemProperty("metadataConfig", "Java17")
   }
 
   test {
     // Java 8 tests only
   }
 
-  val testJavaVersion =
-    gradle.startParameter.projectProperties.get("testJavaVersion")?.let(JavaVersion::toVersion)
-      ?: JavaVersion.current()
+  val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
   if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
     named("testG1", Test::class).configure {
       enabled = false

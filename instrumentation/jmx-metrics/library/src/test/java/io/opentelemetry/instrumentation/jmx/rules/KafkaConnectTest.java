@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.jmx.internal.engine.MetricInfo;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxConfig;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.Metric;
+import io.opentelemetry.instrumentation.jmx.internal.yaml.RuleParser;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.StateMapping;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
@@ -198,7 +199,7 @@ class KafkaConnectTest extends TargetSystemTest {
     try (InputStream input =
         getClass().getClassLoader().getResourceAsStream("jmx/rules/kafka-connect.yaml")) {
       assertThat(input).isNotNull();
-      return io.opentelemetry.instrumentation.jmx.internal.yaml.RuleParser.get().loadConfig(input);
+      return RuleParser.get().loadConfig(input);
     }
   }
 

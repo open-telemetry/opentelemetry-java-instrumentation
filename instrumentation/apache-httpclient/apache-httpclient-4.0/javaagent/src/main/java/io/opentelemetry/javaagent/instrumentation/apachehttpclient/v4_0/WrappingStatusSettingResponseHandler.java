@@ -13,7 +13,7 @@ import java.io.IOException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ResponseHandler;
 
-public final class WrappingStatusSettingResponseHandler<T> implements ResponseHandler<T> {
+public class WrappingStatusSettingResponseHandler<T> implements ResponseHandler<T> {
   private final Context context;
   private final Context parentContext;
   private final ApacheHttpClientRequest request;

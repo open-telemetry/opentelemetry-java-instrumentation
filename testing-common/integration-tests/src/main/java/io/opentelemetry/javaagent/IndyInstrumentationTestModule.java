@@ -31,11 +31,6 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
   }
 
   @Override
-  public boolean isIndyModule() {
-    return true;
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new Instrumentation());
   }
@@ -57,7 +52,12 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
     injector.proxyBuilder("indy.ProxyMe", "foo.bar.Proxy").inject(InjectionMode.CLASS_AND_RESOURCE);
   }
 
-  public static class Instrumentation implements TypeInstrumentation {
+  @Override
+  public boolean defaultEnabled() {
+    return Boolean.getBoolean("otel.javaagent.experimental.indy");
+  }
+
+  static class Instrumentation implements TypeInstrumentation {
 
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {

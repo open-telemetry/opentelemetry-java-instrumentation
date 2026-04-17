@@ -41,7 +41,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
+class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
   private static final Logger logger =
       Logger.getLogger(ExternalAnnotationInstrumentationModule.class.getName());
@@ -109,7 +109,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isAnnotatedWith(traceAnnotationMatcher).and(not(excludedMethodsMatcher)).and(isMethod()),
-        ExternalAnnotationInstrumentation.class.getName() + "$ExternalAnnotationAdvice");
+        getClass().getName() + "$ExternalAnnotationAdvice");
   }
 
   // visible for testing
@@ -202,13 +202,13 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.Origin("#t") Class<?> declaringClass, @Advice.Origin("#m") String methodName) {
       return AdviceScope.start(declaringClass, methodName);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

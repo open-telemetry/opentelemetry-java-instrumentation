@@ -22,6 +22,6 @@ public class JavaHttpClientInstrumenterBuilderFactory {
   public static DefaultHttpClientInstrumenterBuilder<HttpRequest, HttpResponse<?>> create(
       OpenTelemetry openTelemetry) {
     return DefaultHttpClientInstrumenterBuilder.create(
-        INSTRUMENTATION_NAME, openTelemetry, JavaHttpClientAttributesGetter.INSTANCE);
+        INSTRUMENTATION_NAME, openTelemetry, new JavaHttpClientAttributesGetter());
   }
 }

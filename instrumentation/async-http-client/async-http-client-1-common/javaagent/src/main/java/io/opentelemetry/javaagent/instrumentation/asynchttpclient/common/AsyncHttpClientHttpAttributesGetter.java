@@ -28,6 +28,7 @@ final class AsyncHttpClientHttpAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getUrlFull(Request request) {
     return helper.getUrlFull(request);
   }
@@ -54,6 +55,7 @@ final class AsyncHttpClientHttpAttributesGetter
   }
 
   @Override
+  @Nullable
   public Integer getServerPort(Request request) {
     return helper.getServerPort(request);
   }

@@ -365,7 +365,7 @@ class SessionTest extends AbstractHibernateTest {
                     null))),
         Arguments.of(
             named(
-                "get",
+                "update",
                 new Parameter(
                     "update",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value",

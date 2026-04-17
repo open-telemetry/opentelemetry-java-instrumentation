@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.joddhttp.v4_2;
 
 import static io.opentelemetry.javaagent.instrumentation.joddhttp.v4_2.JoddHttpSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -31,8 +30,7 @@ class JoddHttpInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("send")).and(takesArguments(0)),
-        this.getClass().getName() + "$RequestAdvice");
+        named("send").and(takesArguments(0)), getClass().getName() + "$RequestAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -64,12 +62,12 @@ class JoddHttpInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope methodEnter(@Advice.This HttpRequest request) {
       return AdviceScope.start(request);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.This HttpRequest request,
         @Advice.Return @Nullable HttpResponse response,

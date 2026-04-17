@@ -44,19 +44,19 @@ public class Tomcat10ServerHandlerAdvice {
       return new AdviceScope(context, scope);
     }
 
-    public void end(Request request, Response response, Throwable throwable) {
+    public void end(Request request, Response response, @Nullable Throwable throwable) {
       helper().end(request, response, throwable, context, scope);
     }
   }
 
   @Nullable
-  @Advice.OnMethodEnter(suppress = Throwable.class)
+  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
   public static AdviceScope onEnter(
       @Advice.Argument(0) Request request, @Advice.Argument(1) Response response) {
     return AdviceScope.start(request, response);
   }
 
-  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
   public static void stopSpan(
       @Advice.Argument(0) Request request,
       @Advice.Argument(1) Response response,

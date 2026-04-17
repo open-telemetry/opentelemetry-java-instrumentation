@@ -13,6 +13,8 @@ import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.OpenTeleme
 public final class GraphQLTelemetry {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.graphql-java-12.0";
 
+  private final OpenTelemetryInstrumentationHelper helper;
+
   /** Returns a new {@link GraphQLTelemetry} configured with the given {@link OpenTelemetry}. */
   public static GraphQLTelemetry create(OpenTelemetry openTelemetry) {
     return builder(openTelemetry).build();
@@ -24,8 +26,6 @@ public final class GraphQLTelemetry {
   public static GraphQLTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new GraphQLTelemetryBuilder(openTelemetry);
   }
-
-  private final OpenTelemetryInstrumentationHelper helper;
 
   GraphQLTelemetry(
       OpenTelemetry openTelemetry,

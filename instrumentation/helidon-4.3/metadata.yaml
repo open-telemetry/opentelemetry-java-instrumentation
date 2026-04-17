@@ -1,3 +1,4 @@
+display_name: Helidon
 description: This instrumentation enables HTTP server spans and HTTP server metrics for the Helidon HTTP server.
 library_link: https://helidon.io/
 semantic_conventions:

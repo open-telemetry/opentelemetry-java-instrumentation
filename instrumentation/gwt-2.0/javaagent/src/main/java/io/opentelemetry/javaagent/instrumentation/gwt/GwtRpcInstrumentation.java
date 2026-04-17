@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.gwt;
 
+import static io.opentelemetry.javaagent.instrumentation.gwt.GwtSingletons.RPC_CONTEXT_KEY;
 import static io.opentelemetry.javaagent.instrumentation.gwt.GwtSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -21,7 +22,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class GwtRpcInstrumentation implements TypeInstrumentation {
+class GwtRpcInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -38,7 +39,7 @@ public class GwtRpcInstrumentation implements TypeInstrumentation {
             .and(takesArgument(2, Object[].class))
             .and(takesArgument(3, named("com.google.gwt.user.server.rpc.SerializationPolicy")))
             .and(takesArgument(4, int.class)),
-        this.getClass().getName() + "$InvokeAndEncodeResponseAdvice");
+        getClass().getName() + "$InvokeAndEncodeResponseAdvice");
 
     // encodeResponseForFailure is called by invokeAndEncodeResponse in case of failure
     transformer.applyAdviceToMethod(
@@ -48,7 +49,7 @@ public class GwtRpcInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, Throwable.class))
             .and(takesArgument(2, named("com.google.gwt.user.server.rpc.SerializationPolicy")))
             .and(takesArgument(3, int.class)),
-        this.getClass().getName() + "$EncodeResponseForFailureAdvice");
+        getClass().getName() + "$EncodeResponseForFailureAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -69,8 +70,7 @@ public class GwtRpcInstrumentation implements TypeInstrumentation {
         if (!instrumenter().shouldStart(parentContext, method)) {
           return null;
         }
-        Context context =
-            instrumenter().start(parentContext, method).with(GwtSingletons.RPC_CONTEXT_KEY, true);
+        Context context = instrumenter().start(parentContext, method).with(RPC_CONTEXT_KEY, true);
         return new AdviceScope(context, context.makeCurrent());
       }
 
@@ -81,12 +81,12 @@ public class GwtRpcInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(1) Method method) {
       return AdviceScope.start(method);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(1) Method method,
         @Advice.Thrown @Nullable Throwable throwable,
@@ -100,13 +100,13 @@ public class GwtRpcInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class EncodeResponseForFailureAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(1) @Nullable Throwable throwable) {
       if (throwable == null) {
         return;
       }
       Context context = Java8BytecodeBridge.currentContext();
-      if (context.get(GwtSingletons.RPC_CONTEXT_KEY) == null) {
+      if (context.get(RPC_CONTEXT_KEY) == null) {
         // not inside rpc invocation
         return;
       }

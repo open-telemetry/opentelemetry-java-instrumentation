@@ -5,11 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 
+import static java.util.Collections.emptyIterator;
+
 import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Iterator;
+import javax.annotation.Nullable;
 
-enum LibertyDispatcherRequestGetter implements TextMapGetter<LibertyRequest> {
-  INSTANCE;
+class LibertyDispatcherRequestGetter implements TextMapGetter<LibertyRequest> {
 
   @Override
   public Iterable<String> keys(LibertyRequest carrier) {
@@ -17,12 +19,18 @@ enum LibertyDispatcherRequestGetter implements TextMapGetter<LibertyRequest> {
   }
 
   @Override
-  public String get(LibertyRequest carrier, String key) {
+  public String get(@Nullable LibertyRequest carrier, String key) {
+    if (carrier == null) {
+      return null;
+    }
     return carrier.getHeaderValue(key);
   }
 
   @Override
-  public Iterator<String> getAll(LibertyRequest carrier, String key) {
+  public Iterator<String> getAll(@Nullable LibertyRequest carrier, String key) {
+    if (carrier == null) {
+      return emptyIterator();
+    }
     return carrier.getHeaderValues(key).iterator();
   }
 }

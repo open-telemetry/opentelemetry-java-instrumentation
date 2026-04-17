@@ -8,6 +8,7 @@ dependencies {
   testRuntimeOnly("org.apache.tomee:arquillian-tomee-embedded:8.0.6")
   testRuntimeOnly("org.apache.tomee:tomee-embedded:8.0.6")
   testRuntimeOnly("org.apache.tomee:tomee-jaxrs:8.0.6")
+  testRuntimeOnly("org.junit.vintage:junit-vintage-engine")
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent"))

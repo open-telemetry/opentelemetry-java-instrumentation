@@ -21,7 +21,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.amqp.core.Message;
 
-public class AbstractMessageListenerContainerInstrumentation implements TypeInstrumentation {
+class AbstractMessageListenerContainerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.springframework.amqp.rabbit.listener.AbstractMessageListenerContainer");
@@ -58,7 +58,7 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(1) Object data) {
       if (!(data instanceof Message)) {
         return null;
@@ -72,8 +72,8 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
       return new AdviceScope(context, context.makeCurrent());
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-    public static void onEnter(
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
+    public static void onExit(
         @Advice.Argument(1) Object data,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

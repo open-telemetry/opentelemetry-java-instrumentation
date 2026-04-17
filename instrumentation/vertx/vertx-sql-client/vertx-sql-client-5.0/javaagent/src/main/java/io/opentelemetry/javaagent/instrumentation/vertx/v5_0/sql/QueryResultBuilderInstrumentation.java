@@ -13,11 +13,12 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.vertx.core.Promise;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class QueryResultBuilderInstrumentation implements TypeInstrumentation {
+class QueryResultBuilderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -26,20 +27,20 @@ public class QueryResultBuilderInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("complete"), QueryResultBuilderInstrumentation.class.getName() + "$CompleteAdvice");
+    transformer.applyAdviceToMethod(named("complete"), getClass().getName() + "$CompleteAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class CompleteAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static Scope onEnter(
         @Advice.Argument(1) Throwable throwable, @Advice.FieldValue("handler") Promise<?> promise) {
       return endQuerySpan(instrumenter(), promise, throwable);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Enter Scope scope) {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

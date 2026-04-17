@@ -23,7 +23,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JmsMessageListenerInstrumentation implements TypeInstrumentation {
+class JmsMessageListenerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -39,7 +39,7 @@ public class JmsMessageListenerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("onMessage").and(takesArgument(0, named("javax.jms.Message"))).and(isPublic()),
-        JmsMessageListenerInstrumentation.class.getName() + "$MessageListenerAdvice");
+        getClass().getName() + "$MessageListenerAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -79,12 +79,12 @@ public class JmsMessageListenerInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(0) Message message) {
       return AdviceScope.start(message);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

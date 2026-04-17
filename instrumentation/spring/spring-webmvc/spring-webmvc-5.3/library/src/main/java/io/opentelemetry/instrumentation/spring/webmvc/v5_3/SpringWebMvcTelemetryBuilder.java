@@ -23,22 +23,22 @@ public final class SpringWebMvcTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webmvc-5.3";
 
-  private final DefaultHttpServerInstrumenterBuilder<HttpServletRequest, HttpServletResponse>
-      builder;
-
   static {
     SpringMvcBuilderUtil.setBuilderExtractor(builder -> builder.builder);
     Experimental.internalSetEmitExperimentalTelemetry(
         (builder, emit) -> builder.builder.setEmitExperimentalHttpServerTelemetry(emit));
   }
 
+  private final DefaultHttpServerInstrumenterBuilder<HttpServletRequest, HttpServletResponse>
+      builder;
+
   SpringWebMvcTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder =
         DefaultHttpServerInstrumenterBuilder.create(
             INSTRUMENTATION_NAME,
             openTelemetry,
-            SpringWebMvcHttpAttributesGetter.INSTANCE,
-            JavaxHttpServletRequestGetter.INSTANCE);
+            new SpringWebMvcHttpAttributesGetter(),
+            new JavaxHttpServletRequestGetter());
   }
 
   /**

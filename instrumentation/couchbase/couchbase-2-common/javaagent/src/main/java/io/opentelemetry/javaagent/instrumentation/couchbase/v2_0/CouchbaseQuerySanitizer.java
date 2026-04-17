@@ -7,18 +7,20 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQueryAnalyzer;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import javax.annotation.Nullable;
 
-public final class CouchbaseQuerySanitizer {
+public class CouchbaseQuerySanitizer {
 
   private static final SqlQueryAnalyzer analyzer =
-      SqlQueryAnalyzer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
+      SqlQueryAnalyzer.create(
+          DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "couchbase"));
 
   @Nullable private static final Class<?> QUERY_CLASS;
   @Nullable private static final Class<?> STATEMENT_CLASS;
@@ -118,13 +120,14 @@ public final class CouchbaseQuerySanitizer {
     return SqlQuery.create(query.getClass().getSimpleName(), null, null);
   }
 
+  @Nullable
   private static String getQueryText(MethodHandle handle, Object query) {
     if (handle == null) {
       return null;
     }
     try {
       return handle.invoke(query).toString();
-    } catch (Throwable throwable) {
+    } catch (Throwable ignored) {
       return null;
     }
   }

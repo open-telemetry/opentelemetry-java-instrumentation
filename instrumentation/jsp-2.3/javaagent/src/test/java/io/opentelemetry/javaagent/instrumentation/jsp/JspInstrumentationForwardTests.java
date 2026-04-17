@@ -58,7 +58,6 @@ class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat>
     tomcatServer.setPort(port);
     tomcatServer.getConnector();
 
-    // comment to debug
     tomcatServer.setSilent(true);
 
     // this is needed in tomcat 9, this triggers the creation of a connector, will not

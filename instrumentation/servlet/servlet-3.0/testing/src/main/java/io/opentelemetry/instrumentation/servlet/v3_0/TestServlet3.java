@@ -67,7 +67,7 @@ public class TestServlet3 {
             } else if (CAPTURE_PARAMETERS.equals(endpoint)) {
               req.setCharacterEncoding("UTF8");
               String value = req.getParameter("test-parameter");
-              if (!value.equals("test value õäöü")) {
+              if (!"test value õäöü".equals(value)) {
                 throw new IllegalStateException(
                     "request parameter does not have expected value " + value);
               }
@@ -142,7 +142,7 @@ public class TestServlet3 {
                     } else if (CAPTURE_PARAMETERS.equals(endpoint)) {
                       req.setCharacterEncoding("UTF8");
                       String value = req.getParameter("test-parameter");
-                      if (!value.equals("test value õäöü")) {
+                      if (!"test value õäöü".equals(value)) {
                         throw new IllegalStateException(
                             "request parameter does not have expected value " + value);
                       }
@@ -179,18 +179,18 @@ public class TestServlet3 {
                     }
                     return null;
                   });
-            } catch (Exception exception) {
-              if (exception instanceof RuntimeException) {
-                throw (RuntimeException) exception;
+            } catch (Exception e) {
+              if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
               }
-              throw new IllegalStateException(exception);
+              throw new IllegalStateException(e);
             } finally {
               latch.countDown();
             }
           });
       try {
         latch.await();
-      } catch (InterruptedException exception) {
+      } catch (InterruptedException ignored) {
         Thread.currentThread().interrupt();
       }
     }
@@ -227,7 +227,7 @@ public class TestServlet3 {
               } else if (CAPTURE_PARAMETERS.equals(endpoint)) {
                 req.setCharacterEncoding("UTF8");
                 String value = req.getParameter("test-parameter");
-                if (!value.equals("test value õäöü")) {
+                if (!"test value õäöü".equals(value)) {
                   throw new IllegalStateException(
                       "request parameter does not have expected value " + value);
                 }

@@ -50,7 +50,7 @@ public class Jetty11HandlerAdvice {
       // Must be set here since Jetty handlers can use startAsync outside of servlet scope.
       helper().setAsyncListenerResponse(context, response);
       HttpServerResponseCustomizerHolder.getCustomizer()
-          .customize(context, response, Jetty11ResponseMutator.INSTANCE);
+          .customize(context, response, new Jetty11ResponseMutator());
       return new AdviceScope(requestContext, context, scope);
     }
 
@@ -61,7 +61,7 @@ public class Jetty11HandlerAdvice {
   }
 
   @Nullable
-  @Advice.OnMethodEnter(suppress = Throwable.class)
+  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
   public static AdviceScope onEnter(
       @Advice.This Object source,
       @Advice.Argument(2) HttpServletRequest request,
@@ -69,7 +69,7 @@ public class Jetty11HandlerAdvice {
     return AdviceScope.start(source, request, response);
   }
 
-  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
   public static void stopSpan(
       @Advice.Argument(2) HttpServletRequest request,
       @Advice.Argument(3) HttpServletResponse response,

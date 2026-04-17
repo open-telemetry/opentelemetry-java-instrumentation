@@ -38,6 +38,7 @@ dependencies {
   // TODO: Something about library configuration doesn't work well with scala compilation here.
   compileOnly("com.typesafe.play:play_$scalaVersion:$playVersion")
 
+  testInstrumentation(project(":instrumentation:play:play-mvc:play-mvc-2.4:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:akka:akka-actor-2.3:javaagent"))
@@ -59,9 +60,8 @@ testing {
   }
 }
 
-val testLatestDeps = findProperty("testLatestDeps") as Boolean
 tasks {
-  if (testLatestDeps) {
+  if (otelProps.testLatestDeps) {
     // disable regular test running and compiling tasks when latest dep test task is run
     named("test") {
       enabled = false
@@ -81,6 +81,6 @@ configurations.configureEach {
   exclude("org.eclipse.jetty.websocket", "websocket-client")
 }
 tasks.withType<Test>().configureEach {
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  systemProperty("collectMetadata", otelProps.collectMetadata)
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

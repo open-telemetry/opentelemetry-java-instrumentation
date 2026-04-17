@@ -13,7 +13,7 @@ import com.github.tomakehurst.wiremock.http.HttpHeaders;
 import com.github.tomakehurst.wiremock.http.Request;
 import com.github.tomakehurst.wiremock.http.Response;
 
-public final class ResponseHeaderScrubber extends ResponseTransformer {
+public class ResponseHeaderScrubber extends ResponseTransformer {
   @Override
   public String getName() {
     return "scrub-response-header";

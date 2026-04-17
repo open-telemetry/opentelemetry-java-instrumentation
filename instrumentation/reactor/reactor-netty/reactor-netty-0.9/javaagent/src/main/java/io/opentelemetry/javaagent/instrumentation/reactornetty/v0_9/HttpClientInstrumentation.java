@@ -26,7 +26,7 @@ import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientRequest;
 import reactor.netty.http.client.HttpClientResponse;
 
-public class HttpClientInstrumentation implements TypeInstrumentation {
+class HttpClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("reactor.netty.http.client.HttpClient");
@@ -36,7 +36,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isStatic().and(namedOneOf("create", "newConnection", "from")),
-        this.getClass().getName() + "$CreateAdvice");
+        getClass().getName() + "$CreateAdvice");
 
     // advice classes below expose current context in doOn*/doAfter* callbacks
     transformer.applyAdviceToMethod(
@@ -44,38 +44,38 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
             .and(namedOneOf("doOnRequest", "doAfterRequest"))
             .and(takesArguments(1))
             .and(takesArgument(0, BiConsumer.class)),
-        this.getClass().getName() + "$OnRequestAdvice");
+        getClass().getName() + "$OnRequestAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("doOnRequestError"))
             .and(takesArguments(1))
             .and(takesArgument(0, BiConsumer.class)),
-        this.getClass().getName() + "$OnRequestErrorAdvice");
+        getClass().getName() + "$OnRequestErrorAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(namedOneOf("doOnResponse", "doAfterResponse"))
             .and(takesArguments(1))
             .and(takesArgument(0, BiConsumer.class)),
-        this.getClass().getName() + "$OnResponseAdvice");
+        getClass().getName() + "$OnResponseAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("doOnResponseError"))
             .and(takesArguments(1))
             .and(takesArgument(0, BiConsumer.class)),
-        this.getClass().getName() + "$OnResponseErrorAdvice");
+        getClass().getName() + "$OnResponseErrorAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("doOnError"))
             .and(takesArguments(2))
             .and(takesArgument(0, BiConsumer.class))
             .and(takesArgument(1, BiConsumer.class)),
-        this.getClass().getName() + "$OnErrorAdvice");
+        getClass().getName() + "$OnErrorAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class CreateAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth onEnter() {
       CallDepth callDepth = CallDepth.forClass(HttpClient.class);
       callDepth.getAndIncrement();
@@ -83,7 +83,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static HttpClient stopSpan(
         @Advice.Thrown Throwable throwable,
         @Advice.Return HttpClient client,
@@ -100,7 +100,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   public static class OnRequestAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static BiConsumer<? super HttpClientRequest, ? super Connection> onEnter(
         @Advice.Argument(0) BiConsumer<? super HttpClientRequest, ? super Connection> callback) {
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
@@ -114,7 +114,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   public static class OnRequestErrorAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static BiConsumer<? super HttpClientRequest, ? super Throwable> onEnter(
         @Advice.Argument(0) BiConsumer<? super HttpClientRequest, ? super Throwable> callback) {
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
@@ -128,7 +128,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   public static class OnResponseAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static BiConsumer<? super HttpClientResponse, ? super Connection> onEnter(
         @Advice.Argument(0) BiConsumer<? super HttpClientResponse, ? super Connection> callback,
         @Advice.Origin("#m") String methodName) {
@@ -144,7 +144,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   public static class OnResponseErrorAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static BiConsumer<? super HttpClientResponse, ? super Throwable> onEnter(
         @Advice.Argument(0) BiConsumer<? super HttpClientResponse, ? super Throwable> callback) {
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
@@ -161,7 +161,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
       @ToArgument(value = 0, index = 0),
       @ToArgument(value = 1, index = 1)
     })
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.Argument(0)
             BiConsumer<? super HttpClientRequest, ? super Throwable> originalRequestCallback,

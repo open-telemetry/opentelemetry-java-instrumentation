@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 
 /** Entrypoint for instrumenting Spring Web MVC apps. */
 public final class SpringWebMvcTelemetry {
+  private final Instrumenter<HttpServletRequest, HttpServletResponse> instrumenter;
 
   /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static SpringWebMvcTelemetry create(OpenTelemetry openTelemetry) {
@@ -23,8 +24,6 @@ public final class SpringWebMvcTelemetry {
   public static SpringWebMvcTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new SpringWebMvcTelemetryBuilder(openTelemetry);
   }
-
-  private final Instrumenter<HttpServletRequest, HttpServletResponse> instrumenter;
 
   SpringWebMvcTelemetry(Instrumenter<HttpServletRequest, HttpServletResponse> instrumenter) {
     this.instrumenter = instrumenter;

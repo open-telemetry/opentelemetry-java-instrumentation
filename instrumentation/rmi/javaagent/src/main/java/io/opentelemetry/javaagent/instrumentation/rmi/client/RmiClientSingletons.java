@@ -12,14 +12,14 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import java.lang.reflect.Method;
 
-public final class RmiClientSingletons {
+public class RmiClientSingletons {
 
-  private static final Instrumenter<Method, Void> INSTRUMENTER;
+  private static final Instrumenter<Method, Void> instrumenter;
 
   static {
-    RmiClientAttributesGetter rpcAttributesGetter = RmiClientAttributesGetter.INSTANCE;
+    RmiClientAttributesGetter rpcAttributesGetter = new RmiClientAttributesGetter();
 
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<Method, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.rmi",
@@ -29,7 +29,7 @@ public final class RmiClientSingletons {
   }
 
   public static Instrumenter<Method, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private RmiClientSingletons() {}

@@ -13,6 +13,7 @@ import java.security.Principal;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
+import javax.annotation.Nullable;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
@@ -37,17 +38,19 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
   }
 
   @Override
+  @Nullable
   public String getRequestQueryString(HttpServletRequest request) {
     return request.getQueryString();
   }
 
   @Override
+  @Nullable
   public Object getRequestAttribute(HttpServletRequest request, String name) {
     return request.getAttribute(name);
   }
 
   @Override
-  public void setRequestAttribute(HttpServletRequest request, String name, Object value) {
+  public void setRequestAttribute(HttpServletRequest request, String name, @Nullable Object value) {
     request.setAttribute(name, value);
   }
 
@@ -67,6 +70,7 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
   }
 
   @Override
+  @Nullable
   public String getRequestHeader(HttpServletRequest request, String name) {
     return request.getHeader(name);
   }
@@ -82,7 +86,7 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
   public Iterable<String> getRequestHeaderNames(HttpServletRequest httpServletRequest) {
     @SuppressWarnings("unchecked") // servlet api uses Enumeration without generic type
     Enumeration<String> names = httpServletRequest.getHeaderNames();
-    return Collections.list(names);
+    return names == null ? emptyList() : Collections.list(names);
   }
 
   @Override
@@ -98,11 +102,13 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
   }
 
   @Override
+  @Nullable
   public String getRequestPathInfo(HttpServletRequest request) {
     return request.getPathInfo();
   }
 
   @Override
+  @Nullable
   public Principal getRequestUserPrincipal(HttpServletRequest request) {
     return request.getUserPrincipal();
   }

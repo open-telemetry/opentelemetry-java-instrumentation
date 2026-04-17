@@ -9,4 +9,4 @@ import io.opentelemetry.instrumentation.spring.gateway.common.GatewayTestApplica
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class Gateway22TestApplication extends GatewayTestApplication {}
+class Gateway22TestApplication extends GatewayTestApplication {}

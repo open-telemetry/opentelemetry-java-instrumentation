@@ -29,7 +29,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import javax.annotation.Nullable;
 
 class JspSpanAssertions {
   static final boolean isExperimentalEnabled =
@@ -43,7 +42,6 @@ class JspSpanAssertions {
     this.port = port;
   }
 
-  @Nullable
   public static String experimental(String value) {
     if (isExperimentalEnabled) {
       return value;
@@ -71,7 +69,7 @@ class JspSpanAssertions {
                               EXCEPTION_MESSAGE,
                               val ->
                                   val.satisfiesAnyOf(
-                                      v -> assertThat(spanData.getErrorMessageOptional()).isTrue(),
+                                      v -> assertThat(spanData.isErrorMessageOptional()).isTrue(),
                                       v -> val.isInstanceOf(String.class))),
                           satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
     }
@@ -148,7 +146,7 @@ class JspSpanAssertions {
                               EXCEPTION_MESSAGE,
                               val ->
                                   val.satisfiesAnyOf(
-                                      v -> assertThat(spanData.getErrorMessageOptional()).isTrue(),
+                                      v -> assertThat(spanData.isErrorMessageOptional()).isTrue(),
                                       v -> val.isInstanceOf(String.class))),
                           satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
     }

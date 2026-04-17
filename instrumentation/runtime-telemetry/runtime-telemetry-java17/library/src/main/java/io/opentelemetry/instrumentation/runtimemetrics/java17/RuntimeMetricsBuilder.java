@@ -146,7 +146,7 @@ public final class RuntimeMetricsBuilder {
   }
 
   /**
-   * Enable experimental JMX telemetry collection.
+   * Enable experimental telemetry collection.
    *
    * @deprecated Use {@link Experimental#setEmitExperimentalMetrics(RuntimeTelemetryBuilder,
    *     boolean)} instead.

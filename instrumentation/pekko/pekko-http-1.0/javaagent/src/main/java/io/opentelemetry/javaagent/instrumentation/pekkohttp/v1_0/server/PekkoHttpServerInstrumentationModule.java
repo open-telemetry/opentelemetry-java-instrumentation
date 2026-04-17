@@ -42,9 +42,4 @@ public class PekkoHttpServerInstrumentationModule extends InstrumentationModule
         new GraphInterpreterInstrumentation(),
         new PekkoHttpServerSourceInstrumentation());
   }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
-  }
 }

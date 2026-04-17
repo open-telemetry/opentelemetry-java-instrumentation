@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp.server;
 
+import static java.util.Collections.emptyIterator;
 import static java.util.stream.Collectors.toList;
 
 import akka.http.javadsl.model.HttpHeader;
@@ -16,9 +17,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
+import javax.annotation.Nullable;
 
-enum AkkaHttpServerHeaders implements TextMapGetter<HttpRequest> {
-  INSTANCE;
+final class AkkaHttpServerHeaders implements TextMapGetter<HttpRequest> {
 
   @Override
   public Iterable<String> keys(HttpRequest httpRequest) {
@@ -28,13 +29,19 @@ enum AkkaHttpServerHeaders implements TextMapGetter<HttpRequest> {
   }
 
   @Override
-  public String get(HttpRequest carrier, String key) {
+  public String get(@Nullable HttpRequest carrier, String key) {
+    if (carrier == null) {
+      return null;
+    }
     Optional<HttpHeader> header = carrier.getHeader(key);
     return header.map(HttpHeader::value).orElse(null);
   }
 
   @Override
-  public Iterator<String> getAll(HttpRequest carrier, String key) {
+  public Iterator<String> getAll(@Nullable HttpRequest carrier, String key) {
+    if (carrier == null) {
+      return emptyIterator();
+    }
     String headerName = key.toLowerCase(Locale.ROOT);
     List<String> result = new ArrayList<>();
     for (HttpHeader header : carrier.getHeaders()) {

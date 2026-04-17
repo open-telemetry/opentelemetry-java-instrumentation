@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javax.annotation.Nullable;
 import javax.servlet.AsyncContext;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
@@ -89,9 +90,9 @@ public final class Servlet3TelemetryFilter implements Filter {
     Throwable error = null;
     try (Scope ignore = context.makeCurrent()) {
       filterChain.doFilter(otelRequest, httpResponse);
-    } catch (Throwable throwable) {
-      error = throwable;
-      throw throwable;
+    } catch (Throwable t) {
+      error = t;
+      throw t;
     } finally {
       if (otelRequest.hasAsyncListener) {
         if (error != null) {
@@ -111,7 +112,7 @@ public final class Servlet3TelemetryFilter implements Filter {
     final ServletRequestContext<HttpServletRequest> requestContext;
     final ServletResponseContext<HttpServletResponse> responseContext;
     boolean hasAsyncListener = false;
-    Throwable asyncException;
+    @Nullable Throwable asyncException;
 
     OtelHttpServletRequest(
         HttpServletRequest request,
@@ -232,8 +233,9 @@ public final class Servlet3TelemetryFilter implements Filter {
           () -> {
             try (Scope ignored = context.makeCurrent()) {
               runnable.run();
-            } catch (Throwable throwable) {
-              otelRequest.asyncException = throwable;
+            } catch (Throwable t) {
+              otelRequest.asyncException = t;
+              throw t;
             }
           });
     }

@@ -13,21 +13,15 @@ import org.apache.cxf.interceptor.Fault;
 import org.apache.cxf.message.Exchange;
 import org.apache.cxf.message.Message;
 
-public final class CxfHelper {
+public class CxfHelper {
   private static final String REQUEST_KEY = CxfHelper.class.getName() + ".Request";
   private static final String CONTEXT_KEY = CxfHelper.class.getName() + ".Context";
   private static final String SCOPE_KEY = CxfHelper.class.getName() + ".Scope";
-
-  private CxfHelper() {}
 
   public static void start(Message message) {
     Context parentContext = Context.current();
 
     CxfRequest request = new CxfRequest(message);
-
-    if (!request.shouldCreateSpan()) {
-      return;
-    }
 
     CxfServerSpanNaming.updateServerSpanName(parentContext, request);
 
@@ -61,4 +55,6 @@ public final class CxfHelper {
     }
     instrumenter().end(context, request, null, throwable);
   }
+
+  private CxfHelper() {}
 }

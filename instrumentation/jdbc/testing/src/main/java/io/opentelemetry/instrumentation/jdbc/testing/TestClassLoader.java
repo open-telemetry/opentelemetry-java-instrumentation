@@ -26,7 +26,7 @@ public class TestClassLoader extends URLClassLoader {
     if (name.startsWith("io.opentelemetry.instrumentation.jdbc.testing")) {
       try {
         return findClass(name);
-      } catch (ClassNotFoundException exception) {
+      } catch (ClassNotFoundException ignored) {
         // ignore
       }
     }

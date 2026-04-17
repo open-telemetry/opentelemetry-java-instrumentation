@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.jul;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -31,18 +30,17 @@ class JavaUtilLoggingInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("log"))
             .and(takesArguments(1))
             .and(takesArgument(0, named("java.util.logging.LogRecord"))),
-        JavaUtilLoggingInstrumentation.class.getName() + "$LogAdvice");
+        getClass().getName() + "$LogAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class LogAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth methodEnter(
         @Advice.This application.java.util.logging.Logger logger,
         @Advice.Argument(0) LogRecord logRecord) {
@@ -55,7 +53,7 @@ class JavaUtilLoggingInstrumentation implements TypeInstrumentation {
       return callDepth;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(@Advice.Enter CallDepth callDepth) {
       callDepth.decrementAndGet();
     }

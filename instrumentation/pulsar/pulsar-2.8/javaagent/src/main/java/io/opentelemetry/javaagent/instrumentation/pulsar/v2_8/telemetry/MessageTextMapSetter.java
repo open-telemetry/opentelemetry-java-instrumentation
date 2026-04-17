@@ -9,8 +9,7 @@ import io.opentelemetry.context.propagation.TextMapSetter;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.impl.MessageImpl;
 
-enum MessageTextMapSetter implements TextMapSetter<PulsarRequest> {
-  INSTANCE;
+final class MessageTextMapSetter implements TextMapSetter<PulsarRequest> {
 
   @Override
   public void set(@Nullable PulsarRequest carrier, String key, String value) {

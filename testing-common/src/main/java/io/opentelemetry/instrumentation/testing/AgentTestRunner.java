@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
  * AgentTestingExporterAccess} bridge class to retrieve exported traces and metrics data from the
  * agent class loader.
  */
-public final class AgentTestRunner extends InstrumentationTestRunner {
+public class AgentTestRunner extends InstrumentationTestRunner {
   static {
     try {
       LoggerUtils.setLevel(LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME), Level.WARN);

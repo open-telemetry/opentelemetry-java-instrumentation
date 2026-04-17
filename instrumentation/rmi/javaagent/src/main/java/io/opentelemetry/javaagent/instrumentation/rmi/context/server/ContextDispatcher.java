@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.rmi.context.server;
 
-import static io.opentelemetry.javaagent.bootstrap.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPropagator.CONTEXT_CALL_ID;
-import static io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPropagator.PROPAGATOR;
+import static io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPropagator.propagator;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.bootstrap.rmi.ThreadLocalContext;
 import io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPayload;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -32,12 +32,12 @@ import sun.rmi.transport.Target;
  * expected
  */
 public class ContextDispatcher implements Dispatcher {
-  private static final ContextDispatcher CONTEXT_DISPATCHER = new ContextDispatcher();
+  private static final ContextDispatcher contextDispatcher = new ContextDispatcher();
   private static final NoopRemote NOOP_REMOTE = new NoopRemote();
 
   public static Target newDispatcherTarget() {
     return new Target(
-        NOOP_REMOTE, CONTEXT_DISPATCHER, NOOP_REMOTE, CONTEXT_CALL_ID, /* permanent= */ false);
+        NOOP_REMOTE, contextDispatcher, NOOP_REMOTE, CONTEXT_CALL_ID, /* permanent= */ false);
   }
 
   @Override
@@ -48,16 +48,14 @@ public class ContextDispatcher implements Dispatcher {
     int operationId = in.readInt();
     in.readLong(); // skip 8 bytes
 
-    if (PROPAGATOR.isOperationWithPayload(operationId)) {
+    if (propagator().isOperationWithPayload(operationId)) {
       ContextPayload payload = ContextPayload.read(in);
-      if (payload != null) {
+      if (payload == null) {
+        ThreadLocalContext.INSTANCE.set(null);
+      } else {
         Context context = payload.extract();
         SpanContext spanContext = Span.fromContext(context).getSpanContext();
-        if (spanContext.isValid()) {
-          THREAD_LOCAL_CONTEXT.set(context);
-        } else {
-          THREAD_LOCAL_CONTEXT.set(null);
-        }
+        ThreadLocalContext.INSTANCE.set(spanContext.isValid() ? context : null);
       }
     }
 

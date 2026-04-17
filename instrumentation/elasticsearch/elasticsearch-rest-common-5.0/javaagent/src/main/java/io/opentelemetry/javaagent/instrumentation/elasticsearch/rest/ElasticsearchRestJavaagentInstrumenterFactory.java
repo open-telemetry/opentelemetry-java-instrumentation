@@ -16,13 +16,11 @@ import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.util.function.Function;
 import org.elasticsearch.client.Response;
 
-public final class ElasticsearchRestJavaagentInstrumenterFactory {
+public class ElasticsearchRestJavaagentInstrumenterFactory {
 
   private static final boolean CAPTURE_SEARCH_QUERY =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "elasticsearch")
           .getBoolean("capture_search_query", false);
-
-  private ElasticsearchRestJavaagentInstrumenterFactory() {}
 
   public static Instrumenter<ElasticsearchRestRequest, Response> create(
       String instrumentationName) {
@@ -34,4 +32,6 @@ public final class ElasticsearchRestJavaagentInstrumenterFactory {
         AgentCommonConfig.get().getKnownHttpRequestMethods(),
         CAPTURE_SEARCH_QUERY);
   }
+
+  private ElasticsearchRestJavaagentInstrumenterFactory() {}
 }

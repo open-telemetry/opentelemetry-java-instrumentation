@@ -17,7 +17,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.jboss.resteasy.core.ResourceMethodInvoker;
 
-public class ResteasyResourceMethodInvokerInstrumentation implements TypeInstrumentation {
+class ResteasyResourceMethodInvokerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.jboss.resteasy.core.ResourceMethodInvoker");
@@ -30,13 +30,13 @@ public class ResteasyResourceMethodInvokerInstrumentation implements TypeInstrum
             .and(takesArgument(0, named("org.jboss.resteasy.spi.HttpRequest")))
             .and(takesArgument(1, named("org.jboss.resteasy.spi.HttpResponse")))
             .and(takesArgument(2, Object.class)),
-        ResteasyResourceMethodInvokerInstrumentation.class.getName() + "$InvokeOnTargetAdvice");
+        getClass().getName() + "$InvokeOnTargetAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class InvokeOnTargetAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This ResourceMethodInvoker resourceInvoker) {
 
       String name = INVOKER_NAME.get(resourceInvoker);

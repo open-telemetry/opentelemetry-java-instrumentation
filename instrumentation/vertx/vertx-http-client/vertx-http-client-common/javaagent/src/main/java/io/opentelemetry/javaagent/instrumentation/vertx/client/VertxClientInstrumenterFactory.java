@@ -10,7 +10,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrume
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 
-public final class VertxClientInstrumenterFactory {
+public class VertxClientInstrumenterFactory {
 
   public static Instrumenter<HttpClientRequest, HttpClientResponse> create(
       String instrumentationName, AbstractVertxHttpAttributesGetter httpAttributesGetter) {

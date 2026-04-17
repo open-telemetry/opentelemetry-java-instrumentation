@@ -11,14 +11,12 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.instrumentation.jetty.common.JettyHandlerInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class Jetty11InstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class Jetty11InstrumentationModule extends InstrumentationModule {
 
   public Jetty11InstrumentationModule() {
     super("jetty", "jetty-11.0");
@@ -26,6 +24,7 @@ public class Jetty11InstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in Servlet 5.0 (renamed from javax.servlet)
     return hasClassesNamed("jakarta.servlet.Servlet");
   }
 
@@ -35,10 +34,5 @@ public class Jetty11InstrumentationModule extends InstrumentationModule
         new JettyHandlerInstrumentation(
             "jakarta.servlet",
             Jetty11InstrumentationModule.class.getPackage().getName() + ".Jetty11HandlerAdvice"));
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

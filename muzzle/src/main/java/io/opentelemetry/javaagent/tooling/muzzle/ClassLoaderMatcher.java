@@ -112,9 +112,9 @@ public class ClassLoaderMatcher {
       Field field = matcherClass.getDeclaredField("useCache");
       field.setAccessible(true);
       field.setBoolean(null, false);
-    } catch (Exception exception) {
+    } catch (Exception e) {
       throw new IllegalStateException(
-          "Failed to disable cache for ClassLoaderHasClassesNamedMatcher", exception);
+          "Failed to disable cache for ClassLoaderHasClassesNamedMatcher", e);
     }
   }
 

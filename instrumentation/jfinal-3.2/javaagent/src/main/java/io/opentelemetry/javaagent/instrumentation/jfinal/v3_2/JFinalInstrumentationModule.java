@@ -12,13 +12,11 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class JFinalInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class JFinalInstrumentationModule extends InstrumentationModule {
 
   public JFinalInstrumentationModule() {
     super("jfinal", "jfinal-3.2");
@@ -29,11 +27,6 @@ public class JFinalInstrumentationModule extends InstrumentationModule
     // In version 3.2, TypeConverter is moved from com.jfinal.core
     // to com.jfinal.core.converter
     return not(hasClassesNamed("com.jfinal.core.TypeConverter"));
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 
   @Override

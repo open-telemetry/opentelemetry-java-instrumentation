@@ -17,11 +17,13 @@ import java.io.ObjectOutput;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /** ContextPayload wraps context information shared between client and server. */
 public class ContextPayload {
 
   private static final Logger logger = Logger.getLogger(ContextPayload.class.getName());
+  private static final int MAX_CONTEXT_ENTRIES = 1000;
 
   private final Map<String, String> context;
 
@@ -41,24 +43,40 @@ public class ContextPayload {
     return payload;
   }
 
-  @SuppressWarnings("BanSerializableRead") // fine
+  @Nullable
   public static ContextPayload read(ObjectInput oi) throws IOException {
-    try {
-      Object object = oi.readObject();
-      if (object instanceof Map) {
-        @SuppressWarnings("unchecked") // convert it back to the expected type
-        Map<String, String> map = (Map<String, String>) object;
-        return new ContextPayload(map);
-      }
-    } catch (ClassCastException | ClassNotFoundException ex) {
-      logger.log(FINE, "Error reading object", ex);
+    int size = oi.readInt();
+    if (size > MAX_CONTEXT_ENTRIES) {
+      logger.log(
+          FINE,
+          "RMI context propagation payload size {0} exceeds maximum allowed of {1}, skipping context propagation.",
+          new Object[] {size, MAX_CONTEXT_ENTRIES});
+      return null;
     }
-
-    return null;
+    Map<String, String> map = new HashMap<>();
+    for (int i = 0; i < size; i++) {
+      String key = oi.readUTF();
+      String value = oi.readUTF();
+      map.put(key, value);
+    }
+    return new ContextPayload(map);
   }
 
   public void write(ObjectOutput out) throws IOException {
-    out.writeObject(context);
+    int size = context.size();
+    if (size > MAX_CONTEXT_ENTRIES) {
+      logger.log(
+          FINE,
+          "RMI context propagation payload size {0} exceeds maximum allowed of {1}, skipping context propagation.",
+          new Object[] {size, MAX_CONTEXT_ENTRIES});
+      out.writeInt(0);
+      return;
+    }
+    out.writeInt(size);
+    for (Map.Entry<String, String> entry : context.entrySet()) {
+      out.writeUTF(entry.getKey());
+      out.writeUTF(entry.getValue());
+    }
   }
 
   public Context extract() {
@@ -76,7 +94,11 @@ public class ContextPayload {
     }
 
     @Override
-    public String get(ContextPayload carrier, String key) {
+    @Nullable
+    public String get(@Nullable ContextPayload carrier, String key) {
+      if (carrier == null) {
+        return null;
+      }
       return carrier.context.get(key);
     }
   }
@@ -85,7 +107,10 @@ public class ContextPayload {
     INSTANCE;
 
     @Override
-    public void set(ContextPayload carrier, String key, String value) {
+    public void set(@Nullable ContextPayload carrier, String key, String value) {
+      if (carrier == null) {
+        return;
+      }
       carrier.context.put(key, value);
     }
   }

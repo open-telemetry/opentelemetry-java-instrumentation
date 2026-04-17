@@ -14,7 +14,7 @@ import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
-public final class JakartaMessageAdapter implements MessageAdapter {
+public class JakartaMessageAdapter implements MessageAdapter {
 
   public static MessageAdapter create(Message message) {
     return new JakartaMessageAdapter(message);

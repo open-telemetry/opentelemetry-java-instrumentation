@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrConfig;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -16,15 +17,18 @@ import jdk.jfr.FlightRecorder;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 @SuppressWarnings("deprecation") // Testing deprecated API for backward compatibility
 class RuntimeMetricsBuilderTest {
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @BeforeAll
   static void setup() {
     try {
       Class.forName("jdk.jfr.FlightRecorder");
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       Assumptions.abort("JFR not present");
     }
     Assumptions.assumeTrue(FlightRecorder.isAvailable(), "JFR not available");
@@ -71,11 +75,12 @@ class RuntimeMetricsBuilderTest {
   @Test
   void build() {
     var openTelemetry = OpenTelemetry.noop();
-    try (var jfrTelemetry = new RuntimeMetricsBuilder(openTelemetry).build()) {
-      assertThat(getJfrRuntimeMetrics(jfrTelemetry).getRecordedEventHandlers())
-          .hasSizeGreaterThan(0)
-          .allSatisfy(handler -> assertThat(isDefaultEnabled(handler.getFeature())).isTrue());
-    }
+    var jfrTelemetry = new RuntimeMetricsBuilder(openTelemetry).build();
+    cleanup.deferCleanup(jfrTelemetry);
+
+    assertThat(getJfrRuntimeMetrics(jfrTelemetry).getRecordedEventHandlers())
+        .hasSizeGreaterThan(0)
+        .allSatisfy(handler -> assertThat(isDefaultEnabled(handler.getFeature())).isTrue());
   }
 
   // Helper to access the unified module's state
@@ -98,7 +103,7 @@ class RuntimeMetricsBuilderTest {
   }
 
   // Java17 legacy defaults: all non-overlapping features
-  // plus CPU_COUNT_METRICS (which is emitted as cpu.count.limit)
+  // plus CPU_COUNT_METRICS (which is emitted as jvm.cpu.limit)
   private static boolean isDefaultEnabled(
       io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature feature) {
     return !feature.overlapsWithJmx()

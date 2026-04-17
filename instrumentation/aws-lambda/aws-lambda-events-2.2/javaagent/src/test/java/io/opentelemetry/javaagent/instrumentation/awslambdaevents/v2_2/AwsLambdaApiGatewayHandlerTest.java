@@ -92,7 +92,7 @@ class AwsLambdaApiGatewayHandlerTest {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 201L))));
   }
 
-  public static class TestRequestHandlerApiGateway
+  static class TestRequestHandlerApiGateway
       implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     @Override

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 import okhttp3.Request;
 
 class KubernetesRequestDigest {
@@ -16,8 +17,8 @@ class KubernetesRequestDigest {
   KubernetesRequestDigest(
       String urlPath,
       boolean isNonResourceRequest,
-      KubernetesResource resourceMeta,
-      KubernetesVerb verb) {
+      @Nullable KubernetesResource resourceMeta,
+      @Nullable KubernetesVerb verb) {
     this.urlPath = urlPath;
     this.isNonResourceRequest = isNonResourceRequest;
     this.resourceMeta = resourceMeta;
@@ -67,8 +68,8 @@ class KubernetesRequestDigest {
   private final String urlPath;
   private final boolean isNonResourceRequest;
 
-  private final KubernetesResource resourceMeta;
-  private final KubernetesVerb verb;
+  @Nullable private final KubernetesResource resourceMeta;
+  @Nullable private final KubernetesVerb verb;
 
   public String getUrlPath() {
     return urlPath;
@@ -78,10 +79,12 @@ class KubernetesRequestDigest {
     return isNonResourceRequest;
   }
 
+  @Nullable
   public KubernetesResource getResourceMeta() {
     return resourceMeta;
   }
 
+  @Nullable
   public KubernetesVerb getVerb() {
     return verb;
   }

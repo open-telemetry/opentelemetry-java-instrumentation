@@ -1,2 +1,3 @@
+display_name: Failsafe
 description: This standalone instrumentation enables metrics for Failsafe circuit breakers.
 library_link: https://failsafe.dev

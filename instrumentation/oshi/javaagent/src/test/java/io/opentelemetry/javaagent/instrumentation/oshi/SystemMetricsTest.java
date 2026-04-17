@@ -13,7 +13,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class SystemMetricsTest extends AbstractSystemMetricsTest {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Override
   protected void registerMetrics() {}

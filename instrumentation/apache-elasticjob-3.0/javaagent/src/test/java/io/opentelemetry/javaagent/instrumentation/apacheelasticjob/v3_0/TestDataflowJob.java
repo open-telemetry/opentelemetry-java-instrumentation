@@ -11,7 +11,7 @@ import java.util.List;
 import org.apache.shardingsphere.elasticjob.api.ShardingContext;
 import org.apache.shardingsphere.elasticjob.dataflow.job.DataflowJob;
 
-public class TestDataflowJob implements DataflowJob<String> {
+class TestDataflowJob implements DataflowJob<String> {
 
   @Override
   public List<String> fetchData(ShardingContext context) {

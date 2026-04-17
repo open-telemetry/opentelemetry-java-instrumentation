@@ -44,7 +44,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Set up gradle
-        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+        uses: gradle/actions/setup-gradle@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f # v6.0.1
 
       - name: Collect telemetry
         env:
@@ -69,7 +69,7 @@ jobs:
         if: steps.diffcheck.outputs.has_diff == 'true'
         run: .github/scripts/use-cla-approved-bot.sh
 
-      - uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
+      - uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
         if: steps.diffcheck.outputs.has_diff == 'true'
         id: otelbot-token
         with:

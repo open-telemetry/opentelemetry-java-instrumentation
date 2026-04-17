@@ -27,7 +27,7 @@ dependencies {
     }
   }
 
-  if (findProperty("testLatestDeps") as Boolean) {
+  if (otelProps.testLatestDeps) {
     testImplementation("ch.qos.logback:logback-classic:latest.release")
   } else {
     testImplementation("ch.qos.logback:logback-classic") {

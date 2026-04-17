@@ -18,7 +18,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
 
-public class FilterChainContextInstrumentation implements TypeInstrumentation {
+class FilterChainContextInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.glassfish.grizzly.filterchain.FilterChainContext");
@@ -27,21 +27,19 @@ public class FilterChainContextInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("resume").and(takesArguments(0)),
-        FilterChainContextInstrumentation.class.getName() + "$ResumeAdvice");
-    transformer.applyAdviceToMethod(
-        named("write"), FilterChainContextInstrumentation.class.getName() + "$WriteAdvice");
+        named("resume").and(takesArguments(0)), getClass().getName() + "$ResumeAdvice");
+    transformer.applyAdviceToMethod(named("write"), getClass().getName() + "$WriteAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ResumeAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter() {
       return Java8BytecodeBridge.rootContext().makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();
@@ -52,14 +50,14 @@ public class FilterChainContextInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class WriteAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth onEnter() {
       CallDepth callDepth = CallDepth.forClass(FilterChainContext.class);
       callDepth.getAndIncrement();
       return callDepth;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This FilterChainContext filterChainContext, @Advice.Enter CallDepth callDepth) {
       // When exiting the outermost call to write clear context & request from filter chain context.

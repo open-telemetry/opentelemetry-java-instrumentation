@@ -11,8 +11,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.java.message.PublishingMessageImpl;
 
-enum MessageMapSetter implements TextMapSetter<PublishingMessageImpl> {
-  INSTANCE;
+class MessageMapSetter implements TextMapSetter<PublishingMessageImpl> {
 
   @Override
   public void set(@Nullable PublishingMessageImpl message, String key, String value) {

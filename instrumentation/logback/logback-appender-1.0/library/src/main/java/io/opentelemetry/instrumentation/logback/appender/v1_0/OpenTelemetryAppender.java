@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Consumer;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -60,23 +61,34 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    * the {@link LoggerContext}.
    */
   public static void install(OpenTelemetry openTelemetry) {
+    forEachAppender(appender -> appender.setOpenTelemetry(openTelemetry));
+  }
+
+  static void resetForTest() {
+    forEachAppender(OpenTelemetryAppender::resetAppenderForTest);
+  }
+
+  private static void forEachAppender(Consumer<OpenTelemetryAppender> consumer) {
     ILoggerFactory loggerFactorySpi = LoggerFactory.getILoggerFactory();
     if (!(loggerFactorySpi instanceof LoggerContext)) {
       return;
     }
     LoggerContext loggerContext = (LoggerContext) loggerFactorySpi;
     for (Logger logger : loggerContext.getLoggerList()) {
-      logger.iteratorForAppenders().forEachRemaining(appender -> install(openTelemetry, appender));
+      logger
+          .iteratorForAppenders()
+          .forEachRemaining(appender -> forEachAppender(consumer, appender));
     }
   }
 
-  private static void install(OpenTelemetry openTelemetry, Appender<?> appender) {
+  private static void forEachAppender(
+      Consumer<OpenTelemetryAppender> consumer, Appender<?> appender) {
     if (appender instanceof OpenTelemetryAppender) {
-      ((OpenTelemetryAppender) appender).setOpenTelemetry(openTelemetry);
+      consumer.accept((OpenTelemetryAppender) appender);
     } else if (appender instanceof AppenderAttachable) {
       ((AppenderAttachable<?>) appender)
           .iteratorForAppenders()
-          .forEachRemaining(a -> OpenTelemetryAppender.install(openTelemetry, a));
+          .forEachRemaining(a -> forEachAppender(consumer, a));
     }
   }
 
@@ -96,6 +108,10 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             .setCaptureLogstashStructuredArguments(captureLogstashStructuredArguments)
             .setCaptureEventName(captureEventName)
             .build();
+    if (captureEventName) {
+      addWarn(
+          "The captureEventName setting is deprecated and will be removed in a future version.");
+    }
     eventsToReplay = new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
     super.start();
   }
@@ -264,6 +280,18 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     // now emit
     for (LoggingEventToReplay eventToReplay : eventsToReplay) {
       emit(openTelemetry, eventToReplay);
+    }
+  }
+
+  private void resetAppenderForTest() {
+    Lock writeLock = lock.writeLock();
+    writeLock.lock();
+    try {
+      openTelemetry = null;
+      eventsToReplay.clear();
+      replayLimitWarningLogged.set(false);
+    } finally {
+      writeLock.unlock();
     }
   }
 

@@ -117,8 +117,8 @@ abstract class PlayWsClientBaseTest<REQUEST> extends AbstractHttpClientTest<REQU
     protected void doResolve(String inetHost, Promise<InetAddress> promise) throws Exception {
       try {
         promise.setSuccess(InetAddress.getByName(inetHost));
-      } catch (UnknownHostException exception) {
-        promise.setFailure(exception);
+      } catch (UnknownHostException e) {
+        promise.setFailure(e);
       }
     }
 
@@ -128,8 +128,8 @@ abstract class PlayWsClientBaseTest<REQUEST> extends AbstractHttpClientTest<REQU
       try {
         // default implementation calls InetAddress.getAllByName
         promise.setSuccess(singletonList(InetAddress.getByName(inetHost)));
-      } catch (UnknownHostException exception) {
-        promise.setFailure(exception);
+      } catch (UnknownHostException e) {
+        promise.setFailure(e);
       }
     }
   }

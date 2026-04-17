@@ -19,6 +19,7 @@ import javax.annotation.Nullable;
 public abstract class ServletFilterMappingResolverFactory<FILTERREGISTRATION>
     extends ServletMappingResolverFactory {
 
+  @Nullable
   protected abstract FILTERREGISTRATION getFilterRegistration();
 
   protected abstract Collection<String> getUrlPatternMappings(
@@ -27,6 +28,7 @@ public abstract class ServletFilterMappingResolverFactory<FILTERREGISTRATION>
   protected abstract Collection<String> getServletNameMappings(
       FILTERREGISTRATION filterRegistration);
 
+  @Nullable
   protected abstract Collection<String> getServletMappings(String servletName);
 
   @Override

@@ -85,13 +85,39 @@ public record FileManager(String rootDir) {
           .filter(
               path ->
                   path.getFileName().toString().equals("build.gradle.kts")
-                      && !path.toString().contains("/testing/"))
+                      && !path.toString().contains("/testing/")
+                      && !isInNestedInstrumentationModule(path, rootPath))
           .map(Path::toString)
           .collect(toList());
     } catch (IOException e) {
       logger.severe("Error traversing directory: " + e.getMessage());
       return new ArrayList<>();
     }
+  }
+
+  /**
+   * Checks if a file path is inside a nested instrumentation module. A nested module is identified
+   * by having a javaagent/ or library/ directory that is NOT at the root level.
+   *
+   * @param filePath The file path to check
+   * @param rootPath The root instrumentation directory path
+   * @return true if the file is in a nested instrumentation module
+   */
+  private static boolean isInNestedInstrumentationModule(Path filePath, Path rootPath) {
+    Path relativePath = rootPath.relativize(filePath);
+    String relativeStr = relativePath.toString();
+
+    String[] segments = relativeStr.split("/");
+
+    // Find the first javaagent or library segment
+    for (int i = 0; i < segments.length; i++) {
+      if (segments[i].equals("javaagent") || segments[i].equals("library")) {
+        // If javaagent/library is not the first segment, it's a nested module
+        return i > 0;
+      }
+    }
+
+    return false;
   }
 
   @Nullable

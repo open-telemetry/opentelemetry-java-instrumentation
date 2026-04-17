@@ -32,7 +32,6 @@ public class RabbitDeliveryNetAttributesGetter
     return request.getConnection().getAddress().getHostAddress();
   }
 
-  @Nullable
   @Override
   public Integer getNetworkPeerPort(DeliveryRequest request, @Nullable Void response) {
     return request.getConnection().getPort();

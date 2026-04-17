@@ -10,7 +10,7 @@ import io.opentelemetry.context.Scope;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
-public final class TracingSubscriber<T> implements Subscriber<T> {
+public class TracingSubscriber<T> implements Subscriber<T> {
   private final Subscriber<T> delegate;
   private final Context context;
 

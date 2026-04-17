@@ -52,4 +52,34 @@ class FileManagerTest {
                 "instrumentation/elasticsearch/elasticsearch-rest-common-5.0"))
         .isFalse();
   }
+
+  @Test
+  void testFindBuildGradleFilesExcludesNestedModules() throws IOException {
+    // mimicking runtime-telemetry with nested instrumentation modules
+    Path runtimeTelemetry = tempDir.resolve("instrumentation/runtime-telemetry");
+    Path javaagent = Files.createDirectories(runtimeTelemetry.resolve("javaagent"));
+    Path library = Files.createDirectories(runtimeTelemetry.resolve("library"));
+    Path nestedJava17 =
+        Files.createDirectories(runtimeTelemetry.resolve("runtime-telemetry-java17/javaagent"));
+    Path nestedJava8 =
+        Files.createDirectories(runtimeTelemetry.resolve("runtime-telemetry-java8/library"));
+
+    Files.createFile(javaagent.resolve("build.gradle.kts"));
+    Files.createFile(library.resolve("build.gradle.kts"));
+    Files.createFile(nestedJava17.resolve("build.gradle.kts"));
+    Files.createFile(nestedJava8.resolve("build.gradle.kts"));
+
+    List<String> gradleFiles =
+        fileManager.findBuildGradleFiles("instrumentation/runtime-telemetry");
+
+    assertThat(gradleFiles).hasSize(2);
+    assertThat(gradleFiles)
+        .containsExactlyInAnyOrder(
+            javaagent.resolve("build.gradle.kts").toString(),
+            library.resolve("build.gradle.kts").toString());
+    assertThat(gradleFiles)
+        .doesNotContain(
+            nestedJava17.resolve("build.gradle.kts").toString(),
+            nestedJava8.resolve("build.gradle.kts").toString());
+  }
 }

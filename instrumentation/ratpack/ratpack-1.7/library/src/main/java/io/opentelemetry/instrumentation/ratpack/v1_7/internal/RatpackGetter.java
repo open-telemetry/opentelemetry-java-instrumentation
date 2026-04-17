@@ -16,8 +16,7 @@ import ratpack.http.Request;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-enum RatpackGetter implements TextMapGetter<Request> {
-  INSTANCE;
+final class RatpackGetter implements TextMapGetter<Request> {
 
   @Override
   public Iterable<String> keys(Request request) {

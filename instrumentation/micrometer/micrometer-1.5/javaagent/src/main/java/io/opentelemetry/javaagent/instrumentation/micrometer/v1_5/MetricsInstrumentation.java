@@ -15,7 +15,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class MetricsInstrumentation implements TypeInstrumentation {
+class MetricsInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -25,12 +25,12 @@ public class MetricsInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isTypeInitializer(), this.getClass().getName() + "$StaticInitializerAdvice");
+        isTypeInitializer(), getClass().getName() + "$StaticInitializerAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class StaticInitializerAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit() {
       Metrics.addRegistry(MicrometerSingletons.meterRegistry());
     }
