@@ -27,6 +27,7 @@ public class SqsInstrumentationModule extends AbstractAwsSdkInstrumentationModul
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 2.1.0
     return hasClassesNamed("software.amazon.awssdk.services.sqs.SqsClient");
   }
 

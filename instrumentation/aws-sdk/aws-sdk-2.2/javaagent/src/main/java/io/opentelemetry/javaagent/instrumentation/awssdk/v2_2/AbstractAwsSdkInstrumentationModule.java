@@ -38,6 +38,7 @@ abstract class AbstractAwsSdkInstrumentationModule extends InstrumentationModule
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // We don't actually transform it but want to make sure we only apply the instrumentation when
     // our key dependency is present.
+    // added in 2.0.0
     return hasClassesNamed("software.amazon.awssdk.core.interceptor.ExecutionInterceptor");
   }
 
