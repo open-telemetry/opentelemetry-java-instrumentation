@@ -549,6 +549,7 @@ public class HelperInjector implements Transformer {
     map.putIfAbsent(className, classSupplier);
   }
 
+  @Nullable
   private static Class<?> loadExposedClass(ClassLoader classLoader, String className) {
     if (classLoader == null) {
       throw new IllegalStateException("boot loader not supported");
