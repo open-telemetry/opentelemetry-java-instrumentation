@@ -86,10 +86,8 @@ public class InferredSpansComponentProvider implements ComponentProvider {
 ## InstrumentationDefaults
 
 `InstrumentationDefaults` lets distribution authors define instrumentation property defaults once
-and have them work in both configuration modes — traditional auto-configuration and declarative
-configuration.
-
-### Usage
+and have them work in both configuration modes.
+First, there is a single defaults object that is unaware of the source of the configuration:
 
 ```java
 InstrumentationDefaults defaults = new InstrumentationDefaults();
@@ -100,9 +98,8 @@ defaults.setDefault("log4j_appender", "experimental_log_attributes", "true");
 Keys use underscore notation (matching the declarative config model). They are translated to
 hyphen notation (`otel.instrumentation.<name>.<key>`) when producing system property keys.
 
-### Auto-configuration (traditional)
-
-Register the defaults as a properties supplier:
+The auto configuration **without declarative config** registers the defaults as a properties
+supplier, translating them to `otel.instrumentation.*` keys:
 
 ```java
 @AutoService(AutoConfigurationCustomizerProvider.class)
@@ -114,9 +111,22 @@ public class MyDistroAutoConfig implements AutoConfigurationCustomizerProvider {
 }
 ```
 
-### Declarative configuration
+The auto configuration **with declarative config** registers the defaults as a model customizer,
+injecting them under `instrumentation/development.java`.
 
-Register the defaults as a model customizer:
+Let's first look at the yaml file that the defaults effectively merge into:
+
+```yaml
+file_format: 1.0
+instrumentation/development:
+  java:
+    micrometer:
+      base_time_unit: s
+    log4j_appender:
+      experimental_log_attributes: "true"
+```
+
+And now the customizer that applies the defaults to the model:
 
 ```java
 @AutoService(DeclarativeConfigurationCustomizerProvider.class)
@@ -128,6 +138,5 @@ public class MyDistroDeclarativeConfig implements DeclarativeConfigurationCustom
 }
 ```
 
-Defaults are injected under `instrumentation/development.java` in the model. Explicit user
-configuration always takes precedence — defaults are only applied for properties not already
-present.
+Explicit user configuration always takes precedence — defaults are only applied for properties not
+already present (`putIfAbsent`).
