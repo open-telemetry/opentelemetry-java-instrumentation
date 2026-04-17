@@ -402,6 +402,7 @@
       ],
       // using zulu because new releases get published quickly
       depNameTemplate: 'azul/zulu-openjdk',
+      extractVersionTemplate: '^(?<version>\\d+)',
     },
     {
       customType: 'regex',
