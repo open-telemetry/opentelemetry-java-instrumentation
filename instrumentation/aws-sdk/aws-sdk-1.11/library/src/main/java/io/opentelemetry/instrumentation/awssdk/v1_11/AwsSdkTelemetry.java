@@ -12,6 +12,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * Entrypoint for instrumenting AWS SDK v1 clients.
@@ -77,6 +78,7 @@ public class AwsSdkTelemetry {
    * there is no {@link Context}. This is generally not needed unless you are implementing your own
    * instrumentation that delegates to this one.
    */
+  @Nullable
   public static Context getOpenTelemetryContext(Request<?> request) {
     return request.getHandlerContext(TracingRequestHandler.CONTEXT);
   }
