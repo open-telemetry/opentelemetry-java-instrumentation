@@ -65,4 +65,24 @@ public final class InjectedClassHelper {
 
     ProtectionDomain getProtectionDomain();
   }
+
+  private static volatile BiFunction<ClassLoader, String, Class<?>> loadExposedClass;
+
+  @Initializer
+  public static void internalSetLoadExposedClass(
+      BiFunction<ClassLoader, String, Class<?>> loadExposedClass) {
+    if (InjectedClassHelper.loadExposedClass != null) {
+      // Only possible by misuse of this API, just ignore.
+      return;
+    }
+    InjectedClassHelper.loadExposedClass = loadExposedClass;
+  }
+
+  @Nullable
+  public static Class<?> loadExposedClass(ClassLoader classLoader, String className) {
+    if (loadExposedClass == null) {
+      return null;
+    }
+    return loadExposedClass.apply(classLoader, className);
+  }
 }
