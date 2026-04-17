@@ -30,7 +30,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Library | TelemetryBuilder/getter/setter patterns | Library instrumentation classes | `library-patterns.md` |
 | API | Deprecation and breaking-change policy | Public API changes | `api-deprecation-policy.md` |
 | Config | Config property stability/renames/removals | `otel.instrumentation.*` property changes, `DeclarativeConfigUtil` or `ConfigProperties` usage | `config-property-stability.md` |
-| Config | metadata.yaml format and declarative_name conversion | `metadata.yaml` changes | `metadata-yaml-format.md` |
+| Config | metadata.yaml format and declarative_name conversion — **MANDATORY for every instrumentation module** | Any instrumentation module in scope (javaagent, library, or testing) | `metadata-yaml-format.md` |
 | Build | Gradle conventions, muzzle, test tasks, plugins | `build.gradle.kts`, `settings.gradle.kts` | `gradle-conventions.md` |
 | Build | `testcontainersBuildService` declaration | Testcontainers dependency without `usesService` | `gradle-conventions.md` |
 | Style | Prefer instance creation over singletons for stateless interface impls (except on hot paths or Kotlin `object` declarations) | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`, enum/static singletons | — |
@@ -398,6 +398,13 @@ code. Flat `ConfigProperties` is only used directly in `AgentDistributionConfig`
 instrumentation enable/disable bootstrapping (`otel.instrumentation.<name>.enabled`,
 `otel.instrumentation.common.default-enabled`). All other config reads go through the
 declarative API. Do not flag `DeclarativeConfigUtil` usage as incorrect.
+
+## [Config] Mandatory metadata.yaml Review
+
+**For every instrumentation module in scope, you MUST review and update its `metadata.yaml` file.**
+
+This is mandatory regardless of whether metadata.yaml was modified in the PR. Load
+`metadata-yaml-format.md` and execute its full validation procedure for each module.
 
 ## [Testing] General Test Patterns
 

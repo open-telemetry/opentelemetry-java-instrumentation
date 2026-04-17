@@ -28,6 +28,7 @@ Always load:
 
 - `docs/contributing/style-guide.md`
 - `knowledge/general-rules.md` — review checklist and core rules
+- `knowledge/metadata-yaml-format.md` — **MANDATORY** for any instrumentation module
 
 Load other knowledge files only when their scope trigger applies.
 Use the **Knowledge File** column in the checklist table.
@@ -102,6 +103,10 @@ Scope rules:
    `file -> changed line numbers in current file`
 
 ### Phase 3: Review and Fix
+
+**Before reviewing source files**: For each instrumentation module in scope, execute the full
+`metadata-yaml-format.md` validation procedure on its `metadata.yaml`. This is mandatory
+regardless of whether metadata.yaml was modified in the PR.
 
 For each file in scope:
 
