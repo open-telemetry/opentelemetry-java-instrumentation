@@ -3,6 +3,7 @@
   extends: [
     'config:best-practices',
     'helpers:pinGitHubActionDigestsToSemver',
+    ':semanticCommits',
   ],
   ignorePaths: [
     'instrumentation/**',
