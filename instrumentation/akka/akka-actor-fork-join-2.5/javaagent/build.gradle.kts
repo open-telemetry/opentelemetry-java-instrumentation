@@ -30,7 +30,8 @@ dependencies {
 
   library("com.typesafe.akka:akka-actor_2.11:2.5.0")
 
-  latestDepTestLibrary("com.typesafe.akka:akka-actor_2.13:2.5.+") // fork-join was removed in 2.6
+  // akka's ForkJoinPool was removed in 2.6, replaced with the normal java.util.concurrent version
+  latestDepTestLibrary("com.typesafe.akka:akka-actor_2.13:2.5.+") // no longer applicable
 
   testImplementation(project(":instrumentation:executors:testing"))
 }
