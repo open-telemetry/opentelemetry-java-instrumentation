@@ -25,3 +25,4 @@ armeria-1.3:javaagent
 apache-shenyu-2.4:javaagent
 async-http-client-1.8:javaagent
 async-http-client-1-common:javaagent
+armeria-1.3:testing
