@@ -23,19 +23,23 @@ libraries:
   - io.activej:activej-http:[6.0,)
   configurations:
   - name: otel.instrumentation.http.known-methods
+    declarative_name: java.common.http.known_methods
     description: |
       Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
     type: list
     default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
   - name: otel.instrumentation.http.server.capture-request-headers
+    declarative_name: general.http.server.request_captured_headers
     description: List of HTTP request headers to capture in HTTP server telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.http.server.capture-response-headers
+    declarative_name: general.http.server.response_captured_headers
     description: List of HTTP response headers to capture in HTTP server telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.http.server.emit-experimental-telemetry
+    declarative_name: java.common.http.server.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.size` and `http.server.response.size` metrics.
     type: boolean
@@ -4909,21 +4913,28 @@ libraries:
   - io.grpc:grpc-core:[1.6.0,)
   configurations:
   - name: otel.instrumentation.grpc.emit-message-events
+    declarative_name: java.grpc.emit_message_events
     description: Determines whether to emit a span event for each individual message
       received and sent.
     type: boolean
     default: true
   - name: otel.instrumentation.grpc.experimental-span-attributes
+    declarative_name: java.grpc.experimental_span_attributes/development
     description: |
       Enable the capture of experimental span attributes `grpc.received.message_count`, `grpc.sent.message_count` and `grpc.canceled`.
     type: boolean
     default: false
   - name: otel.instrumentation.grpc.capture-metadata.client.request
+    declarative_name: java.grpc.capture_metadata.client.request
     description: |
       A comma-separated list of request metadata keys. gRPC client instrumentation will capture metadata values corresponding to configured keys as span attributes.
     type: list
     default: ''
+    examples:
+    - custom-request-header
+    - my-metadata-key,another-metadata-key
   - name: otel.instrumentation.grpc.capture-metadata.server.request
+    declarative_name: java.grpc.capture_metadata.server.request
     description: |
       A comma-separated list of request metadata keys. gRPC server instrumentation will capture metadata values corresponding to configured keys as span attributes.
     type: list
@@ -7949,18 +7960,22 @@ libraries:
   - org.apache.kafka:kafka-clients:[0.11.0.0,)
   configurations:
   - name: otel.instrumentation.kafka.producer-propagation.enabled
+    declarative_name: java.kafka.producer_propagation.enabled
     description: Enable context propagation for Kafka message producers.
     type: boolean
     default: true
   - name: otel.instrumentation.kafka.experimental-span-attributes
+    declarative_name: java.kafka.experimental_span_attributes/development
     description: Enables the capture of the experimental consumer attribute `kafka.record.queue_time_ms`.
     type: boolean
     default: false
   - name: otel.instrumentation.messaging.experimental.capture-headers
+    declarative_name: java.common.messaging.capture_headers/development
     description: A comma-separated list of header names to capture as span attributes.
     type: list
     default: ''
   - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+    declarative_name: java.common.messaging.receive_telemetry/development.enabled
     description: |
       Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
     type: boolean
@@ -9411,56 +9426,67 @@ libraries:
   - ch.qos.logback:logback-classic:[0.9.16,)
   configurations:
   - name: otel.instrumentation.logback-appender.experimental-log-attributes
+    declarative_name: java.logback_appender.experimental_log_attributes/development
     description: |
       Enables the capture of experimental log attributes, including thread name and thread ID.
     type: boolean
     default: false
   - name: otel.instrumentation.logback-appender.experimental.capture-code-attributes
+    declarative_name: java.logback_appender.capture_code_attributes/development
     description: |
       Enables the capture of code location attributes, including file path, class name, method name, and line number.
     type: boolean
     default: false
   - name: otel.instrumentation.logback-appender.experimental.capture-marker-attribute
+    declarative_name: java.logback_appender.capture_marker_attribute/development
     description: |
       Enables the capture of the Logback marker attribute.
     type: boolean
     default: false
   - name: otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes
+    declarative_name: java.logback_appender.capture_key_value_pair_attributes/development
     description: |
       Enables the capture of attributes from Logback key-value pairs.
     type: boolean
     default: false
   - name: otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes
+    declarative_name: java.logback_appender.capture_logger_context_attributes/development
     description: |
       Enables the capture of attributes from the Logback logger context.
     type: boolean
     default: false
   - name: otel.instrumentation.logback-appender.experimental.capture-template
+    declarative_name: java.logback_appender.capture_template/development
     description: |
       Enables the capture of the log message template before parameter substitution.
     type: boolean
     default: false
   - name: otel.instrumentation.logback-appender.experimental.capture-arguments
+    declarative_name: java.logback_appender.capture_arguments/development
     description: |
       Enables the capture of log message arguments as separate attributes.
     type: boolean
     default: false
   - name: otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes
+    declarative_name: java.logback_appender.capture_logstash_marker_attributes/development
     description: |
       Enables the capture of attributes from Logstash markers.
     type: boolean
     default: false
   - name: otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments
+    declarative_name: java.logback_appender.capture_logstash_structured_arguments/development
     description: |
       Enables the capture of attributes from Logstash structured arguments.
     type: boolean
     default: false
   - name: otel.instrumentation.logback-appender.experimental.capture-mdc-attributes
+    declarative_name: java.logback_appender.capture_mdc_attributes/development
     description: |
       Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a comma-separated list of specific keys.
     type: list
     default: ''
   - name: otel.instrumentation.logback-appender.experimental.capture-event-name
+    declarative_name: java.logback_appender.capture_event_name/development
     description: |
       Enables the capture of the event name from the MDC attribute "event.name" and sets it as the log record's event name.
     type: boolean
@@ -14331,6 +14357,37 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
+  - when: otel.semconv-stability.opt-in=service.peer
+    metrics:
+    - name: http.client.request.duration
+      description: Duration of HTTP client requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
 - name: spring-web-6.0
   display_name: Spring Web
   description: |
@@ -14413,6 +14470,45 @@ libraries:
         type: STRING
       - name: code.namespace
         type: STRING
+  - when: otel.instrumentation.common.experimental.controller-telemetry.enabled,otel.semconv-stability.opt-in=service.peer
+    metrics:
+    - name: http.client.request.duration
+      description: Duration of HTTP client requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: service.peer.name
+        type: STRING
+      - name: url.full
+        type: STRING
+    - span_kind: INTERNAL
+      attributes:
+      - name: code.function
+        type: STRING
+      - name: code.namespace
+        type: STRING
 - name: spring-webflux-5.3
   display_name: Spring WebFlux
   description: |
@@ -14430,6 +14526,79 @@ libraries:
   has_standalone_library: true
   telemetry:
   - when: default
+    metrics:
+    - name: http.client.request.duration
+      description: Duration of HTTP client requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - name: http.server.request.duration
+      description: Duration of HTTP server requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: http.route
+        type: STRING
+      - name: url.scheme
+        type: STRING
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: client.address
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: http.route
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.path
+        type: STRING
+      - name: url.query
+        type: STRING
+      - name: url.scheme
+        type: STRING
+      - name: user_agent.original
+        type: STRING
+  - when: otel.semconv-stability.opt-in=service.peer
     metrics:
     - name: http.client.request.duration
       description: Duration of HTTP client requests.
