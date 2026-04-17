@@ -17,3 +17,4 @@ apache-httpasyncclient-4.1:javaagent
 apache-httpclient-4.3:library
 apache-httpclient-2.0:javaagent
 apache-httpclient-4.0:javaagent
+apache-httpclient-4.3:testing
