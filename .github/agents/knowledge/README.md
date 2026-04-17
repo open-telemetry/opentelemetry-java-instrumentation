@@ -6,21 +6,21 @@ Load only files relevant to the current scope to reduce noise and avoid over-con
 
 ## Topics
 
-| File | Load when |
-| --- | --- |
-| `api-deprecation-policy.md` | Public API removal, rename, or deprecation; stable vs alpha breaking changes |
-| `config-property-stability.md` | `otel.instrumentation.*` property add, remove, rename, or deprecation |
-| `general-rules.md` | Always — review checklist table and core rules enforced on every review |
-| `metadata-yaml-format.md` | **Any instrumentation module** — mandatory review of metadata.yaml for config coverage |
-| `gradle-conventions.md` | `build.gradle.kts` or `settings.gradle.kts` changes, custom test task registration or wiring |
-| `javaagent-advice-patterns.md` | ByteBuddy `@Advice` class or advice-method changes |
-| `javaagent-module-patterns.md` | `InstrumentationModule`, `TypeInstrumentation`, `VirtualField`, `CallDepth` |
-| `javaagent-singletons-patterns.md` | `*Singletons` holder classes, singleton accessors, callers of singleton accessors/fields |
-| `library-patterns.md` | Library instrumentation telemetry, builder, getter, or setter pattern changes |
-| `module-naming.md` | New or renamed modules or packages; settings includes |
+| File | Load when                                                                                                                  |
+| --- |----------------------------------------------------------------------------------------------------------------------------|
+| `api-deprecation-policy.md` | Public API removal, rename, or deprecation; stable vs alpha breaking changes                                               |
+| `config-property-stability.md` | `otel.instrumentation.*` property add, remove, rename, or deprecation                                                      |
+| `general-rules.md` | Always — review checklist table and core rules enforced on every review                                                    |
+| `metadata-yaml-format.md` | Always — mandatory review of metadata.yaml for config coverage                                                             |
+| `gradle-conventions.md` | `build.gradle.kts` or `settings.gradle.kts` changes, custom test task registration or wiring                               |
+| `javaagent-advice-patterns.md` | ByteBuddy `@Advice` class or advice-method changes                                                                         |
+| `javaagent-module-patterns.md` | `InstrumentationModule`, `TypeInstrumentation`, `VirtualField`, `CallDepth`                                                |
+| `javaagent-singletons-patterns.md` | `*Singletons` holder classes, singleton accessors, callers of singleton accessors/fields                                   |
+| `library-patterns.md` | Library instrumentation telemetry, builder, getter, or setter pattern changes                                              |
+| `module-naming.md` | New or renamed modules or packages; settings includes                                                                      |
 | `testing-general-patterns.md` | Test files in scope — assertion style, resource cleanup patterns, attribute assertion patterns, `satisfies()` lambda usage |
-| `testing-experimental-flags.md` | `testExperimental` task or experimental span-attribute assertions |
-| `testing-semconv-stability.md` | Semconv opt-in modes, `emitOld*`/`emitStable*`, `maybeStable`, Semconv test tasks |
+| `testing-experimental-flags.md` | `testExperimental` task or experimental span-attribute assertions                                                          |
+| `testing-semconv-stability.md` | Semconv opt-in modes, `emitOld*`/`emitStable*`, `maybeStable`, Semconv test tasks                                          |
 
 ## Naming Conventions
 
