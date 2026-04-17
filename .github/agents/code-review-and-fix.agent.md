@@ -304,9 +304,9 @@ Auto-fix boundaries:
 - Never change:
   - literal type suffixes (e.g., `200` → `200L` or vice-versa) — Java widens
     automatically; both forms compile identically and the change is noise
-  - non-capturing lambdas or method references as unnecessary allocations; do not flag or
-    fix these, because on modern JDKs these are typically cached at the call site rather
-    than allocated on every invocation
+  - non-capturing lambdas or method references as allocation issues; do not flag,
+    fix, or justify changes to these as per-call allocations. On HotSpot /
+    OpenJDK 8+, these are cached at the call site.
 
 Output content rules:
 

@@ -75,6 +75,8 @@ Read and apply `docs/contributing/style-guide.md`.
 Do not flag the following patterns (common false positives):
 
 - FQCN is acceptable when class-name collision makes import impossible.
+- Do not claim that a Java non-capturing lambda or method reference allocates per
+  call. On HotSpot / OpenJDK 8+, these are cached at the call site.
 
 ## [Style] Visibility modifiers
 
