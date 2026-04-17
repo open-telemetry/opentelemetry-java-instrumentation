@@ -46,3 +46,4 @@ aws-sdk-2.2:library-autoconfigure
 aws-sdk-2.2:library
 aws-sdk-2.2:javaagent
 azure-core-1.14:javaagent
+aws-sdk-2.2:testing
