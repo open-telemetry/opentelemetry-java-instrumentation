@@ -89,6 +89,8 @@ Add `examples` only for module-specific configs with non-obvious format (lists, 
 
 Search module source for `DeclarativeConfigUtil.getInstrumentationConfig()`, `config.getBoolean()`, etc.
 
+If a module has a dependency on other modules (for example, a "-common" module, check those as well since they may read the config.
+
 ### 3. Verify type and default
 
 Match type and default value with actual code usage.
@@ -144,4 +146,3 @@ FAIL in ../instrumentation/liberty/liberty-20.0/metadata.yaml:
 
 - Properties without `otel.instrumentation.` prefix → check SPECIAL_MAPPINGS
 - Already has declarative_name → skip conversion
-- Nested experimental paths → handle `experimental.` at any position
