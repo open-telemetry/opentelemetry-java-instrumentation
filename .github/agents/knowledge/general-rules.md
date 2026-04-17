@@ -67,8 +67,6 @@ application, do not silently swallow it unless the failure is an expected option
   established pattern and preserves module / class logger identity.
 - Silent suppression is acceptable for expected optional-probe paths, such as classpath or
   version-detection lookups where failure is routine and logging would be noisy.
-- Keep the message action-oriented and specific (for example, "Failed to customize Netty 4.1
-  HTTP server response").
 
 ## [Style] Style Guide
 
