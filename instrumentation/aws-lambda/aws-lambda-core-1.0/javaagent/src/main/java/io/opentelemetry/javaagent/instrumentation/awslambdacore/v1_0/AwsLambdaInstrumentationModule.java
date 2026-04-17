@@ -30,7 +30,7 @@ public class AwsLambdaInstrumentationModule extends InstrumentationModule {
         .and(
             not(
                 hasClassesNamed(
-                    // added in 2.2.0
+                    // added in 2.2.0 (in which case aws-lambda-events-2.2 is used)
                     "com.amazonaws.services.lambda.runtime.events.SQSEvent")));
   }
 
