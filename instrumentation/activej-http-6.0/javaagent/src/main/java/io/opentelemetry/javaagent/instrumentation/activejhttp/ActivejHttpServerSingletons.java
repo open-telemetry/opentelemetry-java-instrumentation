@@ -10,7 +10,7 @@ import io.activej.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
 
-public class ActivejHttpServerSingletons {
+class ActivejHttpServerSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.activej-http-6.0";
 
@@ -24,7 +24,7 @@ public class ActivejHttpServerSingletons {
             new ActivejHttpServerRequestGetter());
   }
 
-  public static Instrumenter<HttpRequest, HttpResponse> instrumenter() {
+  static Instrumenter<HttpRequest, HttpResponse> instrumenter() {
     return instrumenter;
   }
 
