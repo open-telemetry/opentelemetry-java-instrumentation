@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ELASTICSEARCH;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -75,16 +76,17 @@ class ElasticsearchRest6Test {
   }
 
   @AfterAll
-  static void cleanUp() {
+  static void cleanUp() throws IOException {
+    client.close();
     elasticsearch.stop();
   }
 
   @Test
-  @SuppressWarnings({"deprecation", "rawtypes"})
-  // ignore deprecation interface
   void elasticsearchStatus() throws IOException {
     Response response = client.performRequest("GET", "_cluster/health");
-    Map result = objectMapper.readValue(response.getEntity().getContent(), Map.class);
+    Map<?, ?> result =
+        objectMapper.readValue(
+            response.getEntity().getContent(), new TypeReference<Map<?, ?>>() {});
 
     assertThat(result.get("status")).isEqualTo("green");
 
@@ -123,8 +125,6 @@ class ElasticsearchRest6Test {
   }
 
   @Test
-  @SuppressWarnings({"deprecation", "rawtypes"})
-  // ignore deprecation interface
   void elasticsearchStatusAsync() throws Exception {
     Response[] requestResponse = {null};
     Exception[] exception = {null};
@@ -158,7 +158,9 @@ class ElasticsearchRest6Test {
     if (exception[0] != null) {
       throw exception[0];
     }
-    Map result = objectMapper.readValue(requestResponse[0].getEntity().getContent(), Map.class);
+    Map<?, ?> result =
+        objectMapper.readValue(
+            requestResponse[0].getEntity().getContent(), new TypeReference<Map<?, ?>>() {});
 
     assertThat(result.get("status")).isEqualTo("green");
 
