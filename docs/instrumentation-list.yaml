@@ -1356,15 +1356,18 @@ libraries:
   - com.linecorp.armeria:armeria:[1.3.0,)
   configurations:
   - name: otel.instrumentation.http.known-methods
+    declarative_name: java.common.http.known_methods
     description: |
       Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
     type: list
     default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
   - name: otel.instrumentation.http.client.capture-request-headers
+    declarative_name: general.http.client.request_captured_headers
     description: List of HTTP request headers to capture in HTTP client telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.http.client.capture-response-headers
+    declarative_name: general.http.client.response_captured_headers
     description: List of HTTP response headers to capture in HTTP client telemetry.
     type: list
     default: ''
@@ -1374,23 +1377,28 @@ libraries:
     type: map
     default: ''
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
+    declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
   - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    declarative_name: java.common.http.client.redact_query_parameters/development
     description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
     type: boolean
     default: true
   - name: otel.instrumentation.http.server.capture-request-headers
+    declarative_name: general.http.server.request_captured_headers
     description: List of HTTP request headers to capture in HTTP server telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.http.server.capture-response-headers
+    declarative_name: general.http.server.response_captured_headers
     description: List of HTTP response headers to capture in HTTP server telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.http.server.emit-experimental-telemetry
+    declarative_name: java.common.http.server.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.size` and `http.server.response.size` metrics.
     type: boolean
@@ -1655,15 +1663,18 @@ libraries:
   - com.ning:async-http-client:[1.8.0,1.9.0)
   configurations:
   - name: otel.instrumentation.http.known-methods
+    declarative_name: java.common.http.known_methods
     description: |
       Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
     type: list
     default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
   - name: otel.instrumentation.http.client.capture-request-headers
+    declarative_name: general.http.client.request_captured_headers
     description: List of HTTP request headers to capture in HTTP client telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.http.client.capture-response-headers
+    declarative_name: general.http.client.response_captured_headers
     description: List of HTTP response headers to capture in HTTP client telemetry.
     type: list
     default: ''
@@ -1673,11 +1684,13 @@ libraries:
     type: map
     default: ''
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
+    declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
   - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    declarative_name: java.common.http.client.redact_query_parameters/development
     description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
     type: boolean
     default: true
@@ -2155,16 +2168,19 @@ libraries:
   - com.amazonaws:aws-java-sdk-core:[1.10.33,)
   configurations:
   - name: otel.instrumentation.aws-sdk.experimental-span-attributes
+    declarative_name: java.aws_sdk.experimental_span_attributes/development
     description: |
       Enables the experimental span attributes `aws.agent`, `aws.queue.name`, `aws.lambda.function.arn` and `aws.lambda.function.name` for AWS SDK instrumentation.
     type: boolean
     default: false
   - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+    declarative_name: java.common.messaging.receive_telemetry/development.enabled
     description: |
       Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
     type: boolean
     default: false
   - name: otel.instrumentation.messaging.experimental.capture-headers
+    declarative_name: java.common.messaging.capture_headers/development
     description: Allows configuring headers to capture as span attributes.
     type: list
     default: ''
@@ -2389,30 +2405,36 @@ libraries:
   - software.amazon.awssdk:sqs:[2.2.0,)
   configurations:
   - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+    declarative_name: java.common.messaging.receive_telemetry/development.enabled
     description: |
       Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
     type: boolean
     default: false
   - name: otel.instrumentation.messaging.experimental.capture-headers
+    declarative_name: java.common.messaging.capture_headers/development
     description: Allows configuring headers to capture as span attributes.
     type: list
     default: ''
   - name: otel.instrumentation.aws-sdk.experimental-span-attributes
+    declarative_name: java.aws_sdk.experimental_span_attributes/development
     description: |
       Enables experimental span attributes `aws.agent`, `aws.lambda.function.arn` and `aws.lambda.function.name` for AWS SDK instrumentation.
     type: boolean
     default: false
   - name: otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging
+    declarative_name: java.aws_sdk.use_propagator_for_messaging/development
     description: Determines whether the configured TextMapPropagator should be used
       to inject into supported messaging attributes (for SQS).
     type: boolean
     default: false
   - name: otel.instrumentation.genai.capture-message-content
+    declarative_name: java.common.gen_ai.capture_message_content
     description: |
       Determines whether Generative AI events include full content of user and assistant messages. Note that full content can have data privacy and size concerns and care should be taken when enabling this
     type: boolean
     default: false
   - name: otel.instrumentation.aws-sdk.experimental-record-individual-http-error
+    declarative_name: java.aws_sdk.record_individual_http_error/development
     description: Determines whether errors returned by each individual HTTP request
       should be recorded as events for the SDK span.
     type: boolean
@@ -7966,7 +7988,8 @@ libraries:
     default: true
   - name: otel.instrumentation.kafka.experimental-span-attributes
     declarative_name: java.kafka.experimental_span_attributes/development
-    description: Enables the capture of the experimental consumer attribute `kafka.record.queue_time_ms`.
+    description: Enables the capture of the experimental consumer attributes `kafka.record.queue_time_ms`
+      and `messaging.kafka.bootstrap.servers`.
     type: boolean
     default: false
   - name: otel.instrumentation.messaging.experimental.capture-headers
@@ -8061,6 +8084,8 @@ libraries:
         type: STRING
       - name: messaging.destination.partition.id
         type: STRING
+      - name: messaging.kafka.bootstrap.servers
+        type: STRING
       - name: messaging.kafka.message.key
         type: STRING
       - name: messaging.kafka.message.offset
@@ -8115,6 +8140,8 @@ libraries:
         type: STRING
       - name: messaging.destination.partition.id
         type: STRING
+      - name: messaging.kafka.bootstrap.servers
+        type: STRING
       - name: messaging.kafka.message.key
         type: STRING
       - name: messaging.kafka.message.offset
@@ -8167,7 +8194,8 @@ libraries:
   - org.apache.kafka:kafka-streams:[0.11.0.0,)
   configurations:
   - name: otel.instrumentation.kafka.experimental-span-attributes
-    description: Enables the capture of the experimental consumer attribute `kafka.record.queue_time_ms`.
+    description: Enables the capture of the experimental consumer attribute `kafka.record.queue_time_ms`
+      and `messaging.kafka.bootstrap.servers`.
     type: boolean
     default: false
   - name: otel.instrumentation.messaging.experimental.capture-headers
@@ -9169,28 +9197,34 @@ libraries:
   has_javaagent: true
   configurations:
   - name: otel.instrumentation.http.known-methods
+    declarative_name: java.common.http.known_methods
     description: |
       Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
     type: list
     default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
   - name: otel.instrumentation.http.server.capture-request-headers
+    declarative_name: general.http.server.request_captured_headers
     description: List of HTTP request headers to capture in HTTP server telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.http.server.capture-response-headers
+    declarative_name: general.http.server.response_captured_headers
     description: List of HTTP response headers to capture in HTTP server telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.http.server.emit-experimental-telemetry
+    declarative_name: java.common.http.server.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.size` and `http.server.response.size` metrics.
     type: boolean
     default: false
   - name: otel.instrumentation.servlet.experimental-span-attributes
+    declarative_name: java.servlet.experimental_span_attributes/development
     description: Enables capturing the experimental `servlet.timeout` span attribute.
     type: boolean
     default: false
-  - name: otel.instrumentation.servlet.capture-request-parameters
+  - name: otel.instrumentation.servlet.experimental.capture-request-parameters
+    declarative_name: java.servlet.capture_request_parameters/development
     description: List of request parameter names to capture as span attributes.
     type: list
     default: ''
@@ -9208,19 +9242,23 @@ libraries:
   has_javaagent: true
   configurations:
   - name: otel.instrumentation.http.known-methods
+    declarative_name: java.common.http.known_methods
     description: |
       Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
     type: list
     default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
   - name: otel.instrumentation.http.server.capture-request-headers
+    declarative_name: general.http.server.request_captured_headers
     description: List of HTTP request headers to capture in HTTP server telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.http.server.capture-response-headers
+    declarative_name: general.http.server.response_captured_headers
     description: List of HTTP response headers to capture in HTTP server telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.http.server.emit-experimental-telemetry
+    declarative_name: java.common.http.server.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.size` and `http.server.response.size` metrics.
     type: boolean
@@ -14078,7 +14116,8 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.kafka.experimental-span-attributes
-    description: Enables the capture of the experimental consumer attribute `kafka.record.queue_time_ms`.
+    description: Enables the capture of the experimental consumer attribute `kafka.record.queue_time_ms`
+      and `messaging.kafka.bootstrap.servers`.
     type: boolean
     default: false
   telemetry:
@@ -15042,28 +15081,34 @@ libraries:
   - org.apache.tomcat.embed:tomcat-embed-core:[7.0.4, 10)
   configurations:
   - name: otel.instrumentation.http.known-methods
+    declarative_name: java.common.http.known_methods
     description: |
       Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
     type: list
     default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
   - name: otel.instrumentation.http.server.capture-request-headers
+    declarative_name: general.http.server.request_captured_headers
     description: List of HTTP request headers to capture in HTTP server telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.http.server.capture-response-headers
+    declarative_name: general.http.server.response_captured_headers
     description: List of HTTP response headers to capture in HTTP server telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.http.server.emit-experimental-telemetry
+    declarative_name: java.common.http.server.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.body.size` and `http.server.response.body.size` metrics.
     type: boolean
     default: false
   - name: otel.instrumentation.servlet.experimental-span-attributes
+    declarative_name: java.servlet.experimental_span_attributes/development
     description: Enables capturing the experimental `servlet.timeout` span attribute.
     type: boolean
     default: false
-  - name: otel.instrumentation.servlet.capture-request-parameters
+  - name: otel.instrumentation.servlet.experimental.capture-request-parameters
+    declarative_name: java.servlet.capture_request_parameters/development
     description: List of request parameter names to capture as span attributes.
     type: list
     default: ''
@@ -15853,7 +15898,8 @@ libraries:
     type: boolean
     default: true
   - name: otel.instrumentation.kafka.experimental-span-attributes
-    description: Enables the capture of the experimental consumer attribute `kafka.record.queue_time_ms`.
+    description: Enables the capture of the experimental consumer attribute `kafka.record.queue_time_ms`
+      and `messaging.kafka.bootstrap.servers`.
     type: boolean
     default: false
   - name: otel.instrumentation.messaging.experimental.capture-headers
