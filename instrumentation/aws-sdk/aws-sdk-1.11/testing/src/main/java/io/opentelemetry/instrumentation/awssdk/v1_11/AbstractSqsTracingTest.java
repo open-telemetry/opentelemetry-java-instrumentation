@@ -27,7 +27,6 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_ME
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
@@ -180,7 +179,7 @@ public abstract class AbstractSqsTracingTest {
                         attributes.add(
                             satisfies(
                                 headerAttributeKey("Test-Message-Header"),
-                                val -> val.isEqualTo(singletonList("test"))));
+                                val -> val.containsExactly("test")));
                       }
 
                       span.hasName("testSdkSqs publish")
@@ -217,7 +216,7 @@ public abstract class AbstractSqsTracingTest {
                         attributes.add(
                             satisfies(
                                 headerAttributeKey("Test-Message-Header"),
-                                val -> val.isEqualTo(singletonList("test"))));
+                                val -> val.containsExactly("test")));
                       }
 
                       span.hasName("testSdkSqs receive")
@@ -253,7 +252,7 @@ public abstract class AbstractSqsTracingTest {
                         attributes.add(
                             satisfies(
                                 headerAttributeKey("Test-Message-Header"),
-                                val -> val.isEqualTo(singletonList("test"))));
+                                val -> val.containsExactly("test")));
                       }
                       span.hasName("testSdkSqs process")
                           .hasKind(SpanKind.CONSUMER)
@@ -451,6 +450,6 @@ public abstract class AbstractSqsTracingTest {
     sqsClient.receiveMessage(receive);
     sqsClient.sendMessage(send);
     sqsClient.receiveMessage(receive);
-    assertThat(receive.getAttributeNames()).isEqualTo(singletonList("AWSTraceHeader"));
+    assertThat(receive.getAttributeNames()).containsExactly("AWSTraceHeader");
   }
 }
