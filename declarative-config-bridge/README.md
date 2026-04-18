@@ -96,7 +96,7 @@ defaults.get("log4j_appender").setDefault("experimental_log_attributes", "true")
 ```
 
 Navigation mirrors `DeclarativeConfigProperties` — reading uses
-`config.getStructured("micrometer").getString("base_time_unit")`; writing defaults uses
+`config.get("micrometer").getString("base_time_unit")`; writing defaults uses
 `defaults.get("micrometer").setDefault("base_time_unit", "s")`.
 
 Keys use underscore notation (matching the declarative config model). They are translated to

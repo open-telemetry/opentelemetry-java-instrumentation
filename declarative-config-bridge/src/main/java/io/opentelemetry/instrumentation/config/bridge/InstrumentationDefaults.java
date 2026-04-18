@@ -19,7 +19,7 @@ import java.util.Map;
  * declarative configuration.
  *
  * <p>Navigation mirrors {@link io.opentelemetry.api.incubator.config.DeclarativeConfigProperties}:
- * read-side uses {@code config.getStructured(name).getString(key)}; write-side uses {@code
+ * read-side uses {@code config.get(name).getString(key)}; write-side uses {@code
  * defaults.get(name).setDefault(key, value)}.
  *
  * <p>Usage:
@@ -42,7 +42,7 @@ public final class InstrumentationDefaults {
 
   /**
    * Returns the defaults builder for the given instrumentation, creating it if absent. Mirrors
-   * {@code DeclarativeConfigProperties.getStructured(name)} on the read side.
+   * {@code DeclarativeConfigProperties.get(name)} on the read side.
    */
   public InstrumentationProperties get(String instrumentation) {
     return instrumentations.computeIfAbsent(instrumentation, k -> new InstrumentationProperties());
