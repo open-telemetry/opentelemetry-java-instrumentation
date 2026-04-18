@@ -103,3 +103,4 @@ executors:bootstrap
 executors:javaagent
 executors:jdk21-testing
 executors:testing
+external-annotations:javaagent
