@@ -37,11 +37,14 @@ class S3PresignerTest {
 
   @BeforeAll
   static void setUp() {
-    // trigger adding tracing interceptor
+    // Build a regular client once so the tracing interceptor is installed before creating
+    // the presigner. This ensures the test verifies that presigner calls leave no current
+    // span when the tracing interceptor is present.
     S3Client.builder()
         .region(Region.AP_NORTHEAST_1)
         .credentialsProvider(CREDENTIALS_PROVIDER)
-        .build();
+        .build()
+        .close();
 
     s3Presigner =
         S3Presigner.builder()
