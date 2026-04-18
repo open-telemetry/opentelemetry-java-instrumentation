@@ -38,13 +38,10 @@ class S3PresignerTest {
   @BeforeAll
   static void setUp() {
     // trigger adding tracing interceptor
-    try (S3Client ignored =
-        S3Client.builder()
-            .region(Region.AP_NORTHEAST_1)
-            .credentialsProvider(CREDENTIALS_PROVIDER)
-            .build()) {
-      // build the client once so the agent adds the tracing interceptor before presigner use
-    }
+    S3Client.builder()
+        .region(Region.AP_NORTHEAST_1)
+        .credentialsProvider(CREDENTIALS_PROVIDER)
+        .build();
 
     s3Presigner =
         S3Presigner.builder()
