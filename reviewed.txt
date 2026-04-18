@@ -62,3 +62,4 @@ camel-2.20:javaagent-unit-tests
 cassandra-3.0:javaagent
 cassandra-4.0:javaagent
 cassandra-4.4:library
+cassandra-4.4:javaagent
