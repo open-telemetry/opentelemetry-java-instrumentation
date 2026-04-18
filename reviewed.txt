@@ -100,3 +100,4 @@ elasticsearch-transport-5.0:javaagent
 elasticsearch-transport-common:javaagent
 elasticsearch-transport-common:testing
 executors:bootstrap
+executors:javaagent
