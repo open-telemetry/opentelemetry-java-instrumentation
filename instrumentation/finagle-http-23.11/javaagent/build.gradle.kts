@@ -56,10 +56,22 @@ tasks {
   }
 
   test {
+    jvmArgs("-Dotel.instrumentation.http.client.emit-experimental-telemetry=true")
+    jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
+    jvmArgs("-Dio.opentelemetry.context.enableStrictContext=true")
+
+    // ensure concurrent tests are competing for netty workers
+    systemProperty("com.twitter.finagle.netty4.numWorkers", "2")
+    // ensure concurrent tests are competing for offload pool workers
+    systemProperty("com.twitter.finagle.offload.numWorkers", "2")
+
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+
     systemProperty(
       "metadataConfig",
       "otel.instrumentation.http.client.emit-experimental-telemetry=true," +
-        "otel.instrumentation.http.server.emit-experimental-telemetry=true"
+          "otel.instrumentation.http.server.emit-experimental-telemetry=true," +
+          "io.opentelemetry.context.enableStrictContext=true"
     )
   }
 
@@ -68,12 +80,18 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
     jvmArgs("-Dio.opentelemetry.context.enableStrictContext=true")
+
+    // ensure concurrent tests are competing for netty workers
+    systemProperty("com.twitter.finagle.netty4.numWorkers", "2")
+    // ensure concurrent tests are competing for offload pool workers
+    systemProperty("com.twitter.finagle.offload.numWorkers", "2")
+
     systemProperty(
       "metadataConfig",
       "otel.instrumentation.http.client.emit-experimental-telemetry=true," +
-        "otel.instrumentation.http.server.emit-experimental-telemetry=true," +
-        "otel.semconv-stability.opt-in=service.peer," +
-        "io.opentelemetry.context.enableStrictContext=true"
+          "otel.instrumentation.http.server.emit-experimental-telemetry=true," +
+          "otel.semconv-stability.opt-in=service.peer," +
+          "io.opentelemetry.context.enableStrictContext=true"
     )
   }
 
