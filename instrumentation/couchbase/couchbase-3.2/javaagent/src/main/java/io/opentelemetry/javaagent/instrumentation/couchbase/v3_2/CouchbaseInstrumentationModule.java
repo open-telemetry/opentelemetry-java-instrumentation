@@ -29,7 +29,6 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule {
         .and(
             not(
                 hasClassesNamed(
-                    // removed in java-client 3.4.0 (core-io 2.4.0)
                     "com.couchbase.client.core.transaction.components.CoreTransactionRequest")));
   }
 
