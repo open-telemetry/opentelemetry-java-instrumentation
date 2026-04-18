@@ -41,7 +41,7 @@ public class ClickHouseScope {
     return new ClickHouseScope(clickHouseDbRequest, context, context.makeCurrent(), instrumenter);
   }
 
-  public void end(Throwable throwable) {
+  public void end(@Nullable Throwable throwable) {
     scope.close();
     instrumenter.end(context, clickHouseDbRequest, null, throwable);
   }
