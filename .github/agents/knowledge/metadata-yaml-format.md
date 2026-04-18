@@ -49,8 +49,8 @@ For `otel.instrumentation.*` properties not in SPECIAL_MAPPINGS:
 1. Strip `otel.instrumentation.` prefix
 2. Replace `-` with `_` (kebab-case → snake_case)
 3. Handle `experimental`:
-   - `experimental.` path segment → remove, add `/development` to next segment
-   - `experimental-` in name → add `/development` to that segment
+   - `experimental.` as a separate path segment → **remove** it, add `/development` to next segment
+   - `experimental-` as a prefix within a segment name → **keep** it (as `experimental_`), add `/development` to that segment
 4. Prepend `java.`
 
 Examples:
@@ -59,8 +59,14 @@ Examples:
 |------------------------------------------------------------------------------|-------------------------------------------------------------|
 | `otel.instrumentation.grpc.emit-message-events`                              | `java.grpc.emit_message_events`                             |
 | `otel.instrumentation.grpc.experimental-span-attributes`                     | `java.grpc.experimental_span_attributes/development`        |
+| `otel.instrumentation.aws-sdk.experimental-span-attributes`                  | `java.aws_sdk.experimental_span_attributes/development`     |
 | `otel.instrumentation.logback-appender.experimental.capture-code-attributes` | `java.logback_appender.capture_code_attributes/development` |
 | `otel.instrumentation.common.experimental.controller-telemetry.enabled`      | `java.common.controller_telemetry/development.enabled`      |
+
+**Key distinction**:
+
+- `experimental-span-attributes` (hyphenated compound) → `experimental_span_attributes/development` (prefix **kept**)
+- `experimental.capture-code-attributes` (separate segment) → `capture_code_attributes/development` (segment **removed**)
 
 ## Examples Guidelines
 
