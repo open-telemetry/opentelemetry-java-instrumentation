@@ -23,10 +23,14 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // introduced in java-client 3.1.0 (core-io 2.1.0)
-    return hasClassesNamed("com.couchbase.client.core.cnc.TracingIdentifiers")
-        // introduced in java-client 3.1.6 (core-io 2.1.6)
-        .and(not(hasClassesNamed("com.couchbase.client.core.endpoint.EventingEndpoint")));
+    return hasClassesNamed(
+            // added in java-client 3.1.0 (core-io 2.1.0)
+            "com.couchbase.client.core.cnc.TracingIdentifiers")
+        .and(
+            not(
+                hasClassesNamed(
+                    // added in java-client 3.1.6 (core-io 2.1.6)
+                    "com.couchbase.client.core.endpoint.EventingEndpoint")));
   }
 
   @Override
