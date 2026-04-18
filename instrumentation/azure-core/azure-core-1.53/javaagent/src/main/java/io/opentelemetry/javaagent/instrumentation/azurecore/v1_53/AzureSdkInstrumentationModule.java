@@ -48,10 +48,14 @@ public class AzureSdkInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // added in azure-core 1.53
-    return hasClassesNamed("com.azure.core.util.LibraryTelemetryOptions")
-        // added in azure-core-tracing-opentelemetry 1.0.0-beta.47 (native OTel support)
-        .and(not(hasClassesNamed("com.azure.core.tracing.opentelemetry.OpenTelemetryTracer")));
+    return hasClassesNamed(
+            // added in azure-core 1.53
+            "com.azure.core.util.LibraryTelemetryOptions")
+        .and(
+            not(
+                hasClassesNamed(
+                    // added in azure-core-tracing-opentelemetry 1.0.0-beta.47 (native OTel support)
+                    "com.azure.core.tracing.opentelemetry.OpenTelemetryTracer")));
   }
 
   @Override
