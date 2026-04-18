@@ -27,7 +27,7 @@ public class ElasticsearchRest7InstrumentationModule extends InstrumentationModu
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // added in 7.0.0
     return hasClassesNamed("org.elasticsearch.client.RestClient$InternalRequest")
-        // added in 8.10 (native OTel instrumentation)
+        // added in 8.10 (native OTel support)
         .and(not(hasClassesNamed("co.elastic.clients.transport.instrumentation.Instrumentation")));
   }
 

@@ -23,7 +23,7 @@ public class PlayInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // play.GlobalSettings was removed in 2.6
+    // removed in 2.6
     return hasClassesNamed("play.GlobalSettings");
   }
 

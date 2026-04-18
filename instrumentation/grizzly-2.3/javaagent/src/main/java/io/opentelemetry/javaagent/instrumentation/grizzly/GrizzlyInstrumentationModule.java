@@ -22,7 +22,7 @@ public class GrizzlyInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // class added in 2.3
+    // added in 2.3
     return hasClassesNamed("org.glassfish.grizzly.InputSource");
   }
 
