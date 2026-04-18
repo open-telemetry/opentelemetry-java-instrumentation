@@ -104,3 +104,4 @@ executors:javaagent
 executors:jdk21-testing
 executors:testing
 external-annotations:javaagent
+external-annotations:javaagent-unit-tests
