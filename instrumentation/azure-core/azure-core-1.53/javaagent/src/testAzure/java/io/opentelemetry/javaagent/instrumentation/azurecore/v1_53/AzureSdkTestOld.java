@@ -55,6 +55,7 @@ class AzureSdkTestOld {
   private static Tracer createAzTracer() {
     Iterable<Tracer> tracers = ServiceLoader.load(Tracer.class);
     Iterator<Tracer> it = tracers.iterator();
-    return it.hasNext() ? it.next() : null;
+    assertThat(it).hasNext();
+    return it.next();
   }
 }
