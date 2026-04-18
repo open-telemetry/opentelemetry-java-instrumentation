@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 
-public class CouchbaseSingletons {
+class CouchbaseSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.couchbase-2.0";
 
@@ -43,7 +43,7 @@ public class CouchbaseSingletons {
     instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
-  public static Instrumenter<CouchbaseRequestInfo, Void> instrumenter() {
+  static Instrumenter<CouchbaseRequestInfo, Void> instrumenter() {
     return instrumenter;
   }
 
