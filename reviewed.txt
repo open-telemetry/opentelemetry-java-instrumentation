@@ -102,3 +102,4 @@ elasticsearch-transport-common:testing
 executors:bootstrap
 executors:javaagent
 executors:jdk21-testing
+executors:testing
