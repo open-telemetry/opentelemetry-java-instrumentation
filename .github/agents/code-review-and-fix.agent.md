@@ -139,6 +139,10 @@ Auto-fix boundaries:
 
 - Safe to fix:
   - import cleanup or direct style-guide conformance
+    **Extra step for shared/common modules**: when the modified file resides in a module
+    whose directory name contains `-common`, or whose Gradle path ends with `:testing`,
+    `:library`, or `:bootstrap`, **first search all sibling modules** under the same
+    instrumentation parent for callers of the type or member before applying the fix.
   - normalization of existing `@SuppressWarnings` syntax or placement, but preserve any
     accurate explanatory comment attached to the suppression instead of deleting it as
     style noise
@@ -397,22 +401,30 @@ Execute these steps strictly in order — do not reorder:
       pre-existing failure — note it in the final output but do not block the commit.
    5. Never commit code that fails tests you can reproduce locally.
 
-   **Testing-module dependent validation**: when any modified module is a `testing` module
-   (its Gradle path ends with `:testing`), you must **also** run `:check` (both normal and
-   `-PtestLatestDeps=true`) for every sibling `library` and `javaagent` module under the
-   same instrumentation parent. `testing` modules contain shared abstract test base classes
-   consumed by those siblings — changes to visibility, method signatures, or class structure
-   in the `testing` module can break compilation or tests in dependent modules.
+   **Shared-module dependent validation**: when any modified module is a shared module
+   consumed by sibling instrumentation modules, you must **also** run `:check` (both normal
+   and `-PtestLatestDeps=true`) for every sibling `library` and `javaagent` module under the
+   same instrumentation parent. A module is shared if its Gradle path ends with `:testing`,
+   or its directory name contains `-common` (e.g., `couchbase-2-common`, `netty-common`),
+   or it is named `library`, `bootstrap`, or `testing-common`. Changes to visibility,
+   method signatures, or class structure in a shared module can break compilation or tests
+   in dependent sibling modules — including failures that compile cleanly but throw
+   `IllegalAccessError` at runtime inside ByteBuddy advice.
 
-   To find siblings, list the parent directory of the `testing` module and look for
+   To find siblings, list the parent directory of the shared module and look for
    `library/`, `javaagent/`, and any version-variant directories that contain `library/`
-   or `javaagent/` submodules. Run `:check` for each.
+   or `javaagent/` submodules. Also check `settings.gradle.kts` for every module under
+   the same instrumentation group. Run `:check` for each sibling that transitively
+   depends on the modified shared module.
 
    Example: if you modify files in
    `:instrumentation:foo:foo-1.0:testing`, also run `:check` for
    `:instrumentation:foo:foo-1.0:library`,
    `:instrumentation:foo:foo-1.0:javaagent`, and any version-variant siblings such as
    `:instrumentation:foo:foo-2.0:library` if it depends on the `foo-1.0:testing` module.
+   Likewise, if you modify files in `:instrumentation:couchbase:couchbase-2-common:javaagent`,
+   also run `:check` for `:instrumentation:couchbase:couchbase-2.0:javaagent` and
+   `:instrumentation:couchbase:couchbase-2.6:javaagent`.
 
    Do not move on to step 2 until every required `:check` run from this step, including
    sibling-module validation and any re-runs after fixes or reverts, has fully completed
