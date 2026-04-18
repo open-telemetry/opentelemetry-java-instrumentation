@@ -12,6 +12,7 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import java.util.LinkedList;
+import javax.annotation.Nullable;
 import org.apache.pekko.http.javadsl.model.AttributeKey;
 import org.apache.pekko.http.scaladsl.model.Uri;
 
@@ -24,7 +25,7 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
   private Uri.Path lastUnmatchedPath = null;
   private boolean lastWasMatched = false;
   @Nullable private final PekkoRouteHolder parent;
-  @Nullable private PekkoRouteHolder override;
+  @Nullable private volatile PekkoRouteHolder override;
 
   public static PekkoRouteHolder create() {
     return new PekkoRouteHolder(null);
@@ -32,6 +33,10 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
 
   public static PekkoRouteHolder get(Context context) {
     return context.get(KEY);
+  }
+
+  private PekkoRouteHolder(@Nullable PekkoRouteHolder parent) {
+    this.parent = parent;
   }
 
   public void push(Uri.Path beforeMatch, Uri.Path afterMatch, String pathToPush) {
@@ -119,9 +124,5 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
   @Override
   public Context storeInContext(Context context) {
     return context.with(KEY, this);
-  }
-
-  private PekkoRouteHolder(@Nullable PekkoRouteHolder parent) {
-    this.parent = parent;
   }
 }

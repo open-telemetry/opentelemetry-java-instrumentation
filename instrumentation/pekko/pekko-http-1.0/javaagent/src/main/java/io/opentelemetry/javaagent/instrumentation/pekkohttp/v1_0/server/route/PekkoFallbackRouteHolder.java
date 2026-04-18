@@ -10,12 +10,13 @@ import static io.opentelemetry.context.ContextKey.named;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
+import javax.annotation.Nullable;
 
 public class PekkoFallbackRouteHolder implements ImplicitContextKeyed {
   private static final ContextKey<PekkoFallbackRouteHolder> KEY =
       named("opentelemetry-pekko-route-fallback");
 
-  @Nullable private PekkoRouteHolder fallback;
+  @Nullable private volatile PekkoRouteHolder fallback;
 
   @Nullable
   public static PekkoFallbackRouteHolder get(Context context) {

@@ -15,6 +15,7 @@ import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route.Pe
 import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route.PekkoRouteHolder;
 import java.util.ArrayDeque;
 import java.util.List;
+import java.util.Optional;
 import java.util.Queue;
 import org.apache.pekko.http.javadsl.model.HttpHeader;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
@@ -154,7 +155,7 @@ public class PekkoHttpServerTracer
                 String route =
                     response
                         .getAttribute(PekkoRouteHolder.ATTRIBUTE_KEY)
-                        .map(PekkoRouteHolder::route)
+                        .flatMap(routeHolder -> Optional.ofNullable(routeHolder.route()))
                         .orElse(null);
                 if (route == null) {
                   PekkoFallbackRouteHolder fallback =
