@@ -90,10 +90,39 @@ For multi-class checks, and for negated exclusions, add a version comment **abov
 name string**.
 
 - **Positive floor class** in `hasClassesNamed(...)`: use `// added in X.Y`.
+  When the landmark class comes from a different artifact than the instrumentation's usual
+  library module, choose the form based on what the comment is documenting:
+  - If the version boundary is for that different artifact itself, use
+    `// added in groupId:artifactId X.Y`.
+  - If the comment is documenting the main library-module boundary or an optional-component
+    presence condition that happens via a different artifact, use
+    `// added in X.Y (via groupId:artifactId A.B)`.
+  - For `javax.servlet:javax.servlet-api` and `jakarta.servlet:jakarta.servlet-api`, use the
+    shorthand `Servlet` instead of the full Maven coordinate, for example `// added in Servlet
+    5.0` or `// added in X.Y (via Servlet 5.0)`.
 - **Positive ceiling class** in `hasClassesNamed(...)`: use `// removed in Y.Z`.
+  When the landmark class comes from a different artifact than the instrumentation's usual
+  library module, choose the form based on what the comment is documenting:
+  - If the version boundary is for that different artifact itself, use
+    `// removed in groupId:artifactId Y.Z`.
+  - If the comment is documenting the main library-module boundary through a class that is
+    supplied by a different artifact, use `// removed in Y.Z (via groupId:artifactId A.B)`.
+  - For `javax.servlet:javax.servlet-api` and `jakarta.servlet:jakarta.servlet-api`, use the
+    shorthand `Servlet` instead of the full Maven coordinate, for example `// removed in Servlet
+    5.0` or `// removed in Y.Z (via Servlet 5.0)`.
 - **Negated exclusion class** in `not(hasClassesNamed(...))` or
   `.and(not(hasClassesNamed(...)))`: use `// added in Y.Z`, because that class's first
   appearance is what starts excluding `Y.Z+`.
+  When the landmark class comes from a different artifact than the instrumentation's usual
+  library module, choose the form based on what the comment is documenting:
+  - If the excluded range begins when that different artifact appears, use
+    `// added in groupId:artifactId Y.Z`.
+  - If the excluded range is described in terms of the main library-module version but the
+    landmark class is supplied by a different artifact, use
+    `// added in Y.Z (via groupId:artifactId A.B)`.
+  - For `javax.servlet:javax.servlet-api` and `jakarta.servlet:jakarta.servlet-api`, use the
+    shorthand `Servlet` instead of the full Maven coordinate, for example `// added in Servlet
+    5.0` or `// added in Y.Z (via Servlet 5.0)`.
 
 You may add brief parenthetical context, but only when it adds interesting, non-duplicative
 signal beyond the version role itself, for example native instrumentation notes, backport
@@ -195,9 +224,9 @@ public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
 ```java
 @Override
 public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-  // added in azure-core 1.53
+  // added in 1.53
   return hasClassesNamed("com.azure.core.util.LibraryTelemetryOptions")
-      // added in azure-core-tracing-opentelemetry 1.0.0-beta.47
+      // added in com.azure:azure-core-tracing-opentelemetry 1.0.0-beta.47
       .and(not(hasClassesNamed("com.azure.core.tracing.opentelemetry.OpenTelemetryTracer")));
 }
 ```
@@ -218,11 +247,24 @@ public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
   comment above the statement or expression. When matchers are chained, place each version
   comment directly above its class name string.
   - Positive floor class → `// added in X.Y`, optionally with brief, non-duplicative context
-    such as `renamed from javax` or `backported to 2.12.3`.
+    such as `renamed from javax` or `backported to 2.12.3`. For a landmark class from a
+    different artifact, use `// added in groupId:artifactId X.Y` when the boundary is for that
+    artifact, or `// added in X.Y (via groupId:artifactId A.B)` when the boundary or presence
+    condition is for the main library module. For `javax.servlet:javax.servlet-api` and
+    `jakarta.servlet:jakarta.servlet-api`, use `Servlet` instead of the full Maven coordinate.
   - Positive ceiling class → `// removed in Y.Z`, optionally with brief, non-duplicative
-    context such as `replaced by jakarta variant` or `moved to internal.async`.
+    context such as `replaced by jakarta variant` or `moved to internal.async`. For a landmark
+    class from a different artifact, use `// removed in groupId:artifactId Y.Z` when the
+    boundary is for that artifact, or `// removed in Y.Z (via groupId:artifactId A.B)` when the
+    boundary is for the main library module. For `javax.servlet:javax.servlet-api` and
+    `jakarta.servlet:jakarta.servlet-api`, use `Servlet` instead of the full Maven coordinate.
   - Negated exclusion class → `// added in Y.Z`, optionally with brief, non-duplicative
-    context such as `native OTel support` or `shaded into core module`.
+    context such as `native OTel support` or `shaded into core module`. For a landmark class
+    from a different artifact, use `// added in groupId:artifactId Y.Z` when the excluded range
+    is driven by that artifact, or `// added in Y.Z (via groupId:artifactId A.B)` when the
+    excluded range is described in terms of the main library module. For
+    `javax.servlet:javax.servlet-api` and `jakarta.servlet:jakarta.servlet-api`, use `Servlet`
+    instead of the full Maven coordinate.
   - Single positive class serving as both floor and ceiling → include both boundaries, for
     example `// added in X.Y, removed in Y.Z`.
   Do not use `// added in` for a **positive** ceiling class, because the upper bound depends on

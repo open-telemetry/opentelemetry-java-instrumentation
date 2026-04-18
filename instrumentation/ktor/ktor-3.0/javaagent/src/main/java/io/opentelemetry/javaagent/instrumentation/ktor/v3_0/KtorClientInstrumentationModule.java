@@ -28,7 +28,7 @@ public class KtorClientInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // added in ktor 3
+    // added in 3.0.0
     return hasClassesNamed("io.ktor.client.content.ProgressListener");
   }
 

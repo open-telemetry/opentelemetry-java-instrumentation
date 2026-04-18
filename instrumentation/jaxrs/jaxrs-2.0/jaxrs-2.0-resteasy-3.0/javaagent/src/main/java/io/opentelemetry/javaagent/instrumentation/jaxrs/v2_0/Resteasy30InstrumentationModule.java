@@ -23,10 +23,10 @@ public class Resteasy30InstrumentationModule extends InstrumentationModule {
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return hasClassesNamed(
-        // added in JAX-RS 2.0
+        // added in javax.ws.rs:javax.ws.rs-api 2.0
         "javax.ws.rs.Path",
-        // removed in 3.1.0.Final (moved to core.interception.jaxrs; back in 3.5.0; moved again in
-        // 4.0.0)
+        // removed in 3.1.0.Final (moved to core.interception.jaxrs; back in 3.5.0;
+        // moved again in 4.0.0)
         "org.jboss.resteasy.core.interception.PostMatchContainerRequestContext");
   }
 

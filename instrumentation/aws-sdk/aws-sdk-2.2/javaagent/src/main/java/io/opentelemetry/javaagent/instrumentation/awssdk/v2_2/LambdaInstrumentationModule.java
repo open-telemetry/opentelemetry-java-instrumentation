@@ -26,6 +26,7 @@ public class LambdaInstrumentationModule extends AbstractAwsSdkInstrumentationMo
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return hasClassesNamed(
         "software.amazon.awssdk.services.lambda.model.InvokeRequest",
+        // added in software.amazon.awssdk:json-utils 2.17.0
         "software.amazon.awssdk.protocols.jsoncore.JsonNode");
   }
 
