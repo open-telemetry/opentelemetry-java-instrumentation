@@ -394,7 +394,8 @@
       datasourceTemplate: 'docker',
       managerFilePatterns: [
         '.github/workflows/**',
-        '**/*.gradle.kts',
+// commented out to see whether weekly update passes without this line
+//        '**/*.gradle.kts',
       ],
       matchStrings: [
         '(?<currentValue>\\d+) # renovate\\(java-version\\)',
