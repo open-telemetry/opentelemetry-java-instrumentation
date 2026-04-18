@@ -86,3 +86,4 @@ couchbase-common:testing
 elasticsearch-api-client-7.16:javaagent
 dropwizard:dropwizard-testing
 dropwizard-views-0.7:javaagent
+elasticsearch-api-client-7.16:javaagent-unit-tests
