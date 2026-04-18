@@ -68,3 +68,4 @@ clickhouse-client-v1-0.5:javaagent
 cdi-testing
 cassandra-4.4:testing
 cassandra-common-4.0:testing
+clickhouse-client-v2-0.8:javaagent
