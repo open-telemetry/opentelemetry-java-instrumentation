@@ -28,7 +28,7 @@ public class KafkaConnectInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // class added in 2.6.0
+    // added in 2.6.0
     return hasClassesNamed("org.apache.kafka.connect.sink.SinkConnectorContext");
   }
 }

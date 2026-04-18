@@ -25,7 +25,7 @@ public class JerseyInstrumentationModule extends InstrumentationModule {
     return hasClassesNamed(
         // added in jakarta.ws.rs:jakarta.ws.rs-api 3.0 (renamed from javax.ws.rs)
         "jakarta.ws.rs.Path",
-        // added in 2.0 (jersey presence)
+        // added in 2.0
         "org.glassfish.jersey.server.ContainerRequest");
   }
 

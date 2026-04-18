@@ -37,8 +37,7 @@ abstract class AbstractAwsSdkInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // We don't actually transform it but want to make sure we only apply the instrumentation when
-    // our key dependency is present.
+    // added in com.amazonaws:aws-java-sdk-core 1.10.33
     return hasClassesNamed("com.amazonaws.AmazonWebServiceClient");
   }
 

@@ -150,6 +150,22 @@ The compact form does **not** apply when matchers are chained (e.g., positive + 
 In that case, follow the multi-class rule: place each version comment directly above its
 class name string.
 
+When the positive matcher in a chain still has a **single inline class string**, keep that
+class on the `return hasClassesNamed("...")` line and place its version comment on the
+preceding line. Place the negated matcher's comment above the `.and(...)` call. This keeps
+the compact look for chained-with-single-positive shapes:
+
+```java
+// added in 4.0.0.Final
+return hasClassesNamed("io.netty.handler.codec.http.HttpMessage")
+    // added in 4.1.0.Final
+    .and(not(hasClassesNamed("io.netty.handler.codec.http.CombinedHttpHeaders")));
+```
+
+Only break the positive class onto its own line (with the comment indented above it) when
+there are multiple positive classes, or when the chained landmark requires a multi-line
+two-line form (such as the artifact-presence-gate two-liner).
+
 **How to identify ceiling classes**: look for a **newer sibling module** for the same
 library, such as `mongo-4.0` next to `mongo-3.7`. If the newer module's
 `classLoaderMatcher()` checks a different variant of the same class, such as
@@ -213,7 +229,8 @@ OpenTelemetry instrumentation and the agent should opt out.
 public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
   // added in 7.0.0
   return hasClassesNamed("org.elasticsearch.client.RestClient$InternalRequest")
-      // added in 8.10 (native OTel support)
+      // artifact presence gate (native OTel support)
+      // added in co.elastic.clients:elasticsearch-java 8.10
       .and(not(hasClassesNamed(
           "co.elastic.clients.transport.instrumentation.Instrumentation")));
 }
@@ -226,10 +243,114 @@ public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
 public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
   // added in 1.53
   return hasClassesNamed("com.azure.core.util.LibraryTelemetryOptions")
+      // artifact presence gate (native OTel support)
       // added in com.azure:azure-core-tracing-opentelemetry 1.0.0-beta.47
       .and(not(hasClassesNamed("com.azure.core.tracing.opentelemetry.OpenTelemetryTracer")));
 }
 ```
+
+#### Main target artifact
+
+Bare version numbers like `// added in 2.2.0` resolve to **the `InstrumentationModule`'s main
+target artifact**, which is normally the artifact pinned by the module's muzzle
+`pass { group + module }` block in `build.gradle.kts`.
+
+When a single gradle module hosts **multiple `InstrumentationModule` classes targeting
+different artifacts** (rare — for example `aws-sdk-2.2/javaagent` has separate
+`InstrumentationModule`s for `:aws-core`, `:sqs`, `:sns`, `:lambda`, and `:bedrock-runtime`),
+open each `classLoaderMatcher()` with a one-line comment naming the target artifact. Bare
+version numbers in the landmark comments then resolve unambiguously to that artifact.
+
+```java
+@Override
+public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+  // this instrumentation module targets software.amazon.awssdk:lambda
+  return hasClassesNamed(
+      // added in 2.2.0
+      "software.amazon.awssdk.services.lambda.model.InvokeRequest",
+      // added in 2.17.0 (via software.amazon.awssdk:json-utils 2.17.0)
+      "software.amazon.awssdk.protocols.jsoncore.JsonNode");
+}
+```
+
+`(via groupId:artifactId A.B)` still means the landmark lives in a required transitive of
+the target artifact. `// added in groupId:artifactId X.Y` (no `via`) still means the landmark
+lives in an independent, opt-in artifact whose presence itself is the gate.
+
+Single-`InstrumentationModule` gradle modules do not need this header.
+
+#### Artifact presence gate annotation
+
+When a landmark class lives in an **opt-in artifact that is not the module's target
+artifact**, use a two-line role comment: `// artifact presence gate` followed by
+`// added in groupId:artifactId X.Y`. Parenthetical context goes on whichever line it
+qualifies — attach it to `artifact presence gate` when it describes **why** the gate
+exists (e.g. `native OTel support`), and to `added in …` when it qualifies the **coordinate
+or version** (e.g. `renamed from extension.incubator`):
+
+```java
+// artifact presence gate
+// added in groupId:artifactId X.Y
+```
+
+```java
+// artifact presence gate (why the gate exists)
+// added in groupId:artifactId X.Y
+```
+
+```java
+// artifact presence gate
+// added in groupId:artifactId X.Y (coordinate/version qualifier)
+```
+
+The `artifact presence gate` label signals "this check is not pinning a version
+boundary of the target artifact — it is detecting that an independent, opt-in dependency
+is on the classpath". The version X.Y is the first version of that opt-in artifact where
+the class existed, for completeness. "Artifact presence" distinguishes this from the
+ordinary class-presence role of `hasClassesNamed` itself.
+
+Typical cases:
+
+- `.and(not(hasClassesNamed(...)))` to back off when a separately-shipped native OTel
+  bridge is present.
+- `.and(hasClassesNamed(...))` to require an add-on that is not a required transitive of
+  the target artifact.
+
+Examples:
+
+```java
+// artifact presence gate (native OTel support)
+// added in com.azure:azure-core-tracing-opentelemetry 1.0.0-beta.47
+.and(not(hasClassesNamed("com.azure.core.tracing.opentelemetry.OpenTelemetryTracer")));
+```
+
+```java
+// artifact presence gate (native OTel support)
+// added in co.elastic.clients:elasticsearch-java 8.10
+.and(not(hasClassesNamed("co.elastic.clients.transport.instrumentation.Instrumentation")));
+```
+
+Do **not** use the `artifact presence gate` label when the landmark class lives in the
+target artifact or a required transitive — those are ordinary version boundaries and use
+the usual role comments (`// added in X.Y`, `// added in X.Y (via groupId:artifactId A.B)`).
+Conversely, do not omit the `groupId:artifactId` qualifier on the `added in` line when
+using the `artifact presence gate` label: the label and the qualifier always go together.
+
+#### `io.opentelemetry*` groupId shorthand
+
+For artifacts whose `groupId` starts with `io.opentelemetry` (for example
+`io.opentelemetry:opentelemetry-api`, `io.opentelemetry:opentelemetry-api-incubator`,
+`io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations`), omit the
+`groupId` and use just the artifact name in role comments:
+
+```java
+// added in opentelemetry-api 1.38.0
+// artifact presence gate
+// added in opentelemetry-instrumentation-annotations 1.16.0
+```
+
+The shorthand does **not** apply to non-OpenTelemetry artifacts — those always use the
+full coordinate.
 
 #### Rules for `classLoaderMatcher()`
 

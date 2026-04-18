@@ -52,7 +52,8 @@ public class AzureSdkInstrumentationModule extends InstrumentationModule
     return hasClassesNamed("com.azure.core.util.tracing.TracerProvider")
         // added in 1.53
         .and(not(hasClassesNamed("com.azure.core.util.LibraryTelemetryOptions")))
-        // added in com.azure:azure-core-tracing-opentelemetry 1.0.0-beta.47 (native OTel support)
+        // artifact presence gate (provides native OTel support)
+        // added in com.azure:azure-core-tracing-opentelemetry 1.0.0-beta.47
         .and(not(hasClassesNamed("com.azure.core.tracing.opentelemetry.OpenTelemetryTracer")));
   }
 
