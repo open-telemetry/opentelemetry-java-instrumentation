@@ -18,12 +18,10 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOutboundHandlerAdapter;
-import io.netty.channel.ChannelPromise;
 import io.netty.channel.OpenTelemetryChannelInitializerDelegate;
 import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http2.Http2StreamFrameToHttpObjectCodec;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
@@ -131,28 +129,7 @@ public class Helpers {
   public static void mutateHandlerPipeline(Channel ch) {
     ChannelHandler codec = ch.pipeline().get(Netty4HttpPackageHelpers.getHttpCodecName());
 
-    if (codec instanceof HttpClientCodec) {
-      // ensure we capture the client context and assign it to the channel before any processing;
-      // not applicable to servers
-      ch.pipeline()
-          .addAfter(
-              ChannelTransportHelpers.getHandlerName(),
-              OTEL_NETTY_HANDLER,
-              new ChannelOutboundHandlerAdapter() {
-                @Override
-                public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise)
-                    throws Exception {
-                  if (msg instanceof HttpRequest) {
-                    Context context =
-                        VirtualField.find(HttpRequest.class, Context.class).get((HttpRequest) msg);
-                    ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT).set(context);
-                  } else {
-                    throw new IllegalArgumentException("unexpected request type: " + msg);
-                  }
-                  super.write(ctx, msg, promise);
-                }
-              });
-    } else {
+    if (codec instanceof HttpServerCodec) {
       // ensure we capture the server context and assign it to the outgoing request before offering
       // to the AsyncQueue;
       // not applicable to clients

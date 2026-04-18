@@ -25,6 +25,7 @@ import com.twitter.util.Time;
 import io.netty.handler.codec.http2.Http2StreamFrameToHttpObjectCodec;
 import io.netty.handler.timeout.ReadTimeoutException;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
@@ -116,8 +117,20 @@ abstract class AbstractClientTest extends AbstractHttpClientTest<Request> {
     optionsBuilder.spanEndsAfterBody();
     optionsBuilder.setClientSpanErrorMapper(
         (uri, error) -> {
-          if ("http://localhost:61/".equals(uri.toString())
-              || "https://192.0.2.1/".equals(uri.toString())) {
+          if (("http://localhost:" + PortUtils.UNUSABLE_PORT + "/").equals(uri.toString())) {
+            assertThat(error)
+                .isInstanceOf(Failure.class)
+                .cause()
+                .isInstanceOf(ConnectionFailedException.class)
+                .cause()
+                // this is a private class
+                // .isInstanceOf(io.netty.channel.AbstractChannel.AnnotatedConnectException.class)
+                .cause()
+                // On Linux: ConnectException, On Windows: ClosedChannelException
+                .isInstanceOfAny(ConnectException.class, ClosedChannelException.class);
+            error = error.getCause().getCause();
+          } else if ("https://192.0.2.1/".equals(uri.toString())
+              || "http://192.0.2.1/".equals(uri.toString())) {
             // finagle handles all these in com.twitter.finagle.netty4.ConnectionBuilder.build();
             // all errors emitted by the netty Bootstrap.connect() call are mapped to
             // twitter/finagle exceptions and handled accordingly;
@@ -131,11 +144,7 @@ abstract class AbstractClientTest extends AbstractHttpClientTest<Request> {
                 .isInstanceOf(ConnectionFailedException.class)
                 .cause()
                 // On Linux: ConnectException, On Windows: ClosedChannelException
-                .satisfies(
-                    cause -> {
-                      assertThat(cause)
-                          .isInstanceOfAny(ConnectException.class, ClosedChannelException.class);
-                    });
+                .isInstanceOfAny(ConnectException.class, ClosedChannelException.class);
             error = error.getCause().getCause();
           } else if (uri.getPath().endsWith("/read-timeout")) {
             // not a connect() exception like the above, so is not wrapped as above;
@@ -166,8 +175,9 @@ abstract class AbstractClientTest extends AbstractHttpClientTest<Request> {
       String method,
       URI uri,
       Map<String, String> headers,
-      HttpClientResult httpClientResult) {
-    doSendRequest(request, uri)
+      HttpClientResult httpClientResult)
+      throws Exception {
+    Await.ready(doSendRequest(request, uri), Duration.fromSeconds(30))
         .onSuccess(
             r -> {
               httpClientResult.complete(r.statusCode());
