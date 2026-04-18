@@ -16,7 +16,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import javax.annotation.Nullable;
 
-public class CouchbaseQuerySanitizer {
+class CouchbaseQuerySanitizer {
 
   private static final SqlQueryAnalyzer analyzer =
       SqlQueryAnalyzer.create(
@@ -79,11 +79,11 @@ public class CouchbaseQuerySanitizer {
     ANALYTICS_GET_STATEMENT = analyticsGetStatement;
   }
 
-  public static SqlQuery analyze(Object query) {
+  static SqlQuery analyze(Object query) {
     return analyzeInternal(query, false);
   }
 
-  public static SqlQuery analyzeWithSummary(Object query) {
+  static SqlQuery analyzeWithSummary(Object query) {
     return analyzeInternal(query, true);
   }
 

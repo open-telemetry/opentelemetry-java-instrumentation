@@ -36,7 +36,7 @@ public abstract class CouchbaseRequestInfo {
   @Nullable private String operationId;
   @Nullable private SocketAddress peerAddress;
 
-  public static CouchbaseRequestInfo create(
+  static CouchbaseRequestInfo create(
       @Nullable String bucket, Class<?> declaringClass, String methodName) {
     String operation =
         methodOperationNames
@@ -45,7 +45,7 @@ public abstract class CouchbaseRequestInfo {
     return new AutoValue_CouchbaseRequestInfo(bucket, null, null, operation, true);
   }
 
-  public static CouchbaseRequestInfo create(@Nullable String bucket, Object query) {
+  static CouchbaseRequestInfo create(@Nullable String bucket, Object query) {
     SqlQuery sqlQuery = emitOldDatabaseSemconv() ? CouchbaseQuerySanitizer.analyze(query) : null;
     SqlQuery sqlQueryWithSummary =
         emitStableDatabaseSemconv() ? CouchbaseQuerySanitizer.analyzeWithSummary(query) : null;
@@ -60,7 +60,7 @@ public abstract class CouchbaseRequestInfo {
     return className + "." + methodName;
   }
 
-  public static Context init(Context context, CouchbaseRequestInfo couchbaseRequest) {
+  static Context init(Context context, CouchbaseRequestInfo couchbaseRequest) {
     return context.with(KEY, couchbaseRequest);
   }
 
@@ -70,21 +70,21 @@ public abstract class CouchbaseRequestInfo {
   }
 
   @Nullable
-  public abstract String bucket();
+  abstract String bucket();
 
   @Nullable
-  public abstract SqlQuery getSqlQuery();
+  abstract SqlQuery getSqlQuery();
 
   @Nullable
-  public abstract SqlQuery getSqlQueryWithSummary();
+  abstract SqlQuery getSqlQueryWithSummary();
 
   @Nullable
-  public abstract String operation();
+  abstract String operation();
 
-  public abstract boolean isMethodCall();
+  abstract boolean isMethodCall();
 
   @Nullable
-  public String getLocalAddress() {
+  String getLocalAddress() {
     return localAddress;
   }
 
@@ -93,7 +93,7 @@ public abstract class CouchbaseRequestInfo {
   }
 
   @Nullable
-  public String getOperationId() {
+  String getOperationId() {
     return operationId;
   }
 
@@ -102,7 +102,7 @@ public abstract class CouchbaseRequestInfo {
   }
 
   @Nullable
-  public SocketAddress getPeerAddress() {
+  SocketAddress getPeerAddress() {
     return peerAddress;
   }
 
