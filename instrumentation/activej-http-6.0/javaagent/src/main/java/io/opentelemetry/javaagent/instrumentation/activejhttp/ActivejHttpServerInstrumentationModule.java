@@ -5,14 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.activejhttp;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
-import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
 public class ActivejHttpServerInstrumentationModule extends InstrumentationModule {
@@ -24,11 +22,5 @@ public class ActivejHttpServerInstrumentationModule extends InstrumentationModul
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ActivejAsyncServletInstrumentation());
-  }
-
-  @Override
-  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // added in 6.0
-    return hasClassesNamed("io.activej.http.HttpServer");
   }
 }

@@ -39,25 +39,36 @@ public class MyLibrary10InstrumentationModule extends InstrumentationModule {
   `Arrays.asList(...)` for multiple items and `Collections.singletonList(...)` for a single
   item.
 
-### `classLoaderMatcher()` — Version-Boundary Detection
+### `classLoaderMatcher()` — Multi-Version Library Split
 
-Override `classLoaderMatcher()` only when the instrumentation targets a specific library
-version range and muzzle cannot distinguish that range on its own. Typical cases are classes
-that were added, removed, renamed, or introduced by a library's own native OpenTelemetry
-instrumentation, but are not referenced by the helper classes muzzle inspects.
+Override `classLoaderMatcher()` only when **multiple instrumentation versions exist for the
+same library** and the module still needs an extra class-presence check to keep one versioned
+module from applying where another versioned module should win. If `typeMatcher()` or
+`classLoaderOptimization()` already differentiates the versions, do not add
+`classLoaderMatcher()`.
+
+Do not add `classLoaderMatcher()` just because muzzle mismatches in cross tests, to avoid
+debug logging, or as a generic optimization. In the common case, the type instrumentation
+already short-circuits when the library is absent, and muzzle handles wrong-version rejection.
 
 **Execution order**: `classLoaderMatcher()` runs **first** and should be very cheap. It is
 followed by `typeMatcher()`, then muzzle. Use `classLoaderMatcher()` to reject obvious
-non-matches before the more expensive checks run.
+non-matches only when a versioned sibling module would otherwise overlap.
 
 **Override it when**:
 
-- A landmark class was **added** in the target version and excludes older versions.
-- A landmark class was **removed** in a newer version and excludes newer versions.
-- A newer version ships **native OpenTelemetry instrumentation** and the agent should back off.
+- There are **multiple instrumentation modules for one library** and a landmark class is needed
+  to separate their supported version ranges.
+- A landmark class was **added** in the target version and excludes older sibling modules.
+- A landmark class was **removed** in a newer version and excludes newer sibling modules.
+- A newer version ships **native OpenTelemetry instrumentation** and the older module should
+  back off.
 
 **Do not override it for**:
 
+- Single-version libraries with no competing instrumentation module.
+- Cross-test-driven preconditions whose only purpose is to avoid muzzle mismatches.
+- Library-absent fast paths that `typeMatcher()` or `classLoaderOptimization()` already cover.
 - Method signature changes.
 - Parameter type changes.
 - Field removals.
@@ -65,7 +76,8 @@ non-matches before the more expensive checks run.
 
 #### Pattern A: Single Landmark Class
 
-This is the most common case: one class cleanly identifies the lower bound.
+This is the most common valid case: one class cleanly identifies which sibling versioned
+module should handle the library.
 
 ```java
 @Override
@@ -176,8 +188,8 @@ the 3.7 module from activating on 4.0+ classloaders. That is why the comment mus
 
 #### Pattern C: Exclude Newer Versions with Native Instrumentation
 
-Use `.and(not(hasClassesNamed(...)))` when the newer library version ships its own
-OpenTelemetry instrumentation and the agent should opt out.
+Use `.and(not(hasClassesNamed(...)))` when a newer sibling version ships its own
+OpenTelemetry instrumentation and the older module should opt out.
 
 ```java
 @Override
@@ -204,13 +216,16 @@ public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
 
 #### Rules for `classLoaderMatcher()`
 
-- **Do NOT add `classLoaderMatcher()` for optimization.** The "skip when library is absent"
-  optimization belongs on `TypeInstrumentation.classLoaderOptimization()`, not here.
-  `classLoaderMatcher()` is only for **version-boundary detection**. Most modules do not need
-  it.
+- **Do NOT add `classLoaderMatcher()` for optimization or to silence muzzle mismatches.** The
+  "skip when library is absent" optimization belongs on
+  `TypeInstrumentation.classLoaderOptimization()`, not here. `classLoaderMatcher()` is only for
+  separating **multiple instrumentation versions of the same library** when the type
+  instrumentation does not already do that. Most modules do not need it.
 - **Do NOT flag modules that omit `classLoaderMatcher()`.** The default (`any()`) is correct
-  when muzzle can detect the version boundary on its own. Only flag a missing override when
-  the module truly depends on an added or removed landmark class that muzzle does not inspect.
+  when there is no competing sibling module, or when `typeMatcher()`,
+  `classLoaderOptimization()`, or muzzle already separates the versions. Only flag a missing
+  override when sibling versioned modules would otherwise overlap and the module truly depends
+  on an added or removed landmark class that the other checks do not inspect.
 - **Version comments are required on landmark classes.** For multi-class checks, or whenever
   the landmark version differs from the module's base version, every `hasClassesNamed()` call
   needs a role comment. When the entire return expression is a single `hasClassesNamed(...)`

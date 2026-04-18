@@ -5,26 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.wicket;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
-import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
 public class WicketInstrumentationModule extends InstrumentationModule {
 
   public WicketInstrumentationModule() {
     super("wicket", "wicket-8.0");
-  }
-
-  @Override
-  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // added in 8.0
-    return hasClassesNamed("org.apache.wicket.request.RequestHandlerExecutor");
   }
 
   @Override
