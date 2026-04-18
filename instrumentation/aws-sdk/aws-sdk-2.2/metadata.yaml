@@ -25,7 +25,7 @@ configurations:
     type: list
     default: ''
   - name: otel.instrumentation.aws-sdk.experimental-span-attributes
-    declarative_name: java.aws_sdk.span_attributes/development
+    declarative_name: java.aws_sdk.experimental_span_attributes/development
     description: >
       Enables experimental span attributes `aws.agent`, `aws.lambda.function.arn` and
       `aws.lambda.function.name` for AWS SDK instrumentation.
