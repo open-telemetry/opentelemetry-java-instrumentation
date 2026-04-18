@@ -144,11 +144,8 @@ tasks {
     }
   }
 
-  test {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-
   withType<Test>().configureEach {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     // TODO run tests both with and without experimental span attributes
     jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
     systemProperty("testLatestDeps", otelProps.testLatestDeps)

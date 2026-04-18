@@ -125,7 +125,7 @@ class Aws0ClientTest {
     List<RequestHandler2> requestHandler2s = extractRequestHandlers(client);
 
     assertThat(requestHandler2s).isNotNull();
-    assertThat(requestHandler2s.size()).isEqualTo(size);
+    assertThat(requestHandler2s).hasSize(size);
     assertThat(requestHandler2s.stream().findFirst().get().getClass().getSimpleName())
         .isEqualTo("TracingRequestHandler");
   }
@@ -200,7 +200,7 @@ class Aws0ClientTest {
     List<RequestHandler2> requestHandler2s = extractRequestHandlers(client);
 
     assertThat(requestHandler2s).isNotNull();
-    assertThat(requestHandler2s.size()).isEqualTo(handlerCount);
+    assertThat(requestHandler2s).hasSize(handlerCount);
     assertThat(requestHandler2s.stream().findFirst().get().getClass().getSimpleName())
         .isEqualTo("TracingRequestHandler");
 
