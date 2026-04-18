@@ -43,7 +43,7 @@ import reactor.test.StepVerifier;
 class AzureSdkTest {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
   void testHelperClassesInjected() {
