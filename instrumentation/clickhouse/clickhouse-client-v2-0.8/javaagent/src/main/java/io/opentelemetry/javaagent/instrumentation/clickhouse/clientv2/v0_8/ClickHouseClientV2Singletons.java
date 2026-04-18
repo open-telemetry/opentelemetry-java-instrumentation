@@ -37,7 +37,7 @@ public class ClickHouseClientV2Singletons {
     return instrumenter;
   }
 
-  public static AddressAndPort getAddressAndPort(Client client) {
+  public static AddressAndPort addressAndPort(Client client) {
     return ADDRESS_AND_PORT.get(client);
   }
 

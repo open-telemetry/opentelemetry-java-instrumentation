@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8.ClickHouseClientV2Singletons.addressAndPort;
 import static io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8.ClickHouseClientV2Singletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isSubTypeOf;
@@ -55,7 +56,7 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
       // https://clickhouse.com/docs/integrations/language-clients/java/client#client-configuration
       // Currently, clientv2 supports only one endpoint. Since the endpoint is not going to change
       // we'll cache it in a virtual field.
-      AddressAndPort addressAndPort = ClickHouseClientV2Singletons.getAddressAndPort(client);
+      AddressAndPort addressAndPort = addressAndPort(client);
       if (addressAndPort == null) {
         String endpoint = client.getEndpoints().stream().findFirst().orElse(null);
         addressAndPort = ClickHouseClientV2Singletons.setAddressAndPort(client, endpoint);
