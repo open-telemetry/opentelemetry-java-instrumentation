@@ -71,3 +71,4 @@ cassandra-common-4.0:testing
 clickhouse-client-v2-0.8:javaagent
 couchbase-2-common:javaagent-unit-tests
 couchbase-2-common:javaagent
+couchbase-3.1.6:javaagent
