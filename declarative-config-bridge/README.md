@@ -91,9 +91,13 @@ First, there is a single defaults object that is unaware of the source of the co
 
 ```java
 InstrumentationDefaults defaults = new InstrumentationDefaults();
-defaults.setDefault("micrometer", "base_time_unit", "s");
-defaults.setDefault("log4j_appender", "experimental_log_attributes", "true");
+defaults.get("micrometer").setDefault("base_time_unit", "s");
+defaults.get("log4j_appender").setDefault("experimental_log_attributes", "true");
 ```
+
+Navigation mirrors `DeclarativeConfigProperties` — reading uses
+`config.getStructured("micrometer").getString("base_time_unit")`; writing defaults uses
+`defaults.get("micrometer").setDefault("base_time_unit", "s")`.
 
 Keys use underscore notation (matching the declarative config model). They are translated to
 hyphen notation (`otel.instrumentation.<name>.<key>`) when producing system property keys.

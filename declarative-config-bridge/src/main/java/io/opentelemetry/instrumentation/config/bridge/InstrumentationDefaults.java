@@ -18,12 +18,16 @@ import java.util.Map;
  * Defines instrumentation defaults that work with both traditional property-based configuration and
  * declarative configuration.
  *
+ * <p>Navigation mirrors {@link io.opentelemetry.api.incubator.config.DeclarativeConfigProperties}:
+ * read-side uses {@code config.getStructured(name).getString(key)}; write-side uses {@code
+ * defaults.get(name).setDefault(key, value)}.
+ *
  * <p>Usage:
  *
  * <pre>{@code
  * InstrumentationDefaults defaults = new InstrumentationDefaults();
- * defaults.setDefault("micrometer", "base_time_unit", "s");
- * defaults.setDefault("log4j_appender", "experimental_log_attributes", "true");
+ * defaults.get("micrometer").setDefault("base_time_unit", "s");
+ * defaults.get("log4j_appender").setDefault("experimental_log_attributes", "true");
  *
  * // Declarative config mode: inject into model
  * customizer.addModelCustomizer(model -> defaults.applyToModel(model));
@@ -34,18 +38,14 @@ import java.util.Map;
  */
 public final class InstrumentationDefaults {
 
-  private final Map<String, Map<String, String>> instrumentations = new LinkedHashMap<>();
+  private final Map<String, InstrumentationProperties> instrumentations = new LinkedHashMap<>();
 
   /**
-   * Sets a default value for an instrumentation property. Keys use underscore notation (e.g. {@code
-   * base_time_unit}); they are translated to hyphen notation when producing property keys.
-   *
-   * @return {@code this} for chaining
+   * Returns the defaults builder for the given instrumentation, creating it if absent. Mirrors
+   * {@code DeclarativeConfigProperties.getStructured(name)} on the read side.
    */
-  @CanIgnoreReturnValue
-  public InstrumentationDefaults setDefault(String instrumentation, String key, String value) {
-    instrumentations.computeIfAbsent(instrumentation, k -> new LinkedHashMap<>()).put(key, value);
-    return this;
+  public InstrumentationProperties get(String instrumentation) {
+    return instrumentations.computeIfAbsent(instrumentation, k -> new InstrumentationProperties());
   }
 
   /** Translates defaults to {@code otel.instrumentation.*} keys for auto-configuration. */
@@ -53,7 +53,7 @@ public final class InstrumentationDefaults {
     HashMap<String, String> map = new HashMap<>();
     instrumentations.forEach(
         (instrumentation, properties) ->
-            properties.forEach(
+            properties.properties.forEach(
                 (key, value) ->
                     map.put(
                         "otel.instrumentation."
@@ -89,9 +89,9 @@ public final class InstrumentationDefaults {
     Map<String, ExperimentalLanguageSpecificInstrumentationPropertyModel> props =
         java.getAdditionalProperties();
 
-    for (Map.Entry<String, Map<String, String>> entry : instrumentations.entrySet()) {
+    for (Map.Entry<String, InstrumentationProperties> entry : instrumentations.entrySet()) {
       String name = entry.getKey();
-      Map<String, String> defaults = entry.getValue();
+      Map<String, String> defaults = entry.getValue().properties;
 
       ExperimentalLanguageSpecificInstrumentationPropertyModel propModel = props.get(name);
       if (propModel == null) {
@@ -107,5 +107,26 @@ public final class InstrumentationDefaults {
     }
 
     return model;
+  }
+
+  /** Defaults for a single instrumentation. Keys use underscore notation. */
+  public static final class InstrumentationProperties {
+
+    private final Map<String, String> properties = new LinkedHashMap<>();
+
+    private InstrumentationProperties() {}
+
+    /**
+     * Sets a default value for a property. Keys use underscore notation (e.g. {@code
+     * base_time_unit}); they are translated to hyphen notation when producing {@code
+     * otel.instrumentation.*} keys.
+     *
+     * @return {@code this} for chaining
+     */
+    @CanIgnoreReturnValue
+    public InstrumentationProperties setDefault(String key, String value) {
+      properties.put(key, value);
+      return this;
+    }
   }
 }

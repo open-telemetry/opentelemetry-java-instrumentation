@@ -16,8 +16,8 @@ class InstrumentationDefaultsTest {
   @Test
   void toConfigProperties() {
     InstrumentationDefaults defaults = new InstrumentationDefaults();
-    defaults.setDefault("micrometer", "base_time_unit", "s");
-    defaults.setDefault("log4j_appender", "experimental_log_attributes", "true");
+    defaults.get("micrometer").setDefault("base_time_unit", "s");
+    defaults.get("log4j_appender").setDefault("experimental_log_attributes", "true");
 
     Map<String, String> props = defaults.toConfigProperties();
 
@@ -30,7 +30,7 @@ class InstrumentationDefaultsTest {
   @Test
   void applyToModel() {
     InstrumentationDefaults defaults = new InstrumentationDefaults();
-    defaults.setDefault("micrometer", "base_time_unit", "s");
+    defaults.get("micrometer").setDefault("base_time_unit", "s");
 
     OpenTelemetryConfigurationModel model = new OpenTelemetryConfigurationModel();
     defaults.applyToModel(model);
@@ -47,16 +47,15 @@ class InstrumentationDefaultsTest {
 
   @Test
   void applyToModelDoesNotOverrideExisting() {
-    InstrumentationDefaults defaults = new InstrumentationDefaults();
-    defaults.setDefault("micrometer", "base_time_unit", "s");
-
     // Pre-populate model with a different value
     OpenTelemetryConfigurationModel model = new OpenTelemetryConfigurationModel();
-    new InstrumentationDefaults()
-        .setDefault("micrometer", "base_time_unit", "ms")
-        .applyToModel(model);
+    InstrumentationDefaults seed = new InstrumentationDefaults();
+    seed.get("micrometer").setDefault("base_time_unit", "ms");
+    seed.applyToModel(model);
 
-    // Apply defaults — should not override
+    // Apply a conflicting default — should not override
+    InstrumentationDefaults defaults = new InstrumentationDefaults();
+    defaults.get("micrometer").setDefault("base_time_unit", "s");
     defaults.applyToModel(model);
 
     assertThat(
