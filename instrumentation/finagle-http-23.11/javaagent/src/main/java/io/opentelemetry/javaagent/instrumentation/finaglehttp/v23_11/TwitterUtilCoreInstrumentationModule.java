@@ -28,6 +28,9 @@ public class TwitterUtilCoreInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new PromiseKInstrumentation(), new PromiseInterruptibleInstrumentation());
+    return asList(
+        new PromiseKInstrumentation(),
+        new PromiseInterruptibleInstrumentation(),
+        new LocalSchedulerActivationInstrumentation());
   }
 }

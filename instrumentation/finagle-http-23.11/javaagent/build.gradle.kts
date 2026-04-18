@@ -32,9 +32,7 @@ dependencies {
 
   library("${scalified("com.twitter:finagle-http")}:$finagleVersion")
 
-  // should wire netty contexts
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
-  testInstrumentation(project(":instrumentation:scala-fork-join-2.8:javaagent"))
 
   implementation(project(":instrumentation:netty:netty-4.1:javaagent"))
   implementation(project(":instrumentation:netty:netty-4.1:library"))

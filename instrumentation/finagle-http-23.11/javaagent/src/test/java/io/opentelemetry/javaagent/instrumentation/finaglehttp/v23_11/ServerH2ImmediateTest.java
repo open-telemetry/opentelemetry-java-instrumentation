@@ -13,7 +13,7 @@ class ServerH2ImmediateTest extends ServerH2Test {
   @Override
   protected Http.Server configureServer(Http.Server in) {
     return super.configureServer(in)
-        // ensures all work is offloaded to a thread pool -- this is where problems can happen
+        // ensures all work is single threaded (simple case)
         .withExecutionOffloaded(FuturePool.immediatePool());
   }
 }

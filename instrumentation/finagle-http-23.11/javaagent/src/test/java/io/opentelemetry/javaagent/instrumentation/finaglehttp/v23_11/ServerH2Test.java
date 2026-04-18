@@ -38,7 +38,7 @@ class ServerH2Test extends AbstractServerTest {
 
   @Override
   protected Http.Server configureServer(Http.Server in) {
-    return in
+    return super.configureServer(in)
         // when enabled, supports protocol h1 & h2, the latter with upgrade
         .withHttp2()
         // todo implement http/2-specific tests
