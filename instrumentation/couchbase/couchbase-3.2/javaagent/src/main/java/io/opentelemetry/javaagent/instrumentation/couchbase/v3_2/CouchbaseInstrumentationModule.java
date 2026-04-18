@@ -23,12 +23,13 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // added in java-client 3.2.0 (core-io 2.2.0)
-    return hasClassesNamed("com.couchbase.client.core.cnc.RequestSpan$StatusCode")
-        // removed in java-client 3.4.0 (core-io 2.4.0)
+    return hasClassesNamed(
+            // added in java-client 3.2.0 (core-io 2.2.0)
+            "com.couchbase.client.core.cnc.RequestSpan$StatusCode")
         .and(
             not(
                 hasClassesNamed(
+                    // removed in java-client 3.4.0 (core-io 2.4.0)
                     "com.couchbase.client.core.transaction.components.CoreTransactionRequest")));
   }
 
