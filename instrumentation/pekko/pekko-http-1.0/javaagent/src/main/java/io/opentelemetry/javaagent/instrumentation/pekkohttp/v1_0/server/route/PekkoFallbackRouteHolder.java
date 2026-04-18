@@ -15,12 +15,14 @@ public class PekkoFallbackRouteHolder implements ImplicitContextKeyed {
   private static final ContextKey<PekkoFallbackRouteHolder> KEY =
       named("opentelemetry-pekko-route-fallback");
 
-  private PekkoRouteHolder fallback;
+  @Nullable private PekkoRouteHolder fallback;
 
+  @Nullable
   public static PekkoFallbackRouteHolder get(Context context) {
     return context.get(KEY);
   }
 
+  @Nullable
   public String route() {
     return fallback != null ? fallback.route() : null;
   }

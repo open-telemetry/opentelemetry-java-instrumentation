@@ -34,7 +34,7 @@ class DirectiveInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ApplyAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToReturned
     public static Function1<RequestContext, Future<RouteResult>> onExit(
         @Advice.Return Function1<RequestContext, Future<RouteResult>> route) {

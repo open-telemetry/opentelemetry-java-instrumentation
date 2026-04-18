@@ -22,7 +22,7 @@ import sttp.tapir.server.interceptor.Responder;
 import sttp.tapir.server.interceptor.SecurityFailureContext;
 import sttp.tapir.server.interpreter.BodyListener;
 
-public final class TapirRouteHandler<T, B> implements EndpointHandler<Future<T>, B> {
+public class TapirRouteHandler<T, B> implements EndpointHandler<Future<T>, B> {
   private static final Uri.Path EMPTY = Uri.Path$.MODULE$.apply("", Charset.defaultCharset());
   private final EndpointHandler<Future<T>, B> endpointHandler;
 

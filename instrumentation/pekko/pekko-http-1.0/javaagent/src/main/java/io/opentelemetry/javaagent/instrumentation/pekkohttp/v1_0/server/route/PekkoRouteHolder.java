@@ -23,8 +23,8 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
   private final LinkedList<String> paths = new LinkedList<>();
   private Uri.Path lastUnmatchedPath = null;
   private boolean lastWasMatched = false;
-  private final PekkoRouteHolder parent;
-  private PekkoRouteHolder override;
+  @Nullable private final PekkoRouteHolder parent;
+  @Nullable private PekkoRouteHolder override;
 
   public static PekkoRouteHolder create() {
     return new PekkoRouteHolder(null);
@@ -67,6 +67,7 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
     lastWasMatched = false;
   }
 
+  @Nullable
   public String route() {
     if (override != null) {
       return override.route();
@@ -120,7 +121,7 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
     return context.with(KEY, this);
   }
 
-  private PekkoRouteHolder(PekkoRouteHolder parent) {
+  private PekkoRouteHolder(@Nullable PekkoRouteHolder parent) {
     this.parent = parent;
   }
 }
