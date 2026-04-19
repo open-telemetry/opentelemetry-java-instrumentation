@@ -8,17 +8,22 @@ package io.opentelemetry.javaagent.instrumentation.internal.urlclassloader;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import java.net.URL;
 import java.net.URLClassLoader;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class AddUrlTest {
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Test
   void testShouldInstrumentClassAfterItIsLoadedViaAddUrl() throws Exception {
     TestUrlClassLoader loader = new TestUrlClassLoader();
+    cleanup.deferCleanup(loader);
 
     // this is just to verify the assumption that TestUrlClassLoader is not finding SystemUtils via
     // the test classpath (in which case the verification below would not be very meaningful)
