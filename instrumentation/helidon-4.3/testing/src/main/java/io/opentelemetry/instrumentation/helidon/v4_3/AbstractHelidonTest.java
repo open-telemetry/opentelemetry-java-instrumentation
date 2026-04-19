@@ -106,7 +106,7 @@ public abstract class AbstractHelidonTest extends AbstractHttpServerTest<WebServ
                     }));
 
     routing.get(
-        "/captureHeaders",
+        CAPTURE_HEADERS.getPath(),
         (req, res) ->
             testing()
                 .runWithSpan(
