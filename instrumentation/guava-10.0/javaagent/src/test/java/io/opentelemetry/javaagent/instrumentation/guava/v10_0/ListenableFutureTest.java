@@ -12,11 +12,11 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -24,15 +24,12 @@ import org.junit.jupiter.params.provider.ValueSource;
 // TODO: add a test for a longer chain of promises
 class ListenableFutureTest {
 
-  static final ExecutorService executor = Executors.newSingleThreadExecutor();
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
+  static final ExecutorService executor = createExecutor();
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
-
-  @AfterAll
-  static void shutdown() {
-    executor.shutdown();
-  }
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
@@ -193,5 +190,11 @@ class ListenableFutureTest {
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
+  }
+
+  private static ExecutorService createExecutor() {
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    cleanup.deferAfterAll(executor::shutdown);
+    return executor;
   }
 }
