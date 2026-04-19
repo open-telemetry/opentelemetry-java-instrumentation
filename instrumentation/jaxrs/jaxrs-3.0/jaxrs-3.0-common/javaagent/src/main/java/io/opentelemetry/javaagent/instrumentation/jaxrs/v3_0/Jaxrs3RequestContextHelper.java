@@ -13,9 +13,9 @@ import io.opentelemetry.javaagent.instrumentation.jaxrs.RequestContextHelper;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import javax.annotation.Nullable;
 
-public class Jaxrs3RequestContextHelper {
+class Jaxrs3RequestContextHelper {
   @Nullable
-  public static <T extends HandlerData> Context createOrUpdateAbortSpan(
+  static <T extends HandlerData> Context createOrUpdateAbortSpan(
       Instrumenter<T, Void> instrumenter, ContainerRequestContext requestContext, T handlerData) {
     requestContext.setProperty(JaxrsConstants.ABORT_HANDLED, true);
     return RequestContextHelper.createOrUpdateAbortSpan(instrumenter, handlerData);
