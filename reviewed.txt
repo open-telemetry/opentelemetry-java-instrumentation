@@ -157,3 +157,4 @@ internal-url-class-loader:javaagent-integration-tests
 hibernate-4.0:javaagent
 java-http-client:library
 java-http-client:javaagent
+java-http-client:testing
