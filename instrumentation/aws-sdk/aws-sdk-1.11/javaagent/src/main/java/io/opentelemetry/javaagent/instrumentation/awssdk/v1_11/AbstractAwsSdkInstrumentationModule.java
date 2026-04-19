@@ -37,7 +37,7 @@ abstract class AbstractAwsSdkInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // added in com.amazonaws:aws-java-sdk-core 1.10.33
+    // added in 1.10.33
     return hasClassesNamed("com.amazonaws.AmazonWebServiceClient");
   }
 
