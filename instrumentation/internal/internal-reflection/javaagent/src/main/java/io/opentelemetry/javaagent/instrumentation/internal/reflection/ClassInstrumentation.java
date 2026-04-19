@@ -91,8 +91,8 @@ class ClassInstrumentation implements TypeInstrumentation {
                         && "getInterfaces".equals(name)
                         && "java/lang/J9VMInternals".equals(owner)
                         && "(Ljava/lang/Class;)[Ljava/lang/Class;".equals(descriptor))) {
-                  mv.visitVarInsn(Opcodes.ALOAD, 0);
-                  mv.visitMethodInsn(
+                  super.visitVarInsn(Opcodes.ALOAD, 0);
+                  super.visitMethodInsn(
                       Opcodes.INVOKESTATIC,
                       Type.getInternalName(ReflectionHelper.class),
                       "filterInterfaces",
