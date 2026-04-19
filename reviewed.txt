@@ -128,3 +128,4 @@ gwt-2.0:javaagent
 helidon-4.3:testing
 helidon-4.3:library
 hibernate-3.3:javaagent
+hibernate-6.0:javaagent
