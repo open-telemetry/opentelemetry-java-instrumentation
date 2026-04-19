@@ -158,3 +158,4 @@ hibernate-4.0:javaagent
 java-http-client:library
 java-http-client:javaagent
 java-http-client:testing
+java-http-server:library
