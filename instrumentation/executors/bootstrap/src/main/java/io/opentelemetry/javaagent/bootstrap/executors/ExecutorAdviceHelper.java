@@ -101,15 +101,13 @@ public final class ExecutorAdviceHelper {
       VirtualField<T, PropagatedContext> virtualField,
       T task) {
     if (propagatedContext != null && throwable != null) {
-      /*
-       * Note: this may potentially clear somebody else's propagated context if we did not set it
-       * up in attachContextToTask because it was already present before us. This should be safe but
-       * may lead to non-attributed async work in some very rare cases.
-       *
-       * Alternative is to not clear propagated context here if we did not set it up in
-       * attachContextToTask, but this may potentially lead to memory leaks if callers do not
-       * properly handle exceptions.
-       */
+      // Note: this may potentially clear somebody else's propagated context if we did not set it
+      // up in attachContextToTask because it was already present before us. This should be safe but
+      // may lead to non-attributed async work in some very rare cases.
+      //
+      // Alternative is to not clear propagated context here if we did not set it up in
+      // attachContextToTask, but this may potentially lead to memory leaks if callers do not
+      // properly handle exceptions.
       propagatedContext.clear();
       // setting the field to null removes it from the fallback map
       virtualField.set(task, null);
