@@ -489,7 +489,7 @@ class SessionTest extends AbstractHibernateTest {
               return exception;
             });
 
-    assertThat(mappingException.getClass()).isEqualTo(MappingException.class);
+    assertThat(mappingException).isInstanceOf(MappingException.class);
 
     testing.waitAndAssertTraces(
         trace ->
