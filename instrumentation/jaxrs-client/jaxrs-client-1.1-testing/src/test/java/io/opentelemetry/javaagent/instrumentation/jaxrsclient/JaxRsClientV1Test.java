@@ -14,6 +14,7 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.GZIPContentEncodingFilter;
 import com.sun.jersey.api.client.filter.LoggingFilter;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
@@ -22,12 +23,13 @@ import java.net.URI;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JaxRsClientV1Test extends AbstractHttpClientTest<WebResource.Builder> {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private final Client client = buildClient(false);
   private final Client clientWithReadTimeout = buildClient(true);
@@ -42,6 +44,7 @@ class JaxRsClientV1Test extends AbstractHttpClientTest<WebResource.Builder> {
     client.addFilter(new LoggingFilter());
     client.addFilter(new GZIPContentEncodingFilter());
 
+    cleanup.deferAfterAll(client::destroy);
     return client;
   }
 
@@ -57,12 +60,6 @@ class JaxRsClientV1Test extends AbstractHttpClientTest<WebResource.Builder> {
           attributes.remove(NETWORK_PROTOCOL_VERSION);
           return attributes;
         });
-  }
-
-  @AfterAll
-  void tearDown() {
-    client.destroy();
-    clientWithReadTimeout.destroy();
   }
 
   private Client getClient(URI uri) {
