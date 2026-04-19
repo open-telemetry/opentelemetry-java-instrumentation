@@ -91,13 +91,56 @@ Add `examples` only for module-specific configs with non-obvious format (lists, 
 - WRONG: `otel.instrumentation.servlet.capture-request-parameters` + `java.servlet.capture_request_parameters/development`
 - RIGHT: `otel.instrumentation.servlet.experimental.capture-request-parameters` + `java.servlet.capture_request_parameters/development`
 
-### 2. Verify config is used
+### 2. Verify config is used and extract actual declarative path
 
 Search module source for `DeclarativeConfigUtil.getInstrumentationConfig()`, `config.getBoolean()`, etc.
 
-If a module has a dependency on other modules (for example, a "-common" module, check those as well since they may read the config.
+If a module has a dependency on other modules (for example, a "-common" module), check those as well since they may read the config.
 
-### 3. Verify type and default
+**Critical**: Extract the actual declarative path string from the code. For example:
+
+```java
+awsSdk.getBoolean(
+    "use_propagator_for_messaging/development",  // ← This is the actual path used in code
+    factory.legacyBooleanValue(
+        "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging"))
+```
+
+The declarative path in this example is `use_propagator_for_messaging/development` under the `aws_sdk` config namespace.
+
+### 3. Cross-check code implementation against conversion rules
+
+For each configuration found in step 2:
+
+1. Take the flat property name from the code (e.g., `otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging`)
+2. Apply the standard conversion rules from the "Standard Conversion" section above
+3. Compare the rule-derived path with the actual path string in the code
+4. If they don't match:
+   - **The code is likely wrong** (common error: dropping `experimental_` prefix)
+   - Flag this as needing both code fix AND metadata.yaml update
+
+**Example of code error**:
+
+```java
+// Code reads:
+awsSdk.getBoolean("use_propagator_for_messaging/development", ...)
+
+// But flat property is:
+"otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging"
+
+// Rule application:
+// 1. Strip "otel.instrumentation." → "aws-sdk.experimental-use-propagator-for-messaging"
+// 2. Replace "-" with "_" → "aws_sdk.experimental_use_propagator_for_messaging"
+// 3. "experimental-" is a prefix within segment → KEEP as "experimental_", add "/development"
+// 4. Result: "experimental_use_propagator_for_messaging/development"
+
+// ❌ Code has: "use_propagator_for_messaging/development" (missing experimental_ prefix)
+// ✓ Should be: "experimental_use_propagator_for_messaging/development"
+```
+
+When you find this discrepancy, both the code AND metadata.yaml need fixing.
+
+### 4. Verify type and default
 
 Match type and default value with actual code usage.
 
@@ -128,12 +171,13 @@ FAIL in ../instrumentation/liberty/liberty-20.0/metadata.yaml:
 
 ## Validation Outcomes
 
-| Issue                        | Action                                  |
-|------------------------------|-----------------------------------------|
-| Config not used              | Flag for removal                        |
-| Default/type mismatch        | Update metadata.yaml to match code      |
-| Missing config (in code)     | Add to metadata.yaml                    |
-| Experimental marker mismatch | Fix flat and declarative names to agree |
+| Issue                                  | Action                                                                           |
+|----------------------------------------|----------------------------------------------------------------------------------|
+| Config not used                        | Flag for removal                                                                 |
+| Default/type mismatch                  | Update metadata.yaml to match code                                               |
+| Missing config (in code)               | Add to metadata.yaml                                                             |
+| Experimental marker mismatch           | Fix flat and declarative names to agree                                          |
+| Code path ≠ rule-derived path          | Fix code to use correct path, then update metadata.yaml (common: missing `experimental_`) |
 
 ## Output Format
 
