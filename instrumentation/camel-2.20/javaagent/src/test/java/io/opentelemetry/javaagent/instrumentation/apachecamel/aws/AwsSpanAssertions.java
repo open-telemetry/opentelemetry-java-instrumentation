@@ -136,7 +136,8 @@ class AwsSpanAssertions {
                 SERVER_PORT,
                 val ->
                     val.satisfiesAnyOf(
-                        v -> val.isInstanceOf(Number.class), v -> assertThat(v).isNull())));
+                        v -> assertThat(v).isInstanceOf(Number.class),
+                        v -> assertThat(v).isNull())));
   }
 
   static SpanDataAssert sns(
@@ -160,6 +161,7 @@ class AwsSpanAssertions {
                 SERVER_PORT,
                 val ->
                     val.satisfiesAnyOf(
-                        v -> val.isInstanceOf(Number.class), v -> assertThat(v).isNull())));
+                        v -> assertThat(v).isInstanceOf(Number.class),
+                        v -> assertThat(v).isNull())));
   }
 }

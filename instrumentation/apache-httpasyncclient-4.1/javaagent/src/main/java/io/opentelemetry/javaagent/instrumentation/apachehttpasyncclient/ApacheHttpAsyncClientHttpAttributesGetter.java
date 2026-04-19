@@ -24,6 +24,7 @@ final class ApacheHttpAsyncClientHttpAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getUrlFull(ApacheHttpClientRequest request) {
     return request.getUrl();
   }

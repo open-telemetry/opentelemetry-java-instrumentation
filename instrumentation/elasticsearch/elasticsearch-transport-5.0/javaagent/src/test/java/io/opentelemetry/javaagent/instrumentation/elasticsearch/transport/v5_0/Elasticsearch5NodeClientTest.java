@@ -75,7 +75,7 @@ class Elasticsearch5NodeClientTest extends AbstractElasticsearchNodeClientTest {
   }
 
   @Override
-  public Client client() {
+  protected Client client() {
     return client;
   }
 

@@ -28,7 +28,7 @@ public class ActivejHttpServerInstrumentationModule extends InstrumentationModul
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // class which was added in 6.0, the minimum version we support.
+    // added in 6.0
     return hasClassesNamed("io.activej.http.HttpServer");
   }
 }

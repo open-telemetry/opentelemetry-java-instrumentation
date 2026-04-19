@@ -55,7 +55,7 @@ dependencies {
 
   // When updating, update above in plugins too
   implementation("com.diffplug.spotless:spotless-plugin-gradle:8.4.0")
-  implementation("com.google.guava:guava:33.5.0-jre")
+  implementation("com.google.guava:guava:33.6.0-jre")
   implementation("com.gradleup.shadow:shadow-gradle-plugin:9.4.1") {
     // plexus-xml 4.1+ pulls in Maven 4 API which uses JPMS-only service registration,
     // causing "No XmlService implementation found" in Gradle's classloader

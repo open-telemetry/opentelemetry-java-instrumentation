@@ -40,7 +40,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -74,18 +73,16 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
     environmentCouchbase = envBuilder(bucketCouchbase).build();
     clusterCouchbase =
         CouchbaseAsyncCluster.create(environmentCouchbase, singletonList("127.0.0.1"));
+    cleanup.deferAfterAll(environmentCouchbase::shutdown);
+    cleanup.deferAfterAll(
+        () ->
+            clusterCouchbase.disconnect().timeout(TIMEOUT_SECONDS, SECONDS).toBlocking().single());
 
     environmentMemcache = envBuilder(bucketMemcache).build();
     clusterMemcache = CouchbaseAsyncCluster.create(environmentMemcache, singletonList("127.0.0.1"));
-  }
-
-  @AfterAll
-  void cleanUpClusters() {
-    clusterCouchbase.disconnect().timeout(10, SECONDS).toBlocking().single();
-    environmentCouchbase.shutdown();
-
-    clusterMemcache.disconnect().timeout(10, SECONDS).toBlocking().single();
-    environmentMemcache.shutdown();
+    cleanup.deferAfterAll(environmentMemcache::shutdown);
+    cleanup.deferAfterAll(
+        () -> clusterMemcache.disconnect().timeout(TIMEOUT_SECONDS, SECONDS).toBlocking().single());
   }
 
   private CouchbaseAsyncCluster getCluster(BucketSettings bucketSettings) {

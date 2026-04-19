@@ -90,7 +90,7 @@ class AwsLambdaStreamHandlerTest {
                         .hasAttributesSatisfyingExactly(equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
-  static class RequestStreamHandlerTestImpl implements RequestStreamHandler {
+  private static class RequestStreamHandlerTestImpl implements RequestStreamHandler {
     @Override
     public void handleRequest(InputStream input, OutputStream output, Context context)
         throws IOException {

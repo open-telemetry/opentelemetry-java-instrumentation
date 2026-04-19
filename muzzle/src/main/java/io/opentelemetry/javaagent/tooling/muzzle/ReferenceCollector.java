@@ -269,6 +269,9 @@ public final class ReferenceCollector {
       @Nullable String className, Set<ClassRef> superTypes) {
     if (className != null && helperClassPredicate.isHelperClass(className)) {
       ClassRef reference = references.get(className);
+      if (reference == null) {
+        return;
+      }
       superTypes.add(reference);
 
       addSuperTypesThatAreAlsoHelperClasses(reference.getSuperClassName(), superTypes);
@@ -287,6 +290,9 @@ public final class ReferenceCollector {
       return true;
     }
     ClassRef reference = references.get(typeName);
+    if (reference == null) {
+      return false;
+    }
     if (hasLibrarySuperType(reference.getSuperClassName())) {
       return true;
     }

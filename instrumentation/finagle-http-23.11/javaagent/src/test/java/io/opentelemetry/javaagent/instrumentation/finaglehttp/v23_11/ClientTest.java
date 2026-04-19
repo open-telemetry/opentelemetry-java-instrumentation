@@ -145,11 +145,7 @@ class ClientTest extends AbstractHttpClientTest<Request> {
                 .isInstanceOf(ConnectionFailedException.class)
                 .cause()
                 // On Linux: ConnectException, On Windows: ClosedChannelException
-                .satisfies(
-                    cause -> {
-                      assertThat(cause)
-                          .isInstanceOfAny(ConnectException.class, ClosedChannelException.class);
-                    });
+                .isInstanceOfAny(ConnectException.class, ClosedChannelException.class);
             error = error.getCause().getCause().getCause();
           } else if (uri.getPath().endsWith("/read-timeout")) {
             // not a connect() exception like the above, so is not wrapped as above;

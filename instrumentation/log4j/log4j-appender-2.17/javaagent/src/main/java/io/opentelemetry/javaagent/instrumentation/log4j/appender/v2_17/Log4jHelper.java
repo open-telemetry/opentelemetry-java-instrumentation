@@ -40,6 +40,8 @@ public class Log4jHelper {
   static {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "log4j_appender");
+    DeclarativeConfigProperties comonConfig =
+        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "common");
 
     captureExperimentalAttributes =
         config.getBoolean("experimental_log_attributes/development", false);
@@ -51,6 +53,7 @@ public class Log4jHelper {
     List<String> captureContextDataAttributes =
         config.getScalarList("capture_mdc_attributes/development", String.class, emptyList());
     boolean captureEventName = config.getBoolean("capture_event_name/development", false);
+    boolean v3Preview = comonConfig.getBoolean("v3_preview", false);
     if (captureEventName) {
       logger.warning(
           "The otel.instrumentation.log4j-appender.experimental.capture-event-name setting is"
@@ -65,7 +68,8 @@ public class Log4jHelper {
             captureMapMessageAttributes,
             captureMarkerAttribute,
             captureContextDataAttributes,
-            captureEventName);
+            captureEventName,
+            v3Preview);
   }
 
   public static void capture(

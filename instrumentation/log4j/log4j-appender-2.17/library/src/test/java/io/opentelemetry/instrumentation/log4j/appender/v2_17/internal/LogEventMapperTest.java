@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class LogEventMapperTest {
 
@@ -34,7 +35,14 @@ class LogEventMapperTest {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE, false, false, false, false, emptyList(), false);
+            ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
+            false,
+            false,
+            emptyList(),
+            false,
+            false);
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
@@ -58,6 +66,7 @@ class LogEventMapperTest {
             false,
             false,
             singletonList("key2"),
+            false,
             false);
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
@@ -83,6 +92,7 @@ class LogEventMapperTest {
             false,
             false,
             singletonList("*"),
+            false,
             false);
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
@@ -114,7 +124,8 @@ class LogEventMapperTest {
             false,
             false,
             singletonList("key1"),
-            captureEventName);
+            captureEventName,
+            false);
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put(eventNameProperty, "MyEventName");
@@ -140,6 +151,7 @@ class LogEventMapperTest {
             false,
             false,
             singletonList("*"),
+            false,
             false);
 
     StringMapMessage message = new StringMapMessage();
@@ -156,12 +168,20 @@ class LogEventMapperTest {
     verifyNoMoreInteractions(builder);
   }
 
-  @Test
-  void testCaptureMapMessageWithSpecialAttribute() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void testCaptureMapMessageWithSpecialAttribute(boolean v3Preview) {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE, false, false, true, false, singletonList("*"), false);
+            ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
+            true,
+            false,
+            singletonList("*"),
+            false,
+            v3Preview);
 
     StringMapMessage message = new StringMapMessage();
     message.put("key1", "value1");
@@ -174,16 +194,25 @@ class LogEventMapperTest {
 
     // then
     verify(builder).setBody("value2");
-    verify(builder).setAttribute(stringKey("log4j.map_message.key1"), "value1");
+    verify(builder)
+        .setAttribute(stringKey(v3Preview ? "key1" : "log4j.map_message.key1"), "value1");
     verifyNoMoreInteractions(builder);
   }
 
-  @Test
-  void testCaptureMapMessageWithoutSpecialAttribute() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void testCaptureMapMessageWithoutSpecialAttribute(boolean v3Preview) {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE, false, false, true, false, singletonList("*"), false);
+            ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
+            true,
+            false,
+            singletonList("*"),
+            false,
+            v3Preview);
 
     StringMapMessage message = new StringMapMessage();
     message.put("key1", "value1");
@@ -196,17 +225,27 @@ class LogEventMapperTest {
 
     // then
     verify(builder, never()).setBody(anyString());
-    verify(builder).setAttribute(stringKey("log4j.map_message.key1"), "value1");
-    verify(builder).setAttribute(stringKey("log4j.map_message.key2"), "value2");
+    verify(builder)
+        .setAttribute(stringKey(v3Preview ? "key1" : "log4j.map_message.key1"), "value1");
+    verify(builder)
+        .setAttribute(stringKey(v3Preview ? "key2" : "log4j.map_message.key2"), "value2");
     verifyNoMoreInteractions(builder);
   }
 
-  @Test
-  void testCaptureStructuredDataMessage() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void testCaptureStructuredDataMessage(boolean v3Preview) {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE, false, false, true, false, singletonList("*"), false);
+            ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
+            true,
+            false,
+            singletonList("*"),
+            false,
+            v3Preview);
 
     StructuredDataMessage message = new StructuredDataMessage("an id", "a message", "a type");
     message.put("key1", "value1");
@@ -219,8 +258,10 @@ class LogEventMapperTest {
 
     // then
     verify(builder).setBody("a message");
-    verify(builder).setAttribute(stringKey("log4j.map_message.key1"), "value1");
-    verify(builder).setAttribute(stringKey("log4j.map_message.message"), "value2");
+    verify(builder)
+        .setAttribute(stringKey(v3Preview ? "key1" : "log4j.map_message.key1"), "value1");
+    verify(builder)
+        .setAttribute(stringKey(v3Preview ? "message" : "log4j.map_message.message"), "value2");
     verifyNoMoreInteractions(builder);
   }
 
