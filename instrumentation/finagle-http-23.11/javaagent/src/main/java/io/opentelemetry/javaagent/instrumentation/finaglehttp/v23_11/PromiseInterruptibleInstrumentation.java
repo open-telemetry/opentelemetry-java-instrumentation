@@ -43,7 +43,11 @@ class PromiseInterruptibleInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 1, readOnly = false)
             PartialFunction<Throwable, BoxedUnit> handler) {
       if (!(handler instanceof TwitterUtilCoreHelpers.InterruptibleWithContext)) {
-        handler = new TwitterUtilCoreHelpers.InterruptibleWithContext(Context.current(), handler);
+        Context context = Context.current();
+        handler =
+            context != Context.root()
+                ? new TwitterUtilCoreHelpers.InterruptibleWithContext(context, handler)
+                : handler;
       }
     }
   }

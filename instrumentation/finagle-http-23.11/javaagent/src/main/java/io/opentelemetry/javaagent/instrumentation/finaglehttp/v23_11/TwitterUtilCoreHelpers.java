@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import scala.Function0;
+import scala.Function1;
 import scala.PartialFunction;
 import scala.runtime.AbstractPartialFunction;
 import scala.runtime.BoxedUnit;
@@ -40,6 +41,17 @@ public class TwitterUtilCoreHelpers {
         return delegate.apply(x);
       }
     }
+  }
+
+  public static <T, O> Function1<T, O> wrap(Context context, Function1<T, O> fn) {
+    if (context == Context.root()) {
+      return fn;
+    }
+    return (t) -> {
+      try (Scope ignored = context.makeCurrent()) {
+        return fn.apply(t);
+      }
+    };
   }
 
   public static <T> Function0<T> wrap(Context context, Function0<T> fn) {

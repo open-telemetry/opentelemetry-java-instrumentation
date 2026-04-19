@@ -60,6 +60,8 @@ tasks {
     jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
     jvmArgs("-Dio.opentelemetry.context.enableStrictContext=true")
 
+    // force the netty event loop into constrained territory
+    systemProperty("io.netty.eventLoopThreads", "2")
     // ensure concurrent tests are competing for netty workers
     systemProperty("com.twitter.finagle.netty4.numWorkers", "2")
     // ensure concurrent tests are competing for offload pool workers
@@ -81,6 +83,8 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
     jvmArgs("-Dio.opentelemetry.context.enableStrictContext=true")
 
+    // force the netty event loop into constrained territory
+    systemProperty("io.netty.eventLoopThreads", "2")
     // ensure concurrent tests are competing for netty workers
     systemProperty("com.twitter.finagle.netty4.numWorkers", "2")
     // ensure concurrent tests are competing for offload pool workers
