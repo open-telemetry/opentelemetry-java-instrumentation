@@ -29,6 +29,8 @@ import io.vertx.core.Vertx;
 import jakarta.persistence.EntityManagerFactory;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.hibernate.reactive.stage.Stage;
 import org.junit.jupiter.api.AfterAll;
@@ -41,7 +43,6 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 
-@SuppressWarnings("InterruptedExceptionSwallowed")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractHibernateReactiveTest {
   private static final Logger logger = LoggerFactory.getLogger(AbstractHibernateReactiveTest.class);
@@ -135,7 +136,7 @@ public abstract class AbstractHibernateReactiveTest {
   }
 
   @Test
-  void testStage() throws Exception {
+  void testStage() throws ExecutionException, InterruptedException, TimeoutException {
     testing
         .runWithSpan(
             "parent",
@@ -158,7 +159,8 @@ public abstract class AbstractHibernateReactiveTest {
   }
 
   @Test
-  void testStageWithStatelessSession() throws Exception {
+  void testStageWithStatelessSession()
+      throws ExecutionException, InterruptedException, TimeoutException {
     testing
         .runWithSpan(
             "parent",
@@ -181,7 +183,8 @@ public abstract class AbstractHibernateReactiveTest {
   }
 
   @Test
-  void testStageSessionWithTransaction() throws Exception {
+  void testStageSessionWithTransaction()
+      throws ExecutionException, InterruptedException, TimeoutException {
     testing
         .runWithSpan(
             "parent",
@@ -204,7 +207,8 @@ public abstract class AbstractHibernateReactiveTest {
   }
 
   @Test
-  void testStageStatelessSessionWithTransaction() throws Exception {
+  void testStageStatelessSessionWithTransaction()
+      throws ExecutionException, InterruptedException, TimeoutException {
     testing
         .runWithSpan(
             "parent",
@@ -227,7 +231,7 @@ public abstract class AbstractHibernateReactiveTest {
   }
 
   @Test
-  void testStageOpenSession() throws Exception {
+  void testStageOpenSession() throws ExecutionException, InterruptedException, TimeoutException {
     CompletableFuture<Object> result = new CompletableFuture<>();
     testing.runWithSpan(
         "parent",
@@ -253,7 +257,8 @@ public abstract class AbstractHibernateReactiveTest {
   }
 
   @Test
-  void testStageOpenStatelessSession() throws Exception {
+  void testStageOpenStatelessSession()
+      throws ExecutionException, InterruptedException, TimeoutException {
     CompletableFuture<Object> result = new CompletableFuture<>();
     testing.runWithSpan(
         "parent",
