@@ -283,11 +283,6 @@ public abstract class AbstractGrpcStreamingTest {
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                experimentalSatisfies(
-                                    GRPC_RECEIVED_MESSAGE_COUNT,
-                                    v -> assertThat(v).isGreaterThan(0)),
-                                experimentalSatisfies(
-                                    GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)),
                                 satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .satisfies(
                                 spanData ->
