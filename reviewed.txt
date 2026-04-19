@@ -162,3 +162,4 @@ java-http-server:library
 java-http-server:javaagent
 java-http-server:testing
 java-util-logging:javaagent
+java-util-logging:shaded-stub-for-instrumenting
