@@ -3,7 +3,7 @@
 ## Quick Reference
 
 - Use when: test files (`**/src/test/**`) are in scope
-- Review focus: assertion style, test class visibility, resource cleanup patterns, attribute assertion patterns
+- Review focus: assertion style, test class visibility, test method signatures and throws clauses, resource cleanup patterns, attribute assertion patterns
 
 ## Assertion Framework
 
@@ -11,6 +11,16 @@
 - Test classes and methods should be package-private (no `public`).
 - Do not use AssertJ `.as(...)` descriptions or `.withFailMessage(...)` in tests.
   Prefer direct assertions whose failure output shows the unexpected values.
+
+## Test Method Throws Clauses
+
+- On methods annotated with `@Test`, keep the `throws` clause to a single exception type.
+  Do not declare multiple checked exception types on a test method.
+- Be as specific as possible. Prefer the narrowest single checked type that the test body
+  actually exposes instead of broad forms such as `throws Exception` or a multi-exception list.
+- If the test only blocks on `Future.get(...)` / `CompletableFuture.get(...)`, prefer refactoring to
+  `join()` or another non-checked wait path when that keeps the test clear, rather than widening the
+  test method to `throws Exception` just to avoid a multi-exception `throws` clause.
 
 ## Test Resource Cleanup
 
