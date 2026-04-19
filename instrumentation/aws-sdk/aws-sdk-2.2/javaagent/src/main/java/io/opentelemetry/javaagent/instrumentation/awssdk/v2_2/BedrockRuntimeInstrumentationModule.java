@@ -27,7 +27,6 @@ public class BedrockRuntimeInstrumentationModule extends AbstractAwsSdkInstrumen
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // added in 2.20.157
     return hasClassesNamed("software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient");
   }
 
