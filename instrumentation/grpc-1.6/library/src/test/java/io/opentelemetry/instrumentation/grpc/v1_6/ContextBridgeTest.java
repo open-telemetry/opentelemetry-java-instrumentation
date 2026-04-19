@@ -10,13 +10,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ContextBridgeTest {
   private static final ContextKey<String> ANIMAL = ContextKey.named("animal");
@@ -24,14 +23,16 @@ class ContextBridgeTest {
   private static final io.grpc.Context.Key<String> FOOD = io.grpc.Context.key("food");
   private static final io.grpc.Context.Key<String> COUNTRY = io.grpc.Context.key("country");
 
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
-
   private static ExecutorService otherThread;
 
   @BeforeAll
   static void setUp() {
     otherThread = Executors.newSingleThreadExecutor();
-    cleanup.deferAfterAll(otherThread::shutdown);
+  }
+
+  @AfterAll
+  static void tearDown() {
+    otherThread.shutdown();
   }
 
   @Test
