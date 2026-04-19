@@ -171,13 +171,13 @@ FAIL in ../instrumentation/liberty/liberty-20.0/metadata.yaml:
 
 ## Validation Outcomes
 
-| Issue                                  | Action                                                                           |
-|----------------------------------------|----------------------------------------------------------------------------------|
-| Config not used                        | Flag for removal                                                                 |
-| Default/type mismatch                  | Update metadata.yaml to match code                                               |
-| Missing config (in code)               | Add to metadata.yaml                                                             |
-| Experimental marker mismatch           | Fix flat and declarative names to agree                                          |
-| Code path ≠ rule-derived path          | Fix code to use correct path, then update metadata.yaml (common: missing `experimental_`) |
+| Issue                         | Action                                                                                    |
+|-------------------------------|-------------------------------------------------------------------------------------------|
+| Config not used               | Flag for removal                                                                          |
+| Default/type mismatch         | Update metadata.yaml to match code                                                        |
+| Missing config (in code)      | Add to metadata.yaml                                                                      |
+| Experimental marker mismatch  | Fix flat and declarative names to agree                                                   |
+| Code path ≠ rule-derived path | Fix code to use correct path, then update metadata.yaml (common: missing `experimental_`) |
 
 ## Output Format
 
