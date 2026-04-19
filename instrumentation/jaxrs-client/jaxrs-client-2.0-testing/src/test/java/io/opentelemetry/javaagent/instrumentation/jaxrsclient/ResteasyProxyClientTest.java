@@ -14,13 +14,13 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import java.net.URI;
 import java.util.Locale;
 import java.util.Map;
-import org.junit.jupiter.api.AfterAll;
 import javax.ws.rs.core.Response;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.specimpl.ResteasyUriBuilder;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ResteasyProxyClientTest extends AbstractHttpClientTest<ResteasyProxyResource> {
