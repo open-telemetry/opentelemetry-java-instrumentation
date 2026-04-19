@@ -25,6 +25,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.HSQLDB;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.regex.Pattern;
@@ -38,9 +39,7 @@ class SpringJpaTest {
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  AnnotationConfigApplicationContext context =
-      new AnnotationConfigApplicationContext(PersistenceConfig.class);
-  CustomerRepository repo = context.getBean(CustomerRepository.class);
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @Test
@@ -52,9 +51,15 @@ class SpringJpaTest {
     Customer customer = new Customer("Bob", "Anonymous");
     customer.setId(null);
 
+    AnnotationConfigApplicationContext context =
+        new AnnotationConfigApplicationContext(PersistenceConfig.class);
+    cleanup.deferCleanup(context);
+    CustomerRepository repo = context.getBean(CustomerRepository.class);
+    testing.clearData();
+
     boolean result = testing.runWithSpan("parent", () -> repo.findAll().iterator().hasNext());
 
-    assertThat(result).isEqualTo(false);
+    assertThat(result).isFalse();
 
     testing.waitAndAssertTraces(
         trace ->

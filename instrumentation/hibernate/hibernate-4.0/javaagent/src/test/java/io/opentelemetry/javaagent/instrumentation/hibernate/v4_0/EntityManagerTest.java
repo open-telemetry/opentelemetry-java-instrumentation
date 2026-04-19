@@ -30,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -42,15 +43,24 @@ import javax.persistence.NoResultException;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
 import org.hibernate.Version;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class EntityManagerTest extends AbstractHibernateTest {
 
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   static final EntityManagerFactory entityManagerFactory =
       Persistence.createEntityManagerFactory("test-pu");
+
+  @BeforeAll
+  static void setUpEntityManagerFactory() {
+    cleanup.deferAfterAll(entityManagerFactory::close);
+  }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @ParameterizedTest
