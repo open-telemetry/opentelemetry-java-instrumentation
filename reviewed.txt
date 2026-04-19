@@ -144,3 +144,4 @@ hystrix-1.4:javaagent
 http-url-connection:javaagent
 iceberg-1.8:testing
 internal-application-logger:javaagent
+internal-class-loader:compile-stub
