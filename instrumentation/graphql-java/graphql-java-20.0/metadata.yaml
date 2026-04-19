@@ -4,6 +4,10 @@ semantic_conventions:
   - GRAPHQL_SERVER_SPANS
 library_link: https://www.graphql-java.com/
 configurations:
+  - name: otel.instrumentation.graphql.capture-query
+    description: Whether to capture the query in `graphql.document` span attribute.
+    type: boolean
+    default: true
   - name: otel.instrumentation.graphql.query-sanitization.enabled
     description: Enables sanitization of sensitive information from queries so they aren't added as span attributes.
     type: boolean
