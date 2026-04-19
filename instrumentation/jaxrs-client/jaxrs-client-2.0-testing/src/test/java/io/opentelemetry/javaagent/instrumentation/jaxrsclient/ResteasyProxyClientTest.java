@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.jaxrsclient;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
@@ -15,6 +14,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import java.net.URI;
 import java.util.Locale;
 import java.util.Map;
+import org.junit.jupiter.api.AfterAll;
 import javax.ws.rs.core.Response;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -27,13 +27,12 @@ class ResteasyProxyClientTest extends AbstractHttpClientTest<ResteasyProxyResour
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
-
   private static final ResteasyClient client =
       new ResteasyClientBuilder().connectionPoolSize(4).build();
 
-  static {
-    cleanup.deferAfterAll(client::close);
+  @AfterAll
+  static void closeClient() {
+    client.close();
   }
 
   @Override
