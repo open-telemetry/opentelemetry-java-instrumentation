@@ -148,3 +148,4 @@ internal-application-logger:bootstrap
 influxdb-2.4:javaagent
 internal-class-loader:javaagent
 internal-class-loader:javaagent-integration-tests
+internal-lambda:javaagent
