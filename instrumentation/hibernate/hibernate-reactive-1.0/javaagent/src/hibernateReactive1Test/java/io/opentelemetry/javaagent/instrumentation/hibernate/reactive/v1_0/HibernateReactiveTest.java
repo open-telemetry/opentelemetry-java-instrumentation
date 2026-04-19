@@ -49,7 +49,7 @@ class HibernateReactiveTest {
   private static final String DB = "tempdb";
 
   @RegisterExtension
-  protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private static final Vertx vertx = Vertx.vertx();
   private static GenericContainer<?> container;
