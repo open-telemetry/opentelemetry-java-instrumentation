@@ -25,7 +25,7 @@ public class JerseyInstrumentationModule extends InstrumentationModule
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return hasClassesNamed(
-        // added in jaxrs-api 2.0
+        // added in JAX-RS 1.0, removed in JAX-RS 3.0 (renamed to jakarta.ws.rs.Path)
         "javax.ws.rs.Path",
         // added in jersey-server 2.0
         "org.glassfish.jersey.server.ContainerRequest");
