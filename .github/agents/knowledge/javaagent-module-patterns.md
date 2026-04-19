@@ -150,10 +150,10 @@ The compact form does **not** apply when matchers are chained (e.g., positive + 
 In that case, follow the multi-class rule: place each version comment directly above its
 class name string.
 
-When the positive matcher in a chain still has a **single inline class string**, keep that
-class on the `return hasClassesNamed("...")` line and place its version comment on the
-preceding line. Place the negated matcher's comment above the `.and(...)` call. This keeps
-the compact look for chained-with-single-positive shapes:
+Within a chain, each `hasClassesNamed("...")` call with a **single inline class string** —
+whether used directly, as `not(hasClassesNamed("..."))`, or inside `.and(...)` — should
+keep the class on one line and place its version comment on the line immediately above
+that call:
 
 ```java
 // added in 4.0.0.Final
@@ -162,9 +162,16 @@ return hasClassesNamed("io.netty.handler.codec.http.HttpMessage")
     .and(not(hasClassesNamed("io.netty.handler.codec.http.CombinedHttpHeaders")));
 ```
 
-Only break the positive class onto its own line (with the comment indented above it) when
-there are multiple positive classes, or when the chained landmark requires a multi-line
-two-line form (such as the artifact-presence-gate two-liner).
+```java
+// removed in 4.0
+return not(hasClassesNamed("io.vertx.core.Starter"))
+    // added in 5.0
+    .and(not(hasClassesNamed("io.vertx.core.http.impl.HttpClientConnectionInternal")));
+```
+
+Only break a class onto its own line (with the comment indented above it) when that call
+has multiple class strings, or when the chained landmark requires a multi-line two-line
+form (such as the artifact-presence-gate two-liner).
 
 **How to identify ceiling classes**: look for a **newer sibling module** for the same
 library, such as `mongo-4.0` next to `mongo-3.7`. If the newer module's
