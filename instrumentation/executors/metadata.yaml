@@ -10,10 +10,15 @@ features:
 - CONTEXT_PROPAGATION
 configurations:
   - name: otel.instrumentation.executors.include
+    declarative_name: java.executors.include
     description: List of Executor subclasses to be instrumented.
     type: list
     default: ""
+    examples:
+      - "com.example.CustomExecutor"
+      - "com.example.ExecutorOne,com.example.ExecutorTwo"
   - name: otel.instrumentation.executors.include-all
+    declarative_name: java.executors.include_all
     description: Whether to instrument all classes that implement the Executor interface.
     type: boolean
     default: false
