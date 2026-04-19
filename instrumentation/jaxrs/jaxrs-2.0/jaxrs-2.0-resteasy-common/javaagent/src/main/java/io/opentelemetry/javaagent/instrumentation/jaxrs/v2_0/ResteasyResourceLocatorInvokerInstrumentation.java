@@ -49,7 +49,7 @@ class ResteasyResourceLocatorInvokerInstrumentation implements TypeInstrumentati
       String name = LOCATOR_NAME.get(resourceInvoker);
       ResteasySpanName.INSTANCE.updateServerSpanName(currentContext, name);
 
-      // subresource locator returns a resources class that may have @Path annotations
+      // subresource locator returns a resource class that may have @Path annotations
       // append current path to jax-rs context path so that it would be present in the final path
       Context context =
           JaxrsContextPath.init(currentContext, JaxrsContextPath.prepend(currentContext, name));
