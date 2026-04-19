@@ -156,6 +156,8 @@ Auto-fix boundaries:
     already valid AssertJ assertions; do not wrap them in `assertThat(...).isTrue()`
   - AssertJ `.as(...)` descriptions and `.withFailMessage(...)` in tests — remove them
     and prefer direct assertions whose failure output already exposes the unexpected values
+  - `@Test` method `throws` clauses — limit them to a single exception type and keep that type as
+    specific as possible.
   - deterministic semconv constant handling aligned with repository rules
   - missing test-task wiring patterns with clear canonical form
   - missing `testInstrumentation` cross-version references — when a javaagent module belongs
