@@ -11,6 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -31,8 +32,9 @@ class ChannelTransportInstrumentation implements TypeInstrumentation {
   public static class WriteAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static Scope methodEnter() {
-      Option<Context> ref = Helpers.CONTEXT_LOCAL.apply();
+      Option<Context> ref = Helpers.contextLocal.apply();
       if (ref.isDefined()) {
         return ref.get().makeCurrent();
       }
@@ -40,7 +42,7 @@ class ChannelTransportInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
-    public static void methodExit(@Advice.Enter Scope scope) {
+    public static void methodExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

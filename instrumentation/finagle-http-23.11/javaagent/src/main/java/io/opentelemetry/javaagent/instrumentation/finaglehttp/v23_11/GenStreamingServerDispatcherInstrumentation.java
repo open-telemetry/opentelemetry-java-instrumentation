@@ -44,13 +44,13 @@ class GenStreamingServerDispatcherInstrumentation implements TypeInstrumentation
       // this works specifically in finagle's netty stack bc at this point the loop()
       // method is running on a netty thread with the necessary access to the
       // java-native ThreadLocal where the Context is stored
-      Helpers.CONTEXT_LOCAL.update(Context.current());
+      Helpers.contextLocal.update(Context.current());
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void methodExit() {
       // always clear this
-      Helpers.CONTEXT_LOCAL.clear();
+      Helpers.contextLocal.clear();
     }
   }
 }

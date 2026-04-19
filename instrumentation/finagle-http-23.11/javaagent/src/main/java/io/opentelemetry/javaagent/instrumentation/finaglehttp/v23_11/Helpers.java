@@ -27,10 +27,7 @@ public class Helpers {
 
   private static final VirtualField<ChannelHandler, ChannelHandler> CHANNEL_HANDLER =
       VirtualField.find(ChannelHandler.class, ChannelHandler.class);
-
-  private Helpers() {}
-
-  public static final Local<Context> CONTEXT_LOCAL = new Local<>();
+  public static final Local<Context> contextLocal = new Local<>();
 
   public static <C extends Channel> ChannelInitializer<C> wrapServer(ChannelInitializer<C> inner) {
     return new OpenTelemetryChannelInitializerDelegate<C>(inner) {
@@ -104,4 +101,6 @@ public class Helpers {
       }
     };
   }
+
+  private Helpers() {}
 }
