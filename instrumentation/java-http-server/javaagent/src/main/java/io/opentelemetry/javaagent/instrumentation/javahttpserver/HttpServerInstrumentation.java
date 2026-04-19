@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.javahttpserver;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.javahttpserver.JavaHttpServerSingletons.instrumentationFilters;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -19,11 +18,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class HttpServerInstrumentation implements TypeInstrumentation {
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("com.sun.net.httpserver.HttpServer");
-  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
