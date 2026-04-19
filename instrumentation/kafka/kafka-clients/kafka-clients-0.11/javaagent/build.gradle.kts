@@ -62,9 +62,25 @@ tasks {
     }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
 
     systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      excludeTestsMatching("KafkaClientPropagationDisabledTest")
+      excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
+    }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
   }
 
   test {
