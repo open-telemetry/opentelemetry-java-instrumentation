@@ -34,7 +34,7 @@ class ChannelTransportInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Scope methodEnter() {
-      Option<Context> ref = Helpers.contextLocal.apply();
+      Option<Context> ref = Helpers.contextLocal().apply();
       if (ref.isDefined()) {
         return ref.get().makeCurrent();
       }
