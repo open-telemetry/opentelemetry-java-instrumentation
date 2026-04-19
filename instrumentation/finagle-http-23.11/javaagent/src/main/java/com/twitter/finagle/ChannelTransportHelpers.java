@@ -9,9 +9,9 @@ import com.twitter.finagle.netty4.transport.ChannelTransport;
 
 /** Exposes the finagle-internal {@link ChannelTransport#HandlerName()}. */
 public class ChannelTransportHelpers {
-  private ChannelTransportHelpers() {}
-
   public static String getHandlerName() {
     return ChannelTransport.HandlerName();
   }
+
+  private ChannelTransportHelpers() {}
 }
