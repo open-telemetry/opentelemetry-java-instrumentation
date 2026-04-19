@@ -107,3 +107,4 @@ external-annotations:javaagent
 external-annotations:javaagent-unit-tests
 failsafe-3.0:library
 geode-1.4:javaagent
+finatra-2.9:javaagent
