@@ -54,7 +54,7 @@ class GeodeRegionInstrumentation implements TypeInstrumentation {
     private final Context context;
     private final Scope scope;
 
-    public AdviceScope(GeodeRequest request, Context context, Scope scope) {
+    private AdviceScope(GeodeRequest request, Context context, Scope scope) {
       this.request = request;
       this.context = context;
       this.scope = scope;
@@ -74,9 +74,7 @@ class GeodeRegionInstrumentation implements TypeInstrumentation {
     }
 
     public void end(@Nullable Throwable throwable) {
-      if (scope != null) {
-        scope.close();
-      }
+      scope.close();
       instrumenter().end(context, request, null, throwable);
     }
   }
