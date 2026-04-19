@@ -32,8 +32,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
 import javax.persistence.ParameterMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -49,10 +47,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class ProcedureCallTest {
 
   @RegisterExtension
-  protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  protected static SessionFactory sessionFactory;
-  protected static List<Value> prepopulated;
+  private static SessionFactory sessionFactory;
 
   @BeforeAll
   @SuppressWarnings("deprecation") // buildSessionFactory
@@ -61,22 +58,22 @@ class ProcedureCallTest {
 
     // Pre-populate the DB, so delete/update can be tested.
     Session writer = sessionFactory.openSession();
-    writer.beginTransaction();
-    prepopulated = new ArrayList<>();
-    for (int i = 0; i < 2; i++) {
-      prepopulated.add(new Value("Hello :) " + i));
-      writer.save(prepopulated.get(i));
+    try {
+      writer.beginTransaction();
+      for (int i = 0; i < 2; i++) {
+        writer.save(new Value("Hello :) " + i));
+      }
+      writer.getTransaction().commit();
+    } finally {
+      writer.close();
     }
-    writer.getTransaction().commit();
-    writer.close();
 
     // Create a stored procedure.
-    Connection conn = DriverManager.getConnection("jdbc:hsqldb:mem:test", "sa", "1");
-    Statement stmt = conn.createStatement();
-    stmt.execute(
-        "CREATE PROCEDURE TEST_PROC() MODIFIES SQL DATA BEGIN ATOMIC INSERT INTO Value VALUES (420, 'fred'); END");
-    stmt.close();
-    conn.close();
+    try (Connection conn = DriverManager.getConnection("jdbc:hsqldb:mem:test", "sa", "1");
+        Statement stmt = conn.createStatement()) {
+      stmt.execute(
+          "CREATE PROCEDURE TEST_PROC() MODIFIES SQL DATA BEGIN ATOMIC INSERT INTO Value VALUES (420, 'fred'); END");
+    }
   }
 
   @AfterAll
@@ -94,13 +91,16 @@ class ProcedureCallTest {
         "parent",
         () -> {
           Session session = sessionFactory.openSession();
-          session.beginTransaction();
+          try {
+            session.beginTransaction();
 
-          ProcedureCall call = session.createStoredProcedureCall("TEST_PROC");
-          call.getOutputs();
+            ProcedureCall call = session.createStoredProcedureCall("TEST_PROC");
+            call.getOutputs();
 
-          session.getTransaction().commit();
-          session.close();
+            session.getTransaction().commit();
+          } finally {
+            session.close();
+          }
         });
 
     testing.waitAndAssertTraces(
@@ -160,20 +160,23 @@ class ProcedureCallTest {
             "parent",
             () -> {
               Session session = sessionFactory.openSession();
-              session.beginTransaction();
+              try {
+                session.beginTransaction();
 
-              ProcedureCall call = session.createStoredProcedureCall("TEST_PROC");
-              ParameterRegistration<Long> parameterRegistration =
-                  call.registerParameter("nonexistent", Long.class, ParameterMode.IN);
-              parameterRegistration.bindValue(420L);
+                ProcedureCall call = session.createStoredProcedureCall("TEST_PROC");
+                ParameterRegistration<Long> parameterRegistration =
+                    call.registerParameter("nonexistent", Long.class, ParameterMode.IN);
+                parameterRegistration.bindValue(420L);
 
-              Throwable thrown = catchThrowable(call::getOutputs);
+                Throwable thrown = catchThrowable(call::getOutputs);
 
-              assertThat(thrown).isInstanceOf(SQLGrammarException.class);
+                assertThat(thrown).isInstanceOf(SQLGrammarException.class);
 
-              session.getTransaction().commit();
-              session.close();
-              return thrown;
+                session.getTransaction().commit();
+                return thrown;
+              } finally {
+                session.close();
+              }
             });
 
     testing.waitAndAssertTraces(
