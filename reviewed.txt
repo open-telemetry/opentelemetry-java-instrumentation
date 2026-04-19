@@ -152,3 +152,4 @@ internal-lambda:javaagent
 internal-eclipse-osgi-3.6:javaagent
 internal-reflection:javaagent
 internal-reflection:javaagent-integration-tests
+internal-url-class-loader:javaagent
