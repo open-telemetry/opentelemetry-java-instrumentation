@@ -4788,6 +4788,7 @@ libraries:
   - com.graphql-java:graphql-java:[12,20)
   configurations:
   - name: otel.instrumentation.graphql.capture-query
+    declarative_name: java.graphql.capture_query
     description: Whether to capture the query in `graphql.document` span attribute.
     type: boolean
     default: true
@@ -4803,11 +4804,6 @@ libraries:
       Whether GraphQL operation name is added to the span name. WARNING: The GraphQL operation name is provided by the client and can have high cardinality. Use only when the server is not exposed to malicious clients.
     type: boolean
     default: false
-  - name: otel.instrumentation.graphql.capture-query
-    declarative_name: java.graphql.capture_query
-    description: Whether to capture the query in the `graphql.document` span attribute.
-    type: boolean
-    default: true
   telemetry:
   - when: default
     spans:
