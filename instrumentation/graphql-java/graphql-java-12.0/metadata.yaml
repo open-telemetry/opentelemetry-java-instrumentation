@@ -5,6 +5,7 @@ semantic_conventions:
 library_link: https://www.graphql-java.com/
 configurations:
   - name: otel.instrumentation.graphql.capture-query
+    declarative_name: java.graphql.capture_query
     description: Whether to capture the query in `graphql.document` span attribute.
     type: boolean
     default: true
@@ -21,8 +22,3 @@ configurations:
       clients.
     type: boolean
     default: false
-  - name: otel.instrumentation.graphql.capture-query
-    declarative_name: java.graphql.capture_query
-    description: Whether to capture the query in the `graphql.document` span attribute.
-    type: boolean
-    default: true
