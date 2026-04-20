@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
-import static io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11.Utils.createClient;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Collections.emptySet;
@@ -13,7 +12,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.twitter.finagle.ConnectionFailedException;
 import com.twitter.finagle.Failure;
-import com.twitter.finagle.Http;
 import com.twitter.finagle.ReadTimedOutException;
 import com.twitter.finagle.Service;
 import com.twitter.finagle.http.Request;
@@ -21,7 +19,6 @@ import com.twitter.finagle.http.Response;
 import com.twitter.util.Await;
 import com.twitter.util.Duration;
 import com.twitter.util.Future;
-import com.twitter.util.Time;
 import io.netty.handler.codec.http2.Http2StreamFrameToHttpObjectCodec;
 import io.netty.handler.timeout.ReadTimeoutException;
 import io.opentelemetry.api.common.AttributeKey;
@@ -39,8 +36,6 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 /**
@@ -58,40 +53,19 @@ abstract class AbstractClientTest extends AbstractHttpClientTest<Request> {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  private final Map<ClientType, Service<Request, Response>> clients = new ConcurrentHashMap<>();
-
-  // finagle Services are closeable, but are bound to a host + port;
-  // as these are only known during the invocation of the test, each test must create and then
-  // tear down their respective Services.
-  //
-  // however, the underlying netty bits are reused between Services by default, so "close"
-  // works out to a more "virtual" operation than with other client libraries.
-  @AfterEach
-  void tearDown() throws Exception {
-    for (Service<Request, Response> client : clients.values()) {
-      Await.ready(client.close(Time.fromSeconds(10)));
-    }
-    clients.clear();
-  }
+  /** Concrete subclasses provide their per-class client extension. */
+  protected abstract FinagleClientExtension clientExtension();
 
   private Service<Request, Response> getClient(URI uri) {
-    return getClient(uri, uri.getScheme().equals("https") ? ClientType.TLS : ClientType.DEFAULT);
+    return clientExtension().getService(uri);
   }
 
   private Service<Request, Response> getClient(URI uri, ClientType clientType) {
-    return clients.computeIfAbsent(
-        clientType,
-        (type) ->
-            configureClient(createClient(type))
-                .newService(uri.getHost() + ":" + Utils.safePort(uri)));
+    return clientExtension().getService(uri, clientType);
   }
 
   private Future<Response> doSendRequest(Request request, URI uri) {
     return getClient(uri).apply(request);
-  }
-
-  protected Http.Client configureClient(Http.Client client) {
-    return client;
   }
 
   @Override

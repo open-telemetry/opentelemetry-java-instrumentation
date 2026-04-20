@@ -22,11 +22,6 @@ public class TwitterUtilCoreInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public String getModuleGroup() {
-    return "netty";
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new FutureInstrumentation(),

@@ -18,6 +18,10 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
+/**
+ * Instruments the local scheduler submissions. Other Scheduler types are handled indirectly by Java
+ * Executor instrumentation.
+ */
 class LocalSchedulerActivationInstrumentation implements TypeInstrumentation {
 
   @Override

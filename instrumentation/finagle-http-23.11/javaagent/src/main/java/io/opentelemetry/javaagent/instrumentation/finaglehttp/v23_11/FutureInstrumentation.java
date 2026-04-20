@@ -19,10 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import scala.Function1;
 import scala.runtime.BoxedUnit;
 
-/**
- * Instruments the Promise state machine so that all chains in the Futures/Fibers are
- * otel-Context-coherent.
- */
+/** Instruments additional Future types that aren't captured by Promise.K. */
 class FutureInstrumentation implements TypeInstrumentation {
 
   @Override

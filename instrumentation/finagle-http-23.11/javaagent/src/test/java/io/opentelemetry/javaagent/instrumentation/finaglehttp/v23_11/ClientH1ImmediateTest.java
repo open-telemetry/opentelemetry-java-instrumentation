@@ -5,14 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
-import com.twitter.finagle.Http;
 import com.twitter.util.FuturePool;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-class ClientH1ImmediateTest extends ClientH1Test {
+class ClientH1ImmediateTest extends AbstractClientTest {
+
+  @RegisterExtension
+  static final FinagleClientExtension CLIENT =
+      new FinagleClientExtension(
+          // ensures all work is single threaded (simple case)
+          client -> client.withNoHttp2().withExecutionOffloaded(FuturePool.immediatePool()));
+
   @Override
-  protected Http.Client configureClient(Http.Client client) {
-    return super.configureClient(client)
-        // ensures all work is single threaded (simple case)
-        .withExecutionOffloaded(FuturePool.immediatePool());
+  protected FinagleClientExtension clientExtension() {
+    return CLIENT;
   }
 }

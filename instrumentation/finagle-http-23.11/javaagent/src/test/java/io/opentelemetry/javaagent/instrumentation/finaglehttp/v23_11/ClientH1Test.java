@@ -6,12 +6,18 @@
 package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
 import com.twitter.finagle.Http;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ClientH1Test extends AbstractClientTest {
+
+  @RegisterExtension
+  static final FinagleClientExtension CLIENT =
+      new FinagleClientExtension(
+          // see note on AbstractClientTest about http/2
+          Http.Client::withNoHttp2);
+
   @Override
-  protected Http.Client configureClient(Http.Client client) {
-    return super.configureClient(client)
-        // see note on AbstractClientTest
-        .withNoHttp2();
+  protected FinagleClientExtension clientExtension() {
+    return CLIENT;
   }
 }

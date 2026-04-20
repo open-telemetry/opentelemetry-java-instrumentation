@@ -84,7 +84,7 @@ public class Helpers {
   }
 
   /*
-  Bridges the netty instrumentation to the finagle-netty integration.
+  Bridges the netty instrumentation to the finagle-netty integration (for h2).
    */
   public static <C extends Channel> ChannelInitializer<C> wrapClient(ChannelInitializer<C> inner) {
     return new OpenTelemetryChannelInitializerDelegate<C>(inner) {
@@ -124,7 +124,7 @@ public class Helpers {
   }
 
   /*
-  Part 1/3 of bridging the otel Context from netty to finagle.
+  Part 1/3 of bridging the otel Context from netty to finagle (for h2).
    */
   public static void mutateHandlerPipeline(Channel ch) {
     ChannelHandler codec = ch.pipeline().get(Netty4HttpPackageHelpers.getHttpCodecName());
