@@ -11,6 +11,10 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.resteasy.common.v2_0.ResteasyResourceLocatorInvokerInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.resteasy.common.v2_0.ResteasyResourceMethodInvokerInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.resteasy.common.v2_0.ResteasyRootNodeTypeInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.resteasy.common.v2_0.ResteasyServletContainerDispatcherInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
