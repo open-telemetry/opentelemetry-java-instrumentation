@@ -29,6 +29,8 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // in GraphInterpreterInstrumentation we instrument a class that belongs to akka-streams, make
+    // sure this runs only when akka-http is present to avoid muzzle failures
     // added in 10.0.0
     return hasClassesNamed("akka.http.scaladsl.HttpExt");
   }
