@@ -72,10 +72,8 @@ class InvocationInstrumentation implements TypeInstrumentation {
       }
 
       public void end(@Nullable Throwable throwable) {
-        if (callDepth.decrementAndGet() > 0
-            || request == null
-            || context == null
-            || scope == null) {
+        // when no tracing scope is started, request and context are also null
+        if (callDepth.decrementAndGet() > 0 || scope == null) {
           return;
         }
         scope.close();
