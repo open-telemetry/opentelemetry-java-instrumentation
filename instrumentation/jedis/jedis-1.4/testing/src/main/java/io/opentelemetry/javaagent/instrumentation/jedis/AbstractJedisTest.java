@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.io.IOException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,7 +55,8 @@ public abstract class AbstractJedisTest {
   }
 
   @AfterAll
-  static void cleanup() {
+  static void cleanup() throws IOException {
+    jedis.disconnect();
     REDIS_SERVER.stop();
   }
 
