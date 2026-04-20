@@ -231,3 +231,4 @@ jms-3.0:javaagent
 jms-1.1:javaagent
 jms-common:javaagent-unit-tests
 jms-common:javaagent
+testing-apps:camel-testing-app
