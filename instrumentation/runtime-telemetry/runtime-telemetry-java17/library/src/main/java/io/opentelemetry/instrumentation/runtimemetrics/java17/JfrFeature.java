@@ -17,9 +17,10 @@ import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetry;
  * @deprecated Use {@link RuntimeTelemetry#builder(io.opentelemetry.api.OpenTelemetry)} in the
  *     {@code runtime-telemetry} module instead. To enable experimental features, use {@link
  *     io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental#setEmitExperimentalMetrics(io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetryBuilder,
- *     boolean)}. To enable JFR collection for metrics that overlap with JMX, use {@link
- *     io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental#setPreferJfrMetrics(io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetryBuilder,
- *     boolean)}. To disable specific metrics, configure metric views.
+ *     boolean)}. When using runtime-telemetry autoconfiguration, use {@code
+ *     otel.instrumentation.runtime-telemetry.jfr.enabled=true} or {@code
+ *     otel.instrumentation.runtime-telemetry.jfr.enable-all=true}. To disable specific metrics,
+ *     configure metric views.
  */
 @Deprecated
 public enum JfrFeature {

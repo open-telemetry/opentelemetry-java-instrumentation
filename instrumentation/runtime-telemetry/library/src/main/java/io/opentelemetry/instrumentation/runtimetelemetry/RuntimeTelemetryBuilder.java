@@ -39,9 +39,6 @@ public final class RuntimeTelemetryBuilder {
     Experimental.internalSetEmitExperimentalMetrics(
         (builder, emit) -> {
           builder.emitExperimentalMetrics = emit;
-          if (emit) {
-            builder.jfrConfig.enableExperimentalFeatures();
-          }
         });
     Experimental.internalSetPreferJfrMetrics(
         (builder, prefer) -> builder.preferJfrMetrics = prefer);

@@ -64,9 +64,9 @@ public final class RuntimeMetricsBuilder {
    *
    * @deprecated Use {@link RuntimeTelemetry#builder(OpenTelemetry)} in the {@code
    *     runtime-telemetry} module instead. To enable experimental features, use {@link
-   *     Experimental#setEmitExperimentalMetrics(RuntimeTelemetryBuilder, boolean)}. To enable JFR
-   *     collection for metrics that overlap with JMX, use {@link
-   *     Experimental#setPreferJfrMetrics(RuntimeTelemetryBuilder, boolean)}.
+   *     Experimental#setEmitExperimentalMetrics(RuntimeTelemetryBuilder, boolean)}. When using
+   *     runtime-telemetry autoconfiguration, use {@code
+   *     otel.instrumentation.runtime-telemetry.jfr.enable-all=true} to enable all JFR metrics.
    */
   @Deprecated
   @CanIgnoreReturnValue
@@ -80,10 +80,11 @@ public final class RuntimeMetricsBuilder {
    *
    * @deprecated Use {@link RuntimeTelemetry#builder(OpenTelemetry)} in the {@code
    *     runtime-telemetry} module instead. To enable experimental features, use {@link
-   *     Experimental#setEmitExperimentalMetrics(RuntimeTelemetryBuilder, boolean)}. To enable JFR
-   *     collection for metrics that overlap with JMX, use {@link
-   *     Experimental#setPreferJfrMetrics(RuntimeTelemetryBuilder, boolean)}. To disable specific
-   *     metrics, configure metric views.
+   *     Experimental#setEmitExperimentalMetrics(RuntimeTelemetryBuilder, boolean)}. When using
+   *     runtime-telemetry autoconfiguration, use {@code
+   *     otel.instrumentation.runtime-telemetry.jfr.enabled=true} or {@code
+   *     otel.instrumentation.runtime-telemetry.jfr.enable-all=true}. To disable specific metrics,
+   *     configure metric views.
    */
   @Deprecated
   @CanIgnoreReturnValue

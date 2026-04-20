@@ -87,6 +87,29 @@ meter_provider:
 
 ## Metrics
 
+### Configuration
+
+The set of emitted metrics depends on three independent knobs. In autoconfigured
+environments, these map to system properties; programmatically, use the corresponding
+builder methods.
+
+- `otel.instrumentation.runtime-telemetry.emit-experimental-metrics=true`
+  (`emitExperimentalMetrics()`): enables additional JMX-based metrics that are not yet
+  stable in the semantic conventions.
+- `otel.instrumentation.runtime-telemetry.jfr.enabled=true` (Java 17+): enables the
+  default set of JFR-based metrics. These metrics have no JMX equivalent, so they
+  complement the JMX metrics without duplication.
+- `otel.instrumentation.runtime-telemetry.jfr.enable-all=true` (Java 17+): additionally
+  sources metrics from JFR instead of JMX wherever a JFR equivalent exists (see
+  [JFR-based (Overlap with JMX)](#jfr-based-overlap-with-jmx) below). The corresponding
+  JMX metrics are suppressed.
+
+> **Warning**: JFR events might not be available for all JVMs or with a GraalVM native
+> image, therefore limiting the produced metrics. The original implementation was done
+> for Hotspot. OpenJ9 currently (Nov. 2025) only has the VM-level JFR implementation. So
+> events emitted at the Java level (ie. in jdk.jfr) will not be present. Meaning,
+> jdk.SocketRead, jdk.SocketWrite won't work.
+
 ### Stable Metrics (enabled by default)
 
 These metrics are collected via JMX on all Java versions:
@@ -107,9 +130,7 @@ These metrics are collected via JMX on all Java versions:
 
 ### Experimental Metrics
 
-These metrics are enabled with `emitExperimentalMetrics()`:
-
-**JMX-based (all Java versions):**
+#### JMX-based (all Java versions)
 
 | Metric | Description |
 | -------- | ----------- |
@@ -119,12 +140,7 @@ These metrics are enabled with `emitExperimentalMetrics()`:
 | `jvm.memory.init` | Measure of initial memory requested |
 | `jvm.system.cpu.utilization` | System-wide CPU utilization |
 
-**JFR-based (Java 17+ only):**
-
-> **Warning**: JFR events might not be available for all JVMs or with a GraalVM native image,
-> therefore limiting the produced metrics. The original implementation was done for Hotspot. OpenJ9
-> currently (Nov. 2025) only has the VM-level JFR implementation. So events emitted at the Java
-> level (ie. in jdk.jfr) will not be present. Meaning, jdk.SocketRead, jdk.SocketWrite won't work.
+#### JFR-based (Java 17+ only)
 
 | Metric | Description |
 | -------- | ----------- |
@@ -133,6 +149,30 @@ These metrics are enabled with `emitExperimentalMetrics()`:
 | `jvm.memory.allocation` | Memory allocation rate |
 | `jvm.network.io` | Network I/O bytes |
 | `jvm.network.time` | Network I/O time |
+
+#### JFR-based (Overlap with JMX)
+
+When `jfr.enable-all=true`, the following metrics are sourced from JFR instead of JMX
+(the JMX-based registration is suppressed to avoid duplicates):
+
+| Metric |
+| -------- |
+| `jvm.buffer.count` |
+| `jvm.buffer.memory.limit` |
+| `jvm.buffer.memory.used` |
+| `jvm.class.count` |
+| `jvm.class.loaded` |
+| `jvm.class.unloaded` |
+| `jvm.cpu.count` |
+| `jvm.cpu.recent_utilization` |
+| `jvm.gc.duration` |
+| `jvm.memory.committed` |
+| `jvm.memory.init` |
+| `jvm.memory.limit` |
+| `jvm.memory.used` |
+| `jvm.memory.used_after_last_gc` |
+| `jvm.system.cpu.utilization` |
+| `jvm.thread.count` |
 
 ## Garbage Collector Dependent Metrics
 

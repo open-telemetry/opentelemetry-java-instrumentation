@@ -23,13 +23,13 @@ public final class Experimental {
   private static volatile BiConsumer<RuntimeTelemetryBuilder, Boolean> setPreferJfrMetrics;
 
   /**
-   * Sets whether experimental metrics should be emitted. Experimental metrics are those not marked
-   * as stable in the <a
+   * Sets whether experimental JMX-based metrics should be emitted. Experimental metrics are those
+   * not marked as stable in the <a
    * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/runtime/jvm-metrics.md">semantic
    * conventions</a>.
    *
    * @param builder the runtime telemetry builder
-   * @param emitExperimentalMetrics {@code true} to emit experimental metrics
+   * @param emitExperimentalMetrics {@code true} to emit experimental JMX metrics
    */
   public static void setEmitExperimentalMetrics(
       RuntimeTelemetryBuilder builder, boolean emitExperimentalMetrics) {
