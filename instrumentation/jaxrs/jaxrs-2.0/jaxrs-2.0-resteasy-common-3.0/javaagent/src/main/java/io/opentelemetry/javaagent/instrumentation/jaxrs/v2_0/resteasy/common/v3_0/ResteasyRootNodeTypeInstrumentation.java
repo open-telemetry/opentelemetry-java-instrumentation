@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jaxrs.resteasy.common.v3_0;
+package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.resteasy.common.v3_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.resteasy.common.v3_0.ResteasySingletons.INVOKER_NAME;
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.resteasy.common.v3_0.ResteasySingletons.LOCATOR_NAME;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.resteasy.common.v3_0.ResteasySingletons.INVOKER_NAME;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.resteasy.common.v3_0.ResteasySingletons.LOCATOR_NAME;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;

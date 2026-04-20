@@ -370,4 +370,9 @@
     <property name="checks" value=".*"/>
     <property name="files" value="instrumentation[/\\]api[/\\]typedspan"/>
   </module>
+  <module name="SuppressionSingleFilter">
+    <property name="checks" value="PackageName"/>
+    <property name="files"
+      value="instrumentation[/\\]jaxrs[/\\]jaxrs-2\.0[/\\]jaxrs-2\.0-resteasy-common-3\.0[/\\]javaagent[/\\]src[/\\]main[/\\]java[/\\]io[/\\]opentelemetry[/\\]javaagent[/\\]instrumentation[/\\]jaxrs[/\\]v2_0[/\\]resteasy[/\\]common[/\\]v3_0"/>
+  </module>
 </module>
