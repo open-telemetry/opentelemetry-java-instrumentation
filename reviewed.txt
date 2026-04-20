@@ -235,3 +235,4 @@ testing-apps:camel-testing-app
 jmx-metrics:javaagent
 jmx-metrics:library
 async-http-client-common-1.8:javaagent
+couchbase-common-2.0:javaagent
