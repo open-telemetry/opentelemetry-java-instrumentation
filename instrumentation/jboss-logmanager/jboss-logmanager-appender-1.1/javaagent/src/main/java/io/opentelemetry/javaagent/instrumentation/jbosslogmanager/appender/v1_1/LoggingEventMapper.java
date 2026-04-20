@@ -154,7 +154,7 @@ public class LoggingEventMapper {
     }
   }
 
-  public static AttributeKey<String> getMdcAttributeKey(String key) {
+  private static AttributeKey<String> getMdcAttributeKey(String key) {
     return mdcAttributeKeys.computeIfAbsent(key, AttributeKey::stringKey);
   }
 
