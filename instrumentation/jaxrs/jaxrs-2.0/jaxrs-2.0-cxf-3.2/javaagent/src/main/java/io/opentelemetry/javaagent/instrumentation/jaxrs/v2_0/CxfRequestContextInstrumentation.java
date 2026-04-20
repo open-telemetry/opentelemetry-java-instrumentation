@@ -10,13 +10,13 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.javaagent.instrumentation.jaxrs.common.v2_0.Jaxrs2HandlerData;
-import io.opentelemetry.javaagent.instrumentation.jaxrs.common.v2_0.Jaxrs2RequestContextHelper;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsConstants;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.common.v2_0.Jaxrs2HandlerData;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.common.v2_0.Jaxrs2RequestContextHelper;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 import javax.ws.rs.container.ContainerRequestContext;
