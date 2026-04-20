@@ -12,7 +12,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jsf.jakarta.JsfRequest;
+import io.opentelemetry.javaagent.instrumentation.jsf.common.jakarta.JsfRequest;
 import jakarta.faces.event.ActionEvent;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
