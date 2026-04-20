@@ -18,6 +18,10 @@
   Do not declare multiple checked exception types on a test method.
 - Be as specific as possible. Prefer the narrowest single checked type that the test body
   actually exposes instead of broad forms such as `throws Exception` or a multi-exception list.
+- Apply this guidance only to JUnit test entry points such as `@Test`,
+  `@ParameterizedTest`, `@RepeatedTest`, `@TestFactory`, and `@TestTemplate`.
+  Do **not** rewrite nearby helpers or utilities solely to narrow a test method's `throws`
+  clause, and do not apply this rule to every method in a testing module or abstract test base.
 - If the test only blocks on `Future.get(...)` / `CompletableFuture.get(...)`, prefer refactoring to
   `join()` or another non-checked wait path when that keeps the test clear, rather than widening the
   test method to `throws Exception` just to avoid a multi-exception `throws` clause.
