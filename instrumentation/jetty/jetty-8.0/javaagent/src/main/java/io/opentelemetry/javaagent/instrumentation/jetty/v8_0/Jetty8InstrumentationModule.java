@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jetty.v8_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.instrumentation.jetty.v8_0.Jetty8Singletons.helper;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
@@ -61,7 +62,7 @@ public class Jetty8InstrumentationModule extends InstrumentationModule {
 
       @Nullable
       public static AdviceScope start(HttpServletRequest request, HttpServletResponse response) {
-        Context attachedContext = Jetty8Singletons.helper().getServerContext(request);
+        Context attachedContext = helper().getServerContext(request);
         if (attachedContext != null) {
           // We are inside nested handler, don't create new span
           return null;
@@ -69,13 +70,13 @@ public class Jetty8InstrumentationModule extends InstrumentationModule {
         Context parentContext = Context.current();
         ServletRequestContext<HttpServletRequest> requestContext =
             new ServletRequestContext<>(request);
-        if (!Jetty8Singletons.helper().shouldStart(parentContext, requestContext)) {
+        if (!helper().shouldStart(parentContext, requestContext)) {
           return null;
         }
-        Context context = Jetty8Singletons.helper().start(parentContext, requestContext);
+        Context context = helper().start(parentContext, requestContext);
         Scope scope = context.makeCurrent();
         // Must be set here since Jetty handlers can use startAsync outside of servlet scope.
-        Jetty8Singletons.helper().setAsyncListenerResponse(context, response);
+        helper().setAsyncListenerResponse(context, response);
         HttpServerResponseCustomizerHolder.getCustomizer()
             .customize(context, response, new Jetty8ResponseMutator());
         return new AdviceScope(requestContext, context, scope);
@@ -83,7 +84,7 @@ public class Jetty8InstrumentationModule extends InstrumentationModule {
 
       public void end(
           @Nullable Throwable throwable, HttpServletRequest request, HttpServletResponse response) {
-        Jetty8Singletons.helper().end(requestContext, request, response, throwable, context, scope);
+        helper().end(requestContext, request, response, throwable, context, scope);
       }
     }
 
