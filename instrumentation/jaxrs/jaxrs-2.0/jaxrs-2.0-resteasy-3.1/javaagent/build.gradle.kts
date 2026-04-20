@@ -38,7 +38,7 @@ dependencies {
   library("org.jboss.resteasy:resteasy-jaxrs:3.1.0.Final")
 
   implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent"))
-  implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-common:javaagent"))
+  implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-resteasy-common-2.0:javaagent"))
 
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent"))
 
