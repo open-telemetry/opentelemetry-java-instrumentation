@@ -429,7 +429,7 @@ targets:
       target: ':instrumentation:clickhouse:clickhouse-client-v2-0.8:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:couchbase:couchbase-2-common:javaagent'
+      target: ':instrumentation:couchbase:couchbase-common-2.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:couchbase:couchbase-2.0:javaagent'
