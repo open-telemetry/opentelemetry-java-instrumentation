@@ -205,3 +205,4 @@ jaxws-common:javaagent
 jaxws-jws-api-1.1:javaagent
 jaxws-metro-2.2:javaagent
 jdbc:bootstrap
+jboss-logmanager-mdc-1.1:javaagent
