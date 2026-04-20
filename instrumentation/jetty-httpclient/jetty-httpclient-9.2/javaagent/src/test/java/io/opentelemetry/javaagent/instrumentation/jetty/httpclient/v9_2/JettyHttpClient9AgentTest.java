@@ -18,12 +18,12 @@ class JettyHttpClient9AgentTest extends AbstractJettyClient9Test {
   static final InstrumentationExtension extension = HttpClientInstrumentationExtension.forAgent();
 
   @Override
-  public HttpClient createStandardClient() {
+  protected HttpClient createStandardClient() {
     return new HttpClient();
   }
 
   @Override
-  public HttpClient createHttpsClient(SslContextFactory sslContextFactory) {
+  protected HttpClient createHttpsClient(SslContextFactory sslContextFactory) {
     return new HttpClient(sslContextFactory);
   }
 }
