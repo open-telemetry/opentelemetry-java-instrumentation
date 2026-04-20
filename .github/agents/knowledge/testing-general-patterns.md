@@ -20,11 +20,16 @@
   actually exposes instead of broad forms such as `throws Exception` or a multi-exception list.
 - Apply this guidance only to JUnit test entry points such as `@Test`,
   `@ParameterizedTest`, `@RepeatedTest`, `@TestFactory`, and `@TestTemplate`.
-  Do **not** rewrite nearby helpers or utilities solely to narrow a test method's `throws`
-  clause, and do not apply this rule to every method in a testing module or abstract test base.
+  Do **not** rewrite nearby helpers or utilities, and do **not** introduce new wrapper
+  helpers (for example, a `waitForMessage(...)` that catches
+  `InterruptedException` / `ExecutionException` / `TimeoutException` and rethrows
+  `AssertionError`), solely to narrow a test method's `throws` clause. Do not apply
+  this rule to every method in a testing module or abstract test base.
 - If the test only blocks on `Future.get(...)` / `CompletableFuture.get(...)`, prefer refactoring to
-  `join()` or another non-checked wait path when that keeps the test clear, rather than widening the
-  test method to `throws Exception` just to avoid a multi-exception `throws` clause.
+  `join()` or another non-checked wait path when that keeps the test clear. If no clean
+  non-checked wait path exists (for example, when a timeout is required via
+  `get(timeout, unit)`), leave the test's `throws` clause as-is — including `throws Exception`
+  — rather than inventing a new helper just to narrow it.
 
 ## Test Resource Cleanup
 
