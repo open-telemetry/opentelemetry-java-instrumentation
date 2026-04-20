@@ -1504,7 +1504,7 @@ public abstract class AbstractJdbcInstrumentationTest {
 
   @FunctionalInterface
   public interface ThrowingBiConsumer<T, U> {
-    void accept(T t, U u) throws Exception;
+    void accept(T t, U u) throws SQLException;
   }
 
   static Stream<Arguments> recursiveStatementsStream() {
@@ -1539,7 +1539,7 @@ public abstract class AbstractJdbcInstrumentationTest {
       String desc,
       boolean usePreparedStatementInConnection,
       ThrowingBiConsumer<Connection, String> executeQueryFunction)
-      throws Exception {
+      throws SQLException {
     Connection connection =
         wrap(new DbCallingConnection(usePreparedStatementInConnection, "jdbc:testdb://localhost"));
 
@@ -1584,7 +1584,7 @@ public abstract class AbstractJdbcInstrumentationTest {
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/6015
   @DisplayName("test proxy statement")
   @Test
-  void testProxyStatement() throws Exception {
+  void testProxyStatement() throws SQLException {
     Connection connection = wrap(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
     cleanup.deferCleanup(connection);
     Statement statement = connection.createStatement();
