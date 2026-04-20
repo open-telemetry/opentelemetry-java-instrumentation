@@ -37,7 +37,7 @@ class TapirPathInstrumentation implements TypeInstrumentation {
   }) // options.prependInterceptor takes higher-kinded type, not possible from java
   public static class ApplyAdvice {
     @Advice.AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Object onExit(@Advice.Return PekkoHttpServerOptions options) {
 
       return options.prependInterceptor((Interceptor) TapirRouteHandler.interceptor());
