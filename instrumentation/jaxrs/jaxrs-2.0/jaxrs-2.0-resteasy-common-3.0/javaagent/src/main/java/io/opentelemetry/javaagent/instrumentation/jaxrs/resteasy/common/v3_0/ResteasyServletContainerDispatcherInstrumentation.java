@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jaxrs.resteasy.common.v2_0;
+package io.opentelemetry.javaagent.instrumentation.jaxrs.resteasy.common.v3_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
