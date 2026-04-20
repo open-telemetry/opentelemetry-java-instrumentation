@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
-import io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.common.CouchbaseRequestInfo;
 import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -18,6 +17,7 @@ import io.opentelemetry.instrumentation.rxjava.v1_0.TracedOnSubscribe;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.common.CouchbaseRequestInfo;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
