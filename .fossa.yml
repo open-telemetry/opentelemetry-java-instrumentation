@@ -1077,7 +1077,7 @@ targets:
       target: ':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent'
+      target: ':instrumentation:jaxrs:jaxrs-2.0:jaxrs-common-2.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-cxf-3.2:javaagent'

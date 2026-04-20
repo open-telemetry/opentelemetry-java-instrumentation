@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
-import io.opentelemetry.instrumentation.jaxrs.v2_0.JaxRsHttpServerTest;
-import io.opentelemetry.instrumentation.jaxrs.v2_0.test.JaxRsTestApplication;
+import io.opentelemetry.instrumentation.jaxrs.v2_0.common.JaxRsHttpServerTest;
+import io.opentelemetry.instrumentation.jaxrs.v2_0.common.test.JaxRsTestApplication;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;

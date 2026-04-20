@@ -27,7 +27,7 @@ dependencies {
   library("org.glassfish.jersey.core:jersey-server:2.0")
   library("org.glassfish.jersey.containers:jersey-container-servlet:2.0")
 
-  implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent"))
+  implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-common-2.0:javaagent"))
 
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
@@ -37,7 +37,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-jersey-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-resteasy-6.0:javaagent"))
 
-  testImplementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:testing"))
+  testImplementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-common-2.0:testing"))
   testImplementation("javax.xml.bind:jaxb-api:2.2.3")
   testImplementation("org.eclipse.jetty:jetty-webapp:9.4.6.v20170531")
 
