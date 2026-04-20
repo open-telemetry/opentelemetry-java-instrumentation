@@ -106,7 +106,14 @@ public class DefineClassHandler implements Handler {
   }
 
   private static class DefineClassContextImpl implements DefineClassContext {
-    private static final DefineClassContextImpl NOP = new DefineClassContextImpl();
+    // NOP is returned from beforeDefineClass without calling enter() (no frame pushed),
+    // so exit() must not mutate the ThreadLocal — otherwise a nested J9 defineClass would
+    // clobber an outer frame that is still active.
+    private static final DefineClassContextImpl NOP =
+        new DefineClassContextImpl() {
+          @Override
+          public void exit() {}
+        };
 
     @Nullable private final DefineClassContextImpl previous;
     @Nullable String failedClassDotName;
