@@ -630,10 +630,10 @@ targets:
       target: ':instrumentation:jms:jms-common:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jsf:jsf-jakarta-common:javaagent'
+      target: ':instrumentation:jsf:jsf-common-javax:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jsf:jsf-javax-common:javaagent'
+      target: ':instrumentation:jsf:jsf-jakarta-common:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jsf:jsf-mojarra-1.2:javaagent'
