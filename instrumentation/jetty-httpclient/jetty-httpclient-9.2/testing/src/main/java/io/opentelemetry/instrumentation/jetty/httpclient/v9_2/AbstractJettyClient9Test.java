@@ -43,8 +43,12 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
 
   @AfterEach
   void after() throws Exception {
-    client.stop();
-    httpsClient.stop();
+    if (client != null) {
+      client.stop();
+    }
+    if (httpsClient != null) {
+      httpsClient.stop();
+    }
   }
 
   @Override
@@ -55,7 +59,7 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
 
   @Override
   public Request buildRequest(String method, URI uri, Map<String, String> headers) {
-    HttpClient theClient = uri.getScheme().equalsIgnoreCase("https") ? httpsClient : client;
+    HttpClient theClient = "https".equalsIgnoreCase(uri.getScheme()) ? httpsClient : client;
     Request request = theClient.newRequest(uri).method(method).agent("Jetty");
     headers.forEach(request::header);
 
