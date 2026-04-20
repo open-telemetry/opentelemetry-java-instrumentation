@@ -33,10 +33,8 @@
   over wrapping most of the test body in try-with-resources.
 - For resources created in `@BeforeAll` or other class-scoped setup, prefer
   `AutoCleanupExtension` with `deferAfterAll(...)` over nested `@AfterAll` cleanup
-  chains. Prefer a single `@AfterAll` when `AutoCleanupExtension` is not otherwise present
-  or needed in the class. Do **not** introduce `AutoCleanupExtension` solely to call
-  `deferAfterAll(...)` once on a single resource — a plain `@AfterAll` is cleaner in that
-  case.
+  chains. Do not introduce or keep `AutoCleanupExtension` solely for a single
+  `deferAfterAll(...)` call — use a plain `@AfterAll` instead.
 - Reuse an existing `cleanup` extension when one is already in scope.
   Otherwise, add a `@RegisterExtension` field when the deferred-cleanup pattern improves
   clarity or avoids wrapping most of the test body.

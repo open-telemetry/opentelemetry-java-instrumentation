@@ -233,6 +233,10 @@ Auto-fix boundaries:
     readers/writers/streams/response bodies).
     Do not apply this conversion in non-JUnit helper methods, `@BeforeAll`, or shared
     setup code.
+  - class-scoped resources created in `@BeforeAll` or other shared setup — prefer
+    `AutoCleanupExtension` with `deferAfterAll(...)` over nested `@AfterAll` cleanup
+    chains. Do not introduce or keep `AutoCleanupExtension` solely for a single
+    `deferAfterAll(...)` call — use a plain `@AfterAll` instead.
   - `hasAttributesSatisfying(...)` calls in test assertions — replace with
     `hasAttributesSatisfyingExactly(...)` because it is more precise (the non-exact
     variant silently ignores unexpected attributes)
