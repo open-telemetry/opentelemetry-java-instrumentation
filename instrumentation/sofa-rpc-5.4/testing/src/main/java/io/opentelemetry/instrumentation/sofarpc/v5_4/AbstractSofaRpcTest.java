@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSp
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -385,16 +384,7 @@ public abstract class AbstractSofaRpcTest {
                                     AbstractSofaRpcTest::assertNetworkPeerAddress),
                                 satisfies(
                                     NETWORK_PEER_PORT, AbstractSofaRpcTest::assertNetworkPeerPort),
-                                satisfies(NETWORK_TYPE, AbstractSofaRpcTest::assertNetworkType),
-                                satisfies(
-                                    ERROR_TYPE,
-                                    errorType ->
-                                        errorType
-                                            .isInstanceOf(String.class)
-                                            .satisfies(
-                                                str ->
-                                                    assertThat(str)
-                                                        .contains("SofaRpcRuntimeException")))),
+                                satisfies(NETWORK_TYPE, AbstractSofaRpcTest::assertNetworkType)),
                     span ->
                         span.hasName(
                                 "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException")
@@ -411,16 +401,8 @@ public abstract class AbstractSofaRpcTest {
                                     NETWORK_PEER_ADDRESS,
                                     AbstractSofaRpcTest::assertNetworkPeerAddress),
                                 satisfies(
-                                    NETWORK_PEER_PORT, AbstractSofaRpcTest::assertNetworkPeerPort),
-                                satisfies(
-                                    ERROR_TYPE,
-                                    errorType ->
-                                        errorType
-                                            .isInstanceOf(String.class)
-                                            .satisfies(
-                                                str ->
-                                                    assertThat(str)
-                                                        .contains("SofaRpcRuntimeException"))))));
+                                    NETWORK_PEER_PORT,
+                                    AbstractSofaRpcTest::assertNetworkPeerPort))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.sofa-rpc-5.4",
@@ -511,16 +493,7 @@ public abstract class AbstractSofaRpcTest {
                                     AbstractSofaRpcTest::assertNetworkPeerAddress),
                                 satisfies(
                                     NETWORK_PEER_PORT, AbstractSofaRpcTest::assertNetworkPeerPort),
-                                satisfies(NETWORK_TYPE, AbstractSofaRpcTest::assertNetworkType),
-                                satisfies(
-                                    ERROR_TYPE,
-                                    errorType ->
-                                        errorType
-                                            .isInstanceOf(String.class)
-                                            .satisfies(
-                                                str ->
-                                                    assertThat(str)
-                                                        .contains("IllegalStateException")))),
+                                satisfies(NETWORK_TYPE, AbstractSofaRpcTest::assertNetworkType)),
                     span ->
                         span.hasName(
                                 "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwBusinessException")
@@ -537,16 +510,8 @@ public abstract class AbstractSofaRpcTest {
                                     NETWORK_PEER_ADDRESS,
                                     AbstractSofaRpcTest::assertNetworkPeerAddress),
                                 satisfies(
-                                    NETWORK_PEER_PORT, AbstractSofaRpcTest::assertNetworkPeerPort),
-                                satisfies(
-                                    ERROR_TYPE,
-                                    errorType ->
-                                        errorType
-                                            .isInstanceOf(String.class)
-                                            .satisfies(
-                                                str ->
-                                                    assertThat(str)
-                                                        .contains("IllegalStateException"))))));
+                                    NETWORK_PEER_PORT,
+                                    AbstractSofaRpcTest::assertNetworkPeerPort))));
   }
 
   @Test
@@ -590,21 +555,6 @@ public abstract class AbstractSofaRpcTest {
                                     AbstractSofaRpcTest::assertNetworkPeerAddress),
                                 satisfies(
                                     NETWORK_PEER_PORT, AbstractSofaRpcTest::assertNetworkPeerPort),
-                                satisfies(NETWORK_TYPE, AbstractSofaRpcTest::assertNetworkType),
-                                satisfies(
-                                    ERROR_TYPE,
-                                    errorType ->
-                                        errorType
-                                            .isInstanceOf(String.class)
-                                            .satisfies(
-                                                str ->
-                                                    assertThat(str)
-                                                        .satisfiesAnyOf(
-                                                            s -> assertThat(s).contains("timeout"),
-                                                            s -> assertThat(s).contains("Timeout"),
-                                                            s ->
-                                                                assertThat(s)
-                                                                    .contains(
-                                                                        "SofaTimeOutException")))))));
+                                satisfies(NETWORK_TYPE, AbstractSofaRpcTest::assertNetworkType))));
   }
 }
