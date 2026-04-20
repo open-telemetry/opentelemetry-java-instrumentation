@@ -222,3 +222,4 @@ jetty-httpclient-9.2:library
 jetty-httpclient-12.0:testing
 jetty-11.0:javaagent
 jetty-httpclient-9.2:testing
+jetty-12.0:javaagent
