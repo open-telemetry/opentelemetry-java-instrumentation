@@ -212,3 +212,4 @@ jdbc:library
 jedis-1.4:javaagent
 jdbc:testing
 jedis-1.4:testing
+jedis-4.0:javaagent
