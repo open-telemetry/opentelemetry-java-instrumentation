@@ -38,7 +38,7 @@ class BijectionsNettyInstrumentation implements TypeInstrumentation {
   public static class FullRequestAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onApplyExit(
-        @Advice.Return(readOnly = false) Request ret, @Advice.Argument(0) FullHttpRequest in) {
+        @Advice.Return Request ret, @Advice.Argument(0) FullHttpRequest in) {
       Helpers.chainContextToFinagle(in, ret);
     }
   }
@@ -46,8 +46,7 @@ class BijectionsNettyInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ChunkedRequestAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onApplyExit(
-        @Advice.Return(readOnly = false) Request ret, @Advice.Argument(0) HttpRequest in) {
+    public static void onApplyExit(@Advice.Return Request ret, @Advice.Argument(0) HttpRequest in) {
       Helpers.chainContextToFinagle(in, ret);
     }
   }

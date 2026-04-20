@@ -5,8 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
+import com.twitter.util.Promise;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import scala.Function0;
 import scala.Function1;
 import scala.PartialFunction;
@@ -14,6 +16,9 @@ import scala.runtime.AbstractPartialFunction;
 import scala.runtime.BoxedUnit;
 
 public class TwitterUtilCoreHelpers {
+  public static final VirtualField<Promise.K, Context> PROMISE_K_CONTEXT_FIELD =
+      VirtualField.find(Promise.K.class, Context.class);
+
   private TwitterUtilCoreHelpers() {}
 
   public static class InterruptibleWithContext

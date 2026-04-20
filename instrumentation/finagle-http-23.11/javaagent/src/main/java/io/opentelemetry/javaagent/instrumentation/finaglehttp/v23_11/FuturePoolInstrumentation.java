@@ -12,6 +12,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import scala.Function0;
@@ -35,9 +36,10 @@ class FuturePoolInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ApplyAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onApplyEnter(@Advice.Argument(value = 0, readOnly = false) Function0<?> f) {
-      f = TwitterUtilCoreHelpers.wrap(Context.current(), f);
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
+    public static Function0<?> onApplyEnter(@Advice.Argument(0) Function0<?> f) {
+      return TwitterUtilCoreHelpers.wrap(Context.current(), f);
     }
   }
 }

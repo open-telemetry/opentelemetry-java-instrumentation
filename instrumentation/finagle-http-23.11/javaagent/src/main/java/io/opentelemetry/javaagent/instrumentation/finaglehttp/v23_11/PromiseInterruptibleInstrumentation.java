@@ -8,11 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import com.twitter.util.Promise;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import scala.PartialFunction;
@@ -38,17 +38,17 @@ class PromiseInterruptibleInstrumentation implements TypeInstrumentation {
   public static class ConstructorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onEnter(
-        @Advice.This Promise.Interruptible thiz,
-        @Advice.Argument(value = 1, readOnly = false)
-            PartialFunction<Throwable, BoxedUnit> handler) {
-      if (!(handler instanceof TwitterUtilCoreHelpers.InterruptibleWithContext)) {
-        Context context = Context.current();
-        handler =
-            context != Context.root()
-                ? new TwitterUtilCoreHelpers.InterruptibleWithContext(context, handler)
-                : handler;
+    @Advice.AssignReturned.ToArguments(@ToArgument(1))
+    public static PartialFunction<Throwable, BoxedUnit> onEnter(
+        @Advice.Argument(1) PartialFunction<Throwable, BoxedUnit> handler) {
+      if (handler instanceof TwitterUtilCoreHelpers.InterruptibleWithContext) {
+        return handler;
       }
+      Context context = Context.current();
+      if (context == Context.root()) {
+        return handler;
+      }
+      return new TwitterUtilCoreHelpers.InterruptibleWithContext(context, handler);
     }
   }
 }

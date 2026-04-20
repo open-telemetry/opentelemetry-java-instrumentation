@@ -13,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.twitter.util.Promise;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -50,9 +49,7 @@ class PromiseKInstrumentation implements TypeInstrumentation {
     public static void onExit(@Advice.This Promise.K thiz) {
       Context current = Context.current();
       if (current != Context.root()) {
-        VirtualField<Promise.K, Context> contextVirtualField =
-            VirtualField.find(Promise.K.class, Context.class);
-        contextVirtualField.set(thiz, current);
+        TwitterUtilCoreHelpers.PROMISE_K_CONTEXT_FIELD.set(thiz, current);
       }
     }
   }
@@ -61,7 +58,7 @@ class PromiseKInstrumentation implements TypeInstrumentation {
   public static class ApplyAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onApplyEnter(@Advice.This Promise.K thiz) {
-      Context savedContext = VirtualField.find(Promise.K.class, Context.class).get(thiz);
+      Context savedContext = TwitterUtilCoreHelpers.PROMISE_K_CONTEXT_FIELD.get(thiz);
       if (savedContext != null) {
         return savedContext.makeCurrent();
       }

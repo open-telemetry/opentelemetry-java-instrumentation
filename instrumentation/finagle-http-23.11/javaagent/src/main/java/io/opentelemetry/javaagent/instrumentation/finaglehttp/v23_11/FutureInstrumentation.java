@@ -14,6 +14,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import scala.Function1;
@@ -39,19 +40,21 @@ class FutureInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class RespondAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(
-        @Advice.Argument(value = 0, readOnly = false) Function1<Try<?>, BoxedUnit> f) {
-      f = TwitterUtilCoreHelpers.wrap(Context.current(), f);
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
+    public static Function1<Try<?>, BoxedUnit> onEnter(
+        @Advice.Argument(0) Function1<Try<?>, BoxedUnit> f) {
+      return TwitterUtilCoreHelpers.wrap(Context.current(), f);
     }
   }
 
   @SuppressWarnings("unused")
   public static class TransformAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(
-        @Advice.Argument(value = 0, readOnly = false) Function1<Try<?>, Future<?>> f) {
-      f = TwitterUtilCoreHelpers.wrap(Context.current(), f);
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
+    public static Function1<Try<?>, Future<?>> onEnter(
+        @Advice.Argument(0) Function1<Try<?>, Future<?>> f) {
+      return TwitterUtilCoreHelpers.wrap(Context.current(), f);
     }
   }
 }
