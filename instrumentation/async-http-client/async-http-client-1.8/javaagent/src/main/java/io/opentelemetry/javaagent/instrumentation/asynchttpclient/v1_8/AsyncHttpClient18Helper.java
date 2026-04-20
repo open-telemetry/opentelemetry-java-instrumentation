@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_8;
 
 import com.ning.http.client.Request;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.javaagent.instrumentation.asynchttpclient.common.AsyncHttpClientHelper;
+import io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_0.common.AsyncHttpClientHelper;
 import java.net.MalformedURLException;
 import java.net.URI;
 import javax.annotation.Nullable;

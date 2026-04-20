@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_8;
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.instrumentation.asynchttpclient.common.AsyncHttpClientInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_0.common.AsyncHttpClientInstrumenterFactory;
 
 public class AsyncHttpClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.async-http-client-1.8";
