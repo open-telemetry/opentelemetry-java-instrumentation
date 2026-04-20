@@ -27,6 +27,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.AsyncResponseData;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.CompletionStageFinishCallback;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsServerSpanNaming;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.common.v3_0.Jaxrs3HandlerData;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.container.AsyncResponse;
 import java.lang.reflect.Method;

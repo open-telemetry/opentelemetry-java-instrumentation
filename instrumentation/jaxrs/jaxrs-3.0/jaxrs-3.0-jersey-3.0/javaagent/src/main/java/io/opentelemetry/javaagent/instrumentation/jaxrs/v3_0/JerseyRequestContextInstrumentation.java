@@ -10,6 +10,9 @@ import static io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.JerseySingle
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsConstants;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.common.v3_0.AbstractRequestContextInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.common.v3_0.Jaxrs3HandlerData;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.common.v3_0.Jaxrs3RequestContextHelper;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ResourceInfo;
 import jakarta.ws.rs.core.UriInfo;

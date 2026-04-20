@@ -1098,13 +1098,13 @@ targets:
       target: ':instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-annotations:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-common:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-jersey-3.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-resteasy-6.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:jaxrs:jaxrs-3.0:jaxrs-common-3.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap'

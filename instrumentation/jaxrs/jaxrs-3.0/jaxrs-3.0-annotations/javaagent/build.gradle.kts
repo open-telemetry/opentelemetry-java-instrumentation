@@ -14,7 +14,7 @@ muzzle {
 dependencies {
   bootstrap(project(":instrumentation:jaxrs:jaxrs-common:bootstrap"))
 
-  implementation(project(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-common:javaagent"))
+  implementation(project(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-common-3.0:javaagent"))
 
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent"))
 

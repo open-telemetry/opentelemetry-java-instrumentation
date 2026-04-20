@@ -13,6 +13,8 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsConstants;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsServerSpanNaming;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.common.v3_0.AbstractRequestContextInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.common.v3_0.Jaxrs3HandlerData;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
