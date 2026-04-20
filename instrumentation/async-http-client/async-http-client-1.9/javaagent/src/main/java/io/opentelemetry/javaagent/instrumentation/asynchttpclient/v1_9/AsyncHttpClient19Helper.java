@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9;
 import com.ning.http.client.Request;
 import com.ning.http.client.uri.Uri;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.javaagent.instrumentation.asynchttpclient.common.AsyncHttpClientHelper;
+import io.opentelemetry.javaagent.instrumentation.asynchttpclient.common.v1_0.AsyncHttpClientHelper;
 import javax.annotation.Nullable;
 
 final class AsyncHttpClient19Helper implements AsyncHttpClientHelper {
