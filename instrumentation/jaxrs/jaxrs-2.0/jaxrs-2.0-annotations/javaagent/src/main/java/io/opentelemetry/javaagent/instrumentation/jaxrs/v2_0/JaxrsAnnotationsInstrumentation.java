@@ -16,6 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
+import io.opentelemetry.javaagent.instrumentation.jaxrs.common.v2_0.Jaxrs2HandlerData;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;

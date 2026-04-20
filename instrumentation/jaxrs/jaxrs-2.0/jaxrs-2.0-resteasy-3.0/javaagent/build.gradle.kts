@@ -37,7 +37,7 @@ dependencies {
   compileOnly("javax.ws.rs:javax.ws.rs-api:2.0")
   library("org.jboss.resteasy:resteasy-jaxrs:3.0.0.Final")
 
-  implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent"))
+  implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-common-2.0:javaagent"))
   implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-common:javaagent"))
 
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent"))
@@ -50,7 +50,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-jersey-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-resteasy-6.0:javaagent"))
 
-  testImplementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:testing"))
+  testImplementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-common-2.0:testing"))
   testImplementation("org.eclipse.jetty:jetty-webapp:9.4.6.v20170531")
 
   testLibrary("org.jboss.resteasy:resteasy-undertow:3.0.4.Final") {

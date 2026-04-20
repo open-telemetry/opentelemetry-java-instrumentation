@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
 import static java.util.Collections.singleton;
 
-import io.opentelemetry.instrumentation.jaxrs.v2_0.test.JaxRsApplicationPathTestApplication;
+import io.opentelemetry.instrumentation.jaxrs.common.v2_0.test.JaxRsApplicationPathTestApplication;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.ServletException;

@@ -4,7 +4,7 @@ plugins {
 
 muzzle {
   // Cant assert fails because muzzle assumes all instrumentations will fail
-  // Instrumentations in jaxrs-2.0-common will pass
+  // Instrumentations in jaxrs-common-2.0 will pass
   pass {
     group.set("org.apache.cxf")
     module.set("cxf-rt-frontend-jaxrs")
@@ -28,7 +28,7 @@ dependencies {
   compileOnly("javax.servlet:javax.servlet-api:3.1.0")
   library("org.apache.cxf:cxf-rt-frontend-jaxrs:3.2.0")
 
-  implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent"))
+  implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-common-2.0:javaagent"))
 
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
@@ -39,7 +39,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-jersey-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-resteasy-6.0:javaagent"))
 
-  testImplementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:testing"))
+  testImplementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-common-2.0:testing"))
   testImplementation("javax.xml.bind:jaxb-api:2.2.3")
   testImplementation("org.eclipse.jetty:jetty-webapp:9.4.6.v20170531")
 
