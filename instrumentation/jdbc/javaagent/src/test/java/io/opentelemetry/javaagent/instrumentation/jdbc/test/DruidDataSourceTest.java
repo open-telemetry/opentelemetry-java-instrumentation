@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONN
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.H2;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -88,7 +89,7 @@ class DruidDataSourceTest {
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "h2:mem:"),
                             equalTo(maybeStable(DB_NAME), "test"),
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"))));
   }
 }

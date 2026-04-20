@@ -12,11 +12,12 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class GraphInterpreterInstrumentation implements TypeInstrumentation {
+class GraphInterpreterInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("akka.stream.impl.fusing.GraphInterpreter");
@@ -24,14 +25,14 @@ public class GraphInterpreterInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("processPush"), GraphInterpreterInstrumentation.class.getName() + "$PushAdvice");
+    transformer.applyAdviceToMethod(named("processPush"), getClass().getName() + "$PushAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class PushAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static Scope onEnter(@Advice.Argument(0) GraphInterpreter.Connection connection) {
       // processPush is called when execution passes to application or server. Here we propagate the
       // context to the application code.
@@ -42,8 +43,8 @@ public class GraphInterpreterInstrumentation implements TypeInstrumentation {
       return null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exit(@Advice.Enter Scope scope) {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void exit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

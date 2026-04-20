@@ -6,8 +6,8 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
-import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -17,8 +17,8 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -157,8 +156,8 @@ abstract class AbstractRocketMqClientTest {
             result.completeExceptionally(throwable);
           }
         });
-    SendResult sendResult = result.get(10, TimeUnit.SECONDS);
-    assertEquals(SendStatus.SEND_OK, sendResult.getSendStatus(), "Send status should be SEND_OK");
+    SendResult sendResult = result.get(10, SECONDS);
+    assertThat(sendResult.getSendStatus()).isEqualTo(SendStatus.SEND_OK);
     // waiting longer than assertTraces below does on its own because of CI flakiness
     tracingMessageListener.waitForMessages();
 
@@ -218,8 +217,7 @@ abstract class AbstractRocketMqClientTest {
             "parent",
             () -> {
               SendResult sendResult = producer.send(msg);
-              assertEquals(
-                  SendStatus.SEND_OK, sendResult.getSendStatus(), "Send status should be SEND_OK");
+              assertThat(sendResult.getSendStatus()).isEqualTo(SendStatus.SEND_OK);
             });
     // waiting longer than assertTraces below does on its own because of CI flakiness
     tracingMessageListener.waitForMessages();
@@ -432,8 +430,7 @@ abstract class AbstractRocketMqClientTest {
                       sharedTopic, "TagA", "Hello RocketMQ".getBytes(Charset.defaultCharset()));
               msg.putUserProperty("Test-Message-Header", "test");
               SendResult sendResult = producer.send(msg);
-              assertEquals(
-                  SendStatus.SEND_OK, sendResult.getSendStatus(), "Send status should be SEND_OK");
+              assertThat(sendResult.getSendStatus()).isEqualTo(SendStatus.SEND_OK);
             });
     // waiting longer than assertTraces below does on its own because of CI flakiness
     tracingMessageListener.waitForMessages();
@@ -461,7 +458,7 @@ abstract class AbstractRocketMqClientTest {
                                     stringKey("messaging.rocketmq.send_result"),
                                     experimental("SEND_OK")),
                                 equalTo(
-                                    stringArrayKey("messaging.header.Test_Message_Header"),
+                                    headerAttributeKey("Test-Message-Header"),
                                     singletonList("test"))),
                     span ->
                         span.hasName(sharedTopic + " process")
@@ -487,12 +484,64 @@ abstract class AbstractRocketMqClientTest {
                                     longKey("messaging.rocketmq.queue_offset"),
                                     val -> experimentalLong(val)),
                                 equalTo(
-                                    stringArrayKey("messaging.header.Test_Message_Header"),
+                                    headerAttributeKey("Test-Message-Header"),
                                     singletonList("test"))),
                     span ->
                         span.hasName("messageListener")
                             .hasParent(trace.getSpan(2))
                             .hasKind(SpanKind.INTERNAL)));
+  }
+
+  @Test
+  void testRocketmqProduceOneway() throws Exception {
+    testing().runWithSpan("parent", () -> producer.sendOneway(msg));
+    // waiting longer than assertTraces below does on its own because of CI flakiness
+    tracingMessageListener.waitForMessages();
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                    span ->
+                        span.hasName(sharedTopic + " publish")
+                            .hasKind(SpanKind.PRODUCER)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
+                                equalTo(MESSAGING_OPERATION, "publish"),
+                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
+                                satisfies(
+                                    stringKey("messaging.rocketmq.broker_address"),
+                                    val -> experimentalString(val))),
+                    span ->
+                        span.hasName(sharedTopic + " process")
+                            .hasKind(SpanKind.CONSUMER)
+                            .hasParent(trace.getSpan(1))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
+                                equalTo(MESSAGING_OPERATION, "process"),
+                                satisfies(
+                                    MESSAGING_MESSAGE_BODY_SIZE,
+                                    val -> val.isInstanceOf(Long.class)),
+                                satisfies(
+                                    MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
+                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
+                                satisfies(
+                                    stringKey("messaging.rocketmq.broker_address"),
+                                    val -> experimentalString(val)),
+                                satisfies(
+                                    longKey("messaging.rocketmq.queue_id"),
+                                    val -> experimentalLong(val)),
+                                satisfies(
+                                    longKey("messaging.rocketmq.queue_offset"),
+                                    val -> experimentalLong(val))),
+                    span ->
+                        span.hasName("messageListener")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(2))));
   }
 
   private static Consumer<List<? extends LinkData>> links(SpanContext... spanContexts) {

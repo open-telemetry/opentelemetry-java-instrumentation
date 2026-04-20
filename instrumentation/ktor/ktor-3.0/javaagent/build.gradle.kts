@@ -12,8 +12,6 @@ muzzle {
     versions.set("[3.0.0,)")
     assertInverse.set(true)
     excludeInstrumentationName("ktor-server")
-    // missing dependencies
-    skip("1.1.0", "1.1.1", "1.1.5")
   }
   pass {
     group.set("io.ktor")
@@ -21,8 +19,6 @@ muzzle {
     versions.set("[3.0.0,)")
     assertInverse.set(true)
     excludeInstrumentationName("ktor-client")
-    // missing dependencies
-    skip("1.1.0", "1.1.1")
   }
 }
 
@@ -38,6 +34,8 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:ktor:ktor-2.0:javaagent"))
+  testInstrumentation(project(":instrumentation:kotlinx-coroutines:kotlinx-coroutines-1.0:javaagent"))
+  testInstrumentation(project(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent"))
 
   testImplementation(project(":instrumentation:ktor:ktor-3.0:testing"))
   testImplementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")

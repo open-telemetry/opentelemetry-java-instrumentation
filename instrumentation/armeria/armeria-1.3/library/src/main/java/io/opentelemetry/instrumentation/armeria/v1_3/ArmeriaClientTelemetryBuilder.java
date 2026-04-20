@@ -9,7 +9,6 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.linecorp.armeria.client.ClientRequestContext;
 import com.linecorp.armeria.common.logging.RequestLog;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
@@ -21,11 +20,7 @@ import io.opentelemetry.instrumentation.armeria.v1_3.internal.Experimental;
 import java.util.Collection;
 import java.util.function.UnaryOperator;
 
-@SuppressWarnings("deprecation") // using deprecated internalSetClientPeerService for compatibility
 public final class ArmeriaClientTelemetryBuilder {
-
-  // copied from PeerIncubatingAttributes
-  private static final AttributeKey<String> PEER_SERVICE = AttributeKey.stringKey("peer.service");
 
   private final DefaultHttpClientInstrumenterBuilder<ClientRequestContext, RequestLog> builder;
 
@@ -33,10 +28,6 @@ public final class ArmeriaClientTelemetryBuilder {
     ArmeriaInstrumenterBuilderUtil.setClientBuilderExtractor(builder -> builder.builder);
     Experimental.internalSetEmitExperimentalClientTelemetry(
         (builder, emit) -> builder.builder.setEmitExperimentalHttpClientTelemetry(emit));
-    Experimental.internalSetClientPeerService(
-        (builder, peerService) ->
-            builder.builder.addAttributesExtractor(
-                AttributesExtractor.constant(PEER_SERVICE, peerService)));
   }
 
   ArmeriaClientTelemetryBuilder(OpenTelemetry openTelemetry) {

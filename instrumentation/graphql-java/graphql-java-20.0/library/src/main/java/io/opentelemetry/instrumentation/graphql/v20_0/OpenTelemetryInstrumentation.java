@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.graphql.v20_0;
 
 import static graphql.execution.instrumentation.InstrumentationState.ofState;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 
 import graphql.ExecutionResult;
 import graphql.GraphQLError;
@@ -26,10 +28,10 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.graphql.internal.OpenTelemetryInstrumentationHelper;
-import io.opentelemetry.instrumentation.graphql.internal.OpenTelemetryInstrumentationState;
-import io.opentelemetry.semconv.ExceptionAttributes;
+import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.OpenTelemetryInstrumentationHelper;
+import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.OpenTelemetryInstrumentationState;
 import java.util.concurrent.CompletionStage;
+import javax.annotation.Nullable;
 
 final class OpenTelemetryInstrumentation extends SimplePerformantInstrumentation {
   private final OpenTelemetryInstrumentationHelper helper;
@@ -88,35 +90,30 @@ final class OpenTelemetryInstrumentation extends SimplePerformantInstrumentation
       Context childContext = dataFetcherInstrumenter.start(parentContext, environment);
       state.setContextForPath(path, childContext);
 
-      boolean isCompletionStage = false;
-
-      Object fieldValue = null;
+      Object fieldValue;
       try (Scope ignored = childContext.makeCurrent()) {
         fieldValue = dataFetcher.get(environment);
-        isCompletionStage = fieldValue instanceof CompletionStage;
-
-        if (isCompletionStage) {
-          return ((CompletionStage<?>) fieldValue)
-              .whenComplete(
-                  (result, throwable) -> {
-                    handleDataFetcherResult(childContext, result);
-                    dataFetcherInstrumenter.end(childContext, environment, result, throwable);
-                  });
-        }
-        return fieldValue;
-      } catch (Throwable throwable) {
-        dataFetcherInstrumenter.end(childContext, environment, null, throwable);
-        throw throwable;
-      } finally {
-        if (!isCompletionStage) {
-          handleDataFetcherResult(childContext, fieldValue);
-          dataFetcherInstrumenter.end(childContext, environment, fieldValue, null);
-        }
+      } catch (Throwable t) {
+        dataFetcherInstrumenter.end(childContext, environment, null, t);
+        throw t;
       }
+
+      if (fieldValue instanceof CompletionStage) {
+        return ((CompletionStage<?>) fieldValue)
+            .whenComplete(
+                (result, throwable) -> {
+                  handleDataFetcherResult(childContext, result);
+                  dataFetcherInstrumenter.end(childContext, environment, result, throwable);
+                });
+      }
+
+      handleDataFetcherResult(childContext, fieldValue);
+      dataFetcherInstrumenter.end(childContext, environment, fieldValue, null);
+      return fieldValue;
     };
   }
 
-  private static void handleDataFetcherResult(Context context, Object result) {
+  private static void handleDataFetcherResult(Context context, @Nullable Object result) {
     if (!(result instanceof DataFetcherResult)) {
       return;
     }
@@ -125,8 +122,8 @@ final class OpenTelemetryInstrumentation extends SimplePerformantInstrumentation
     Span span = Span.fromContext(context);
     for (GraphQLError error : dataFetcherResult.getErrors()) {
       AttributesBuilder attributes = Attributes.builder();
-      attributes.put(ExceptionAttributes.EXCEPTION_TYPE, String.valueOf(error.getErrorType()));
-      attributes.put(ExceptionAttributes.EXCEPTION_MESSAGE, error.getMessage());
+      attributes.put(EXCEPTION_TYPE, String.valueOf(error.getErrorType()));
+      attributes.put(EXCEPTION_MESSAGE, error.getMessage());
 
       span.addEvent("exception", attributes.build());
     }

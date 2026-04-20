@@ -3,19 +3,17 @@ plugins {
   id("otel.java-conventions")
 }
 
-val denyUnsafe = gradle.startParameter.projectProperties["denyUnsafe"] == "true"
-
 dependencies {
-  implementation("com.linecorp.armeria:armeria-junit5:1.35.0")
+  implementation("com.linecorp.armeria:armeria-junit5:1.38.0")
   implementation("com.google.errorprone:error_prone_annotations")
   implementation("io.opentelemetry.proto:opentelemetry-proto")
-  implementation("com.google.protobuf:protobuf-java-util:4.33.5")
+  implementation("com.google.protobuf:protobuf-java-util:4.34.1")
   implementation("com.github.tomakehurst:wiremock-jre8:2.35.2")
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
   // we'll replace caffeine shaded in armeria with a later version that doesn't use Unsafe. Caffeine
   // 3+ doesn't work with Java 8, but that is fine since --sun-misc-unsafe-memory-access=deny
   // requires Java 23.
-  if (denyUnsafe) {
+  if (otelProps.denyUnsafe) {
     implementation("com.github.ben-manes.caffeine:caffeine:3.2.3")
   }
 }
@@ -31,7 +29,7 @@ tasks {
 
     // Ensures tests are not affected by Armeria instrumentation
     relocate("com.linecorp.armeria", "io.opentelemetry.testing.internal.armeria")
-    if (denyUnsafe) {
+    if (otelProps.denyUnsafe) {
       relocate(
         "com.github.benmanes.caffeine",
         "io.opentelemetry.testing.internal.armeria.internal.shaded.caffeine"
@@ -77,7 +75,7 @@ tasks {
       duplicatesStrategy = DuplicatesStrategy.INCLUDE
     }
     // exclude caffeine shaded in armeria
-    if (denyUnsafe) {
+    if (otelProps.denyUnsafe) {
       exclude("com/linecorp/armeria/internal/shaded/caffeine/**")
     }
 

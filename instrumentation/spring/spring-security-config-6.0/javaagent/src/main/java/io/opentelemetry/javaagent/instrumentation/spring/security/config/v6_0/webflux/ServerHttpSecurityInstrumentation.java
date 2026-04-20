@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.spring.security.config.v6_0.webflux;
 
 import static io.opentelemetry.javaagent.instrumentation.spring.security.config.v6_0.EnduserAttributesCapturerSingletons.enduserAttributesCapturer;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -20,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 
 /** Instrumentation for {@link ServerHttpSecurity}. */
-public class ServerHttpSecurityInstrumentation implements TypeInstrumentation {
+class ServerHttpSecurityInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -30,14 +29,14 @@ public class ServerHttpSecurityInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(named("build")).and(takesArguments(0)),
+        isPublic().and(named("build")).and(takesArguments(0)),
         getClass().getName() + "$BuildAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class BuildAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This ServerHttpSecurity serverHttpSecurity) {
       new EnduserAttributesServerHttpSecurityCustomizer(enduserAttributesCapturer())
           .customize(serverHttpSecurity);

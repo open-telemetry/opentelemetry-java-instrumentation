@@ -6,7 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
 import com.google.auto.value.AutoValue;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import javax.annotation.Nullable;
 import net.spy.memcached.MemcachedConnection;
+import net.spy.memcached.MemcachedNode;
 
 @AutoValue
 public abstract class SpymemcachedRequest {
@@ -19,7 +23,36 @@ public abstract class SpymemcachedRequest {
 
   public abstract String getQueryText();
 
-  public String dbOperation() {
+  @Nullable private MemcachedNode handlingNode;
+  @Nullable private InetSocketAddress handlingNodeAddress;
+  private boolean hasMultipleHandlingNodes;
+
+  public void setHandlingNode(@Nullable MemcachedNode node) {
+    if (node == null || hasMultipleHandlingNodes) {
+      return;
+    }
+    if (handlingNode != null && node != handlingNode) {
+      // bulk operations may have multiple nodes, so if we see a different node than the one we
+      // already have, we will not set any node for this request
+      hasMultipleHandlingNodes = true;
+      handlingNode = null;
+      handlingNodeAddress = null;
+      return;
+    }
+
+    handlingNode = node;
+    SocketAddress socketAddress = node.getSocketAddress();
+    if (socketAddress instanceof InetSocketAddress) {
+      handlingNodeAddress = (InetSocketAddress) socketAddress;
+    }
+  }
+
+  @Nullable
+  public InetSocketAddress getHandlingNodeAddress() {
+    return handlingNodeAddress;
+  }
+
+  public String getOperationName() {
     String queryText = getQueryText();
     if (queryText.startsWith("async")) {
       queryText = queryText.substring("async".length());

@@ -1,3 +1,4 @@
+display_name: Spring Security
 description: >
   This instrumentation does not emit any telemetry on its own. Instead, it captures enduser
   attributes, and is only enabled when at least one of the `enduser` configurations is enabled.

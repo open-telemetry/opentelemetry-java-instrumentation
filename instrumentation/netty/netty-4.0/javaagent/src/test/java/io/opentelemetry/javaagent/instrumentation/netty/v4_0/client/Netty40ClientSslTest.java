@@ -16,6 +16,9 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.netty.bootstrap.Bootstrap;
@@ -39,14 +42,12 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -74,12 +75,12 @@ class Netty40ClientSslTest {
   @AfterAll
   static void cleanup() throws InterruptedException, ExecutionException, TimeoutException {
     eventLoopGroup.shutdownGracefully();
-    server.stop().get(10, TimeUnit.SECONDS);
+    server.stop().get(10, SECONDS);
   }
 
   @Test
-  public void shouldFailSslHandshake() {
-    Bootstrap bootstrap = createBootstrap(eventLoopGroup, Collections.singletonList("SSLv3"));
+  void shouldFailSslHandshake() {
+    Bootstrap bootstrap = createBootstrap(eventLoopGroup, singletonList("SSLv3"));
 
     URI uri = server.resolveHttpsAddress("/success");
     DefaultFullHttpRequest request =
@@ -132,8 +133,8 @@ class Netty40ClientSslTest {
                       cleanup.deferCleanup(() -> channel.close().sync());
                       CompletableFuture<Integer> result = new CompletableFuture<>();
                       channel.pipeline().addLast(new ClientHandler(result));
-                      channel.writeAndFlush(request).get(10, TimeUnit.SECONDS);
-                      result.get(10, TimeUnit.SECONDS);
+                      channel.writeAndFlush(request).get(10, SECONDS);
+                      result.get(10, SECONDS);
                     }));
 
     // Then
@@ -148,10 +149,10 @@ class Netty40ClientSslTest {
 
   @SuppressWarnings("InterruptedExceptionSwallowed")
   @Test
-  public void shouldSuccessfullyEstablishSslHandshake() throws Exception {
+  void shouldSuccessfullyEstablishSslHandshake() throws Exception {
     // given
     Bootstrap bootstrap =
-        createBootstrap(eventLoopGroup, Arrays.asList("TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3"));
+        createBootstrap(eventLoopGroup, asList("TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3"));
 
     URI uri = server.resolveHttpsAddress("/success");
     DefaultFullHttpRequest request =
@@ -167,8 +168,8 @@ class Netty40ClientSslTest {
           cleanup.deferCleanup(() -> channel.close().sync());
           CompletableFuture<Integer> result = new CompletableFuture<>();
           channel.pipeline().addLast(new ClientHandler(result));
-          channel.writeAndFlush(request).get(10, TimeUnit.SECONDS);
-          result.get(10, TimeUnit.SECONDS);
+          channel.writeAndFlush(request).get(10, SECONDS);
+          result.get(10, SECONDS);
         });
 
     // then
@@ -229,7 +230,7 @@ class Netty40ClientSslTest {
 
                 SSLContext sslContext = SSLContext.getInstance("TLS");
                 sslContext.init(null, null, null);
-                javax.net.ssl.SSLEngine sslEngine = sslContext.createSSLEngine();
+                SSLEngine sslEngine = sslContext.createSSLEngine();
                 sslEngine.setUseClientMode(true);
                 sslEngine.setEnabledProtocols(enabledProtocols.toArray(new String[0]));
                 sslEngine.setEnabledCipherSuites(SUPPORTED_CIPHERS);

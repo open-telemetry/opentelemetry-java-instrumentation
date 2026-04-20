@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.jdbc.TestConnection;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +39,7 @@ class OpenTelemetryConnectionTest {
 
   @SuppressWarnings("unchecked")
   @Test
-  void testVerifyCreateStatementReturnsOtelWrapper() throws Exception {
+  void testVerifyCreateStatementReturnsOtelWrapper() throws SQLException {
     OpenTelemetry openTelemetry = OpenTelemetry.propagating(ContextPropagators.noop());
     OpenTelemetryConnection connection = getConnection(openTelemetry);
 
@@ -53,7 +54,7 @@ class OpenTelemetryConnectionTest {
 
   @SuppressWarnings("unchecked")
   @Test
-  void testVerifyPrepareStatementReturnsOtelWrapper() throws Exception {
+  void testVerifyPrepareStatementReturnsOtelWrapper() throws SQLException {
     OpenTelemetry openTelemetry = OpenTelemetry.propagating(ContextPropagators.noop());
     OpenTelemetryConnection connection = getConnection(openTelemetry);
 
@@ -80,7 +81,7 @@ class OpenTelemetryConnectionTest {
 
   @SuppressWarnings("unchecked")
   @Test
-  void testVerifyPrepareCallReturnsOtelWrapper() throws Exception {
+  void testVerifyPrepareCallReturnsOtelWrapper() throws SQLException {
     OpenTelemetry openTelemetry = OpenTelemetry.propagating(ContextPropagators.noop());
     OpenTelemetryConnection connection = getConnection(openTelemetry);
 
@@ -101,14 +102,14 @@ class OpenTelemetryConnectionTest {
 
   private static DbInfo getDbInfo() {
     return DbInfo.builder()
-        .system("my_system")
-        .subtype("my_sub_type")
-        .shortUrl("my_connection_string")
-        .user("my_user")
-        .name("my_name")
-        .db("my_db")
-        .host("my_host")
-        .port(1234)
+        .dbSystemName("my_system")
+        .dbSystem("my_system")
+        .dbConnectionString("my_connection_string")
+        .dbUser("my_user")
+        .dbName("my_name")
+        .dbNamespace("my_name")
+        .serverAddress("my_host")
+        .serverPort(1234)
         .build();
   }
 

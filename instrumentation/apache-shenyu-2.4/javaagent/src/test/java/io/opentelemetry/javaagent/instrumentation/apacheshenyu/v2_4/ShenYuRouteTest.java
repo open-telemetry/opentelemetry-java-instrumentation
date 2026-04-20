@@ -5,16 +5,31 @@
 
 package io.opentelemetry.javaagent.instrumentation.apacheshenyu.v2_4;
 
+import static io.opentelemetry.api.common.AttributeKey.booleanKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
+import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import org.apache.shenyu.common.dto.MetaData;
+import org.assertj.core.api.AbstractLongAssert;
+import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,36 +45,6 @@ import reactor.netty.http.client.HttpClient;
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     classes = {ShenYuBootstrapApplication.class})
 class ShenYuRouteTest {
-
-  private static final AttributeKey<String> META_ID_ATTRIBUTE =
-      AttributeKey.stringKey("apache-shenyu.meta.id");
-
-  private static final AttributeKey<String> APP_NAME_ATTRIBUTE =
-      AttributeKey.stringKey("apache-shenyu.meta.app-name");
-
-  private static final AttributeKey<String> CONTEXT_PATH_ATTRIBUTE =
-      AttributeKey.stringKey("apache-shenyu.meta.context-path");
-
-  private static final AttributeKey<String> PATH_ATTRIBUTE =
-      AttributeKey.stringKey("apache-shenyu.meta.path");
-
-  private static final AttributeKey<String> RPC_TYPE_ATTRIBUTE =
-      AttributeKey.stringKey("apache-shenyu.meta.rpc-type");
-
-  private static final AttributeKey<String> SERVICE_NAME_ATTRIBUTE =
-      AttributeKey.stringKey("apache-shenyu.meta.service-name");
-
-  private static final AttributeKey<String> METHOD_NAME_ATTRIBUTE =
-      AttributeKey.stringKey("apache-shenyu.meta.method-name");
-
-  private static final AttributeKey<String> PARAMETER_TYPES_ATTRIBUTE =
-      AttributeKey.stringKey("apache-shenyu.meta.param-types");
-
-  private static final AttributeKey<String> RPC_EXT_ATTRIBUTE =
-      AttributeKey.stringKey("apache-shenyu.meta.rpc-ext");
-
-  private static final AttributeKey<Boolean> META_ENABLED_ATTRIBUTE =
-      AttributeKey.booleanKey("apache-shenyu.meta.enabled");
 
   @Value("${local.server.port}")
   private int port;
@@ -112,18 +97,29 @@ class ShenYuRouteTest {
                 span ->
                     span.hasName("GET /a/b/c")
                         .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(HTTP_ROUTE, "/a/b/c"),
-                            equalTo(META_ID_ATTRIBUTE, "123"),
-                            equalTo(META_ENABLED_ATTRIBUTE, true),
-                            equalTo(METHOD_NAME_ATTRIBUTE, "hello"),
-                            equalTo(PARAMETER_TYPES_ATTRIBUTE, "string"),
-                            equalTo(PATH_ATTRIBUTE, "/a/b/c"),
-                            equalTo(RPC_EXT_ATTRIBUTE, "test-ext"),
-                            equalTo(RPC_TYPE_ATTRIBUTE, "http"),
-                            equalTo(SERVICE_NAME_ATTRIBUTE, "shenyu-service"),
-                            equalTo(APP_NAME_ATTRIBUTE, "test-shenyu"),
-                            equalTo(CONTEXT_PATH_ATTRIBUTE, "/"))));
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(URL_PATH, "/a/b/c"),
+                            equalTo(URL_SCHEME, "http"),
+                            satisfies(CLIENT_ADDRESS, AbstractStringAssert::isNotBlank),
+                            satisfies(NETWORK_PEER_ADDRESS, AbstractStringAssert::isNotBlank),
+                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isPositive),
+                            satisfies(NETWORK_PROTOCOL_VERSION, AbstractStringAssert::isNotBlank),
+                            satisfies(SERVER_ADDRESS, AbstractStringAssert::isNotBlank),
+                            satisfies(SERVER_PORT, AbstractLongAssert::isPositive),
+                            satisfies(USER_AGENT_ORIGINAL, AbstractStringAssert::isNotBlank),
+                            equalTo(stringKey("apache-shenyu.meta.id"), "123"),
+                            equalTo(booleanKey("apache-shenyu.meta.enabled"), true),
+                            equalTo(stringKey("apache-shenyu.meta.method-name"), "hello"),
+                            equalTo(stringKey("apache-shenyu.meta.param-types"), "string"),
+                            equalTo(stringKey("apache-shenyu.meta.path"), "/a/b/c"),
+                            equalTo(stringKey("apache-shenyu.meta.rpc-ext"), "test-ext"),
+                            equalTo(stringKey("apache-shenyu.meta.rpc-type"), "http"),
+                            equalTo(stringKey("apache-shenyu.meta.service-name"), "shenyu-service"),
+                            equalTo(stringKey("apache-shenyu.meta.app-name"), "test-shenyu"),
+                            equalTo(stringKey("apache-shenyu.meta.context-path"), "/"))));
   }
 
   @Test

@@ -23,9 +23,10 @@ package io.opentelemetry.instrumentation.jdbc;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.INSTRUMENTATION_NAME;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
@@ -51,6 +52,8 @@ import javax.annotation.Nullable;
 /** JDBC driver for OpenTelemetry. */
 public final class OpenTelemetryDriver implements Driver {
 
+  private static final Logger logger = Logger.getLogger(OpenTelemetryDriver.class.getName());
+
   // visible for testing
   static final OpenTelemetryDriver INSTANCE = new OpenTelemetryDriver();
 
@@ -61,35 +64,41 @@ public final class OpenTelemetryDriver implements Driver {
 
   private static final String URL_PREFIX = "jdbc:otel:";
   private static final AtomicBoolean REGISTERED = new AtomicBoolean();
+  private static final AtomicBoolean warnedDeprecatedCommonSqlCommenterProperty =
+      new AtomicBoolean();
   private static final List<Driver> DRIVER_CANDIDATES = new CopyOnWriteArrayList<>();
 
-  @SuppressWarnings("deprecation") // using deprecated config property
+  @SuppressWarnings("deprecation") // library flat config fallback remains supported until 3.0
   private static SqlCommenter getSqlCommenter(OpenTelemetry openTelemetry) {
-    Boolean enabled =
-        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "jdbc")
-            .get("sqlcommenter/development")
-            .getBoolean("enabled");
-    if (enabled == null) {
-      enabled =
-          io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil.getBoolean(
-              "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled");
-    }
-    if (enabled == null) {
-      enabled =
-          DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
-              .get("database")
-              .get("sqlcommenter/development")
-              .getBoolean("enabled");
-    }
-    if (enabled == null) {
-      enabled =
-          io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil.getBoolean(
-              "otel.instrumentation.common.experimental.db-sqlcommenter.enabled");
-    }
-    if (enabled == null) {
-      enabled = false; // default value
-    }
+    Boolean deprecatedCommonSqlCommenterEnabled = getDeprecatedCommonSqlCommenterEnabled();
+    boolean enabled =
+        DbConfig.isSqlCommenterEnabled(
+            openTelemetry,
+            "jdbc",
+            ConfigPropertiesUtil.getBoolean(
+                "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled",
+                ConfigPropertiesUtil.getBoolean(
+                    "otel.instrumentation.common.db.experimental.sqlcommenter.enabled",
+                    deprecatedCommonSqlCommenterEnabled != null
+                        ? deprecatedCommonSqlCommenterEnabled
+                        : false)));
     return SqlCommenter.builder().setEnabled(enabled).build();
+  }
+
+  @Nullable
+  @SuppressWarnings("deprecation") // library flat config fallback remains supported until 3.0
+  private static Boolean getDeprecatedCommonSqlCommenterEnabled() {
+    Boolean deprecatedValue =
+        ConfigPropertiesUtil.getBoolean(
+            "otel.instrumentation.common.experimental.db-sqlcommenter.enabled");
+    if (deprecatedValue != null
+        && warnedDeprecatedCommonSqlCommenterProperty.compareAndSet(false, true)) {
+      logger.warning(
+          "The otel.instrumentation.common.experimental.db-sqlcommenter.enabled system property"
+              + " is deprecated and will be removed in a future version. Use"
+              + " otel.instrumentation.common.db.experimental.sqlcommenter.enabled instead.");
+    }
+    return deprecatedValue;
   }
 
   static {
@@ -150,7 +159,7 @@ public final class OpenTelemetryDriver implements Driver {
    *
    * @param driver {@link Driver} that should be registered
    */
-  public static void addDriverCandidate(Driver driver) {
+  public static void addDriverCandidate(@Nullable Driver driver) {
     if (driver != null) {
       DRIVER_CANDIDATES.add(driver);
     }
@@ -237,7 +246,7 @@ public final class OpenTelemetryDriver implements Driver {
     Enumeration<Driver> drivers = DriverManager.getDrivers();
     while (drivers.hasMoreElements()) {
       Driver driver = drivers.nextElement();
-      if (driver instanceof io.opentelemetry.instrumentation.jdbc.OpenTelemetryDriver) {
+      if (driver instanceof OpenTelemetryDriver) {
         OpenTelemetryDriver openTelemetryDriver = (OpenTelemetryDriver) driver;
         openTelemetryDriver.setOpenTelemetry(openTelemetry);
       }

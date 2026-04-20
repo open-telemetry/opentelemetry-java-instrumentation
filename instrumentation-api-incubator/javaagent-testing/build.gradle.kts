@@ -11,7 +11,7 @@ dependencies {
 tasks {
   test {
     jvmArgs(
-      "-Dotel.experimental.config.file=$projectDir/src/test/resources/declarative-config.yaml"
+      "-Dotel.config.file=$projectDir/src/test/resources/declarative-config.yaml"
     )
   }
 }

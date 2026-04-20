@@ -6,12 +6,12 @@
 package io.opentelemetry.instrumentation.restlet.v1_1.internal;
 
 import static io.opentelemetry.instrumentation.restlet.v1_1.internal.RestletHeadersGetter.getHeaders;
+import static java.util.Collections.emptyList;
 
 import com.noelios.restlet.http.HttpCall;
 import com.noelios.restlet.http.HttpRequest;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.restlet.data.Form;
@@ -20,8 +20,7 @@ import org.restlet.data.Request;
 import org.restlet.data.Response;
 import org.restlet.util.Series;
 
-enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, Response> {
-  INSTANCE;
+final class RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, Response> {
 
   @Override
   public String getHttpRequestMethod(Request request) {
@@ -50,7 +49,7 @@ enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   public List<String> getHttpRequestHeader(Request request, String name) {
     Form headers = getHeaders(request);
     if (headers == null) {
-      return Collections.emptyList();
+      return emptyList();
     }
     return parametersToList(headers.subList(name, /* ignoreCase= */ true));
   }
@@ -65,7 +64,7 @@ enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   public List<String> getHttpResponseHeader(Request request, Response response, String name) {
     Form headers = getHeaders(response);
     if (headers == null) {
-      return Collections.emptyList();
+      return emptyList();
     }
     return parametersToList(headers.subList(name, /* ignoreCase= */ true));
   }
@@ -73,7 +72,7 @@ enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   // minimize memory overhead by not using streams
   private static List<String> parametersToList(Series<Parameter> headers) {
     if (headers.isEmpty()) {
-      return Collections.emptyList();
+      return emptyList();
     }
     List<String> stringHeaders = new ArrayList<>(headers.size());
     for (Parameter header : headers) {
@@ -86,7 +85,7 @@ enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   @Override
   public String getNetworkProtocolName(Request request, @Nullable Response response) {
     String protocol = getProtocolString(request);
-    if (protocol.startsWith("HTTP/")) {
+    if (protocol != null && protocol.startsWith("HTTP/")) {
       return "http";
     }
     return null;
@@ -96,12 +95,13 @@ enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   @Override
   public String getNetworkProtocolVersion(Request request, @Nullable Response response) {
     String protocol = getProtocolString(request);
-    if (protocol.startsWith("HTTP/")) {
+    if (protocol != null && protocol.startsWith("HTTP/")) {
       return protocol.substring("HTTP/".length());
     }
     return null;
   }
 
+  @Nullable
   private static String getProtocolString(Request request) {
     return (String) request.getAttributes().get("org.restlet.http.version");
   }

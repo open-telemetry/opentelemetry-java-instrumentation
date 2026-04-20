@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
+import static java.util.Objects.requireNonNull;
+
 import io.opentelemetry.api.OpenTelemetry;
 import java.io.Serializable;
-import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -22,7 +23,7 @@ public final class OpenTelemetrySupplier implements Supplier<OpenTelemetry>, Ser
   private final transient OpenTelemetry openTelemetry;
 
   public OpenTelemetrySupplier(OpenTelemetry openTelemetry) {
-    Objects.requireNonNull(openTelemetry);
+    requireNonNull(openTelemetry);
     this.openTelemetry = openTelemetry;
   }
 

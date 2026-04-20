@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.openai.v1_1;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.openai.v1_1.GenAiAttributes.GEN_AI_PROVIDER_NAME;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionAssistantMessageParam;
@@ -32,14 +34,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 final class ChatCompletionEventsHelper {
 
   private static final AttributeKey<String> EVENT_NAME = stringKey("event.name");
 
-  public static void emitPromptLogEvents(
+  static void emitPromptLogEvents(
       Context context,
       Logger eventLogger,
       ChatCompletionCreateParams request,
@@ -78,7 +79,7 @@ final class ChatCompletionEventsHelper {
                   List<Value<?>> toolCallsJson =
                       toolCalls.stream()
                           .map(call -> buildToolCallEventObject(call, captureMessageContent))
-                          .collect(Collectors.toList());
+                          .collect(toList());
                   body.put("tool_calls", Value.of(toolCallsJson));
                 });
       } else if (msg.isTool()) {
@@ -121,7 +122,7 @@ final class ChatCompletionEventsHelper {
                 return null;
               })
           .filter(Objects::nonNull)
-          .collect(Collectors.joining());
+          .collect(joining());
     } else {
       return "";
     }
@@ -154,19 +155,17 @@ final class ChatCompletionEventsHelper {
       return content.asArrayOfContentParts().stream()
           .map(part -> part.isText() ? part.asText().text() : null)
           .filter(Objects::nonNull)
-          .collect(Collectors.joining());
+          .collect(joining());
     } else {
       return "";
     }
   }
 
   private static String joinContentParts(List<ChatCompletionContentPartText> contentParts) {
-    return contentParts.stream()
-        .map(ChatCompletionContentPartText::text)
-        .collect(Collectors.joining());
+    return contentParts.stream().map(ChatCompletionContentPartText::text).collect(joining());
   }
 
-  public static void emitCompletionLogEvents(
+  static void emitCompletionLogEvents(
       Context context,
       Logger eventLogger,
       ChatCompletion completion,
@@ -186,7 +185,7 @@ final class ChatCompletionEventsHelper {
                     Value.of(
                         toolCalls.stream()
                             .map(call -> buildToolCallEventObject(call, captureMessageContent))
-                            .collect(Collectors.toList())));
+                            .collect(toList())));
               });
       emitCompletionLogEvent(
           context,
@@ -197,7 +196,7 @@ final class ChatCompletionEventsHelper {
     }
   }
 
-  public static void emitCompletionLogEvent(
+  static void emitCompletionLogEvent(
       Context context,
       Logger eventLogger,
       long index,
@@ -266,7 +265,7 @@ final class ChatCompletionEventsHelper {
 
     try {
       return (String) methodHandle.invoke(object);
-    } catch (Throwable ignore) {
+    } catch (Throwable ignored) {
       return "";
     }
   }
@@ -299,7 +298,7 @@ final class ChatCompletionEventsHelper {
         name = lookup.findVirtual(functionClass, "name", MethodType.methodType(String.class));
         arguments =
             lookup.findVirtual(functionClass, "arguments", MethodType.methodType(String.class));
-      } catch (Exception exception) {
+      } catch (Exception ignored) {
         id = null;
         function = null;
         name = null;
@@ -327,7 +326,7 @@ final class ChatCompletionEventsHelper {
 
       try {
         return new V1FunctionAccess(toolCall, functionHandle.invoke(toolCall));
-      } catch (Throwable ignore) {
+      } catch (Throwable ignored) {
         return null;
       }
     }
@@ -352,7 +351,7 @@ final class ChatCompletionEventsHelper {
     }
   }
 
-  static class V3FunctionAccess implements FunctionAccess {
+  private static class V3FunctionAccess implements FunctionAccess {
     @Nullable private static final MethodHandle functionToolCallHandle;
     @Nullable private static final MethodHandle idHandle;
     @Nullable private static final MethodHandle functionHandle;
@@ -386,7 +385,7 @@ final class ChatCompletionEventsHelper {
         name = lookup.findVirtual(functionClass, "name", MethodType.methodType(String.class));
         arguments =
             lookup.findVirtual(functionClass, "arguments", MethodType.methodType(String.class));
-      } catch (Exception exception) {
+      } catch (Exception ignored) {
         functionToolCall = null;
         id = null;
         function = null;
@@ -422,7 +421,7 @@ final class ChatCompletionEventsHelper {
         }
         Object functionToolCall = optional.get();
         return new V3FunctionAccess(functionToolCall, functionHandle.invoke(functionToolCall));
-      } catch (Throwable ignore) {
+      } catch (Throwable ignored) {
         return null;
       }
     }

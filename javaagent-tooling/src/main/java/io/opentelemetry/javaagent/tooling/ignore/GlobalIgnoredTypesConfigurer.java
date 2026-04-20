@@ -124,6 +124,7 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
             "org.springframework.context.support.ContextTypeMatchClassLoader$ContextOverridingClassLoader")
         .ignoreClassLoader("sun.misc.Launcher$ExtClassLoader")
         .ignoreClassLoader("org.openjdk.nashorn.internal.runtime.ScriptLoader")
+        .ignoreClassLoader("jdk.nashorn.internal.runtime.ScriptLoader")
         .ignoreClassLoader("org.codehaus.janino.ByteArrayClassLoader")
         .ignoreClassLoader("org.eclipse.persistence.internal.jaxb.JaxbClassLoader")
         .ignoreClassLoader("com.alibaba.fastjson.util.ASMClassLoader")
@@ -156,6 +157,7 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/787
     builder.ignoreTaskClass("org.apache.tomcat.util.net.NioEndpoint$SocketProcessor");
     builder.ignoreTaskClass("org.apache.tomcat.util.net.JIoEndpoint$SocketProcessor");
+    builder.ignoreTaskClass("org.apache.tomcat.util.net.AprEndpoint$SocketProcessor");
 
     // HttpConnection implements Runnable. When async request is completed HttpConnection
     // may be sent to process next request while context from previous request hasn't been

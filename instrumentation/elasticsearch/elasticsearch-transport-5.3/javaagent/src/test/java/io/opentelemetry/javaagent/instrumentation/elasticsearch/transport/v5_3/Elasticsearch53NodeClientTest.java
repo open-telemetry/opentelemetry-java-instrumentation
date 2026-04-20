@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_3;
 
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING;
 
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.AbstractElasticsearchNodeClientTest;
 import java.io.File;
-import java.util.Collections;
 import java.util.UUID;
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest;
 import org.elasticsearch.client.Client;
@@ -50,7 +51,7 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
     testNode =
         new Node(
             new Environment(InternalSettingsPreparer.prepareSettings(settings)),
-            Collections.singletonList(Netty3Plugin.class)) {};
+            singletonList(Netty3Plugin.class)) {};
     startNode(testNode);
 
     client = testNode.client();
@@ -74,7 +75,7 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
               .updateSettings(
                   new ClusterUpdateSettingsRequest()
                       .transientSettings(
-                          Collections.singletonMap(
+                          singletonMap(
                               "cluster.routing.allocation.disk.threshold_enabled", false)));
         });
     testing.waitForTraces(1);

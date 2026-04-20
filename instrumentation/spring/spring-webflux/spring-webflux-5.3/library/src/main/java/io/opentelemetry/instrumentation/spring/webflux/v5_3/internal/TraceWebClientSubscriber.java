@@ -23,8 +23,8 @@ final class TraceWebClientSubscriber implements CoreSubscriber<ClientResponse> {
   private final ClientRequest request;
   private final CoreSubscriber<? super ClientResponse> actual;
   private final reactor.util.context.Context reactorContext;
-  private final io.opentelemetry.context.Context otelClientContext;
-  private final io.opentelemetry.context.Context otelParentContext;
+  private final Context otelClientContext;
+  private final Context otelParentContext;
 
   TraceWebClientSubscriber(
       Instrumenter<ClientRequest, ClientResponse> instrumenter,

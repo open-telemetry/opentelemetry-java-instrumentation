@@ -11,7 +11,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import java.util.Collections;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
@@ -29,7 +28,7 @@ public class LambdaInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<String> injectedClassNames() {
-    return Collections.singletonList(
+    return singletonList(
         "io.opentelemetry.javaagent.instrumentation.internal.lambda.LambdaTransformerHelper");
   }
 

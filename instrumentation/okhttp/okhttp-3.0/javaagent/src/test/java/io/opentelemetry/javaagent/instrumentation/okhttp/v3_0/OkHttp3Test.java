@@ -6,12 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.okhttp.v3_0;
 
 import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.okhttp.v3_0.AbstractOkHttp3Test;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
-import java.util.concurrent.TimeUnit;
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
@@ -34,7 +34,7 @@ class OkHttp3Test extends AbstractOkHttp3Test {
   void reusedBuilderOnlyHasOpenTelemetryInterceptors() {
     OkHttpClient.Builder builder =
         new OkHttpClient.Builder()
-            .connectTimeout(CONNECTION_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS)
+            .connectTimeout(CONNECTION_TIMEOUT.toMillis(), MILLISECONDS)
             .retryOnConnectionFailure(false);
 
     OkHttpClient newClient = builder.build().newBuilder().build();

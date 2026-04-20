@@ -11,20 +11,14 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
-public final class XxlJobHelper {
+public class XxlJobHelper {
   private final Instrumenter<XxlJobProcessRequest, Void> instrumenter;
   private final Predicate<Object> failedStatusPredicate;
 
-  public static class XxlJobScope {
-    private final XxlJobProcessRequest request;
-    private final Context context;
-    private final Scope scope;
-
-    private XxlJobScope(XxlJobProcessRequest request, Context context, Scope scope) {
-      this.request = request;
-      this.context = context;
-      this.scope = scope;
-    }
+  public static XxlJobHelper create(
+      Instrumenter<XxlJobProcessRequest, Void> instrumenter,
+      Predicate<Object> failedStatusPredicate) {
+    return new XxlJobHelper(instrumenter, failedStatusPredicate);
   }
 
   private XxlJobHelper(
@@ -32,12 +26,6 @@ public final class XxlJobHelper {
       Predicate<Object> failedStatusPredicate) {
     this.instrumenter = instrumenter;
     this.failedStatusPredicate = failedStatusPredicate;
-  }
-
-  public static XxlJobHelper create(
-      Instrumenter<XxlJobProcessRequest, Void> instrumenter,
-      Predicate<Object> failedStatusPredicate) {
-    return new XxlJobHelper(instrumenter, failedStatusPredicate);
   }
 
   @Nullable
@@ -60,5 +48,17 @@ public final class XxlJobHelper {
     }
     scope.scope.close();
     instrumenter.end(scope.context, scope.request, null, throwable);
+  }
+
+  public static class XxlJobScope {
+    private final XxlJobProcessRequest request;
+    private final Context context;
+    private final Scope scope;
+
+    private XxlJobScope(XxlJobProcessRequest request, Context context, Scope scope) {
+      this.request = request;
+      this.context = context;
+      this.scope = scope;
+    }
   }
 }

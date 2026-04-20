@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.jmx.rules;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.JmxAssertj.assertThat;
+import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.fail;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -17,14 +18,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public class MetricsVerifier {
 
   private final Map<String, Consumer<Metric>> assertions = new HashMap<>();
   private boolean strictMode = true;
-
-  private MetricsVerifier() {}
 
   /**
    * Create instance of MetricsVerifier configured to fail verification if any metric was not
@@ -37,6 +35,8 @@ public class MetricsVerifier {
   public static MetricsVerifier create() {
     return new MetricsVerifier();
   }
+
+  private MetricsVerifier() {}
 
   /**
    * Disable strict checks of metric assertions. It means that all metrics checks added after
@@ -108,8 +108,7 @@ public class MetricsVerifier {
   }
 
   private void verifyAllExpectedMetricsWereReceived(List<Metric> metrics) {
-    Set<String> receivedMetricNames =
-        metrics.stream().map(Metric::getName).collect(Collectors.toSet());
+    Set<String> receivedMetricNames = metrics.stream().map(Metric::getName).collect(toSet());
     Set<String> assertionNames = new HashSet<>(assertions.keySet());
 
     assertionNames.removeAll(receivedMetricNames);

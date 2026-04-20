@@ -21,7 +21,7 @@ final class ResponseCustomizingFilter implements Filter {
 
     var context = Context.current();
     HttpServerResponseCustomizerHolder.getCustomizer()
-        .customize(context, res, HelidonServerResponseMutator.INSTANCE);
+        .customize(context, res, new HelidonServerResponseMutator());
     chain.proceed();
   }
 }

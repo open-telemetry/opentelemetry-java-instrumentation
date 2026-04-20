@@ -28,7 +28,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import scala.Some;
 
-public class FinatraRouteInstrumentation implements TypeInstrumentation {
+class FinatraRouteInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -41,10 +41,10 @@ public class FinatraRouteInstrumentation implements TypeInstrumentation {
         named("handleMatch")
             .and(takesArguments(2))
             .and(takesArgument(0, named("com.twitter.finagle.http.Request"))),
-        this.getClass().getName() + "$HandleMatchAdvice");
+        getClass().getName() + "$HandleMatchAdvice");
     transformer.applyAdviceToMethod(
         named("copy").and(returns(named("com.twitter.finatra.http.internal.routing.Route"))),
-        this.getClass().getName() + "$CopyAdvice");
+        getClass().getName() + "$CopyAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -95,7 +95,7 @@ public class FinatraRouteInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope nameSpan(
         @Advice.This Route route,
         @Advice.FieldValue("routeInfo") RouteInfo routeInfo,
@@ -103,7 +103,7 @@ public class FinatraRouteInstrumentation implements TypeInstrumentation {
       return AdviceScope.start(route, routeInfo, controllerClass);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void setupCallback(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Return @Nullable Some<Future<Response>> responseOption,
@@ -117,7 +117,7 @@ public class FinatraRouteInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CopyAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Route route, @Advice.Return Route result) {
       setCallbackClass(result, getCallbackClass(route));
     }

@@ -1,5 +1,6 @@
 plugins {
   id("otel.java-conventions")
+  id("otel.nullaway-conventions")
   id("otel.publish-conventions")
 }
 
@@ -9,6 +10,7 @@ dependencies {
   api("io.opentelemetry:opentelemetry-sdk")
   api("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   api("net.bytebuddy:byte-buddy-dep")
+  compileOnly("com.fasterxml.jackson.core:jackson-annotations")
 
   implementation(project(":instrumentation-api"))
   implementation(project(":instrumentation-api-incubator"))

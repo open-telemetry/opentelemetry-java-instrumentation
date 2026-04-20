@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.cache;
 
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
+
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.Measurement;
@@ -21,7 +22,7 @@ import org.openjdk.jmh.infra.Blackhole;
 @Fork(3)
 @Warmup(iterations = 10, time = 1)
 @Measurement(iterations = 5, time = 1)
-@OutputTimeUnit(TimeUnit.MICROSECONDS)
+@OutputTimeUnit(MICROSECONDS)
 @State(Scope.Thread)
 public class CacheBenchmark {
 

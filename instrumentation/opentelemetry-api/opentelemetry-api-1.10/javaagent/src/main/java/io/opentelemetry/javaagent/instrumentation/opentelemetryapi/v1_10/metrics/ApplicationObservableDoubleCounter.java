@@ -5,20 +5,24 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
-import application.io.opentelemetry.api.metrics.ObservableDoubleCounter;
+import io.opentelemetry.api.metrics.ObservableDoubleCounter;
 
-public final class ApplicationObservableDoubleCounter implements ObservableDoubleCounter {
+public class ApplicationObservableDoubleCounter
+    implements application.io.opentelemetry.api.metrics.ObservableDoubleCounter {
 
-  private final io.opentelemetry.api.metrics.ObservableDoubleCounter agentCounter;
+  private final ObservableDoubleCounter agentCounter;
+  private final Runnable onClose;
 
   public ApplicationObservableDoubleCounter(
-      io.opentelemetry.api.metrics.ObservableDoubleCounter agentCounter) {
+      ObservableDoubleCounter agentCounter, Runnable onClose) {
     this.agentCounter = agentCounter;
+    this.onClose = onClose;
   }
 
   // not adding @Override because this method was introduced in 1.12
   @SuppressWarnings("unused")
   public void close() {
     agentCounter.close();
+    onClose.run();
   }
 }

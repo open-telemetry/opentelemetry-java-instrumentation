@@ -10,12 +10,12 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.EarlyInstrumentationModule;
 import java.util.List;
 
-@AutoService(InstrumentationModule.class)
+@AutoService({InstrumentationModule.class, EarlyInstrumentationModule.class})
 public class HttpUrlConnectionInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+    implements EarlyInstrumentationModule {
 
   public HttpUrlConnectionInstrumentationModule() {
     super("http-url-connection");
@@ -24,10 +24,5 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new HttpUrlConnectionInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

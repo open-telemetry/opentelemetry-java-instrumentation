@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.test.AnnotatedTestClass;
 import java.io.IOException;
@@ -56,9 +56,11 @@ class AgentCachingPoolStrategyTest {
     TypePool.Resolution resolution = pool.describe(AnnotatedTestClass.class.getName());
     TypeDescription typeDescription = resolution.resolve();
 
-    assertTrue(isAnnotatedWith(AnnotatedTestClass.TestAnnotation.class).matches(typeDescription));
-    assertTrue(
-        declaresMethod(isAnnotatedWith(AnnotatedTestClass.TestAnnotation.class))
-            .matches(typeDescription));
+    assertThat(isAnnotatedWith(AnnotatedTestClass.TestAnnotation.class).matches(typeDescription))
+        .isTrue();
+    assertThat(
+            declaresMethod(isAnnotatedWith(AnnotatedTestClass.TestAnnotation.class))
+                .matches(typeDescription))
+        .isTrue();
   }
 }

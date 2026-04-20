@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarRequest;
+import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.Producer;
@@ -26,7 +27,7 @@ public class VirtualFieldStore {
 
   private VirtualFieldStore() {}
 
-  public static void inject(Message<?> instance, Context context) {
+  public static void inject(Message<?> instance, @Nullable Context context) {
     if (instance instanceof TopicMessageImpl<?>) {
       TopicMessageImpl<?> topicMessage = (TopicMessageImpl<?>) instance;
       instance = topicMessage.getMessage();
@@ -66,10 +67,12 @@ public class VirtualFieldStore {
     return PRODUCER_FIELD.get(instance);
   }
 
+  @Nullable
   public static String extract(Consumer<?> instance) {
     return CONSUMER_FIELD.get(instance);
   }
 
+  @Nullable
   public static SendCallbackData extract(SendCallback instance) {
     return CALLBACK_FIELD.get(instance);
   }

@@ -5,14 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.springframework.amqp.core.Message;
 
-enum SpringRabbitMessageAttributesGetter implements MessagingAttributesGetter<Message, Void> {
-  INSTANCE;
+class SpringRabbitMessageAttributesGetter implements MessagingAttributesGetter<Message, Void> {
 
   @Override
   public String getSystem(Message message) {
@@ -80,8 +81,8 @@ enum SpringRabbitMessageAttributesGetter implements MessagingAttributesGetter<Me
   public List<String> getMessageHeader(Message message, String name) {
     Object value = message.getMessageProperties().getHeaders().get(name);
     if (value != null) {
-      return Collections.singletonList(value.toString());
+      return singletonList(value.toString());
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 }

@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.extension.instrumentation.internal;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import net.bytebuddy.utility.JavaModule;
@@ -61,7 +61,7 @@ public interface ExperimentalInstrumentationModule {
    * @return the list of packages (without trailing dots)
    */
   default List<String> agentPackagesToHide() {
-    return Collections.emptyList();
+    return emptyList();
   }
 
   /**
@@ -73,16 +73,20 @@ public interface ExperimentalInstrumentationModule {
   // TODO: when moving this method outside of experimental API, we need to decide using JavaModule
   // instance or a class FQN in the map entry, as it could lead to some limitations
   default Map<JavaModule, List<String>> jpmsModulesToOpen() {
-    return Collections.emptyMap();
+    return emptyMap();
   }
 
   /**
-   * Signals that the advice in this module is ready to be used with indy instrumentation and the
-   * automatic advice conversion doesn't need to be applied.
+   * Returns a list of instrumentation helper classes that are exposed to the application class
+   * loader.
    *
-   * @return true if module is ready to be used with indy instrumentation.
+   * <p>When using non-inline advice helper classes are loaded into a separate class loader. Classes
+   * from that class loader aren't visible to the instrumented application. This method can be used
+   * to expose some of the helper classes to the application class loader, so that they can be
+   * loaded through the loadClass method of the application class loader. This can for example be
+   * used to add a SPI implementation that can be loaded via the ServiceLoader.
    */
-  default boolean isIndyReady() {
-    return false;
+  default List<String> exposedClassNames() {
+    return emptyList();
   }
 }

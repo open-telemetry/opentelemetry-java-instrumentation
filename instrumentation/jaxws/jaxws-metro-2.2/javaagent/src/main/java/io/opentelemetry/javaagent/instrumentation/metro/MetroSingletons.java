@@ -12,10 +12,10 @@ import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 public class MetroSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jaxws-metro-2.2";
 
-  private static final Instrumenter<MetroRequest, Void> INSTRUMENTER;
+  private static final Instrumenter<MetroRequest, Void> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<MetroRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, MetroRequest::spanName)
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
@@ -23,7 +23,7 @@ public class MetroSingletons {
   }
 
   public static Instrumenter<MetroRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private MetroSingletons() {}

@@ -16,7 +16,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class CounterInstrumentation implements TypeInstrumentation {
+class CounterInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -26,15 +26,15 @@ public class CounterInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("inc").and(takesArguments(long.class)), this.getClass().getName() + "$IncAdvice");
+        named("inc").and(takesArguments(long.class)), getClass().getName() + "$IncAdvice");
     transformer.applyAdviceToMethod(
-        named("dec").and(takesArguments(long.class)), this.getClass().getName() + "$DecAdvice");
+        named("dec").and(takesArguments(long.class)), getClass().getName() + "$DecAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class IncAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This Counter counter, @Advice.Argument(0) long increment) {
       metrics().counterAdd(counter, increment);
     }
@@ -43,7 +43,7 @@ public class CounterInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class DecAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This Counter counter, @Advice.Argument(0) long decrement) {
       metrics().counterAdd(counter, -decrement);
     }

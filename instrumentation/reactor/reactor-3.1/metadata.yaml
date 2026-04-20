@@ -1,0 +1,14 @@
+display_name: Reactor
+description: >
+  This instrumentation enables context propagation for Project Reactor reactive streams, it does
+  not emit any telemetry on its own.
+features:
+  - CONTEXT_PROPAGATION
+library_link: https://projectreactor.io/
+configurations:
+  - name: otel.instrumentation.reactor.experimental-span-attributes
+    description: >
+      Enables the capture of the experimental `reactor.canceled` attribute on spans when reactive
+      streams are cancelled.
+    type: boolean
+    default: false

@@ -5,17 +5,18 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.Message;
 
-enum RocketMqProducerAttributeGetter
+final class RocketMqProducerAttributeGetter
     implements MessagingAttributesGetter<SendMessageContext, Void> {
-  INSTANCE;
 
   @Override
   public String getSystem(SendMessageContext request) {
@@ -84,10 +85,14 @@ enum RocketMqProducerAttributeGetter
 
   @Override
   public List<String> getMessageHeader(SendMessageContext request, String name) {
-    String value = request.getMessage().getProperties().get(name);
-    if (value != null) {
-      return Collections.singletonList(value);
+    Message message = request.getMessage();
+    if (message == null) {
+      return emptyList();
     }
-    return Collections.emptyList();
+    String value = message.getProperties().get(name);
+    if (value != null) {
+      return singletonList(value);
+    }
+    return emptyList();
   }
 }

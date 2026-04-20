@@ -8,10 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import reactor.core.publisher.Mono;
 
-public class TracedWithSpan {
+class TracedWithSpan {
 
   @WithSpan
-  public <T> Mono<T> mono(Mono<T> mono) {
+  <T> Mono<T> mono(Mono<T> mono) {
     return mono;
   }
 }

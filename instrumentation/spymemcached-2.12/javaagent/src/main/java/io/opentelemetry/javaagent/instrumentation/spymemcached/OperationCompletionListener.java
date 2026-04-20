@@ -17,10 +17,6 @@ import net.spy.memcached.internal.OperationFuture;
 public class OperationCompletionListener extends CompletionListener<OperationFuture<?>>
     implements net.spy.memcached.internal.OperationCompletionListener {
 
-  private OperationCompletionListener(Context parentContext, SpymemcachedRequest request) {
-    super(parentContext, request);
-  }
-
   @Nullable
   public static OperationCompletionListener create(
       Context parentContext, MemcachedConnection connection, String methodName) {
@@ -29,6 +25,10 @@ public class OperationCompletionListener extends CompletionListener<OperationFut
       return null;
     }
     return new OperationCompletionListener(parentContext, request);
+  }
+
+  private OperationCompletionListener(Context parentContext, SpymemcachedRequest request) {
+    super(parentContext, request);
   }
 
   @Override

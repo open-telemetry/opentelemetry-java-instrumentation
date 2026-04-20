@@ -22,7 +22,7 @@ import org.glassfish.grizzly.filterchain.FilterChainContext;
 import org.glassfish.grizzly.http.HttpRequestPacket;
 import org.glassfish.grizzly.http.HttpResponsePacket;
 
-public class HttpServerFilterInstrumentation implements TypeInstrumentation {
+class HttpServerFilterInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -38,22 +38,22 @@ public class HttpServerFilterInstrumentation implements TypeInstrumentation {
             .and(takesArgument(2, named("org.glassfish.grizzly.http.HttpResponsePacket")))
             .and(takesArgument(3, named("org.glassfish.grizzly.http.HttpContent")))
             .and(isPrivate()),
-        HttpServerFilterInstrumentation.class.getName() + "$PrepareResponseAdvice");
+        getClass().getName() + "$PrepareResponseAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class PrepareResponseAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.Argument(0) FilterChainContext ctx,
         @Advice.Argument(2) HttpResponsePacket response) {
       Context context = GrizzlyStateStorage.getContext(ctx);
       HttpServerResponseCustomizerHolder.getCustomizer()
-          .customize(context, response, GrizzlyHttpResponseMutator.INSTANCE);
+          .customize(context, response, new GrizzlyHttpResponseMutator());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(0) FilterChainContext ctx,
         @Advice.Argument(2) HttpResponsePacket response) {
@@ -61,9 +61,7 @@ public class HttpServerFilterInstrumentation implements TypeInstrumentation {
       HttpRequestPacket request = GrizzlyStateStorage.removeRequest(ctx);
       if (context != null && request != null) {
         Throwable error = GrizzlyErrorHolder.getOrDefault(context, null);
-        if (error == null) {
-          error = AppServerBridge.getException(context);
-        }
+        error = AppServerBridge.getException(context, error);
         instrumenter().end(context, request, response, error);
       }
     }

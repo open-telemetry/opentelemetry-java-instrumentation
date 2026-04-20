@@ -69,12 +69,14 @@ final class ActivejHttpServerAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getUrlQuery(HttpRequest request) {
     return request.getQuery();
   }
 
   @Override
   @SuppressWarnings("UnnecessaryDefaultInEnumSwitch")
+  @Nullable
   public String getNetworkProtocolName(HttpRequest request, @Nullable HttpResponse httpResponse) {
     return switch (request.getVersion()) {
       case HTTP_0_9, HTTP_1_0, HTTP_1_1, HTTP_2_0 -> "http";
@@ -84,6 +86,7 @@ final class ActivejHttpServerAttributesGetter
 
   @Override
   @SuppressWarnings("UnnecessaryDefaultInEnumSwitch")
+  @Nullable
   public String getNetworkProtocolVersion(
       HttpRequest request, @Nullable HttpResponse httpResponse) {
     return switch (request.getVersion()) {

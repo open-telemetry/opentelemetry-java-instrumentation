@@ -6,8 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -20,9 +21,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
@@ -30,6 +28,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@SuppressWarnings("deprecation") // testing old code semconv
 class ContextBridgeTest {
 
   @RegisterExtension
@@ -78,14 +77,16 @@ class ContextBridgeTest {
     // When
     runnable.run();
     // Then
-    List<AttributeAssertion> assertions =
-        SemconvCodeStabilityUtil.codeFunctionAssertions(runnable.getClass(), "run");
-    assertions.add(equalTo(stringKey("cat"), "yes"));
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("test").hasNoParent().hasAttributesSatisfyingExactly(assertions)));
+                    span.hasName("test")
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION, "run"),
+                            equalTo(CODE_NAMESPACE, runnable.getClass().getName()),
+                            equalTo(stringKey("cat"), "yes"))));
   }
 
   @Test
@@ -138,15 +139,17 @@ class ContextBridgeTest {
     // When
     runnable.run();
 
-    List<AttributeAssertion> assertions = codeFunctionAssertions(runnable.getClass(), "run");
-    assertions.add(equalTo(stringKey("cat"), "yes"));
-
     // Then
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("test").hasNoParent().hasAttributesSatisfyingExactly(assertions)));
+                    span.hasName("test")
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION, "run"),
+                            equalTo(CODE_NAMESPACE, runnable.getClass().getName()),
+                            equalTo(stringKey("cat"), "yes"))));
   }
 
   @Test

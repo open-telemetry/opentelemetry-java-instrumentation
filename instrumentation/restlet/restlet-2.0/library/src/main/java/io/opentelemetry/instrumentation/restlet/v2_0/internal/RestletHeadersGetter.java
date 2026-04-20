@@ -5,14 +5,14 @@
 
 package io.opentelemetry.instrumentation.restlet.v2_0.internal;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyIterator;
 import static java.util.Collections.emptySet;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
@@ -23,27 +23,22 @@ import org.restlet.util.Series;
 
 final class RestletHeadersGetter implements TextMapGetter<Request> {
 
-  private static final MethodHandle GET_ATTRIBUTES;
+  private static final MethodHandle GET_ATTRIBUTES = findGetAttributes();
 
-  static {
-    MethodHandle getAttributes = null;
-
+  @Nullable
+  private static MethodHandle findGetAttributes() {
     MethodHandles.Lookup lookup = MethodHandles.lookup();
     try {
-      getAttributes =
-          lookup.findVirtual(Message.class, "getAttributes", MethodType.methodType(Map.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
+      return lookup.findVirtual(Message.class, "getAttributes", MethodType.methodType(Map.class));
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
       // changed the return type to ConcurrentMap in version 2.1
       try {
-        getAttributes =
-            lookup.findVirtual(
-                Message.class, "getAttributes", MethodType.methodType(ConcurrentMap.class));
-      } catch (NoSuchMethodException | IllegalAccessException ex) {
-        // ignored
+        return lookup.findVirtual(
+            Message.class, "getAttributes", MethodType.methodType(ConcurrentMap.class));
+      } catch (NoSuchMethodException | IllegalAccessException ignore) {
+        return null;
       }
     }
-
-    GET_ATTRIBUTES = getAttributes;
   }
 
   @Override
@@ -53,21 +48,22 @@ final class RestletHeadersGetter implements TextMapGetter<Request> {
   }
 
   @Override
-  public String get(Request carrier, String key) {
+  @Nullable
+  public String get(@Nullable Request carrier, String key) {
     Series<?> headers = getHeaders(carrier);
     return headers == null ? null : headers.getFirstValue(key, /* ignoreCase= */ true);
   }
 
   @Override
-  public Iterator<String> getAll(Request carrier, String key) {
+  public Iterator<String> getAll(@Nullable Request carrier, String key) {
     Series<?> headers = getHeaders(carrier);
     return headers == null
-        ? Collections.emptyIterator()
-        : Arrays.asList(headers.getValuesArray(key, /* ignoreCase= */ true)).iterator();
+        ? emptyIterator()
+        : asList(headers.getValuesArray(key, /* ignoreCase= */ true)).iterator();
   }
 
   @Nullable
-  static Series<?> getHeaders(Message carrier) {
+  static Series<?> getHeaders(@Nullable Message carrier) {
     if (GET_ATTRIBUTES == null) {
       return null;
     }

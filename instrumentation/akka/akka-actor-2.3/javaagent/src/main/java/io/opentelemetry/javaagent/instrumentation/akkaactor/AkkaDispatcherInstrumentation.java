@@ -19,7 +19,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AkkaDispatcherInstrumentation implements TypeInstrumentation {
+class AkkaDispatcherInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -32,13 +32,13 @@ public class AkkaDispatcherInstrumentation implements TypeInstrumentation {
         named("dispatch")
             .and(takesArgument(0, named("akka.actor.ActorCell")))
             .and(takesArgument(1, named("akka.dispatch.Envelope"))),
-        AkkaDispatcherInstrumentation.class.getName() + "$DispatchEnvelopeAdvice");
+        getClass().getName() + "$DispatchEnvelopeAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class DispatchEnvelopeAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static PropagatedContext enterDispatch(@Advice.Argument(1) Envelope envelope) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, envelope.message())) {
@@ -48,7 +48,7 @@ public class AkkaDispatcherInstrumentation implements TypeInstrumentation {
       return null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exitDispatch(
         @Advice.Argument(1) Envelope envelope,
         @Advice.Enter PropagatedContext propagatedContext,

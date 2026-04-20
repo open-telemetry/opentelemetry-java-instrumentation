@@ -5,11 +5,13 @@
 
 package io.opentelemetry.instrumentation.resources;
 
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_VERSION;
+
 import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.resources.internal.ManifestResourceExtractor;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ServiceAttributes;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -37,12 +39,8 @@ public final class ManifestResourceProvider extends AttributeResourceProvider<Re
           @Override
           public void registerAttributes(Builder<Resource> builder) {
             builder
-                .add(
-                    ServiceAttributes.SERVICE_NAME,
-                    r -> Optional.ofNullable(r.getAttribute(ServiceAttributes.SERVICE_NAME)))
-                .add(
-                    ServiceAttributes.SERVICE_VERSION,
-                    r -> Optional.ofNullable(r.getAttribute(ServiceAttributes.SERVICE_VERSION)));
+                .add(SERVICE_NAME, r -> Optional.ofNullable(r.getAttribute(SERVICE_NAME)))
+                .add(SERVICE_VERSION, r -> Optional.ofNullable(r.getAttribute(SERVICE_VERSION)));
           }
         });
   }

@@ -5,13 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
+import static java.util.Collections.singletonMap;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
-import java.util.Collections;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
 
 final class CamelPropagationUtil {
@@ -32,7 +34,7 @@ final class CamelPropagationUtil {
     return AwsXrayPropagator.getInstance()
         .extract(
             Context.current(),
-            Collections.singletonMap("X-Amzn-Trace-Id", exchangeHeaders.get("AWSTraceHeader")),
+            singletonMap("X-Amzn-Trace-Id", exchangeHeaders.get("AWSTraceHeader")),
             MapGetter.INSTANCE);
   }
 
@@ -57,7 +59,11 @@ final class CamelPropagationUtil {
     }
 
     @Override
-    public String get(Map<String, Object> map, String key) {
+    @Nullable
+    public String get(@Nullable Map<String, Object> map, String key) {
+      if (map == null) {
+        return null;
+      }
       Object value = map.get(key);
       return (value == null ? null : value.toString());
     }
@@ -67,7 +73,10 @@ final class CamelPropagationUtil {
     INSTANCE;
 
     @Override
-    public void set(Map<String, Object> carrier, String key, String value) {
+    public void set(@Nullable Map<String, Object> carrier, String key, String value) {
+      if (carrier == null) {
+        return;
+      }
       // Camel keys are internal ones
       if (!key.startsWith("Camel")) {
         carrier.put(key, value);

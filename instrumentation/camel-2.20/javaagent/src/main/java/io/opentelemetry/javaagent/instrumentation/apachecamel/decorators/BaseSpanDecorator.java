@@ -23,6 +23,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
+import static java.util.Collections.emptyMap;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanKind;
@@ -30,7 +32,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.SpanDecorator;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.camel.Endpoint;
@@ -81,7 +82,7 @@ class BaseSpanDecorator implements SpanDecorator {
       }
       return map;
     }
-    return Collections.emptyMap();
+    return emptyMap();
   }
 
   @Override

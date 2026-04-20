@@ -5,12 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Map;
 import javax.ws.rs.core.Response;
@@ -19,13 +20,20 @@ import org.apache.http.client.utils.URLEncodedUtils;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.specimpl.ResteasyUriBuilder;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ResteasyProxyClientTest extends AbstractHttpClientTest<ResteasyProxyResource> {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  static ResteasyClient client = new ResteasyClientBuilder().connectionPoolSize(4).build();
+  private static final ResteasyClient client =
+      new ResteasyClientBuilder().connectionPoolSize(4).build();
+
+  @AfterAll
+  static void closeClient() {
+    client.close();
+  }
 
   @Override
   public ResteasyProxyResource buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -41,7 +49,7 @@ class ResteasyProxyClientTest extends AbstractHttpClientTest<ResteasyProxyResour
         (method + "_" + uri.getPath()).toLowerCase(Locale.ROOT).replace("/", "").replace('-', '_');
 
     String param =
-        URLEncodedUtils.parse(uri, StandardCharsets.UTF_8.name()).stream()
+        URLEncodedUtils.parse(uri, UTF_8.name()).stream()
             .findFirst()
             .map(NameValuePair::getValue)
             .orElse(null);

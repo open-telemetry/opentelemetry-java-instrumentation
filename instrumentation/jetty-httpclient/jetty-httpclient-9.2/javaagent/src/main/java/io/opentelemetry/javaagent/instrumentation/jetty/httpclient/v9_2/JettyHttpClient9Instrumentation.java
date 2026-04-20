@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2;
 import static io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientWrapUtil.wrapResponseListeners;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2.JettyHttpClientSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -26,7 +25,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.eclipse.jetty.client.HttpRequest;
 import org.eclipse.jetty.client.api.Response;
 
-public class JettyHttpClient9Instrumentation implements TypeInstrumentation {
+class JettyHttpClient9Instrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.eclipse.jetty.client.HttpClient");
@@ -35,11 +34,10 @@ public class JettyHttpClient9Instrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("send"))
+        named("send")
             .and(takesArgument(0, named("org.eclipse.jetty.client.HttpRequest")))
             .and(takesArgument(1, List.class)),
-        JettyHttpClient9Instrumentation.class.getName() + "$JettyHttpClient9Advice");
+        getClass().getName() + "$JettyHttpClient9Advice");
   }
 
   @SuppressWarnings("unused")
@@ -56,7 +54,7 @@ public class JettyHttpClient9Instrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToArguments(@ToArgument(value = 1, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] addTracingEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Argument(1) List<Response.ResponseListener> listeners) {
@@ -72,7 +70,7 @@ public class JettyHttpClient9Instrumentation implements TypeInstrumentation {
       return new Object[] {new AdviceLocals(context, context.makeCurrent()), wrappedListeners};
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void exitTracingInterceptor(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Thrown Throwable throwable,

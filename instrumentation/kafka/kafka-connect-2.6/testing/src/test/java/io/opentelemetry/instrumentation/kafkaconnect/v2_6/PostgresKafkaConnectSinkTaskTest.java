@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.kafkaconnect.v2_6;
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -18,6 +19,7 @@ import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THR
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static io.restassured.RestAssured.given;
 import static java.lang.String.format;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.trace.Span;
@@ -50,20 +52,18 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 import org.testcontainers.utility.DockerImageName;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-@Testcontainers
 class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
 
   private static final Logger logger =
       LoggerFactory.getLogger(PostgresKafkaConnectSinkTaskTest.class);
 
   private static final String POSTGRES_NETWORK_ALIAS = "postgres";
-  private static final String DB_NAME = "test";
+  private static final String DATABASE_NAME = "test";
   private static final String DB_USERNAME = "postgres";
   private static final String DB_PASSWORD = "password";
   private static final String DB_TABLE_PERSON = "person";
@@ -80,7 +80,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
             .withNetwork(network)
             .withNetworkAliases(POSTGRES_NETWORK_ALIAS)
             .withInitScript("postgres-setup.sql")
-            .withDatabaseName(DB_NAME)
+            .withDatabaseName(DATABASE_NAME)
             .withUsername(DB_USERNAME)
             .withPassword(DB_PASSWORD)
             .withStartupTimeout(Duration.ofMinutes(5));
@@ -162,8 +162,14 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
         trace -> {
           // kafka connect consumer trace, linked to producer span via a span link
           Consumer<SpanDataAssert> selectAssertion =
-              span ->
-                  span.hasName("SELECT test").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0));
+              span -> {
+                if (emitStableDatabaseSemconv()) {
+                  span.satisfies(spanData -> assertThat(spanData.getName()).startsWith("SELECT"));
+                } else {
+                  span.hasName("SELECT " + DATABASE_NAME);
+                }
+                span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0));
+              };
 
           trace.hasSpansSatisfyingExactly(
               span ->
@@ -184,7 +190,10 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
               selectAssertion,
               selectAssertion,
               span ->
-                  span.hasName("INSERT test." + DB_TABLE_PERSON)
+                  span.hasName(
+                          emitStableDatabaseSemconv()
+                              ? "INSERT \"" + DB_TABLE_PERSON + "\""
+                              : "INSERT " + DATABASE_NAME + "." + DB_TABLE_PERSON)
                       .hasKind(SpanKind.CLIENT)
                       .hasParent(trace.getSpan(0)));
         },
@@ -287,8 +296,14 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
         trace -> {
           // kafka connect consumer trace, linked to producer span via a span link
           Consumer<SpanDataAssert> selectAssertion =
-              span ->
-                  span.hasName("SELECT test").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0));
+              span -> {
+                if (emitStableDatabaseSemconv()) {
+                  span.satisfies(spanData -> assertThat(spanData.getName()).startsWith("SELECT"));
+                } else {
+                  span.hasName("SELECT " + DATABASE_NAME);
+                }
+                span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0));
+              };
 
           trace.hasSpansSatisfyingExactly(
               span ->
@@ -311,7 +326,10 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
               selectAssertion,
               selectAssertion,
               span ->
-                  span.hasName("INSERT test." + DB_TABLE_PERSON)
+                  span.hasName(
+                          emitStableDatabaseSemconv()
+                              ? "BATCH INSERT \"" + DB_TABLE_PERSON + "\""
+                              : "INSERT " + DATABASE_NAME + "." + DB_TABLE_PERSON)
                       .hasKind(SpanKind.CLIENT)
                       .hasParent(trace.getSpan(0)));
         },
@@ -333,7 +351,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
             Locale.ROOT,
             "jdbc:postgresql://%s:5432/%s?loggerLevel=OFF",
             POSTGRES_NETWORK_ALIAS,
-            DB_NAME));
+            DATABASE_NAME));
     configMap.put("connection.user", DB_USERNAME);
     configMap.put("connection.password", DB_PASSWORD);
     configMap.put("topics", topicName);
@@ -374,7 +392,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
             Locale.ROOT,
             "jdbc:postgresql://%s:5432/%s?loggerLevel=OFF",
             POSTGRES_NETWORK_ALIAS,
-            DB_NAME));
+            DATABASE_NAME));
     configMap.put("connection.user", DB_USERNAME);
     configMap.put("connection.password", DB_PASSWORD);
     // Configure multiple topics separated by commas

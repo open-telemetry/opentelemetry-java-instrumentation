@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import java.io.File;
@@ -22,7 +24,6 @@ import java.security.CodeSource;
 import java.security.PermissionCollection;
 import java.security.Permissions;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -103,8 +104,8 @@ public class ExtensionClassLoader extends URLClassLoader {
           }
         }
       }
-    } catch (IOException ex) {
-      System.err.println("Failed to open embedded extensions " + ex.getMessage());
+    } catch (IOException e) {
+      System.err.println("Failed to open embedded extensions " + e.getMessage());
     }
   }
 
@@ -124,7 +125,7 @@ public class ExtensionClassLoader extends URLClassLoader {
   // visible for testing
   static List<URL> parseLocation(@Nullable String locationName, File javaagentFile) {
     if (locationName == null) {
-      return Collections.emptyList();
+      return emptyList();
     }
 
     List<URL> result = new ArrayList<>();

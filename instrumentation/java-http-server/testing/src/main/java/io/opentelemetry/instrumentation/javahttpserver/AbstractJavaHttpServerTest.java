@@ -9,10 +9,14 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD_FROM_REQUEST_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
 
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpExchange;
@@ -23,11 +27,11 @@ import io.opentelemetry.testing.internal.armeria.common.QueryParams;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<HttpServer> {
@@ -35,7 +39,7 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
   protected void configureContexts(List<HttpContext> contexts) {}
 
   static void sendResponse(HttpExchange exchange, int status, String response) throws IOException {
-    sendResponse(exchange, status, Collections.emptyMap(), response);
+    sendResponse(exchange, status, emptyMap(), response);
   }
 
   static void sendResponse(HttpExchange exchange, int status, Map<String, String> headers)
@@ -47,7 +51,7 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
       HttpExchange exchange, int status, Map<String, String> headers, String response)
       throws IOException {
 
-    byte[] bytes = response.getBytes(StandardCharsets.UTF_8);
+    byte[] bytes = response.getBytes(UTF_8);
 
     // -1 means no content, 0 means unknown content length
     long contentLength = bytes.length == 0 ? -1 : bytes.length;
@@ -92,7 +96,7 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
                             sendResponse(
                                 ctx,
                                 REDIRECT.getStatus(),
-                                Collections.singletonMap("Location", REDIRECT.getBody()))));
+                                singletonMap("Location", REDIRECT.getBody()))));
 
     contexts.add(context);
     context =
@@ -134,7 +138,21 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
     contexts.add(context);
     context =
         server.createContext(
-            "/captureHeaders",
+            INDEXED_CHILD_FROM_REQUEST_BODY.getPath(),
+            ctx ->
+                testing()
+                    .runWithSpan(
+                        "controller",
+                        () -> {
+                          String requestBody = readRequestBody(ctx.getRequestBody());
+                          bodyConsumer(INDEXED_CHILD_FROM_REQUEST_BODY, requestBody);
+                          sendResponse(
+                              ctx, INDEXED_CHILD_FROM_REQUEST_BODY.getStatus(), requestBody);
+                        }));
+    contexts.add(context);
+    context =
+        server.createContext(
+            CAPTURE_HEADERS.getPath(),
             ctx ->
                 testing()
                     .runWithSpan(
@@ -143,7 +161,7 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
                             sendResponse(
                                 ctx,
                                 CAPTURE_HEADERS.getStatus(),
-                                Collections.singletonMap(
+                                singletonMap(
                                     "X-Test-Response",
                                     ctx.getRequestHeaders().getFirst("X-Test-Request")),
                                 CAPTURE_HEADERS.getBody())));
@@ -173,7 +191,11 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
 
   @Override
   protected void stopServer(HttpServer server) {
+    Executor executor = server.getExecutor();
     server.stop(0);
+    if (executor instanceof ExecutorService) {
+      ((ExecutorService) executor).shutdown();
+    }
   }
 
   @Override
@@ -181,6 +203,8 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
     // filter isn't called for non-standard method
     options.disableTestNonStandardHttpMethod();
     options.setTestHttpPipelining(
+        Double.parseDouble(System.getProperty("java.specification.version")) >= 21);
+    options.setTestHttpBodyPipelining(
         Double.parseDouble(System.getProperty("java.specification.version")) >= 21);
     options.setExpectedHttpRoute(
         (endpoint, method) -> {

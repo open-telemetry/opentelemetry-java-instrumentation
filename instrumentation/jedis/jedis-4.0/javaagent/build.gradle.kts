@@ -7,7 +7,6 @@ muzzle {
     group.set("redis.clients")
     module.set("jedis")
     versions.set("[4.0.0-beta1,)")
-    skip("jedis-3.6.2")
     assertInverse.set(true)
   }
 }
@@ -29,7 +28,7 @@ tasks {
     // latest dep test fails because peer ip is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
     jvmArgs("-Djava.net.preferIPv4Stack=true")
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {

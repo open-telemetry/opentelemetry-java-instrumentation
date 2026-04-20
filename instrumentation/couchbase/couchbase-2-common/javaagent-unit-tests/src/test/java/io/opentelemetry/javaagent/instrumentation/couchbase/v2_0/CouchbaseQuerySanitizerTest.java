@@ -24,7 +24,7 @@ class CouchbaseQuerySanitizerTest {
   @ParameterizedTest
   @MethodSource("providesArguments")
   void testShouldNormalizeStringQuery(Parameter parameter) {
-    String normalized = CouchbaseQuerySanitizer.sanitize(parameter.query).getQueryText();
+    String normalized = CouchbaseQuerySanitizer.analyze(parameter.query).getQueryText();
     assertThat(normalized).isNotNull();
     // the analytics query ends up with trailing ';' in earlier couchbase version, but no trailing
     // ';' in later couchbase version
@@ -72,10 +72,10 @@ class CouchbaseQuerySanitizerTest {
   }
 
   private static class Parameter {
-    final Object query;
-    final String expected;
+    private final Object query;
+    private final String expected;
 
-    Parameter(Object query, String expected) {
+    private Parameter(Object query, String expected) {
       this.query = query;
       this.expected = expected;
     }

@@ -7,10 +7,6 @@ muzzle {
     group.set("org.elasticsearch.client")
     module.set("transport")
     versions.set("[6.0.0,)")
-    // version 7.11.0 depends on org.elasticsearch:elasticsearch:7.11.0 which depends on
-    // org.elasticsearch:elasticsearch-plugin-classloader:7.11.0 which does not exist
-    // version 7.17.8 has broken module metadata
-    skip("7.11.0", "7.17.8")
     // version 8.8.0 depends on elasticsearch:elasticsearch-preallocate which doesn't exist
     excludeDependency("org.elasticsearch:elasticsearch-preallocate")
     assertInverse.set(true)
@@ -19,11 +15,6 @@ muzzle {
     group.set("org.elasticsearch")
     module.set("elasticsearch")
     versions.set("[6.0.0,8.0.0)")
-    // version 7.11.0 depends on org.elasticsearch:elasticsearch:7.11.0 which depends on
-    // org.elasticsearch:elasticsearch-plugin-classloader:7.11.0 which does not exist
-    // 9.3.0 has missing org.elasticsearch:exponential-histogram
-    // see https://github.com/elastic/elasticsearch/issues/141846
-    skip("7.11.0", "9.3.0")
     // version 8.8.0 depends on elasticsearch:elasticsearch-preallocate which doesn't exist
     excludeDependency("org.elasticsearch:elasticsearch-preallocate")
     assertInverse.set(true)
@@ -48,13 +39,11 @@ dependencies {
   testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
-
 testing {
   suites {
     val elasticsearch6Test by registering(JvmTestSuite::class) {
       dependencies {
-        if (latestDepTest) {
+        if (otelProps.testLatestDeps) {
           implementation("org.elasticsearch.client:transport:6.4.+")
           implementation("org.elasticsearch.plugin:transport-netty4-client:6.4.+")
         } else {
@@ -68,7 +57,7 @@ testing {
 
     val elasticsearch65Test by registering(JvmTestSuite::class) {
       dependencies {
-        if (latestDepTest) {
+        if (otelProps.testLatestDeps) {
           implementation("org.elasticsearch.client:transport:6.+")
           implementation("org.elasticsearch.plugin:transport-netty4-client:6.+")
         } else {
@@ -82,7 +71,7 @@ testing {
 
     val elasticsearch7Test by registering(JvmTestSuite::class) {
       dependencies {
-        if (latestDepTest) {
+        if (otelProps.testLatestDeps) {
           implementation("org.elasticsearch.client:transport:latest.release")
           implementation("org.elasticsearch.plugin:transport-netty4-client:latest.release")
         } else {
@@ -98,9 +87,9 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testSuites = testing.suites.withType(JvmTestSuite::class)
@@ -110,8 +99,8 @@ tasks {
       testClassesDirs = suite.sources.output.classesDirs
       classpath = suite.sources.runtimeClasspath
 
-      jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
-      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
+      jvmArgs("-Dotel.semconv-stability.opt-in=database")
+      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
     }
   }
 
@@ -129,7 +118,7 @@ tasks {
     dependsOn(testing.suites, stableSemconvSuites, experimentalSuites)
   }
 
-  if (findProperty("denyUnsafe") as Boolean) {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

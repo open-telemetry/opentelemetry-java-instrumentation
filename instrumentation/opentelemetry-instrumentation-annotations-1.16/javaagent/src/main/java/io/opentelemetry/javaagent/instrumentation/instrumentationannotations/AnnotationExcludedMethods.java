@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.instrumentationannotations;
 
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
+import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 
@@ -17,9 +18,8 @@ import java.util.Set;
 import net.bytebuddy.description.ByteCodeElement;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.matcher.ElementMatchers;
 
-public final class AnnotationExcludedMethods {
+public class AnnotationExcludedMethods {
 
   /*
   Returns a matcher for all methods that should be excluded from auto-instrumentation by
@@ -34,8 +34,7 @@ public final class AnnotationExcludedMethods {
                 GlobalOpenTelemetry.get(), "opentelemetry_instrumentation_annotations"));
     for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
       String className = entry.getKey();
-      ElementMatcher.Junction<ByteCodeElement> matcher =
-          isDeclaredBy(ElementMatchers.named(className));
+      ElementMatcher.Junction<ByteCodeElement> matcher = isDeclaredBy(named(className));
 
       Set<String> methodNames = entry.getValue();
       if (!methodNames.isEmpty()) {

@@ -29,6 +29,7 @@ import org.restlet.data.MediaType;
 import org.restlet.data.Protocol;
 import org.restlet.data.Status;
 import org.restlet.routing.Redirector;
+import org.restlet.routing.Route;
 import org.restlet.routing.Router;
 import org.restlet.routing.Template;
 import org.restlet.routing.VirtualHost;
@@ -69,13 +70,13 @@ public class AbstractRestletServerTest extends AbstractHttpServerTest<Component>
 
   // org.restlet.routing.Route is deprecated in 2.0 but not deprecated in later versions
   @SuppressWarnings("deprecation")
-  private org.restlet.routing.Route attach(String path, Restlet restlet) {
+  private Route attach(String path, Restlet restlet) {
     try {
       // return type is different in latest version
       Method method = VirtualHost.class.getMethod("attach", String.class, Restlet.class);
-      return (org.restlet.routing.Route) method.invoke(host, path, restlet);
-    } catch (Exception exception) {
-      throw new IllegalStateException(exception);
+      return (Route) method.invoke(host, path, restlet);
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
     }
   }
 
@@ -86,8 +87,8 @@ public class AbstractRestletServerTest extends AbstractHttpServerTest<Component>
       // return type is different in latest version
       Method method = VirtualHost.class.getMethod("attach", Restlet.class);
       method.invoke(host, restlet);
-    } catch (Exception exception) {
-      throw new IllegalStateException(exception);
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
     }
   }
 
@@ -95,8 +96,8 @@ public class AbstractRestletServerTest extends AbstractHttpServerTest<Component>
     try {
       Method getTemplate = route.getClass().getMethod("getTemplate");
       return (Template) getTemplate.invoke(route);
-    } catch (Exception exception) {
-      throw new IllegalStateException(exception);
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
     }
   }
 

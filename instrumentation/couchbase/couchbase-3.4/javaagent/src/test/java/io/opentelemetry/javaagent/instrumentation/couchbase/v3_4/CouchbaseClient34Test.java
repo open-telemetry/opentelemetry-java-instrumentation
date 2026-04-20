@@ -11,11 +11,11 @@ import com.couchbase.client.core.error.DocumentNotFoundException;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.Collection;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.time.Duration;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -32,11 +32,14 @@ class CouchbaseClient34Test {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   private static final Logger logger = LoggerFactory.getLogger("couchbase-container");
 
-  static CouchbaseContainer couchbase;
-  static Cluster cluster;
-  static Collection collection;
+  private static CouchbaseContainer couchbase;
+  private static Cluster cluster;
+  private static Collection collection;
 
   @BeforeAll
   static void setup() {
@@ -48,26 +51,22 @@ class CouchbaseClient34Test {
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .withStartupTimeout(Duration.ofMinutes(2));
     couchbase.start();
+    cleanup.deferAfterAll(couchbase::stop);
 
     cluster =
         Cluster.connect(
             couchbase.getConnectionString(), couchbase.getUsername(), couchbase.getPassword());
+    cleanup.deferAfterAll(cluster::disconnect);
     Bucket bucket = cluster.bucket("test");
     collection = bucket.defaultCollection();
     bucket.waitUntilReady(Duration.ofSeconds(30));
-  }
-
-  @AfterAll
-  static void cleanup() {
-    cluster.disconnect();
-    couchbase.stop();
   }
 
   @Test
   void testEmitsSpans() {
     try {
       collection.get("id");
-    } catch (DocumentNotFoundException e) {
+    } catch (DocumentNotFoundException ignored) {
       // Expected
     }
 

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
@@ -44,7 +44,7 @@ class MessagingSpanNameExtractorTest {
     String spanName = underTest.extract(message);
 
     // then
-    assertEquals(expectedSpanName, spanName);
+    assertThat(spanName).isEqualTo(expectedSpanName);
   }
 
   static Stream<Arguments> spanNameParams() {

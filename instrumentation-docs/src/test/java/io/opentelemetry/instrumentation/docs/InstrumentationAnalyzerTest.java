@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.docs;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import io.opentelemetry.instrumentation.docs.parsers.ModuleParser;
 import io.opentelemetry.instrumentation.docs.utils.InstrumentationPath;
-import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -21,7 +21,7 @@ class InstrumentationAnalyzerTest {
   @Test
   void testConvertToInstrumentationModule() {
     List<InstrumentationPath> paths =
-        Arrays.asList(
+        asList(
             new InstrumentationPath(
                 "log4j-appender-2.17",
                 "instrumentation/log4j/log4j-appender-2.17/library",
@@ -74,7 +74,7 @@ class InstrumentationAnalyzerTest {
   @Test
   void testModuleConverterCreatesUniqueModules() {
     List<InstrumentationPath> paths =
-        Arrays.asList(
+        asList(
             new InstrumentationPath(
                 "same-name",
                 "instrumentation/test1/same-name/library",

@@ -1,2 +1,13 @@
+display_name: Spring WS
 disabled_by_default: true
+description: >
+  This instrumentation enables controller spans for Spring Web Services 2.0+ endpoints
+  (controller spans are disabled by default).
+features:
+  - CONTROLLER_SPANS
 library_link: https://spring.io/projects/spring-ws
+configurations:
+  - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+    description: Enables the creation of experimental controller spans.
+    type: boolean
+    default: false

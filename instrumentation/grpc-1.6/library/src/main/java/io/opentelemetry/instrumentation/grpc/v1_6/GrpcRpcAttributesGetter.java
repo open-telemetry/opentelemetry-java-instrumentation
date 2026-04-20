@@ -5,16 +5,17 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
+
 import io.grpc.Metadata;
+import io.grpc.Status;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesGetter;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 
-enum GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest> {
-  INSTANCE;
+final class GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, Status> {
 
   @Override
   public String getSystem(GrpcRequest request) {
@@ -32,6 +33,7 @@ enum GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest> {
     return fullMethodName.substring(0, slashIndex);
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getMethod(GrpcRequest request) {
@@ -41,6 +43,11 @@ enum GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest> {
       return null;
     }
     return fullMethodName.substring(slashIndex + 1);
+  }
+
+  @Override
+  public String getRpcMethod(GrpcRequest request) {
+    return request.getMethod().getFullMethodName();
   }
 
   @Override
@@ -57,20 +64,20 @@ enum GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest> {
 
   List<String> metadataValue(GrpcRequest request, String key) {
     if (request.getMetadata() == null) {
-      return Collections.emptyList();
+      return emptyList();
     }
 
-    if (key == null || key.isEmpty()) {
-      return Collections.emptyList();
+    if (key.isEmpty()) {
+      return emptyList();
     }
 
     Iterable<String> values =
         request.getMetadata().getAll(Metadata.Key.of(key, Metadata.ASCII_STRING_MARSHALLER));
 
     if (values == null) {
-      return Collections.emptyList();
+      return emptyList();
     }
 
-    return StreamSupport.stream(values.spliterator(), false).collect(Collectors.toList());
+    return StreamSupport.stream(values.spliterator(), false).collect(toList());
   }
 }

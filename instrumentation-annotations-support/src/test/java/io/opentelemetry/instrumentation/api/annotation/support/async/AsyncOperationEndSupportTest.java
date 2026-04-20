@@ -5,9 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.annotation.support.async;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotSame;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
@@ -39,7 +37,7 @@ class AsyncOperationEndSupportTest {
     CompletableFuture<String> result = underTest.asyncEnd(context, "request", future, exception);
 
     // then
-    assertSame(future, result);
+    assertThat(result).isSameAs(future);
 
     verify(instrumenter).end(context, "request", null, exception);
   }
@@ -57,7 +55,7 @@ class AsyncOperationEndSupportTest {
     CompletableFuture<String> result = underTest.asyncEnd(context, "request", future, null);
 
     // then
-    assertSame(future, result);
+    assertThat(result).isSameAs(future);
 
     verify(instrumenter).end(context, "request", null, null);
   }
@@ -74,7 +72,7 @@ class AsyncOperationEndSupportTest {
     String result = underTest.asyncEnd(context, "request", "not async", null);
 
     // then
-    assertSame("not async", result);
+    assertThat(result).isSameAs("not async");
 
     verify(instrumenter).end(context, "request", "not async", null);
   }
@@ -92,14 +90,14 @@ class AsyncOperationEndSupportTest {
     CompletableFuture<String> result = underTest.asyncEnd(context, "request", future, null);
 
     // then
-    assertNotSame(future, result);
+    assertThat(result).isNotSameAs(future);
     verifyNoInteractions(instrumenter);
 
     // when
     future.complete("done!");
 
     // then
-    assertEquals("done!", result.join());
+    assertThat(result.join()).isEqualTo("done!");
     verify(instrumenter).end(context, "request", "done!", null);
   }
 }

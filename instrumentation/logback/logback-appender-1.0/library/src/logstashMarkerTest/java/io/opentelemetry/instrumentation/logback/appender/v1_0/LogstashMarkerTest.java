@@ -5,11 +5,18 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
+import static io.opentelemetry.api.common.AttributeKey.booleanArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.booleanKey;
+import static io.opentelemetry.api.common.AttributeKey.doubleArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.doubleKey;
+import static io.opentelemetry.api.common.AttributeKey.longArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Arrays.asList;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import net.logstash.logback.marker.Markers;
@@ -49,12 +56,11 @@ class LogstashMarkerTest {
         logRecord ->
             logRecord
                 .hasBody("log message 1")
-                .hasTotalAttributeCount(3) // 3 markers (event.name handled separately)
                 .hasEventName("MyEventName")
-                .hasAttributesSatisfying(
-                    equalTo(AttributeKey.stringKey("field1"), "value1"),
-                    equalTo(AttributeKey.longKey("field2"), 2L),
-                    equalTo(AttributeKey.stringKey("field3"), "value3")));
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("field1"), "value1"),
+                    equalTo(longKey("field2"), 2L),
+                    equalTo(stringKey("field3"), "value3")));
   }
 
   @Test
@@ -78,7 +84,7 @@ class LogstashMarkerTest {
         .addMarker(Markers.append("field8", new Boolean[] {true, false, true}))
         .addMarker(Markers.appendArray("field9", 1, 2.0, true, "text"))
         .addMarker(Markers.appendRaw("field10", "raw value"))
-        .addMarker(Markers.append("field11", Arrays.asList(1, 2, 3)))
+        .addMarker(Markers.append("field11", asList(1, 2, 3)))
         .addMarker(Markers.appendEntries(entries))
         .log();
 
@@ -88,26 +94,21 @@ class LogstashMarkerTest {
                 .hasBody("log message 1")
                 // 14 fields (including map keys)
                 .hasTotalAttributeCount(14)
-                .hasAttributesSatisfying(
-                    equalTo(AttributeKey.longKey("field1"), 1L),
-                    equalTo(AttributeKey.doubleKey("field2"), 2.0),
-                    equalTo(AttributeKey.stringKey("field3"), "text-1"),
-                    equalTo(AttributeKey.booleanKey("field4"), true),
-                    equalTo(AttributeKey.longArrayKey("field5"), Arrays.asList(1L, 2L, 3L)),
-                    equalTo(AttributeKey.doubleArrayKey("field6"), Arrays.asList(1.0, 2.0, 3.0)),
-                    equalTo(
-                        AttributeKey.stringArrayKey("field7"),
-                        Arrays.asList("text-2", "text-3", "text-4")),
-                    equalTo(
-                        AttributeKey.booleanArrayKey("field8"), Arrays.asList(true, false, true)),
-                    equalTo(
-                        AttributeKey.stringArrayKey("field9"),
-                        Arrays.asList("1", "2.0", "true", "text")),
-                    equalTo(AttributeKey.stringKey("field10"), "raw value"),
-                    equalTo(AttributeKey.stringArrayKey("field11"), Arrays.asList("1", "2", "3")),
-                    equalTo(AttributeKey.longKey("map1"), 1L),
-                    equalTo(AttributeKey.doubleKey("map2"), 2.0),
-                    equalTo(AttributeKey.stringKey("map3"), "text-5")));
+                .hasAttributesSatisfyingExactly(
+                    equalTo(longKey("field1"), 1L),
+                    equalTo(doubleKey("field2"), 2.0),
+                    equalTo(stringKey("field3"), "text-1"),
+                    equalTo(booleanKey("field4"), true),
+                    equalTo(longArrayKey("field5"), asList(1L, 2L, 3L)),
+                    equalTo(doubleArrayKey("field6"), asList(1.0, 2.0, 3.0)),
+                    equalTo(stringArrayKey("field7"), asList("text-2", "text-3", "text-4")),
+                    equalTo(booleanArrayKey("field8"), asList(true, false, true)),
+                    equalTo(stringArrayKey("field9"), asList("1", "2.0", "true", "text")),
+                    equalTo(stringKey("field10"), "raw value"),
+                    equalTo(stringArrayKey("field11"), asList("1", "2", "3")),
+                    equalTo(longKey("map1"), 1L),
+                    equalTo(doubleKey("map2"), 2.0),
+                    equalTo(stringKey("map3"), "text-5")));
   }
 
   @Test
@@ -128,5 +129,38 @@ class LogstashMarkerTest {
 
     testing.waitAndAssertLogRecords(
         logRecord -> logRecord.hasBody("log message 1").hasTotalAttributeCount(0));
+  }
+
+  @Test
+  void otelEventNameInSingleFieldMarker() {
+    logger
+        .atInfo()
+        .setMessage("log message 1")
+        .addMarker(Markers.append("otel.event.name", "MyEventName"))
+        .addMarker(Markers.append("key1", "val1"))
+        .log();
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasBody("log message 1")
+                .hasEventName("MyEventName")
+                .hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "val1")));
+  }
+
+  @Test
+  void otelEventNameInMapEntriesMarker() {
+    Map<String, Object> entries = new HashMap<>();
+    entries.put("otel.event.name", "MyEventName");
+    entries.put("key1", "val1");
+
+    logger.atInfo().setMessage("log message 1").addMarker(Markers.appendEntries(entries)).log();
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasBody("log message 1")
+                .hasEventName("MyEventName")
+                .hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "val1")));
   }
 }

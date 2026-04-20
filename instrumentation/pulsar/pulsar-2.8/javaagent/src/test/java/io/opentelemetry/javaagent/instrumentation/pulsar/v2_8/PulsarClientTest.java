@@ -12,14 +12,16 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
@@ -56,7 +58,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
     String msg = "test";
     MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
 
-    latch.await(1, TimeUnit.MINUTES);
+    latch.await(1, MINUTES);
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertSortedTraces(
@@ -91,6 +93,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                             processAttributes(topic, msgId.toString(), false))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testConsumeNonPartitionedTopicUsingReceive() throws Exception {
     String topic = "persistent://public/default/testConsumeNonPartitionedTopicCallReceive";
@@ -136,9 +139,11 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                             receiveAttributes(topic, msgId.toString(), false))));
 
     assertThat(testing.metrics())
+        .filteredOn(
+            metric ->
+                !metric.getName().startsWith("otel.sdk.")
+                    && !metric.getName().startsWith("pulsar.client."))
         .satisfiesExactlyInAnyOrder(
-            metric -> assertThat(metric).hasName("otel.sdk.span.started"),
-            metric -> assertThat(metric).hasName("otel.sdk.span.live"),
             metric ->
                 assertThat(metric)
                     .hasName("messaging.receive.duration")
@@ -150,9 +155,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                 point ->
                                     point
                                         .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(MESSAGING_OPERATION, "receive"),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))),
@@ -167,9 +173,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                               point -> {
                                 point
                                     .hasValue(1)
-                                    .hasAttributesSatisfying(
+                                    .hasAttributesSatisfyingExactly(
                                         equalTo(MESSAGING_SYSTEM, "pulsar"),
                                         equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                        equalTo(MESSAGING_OPERATION, "receive"),
                                         equalTo(SERVER_PORT, brokerPort),
                                         equalTo(SERVER_ADDRESS, brokerHost));
                               });
@@ -185,14 +192,16 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                 point ->
                                     point
                                         .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(MESSAGING_OPERATION, "publish"),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testConsumeNonPartitionedTopicUsingReceiveAsync() throws Exception {
     String topic = "persistent://public/default/testConsumeNonPartitionedTopicCallReceiveAsync";
@@ -220,7 +229,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
     String msg = "test";
     MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
 
-    result.get(1, TimeUnit.MINUTES);
+    result.get(1, MINUTES);
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertSortedTraces(
@@ -252,9 +261,11 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                         .hasParent(trace.getSpan(0))));
 
     assertThat(testing.metrics())
+        .filteredOn(
+            metric ->
+                !metric.getName().startsWith("otel.sdk.")
+                    && !metric.getName().startsWith("pulsar.client."))
         .satisfiesExactlyInAnyOrder(
-            metric -> assertThat(metric).hasName("otel.sdk.span.started"),
-            metric -> assertThat(metric).hasName("otel.sdk.span.live"),
             metric ->
                 assertThat(metric)
                     .hasName("messaging.receive.duration")
@@ -266,9 +277,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                 point ->
                                     point
                                         .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(MESSAGING_OPERATION, "receive"),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))),
@@ -283,9 +295,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                               point -> {
                                 point
                                     .hasValue(1)
-                                    .hasAttributesSatisfying(
+                                    .hasAttributesSatisfyingExactly(
                                         equalTo(MESSAGING_SYSTEM, "pulsar"),
                                         equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                        equalTo(MESSAGING_OPERATION, "receive"),
                                         equalTo(SERVER_PORT, brokerPort),
                                         equalTo(SERVER_ADDRESS, brokerHost));
                               });
@@ -301,14 +314,16 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                 point ->
                                     point
                                         .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(MESSAGING_OPERATION, "publish"),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testConsumeNonPartitionedTopicUsingReceiveWithTimeout() throws Exception {
     String topic =
@@ -326,7 +341,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
     String msg = "test";
     MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
 
-    Message<String> receivedMsg = consumer.receive(1, TimeUnit.MINUTES);
+    Message<String> receivedMsg = consumer.receive(1, MINUTES);
     consumer.acknowledge(receivedMsg);
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
@@ -355,9 +370,11 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                             receiveAttributes(topic, msgId.toString(), false))));
 
     assertThat(testing.metrics())
+        .filteredOn(
+            metric ->
+                !metric.getName().startsWith("otel.sdk.")
+                    && !metric.getName().startsWith("pulsar.client."))
         .satisfiesExactlyInAnyOrder(
-            metric -> assertThat(metric).hasName("otel.sdk.span.started"),
-            metric -> assertThat(metric).hasName("otel.sdk.span.live"),
             metric ->
                 assertThat(metric)
                     .hasName("messaging.receive.duration")
@@ -369,9 +386,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                 point ->
                                     point
                                         .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(MESSAGING_OPERATION, "receive"),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))),
@@ -386,9 +404,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                               point -> {
                                 point
                                     .hasValue(1)
-                                    .hasAttributesSatisfying(
+                                    .hasAttributesSatisfyingExactly(
                                         equalTo(MESSAGING_SYSTEM, "pulsar"),
                                         equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                        equalTo(MESSAGING_OPERATION, "receive"),
                                         equalTo(SERVER_PORT, brokerPort),
                                         equalTo(SERVER_ADDRESS, brokerHost));
                               });
@@ -404,9 +423,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                 point ->
                                     point
                                         .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(MESSAGING_OPERATION, "publish"),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))));
@@ -439,7 +459,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
             "parent",
             () -> producer.newMessage().value(msg).property("Test-Message-Header", "test").send());
 
-    latch.await(1, TimeUnit.MINUTES);
+    latch.await(1, MINUTES);
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertSortedTraces(
@@ -499,7 +519,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
     String msg = "test";
     MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
 
-    latch.await(1, TimeUnit.MINUTES);
+    latch.await(1, MINUTES);
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertSortedTraces(
@@ -560,7 +580,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                     })
             .subscribe();
 
-    latch.await(1, TimeUnit.MINUTES);
+    latch.await(1, MINUTES);
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     AtomicReference<SpanData> producerSpan2 = new AtomicReference<>();
@@ -687,11 +707,11 @@ class PulsarClientTest extends AbstractPulsarClientTest {
         client
             .newProducer(Schema.STRING)
             .topic(topic)
-            .sendTimeout(0, TimeUnit.SECONDS)
+            .sendTimeout(0, SECONDS)
             .enableBatching(false)
             .create();
     Transaction transaction =
-        client.newTransaction().withTransactionTimeout(15, TimeUnit.SECONDS).build().get();
+        client.newTransaction().withTransactionTimeout(15, SECONDS).build().get();
     testing.runWithSpan("parent1", () -> producer.newMessage(transaction).value("test1").send());
     transaction.commit();
 

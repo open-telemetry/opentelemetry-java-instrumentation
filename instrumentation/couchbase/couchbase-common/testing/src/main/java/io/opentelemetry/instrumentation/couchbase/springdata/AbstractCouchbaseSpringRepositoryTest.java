@@ -17,6 +17,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.COUCHBASE;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.couchbase.client.java.Cluster;
@@ -29,8 +30,6 @@ import io.opentelemetry.instrumentation.couchbase.AbstractCouchbaseTest;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.Collections;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -49,10 +48,9 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
   private TestRepository repository;
 
   @BeforeAll
-  void setUp() {
+  void setUpSpring() {
     CouchbaseEnvironment environment = envBuilder(bucketCouchbase).build();
-    Cluster couchbaseCluster =
-        CouchbaseCluster.create(environment, Collections.singletonList("127.0.0.1"));
+    Cluster couchbaseCluster = CouchbaseCluster.create(environment, singletonList("127.0.0.1"));
 
     // Create view for SpringRepository's findAll()
     couchbaseCluster
@@ -61,7 +59,7 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
         .insertDesignDocument(
             DesignDocument.create(
                 "testDocument",
-                Collections.singletonList(
+                singletonList(
                     DefaultView.create(
                         "all",
                         "function (doc, meta) {"
@@ -76,6 +74,7 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
     couchbaseCluster.disconnect();
 
     applicationContext = new AnnotationConfigApplicationContext(CouchbaseConfig.class);
+    cleanup.deferAfterAll(applicationContext);
     repository = applicationContext.getBean(TestRepository.class);
   }
 
@@ -83,11 +82,6 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
     testing.clearData();
     repository.deleteAll();
     testing.waitForTraces(2);
-  }
-
-  @AfterAll
-  void cleanUp() {
-    applicationContext.close();
   }
 
   protected abstract TestDocument findById(TestRepository repository, String id);
@@ -98,7 +92,7 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
   void emptyRepo() {
     Iterable<TestDocument> result = repository.findAll();
 
-    assertThat(result.iterator().hasNext()).isFalse();
+    assertThat(result).isEmpty();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -112,7 +106,7 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                             equalTo(maybeStable(DB_NAME), bucketCouchbase.name()),
                             satisfies(
                                 maybeStable(DB_STATEMENT),
-                                s -> s.startsWith("ViewQuery(testDocument/all)")),
+                                val -> val.startsWith("ViewQuery(testDocument/all)")),
                             equalTo(NETWORK_TYPE, networkType()),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
@@ -303,7 +297,7 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                             equalTo(maybeStable(DB_NAME), bucketCouchbase.name()),
                             satisfies(
                                 maybeStable(DB_STATEMENT),
-                                s -> s.startsWith("ViewQuery(testDocument/all)")),
+                                val -> val.startsWith("ViewQuery(testDocument/all)")),
                             equalTo(NETWORK_TYPE, networkType()),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),

@@ -1,3 +1,4 @@
+display_name: OpenTelemetry Extension Kotlin
 classification: internal
 description: >
   Our Kotlin coroutine instrumentation relies on a shaded copy of the opentelemetry-extension-kotlin

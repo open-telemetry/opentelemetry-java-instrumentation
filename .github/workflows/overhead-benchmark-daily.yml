@@ -35,17 +35,11 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
 
       - name: Build Latest Snapshot JAR
-        # Exclude GraalVM collectReachabilityMetadata tasks to avoid configuration cache issues
-        # See https://github.com/graalvm/native-build-tools/issues/477
         run: >
           ./gradlew assemble -x javadoc
-          -x :smoke-tests-otel-starter:spring-boot-3:collectReachabilityMetadata
-          -x :smoke-tests-otel-starter:spring-boot-3.2:collectReachabilityMetadata
-          -x :smoke-tests-otel-starter:spring-boot-4:collectReachabilityMetadata
-          -x :smoke-tests-otel-starter:spring-boot-reactive-3:collectReachabilityMetadata
 
       - name: Run tests
         working-directory: benchmark-overhead

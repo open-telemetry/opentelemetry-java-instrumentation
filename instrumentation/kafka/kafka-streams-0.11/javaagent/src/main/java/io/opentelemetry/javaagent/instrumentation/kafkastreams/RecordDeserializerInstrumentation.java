@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPackagePrivate;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -24,7 +23,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 
 // in 1.0.0 SourceNodeRecordDeserializer was refactored into RecordDeserializer
-public class RecordDeserializerInstrumentation implements TypeInstrumentation {
+class RecordDeserializerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -35,19 +34,18 @@ public class RecordDeserializerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPackagePrivate())
+        isPackagePrivate()
             .and(named("deserialize"))
             .and(takesArgument(1, named("org.apache.kafka.clients.consumer.ConsumerRecord")))
             .and(returns(named("org.apache.kafka.clients.consumer.ConsumerRecord"))),
-        RecordDeserializerInstrumentation.class.getName() + "$DeserializeAdvice");
+        getClass().getName() + "$DeserializeAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class DeserializeAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static ConsumerRecord<?, ?> onExit(
         @Advice.Argument(1) ConsumerRecord<?, ?> incoming,
         @Advice.Return ConsumerRecord<?, ?> result) {

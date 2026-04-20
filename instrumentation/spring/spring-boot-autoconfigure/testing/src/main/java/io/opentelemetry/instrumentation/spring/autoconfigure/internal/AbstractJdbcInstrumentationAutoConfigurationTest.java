@@ -33,7 +33,7 @@ public abstract class AbstractJdbcInstrumentationAutoConfigurationTest {
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
-  void statementSanitizerEnabledByDefault() {
+  void querySanitizerEnabledByDefault() {
     contextRunner.run(
         context -> {
           DataSource dataSource = context.getBean(DataSource.class);

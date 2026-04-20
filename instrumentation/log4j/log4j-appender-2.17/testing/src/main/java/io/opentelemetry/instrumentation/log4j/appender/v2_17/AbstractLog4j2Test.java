@@ -19,6 +19,7 @@ import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THR
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
@@ -44,6 +45,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 public abstract class AbstractLog4j2Test {
 
   private static final Logger logger = LogManager.getLogger("abc");
+
+  private static final boolean v3Preview =
+      Boolean.getBoolean("otel.instrumentation.common.v3-preview");
 
   protected abstract InstrumentationExtension testing();
 
@@ -126,7 +130,7 @@ public abstract class AbstractLog4j2Test {
                           equalTo(EXCEPTION_MESSAGE, "hello"),
                           satisfies(
                               EXCEPTION_STACKTRACE,
-                              v -> v.contains(AbstractLog4j2Test.class.getName()))));
+                              val -> val.contains(AbstractLog4j2Test.class.getName()))));
                 }
                 logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
 
@@ -140,11 +144,16 @@ public abstract class AbstractLog4j2Test {
     }
   }
 
-  @Test
-  void testContextData() {
+  private static Stream<Arguments> eventNameProperties() {
+    return Stream.of(Arguments.of("event.name"), Arguments.of("otel.event.name"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("eventNameProperties")
+  void testContextData(String eventNameProperty) {
     ThreadContext.put("key1", "val1");
     ThreadContext.put("key2", "val2");
-    ThreadContext.put("event.name", "MyEventName");
+    ThreadContext.put(eventNameProperty, "MyEventName");
     try {
       logger.info("xyz: {}", 123);
     } finally {
@@ -177,8 +186,8 @@ public abstract class AbstractLog4j2Test {
 
     List<AttributeAssertion> assertions = addCodeLocationAttributes("testStringMapMessage");
     assertions.addAll(threadAttributesAssertions());
-    assertions.add(equalTo(stringKey("log4j.map_message.key1"), "val1"));
-    assertions.add(equalTo(stringKey("log4j.map_message.key2"), "val2"));
+    assertions.add(equalTo(mapMessageKey("key1"), "val1"));
+    assertions.add(equalTo(mapMessageKey("key2"), "val2"));
 
     testing()
         .waitAndAssertLogRecords(
@@ -201,7 +210,7 @@ public abstract class AbstractLog4j2Test {
     List<AttributeAssertion> assertions =
         addCodeLocationAttributes("testStringMapMessageWithSpecialAttribute");
     assertions.addAll(threadAttributesAssertions());
-    assertions.add(equalTo(stringKey("log4j.map_message.key1"), "val1"));
+    assertions.add(equalTo(mapMessageKey("key1"), "val1"));
 
     testing()
         .waitAndAssertLogRecords(
@@ -223,14 +232,47 @@ public abstract class AbstractLog4j2Test {
 
     List<AttributeAssertion> assertions = addCodeLocationAttributes("testStructuredDataMapMessage");
     assertions.addAll(threadAttributesAssertions());
-    assertions.add(equalTo(stringKey("log4j.map_message.key1"), "val1"));
-    assertions.add(equalTo(stringKey("log4j.map_message.key2"), "val2"));
+    assertions.add(equalTo(mapMessageKey("key1"), "val1"));
+    assertions.add(equalTo(mapMessageKey("key2"), "val2"));
 
     testing()
         .waitAndAssertLogRecords(
             logRecord ->
                 logRecord
                     .hasBody("a message")
+                    .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+                    .hasSeverity(Severity.INFO)
+                    .hasSeverityText("INFO")
+                    .hasAttributesSatisfyingExactly(assertions));
+  }
+
+  @Test
+  void testStringMapMessageWinsOverContextData() {
+    ThreadContext.put("key1", "context-value");
+    StringMapMessage message = new StringMapMessage();
+    message.put("key1", "message-value");
+    try {
+      logger.info(message);
+    } finally {
+      ThreadContext.clearMap();
+    }
+
+    // currently, context data uses "key1" while MapMessage uses "log4j.map_message.key1"
+    // once the "log4j.map_message" prefix is removed, both will share the same key "key1"
+    // and the MapMessage value should win (context data is captured first, MapMessage second)
+    List<AttributeAssertion> assertions =
+        addCodeLocationAttributes("testStringMapMessageWinsOverContextData");
+    assertions.addAll(threadAttributesAssertions());
+    assertions.add(equalTo(mapMessageKey("key1"), "message-value"));
+    if (!v3Preview) {
+      assertions.add(equalTo(stringKey("key1"), "context-value"));
+    }
+
+    testing()
+        .waitAndAssertLogRecords(
+            logRecord ->
+                logRecord
+                    .hasBody((Value<?>) null)
                     .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
                     .hasSeverity(Severity.INFO)
                     .hasSeverityText("INFO")
@@ -252,6 +294,30 @@ public abstract class AbstractLog4j2Test {
         .waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly(assertions));
   }
 
+  @Test
+  void testOtelEventNameInMapMessage() {
+    StringMapMessage message = new StringMapMessage();
+    message.put("otel.event.name", "MyEventName");
+    message.put("key1", "val1");
+    logger.info(message);
+
+    List<AttributeAssertion> assertions =
+        addCodeLocationAttributes("testOtelEventNameInMapMessage");
+    assertions.addAll(threadAttributesAssertions());
+    assertions.add(equalTo(mapMessageKey("key1"), "val1"));
+
+    testing()
+        .waitAndAssertLogRecords(
+            logRecord ->
+                logRecord
+                    .hasBody((Value<?>) null)
+                    .hasEventName("MyEventName")
+                    .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+                    .hasSeverity(Severity.INFO)
+                    .hasSeverityText("INFO")
+                    .hasAttributesSatisfyingExactly(assertions));
+  }
+
   private static void performLogging(
       OneArgLoggerMethod oneArgLoggerMethod,
       TwoArgLoggerMethod twoArgLoggerMethod,
@@ -270,13 +336,17 @@ public abstract class AbstractLog4j2Test {
     return result;
   }
 
+  static AttributeKey<String> mapMessageKey(String key) {
+    return stringKey(v3Preview ? key : "log4j.map_message." + key);
+  }
+
   @FunctionalInterface
-  public interface OneArgLoggerMethod {
+  private interface OneArgLoggerMethod {
     void call(Logger logger, String msg, Object arg);
   }
 
   @FunctionalInterface
-  public interface TwoArgLoggerMethod {
+  private interface TwoArgLoggerMethod {
     void call(Logger logger, String msg, Object arg1, Object arg2);
   }
 }

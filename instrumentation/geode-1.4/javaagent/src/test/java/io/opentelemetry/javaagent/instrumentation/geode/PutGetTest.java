@@ -15,8 +15,8 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.GEODE;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -44,10 +44,10 @@ class PutGetTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  static ClientCache cache = new ClientCacheFactory().create();
-  static ClientRegionFactory<Object, Object> regionFactory =
+  private static final ClientCache cache = new ClientCacheFactory().create();
+  private static final ClientRegionFactory<Object, Object> regionFactory =
       cache.createClientRegionFactory(ClientRegionShortcut.LOCAL);
-  static Region<Object, Object> region = regionFactory.create("test-region");
+  private static final Region<Object, Object> region = regionFactory.create("test-region");
 
   private static Stream<Arguments> provideParameters() {
     return Stream.of(
@@ -76,7 +76,7 @@ class PutGetTest {
               region.put(key, value);
               return region.get(key);
             });
-    assertEquals(value, cacheValue);
+    assertThat(cacheValue).isEqualTo(value);
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -85,21 +85,21 @@ class PutGetTest {
                     span.hasName("clear test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "geode"),
+                            equalTo(maybeStable(DB_SYSTEM), GEODE),
                             equalTo(maybeStable(DB_NAME), "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "clear")),
                 span ->
                     span.hasName("put test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "geode"),
+                            equalTo(maybeStable(DB_SYSTEM), GEODE),
                             equalTo(maybeStable(DB_NAME), "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "put")),
                 span ->
                     span.hasName("get test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "geode"),
+                            equalTo(maybeStable(DB_SYSTEM), GEODE),
                             equalTo(maybeStable(DB_NAME), "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "get"))));
   }
@@ -114,7 +114,7 @@ class PutGetTest {
           region.put(key, value);
           region.remove(key);
         });
-    assertEquals(0, region.size());
+    assertThat(region).isEmpty();
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -123,21 +123,21 @@ class PutGetTest {
                     span.hasName("clear test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "geode"),
+                            equalTo(maybeStable(DB_SYSTEM), GEODE),
                             equalTo(maybeStable(DB_NAME), "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "clear")),
                 span ->
                     span.hasName("put test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "geode"),
+                            equalTo(maybeStable(DB_SYSTEM), GEODE),
                             equalTo(maybeStable(DB_NAME), "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "put")),
                 span ->
                     span.hasName("remove test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "geode"),
+                            equalTo(maybeStable(DB_SYSTEM), GEODE),
                             equalTo(maybeStable(DB_NAME), "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "remove"))));
   }
@@ -153,7 +153,7 @@ class PutGetTest {
               region.put(key, value);
               return region.query("SELECT * FROM /test-region");
             });
-    assertEquals(1, cacheValue.size());
+    assertThat(cacheValue).hasSize(1);
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -162,21 +162,21 @@ class PutGetTest {
                     span.hasName("clear test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "geode"),
+                            equalTo(maybeStable(DB_SYSTEM), GEODE),
                             equalTo(maybeStable(DB_NAME), "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "clear")),
                 span ->
                     span.hasName("put test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "geode"),
+                            equalTo(maybeStable(DB_SYSTEM), GEODE),
                             equalTo(maybeStable(DB_NAME), "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "put")),
                 span ->
                     span.hasName("query test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "geode"),
+                            equalTo(maybeStable(DB_SYSTEM), GEODE),
                             equalTo(maybeStable(DB_NAME), "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "query"),
                             equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM /test-region"))));
@@ -193,7 +193,7 @@ class PutGetTest {
               region.put(key, value);
               return region.existsValue("SELECT * FROM /test-region");
             });
-    assertTrue(cacheValue);
+    assertThat(cacheValue).isTrue();
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -202,21 +202,21 @@ class PutGetTest {
                     span.hasName("clear test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "geode"),
+                            equalTo(maybeStable(DB_SYSTEM), GEODE),
                             equalTo(maybeStable(DB_NAME), "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "clear")),
                 span ->
                     span.hasName("put test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "geode"),
+                            equalTo(maybeStable(DB_SYSTEM), GEODE),
                             equalTo(maybeStable(DB_NAME), "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "put")),
                 span ->
                     span.hasName("existsValue test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "geode"),
+                            equalTo(maybeStable(DB_SYSTEM), GEODE),
                             equalTo(maybeStable(DB_NAME), "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "existsValue"),
                             equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM /test-region"))));
@@ -234,7 +234,7 @@ class PutGetTest {
               return region.query("SELECT * FROM /test-region p WHERE p.expDate = '10/2020'");
             });
 
-    assertEquals(value, results.asList().get(0));
+    assertThat(results.asList().get(0)).isEqualTo(value);
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -243,21 +243,21 @@ class PutGetTest {
                     span.hasName("clear test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "geode"),
+                            equalTo(maybeStable(DB_SYSTEM), GEODE),
                             equalTo(maybeStable(DB_NAME), "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "clear")),
                 span ->
                     span.hasName("put test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "geode"),
+                            equalTo(maybeStable(DB_SYSTEM), GEODE),
                             equalTo(maybeStable(DB_NAME), "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "put")),
                 span ->
                     span.hasName("query test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "geode"),
+                            equalTo(maybeStable(DB_SYSTEM), GEODE),
                             equalTo(maybeStable(DB_NAME), "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "query"),
                             equalTo(
@@ -266,8 +266,8 @@ class PutGetTest {
   }
 
   static class Card implements DataSerializable {
-    String cardNumber;
-    String expDate;
+    private String cardNumber;
+    private String expDate;
 
     public Card(String cardNumber, String expDate) {
       this.cardNumber = cardNumber;

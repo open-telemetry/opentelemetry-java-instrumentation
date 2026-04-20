@@ -12,9 +12,10 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static java.util.Collections.singletonList;
 
-import java.util.Collections;
 import play.libs.F;
+import play.mvc.Http.Context.Implicit;
 import play.mvc.Results;
 import play.routing.RoutingDsl;
 import play.server.Server;
@@ -44,9 +45,7 @@ class PlayAsyncServerTest extends PlayServerTest {
                                 INDEXED_CHILD,
                                 () -> {
                                   INDEXED_CHILD.collectSpanAttributes(
-                                      it ->
-                                          play.mvc.Http.Context.Implicit.request()
-                                              .getQueryString(it));
+                                      it -> Implicit.request().getQueryString(it));
                                   return Results.status(
                                       INDEXED_CHILD.getStatus(), INDEXED_CHILD.getBody());
                                 })))
@@ -79,14 +78,13 @@ class PlayAsyncServerTest extends PlayServerTest {
                                   Tuple2<String, String> header =
                                       new Tuple2<>(
                                           "X-Test-Response",
-                                          play.mvc.Http.Context.Implicit.request()
-                                              .getHeader("X-Test-Request"));
+                                          Implicit.request().getHeader("X-Test-Request"));
                                   return new Results.Status(
                                       javaResult
                                           .toScala()
                                           .withHeaders(
                                               JavaConverters.asScalaIteratorConverter(
-                                                      Collections.singletonList(header).iterator())
+                                                      singletonList(header).iterator())
                                                   .asScala()
                                                   .toSeq()));
                                 })))

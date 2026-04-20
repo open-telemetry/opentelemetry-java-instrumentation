@@ -11,9 +11,9 @@ muzzle {
   }
 }
 
-val testLatestDeps = findProperty("testLatestDeps") as Boolean
-
 dependencies {
+  testInstrumentation(project(":instrumentation:log4j:log4j-appender-1.2:javaagent"))
+
   library("org.apache.logging.log4j:log4j-core:2.0")
 
   compileOnly(project(":javaagent-bootstrap"))
@@ -22,7 +22,7 @@ dependencies {
 
   testImplementation(project(":instrumentation:log4j:log4j-appender-2.17:testing"))
 
-  if (testLatestDeps) {
+  if (otelProps.testLatestDeps) {
     // this dependency is needed for the slf4j->log4j test
     testImplementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.+")
     testCompileOnly("biz.aQute.bnd:biz.aQute.bnd.annotation:7.0.0")
@@ -42,7 +42,7 @@ dependencies {
 }
 
 tasks.withType<Test>().configureEach {
-  systemProperty("testLatestDeps", testLatestDeps)
+  systemProperty("testLatestDeps", otelProps.testLatestDeps)
 }
 
 tasks {
@@ -52,11 +52,17 @@ tasks {
     jvmArgs("-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector")
   }
 
-  check {
-    dependsOn(testAsync)
+  val testV3Preview by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
   }
 
-  if (findProperty("denyUnsafe") as Boolean) {
+  check {
+    dependsOn(testAsync, testV3Preview)
+  }
+
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

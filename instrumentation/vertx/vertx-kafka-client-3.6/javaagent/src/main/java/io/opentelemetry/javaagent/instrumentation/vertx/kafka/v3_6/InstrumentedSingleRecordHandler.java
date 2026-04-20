@@ -16,7 +16,7 @@ import io.vertx.core.Handler;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
-public final class InstrumentedSingleRecordHandler<K, V> implements Handler<ConsumerRecord<K, V>> {
+public class InstrumentedSingleRecordHandler<K, V> implements Handler<ConsumerRecord<K, V>> {
 
   @Nullable private final Handler<ConsumerRecord<K, V>> delegate;
 

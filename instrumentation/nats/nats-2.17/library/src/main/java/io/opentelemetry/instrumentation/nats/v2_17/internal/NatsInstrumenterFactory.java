@@ -26,13 +26,13 @@ public final class NatsInstrumenterFactory {
             openTelemetry,
             INSTRUMENTATION_NAME,
             MessagingSpanNameExtractor.create(
-                NatsRequestMessagingAttributesGetter.INSTANCE, MessageOperation.PUBLISH))
+                new NatsRequestMessagingAttributesGetter(), MessageOperation.PUBLISH))
         .addAttributesExtractor(
             MessagingAttributesExtractor.builder(
-                    NatsRequestMessagingAttributesGetter.INSTANCE, MessageOperation.PUBLISH)
+                    new NatsRequestMessagingAttributesGetter(), MessageOperation.PUBLISH)
                 .setCapturedHeaders(capturedHeaders)
                 .build())
-        .buildProducerInstrumenter(NatsRequestTextMapSetter.INSTANCE);
+        .buildProducerInstrumenter(new NatsRequestTextMapSetter());
   }
 
   public static Instrumenter<NatsRequest, Void> createConsumerProcessInstrumenter(
@@ -42,14 +42,14 @@ public final class NatsInstrumenterFactory {
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(
-                    NatsRequestMessagingAttributesGetter.INSTANCE, MessageOperation.PROCESS))
+                    new NatsRequestMessagingAttributesGetter(), MessageOperation.PROCESS))
             .addAttributesExtractor(
                 MessagingAttributesExtractor.builder(
-                        NatsRequestMessagingAttributesGetter.INSTANCE, MessageOperation.PROCESS)
+                        new NatsRequestMessagingAttributesGetter(), MessageOperation.PROCESS)
                     .setCapturedHeaders(capturedHeaders)
                     .build());
 
-    return builder.buildConsumerInstrumenter(NatsRequestTextMapGetter.INSTANCE);
+    return builder.buildConsumerInstrumenter(new NatsRequestTextMapGetter());
   }
 
   private NatsInstrumenterFactory() {}

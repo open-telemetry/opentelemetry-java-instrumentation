@@ -13,14 +13,14 @@ import io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.Elasticsear
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 
-public final class ElasticsearchRest7Singletons {
+public class ElasticsearchRest7Singletons {
 
-  private static final Instrumenter<ElasticsearchRestRequest, Response> INSTRUMENTER =
+  private static final Instrumenter<ElasticsearchRestRequest, Response> instrumenter =
       ElasticsearchRestJavaagentInstrumenterFactory.create(
           "io.opentelemetry.elasticsearch-rest-7.0");
 
   public static Instrumenter<ElasticsearchRestRequest, Response> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static final VirtualField<Request, ElasticsearchEndpointDefinition> ENDPOINT_DEFINITION =

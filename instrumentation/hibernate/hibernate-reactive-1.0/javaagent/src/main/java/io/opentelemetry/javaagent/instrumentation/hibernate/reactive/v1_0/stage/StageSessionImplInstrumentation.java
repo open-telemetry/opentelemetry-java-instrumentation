@@ -20,7 +20,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class StageSessionImplInstrumentation implements TypeInstrumentation {
+class StageSessionImplInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return namedOneOf(
@@ -33,19 +33,19 @@ public class StageSessionImplInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("withTransaction")
             .and(takesArgument(0, Function.class).and(returns(CompletionStage.class))),
-        this.getClass().getName() + "$WithTransactionAdvice");
+        getClass().getName() + "$WithTransactionAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class WithTransactionAdvice {
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Function<?, ?> onEnter(@Advice.Argument(0) Function<?, ?> function) {
       return FunctionWrapper.wrap(function);
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static CompletionStage<?> onExit(@Advice.Return CompletionStage<?> completionStage) {
       return CompletionStageWrapper.wrap(completionStage);
     }

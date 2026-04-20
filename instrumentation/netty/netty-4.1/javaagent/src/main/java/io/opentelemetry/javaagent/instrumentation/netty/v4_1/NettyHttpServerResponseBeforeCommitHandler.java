@@ -17,6 +17,6 @@ public enum NettyHttpServerResponseBeforeCommitHandler
   @Override
   public void handle(Context context, HttpResponse response) {
     HttpServerResponseCustomizerHolder.getCustomizer()
-        .customize(context, response, NettyHttpServerResponseMutator.INSTANCE);
+        .customize(context, response, new NettyHttpServerResponseMutator());
   }
 }

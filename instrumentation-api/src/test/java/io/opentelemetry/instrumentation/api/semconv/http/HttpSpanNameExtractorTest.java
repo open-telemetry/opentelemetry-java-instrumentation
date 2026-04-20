@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.api.semconv.http;
 
+import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalAttributesGetter;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
-import java.util.Collections;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,15 +34,14 @@ class HttpSpanNameExtractorTest {
   void routeAndMethod() {
     when(serverGetter.getHttpRoute(anyMap())).thenReturn("/cats/{id}");
     when(serverGetter.getHttpRequestMethod(anyMap())).thenReturn("GET");
-    assertThat(HttpSpanNameExtractor.create(serverGetter).extract(Collections.emptyMap()))
+    assertThat(HttpSpanNameExtractor.create(serverGetter).extract(emptyMap()))
         .isEqualTo("GET /cats/{id}");
   }
 
   @Test
   void method() {
     when(clientGetter.getHttpRequestMethod(anyMap())).thenReturn("GET");
-    assertThat(HttpSpanNameExtractor.create(clientGetter).extract(Collections.emptyMap()))
-        .isEqualTo("GET");
+    assertThat(HttpSpanNameExtractor.create(clientGetter).extract(emptyMap())).isEqualTo("GET");
   }
 
   @Test
@@ -52,12 +51,11 @@ class HttpSpanNameExtractorTest {
     HttpSpanNameExtractorBuilder<Map<String, String>> builder =
         HttpSpanNameExtractor.builder(clientGetter);
     Experimental.setUrlTemplateExtractor(builder, clientGetter::getUrlTemplate);
-    assertThat(builder.build().extract(Collections.emptyMap())).isEqualTo("GET /cats/{id}");
+    assertThat(builder.build().extract(emptyMap())).isEqualTo("GET /cats/{id}");
   }
 
   @Test
   void nothing() {
-    assertThat(HttpSpanNameExtractor.create(clientGetter).extract(Collections.emptyMap()))
-        .isEqualTo("HTTP");
+    assertThat(HttpSpanNameExtractor.create(clientGetter).extract(emptyMap())).isEqualTo("HTTP");
   }
 }

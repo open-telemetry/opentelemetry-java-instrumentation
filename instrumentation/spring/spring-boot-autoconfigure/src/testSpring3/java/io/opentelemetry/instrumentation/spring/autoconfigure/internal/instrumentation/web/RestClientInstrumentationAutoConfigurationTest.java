@@ -5,8 +5,10 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.web;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.AbstractRestClientInstrumentationAutoConfigurationTest;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
 
 class RestClientInstrumentationAutoConfigurationTest
     extends AbstractRestClientInstrumentationAutoConfigurationTest {
@@ -17,7 +19,12 @@ class RestClientInstrumentationAutoConfigurationTest
   }
 
   @Override
-  protected Class<?> postProcessorClass() {
+  protected Class<RestClientBeanPostProcessor> postProcessorClass() {
     return RestClientBeanPostProcessor.class;
+  }
+
+  @Override
+  protected ClientHttpRequestInterceptor getInterceptor(OpenTelemetry openTelemetry) {
+    return RestClientBeanPostProcessor.getInterceptor(openTelemetry);
   }
 }

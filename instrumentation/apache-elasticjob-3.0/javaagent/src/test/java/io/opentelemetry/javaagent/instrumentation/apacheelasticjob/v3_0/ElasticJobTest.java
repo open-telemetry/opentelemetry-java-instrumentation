@@ -30,7 +30,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import javax.annotation.Nullable;
 import org.apache.shardingsphere.elasticjob.api.JobConfiguration;
 import org.apache.shardingsphere.elasticjob.http.props.HttpJobProperties;
 import org.apache.shardingsphere.elasticjob.infra.env.IpUtils;
@@ -39,7 +38,6 @@ import org.apache.shardingsphere.elasticjob.reg.base.CoordinatorRegistryCenter;
 import org.apache.shardingsphere.elasticjob.reg.zookeeper.ZookeeperConfiguration;
 import org.apache.shardingsphere.elasticjob.reg.zookeeper.ZookeeperRegistryCenter;
 import org.apache.shardingsphere.elasticjob.script.props.ScriptJobProperties;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -70,7 +68,9 @@ class ElasticJobTest {
     int embedZookeeperPort = PortUtils.findOpenPort();
     zookeeperConnectionString = "localhost:" + embedZookeeperPort;
     EmbedZookeeperServer.start(embedZookeeperPort);
+    cleanup.deferAfterAll(EmbedZookeeperServer::stop);
     regCenter = setUpRegistryCenter();
+    cleanup.deferAfterAll(regCenter::close);
     httpServer = HttpServer.create(new InetSocketAddress(0), 0);
     httpServer.createContext(
         "/hello",
@@ -81,17 +81,7 @@ class ElasticJobTest {
           exchange.close();
         });
     httpServer.start();
-  }
-
-  @AfterAll
-  static void stop() throws Exception {
-    if (httpServer != null) {
-      httpServer.stop(0);
-    }
-    if (regCenter != null) {
-      regCenter.close();
-    }
-    EmbedZookeeperServer.stop();
+    cleanup.deferAfterAll(() -> httpServer.stop(0));
   }
 
   @Test
@@ -354,7 +344,6 @@ class ElasticJobTest {
     return tempScript.toString();
   }
 
-  @Nullable
   private static <T> T experimental(T value) {
     return EXPERIMENTAL_ATTRIBUTES_ENABLED ? value : null;
   }
@@ -390,9 +379,11 @@ class ElasticJobTest {
     assertions.add(
         satisfies(
             stringKey("scheduling.apache-elasticjob.task.id"),
-            taskId -> {
+            val -> {
               if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
-                taskId.contains(jobName);
+                val.contains(jobName);
+              } else {
+                val.isNull();
               }
             }));
 

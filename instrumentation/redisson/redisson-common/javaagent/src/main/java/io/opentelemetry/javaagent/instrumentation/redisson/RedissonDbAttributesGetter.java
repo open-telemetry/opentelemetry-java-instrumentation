@@ -6,16 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 final class RedissonDbAttributesGetter implements DbClientAttributesGetter<RedissonRequest, Void> {
 
-  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
   public String getDbSystemName(RedissonRequest request) {
-    return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
+    return DbSystemNameIncubatingValues.REDIS;
   }
 
   @Nullable
@@ -25,6 +24,7 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
   }
 
   @Override
+  @Nullable
   public String getDbQueryText(RedissonRequest request) {
     return request.getQueryText();
   }
@@ -36,6 +36,7 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
   }
 
   @Override
+  @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       RedissonRequest request, @Nullable Void unused) {
     return request.getAddress();

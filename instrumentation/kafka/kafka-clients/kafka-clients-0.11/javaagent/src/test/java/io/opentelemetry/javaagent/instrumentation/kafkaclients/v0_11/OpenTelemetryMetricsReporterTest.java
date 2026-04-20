@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.AbstractOpenTelemetryMetricsReporterTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.Collections;
 import java.util.Map;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -55,13 +55,13 @@ class OpenTelemetryMetricsReporterTest extends AbstractOpenTelemetryMetricsRepor
     Map<String, Object> consumerConfig = consumerConfig();
     consumerConfig.put(
         CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
-        Collections.singletonList(TestMetricsReporter.class));
+        singletonList(TestMetricsReporter.class));
     new KafkaConsumer<>(consumerConfig).close();
 
     Map<String, Object> producerConfig = producerConfig();
     producerConfig.put(
         CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
-        Collections.singletonList(TestMetricsReporter.class));
+        singletonList(TestMetricsReporter.class));
     new KafkaProducer<>(producerConfig).close();
   }
 
@@ -70,13 +70,13 @@ class OpenTelemetryMetricsReporterTest extends AbstractOpenTelemetryMetricsRepor
     Map<String, Object> consumerConfig = consumerConfig();
     consumerConfig.put(
         CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
-        Collections.singletonList(TestMetricsReporter.class.getName()));
+        singletonList(TestMetricsReporter.class.getName()));
     new KafkaConsumer<>(consumerConfig).close();
 
     Map<String, Object> producerConfig = producerConfig();
     producerConfig.put(
         CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
-        Collections.singletonList(TestMetricsReporter.class.getName()));
+        singletonList(TestMetricsReporter.class.getName()));
     new KafkaProducer<>(producerConfig).close();
   }
 }

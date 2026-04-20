@@ -7,7 +7,6 @@ muzzle {
     group.set("io.opentelemetry")
     module.set("opentelemetry-extension-annotations")
     versions.set("[0.16.0,)")
-    skip("0.13.0") // opentelemetry-api has a bad dependency on non-alpha api-metric 0.13.0
     assertInverse.set(true)
   }
 }
@@ -44,7 +43,7 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs(
-      "-Dotel.experimental.config.file=$projectDir/src/test/resources/declarative-config.yaml"
+      "-Dotel.config.file=$projectDir/src/test/resources/declarative-config.yaml"
     )
   }
 

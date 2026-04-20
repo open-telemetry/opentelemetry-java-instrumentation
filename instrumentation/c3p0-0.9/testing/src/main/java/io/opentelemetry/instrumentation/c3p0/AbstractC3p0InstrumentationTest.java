@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.c3p0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
@@ -15,16 +17,11 @@ import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetrics
 import io.opentelemetry.instrumentation.testing.junit.db.MockDriver;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
 public abstract class AbstractC3p0InstrumentationTest {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.c3p0-0.9";
 
@@ -49,7 +46,7 @@ public abstract class AbstractC3p0InstrumentationTest {
     // when
     Connection connection = c3p0DataSource.getConnection();
     configure(c3p0DataSource);
-    TimeUnit.MILLISECONDS.sleep(100);
+    MILLISECONDS.sleep(100);
     connection.close();
 
     // then
@@ -67,7 +64,7 @@ public abstract class AbstractC3p0InstrumentationTest {
     // then
     Set<String> metricNames =
         new HashSet<>(
-            Arrays.asList(
+            asList(
                 emitStableDatabaseSemconv()
                     ? "db.client.connection.count"
                     : "db.client.connections.usage",
@@ -83,9 +80,7 @@ public abstract class AbstractC3p0InstrumentationTest {
   private void assertDataSourceMetrics(PooledDataSource dataSource) {
     String dataSourceName = dataSource.getDataSourceName();
 
-    assertThat(dataSourceName)
-        .as("c3p0 generates a unique pool name if it's not explicitly provided")
-        .isNotEmpty();
+    assertThat(dataSourceName).isNotEmpty();
 
     DbConnectionPoolMetricsAssertions.create(
             testing(), INSTRUMENTATION_NAME, dataSource.getDataSourceName())

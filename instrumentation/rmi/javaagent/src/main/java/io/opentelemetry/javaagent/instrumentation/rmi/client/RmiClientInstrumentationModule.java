@@ -10,12 +10,10 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class RmiClientInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class RmiClientInstrumentationModule extends InstrumentationModule {
 
   public RmiClientInstrumentationModule() {
     super("rmi", "rmi-client");
@@ -24,10 +22,5 @@ public class RmiClientInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new UnicastRefInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

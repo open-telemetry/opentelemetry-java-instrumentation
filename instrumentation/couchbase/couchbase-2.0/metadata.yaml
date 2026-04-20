@@ -1,3 +1,4 @@
+display_name: Couchbase Client
 description: >
   This instrumentation enables database client spans and database client metrics for Couchbase 2.0
   operations. It automatically traces key-value operations (get, upsert, replace, remove), view
@@ -7,7 +8,16 @@ semantic_conventions:
   - DATABASE_CLIENT_METRICS
 library_link: https://github.com/couchbase/couchbase-java-client
 configurations:
-  - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-    description: Enables statement sanitization for database queries.
+  - name: otel.instrumentation.couchbase.experimental-span-attributes
+    declarative_name: java.couchbase.experimental_span_attributes/development
+    description: >
+      Enables experimental span attributes `couchbase.operation_id` and
+      `couchbase.local.address`. Different operation types receive different experimental
+      attributes.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.common.db.query-sanitization.enabled
+    declarative_name: java.common.db.query_sanitization.enabled
+    description: Enables query sanitization for database queries.
     type: boolean
     default: true

@@ -26,6 +26,8 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.HSQLDB;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OTHER_SQL;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -91,17 +93,17 @@ public abstract class AbstractJdbcInstrumentationTest {
     return dataSource;
   }
 
-  protected boolean hasPeerService() {
+  protected boolean hasServicePeerName() {
     return true;
   }
 
-  private static final String dbName = "jdbcUnitTest";
-  private static final String dbNameLower = dbName.toLowerCase(Locale.ROOT);
+  private static final String databaseName = "jdbcUnitTest";
+  private static final String databaseNameLower = databaseName.toLowerCase(Locale.ROOT);
   private static final Map<String, String> jdbcUrls =
       ImmutableMap.of(
-          "h2", "jdbc:h2:mem:" + dbName,
-          "derby", "jdbc:derby:memory:" + dbName,
-          "hsqldb", "jdbc:hsqldb:mem:" + dbName);
+          "h2", "jdbc:h2:mem:" + databaseName,
+          "derby", "jdbc:derby:memory:" + databaseName,
+          "hsqldb", "jdbc:hsqldb:mem:" + databaseName);
   private static final Map<String, String> jdbcDriverClassNames =
       ImmutableMap.of(
           "h2", "org.h2.Driver",
@@ -109,7 +111,7 @@ public abstract class AbstractJdbcInstrumentationTest {
           "hsqldb", "org.hsqldb.jdbc.JDBCDriver");
   private static final Map<String, String> jdbcUserNames = Maps.newHashMap();
   private static final Properties connectionProps = new Properties();
-  // JDBC Connection pool name (i.e. HikariCP) -> Map<dbName, Datasource>
+  // JDBC Connection pool name (i.e. HikariCP) -> Map<databaseName, Datasource>
   private static final Map<String, Map<String, DataSource>> cpDatasources = Maps.newHashMap();
 
   static {
@@ -138,8 +140,8 @@ public abstract class AbstractJdbcInstrumentationTest {
                           if (dataSource instanceof Closeable) {
                             try {
                               ((Closeable) dataSource).close();
-                            } catch (IOException ignore) {
-                              // ignore
+                            } catch (IOException ignored) {
+                              // ignore exceptions during close
                             }
                           }
                         }));
@@ -207,17 +209,16 @@ public abstract class AbstractJdbcInstrumentationTest {
   }
 
   static DataSource createDs(String connectionPoolName, String dbType, String jdbcUrl) {
-    DataSource ds = null;
-    if (connectionPoolName.equals("tomcat")) {
-      ds = createTomcatDs(dbType, jdbcUrl);
+    switch (connectionPoolName) {
+      case "tomcat":
+        return createTomcatDs(dbType, jdbcUrl);
+      case "hikari":
+        return createHikariDs(dbType, jdbcUrl);
+      case "c3p0":
+        return createC3P0Ds(dbType, jdbcUrl);
+      default:
+        throw new IllegalArgumentException("Unknown connection pool: " + connectionPoolName);
     }
-    if (connectionPoolName.equals("hikari")) {
-      ds = createHikariDs(dbType, jdbcUrl);
-    }
-    if (connectionPoolName.equals("c3p0")) {
-      ds = createC3P0Ds(dbType, jdbcUrl);
-    }
-    return ds;
   }
 
   static Stream<Arguments> basicStatementStream() throws SQLException {
@@ -228,7 +229,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             null,
             "SELECT 3",
             "SELECT ?",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + dbNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseNameLower,
             "h2:mem:",
             null),
         Arguments.of(
@@ -255,7 +256,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             null,
             "SELECT 3",
             "SELECT ?",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + dbNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseNameLower,
             "h2:mem:",
             null),
         Arguments.of(
@@ -282,7 +283,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             null,
             "SELECT 3",
             "SELECT ?",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + dbNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseNameLower,
             "h2:mem:",
             null),
         Arguments.of(
@@ -309,7 +310,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             null,
             "SELECT 3",
             "SELECT ?",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + dbNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseNameLower,
             "h2:mem:",
             null),
         Arguments.of(
@@ -336,7 +337,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             null,
             "SELECT 3",
             "SELECT ?",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + dbNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseNameLower,
             "h2:mem:",
             null),
         Arguments.of(
@@ -364,14 +365,14 @@ public abstract class AbstractJdbcInstrumentationTest {
             null,
             "CALL ABS(-3)",
             "CALL ABS(?)",
-            emitStableDatabaseSemconv() ? "CALL ABS" : "CALL " + dbNameLower + ".ABS",
+            emitStableDatabaseSemconv() ? "CALL ABS" : "CALL " + databaseNameLower + ".ABS",
             "h2:mem:",
             null));
   }
 
   @ParameterizedTest
   @MethodSource("basicStatementStream")
-  public void testBasicStatement(
+  void testBasicStatement(
       String system,
       Connection conn,
       String username,
@@ -401,7 +402,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), dbNameLower),
+                                equalTo(maybeStable(DB_NAME), databaseNameLower),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
@@ -439,7 +440,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             null,
             "SELECT 3",
             emitStableDatabaseSemconv() ? "SELECT 3" : "SELECT ?",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + dbNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseNameLower,
             "h2:mem:",
             null),
         Arguments.of(
@@ -459,7 +460,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             null,
             "SELECT 3",
             emitStableDatabaseSemconv() ? "SELECT 3" : "SELECT ?",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + dbNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseNameLower,
             "h2:mem:",
             null),
         Arguments.of(
@@ -479,7 +480,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             null,
             "SELECT 3",
             emitStableDatabaseSemconv() ? "SELECT 3" : "SELECT ?",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + dbNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseNameLower,
             "h2:mem:",
             null),
         Arguments.of(
@@ -499,7 +500,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             null,
             "SELECT 3",
             emitStableDatabaseSemconv() ? "SELECT 3" : "SELECT ?",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + dbNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseNameLower,
             "h2:mem:",
             null),
         Arguments.of(
@@ -520,7 +521,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             null,
             "CALL ABS(-3)",
             emitStableDatabaseSemconv() ? "CALL ABS(-3)" : "CALL ABS(?)",
-            emitStableDatabaseSemconv() ? "CALL ABS" : "CALL " + dbNameLower + ".ABS",
+            emitStableDatabaseSemconv() ? "CALL ABS" : "CALL " + databaseNameLower + ".ABS",
             "h2:mem:",
             null));
   }
@@ -564,7 +565,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), dbNameLower),
+                                equalTo(maybeStable(DB_NAME), databaseNameLower),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
@@ -623,7 +624,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), dbNameLower),
+                                equalTo(maybeStable(DB_NAME), databaseNameLower),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
@@ -682,7 +683,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), dbNameLower),
+                                equalTo(maybeStable(DB_NAME), databaseNameLower),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
@@ -853,7 +854,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), dbNameLower),
+                                equalTo(maybeStable(DB_NAME), databaseNameLower),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
@@ -1086,7 +1087,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), dbNameLower),
+                                equalTo(maybeStable(DB_NAME), databaseNameLower),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
@@ -1108,18 +1109,18 @@ public abstract class AbstractJdbcInstrumentationTest {
             true,
             "h2",
             new org.h2.Driver(),
-            "jdbc:h2:mem:" + dbName,
+            "jdbc:h2:mem:" + databaseName,
             null,
             "SELECT 3;",
             emitStableDatabaseSemconv() ? "SELECT 3;" : "SELECT ?;",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + dbNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseNameLower,
             "h2:mem:",
             null),
         Arguments.of(
             true,
             "derby",
             new EmbeddedDriver(),
-            "jdbc:derby:memory:" + dbName + ";create=true",
+            "jdbc:derby:memory:" + databaseName + ";create=true",
             "APP",
             "SELECT 3 FROM SYSIBM.SYSDUMMY1",
             emitStableDatabaseSemconv()
@@ -1132,18 +1133,18 @@ public abstract class AbstractJdbcInstrumentationTest {
             false,
             "h2",
             new org.h2.Driver(),
-            "jdbc:h2:mem:" + dbName,
+            "jdbc:h2:mem:" + databaseName,
             null,
             "SELECT 3;",
             "SELECT ?;",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + dbNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseNameLower,
             "h2:mem:",
             null),
         Arguments.of(
             false,
             "derby",
             new EmbeddedDriver(),
-            "jdbc:derby:memory:" + dbName + ";create=true",
+            "jdbc:derby:memory:" + databaseName + ";create=true",
             "APP",
             "SELECT 3 FROM SYSIBM.SYSDUMMY1",
             "SELECT ? FROM SYSIBM.SYSDUMMY1",
@@ -1206,7 +1207,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), dbNameLower),
+                                equalTo(maybeStable(DB_NAME), databaseNameLower),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
@@ -1235,7 +1236,7 @@ public abstract class AbstractJdbcInstrumentationTest {
         Arguments.of(
             new EmbeddedDataSource(),
             (Consumer<DataSource>)
-                ds -> ((EmbeddedDataSource) ds).setDatabaseName("memory:" + dbName),
+                ds -> ((EmbeddedDataSource) ds).setDatabaseName("memory:" + databaseName),
             "derby",
             "APP",
             "derby:memory:"),
@@ -1267,7 +1268,6 @@ public abstract class AbstractJdbcInstrumentationTest {
 
     List<AttributeAssertion> attributesAssertions =
         codeFunctionAssertions(originalDatasourceClass, "getConnection");
-    attributesAssertions.add(equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)));
     attributesAssertions.add(equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)));
     attributesAssertions.add(equalTo(DB_USER, emitStableDatabaseSemconv() ? null : user));
     attributesAssertions.add(equalTo(maybeStable(DB_NAME), "jdbcunittest"));
@@ -1321,14 +1321,14 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), "other_sql"),
+                                equalTo(maybeStable(DB_SYSTEM), OTHER_SQL),
                                 equalTo(maybeStable(DB_STATEMENT), "testing ?"),
                                 equalTo(
                                     DB_CONNECTION_STRING,
                                     emitStableDatabaseSemconv() ? null : "testdb://localhost"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasPeerService() ? "test-peer-service" : null),
+                                    hasServicePeerName() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
@@ -1409,7 +1409,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), "other_sql"),
+                                equalTo(maybeStable(DB_SYSTEM), OTHER_SQL),
                                 equalTo(maybeStable(DB_NAME), databaseName),
                                 equalTo(
                                     DB_CONNECTION_STRING,
@@ -1428,7 +1428,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                     emitStableDatabaseSemconv() ? null : table),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasPeerService() ? "test-peer-service" : null),
+                                    hasServicePeerName() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
@@ -1471,8 +1471,8 @@ public abstract class AbstractJdbcInstrumentationTest {
                     span.hasName("SELECT INFORMATION_SCHEMA.SYSTEM_USERS")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
-                            equalTo(maybeStable(DB_NAME), dbNameLower),
+                            equalTo(maybeStable(DB_SYSTEM), HSQLDB),
+                            equalTo(maybeStable(DB_NAME), databaseNameLower),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "SA"),
                             equalTo(
                                 DB_CONNECTION_STRING,
@@ -1560,7 +1560,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), "other_sql"),
+                                equalTo(maybeStable(DB_SYSTEM), OTHER_SQL),
                                 equalTo(
                                     DB_CONNECTION_STRING,
                                     emitStableDatabaseSemconv() ? null : "testdb://localhost"),
@@ -1576,7 +1576,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                     emitStableDatabaseSemconv() ? null : "table"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasPeerService() ? "test-peer-service" : null),
+                                    hasServicePeerName() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
@@ -1586,10 +1586,9 @@ public abstract class AbstractJdbcInstrumentationTest {
   @Test
   void testProxyStatement() throws Exception {
     Connection connection = wrap(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
+    cleanup.deferCleanup(connection);
     Statement statement = connection.createStatement();
     cleanup.deferCleanup(statement);
-    cleanup.deferCleanup(connection);
-
     Statement proxyStatement = ProxyStatementFactory.proxyStatementWithCustomClassLoader(statement);
     ResultSet resultSet =
         testing().runWithSpan("parent", () -> proxyStatement.executeQuery("SELECT 3"));
@@ -1603,7 +1602,9 @@ public abstract class AbstractJdbcInstrumentationTest {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         span.hasName(
-                                emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + dbNameLower)
+                                emitStableDatabaseSemconv()
+                                    ? "SELECT"
+                                    : "SELECT " + databaseNameLower)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))));
   }
@@ -1614,9 +1615,9 @@ public abstract class AbstractJdbcInstrumentationTest {
   @Test
   void testProxyPreparedStatement() throws SQLException {
     Connection connection = wrap(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
+    cleanup.deferCleanup(connection);
     PreparedStatement statement = connection.prepareStatement("SELECT 3");
     cleanup.deferCleanup(statement);
-    cleanup.deferCleanup(connection);
 
     PreparedStatement proxyStatement = ProxyStatementFactory.proxyPreparedStatement(statement);
     ResultSet resultSet = testing().runWithSpan("parent", () -> proxyStatement.executeQuery());
@@ -1630,7 +1631,9 @@ public abstract class AbstractJdbcInstrumentationTest {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         span.hasName(
-                                emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + dbNameLower)
+                                emitStableDatabaseSemconv()
+                                    ? "SELECT"
+                                    : "SELECT " + databaseNameLower)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))));
   }
@@ -1719,7 +1722,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), dbNameLower),
+                                equalTo(maybeStable(DB_NAME), databaseNameLower),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
@@ -1752,7 +1755,7 @@ public abstract class AbstractJdbcInstrumentationTest {
     Statement createTable2 = connection.createStatement();
     createTable2.execute(
         "CREATE TABLE " + tableName2 + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
-    cleanup.deferCleanup(createTable1);
+    cleanup.deferCleanup(createTable2);
 
     testing().waitForTraces(2);
     testing().clearData();
@@ -1776,7 +1779,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), dbNameLower),
+                                equalTo(maybeStable(DB_NAME), databaseNameLower),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
@@ -1828,7 +1831,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), dbNameLower),
+                                equalTo(maybeStable(DB_NAME), databaseNameLower),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
@@ -1887,7 +1890,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), dbNameLower),
+                                equalTo(maybeStable(DB_NAME), databaseNameLower),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
@@ -1915,10 +1918,9 @@ public abstract class AbstractJdbcInstrumentationTest {
   void testSqlCommenterNotEnabled() throws SQLException {
     List<String> executedSql = new ArrayList<>();
     Connection connection = new TestConnection(executedSql::add);
-    Statement statement = connection.createStatement();
-
-    cleanup.deferCleanup(statement);
     cleanup.deferCleanup(connection);
+    Statement statement = connection.createStatement();
+    cleanup.deferCleanup(statement);
 
     String query = "SELECT 1";
     testing().runWithSpan("parent", () -> statement.execute(query));
@@ -1968,7 +1970,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), dbNameLower),
+                                equalTo(maybeStable(DB_NAME), databaseNameLower),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
@@ -1990,7 +1992,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), dbNameLower),
+                                equalTo(maybeStable(DB_NAME), databaseNameLower),
                                 // COMMIT is not extracted from db.query.text - it's an explicit
                                 // transaction operation
                                 equalTo(maybeStable(DB_OPERATION), "COMMIT"),
@@ -2041,7 +2043,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), dbNameLower),
+                                equalTo(maybeStable(DB_NAME), databaseNameLower),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
@@ -2063,7 +2065,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), dbNameLower),
+                                equalTo(maybeStable(DB_NAME), databaseNameLower),
                                 // ROLLBACK is not extracted from db.query.text - it's an explicit
                                 // transaction operation
                                 equalTo(maybeStable(DB_OPERATION), "ROLLBACK"),
@@ -2108,6 +2110,7 @@ public abstract class AbstractJdbcInstrumentationTest {
   @Test
   void testPreparedStatementWrapper() throws SQLException {
     Connection connection = wrap(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
+    cleanup.deferCleanup(connection);
     Connection proxyConnection =
         ProxyStatementFactory.proxy(
             Connection.class,
@@ -2121,7 +2124,6 @@ public abstract class AbstractJdbcInstrumentationTest {
             });
     PreparedStatement statement = proxyConnection.prepareStatement("SELECT 3");
     cleanup.deferCleanup(statement);
-    cleanup.deferCleanup(connection);
 
     ResultSet resultSet = testing().runWithSpan("parent", () -> statement.executeQuery());
 
@@ -2138,7 +2140,9 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0)),
                     span ->
                         span.hasName(
-                                emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + dbNameLower)
+                                emitStableDatabaseSemconv()
+                                    ? "SELECT"
+                                    : "SELECT " + databaseNameLower)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(1))));
   }
@@ -2149,9 +2153,9 @@ public abstract class AbstractJdbcInstrumentationTest {
   @Test
   void testStatementWrapper() throws SQLException {
     Connection connection = wrap(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
+    cleanup.deferCleanup(connection);
     Statement statement = connection.createStatement();
     cleanup.deferCleanup(statement);
-    cleanup.deferCleanup(connection);
 
     Statement proxyStatement =
         ProxyStatementFactory.proxyStatement(
@@ -2184,7 +2188,9 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0)),
                     span ->
                         span.hasName(
-                                emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + dbNameLower)
+                                emitStableDatabaseSemconv()
+                                    ? "SELECT"
+                                    : "SELECT " + databaseNameLower)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(1))));
   }

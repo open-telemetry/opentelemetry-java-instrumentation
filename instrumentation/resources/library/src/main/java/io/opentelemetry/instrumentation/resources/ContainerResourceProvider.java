@@ -10,7 +10,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
 
-/** {@link ResourceProvider} for automatically configuring {@link ResourceProvider}. */
+/** {@link ResourceProvider} for automatically configuring {@link ContainerResource}. */
 @AutoService(ResourceProvider.class)
 public class ContainerResourceProvider implements ResourceProvider {
   @Override

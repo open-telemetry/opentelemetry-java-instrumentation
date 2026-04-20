@@ -5,14 +5,20 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.logging;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
+import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizer;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
+import io.opentelemetry.sdk.logs.export.LogRecordExporter;
+import io.opentelemetry.sdk.metrics.export.MetricExporter;
+import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -40,18 +46,17 @@ class SpanLoggingCustomizerProviderTest {
 
     String yaml =
         alreadyAdded
-            ? "file_format: \"1.0-rc.1\"\n"
+            ? "file_format: \"1.0\"\n"
                 + "tracer_provider:\n"
                 + "  processors:\n"
                 + "    - simple:\n"
                 + "        exporter:\n"
                 + "          console: {}\n"
-            : "file_format: \"1.0-rc.1\"\n" + debug;
+            : "file_format: \"1.0\"\n" + debug;
 
     OpenTelemetryConfigurationModel model =
         applyCustomizer(
-            DeclarativeConfiguration.parse(
-                new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8))),
+            DeclarativeConfiguration.parse(new ByteArrayInputStream(yaml.getBytes(UTF_8))),
             new DeclarativeConfigLoggingExporterAutoConfiguration.SpanLoggingCustomizerProvider());
 
     String console = "ConsoleExporterModel";
@@ -67,11 +72,40 @@ class SpanLoggingCustomizerProviderTest {
       DeclarativeConfigLoggingExporterAutoConfiguration.SpanLoggingCustomizerProvider provider) {
     List<Function<OpenTelemetryConfigurationModel, OpenTelemetryConfigurationModel>> customizers =
         new ArrayList<>();
-    provider.customize(c -> customizers.add(c));
+    provider.customize(new ModelCustomizerCollector(customizers));
     for (Function<OpenTelemetryConfigurationModel, OpenTelemetryConfigurationModel> customizer :
         customizers) {
       model = customizer.apply(model);
     }
     return model;
+  }
+
+  private static class ModelCustomizerCollector implements DeclarativeConfigurationCustomizer {
+    private final List<Function<OpenTelemetryConfigurationModel, OpenTelemetryConfigurationModel>>
+        customizers;
+
+    ModelCustomizerCollector(
+        List<Function<OpenTelemetryConfigurationModel, OpenTelemetryConfigurationModel>>
+            customizers) {
+      this.customizers = customizers;
+    }
+
+    @Override
+    public void addModelCustomizer(
+        Function<OpenTelemetryConfigurationModel, OpenTelemetryConfigurationModel> customizer) {
+      customizers.add(customizer);
+    }
+
+    @Override
+    public <T extends SpanExporter> void addSpanExporterCustomizer(
+        Class<T> exporterType, BiFunction<T, DeclarativeConfigProperties, T> customizer) {}
+
+    @Override
+    public <T extends MetricExporter> void addMetricExporterCustomizer(
+        Class<T> exporterType, BiFunction<T, DeclarativeConfigProperties, T> customizer) {}
+
+    @Override
+    public <T extends LogRecordExporter> void addLogRecordExporterCustomizer(
+        Class<T> exporterType, BiFunction<T, DeclarativeConfigProperties, T> customizer) {}
   }
 }

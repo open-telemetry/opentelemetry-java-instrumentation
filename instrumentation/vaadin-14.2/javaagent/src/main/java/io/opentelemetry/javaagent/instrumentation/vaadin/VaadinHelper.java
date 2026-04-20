@@ -39,7 +39,7 @@ public class VaadinHelper {
   }
 
   public void endVaadinServiceSpan(
-      Context context, VaadinServiceRequest request, Throwable throwable) {
+      Context context, VaadinServiceRequest request, @Nullable Throwable throwable) {
     serviceInstrumenter.end(context, request, null, throwable);
 
     HttpServerRoute.update(
@@ -85,7 +85,10 @@ public class VaadinHelper {
   }
 
   public void endRequestHandlerSpan(
-      Context context, VaadinHandlerRequest request, Throwable throwable, boolean handled) {
+      Context context,
+      VaadinHandlerRequest request,
+      @Nullable Throwable throwable,
+      boolean handled) {
     requestHandlerInstrumenter.end(context, request, null, throwable);
 
     // request handler returns true when it processes the request, if that is the case then
@@ -98,7 +101,7 @@ public class VaadinHelper {
     }
   }
 
-  public void updateServerSpanName(UI ui) {
+  public void updateServerSpanName(@Nullable UI ui) {
     if (ui != null) {
       Location location = ui.getInternals().getActiveViewLocation();
       updateServerSpanName(location);

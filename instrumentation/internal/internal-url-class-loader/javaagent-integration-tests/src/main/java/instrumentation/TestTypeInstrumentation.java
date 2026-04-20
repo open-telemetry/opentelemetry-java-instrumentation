@@ -15,7 +15,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class TestTypeInstrumentation implements TypeInstrumentation {
+class TestTypeInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("org.apache.commons.lang3.SystemUtils");
@@ -29,14 +29,14 @@ public class TestTypeInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("getHostName"), TestTypeInstrumentation.class.getName() + "$GetHostNameAdvice");
+        named("getHostName"), getClass().getName() + "$GetHostNameAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class GetHostNameAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(inline = false)
     public static String methodExit() {
       return "not-the-host-name";
     }

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.test.utils;
 
-public final class ClassUtils {
+public class ClassUtils {
 
   public static String getClassName(Class<?> clazz) {
     if (!clazz.isAnonymousClass()) {

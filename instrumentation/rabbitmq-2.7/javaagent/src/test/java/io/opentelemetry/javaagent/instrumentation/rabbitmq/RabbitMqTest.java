@@ -20,9 +20,9 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
@@ -40,18 +40,18 @@ import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.AbstractLongAssert;
@@ -78,18 +78,18 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   Channel channel;
 
   @BeforeEach
-  public void setup() throws IOException, TimeoutException {
+  void setup() throws IOException, TimeoutException {
     conn = connectionFactory.newConnection();
     channel = conn.createChannel();
   }
 
   @AfterEach
-  public void cleanup() throws IOException, TimeoutException {
+  void cleanup() throws IOException, TimeoutException {
     try {
-      if (null != channel) {
+      if (channel != null) {
         channel.close();
       }
-      if (null != conn) {
+      if (conn != null) {
         conn.close();
       }
     } catch (ShutdownSignalException ignored) {
@@ -119,7 +119,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     GetResponse response =
         testing.runWithSpan("consumer parent", () -> channel.basicGet(queueName, true));
 
-    assertEquals("Hello, world!", new String(response.getBody(), Charset.defaultCharset()));
+    assertThat(new String(response.getBody(), Charset.defaultCharset())).isEqualTo("Hello, world!");
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
 
@@ -175,7 +175,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     GetResponse response =
         testing.runWithSpan("consumer parent", () -> channel.basicGet(queueName, true));
 
-    assertEquals("Hello, world!", new String(response.getBody(), Charset.defaultCharset()));
+    assertThat(new String(response.getBody(), Charset.defaultCharset())).isEqualTo("Hello, world!");
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
 
@@ -285,10 +285,11 @@ class RabbitMqTest extends AbstractRabbitMqTest {
 
     testing.waitAndAssertTraces(traceAssertions);
 
-    assertEquals(messageCount, deliveries.size());
-    for (int i = 1; i <= messageCount; i++) {
-      assertEquals("msg " + i, deliveries.get(i - 1));
-    }
+    assertThat(deliveries)
+        .containsExactly(
+            IntStream.rangeClosed(1, messageCount)
+                .mapToObj(i -> "msg " + i)
+                .toArray(String[]::new));
   }
 
   @Test
@@ -353,7 +354,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
       callback.accept(channel);
     } catch (RuntimeException re) {
       thrown = re.getCause();
-      assertTrue(thrown.getClass().getName().contains(accessor.getString(1)));
+      assertThat(thrown.getClass().getName()).contains(accessor.getString(1));
     }
 
     Throwable finalThrown = thrown;
@@ -395,7 +396,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
         testing.runWithSpan(
             "consumer parent", () -> (String) template.receiveAndConvert(queue.getName()));
 
-    assertEquals("foo", message);
+    assertThat(message).isEqualTo("foo");
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
 
@@ -440,7 +441,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   @Test
   void captureMessageHeaderAsSpanAttributes() throws IOException, InterruptedException {
     String queueName = channel.queueDeclare().getQueue();
-    Map<String, Object> headers = new java.util.HashMap<>();
+    Map<String, Object> headers = new HashMap<>();
     headers.put("Test_Message_Header", "test");
     AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder().headers(headers).build();
     channel.basicPublish(
@@ -460,9 +461,9 @@ class RabbitMqTest extends AbstractRabbitMqTest {
         };
 
     channel.basicConsume(queueName, callback);
-    assertTrue(latch.await(10, TimeUnit.SECONDS));
+    assertThat(latch.await(10, SECONDS)).isTrue();
 
-    assertEquals("Hello, world!", deliveries.get(0));
+    assertThat(deliveries.get(0)).isEqualTo("Hello, world!");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -626,7 +627,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
 
     verifyParentAndLink(span, parentSpan, linkSpan);
 
-    if (null != exception) {
+    if (exception != null) {
       verifyException(span, exception, errorMsg);
     }
 
@@ -650,7 +651,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
           span.hasAttributesSatisfying(
               equalTo(stringKey("rabbitmq.command"), "basic.publish"),
               satisfies(
-                  MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
+                  MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
                   val ->
                       val.satisfiesAnyOf(
                           v -> assertThat(v).isNull(),
@@ -699,7 +700,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
         equalTo(MESSAGING_SYSTEM, "rabbitmq"),
         satisfies(MESSAGING_DESTINATION_NAME, val -> val.isIn(exchange, null)),
         satisfies(
-            MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
+            MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
             val ->
                 val.satisfiesAnyOf(
                     v -> assertThat(v).isNull(),
@@ -755,13 +756,13 @@ class RabbitMqTest extends AbstractRabbitMqTest {
 
   private static void verifyParentAndLink(
       SpanDataAssert span, SpanData parentSpan, SpanData linkSpan) {
-    if (null != parentSpan) {
+    if (parentSpan != null) {
       span.hasParent(parentSpan);
     } else {
       span.hasNoParent();
     }
 
-    if (null != linkSpan) {
+    if (linkSpan != null) {
       span.hasLinks(LinkData.create(linkSpan.getSpanContext()));
     } else {
       span.hasTotalRecordedLinks(0);

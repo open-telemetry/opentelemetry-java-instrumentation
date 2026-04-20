@@ -32,7 +32,7 @@ final class RocketMqInstrumenterFactory {
 
   public static Instrumenter<PublishingMessageImpl, SendReceiptImpl> createProducerInstrumenter(
       OpenTelemetry openTelemetry, List<String> capturedHeaders) {
-    RocketMqProducerAttributeGetter getter = RocketMqProducerAttributeGetter.INSTANCE;
+    RocketMqProducerAttributeGetter getter = new RocketMqProducerAttributeGetter();
     MessageOperation operation = MessageOperation.PUBLISH;
 
     AttributesExtractor<PublishingMessageImpl, SendReceiptImpl> attributesExtractor =
@@ -44,14 +44,14 @@ final class RocketMqInstrumenterFactory {
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(getter, operation))
             .addAttributesExtractor(attributesExtractor)
-            .addAttributesExtractor(RocketMqProducerAttributeExtractor.INSTANCE);
-    return instrumenterBuilder.buildProducerInstrumenter(MessageMapSetter.INSTANCE);
+            .addAttributesExtractor(new RocketMqProducerAttributeExtractor());
+    return instrumenterBuilder.buildProducerInstrumenter(new MessageMapSetter());
   }
 
   public static Instrumenter<ReceiveMessageRequest, List<MessageView>>
       createConsumerReceiveInstrumenter(
           OpenTelemetry openTelemetry, List<String> capturedHeaders, boolean enabled) {
-    RocketMqConsumerReceiveAttributeGetter getter = RocketMqConsumerReceiveAttributeGetter.INSTANCE;
+    RocketMqConsumerReceiveAttributeGetter getter = new RocketMqConsumerReceiveAttributeGetter();
     MessageOperation operation = MessageOperation.RECEIVE;
 
     AttributesExtractor<ReceiveMessageRequest, List<MessageView>> attributesExtractor =
@@ -64,7 +64,7 @@ final class RocketMqInstrumenterFactory {
                 MessagingSpanNameExtractor.create(getter, operation))
             .setEnabled(enabled)
             .addAttributesExtractor(attributesExtractor)
-            .addAttributesExtractor(RocketMqConsumerReceiveAttributeExtractor.INSTANCE);
+            .addAttributesExtractor(new RocketMqConsumerReceiveAttributeExtractor());
     return instrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
@@ -72,7 +72,7 @@ final class RocketMqInstrumenterFactory {
       OpenTelemetry openTelemetry,
       List<String> capturedHeaders,
       boolean receiveInstrumentationEnabled) {
-    RocketMqConsumerProcessAttributeGetter getter = RocketMqConsumerProcessAttributeGetter.INSTANCE;
+    RocketMqConsumerProcessAttributeGetter getter = new RocketMqConsumerProcessAttributeGetter();
     MessageOperation operation = MessageOperation.PROCESS;
 
     AttributesExtractor<MessageView, ConsumeResult> attributesExtractor =
@@ -84,7 +84,7 @@ final class RocketMqInstrumenterFactory {
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(getter, operation))
             .addAttributesExtractor(attributesExtractor)
-            .addAttributesExtractor(RocketMqConsumerProcessAttributeExtractor.INSTANCE)
+            .addAttributesExtractor(new RocketMqConsumerProcessAttributeExtractor())
             .setSpanStatusExtractor(
                 (spanStatusBuilder, messageView, consumeResult, error) -> {
                   if (consumeResult == ConsumeResult.FAILURE) {
@@ -98,11 +98,11 @@ final class RocketMqInstrumenterFactory {
     if (receiveInstrumentationEnabled) {
       SpanLinksExtractor<MessageView> spanLinksExtractor =
           new PropagatorBasedSpanLinksExtractor<>(
-              openTelemetry.getPropagators().getTextMapPropagator(), MessageMapGetter.INSTANCE);
+              openTelemetry.getPropagators().getTextMapPropagator(), new MessageMapGetter());
       instrumenterBuilder.addSpanLinksExtractor(spanLinksExtractor);
       return instrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
     }
-    return instrumenterBuilder.buildConsumerInstrumenter(MessageMapGetter.INSTANCE);
+    return instrumenterBuilder.buildConsumerInstrumenter(new MessageMapGetter());
   }
 
   private static <T, R> AttributesExtractor<T, R> buildMessagingAttributesExtractor(

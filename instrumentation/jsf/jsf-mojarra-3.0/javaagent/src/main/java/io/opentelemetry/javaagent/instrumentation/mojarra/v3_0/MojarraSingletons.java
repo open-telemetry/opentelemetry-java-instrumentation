@@ -14,10 +14,10 @@ import io.opentelemetry.javaagent.instrumentation.jsf.jakarta.JsfRequest;
 public class MojarraSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jsf-mojarra-3.0";
 
-  private static final Instrumenter<JsfRequest, Void> INSTRUMENTER;
+  private static final Instrumenter<JsfRequest, Void> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<JsfRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, JsfRequest::spanName)
             .setErrorCauseExtractor(new JsfErrorCauseExtractor())
@@ -26,7 +26,7 @@ public class MojarraSingletons {
   }
 
   public static Instrumenter<JsfRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private MojarraSingletons() {}

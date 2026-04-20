@@ -20,7 +20,7 @@ public final class NettyErrorHolder implements ImplicitContextKeyed {
 
   private static final ContextKey<NettyErrorHolder> KEY = named("opentelemetry-netty-error");
 
-  private volatile Throwable error;
+  @Nullable private volatile Throwable error;
 
   private NettyErrorHolder() {}
 
@@ -44,6 +44,8 @@ public final class NettyErrorHolder implements ImplicitContextKeyed {
     NettyErrorHolder holder = context.get(KEY);
     if (holder != null) {
       result = holder.error;
+      // clear the stored exception after reading it
+      holder.error = null;
     }
     return result == null ? error : result;
   }

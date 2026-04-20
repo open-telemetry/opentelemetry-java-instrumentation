@@ -42,7 +42,7 @@ class KtorServerTelemetry private constructor(
         DefaultHttpServerInstrumenterBuilder.create(
           INSTRUMENTATION_NAME,
           openTelemetry,
-          KtorHttpServerAttributesGetter.INSTANCE
+          KtorHttpServerAttributesGetter
         )
     }
 

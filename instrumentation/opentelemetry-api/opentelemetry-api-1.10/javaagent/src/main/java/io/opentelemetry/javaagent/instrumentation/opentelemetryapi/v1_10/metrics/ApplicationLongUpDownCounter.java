@@ -5,18 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
-import application.io.opentelemetry.api.common.Attributes;
-import application.io.opentelemetry.api.metrics.LongUpDownCounter;
-import application.io.opentelemetry.context.Context;
+import io.opentelemetry.api.metrics.LongUpDownCounter;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 
-public class ApplicationLongUpDownCounter implements LongUpDownCounter {
+public class ApplicationLongUpDownCounter
+    implements application.io.opentelemetry.api.metrics.LongUpDownCounter {
 
-  private final io.opentelemetry.api.metrics.LongUpDownCounter agentCounter;
+  private final LongUpDownCounter agentCounter;
 
-  protected ApplicationLongUpDownCounter(
-      io.opentelemetry.api.metrics.LongUpDownCounter agentCounter) {
+  protected ApplicationLongUpDownCounter(LongUpDownCounter agentCounter) {
     this.agentCounter = agentCounter;
   }
 
@@ -26,15 +24,25 @@ public class ApplicationLongUpDownCounter implements LongUpDownCounter {
   }
 
   @Override
-  public void add(long value, Attributes applicationAttributes) {
+  public void add(
+      long value, application.io.opentelemetry.api.common.Attributes applicationAttributes) {
     agentCounter.add(value, Bridging.toAgent(applicationAttributes));
   }
 
   @Override
-  public void add(long value, Attributes applicationAttributes, Context applicationContext) {
+  public void add(
+      long value,
+      application.io.opentelemetry.api.common.Attributes applicationAttributes,
+      application.io.opentelemetry.context.Context applicationContext) {
     agentCounter.add(
         value,
         Bridging.toAgent(applicationAttributes),
         AgentContextStorage.getAgentContext(applicationContext));
+  }
+
+  // added in 1.40.0 to incubator api
+  // added in 1.61.0 to stable api
+  public boolean isEnabled() {
+    return agentCounter.isEnabled();
   }
 }

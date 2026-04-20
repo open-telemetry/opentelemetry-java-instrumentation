@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.mongo.v3_1.internal.TracingCommandListen
 // TODO this class is used for all Mongo versions. Extract to mongo-common module
 /** Entrypoint to OpenTelemetry instrumentation of the MongoDB client. */
 public final class MongoTelemetry {
+  private final Instrumenter<CommandStartedEvent, Void> instrumenter;
 
   /** Returns a new {@link MongoTelemetry} configured with the given {@link OpenTelemetry}. */
   public static MongoTelemetry create(OpenTelemetry openTelemetry) {
@@ -28,19 +29,14 @@ public final class MongoTelemetry {
     return new MongoTelemetryBuilder(openTelemetry, "io.opentelemetry.mongo-3.1");
   }
 
-  private final Instrumenter<CommandStartedEvent, Void> instrumenter;
-
   MongoTelemetry(
       OpenTelemetry openTelemetry,
       String instrumentationName,
-      boolean statementSanitizationEnabled,
+      boolean querySanitizationEnabled,
       int maxNormalizedQueryLength) {
     this.instrumenter =
         MongoInstrumenterFactory.createInstrumenter(
-            openTelemetry,
-            instrumentationName,
-            statementSanitizationEnabled,
-            maxNormalizedQueryLength);
+            openTelemetry, instrumentationName, querySanitizationEnabled, maxNormalizedQueryLength);
   }
 
   /**
@@ -49,16 +45,5 @@ public final class MongoTelemetry {
    */
   public CommandListener createCommandListener() {
     return new TracingCommandListener(instrumenter);
-  }
-
-  /**
-   * Returns a new {@link CommandListener} that can be used with methods like {@link
-   * com.mongodb.MongoClientOptions.Builder#addCommandListener(CommandListener)}.
-   *
-   * @deprecated Use {@link #createCommandListener()} instead.
-   */
-  @Deprecated
-  public CommandListener newCommandListener() {
-    return createCommandListener();
   }
 }

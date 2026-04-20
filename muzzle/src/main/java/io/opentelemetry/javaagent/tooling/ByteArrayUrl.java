@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -13,9 +15,9 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.net.URLStreamHandler;
-import java.nio.charset.StandardCharsets;
 import java.security.Permission;
 import java.security.PrivilegedAction;
+import javax.annotation.Nullable;
 
 public class ByteArrayUrl {
 
@@ -38,7 +40,7 @@ public class ByteArrayUrl {
 
   private static URL doCreate(String contentName, byte[] data) {
     try {
-      String file = URLEncoder.encode(contentName, StandardCharsets.UTF_8.toString());
+      String file = URLEncoder.encode(contentName, UTF_8.toString());
       return new URL(URL_SCHEMA, null, -1, file, new ByteArrayUrlStreamHandler(data));
     } catch (MalformedURLException e) {
       throw new IllegalArgumentException("Failed to generate URL for the provided arguments", e);
@@ -90,6 +92,7 @@ public class ByteArrayUrl {
         return inputStream;
       }
 
+      @Nullable
       @Override
       public Permission getPermission() {
         return null;

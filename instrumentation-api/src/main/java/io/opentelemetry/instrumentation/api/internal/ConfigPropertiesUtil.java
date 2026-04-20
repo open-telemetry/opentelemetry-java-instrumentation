@@ -5,10 +5,11 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import static java.util.stream.Collectors.toList;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -110,10 +111,7 @@ public final class ConfigPropertiesUtil {
   }
 
   private static List<String> filterBlanksAndNulls(String[] values) {
-    return Arrays.stream(values)
-        .map(String::trim)
-        .filter(s -> !s.isEmpty())
-        .collect(Collectors.toList());
+    return Arrays.stream(values).map(String::trim).filter(s -> !s.isEmpty()).collect(toList());
   }
 
   private static String toEnvVarName(String propertyName) {

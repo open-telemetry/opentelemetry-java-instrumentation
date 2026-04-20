@@ -10,6 +10,7 @@ import static java.util.logging.Level.FINE;
 import io.opentelemetry.context.Context;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /** Represents a {@link Context} attached to a concurrent task instance. */
 public final class PropagatedContext {
@@ -42,10 +43,12 @@ public final class PropagatedContext {
     contextUpdater.set(this, null);
   }
 
+  @Nullable
   Context getAndClear() {
     return contextUpdater.getAndSet(this, null);
   }
 
+  @Nullable
   Context get() {
     return contextUpdater.get(this);
   }

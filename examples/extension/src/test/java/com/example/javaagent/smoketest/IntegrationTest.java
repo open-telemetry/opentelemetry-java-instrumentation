@@ -5,6 +5,10 @@
 
 package com.example.javaagent.smoketest;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -15,8 +19,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import okhttp3.OkHttpClient;
@@ -192,12 +194,12 @@ abstract class IntegrationTest {
               }
               return builder.build();
             })
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   private String waitForContent() throws IOException, InterruptedException {
     long previousSize = 0;
-    long deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(30);
+    long deadline = System.currentTimeMillis() + SECONDS.toMillis(30);
     String content = "[]";
     while (System.currentTimeMillis() < deadline) {
 
@@ -217,7 +219,7 @@ abstract class IntegrationTest {
       }
       previousSize = content.length();
       System.out.printf("Current content size %d%n", previousSize);
-      TimeUnit.MILLISECONDS.sleep(500);
+      MILLISECONDS.sleep(500);
     }
 
     return content;

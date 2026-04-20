@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs;
 
-public final class JaxrsConstants {
+public class JaxrsConstants {
   public static final String ABORT_FILTER_CLASS =
       "io.opentelemetry.javaagent.instrumentation.jaxrs.filter.abort.class";
   public static final String ABORT_HANDLED =

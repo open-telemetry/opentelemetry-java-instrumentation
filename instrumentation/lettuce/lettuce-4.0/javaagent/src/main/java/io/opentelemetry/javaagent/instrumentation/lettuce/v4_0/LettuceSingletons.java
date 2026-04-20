@@ -15,18 +15,17 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 
-public final class LettuceSingletons {
+public class LettuceSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.lettuce-4.0";
 
-  private static final Instrumenter<RedisCommand<?, ?, ?>, Void> INSTRUMENTER;
-  private static final Instrumenter<RedisURI, Void> CONNECT_INSTRUMENTER;
+  private static final Instrumenter<RedisCommand<?, ?, ?>, Void> instrumenter;
+  private static final Instrumenter<RedisURI, Void> connectInstrumenter;
 
   public static final ContextKey<Context> COMMAND_CONTEXT_KEY =
       ContextKey.named("opentelemetry-lettuce-v4_0-context-key");
@@ -37,7 +36,7 @@ public final class LettuceSingletons {
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
 
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<RedisCommand<?, ?, ?>, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
@@ -49,13 +48,13 @@ public final class LettuceSingletons {
     LettuceConnectNetworkAttributesGetter netAttributesGetter =
         new LettuceConnectNetworkAttributesGetter();
 
-    CONNECT_INSTRUMENTER =
+    connectInstrumenter =
         Instrumenter.<RedisURI, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, redisUri -> "CONNECT")
             .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(
-                PeerServiceAttributesExtractor.create(
-                    netAttributesGetter, AgentCommonConfig.get().getPeerServiceResolver()))
+                ServicePeerAttributesExtractor.create(
+                    netAttributesGetter, GlobalOpenTelemetry.get()))
             .addAttributesExtractor(new LettuceConnectAttributesExtractor())
             .setEnabled(
                 DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "lettuce")
@@ -65,11 +64,11 @@ public final class LettuceSingletons {
   }
 
   public static Instrumenter<RedisCommand<?, ?, ?>, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static Instrumenter<RedisURI, Void> connectInstrumenter() {
-    return CONNECT_INSTRUMENTER;
+    return connectInstrumenter;
   }
 
   private LettuceSingletons() {}

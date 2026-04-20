@@ -6,21 +6,20 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v6_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticTransportRequest;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticsearchTransportInstrumenterFactory;
 import org.elasticsearch.action.ActionResponse;
 
-public final class Elasticsearch6TransportSingletons {
+final class Elasticsearch6TransportSingletons {
 
-  private static final Instrumenter<ElasticTransportRequest, ActionResponse> INSTRUMENTER =
+  private static final Instrumenter<ElasticTransportRequest, ActionResponse> instrumenter =
       ElasticsearchTransportInstrumenterFactory.create(
           "io.opentelemetry.elasticsearch-transport-6.0",
           new Elasticsearch6TransportExperimentalAttributesExtractor(),
-          NetworkAttributesExtractor.create(new Elasticsearch6TransportNetworkAttributesGetter()));
+          new Elasticsearch6TransportAttributesGetter());
 
   public static Instrumenter<ElasticTransportRequest, ActionResponse> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private Elasticsearch6TransportSingletons() {}

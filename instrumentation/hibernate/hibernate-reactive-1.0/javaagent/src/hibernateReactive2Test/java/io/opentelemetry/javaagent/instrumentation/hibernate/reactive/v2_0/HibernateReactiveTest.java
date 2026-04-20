@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.reactive.v2_0;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
-import java.util.concurrent.TimeUnit;
 
 class HibernateReactiveTest extends AbstractHibernateReactiveTest {
 
@@ -19,6 +20,6 @@ class HibernateReactiveTest extends AbstractHibernateReactiveTest {
             promise -> promise.complete(Persistence.createEntityManagerFactory("test-pu")))
         .toCompletionStage()
         .toCompletableFuture()
-        .get(30, TimeUnit.SECONDS);
+        .get(30, SECONDS);
   }
 }

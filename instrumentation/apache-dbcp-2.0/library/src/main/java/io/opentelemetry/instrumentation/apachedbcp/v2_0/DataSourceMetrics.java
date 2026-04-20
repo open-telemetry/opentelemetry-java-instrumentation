@@ -23,38 +23,39 @@ final class DataSourceMetrics {
   private static final Map<BasicDataSourceMXBean, BatchCallback> dataSourceMetrics =
       new ConcurrentHashMap<>();
 
-  public static void registerMetrics(
+  static void registerMetrics(
       OpenTelemetry openTelemetry, BasicDataSourceMXBean dataSource, String dataSourceName) {
-    DbConnectionPoolMetrics metrics =
-        DbConnectionPoolMetrics.create(openTelemetry, INSTRUMENTATION_NAME, dataSourceName);
+    dataSourceMetrics.computeIfAbsent(
+        dataSource,
+        ds -> {
+          DbConnectionPoolMetrics metrics =
+              DbConnectionPoolMetrics.create(openTelemetry, INSTRUMENTATION_NAME, dataSourceName);
 
-    ObservableLongMeasurement connections = metrics.connections();
-    ObservableLongMeasurement minIdleConnections = metrics.minIdleConnections();
-    ObservableLongMeasurement maxIdleConnections = metrics.maxIdleConnections();
-    ObservableLongMeasurement maxConnections = metrics.maxConnections();
+          ObservableLongMeasurement connections = metrics.connections();
+          ObservableLongMeasurement minIdleConnections = metrics.minIdleConnections();
+          ObservableLongMeasurement maxIdleConnections = metrics.maxIdleConnections();
+          ObservableLongMeasurement maxConnections = metrics.maxConnections();
 
-    Attributes attributes = metrics.getAttributes();
-    Attributes usedConnectionsAttributes = metrics.getUsedConnectionsAttributes();
-    Attributes idleConnectionsAttributes = metrics.getIdleConnectionsAttributes();
+          Attributes attributes = metrics.getAttributes();
+          Attributes usedConnectionsAttributes = metrics.getUsedConnectionsAttributes();
+          Attributes idleConnectionsAttributes = metrics.getIdleConnectionsAttributes();
 
-    BatchCallback callback =
-        metrics.batchCallback(
-            () -> {
-              connections.record(dataSource.getNumActive(), usedConnectionsAttributes);
-              connections.record(dataSource.getNumIdle(), idleConnectionsAttributes);
-              minIdleConnections.record(dataSource.getMinIdle(), attributes);
-              maxIdleConnections.record(dataSource.getMaxIdle(), attributes);
-              maxConnections.record(dataSource.getMaxTotal(), attributes);
-            },
-            connections,
-            minIdleConnections,
-            maxIdleConnections,
-            maxConnections);
-
-    dataSourceMetrics.put(dataSource, callback);
+          return metrics.batchCallback(
+              () -> {
+                connections.record(ds.getNumActive(), usedConnectionsAttributes);
+                connections.record(ds.getNumIdle(), idleConnectionsAttributes);
+                minIdleConnections.record(ds.getMinIdle(), attributes);
+                maxIdleConnections.record(ds.getMaxIdle(), attributes);
+                maxConnections.record(ds.getMaxTotal(), attributes);
+              },
+              connections,
+              minIdleConnections,
+              maxIdleConnections,
+              maxConnections);
+        });
   }
 
-  public static void unregisterMetrics(BasicDataSourceMXBean dataSource) {
+  static void unregisterMetrics(BasicDataSourceMXBean dataSource) {
     BatchCallback callback = dataSourceMetrics.remove(dataSource);
     if (callback != null) {
       callback.close();

@@ -29,7 +29,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import okhttp3.Call;
 import okhttp3.Request;
 
-public class ApiClientInstrumentation implements TypeInstrumentation {
+class ApiClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.kubernetes.client.openapi.ApiClient");
@@ -39,27 +39,27 @@ public class ApiClientInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isPublic().and(named("buildRequest")).and(takesArguments(10).or(takesArguments(11))),
-        this.getClass().getName() + "$BuildRequestAdvice");
+        getClass().getName() + "$BuildRequestAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("execute"))
             .and(takesArguments(2))
             .and(takesArgument(0, named("okhttp3.Call"))),
-        this.getClass().getName() + "$ExecuteAdvice");
+        getClass().getName() + "$ExecuteAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("executeAsync"))
             .and(takesArguments(3))
             .and(takesArgument(0, named("okhttp3.Call")))
             .and(takesArgument(2, named("io.kubernetes.client.openapi.ApiCallback"))),
-        this.getClass().getName() + "$ExecuteAsyncAdvice");
+        getClass().getName() + "$ExecuteAsyncAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class BuildRequestAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Request onExit(@Advice.Return Request originalReturnValue) {
       Context parentContext = currentContext();
       if (!instrumenter().shouldStart(parentContext, originalReturnValue)) {
@@ -79,7 +79,7 @@ public class ApiClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ExecuteAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Return ApiResponse<?> response, @Advice.Thrown Throwable throwable) {
       CurrentState currentState = CurrentState.remove();
@@ -102,7 +102,7 @@ public class ApiClientInstrumentation implements TypeInstrumentation {
   public static class ExecuteAsyncAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(value = 2, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.Argument(0) Call httpCall, @Advice.Argument(2) ApiCallback<?> originalCallback) {
       CurrentState current = CurrentState.remove();
@@ -118,7 +118,7 @@ public class ApiClientInstrumentation implements TypeInstrumentation {
       return new Object[] {current, callback};
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter Object[] enterResult) {
       CurrentState current = (CurrentState) enterResult[0];

@@ -10,6 +10,7 @@ import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 final class SqsMessageImpl implements SqsMessage {
 
@@ -37,6 +38,7 @@ final class SqsMessageImpl implements SqsMessage {
   }
 
   @Override
+  @Nullable
   public String getMessageAttribute(String name) {
     MessageAttributeValue value = message.getMessageAttributes().get(name);
     return value != null ? value.getStringValue() : null;

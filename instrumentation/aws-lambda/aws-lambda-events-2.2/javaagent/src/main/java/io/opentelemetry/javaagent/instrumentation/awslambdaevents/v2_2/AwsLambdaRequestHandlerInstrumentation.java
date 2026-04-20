@@ -9,7 +9,8 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2.AwsLambdaSingletons.flushTimeout;
 import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2.AwsLambdaSingletons.functionInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static java.util.Collections.emptyMap;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -23,16 +24,14 @@ import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentation {
+class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -47,11 +46,10 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("handleRequest"))
             .and(takesArgument(1, named("com.amazonaws.services.lambda.runtime.Context"))),
-        AwsLambdaRequestHandlerInstrumentation.class.getName() + "$HandleRequestAdvice");
+        getClass().getName() + "$HandleRequestAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -80,7 +78,7 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
       @Nullable
       public static AdviceScope start(Object arg, Context context) {
 
-        Map<String, String> headers = Collections.emptyMap();
+        Map<String, String> headers = emptyMap();
         if (arg instanceof APIGatewayProxyRequestEvent) {
           headers = MapUtils.lowercaseMap(((APIGatewayProxyRequestEvent) arg).getHeaders());
         }
@@ -116,23 +114,21 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
           AwsLambdaSingletons.messageInstrumenter()
               .end(messageContext, (SQSEvent) arg, null, throwable);
         }
-        if (functionScope != null) {
-          functionScope.close();
-          functionInstrumenter().end(functionContext, lambdaRequest, result, throwable);
-        }
-        OpenTelemetrySdkAccess.forceFlush(flushTimeout().toNanos(), TimeUnit.NANOSECONDS);
+        functionScope.close();
+        functionInstrumenter().end(functionContext, lambdaRequest, result, throwable);
+        OpenTelemetrySdkAccess.forceFlush(flushTimeout().toNanos(), NANOSECONDS);
       }
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.Argument(value = 0, typing = Typing.DYNAMIC) Object arg,
         @Advice.Argument(1) Context context) {
       return AdviceScope.start(arg, context);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Argument(value = 0, typing = Typing.DYNAMIC) Object arg,
         @Advice.Return @Nullable Object result,

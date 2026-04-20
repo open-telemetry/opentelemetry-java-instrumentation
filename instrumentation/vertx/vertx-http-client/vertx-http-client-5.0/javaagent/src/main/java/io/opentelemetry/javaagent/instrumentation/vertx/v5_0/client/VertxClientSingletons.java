@@ -16,16 +16,13 @@ import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.net.HostAndPort;
 import java.util.concurrent.CompletableFuture;
+import javax.annotation.Nullable;
 
-public final class VertxClientSingletons {
+public class VertxClientSingletons {
 
-  private static final Instrumenter<HttpClientRequest, HttpClientResponse> INSTRUMENTER =
+  private static final Instrumenter<HttpClientRequest, HttpClientResponse> instrumenter =
       VertxClientInstrumenterFactory.create(
           "io.opentelemetry.vertx-http-client-5.0", new Vertx5HttpAttributesGetter());
-
-  public static Instrumenter<HttpClientRequest, HttpClientResponse> instrumenter() {
-    return INSTRUMENTER;
-  }
 
   private static final VirtualField<HttpClientRequest, HostAndPort> authorityField =
       VirtualField.find(HttpClientRequest.class, HostAndPort.class);
@@ -33,10 +30,15 @@ public final class VertxClientSingletons {
   public static final VirtualField<HttpClientRequest, Contexts> CONTEXTS =
       VirtualField.find(HttpClientRequest.class, Contexts.class);
 
-  public static void setAuthority(HttpClientRequest request, HostAndPort authority) {
+  public static Instrumenter<HttpClientRequest, HttpClientResponse> instrumenter() {
+    return instrumenter;
+  }
+
+  public static void setAuthority(HttpClientRequest request, @Nullable HostAndPort authority) {
     authorityField.set(request, authority);
   }
 
+  @Nullable
   public static HostAndPort getAuthority(HttpClientRequest request) {
     return authorityField.get(request);
   }

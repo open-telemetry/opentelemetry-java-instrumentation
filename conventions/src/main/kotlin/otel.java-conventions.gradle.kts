@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.OtelJavaExtension
+import io.opentelemetry.instrumentation.gradle.OtelPropsExtension
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import java.time.Duration
 
@@ -8,12 +9,14 @@ plugins {
   checkstyle
   idea
 
+  id("otel.props-conventions")
   id("otel.errorprone-conventions")
   id("otel.spotless-conventions")
-  id("org.owasp.dependencycheck")
+  id("org.sonatype.gradle.plugins.scan")
 }
 
 val otelJava = extensions.create<OtelJavaExtension>("otelJava")
+val otelProps = the<OtelPropsExtension>()
 
 afterEvaluate {
   val previousBaseArchiveName = base.archivesName.get()
@@ -73,7 +76,11 @@ tasks.withType<JavaCompile>().configureEach {
           // jdk21 generates more serial warnings than previous versions
           "-Xlint:-serial",
           // suppress warning: Cannot find annotation method 'forRemoval()' in type 'Deprecated'
-          "-Xlint:-classfile"
+          "-Xlint:-classfile",
+          // We suppress the "deprecation" warning because --release 8 causes javac to warn on
+          // importing deprecated classes (fixed in JDK 9+, see https://bugs.openjdk.org/browse/JDK-8032211).
+          // We use a custom Error Prone check instead (OtelDeprecatedApiUsage).
+          "-Xlint:-deprecation"
         )
       )
       if (System.getProperty("dev") != "true") {
@@ -143,7 +150,7 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
     with(ctx.details) {
       if (id.group == "io.netty" && id.name != "netty") {
         if (id.version.startsWith("4.1.")) {
-          belongsTo("io.netty:netty-bom:4.1.130.Final", false)
+          belongsTo("io.netty:netty-bom:4.1.132.Final", false)
         } else if (id.version.startsWith("4.0.")) {
           belongsTo("io.netty:netty-bom:4.0.56.Final", false)
         }
@@ -175,7 +182,6 @@ testing {
       implementation("org.junit.jupiter:junit-jupiter-api")
       implementation("org.junit.jupiter:junit-jupiter-params")
       runtimeOnly("org.junit.jupiter:junit-jupiter-engine")
-      runtimeOnly("org.junit.vintage:junit-vintage-engine")
       implementation("org.junit-pioneer:junit-pioneer")
 
       implementation("org.assertj:assertj-core")
@@ -317,9 +323,8 @@ tasks.withType<Test>().configureEach {
   useJUnitPlatform()
 
   // work around jvm crash on openJ9 8 after updating armeria to 1.33.1
-  val testJavaVersion = gradle.startParameter.projectProperties["testJavaVersion"]?.let(JavaVersion::toVersion)
-  val useJ9 = gradle.startParameter.projectProperties["testJavaVM"]?.run { this == "openj9" }
-    ?: false
+  val testJavaVersion = otelProps.testJavaVersion
+  val useJ9 = otelProps.testJavaVM == "openj9"
   if (useJ9 && testJavaVersion != null && testJavaVersion.isJava8) {
     jvmArgs("-Xjit:exclude={io/opentelemetry/testing/internal/io/netty/buffer/HeapByteBufUtil.*}," +
         "exclude={io/opentelemetry/testing/internal/io/netty/buffer/UnpooledHeapByteBuf.*}," +
@@ -329,10 +334,10 @@ tasks.withType<Test>().configureEach {
 
   // There's no real harm in setting this for all tests even if any happen to not be using context
   // propagation.
-  jvmArgs("-Dio.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: true}")
+  jvmArgs("-Dio.opentelemetry.context.enableStrictContext=${otelProps.enableStrictContext}")
   // TODO: Have agent map unshaded to shaded.
   if (project.findProperty("disableShadowRelocate") != "true") {
-    jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: true}")
+    jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=${otelProps.enableStrictContext}")
   } else {
     jvmArgs("-Dotel.instrumentation.opentelemetry-api.enabled=false")
     jvmArgs("-Dotel.instrumentation.opentelemetry-instrumentation-api.enabled=false")
@@ -356,7 +361,7 @@ tasks.withType<Test>().configureEach {
   timeout.set(Duration.ofMinutes(15))
 
   val defaultMaxRetries = if (System.getenv().containsKey("CI")) 5 else 0
-  val maxTestRetries = gradle.startParameter.projectProperties["maxTestRetries"]?.toInt() ?: defaultMaxRetries
+  val maxTestRetries = otelProps.maxTestRetries ?: defaultMaxRetries
 
   develocity.testRetry {
     // You can see tests that were retried by this mechanism in the collected test reports and build scans.
@@ -385,9 +390,8 @@ class KeystoreArgumentsProvider(
 }
 
 afterEvaluate {
-  val testJavaVersion = gradle.startParameter.projectProperties["testJavaVersion"]?.let(JavaVersion::toVersion)
-  val useJ9 = gradle.startParameter.projectProperties["testJavaVM"]?.run { this == "openj9" }
-    ?: false
+  val testJavaVersion = otelProps.testJavaVersion
+  val useJ9 = otelProps.testJavaVM == "openj9"
   tasks.withType<Test>().configureEach {
     if (testJavaVersion != null) {
       javaLauncher.set(
@@ -415,15 +419,18 @@ afterEvaluate {
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "13.1.0"
+  toolVersion = "13.4.0"
   maxWarnings = 0
 }
 
-dependencyCheck {
-  skipConfigurations = listOf("errorprone", "checkstyle", "annotationProcessor")
-  suppressionFile = "buildscripts/dependency-check-suppressions.xml"
-  failBuildOnCVSS = 7.0f // fail on high or critical CVE
-  nvd.apiKey = System.getenv("NVD_API_KEY")
+tasks.withType<Checkstyle> {
+  isShowViolations = true
+}
+
+ossIndexAudit {
+  username = System.getenv("SONATYPE_OSS_INDEX_USER") ?: ""
+  password = System.getenv("SONATYPE_OSS_INDEX_PASSWORD") ?: ""
+  outputFormat = org.sonatype.gradle.plugins.scan.ossindex.OutputFormat.JSON_CYCLONE_DX_1_4
 }
 
 idea {

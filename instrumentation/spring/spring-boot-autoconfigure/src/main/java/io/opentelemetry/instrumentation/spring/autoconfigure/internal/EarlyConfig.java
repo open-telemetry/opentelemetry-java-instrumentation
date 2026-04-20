@@ -5,7 +5,11 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
+import static java.util.Collections.emptyList;
+
+import java.util.Arrays;
+import java.util.List;
+import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.core.env.Environment;
 
 /**
@@ -18,7 +22,7 @@ public class EarlyConfig {
   public static boolean otelEnabled(Environment environment) {
     boolean disabled =
         environment.getProperty(
-            getPropertyName(environment, "otel.sdk.disabled", "otel.disabled"),
+            isDeclarativeConfig(environment) ? "otel.disabled" : "otel.sdk.disabled",
             Boolean.class,
             false);
     return !disabled;
@@ -28,48 +32,51 @@ public class EarlyConfig {
     return environment.getProperty("otel.file_format", String.class) != null;
   }
 
-  public static boolean isDefaultEnabled(Environment environment) {
-    if (isDeclarativeConfig(environment)) {
-      String mode =
-          environment.getProperty(
-              "otel.instrumentation/development.java.spring_starter.instrumentation_mode",
-              String.class,
-              "default");
-
-      switch (mode) {
-        case "none":
-          return false;
-        case "default":
-          return true;
-        default:
-          throw new ConfigurationException("Unknown instrumentation mode: " + mode);
-      }
-    } else {
-      return environment.getProperty(
-          "otel.instrumentation.common.default-enabled", Boolean.class, true);
-    }
-  }
-
   public static boolean isInstrumentationEnabled(
-      Environment environment, String name, boolean defaultValue) {
-    String property =
-        getPropertyName(
-            environment,
-            String.format("otel.instrumentation.%s.enabled", name),
-            String.format(
-                "otel.instrumentation/development.java.%s.enabled", name.replace('-', '_')));
-    Boolean explicit = environment.getProperty(property, Boolean.class);
+      Environment environment, String name, boolean enabledByDefault) {
+    if (isDeclarativeConfig(environment)) {
+      String snakeCase = name.replace('-', '_');
+
+      List<String> disabled =
+          bindList(environment, "otel.distribution.spring_starter.instrumentation.disabled");
+      if (disabled.contains(snakeCase)) {
+        return false;
+      }
+
+      List<String> enabled =
+          bindList(environment, "otel.distribution.spring_starter.instrumentation.enabled");
+      if (enabled.contains(snakeCase)) {
+        return true;
+      }
+
+      if (!enabledByDefault) {
+        return false;
+      }
+      return environment.getProperty(
+          "otel.distribution.spring_starter.instrumentation.default_enabled", Boolean.class, true);
+    }
+
+    Boolean explicit =
+        environment.getProperty(
+            String.format("otel.instrumentation.%s.enabled", name), Boolean.class);
     if (explicit != null) {
       return explicit;
     }
-    if (!defaultValue) {
+    if (!enabledByDefault) {
       return false;
     }
-    return isDefaultEnabled(environment);
+    return environment.getProperty(
+        "otel.instrumentation.common.default-enabled", Boolean.class, true);
   }
 
-  private static String getPropertyName(
-      Environment environment, String propertyBased, String declarative) {
-    return isDeclarativeConfig(environment) ? declarative : propertyBased;
+  // Environment.getProperty(key, List.class) does not handle indexed properties (e.g.
+  // enabled[0]=spring_web); Binder handles both indexed and comma-separated list formats
+  private static List<String> bindList(Environment environment, String key) {
+    // Binder requires canonical property names (lowercase with hyphens, no underscores)
+    String canonicalKey = key.replace('_', '-');
+    return Binder.get(environment)
+        .bind(canonicalKey, String[].class)
+        .map(Arrays::asList)
+        .orElse(emptyList());
   }
 }

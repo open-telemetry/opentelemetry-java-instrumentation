@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
+import static java.util.Arrays.asList;
+
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import java.util.Arrays;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
@@ -22,7 +23,7 @@ public class FinagleHttpInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Arrays.asList(
+    return asList(
         new GenStreamingServerDispatcherInstrumentation(),
         new ChannelTransportInstrumentation(),
         new H2StreamChannelInitInstrumentation());
@@ -37,7 +38,7 @@ public class FinagleHttpInstrumentationModule extends InstrumentationModule
   @Override
   public List<String> injectedClassNames() {
     // these are injected so that they can access package-private members
-    return Arrays.asList(
+    return asList(
         "com.twitter.finagle.ChannelTransportHelpers",
         "io.netty.channel.OpenTelemetryChannelInitializerDelegate");
   }

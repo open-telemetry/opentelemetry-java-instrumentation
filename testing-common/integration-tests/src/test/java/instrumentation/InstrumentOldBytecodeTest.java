@@ -7,6 +7,7 @@ package instrumentation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.ibm.as400.resource.ResourceLevel;
 import org.junit.jupiter.api.Test;
 
 class InstrumentOldBytecodeTest {
@@ -14,6 +15,6 @@ class InstrumentOldBytecodeTest {
   @Test
   @SuppressWarnings("deprecation") // com.ibm.as400.resource.ResourceLevel is deprecated
   void canInstrumentOldBytecode() {
-    assertThat(new com.ibm.as400.resource.ResourceLevel().toString()).isEqualTo("instrumented");
+    assertThat(new ResourceLevel().toString()).isEqualTo("instrumented");
   }
 }

@@ -13,6 +13,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -21,7 +22,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static io.r2dbc.spi.ConnectionFactoryOptions.CONNECT_TIMEOUT;
 import static io.r2dbc.spi.ConnectionFactoryOptions.DATABASE;
@@ -40,6 +40,7 @@ import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
@@ -88,7 +89,7 @@ public abstract class AbstractR2dbcStatementTest {
               "MYSQL_PASSWORD", PW_DB,
               "MYSQL_DATABASE", DB);
 
-  private static final Map<String, DbSystemProps> SYSTEMS = new HashMap<>();
+  private static final Map<String, DbSystemProps> SYSTEMS = new LinkedHashMap<>();
 
   static {
     SYSTEMS.put(POSTGRESQL.system, POSTGRESQL);
@@ -134,7 +135,7 @@ public abstract class AbstractR2dbcStatementTest {
     }
   }
 
-  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideParameters")
   void testQueries(Parameter parameter) {
@@ -159,7 +160,7 @@ public abstract class AbstractR2dbcStatementTest {
               Mono.from(connectionFactory.create())
                   .flatMapMany(
                       connection ->
-                          Mono.from(connection.createStatement(parameter.statement).execute())
+                          Mono.from(connection.createStatement(parameter.queryText).execute())
                               // Subscribe to the Statement.execute()
                               .flatMapMany(result -> result.map((row, metadata) -> ""))
                               .concatWith(Mono.from(connection.close()).cast(String.class)))
@@ -185,7 +186,7 @@ public abstract class AbstractR2dbcStatementTest {
                                 equalTo(maybeStable(DB_SYSTEM), parameter.system),
                                 equalTo(maybeStable(DB_NAME), DB),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                                equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
+                                equalTo(maybeStable(DB_STATEMENT), parameter.expectedQueryText),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
                                     emitStableDatabaseSemconv()
@@ -260,7 +261,6 @@ public abstract class AbstractR2dbcStatementTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // uses deprecated semconv
   void testMetrics() {
     DbSystemProps props = SYSTEMS.get(MARIADB.system);
     startContainer(props);
@@ -297,22 +297,22 @@ public abstract class AbstractR2dbcStatementTest {
   private static class Parameter {
 
     final String system;
-    final String statement;
-    final String expectedStatement;
+    final String queryText;
+    final String expectedQueryText;
     final String spanName;
     final String table;
     final String operation;
 
     Parameter(
         String system,
-        String statement,
-        String expectedStatement,
+        String queryText,
+        String expectedQueryText,
         String spanName,
         String table,
         String operation) {
       this.system = system;
-      this.statement = statement;
-      this.expectedStatement = expectedStatement;
+      this.queryText = queryText;
+      this.expectedQueryText = expectedQueryText;
       this.spanName = spanName;
       this.table = table;
       this.operation = operation;

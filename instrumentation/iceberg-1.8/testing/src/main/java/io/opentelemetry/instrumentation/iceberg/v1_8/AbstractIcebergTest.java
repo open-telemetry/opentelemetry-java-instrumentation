@@ -8,12 +8,12 @@ package io.opentelemetry.instrumentation.iceberg.v1_8;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import org.apache.iceberg.DataFile;
 import org.apache.iceberg.DataFiles;
 import org.apache.iceberg.FileScanTask;
@@ -34,32 +34,32 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-public abstract class AbstractIcebergTest {
-  protected static final int FORMAT_VERSION = 2;
-  protected static final Schema SCHEMA =
+abstract class AbstractIcebergTest {
+  private static final int FORMAT_VERSION = 2;
+  private static final Schema SCHEMA =
       new Schema(
           NestedField.required(3, "id", IntegerType.get()),
           NestedField.required(4, "data", StringType.get()));
-  protected static final PartitionSpec SPEC =
+  private static final PartitionSpec SPEC =
       PartitionSpec.builderFor(SCHEMA).bucket("data", 16).build();
-  protected static final DataFile FILE_1 =
+  private static final DataFile FILE_1 =
       DataFiles.builder(SPEC)
           .withPath("/path/to/data-a.parquet")
           .withFileSizeInBytes(10L)
           .withPartitionPath("data_bucket=0")
           .withRecordCount(1L)
           .build();
-  protected static final DataFile FILE_2 =
+  private static final DataFile FILE_2 =
       DataFiles.builder(SPEC)
           .withPath("/path/to/data-b.parquet")
           .withFileSizeInBytes(10L)
           .withPartitionPath("data_bucket=1")
           .withRecordCount(1L)
-          .withSplitOffsets(Arrays.asList(1L))
+          .withSplitOffsets(asList(1L))
           .build();
 
-  @TempDir protected File tableDir = null;
-  protected Table table;
+  @TempDir private File tableDir;
+  private Table table;
 
   protected abstract InstrumentationExtension testing();
 
@@ -386,8 +386,8 @@ public abstract class AbstractIcebergTest {
                                                 expectedReport.tableName())))));
   }
 
-  static final class SimpleReporter implements MetricsReporter {
-    MetricsReport report;
+  private static class SimpleReporter implements MetricsReporter {
+    private MetricsReport report;
 
     @Override
     public void report(MetricsReport report) {

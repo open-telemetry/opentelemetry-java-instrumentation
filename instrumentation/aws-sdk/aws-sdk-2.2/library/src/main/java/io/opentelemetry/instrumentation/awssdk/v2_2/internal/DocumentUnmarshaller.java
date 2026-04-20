@@ -21,10 +21,12 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import software.amazon.awssdk.core.document.Document;
 import software.amazon.awssdk.protocols.jsoncore.JsonNode;
 import software.amazon.awssdk.protocols.jsoncore.JsonNodeVisitor;
@@ -54,8 +56,7 @@ final class DocumentUnmarshaller implements JsonNodeVisitor<Document> {
 
   @Override
   public Document visitArray(List<JsonNode> array) {
-    return Document.fromList(
-        array.stream().map(node -> node.visit(this)).collect(Collectors.toList()));
+    return Document.fromList(array.stream().map(node -> node.visit(this)).collect(toList()));
   }
 
   @Override
@@ -63,7 +64,7 @@ final class DocumentUnmarshaller implements JsonNodeVisitor<Document> {
     return Document.fromMap(
         object.entrySet().stream()
             .collect(
-                Collectors.toMap(
+                toMap(
                     Map.Entry::getKey,
                     entry -> entry.getValue().visit(this),
                     (left, right) -> left,

@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HttpClientImplInstrumentation implements TypeInstrumentation {
+class HttpClientImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -26,13 +26,12 @@ public class HttpClientImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isConstructor(), HttpClientImplInstrumentation.class.getName() + "$AttachStateAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$AttachStateAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class AttachStateAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void attachHttpClientOptions(
         @Advice.This HttpClientImpl client,
         @Advice.FieldValue("options") HttpClientOptions options) {

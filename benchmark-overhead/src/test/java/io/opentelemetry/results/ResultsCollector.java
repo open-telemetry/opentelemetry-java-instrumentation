@@ -5,6 +5,7 @@
 
 package io.opentelemetry.results;
 
+import static java.util.stream.Collectors.toList;
 import com.jayway.jsonpath.JsonPath;
 import io.opentelemetry.agents.Agent;
 import io.opentelemetry.config.TestConfig;
@@ -16,7 +17,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class ResultsCollector {
 
@@ -31,7 +31,7 @@ public class ResultsCollector {
   public List<AppPerfResults> collect(TestConfig config) {
     return config.getAgents().stream()
         .map(a -> readAgentResults(a, config))
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   private AppPerfResults readAgentResults(Agent agent, TestConfig config) {

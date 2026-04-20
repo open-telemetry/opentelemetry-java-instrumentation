@@ -24,7 +24,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
 
-public class AnnotatedMethodInstrumentation implements TypeInstrumentation {
+class AnnotatedMethodInstrumentation implements TypeInstrumentation {
   private static final String[] ANNOTATION_CLASSES =
       new String[] {
         "org.springframework.ws.server.endpoint.annotation.PayloadRoot",
@@ -46,7 +46,7 @@ public class AnnotatedMethodInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isMethod().and(isAnnotatedWith(namedOneOf(ANNOTATION_CLASSES))),
-        AnnotatedMethodInstrumentation.class.getName() + "$AnnotatedMethodAdvice");
+        getClass().getName() + "$AnnotatedMethodAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -97,14 +97,14 @@ public class AnnotatedMethodInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope startSpan(
         @Advice.Origin("#t") Class<?> codeClass, @Advice.Origin("#m") String methodName) {
       CallDepth callDepth = CallDepth.forClass(PayloadRoot.class);
       return AdviceScope.enter(callDepth, codeClass, methodName);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
       adviceScope.exit(throwable);

@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isEnum;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -28,7 +27,7 @@ import org.influxdb.dto.Query;
 import org.influxdb.impl.InfluxDBImpl;
 import retrofit2.Retrofit;
 
-public class InfluxDbImplInstrumentation implements TypeInstrumentation {
+class InfluxDbImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -38,12 +37,11 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("query")).and(takesArgument(0, named("org.influxdb.dto.Query"))),
-        this.getClass().getName() + "$InfluxDbQueryAdvice");
+        named("query").and(takesArgument(0, named("org.influxdb.dto.Query"))),
+        getClass().getName() + "$InfluxDbQueryAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("write"))
+        named("write")
             .and(
                 takesArguments(1)
                     .and(takesArgument(0, named("org.influxdb.dto.BatchPoints")))
@@ -59,16 +57,16 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
                             .and(takesArgument(1, String.class))
                             .and(takesArgument(2, isEnum()))
                             .and(takesArgument(3, named("java.util.concurrent.TimeUnit"))))),
-        this.getClass().getName() + "$InfluxDbModifyAdvice");
+        getClass().getName() + "$InfluxDbModifyAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(namedOneOf("createDatabase", "deleteDatabase")),
-        this.getClass().getName() + "$InfluxDbModifyAdvice");
+        namedOneOf("createDatabase", "deleteDatabase"),
+        getClass().getName() + "$InfluxDbModifyAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class InfluxDbQueryAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToAllArguments(index = 0, typing = Assigner.Typing.DYNAMIC)
     public static Object[] onEnter(
         @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] arguments,
@@ -96,13 +94,13 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
       // wrap callbacks so they'd run in the context of the parent span
       Object[] newArguments = new Object[arguments.length];
       for (int i = 0; i < arguments.length; i++) {
-        newArguments[i] = InfluxDbObjetWrapper.wrap(arguments[i], parentContext);
+        newArguments[i] = InfluxDbObjectWrapper.wrap(arguments[i], parentContext);
       }
 
       return new Object[] {newArguments, InfluxDbScope.start(parentContext, influxDbRequest)};
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown Throwable throwable, @Advice.Enter Object[] enterArgs) {
       CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
@@ -117,7 +115,7 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InfluxDbModifyAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static InfluxDbScope onEnter(
         @Advice.Origin("#m") String methodName,
         @Advice.Argument(0) Object arg0,
@@ -140,17 +138,17 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
               // write data by UDP protocol, in this way, can't get database name.
               : arg0 instanceof Integer ? "" : String.valueOf(arg0);
 
-      String operation;
+      String operationName;
       if ("createDatabase".equals(methodName)) {
-        operation = "CREATE DATABASE";
+        operationName = "CREATE DATABASE";
       } else if ("deleteDatabase".equals(methodName)) {
-        operation = "DROP DATABASE";
+        operationName = "DROP DATABASE";
       } else {
-        operation = "WRITE";
+        operationName = "WRITE";
       }
 
       InfluxDbRequest influxDbRequest =
-          InfluxDbRequest.create(httpUrl.host(), httpUrl.port(), database, operation, null);
+          InfluxDbRequest.create(httpUrl.host(), httpUrl.port(), database, operationName, null);
 
       if (!instrumenter().shouldStart(parentContext, influxDbRequest)) {
         return null;
@@ -159,7 +157,7 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
       return InfluxDbScope.start(parentContext, influxDbRequest);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown Throwable throwable, @Advice.Enter InfluxDbScope scope) {
       CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);

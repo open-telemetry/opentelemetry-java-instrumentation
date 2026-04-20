@@ -61,6 +61,7 @@ final class TracingJobListener implements JobListener {
       return;
     }
 
+    contextVirtualField.set(job, null);
     contextAndScope.closeScope();
     instrumenter.end(contextAndScope.getContext(), job, null, error);
   }

@@ -27,8 +27,11 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenA
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiProviderNameIncubatingValues.OPENAI;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.INPUT;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.OUTPUT;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -65,14 +68,11 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.openai.TestHelper;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletionException;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -87,11 +87,11 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  protected final ChatCompletion doCompletions(ChatCompletionCreateParams params) {
+  protected ChatCompletion doCompletions(ChatCompletionCreateParams params) {
     return doCompletions(params, getClient(), getClientAsync());
   }
 
-  protected final ChatCompletion doCompletions(
+  protected ChatCompletion doCompletions(
       ChatCompletionCreateParams params, OpenAIClient client, OpenAIClientAsync clientAsync) {
     switch (testType) {
       case SYNC:
@@ -121,23 +121,22 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
     throw new AssertionError();
   }
 
-  protected final List<ChatCompletionChunk> doCompletionsStreaming(
-      ChatCompletionCreateParams params) {
+  protected List<ChatCompletionChunk> doCompletionsStreaming(ChatCompletionCreateParams params) {
     return doCompletionsStreaming(params, getClient(), getClientAsync());
   }
 
-  protected final List<ChatCompletionChunk> doCompletionsStreaming(
+  protected List<ChatCompletionChunk> doCompletionsStreaming(
       ChatCompletionCreateParams params, OpenAIClient client, OpenAIClientAsync clientAsync) {
     switch (testType) {
       case SYNC:
         try (StreamResponse<ChatCompletionChunk> result =
             client.chat().completions().createStreaming(params)) {
-          return result.stream().collect(Collectors.toList());
+          return result.stream().collect(toList());
         }
       case SYNC_FROM_ASYNC:
         try (StreamResponse<ChatCompletionChunk> result =
             clientAsync.sync().chat().completions().createStreaming(params)) {
-          return result.stream().collect(Collectors.toList());
+          return result.stream().collect(toList());
         }
       case ASYNC:
       case ASYNC_FROM_SYNC:
@@ -183,11 +182,11 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                                satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                                satisfies(GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                                 satisfies(
                                     GEN_AI_RESPONSE_FINISH_REASONS,
-                                    reasons -> reasons.containsExactly("stop")),
+                                    val -> val.containsExactly("stop")),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L)))));
 
@@ -264,7 +263,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
             .messages(
-                Arrays.asList(
+                asList(
                     createDeveloperMessage(
                         "You are an assistant which just answers every query with tomato"),
                     createUserMessage("Say something")))
@@ -347,11 +346,11 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                 equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, singletonList("foo")),
                                 equalTo(GEN_AI_REQUEST_TEMPERATURE, 1.0),
                                 equalTo(GEN_AI_REQUEST_TOP_P, 1.0),
-                                satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                                satisfies(GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                                 satisfies(
                                     GEN_AI_RESPONSE_FINISH_REASONS,
-                                    reasons -> reasons.containsExactly("stop")),
+                                    val -> val.containsExactly("stop")),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 3L)))));
 
@@ -427,7 +426,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
   void multipleChoices() {
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
-            .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
             .model(TEST_CHAT_MODEL)
             .n(2)
             .build();
@@ -448,11 +447,11 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                                satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                                satisfies(GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                                 satisfies(
                                     GEN_AI_RESPONSE_FINISH_REASONS,
-                                    reasons -> reasons.containsExactly("stop", "stop")),
+                                    val -> val.containsExactly("stop", "stop")),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 7L)))));
 
@@ -579,11 +578,11 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                                satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                                satisfies(GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                                 satisfies(
                                     GEN_AI_RESPONSE_FINISH_REASONS,
-                                    reasons -> reasons.containsExactly("tool_calls")),
+                                    val -> val.containsExactly("tool_calls")),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 67L),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 46L)))));
 
@@ -727,11 +726,11 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                                satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                                satisfies(GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                                 satisfies(
                                     GEN_AI_RESPONSE_FINISH_REASONS,
-                                    reasons -> reasons.containsExactly("stop")),
+                                    val -> val.containsExactly("stop")),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 99L),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 25L)))));
 
@@ -888,7 +887,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
-            .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
             .model(TEST_CHAT_MODEL)
             .build();
 
@@ -940,7 +939,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
   void stream() {
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
-            .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
             .model(TEST_CHAT_MODEL)
             .build();
 
@@ -957,7 +956,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 })
             .filter(Optional::isPresent)
             .map(Optional::get)
-            .collect(Collectors.joining());
+            .collect(joining());
 
     String content = "Atlantic Ocean.";
     assertThat(fullMessage).isEqualTo(content);
@@ -972,11 +971,11 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                                satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                                satisfies(GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                                 satisfies(
                                     GEN_AI_RESPONSE_FINISH_REASONS,
-                                    reasons -> reasons.containsExactly("stop"))))));
+                                    val -> val.containsExactly("stop"))))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -1025,7 +1024,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
   void streamIncludeUsage() {
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
-            .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
             .model(TEST_CHAT_MODEL)
             .streamOptions(ChatCompletionStreamOptions.builder().includeUsage(true).build())
             .build();
@@ -1043,7 +1042,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 })
             .filter(Optional::isPresent)
             .map(Optional::get)
-            .collect(Collectors.joining());
+            .collect(joining());
 
     String content = "South Atlantic Ocean";
     assertThat(fullMessage).isEqualTo(content);
@@ -1058,11 +1057,11 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                                satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                                satisfies(GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                                 satisfies(
                                     GEN_AI_RESPONSE_FINISH_REASONS,
-                                    reasons -> reasons.containsExactly("stop")),
+                                    val -> val.containsExactly("stop")),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 3L)))));
 
@@ -1138,7 +1137,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
   void streamMultipleChoices() {
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
-            .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
             .model(TEST_CHAT_MODEL)
             .n(2)
             .build();
@@ -1179,11 +1178,11 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                                satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                                satisfies(GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                                 satisfies(
                                     GEN_AI_RESPONSE_FINISH_REASONS,
-                                    reasons -> reasons.containsExactly("stop", "stop"))))));
+                                    val -> val.containsExactly("stop", "stop"))))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -1331,11 +1330,11 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                                satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                                satisfies(GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                                 satisfies(
                                     GEN_AI_RESPONSE_FINISH_REASONS,
-                                    reasons -> reasons.containsExactly("tool_calls"))))));
+                                    val -> val.containsExactly("tool_calls"))))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -1449,7 +1448,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 })
             .filter(Optional::isPresent)
             .map(Optional::get)
-            .collect(Collectors.joining());
+            .collect(joining());
 
     getTesting()
         .waitAndAssertTraces(
@@ -1461,11 +1460,11 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                                satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                                satisfies(GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                                 satisfies(
                                     GEN_AI_RESPONSE_FINISH_REASONS,
-                                    reasons -> reasons.containsExactly("stop"))))));
+                                    val -> val.containsExactly("stop"))))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -1595,7 +1594,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
-            .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
             .model(TEST_CHAT_MODEL)
             .build();
 
@@ -1684,8 +1683,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             .parameters(
                 FunctionParameters.builder()
                     .putAdditionalProperty("type", JsonValue.from("object"))
-                    .putAdditionalProperty(
-                        "required", JsonValue.from(Collections.singletonList("location")))
+                    .putAdditionalProperty("required", JsonValue.from(singletonList("location")))
                     .putAdditionalProperty("additionalProperties", JsonValue.from(false))
                     .putAdditionalProperty("properties", JsonObject.of(properties))
                     .build())

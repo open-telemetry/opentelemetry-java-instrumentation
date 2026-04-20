@@ -9,7 +9,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import application.io.opentelemetry.context.Context;
 import io.opentelemetry.api.internal.InstrumentationUtil;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -19,7 +18,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class InstrumentationUtilInstrumentation implements TypeInstrumentation {
+class InstrumentationUtilInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("application.io.opentelemetry.api.internal.InstrumentationUtil");
@@ -31,23 +30,27 @@ public class InstrumentationUtilInstrumentation implements TypeInstrumentation {
         named("shouldSuppressInstrumentation")
             .and(takesArgument(0, named("application.io.opentelemetry.context.Context")))
             .and(returns(boolean.class)),
-        this.getClass().getName() + "$ShouldSuppressAdvice");
+        getClass().getName() + "$ShouldSuppressAdvice");
     transformer.applyAdviceToMethod(
         named("suppressInstrumentation").and(takesArgument(0, Runnable.class)),
-        this.getClass().getName() + "$SuppressAdvice");
+        getClass().getName() + "$SuppressAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ShouldSuppressAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Advice.OnNonDefaultValue.class)
+    @Advice.OnMethodEnter(
+        suppress = Throwable.class,
+        skipOn = Advice.OnNonDefaultValue.class,
+        inline = false)
     public static boolean methodEnter() {
       return true;
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static boolean methodExit(@Advice.Argument(0) Context context) {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static boolean methodExit(
+        @Advice.Argument(0) application.io.opentelemetry.context.Context context) {
       return InstrumentationUtil.shouldSuppressInstrumentation(
           AgentContextStorage.getAgentContext(context));
     }
@@ -56,7 +59,10 @@ public class InstrumentationUtilInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SuppressAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Advice.OnNonDefaultValue.class)
+    @Advice.OnMethodEnter(
+        suppress = Throwable.class,
+        skipOn = Advice.OnNonDefaultValue.class,
+        inline = false)
     public static boolean methodEnter(@Advice.Argument(0) Runnable runnable) {
       InstrumentationUtil.suppressInstrumentation(runnable);
       return true;

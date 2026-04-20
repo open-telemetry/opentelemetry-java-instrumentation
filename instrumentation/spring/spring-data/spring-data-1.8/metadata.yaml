@@ -1,5 +1,3 @@
-description: >
-  This instrumentation enhances tracing for Spring Data operations. It works in conjunction
-  with other instrumentations, such as JDBC, to provide additional context and details
-  for database interactions initiated through Spring Data.
+display_name: Spring Data
+description: This instrumentation enables spans for Spring Data repository method invocations.
 library_link: https://spring.io/projects/spring-data

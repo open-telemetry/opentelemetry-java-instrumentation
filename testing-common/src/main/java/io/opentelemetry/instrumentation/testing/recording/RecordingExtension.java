@@ -15,8 +15,7 @@ import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
-public final class RecordingExtension extends WireMockExtension
-    implements AfterTestExecutionCallback {
+public class RecordingExtension extends WireMockExtension implements AfterTestExecutionCallback {
   /**
    * Setting this to true will make the tests call the real API instead and record the responses.
    * You'll have to setup credentials for this to work.

@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.bootstrap.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +32,7 @@ public final class ConfiguredResourceAttributesHolder {
     List<String> mdcResourceAttributes =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "common")
             .get("mdc")
-            .getScalarList("resource_attributes", String.class, Collections.emptyList());
+            .getScalarList("resource_attributes", String.class, emptyList());
     for (String key : mdcResourceAttributes) {
       String value = resourceAttribute.get(stringKey(key));
       if (value != null) {

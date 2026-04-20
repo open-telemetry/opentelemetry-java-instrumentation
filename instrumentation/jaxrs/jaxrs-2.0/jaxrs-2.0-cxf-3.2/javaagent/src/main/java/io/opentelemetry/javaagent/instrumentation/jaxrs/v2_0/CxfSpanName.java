@@ -13,12 +13,13 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.jaxrs.JaxrsContextPath;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
+import javax.annotation.Nullable;
 import org.apache.cxf.jaxrs.model.ClassResourceInfo;
 import org.apache.cxf.jaxrs.model.OperationResourceInfo;
 import org.apache.cxf.jaxrs.model.URITemplate;
 import org.apache.cxf.message.Exchange;
 
-public final class CxfSpanName implements HttpServerRouteGetter<String> {
+public class CxfSpanName implements HttpServerRouteGetter<String> {
 
   public static final CxfSpanName INSTANCE = new CxfSpanName();
 
@@ -31,6 +32,7 @@ public final class CxfSpanName implements HttpServerRouteGetter<String> {
     return JaxrsContextPath.init(context, jaxrsName);
   }
 
+  @Nullable
   private static String calculateJaxrsName(Context context, Exchange exchange) {
     OperationResourceInfo ori = exchange.get(OperationResourceInfo.class);
     ClassResourceInfo cri = ori.getClassResourceInfo();
@@ -57,7 +59,8 @@ public final class CxfSpanName implements HttpServerRouteGetter<String> {
   }
 
   @Override
-  public String get(Context context, String jaxrsName) {
+  @Nullable
+  public String get(Context context, @Nullable String jaxrsName) {
     return ServletContextPath.prepend(context, jaxrsName);
   }
 

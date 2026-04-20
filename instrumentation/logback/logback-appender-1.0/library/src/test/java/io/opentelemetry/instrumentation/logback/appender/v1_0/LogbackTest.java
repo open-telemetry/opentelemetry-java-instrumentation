@@ -31,7 +31,7 @@ class LogbackTest extends AbstractLogbackTest {
 
   @AfterEach
   void tearDown() {
-    OpenTelemetryAppender.install(null);
+    OpenTelemetryAppender.resetForTest();
   }
 
   @Override

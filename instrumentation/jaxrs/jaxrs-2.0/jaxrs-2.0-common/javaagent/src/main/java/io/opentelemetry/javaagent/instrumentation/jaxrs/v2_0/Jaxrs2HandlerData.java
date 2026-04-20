@@ -12,6 +12,7 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 
@@ -53,6 +54,7 @@ public class Jaxrs2HandlerData extends HandlerData {
   }
 
   @Override
+  @Nullable
   protected Supplier<String> getPathAnnotation(AnnotatedElement annotatedElement) {
     Path path = annotatedElement.getAnnotation(Path.class);
     return path != null ? path::value : null;

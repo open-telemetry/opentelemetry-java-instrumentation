@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.reactive.server;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
@@ -28,7 +29,6 @@ import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,7 +73,7 @@ public class VertxReactiveWebServer extends AbstractVerticle {
           future.complete(null);
         });
     // block until vertx server is up
-    future.get(30, TimeUnit.SECONDS);
+    future.get(30, SECONDS);
 
     return server;
   }
@@ -96,7 +96,8 @@ public class VertxReactiveWebServer extends AbstractVerticle {
               .createHttpServer()
               .requestHandler(router)
               .listen(port, h -> startPromise.complete());
-        });
+        },
+        throwable -> startPromise.fail(throwable));
   }
 
   @SuppressWarnings("CheckReturnValue")
@@ -148,11 +149,12 @@ public class VertxReactiveWebServer extends AbstractVerticle {
     }
   }
 
-  private static void setUpInitialData(Handler<Void> done) {
+  private static void setUpInitialData(Handler<Void> done, Handler<Throwable> onError) {
     client.getConnection(
         res -> {
           if (res.failed()) {
-            throw new IllegalStateException(res.cause());
+            onError.handle(res.cause());
+            return;
           }
 
           SQLConnection conn = res.result();
@@ -161,14 +163,16 @@ public class VertxReactiveWebServer extends AbstractVerticle {
               "CREATE TABLE IF NOT EXISTS products(id INT IDENTITY, name VARCHAR(255), price FLOAT, weight INT)",
               ddl -> {
                 if (ddl.failed()) {
-                  throw new IllegalStateException(ddl.cause());
+                  onError.handle(ddl.cause());
+                  return;
                 }
 
                 conn.execute(
                     "INSERT INTO products (name, price, weight) VALUES ('Egg Whisk', 3.99, 150), ('Tea Cosy', 5.99, 100), ('Spatula', 1.00, 80)",
                     fixtures -> {
                       if (fixtures.failed()) {
-                        throw new IllegalStateException(fixtures.cause());
+                        onError.handle(fixtures.cause());
+                        return;
                       }
 
                       done.handle(null);

@@ -5,13 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.tomcat;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import jakarta.servlet.ServletException;
 import java.io.IOException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import org.apache.catalina.AccessLog;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
@@ -20,7 +21,7 @@ import org.apache.catalina.valves.ValveBase;
 // public, because it's loaded by reflection
 public class TestAccessLogValve extends ValveBase implements AccessLog {
 
-  public final List<Map.Entry<String, String>> getLoggedIds() {
+  public List<Map.Entry<String, String>> getLoggedIds() {
     return loggedIds;
   }
 
@@ -46,7 +47,7 @@ public class TestAccessLogValve extends ValveBase implements AccessLog {
   }
 
   public void waitForLoggedIds(int expected) {
-    long timeout = TimeUnit.SECONDS.toMillis(20);
+    long timeout = SECONDS.toMillis(20);
     long startTime = System.currentTimeMillis();
     long endTime = startTime + timeout;
     long toWait = timeout;
@@ -55,6 +56,7 @@ public class TestAccessLogValve extends ValveBase implements AccessLog {
         try {
           loggedIds.wait(toWait);
         } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
           throw new IllegalStateException(e);
         }
         toWait = endTime - System.currentTimeMillis();

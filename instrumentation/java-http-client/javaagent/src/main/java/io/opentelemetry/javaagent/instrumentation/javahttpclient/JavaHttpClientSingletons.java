@@ -15,23 +15,23 @@ import java.net.http.HttpResponse;
 
 public class JavaHttpClientSingletons {
 
-  private static final HttpHeadersSetter SETTER;
-  private static final Instrumenter<HttpRequest, HttpResponse<?>> INSTRUMENTER;
+  private static final HttpHeadersSetter setter;
+  private static final Instrumenter<HttpRequest, HttpResponse<?>> instrumenter;
 
   static {
-    SETTER = new HttpHeadersSetter(GlobalOpenTelemetry.getPropagators());
+    setter = new HttpHeadersSetter(GlobalOpenTelemetry.getPropagators());
 
-    INSTRUMENTER =
+    instrumenter =
         JavaagentHttpClientInstrumenters.create(
             JavaHttpClientInstrumenterBuilderFactory.create(GlobalOpenTelemetry.get()));
   }
 
   public static Instrumenter<HttpRequest, HttpResponse<?>> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static HttpHeadersSetter setter() {
-    return SETTER;
+    return setter;
   }
 
   private JavaHttpClientSingletons() {}

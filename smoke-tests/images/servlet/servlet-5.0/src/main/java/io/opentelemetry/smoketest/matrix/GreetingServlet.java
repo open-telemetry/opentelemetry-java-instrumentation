@@ -5,6 +5,8 @@
 
 package io.opentelemetry.smoketest.matrix;
 
+import static java.util.Objects.requireNonNull;
+
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,7 +17,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Objects;
 
 @SuppressWarnings("SystemOut")
 public class GreetingServlet extends HttpServlet {
@@ -31,6 +32,7 @@ public class GreetingServlet extends HttpServlet {
     try (InputStream remoteInputStream = urlConnection.getInputStream()) {
       long bytesRead = transfer(remoteInputStream, buffer);
       String responseBody = buffer.toString("UTF-8");
+      resp.setContentType("text/plain");
       ServletOutputStream outputStream = resp.getOutputStream();
       outputStream.print(
           bytesRead + " bytes read by " + urlConnection.getClass().getName() + "\n" + responseBody);
@@ -41,7 +43,7 @@ public class GreetingServlet extends HttpServlet {
 
   // We have to run on Java 8, so no Java 9 stream transfer goodies for us.
   private static long transfer(InputStream from, OutputStream to) throws IOException {
-    Objects.requireNonNull(to, "out");
+    requireNonNull(to, "out");
     long transferred = 0;
     byte[] buffer = new byte[65535];
     int read;

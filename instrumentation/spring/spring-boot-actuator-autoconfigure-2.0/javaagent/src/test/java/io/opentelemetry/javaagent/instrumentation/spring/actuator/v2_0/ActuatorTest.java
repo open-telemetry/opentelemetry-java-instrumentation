@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.actuator.v2_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -53,10 +53,8 @@ class ActuatorTest {
                                         point ->
                                             point
                                                 .hasValue(1)
-                                                .hasAttributesSatisfying(
-                                                    equalTo(
-                                                        AttributeKey.stringKey("tag"),
-                                                        "value"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "value"))))));
 
     MeterRegistry meterRegistry = context.getBean(MeterRegistry.class);
     assertThat(meterRegistry).isInstanceOf(CompositeMeterRegistry.class);

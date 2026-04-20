@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.zio.v2_0;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -15,7 +14,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import zio.Supervisor;
 
-public class ZioRuntimeInstrumentation implements TypeInstrumentation {
+class ZioRuntimeInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -25,15 +24,13 @@ public class ZioRuntimeInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("defaultSupervisor")), getClass().getName() + "$DefaultSupervisor");
+        named("defaultSupervisor"), getClass().getName() + "$DefaultSupervisorAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static final class DefaultSupervisor {
+  public static class DefaultSupervisorAdvice {
 
-    private DefaultSupervisor() {}
-
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToReturned
     public static Object onExit(@Advice.Return Supervisor<?> supervisor) {
       return supervisor.$plus$plus(TracingSupervisor.INSTANCE);

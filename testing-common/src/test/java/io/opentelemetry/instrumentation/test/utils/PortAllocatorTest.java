@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.test.utils;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.Closeable;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 class PortAllocatorTest {
@@ -18,14 +18,14 @@ class PortAllocatorTest {
     PortAllocator portAllocator = getPortAllocator((port) -> true);
     int next = PortAllocator.RANGE_MIN + 1;
     for (int i = 0; i < 1000; i++) {
-      Assertions.assertEquals(next, portAllocator.getPort());
+      assertThat(portAllocator.getPort()).isEqualTo(next);
       next++;
       if (next % PortAllocator.CHUNK_SIZE == 0) {
         next++;
       }
     }
-    Assertions.assertEquals(next, portAllocator.getPorts(10));
-    Assertions.assertEquals(12101, portAllocator.getPorts(PortAllocator.CHUNK_SIZE - 1));
+    assertThat(portAllocator.getPorts(10)).isEqualTo(next);
+    assertThat(portAllocator.getPorts(PortAllocator.CHUNK_SIZE - 1)).isEqualTo(12101);
     assertThatThrownBy(() -> portAllocator.getPorts(PortAllocator.CHUNK_SIZE + 1))
         .isInstanceOf(IllegalStateException.class);
   }
@@ -35,7 +35,7 @@ class PortAllocatorTest {
     PortAllocator portAllocator = getPortAllocator((port) -> port % 2 == 0);
     int next = PortAllocator.RANGE_MIN + 2;
     for (int i = 0; i < 1000; i++) {
-      Assertions.assertEquals(next, portAllocator.getPort());
+      assertThat(portAllocator.getPort()).isEqualTo(next);
       next += 2;
       if (next % PortAllocator.CHUNK_SIZE == 0) {
         next += 2;

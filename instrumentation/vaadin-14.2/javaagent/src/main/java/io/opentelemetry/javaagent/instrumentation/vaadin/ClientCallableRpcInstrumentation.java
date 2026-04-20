@@ -19,7 +19,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 // add spans around calls to methods with @ClientCallable annotation
-public class ClientCallableRpcInstrumentation implements TypeInstrumentation {
+class ClientCallableRpcInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -35,7 +35,7 @@ public class ClientCallableRpcInstrumentation implements TypeInstrumentation {
             .and(takesArgument(2, named(String.class.getName())))
             .and(takesArgument(3, named("elemental.json.JsonArray")))
             .and(takesArgument(4, named(int.class.getName()))),
-        this.getClass().getName() + "$InvokeMethodAdvice");
+        getClass().getName() + "$InvokeMethodAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -73,13 +73,13 @@ public class ClientCallableRpcInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.Argument(1) Class<?> componentClass, @Advice.Argument(2) String methodName) {
       return AdviceScope.start(componentClass, methodName);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

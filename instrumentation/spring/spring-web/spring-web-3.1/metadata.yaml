@@ -1,4 +1,8 @@
+display_name: Spring Web
 description: >
   This instrumentation provides a library integration that enables capturing HTTP client spans and
   metrics for Spring's RestTemplate.
 library_link: https://github.com/spring-projects/spring-framework
+semantic_conventions:
+  - HTTP_CLIENT_SPANS
+  - HTTP_CLIENT_METRICS

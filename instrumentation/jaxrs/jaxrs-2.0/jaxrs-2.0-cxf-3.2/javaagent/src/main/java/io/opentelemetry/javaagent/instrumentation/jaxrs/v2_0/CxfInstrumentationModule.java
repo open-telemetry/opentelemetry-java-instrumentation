@@ -10,12 +10,10 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class CxfInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class CxfInstrumentationModule extends InstrumentationModule {
   public CxfInstrumentationModule() {
     super("jaxrs", "jaxrs-2.0", "cxf", "cxf-3.2");
   }
@@ -27,10 +25,5 @@ public class CxfInstrumentationModule extends InstrumentationModule
         new CxfServletControllerInstrumentation(),
         new CxfRsHttpListenerInstrumentation(),
         new CxfJaxRsInvokerInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

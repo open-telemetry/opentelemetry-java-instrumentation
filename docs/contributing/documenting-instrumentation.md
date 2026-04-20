@@ -94,8 +94,8 @@ disabled_by_default: true
 classification: library
 library_link: https://github.com/...
 configurations:
-  - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-    description: Enables statement sanitization for database queries.
+  - name: otel.instrumentation.common.db.query-sanitization.enabled
+    description: Enables query sanitization for database queries.
     type: boolean
     default: true
 override_telemetry: false
@@ -206,7 +206,8 @@ List of possible options:
 * `AUTO_INSTRUMENTATION_SHIM`: Instrumentation that adapts or bridges instrumentation from upstream libraries or frameworks
 * `CONTROLLER_SPANS`: Instrumentation that generates controller-level spans for controller/handler methods in web frameworks (disabled by default, experimental)
 * `VIEW_SPANS`: Instrumentation that generates view-level spans for view rendering such as templates or JSP (disabled by default, experimental)
-* `LOGGING_BRIDGE`: Instrumentation that bridges logging framework events to the OpenTelemetry Logs API. These instrumentations capture log records from standard logging frameworks and emit them as OpenTelemetry log records.
+* `LOGGING_BRIDGE`: Instrumentation that bridges logging framework events to the OpenTelemetry Logs API. These instrumentations capture log records from standard logging frameworks and emit them as OpenTelemetry log records
+* `RESOURCE_DETECTOR`: Instrumentation that sets resource attributes based on certain conditions
 
 ### Library Link
 
@@ -220,7 +221,7 @@ If an instrumentation module has configuration options, they should be documente
 
 Each configuration should include:
 
-* `name`: The full configuration property name, for example `otel.instrumentation.common.db-statement-sanitizer.enabled`.
+* `name`: The full configuration property name, for example `otel.instrumentation.common.db.query-sanitization.enabled`.
 * `description`: A brief description of what the configuration does.
 * `type`: The data type of the configuration value. Supported types are: `boolean`, `string`, `list`, and `map`.
 * `default`: The default value for the configuration.

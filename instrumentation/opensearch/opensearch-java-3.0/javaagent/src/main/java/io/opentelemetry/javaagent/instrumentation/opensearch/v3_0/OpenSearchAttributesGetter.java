@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 
 final class OpenSearchAttributesGetter
@@ -14,7 +14,7 @@ final class OpenSearchAttributesGetter
 
   @Override
   public String getDbSystemName(OpenSearchRequest request) {
-    return DbIncubatingAttributes.DbSystemNameIncubatingValues.OPENSEARCH;
+    return DbSystemNameIncubatingValues.OPENSEARCH;
   }
 
   @Override
@@ -26,18 +26,17 @@ final class OpenSearchAttributesGetter
   @Override
   @Nullable
   public String getDbQueryText(OpenSearchRequest request) {
-    return request.getMethod() + " " + request.getEndpoint();
+    if (request.getBody() == null) {
+      // fall back to method and endpoint if capturing the query body is disabled or if the body is
+      // not available
+      return request.getMethod() + " " + request.getEndpoint();
+    }
+    return request.getBody();
   }
 
   @Override
   @Nullable
   public String getDbOperationName(OpenSearchRequest request) {
     return request.getMethod();
-  }
-
-  @Nullable
-  @Override
-  public String getDbResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
-    return null; // Response status is handled by HTTP instrumentation
   }
 }

@@ -16,7 +16,10 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.POSTGRESQL;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -26,7 +29,6 @@ import io.vertx.core.Vertx;
 import jakarta.persistence.EntityManagerFactory;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.hibernate.reactive.stage.Stage;
 import org.junit.jupiter.api.AfterAll;
@@ -104,7 +106,9 @@ public abstract class AbstractHibernateReactiveTest {
       stageSessionFactory.close();
     }
     vertx.close();
-    container.stop();
+    if (container != null) {
+      container.stop();
+    }
   }
 
   @Test
@@ -148,7 +152,7 @@ public abstract class AbstractHibernateReactiveTest {
                               .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                         })
                     .toCompletableFuture())
-        .get(30, TimeUnit.SECONDS);
+        .get(30, SECONDS);
 
     assertTrace();
   }
@@ -171,7 +175,7 @@ public abstract class AbstractHibernateReactiveTest {
                               .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                         })
                     .toCompletableFuture())
-        .get(30, TimeUnit.SECONDS);
+        .get(30, SECONDS);
 
     assertTrace();
   }
@@ -194,7 +198,7 @@ public abstract class AbstractHibernateReactiveTest {
                               .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                         })
                     .toCompletableFuture())
-        .get(30, TimeUnit.SECONDS);
+        .get(30, SECONDS);
 
     assertTrace();
   }
@@ -217,7 +221,7 @@ public abstract class AbstractHibernateReactiveTest {
                               .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                         })
                     .toCompletableFuture())
-        .get(30, TimeUnit.SECONDS);
+        .get(30, SECONDS);
 
     assertTrace();
   }
@@ -243,7 +247,7 @@ public abstract class AbstractHibernateReactiveTest {
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
                         .whenComplete((value, throwable) -> complete(result, value, throwable))));
-    result.get(30, TimeUnit.SECONDS);
+    result.get(30, SECONDS);
 
     assertTrace();
   }
@@ -269,7 +273,7 @@ public abstract class AbstractHibernateReactiveTest {
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
                         .whenComplete((value, throwable) -> complete(result, value, throwable))));
-    result.get(30, TimeUnit.SECONDS);
+    result.get(30, SECONDS);
 
     assertTrace();
   }
@@ -299,6 +303,9 @@ public abstract class AbstractHibernateReactiveTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                maybeStable(DB_SYSTEM),
+                                emitStableDatabaseSemconv() ? POSTGRESQL : null),
                             equalTo(maybeStable(DB_NAME), DB),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
                             equalTo(

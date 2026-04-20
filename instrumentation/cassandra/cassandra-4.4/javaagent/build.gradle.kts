@@ -13,15 +13,13 @@ muzzle {
     group.set("org.apache.cassandra")
     module.set("java-driver-core")
     versions.set("(,)")
-    assertInverse.set(true)
   }
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
 dependencies {
   implementation(project(":instrumentation:cassandra:cassandra-4.4:library"))
 
-  if (latestDepTest) {
+  if (otelProps.testLatestDeps) {
     library("org.apache.cassandra:java-driver-core:4.18.0")
   } else {
     library("com.datastax.oss:java-driver-core:4.4.0")
@@ -40,15 +38,15 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   check {

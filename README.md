@@ -143,18 +143,18 @@ For more information about the maintainer role, see the [community repository](h
 - [Jason Plumb](https://github.com/breedx-splk), Splunk
 - [Jay DeLuca](https://github.com/jaydeluca), Grafana Labs
 - [Jean Bisutti](https://github.com/jeanbisutti), Microsoft
-- [John Watson](https://github.com/jkwatson), Cloudera
+- [John Watson](https://github.com/jkwatson), Sublime Security
 - [Jonas Kunz](https://github.com/JonasKunz), Elastic
 - [Steve Rao](https://github.com/steverao), Alibaba
 - [Sylvain Juge](https://github.com/SylvainJuge), Elastic
 
 For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#approver).
 
-### Emeritus maintainers
+### Emeritus
 
-- [Mateusz Rzeszutek](https://github.com/mateuszrzeszutek)
-- [Nikita Salnikov-Tarnovski](https://github.com/iNikem)
-- [Tyler Benson](https://github.com/tylerbenson)
+- [Mateusz Rzeszutek](https://github.com/mateuszrzeszutek), Maintainer
+- [Nikita Salnikov-Tarnovski](https://github.com/iNikem), Maintainer
+- [Tyler Benson](https://github.com/tylerbenson), Maintainer
 
 For more information about the emeritus role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#emeritus-maintainerapprovertriager).
 

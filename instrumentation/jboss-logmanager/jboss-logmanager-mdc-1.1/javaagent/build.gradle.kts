@@ -15,9 +15,7 @@ dependencies {
   library("org.jboss.logmanager:jboss-logmanager:1.1.0.GA")
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
-
-if (latestDepTest) {
+if (otelProps.testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }

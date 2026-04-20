@@ -16,6 +16,8 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSIO
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
@@ -33,8 +35,6 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -45,7 +45,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTest<HttpRequest> {
+abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTest<HttpRequest> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
@@ -96,18 +96,17 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
   protected abstract HttpResponse sendRequest(HttpRequest request) throws Exception;
 
   @Test
-  @SuppressWarnings("deprecation") // using deprecated semconv
   void errorTracesWhenExceptionIsNotThrown() throws Exception {
     URI uri = resolveAddress("/error");
 
-    HttpRequest request = buildRequest("GET", uri, Collections.emptyMap());
-    int responseCode = sendRequest(request, "GET", uri, Collections.emptyMap());
+    HttpRequest request = buildRequest("GET", uri, emptyMap());
+    int responseCode = sendRequest(request, "GET", uri, emptyMap());
 
     assertThat(responseCode).isEqualTo(500);
 
     List<AttributeAssertion> attributes =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 equalTo(SERVER_ADDRESS, "localhost"),
                 satisfies(SERVER_PORT, AbstractLongAssert::isPositive),
                 equalTo(URL_FULL, uri.toString()),

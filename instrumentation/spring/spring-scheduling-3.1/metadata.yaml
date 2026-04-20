@@ -1,3 +1,4 @@
+display_name: Spring Scheduling
 description: This instrumentation enables tracing for Spring Scheduling tasks.
 library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/scheduling/package-summary.html
 configurations:

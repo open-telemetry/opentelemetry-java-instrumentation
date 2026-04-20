@@ -13,7 +13,6 @@ import dev.failsafe.CircuitBreaker;
 import dev.failsafe.CircuitBreakerOpenException;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.LongPointAssert;
@@ -24,7 +23,7 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-final class FailsafeTelemetryTest {
+class FailsafeTelemetryTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
@@ -32,7 +31,7 @@ final class FailsafeTelemetryTest {
   void captureCircuitBreakerMetrics() {
     // given
     CircuitBreaker<Object> userCircuitBreaker =
-        dev.failsafe.CircuitBreaker.builder()
+        CircuitBreaker.builder()
             .handleResultIf(Objects::isNull)
             .withFailureThreshold(2)
             .withDelay(Duration.ZERO)
@@ -85,10 +84,7 @@ final class FailsafeTelemetryTest {
   void captureRetryPolicyMetrics() {
     // given
     RetryPolicy<Object> userRetryPolicy =
-        dev.failsafe.RetryPolicy.builder()
-            .handleResultIf(Objects::isNull)
-            .withMaxAttempts(3)
-            .build();
+        RetryPolicy.builder().handleResultIf(Objects::isNull).withMaxAttempts(3).build();
     FailsafeTelemetry failsafeTelemetry = FailsafeTelemetry.create(testing.getOpenTelemetry());
     RetryPolicy<Object> instrumentedRetryPolicy =
         failsafeTelemetry.createRetryPolicy(userRetryPolicy, "testing");
@@ -132,14 +128,20 @@ final class FailsafeTelemetryTest {
                                     .hasCount(3)
                                     .hasMin(1)
                                     .hasMax(3)
-                                    .hasAttributes(buildExpectedRetryPolicyAttributes("success"))
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("failsafe.retry_policy.name"), "testing"),
+                                        equalTo(
+                                            stringKey("failsafe.retry_policy.outcome"), "success"))
                                     .hasBucketCounts(1L, 1L, 1L, 0L, 0L),
                             histogramPointAssert ->
                                 histogramPointAssert
                                     .hasCount(2)
                                     .hasMin(3)
                                     .hasMax(3)
-                                    .hasAttributes(buildExpectedRetryPolicyAttributes("failure"))
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("failsafe.retry_policy.name"), "testing"),
+                                        equalTo(
+                                            stringKey("failsafe.retry_policy.outcome"), "failure"))
                                     .hasBucketCounts(0L, 0L, 2L, 0L, 0L))));
   }
 
@@ -158,13 +160,8 @@ final class FailsafeTelemetryTest {
     return longSumAssert ->
         longSumAssert
             .hasValue(expectedValue)
-            .hasAttributes(buildExpectedRetryPolicyAttributes(expectedOutcomeValue));
-  }
-
-  private static Attributes buildExpectedRetryPolicyAttributes(String expectedOutcome) {
-    return Attributes.builder()
-        .put("failsafe.retry_policy.name", "testing")
-        .put("failsafe.retry_policy.outcome", expectedOutcome)
-        .build();
+            .hasAttributesSatisfyingExactly(
+                equalTo(stringKey("failsafe.retry_policy.name"), "testing"),
+                equalTo(stringKey("failsafe.retry_policy.outcome"), expectedOutcomeValue));
   }
 }

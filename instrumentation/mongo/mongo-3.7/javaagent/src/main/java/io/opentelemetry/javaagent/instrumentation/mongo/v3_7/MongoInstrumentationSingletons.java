@@ -8,26 +8,27 @@ package io.opentelemetry.javaagent.instrumentation.mongo.v3_7;
 import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrumenterFactory;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.TracingCommandListener;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 
-public final class MongoInstrumentationSingletons {
+public class MongoInstrumentationSingletons {
 
-  private static final Instrumenter<CommandStartedEvent, Void> INSTRUMENTER =
+  private static final Instrumenter<CommandStartedEvent, Void> instrumenter =
       MongoInstrumenterFactory.createInstrumenter(
           GlobalOpenTelemetry.get(),
           "io.opentelemetry.mongo-3.7",
-          DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "mongo")
-              .get("statement_sanitizer")
-              .getBoolean("enabled", AgentCommonConfig.get().isStatementSanitizationEnabled()));
+          DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "mongo"));
 
-  public static final CommandListener LISTENER = new TracingCommandListener(INSTRUMENTER);
+  private static final CommandListener tracingListener = new TracingCommandListener(instrumenter);
 
-  public static boolean isTracingListener(CommandListener listener) {
-    return listener.getClass().getName().equals(LISTENER.getClass().getName());
+  public static CommandListener tracingListener() {
+    return tracingListener;
+  }
+
+  public static boolean isTracingListener(CommandListener commandListener) {
+    return commandListener.getClass().getName().equals(tracingListener.getClass().getName());
   }
 
   private MongoInstrumentationSingletons() {}

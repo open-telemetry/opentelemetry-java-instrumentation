@@ -30,13 +30,13 @@ class GraphqlInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         namedOneOf("checkInstrumentationDefaultState", "checkInstrumentation")
             .and(returns(named("graphql.execution.instrumentation.Instrumentation"))),
-        this.getClass().getName() + "$AddInstrumentationAdvice");
+        getClass().getName() + "$AddInstrumentationAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class AddInstrumentationAdvice {
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Instrumentation onExit(@Advice.Return Instrumentation instrumentation) {
       return addInstrumentation(instrumentation);
     }

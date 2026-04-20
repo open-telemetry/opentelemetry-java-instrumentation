@@ -50,7 +50,7 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
 
   private long contentLength = UNSET;
 
-  private SnippetInjectingPrintWriter snippetInjectingPrintWriter = null;
+  @Nullable private SnippetInjectingPrintWriter snippetInjectingPrintWriter = null;
 
   public Servlet3SnippetInjectingResponseWrapper(HttpServletResponse response, String snippet) {
     super(response);
@@ -90,8 +90,8 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
     if ("Content-Length".equalsIgnoreCase(name) && isContentTypeTextHtml()) {
       try {
         contentLength = Long.parseLong(value);
-      } catch (NumberFormatException ex) {
-        logger.log(FINE, "Failed to parse the Content-Length header", ex);
+      } catch (NumberFormatException e) {
+        logger.log(FINE, "Failed to parse the Content-Length header", e);
       }
     }
   }
@@ -127,7 +127,7 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
           .findSpecial(
               HttpServletResponseWrapper.class,
               "setContentLengthLong",
-              MethodType.methodType(void.class),
+              MethodType.methodType(void.class, long.class),
               SnippetInjectingResponseWrapper.class);
     } catch (NoSuchMethodException | IllegalAccessException e) {
       return null;

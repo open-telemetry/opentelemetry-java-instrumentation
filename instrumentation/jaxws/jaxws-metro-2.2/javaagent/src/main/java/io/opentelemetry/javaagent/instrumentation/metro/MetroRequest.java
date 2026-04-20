@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.metro;
 
 import com.sun.xml.ws.api.message.Packet;
 import com.sun.xml.ws.api.server.WSEndpoint;
+import javax.xml.namespace.QName;
 
 public class MetroRequest {
   private final Packet packet;
@@ -27,7 +28,10 @@ public class MetroRequest {
 
   private static String getSpanName(WSEndpoint<?> endpoint, Packet packet) {
     String serviceName = endpoint.getServiceName().getLocalPart();
-    String operationName = packet.getWSDLOperation().getLocalPart();
-    return serviceName + "/" + operationName;
+    QName wsdlOperation = packet.getWSDLOperation();
+    if (wsdlOperation == null) {
+      return serviceName;
+    }
+    return serviceName + "/" + wsdlOperation.getLocalPart();
   }
 }

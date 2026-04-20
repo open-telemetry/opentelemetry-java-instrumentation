@@ -20,16 +20,8 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerTra
 
 /** Entrypoint for instrumenting Netty HTTP servers. */
 public final class NettyServerTelemetry {
-
   private final Instrumenter<NettyCommonRequest, HttpResponse> instrumenter;
   private final ProtocolEventHandler protocolEventHandler;
-
-  NettyServerTelemetry(
-      Instrumenter<NettyCommonRequest, HttpResponse> instrumenter,
-      ProtocolEventHandler protocolEventHandler) {
-    this.instrumenter = instrumenter;
-    this.protocolEventHandler = protocolEventHandler;
-  }
 
   /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static NettyServerTelemetry create(OpenTelemetry openTelemetry) {
@@ -39,6 +31,13 @@ public final class NettyServerTelemetry {
   /** Returns a builder configured with the given {@link OpenTelemetry} instance. */
   public static NettyServerTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new NettyServerTelemetryBuilder(openTelemetry);
+  }
+
+  NettyServerTelemetry(
+      Instrumenter<NettyCommonRequest, HttpResponse> instrumenter,
+      ProtocolEventHandler protocolEventHandler) {
+    this.instrumenter = instrumenter;
+    this.protocolEventHandler = protocolEventHandler;
   }
 
   /**
@@ -54,17 +53,8 @@ public final class NettyServerTelemetry {
    * #createRequestHandler()}.
    */
   public ChannelOutboundHandler createResponseHandler() {
-    return createResponseHandler(HttpServerResponseBeforeCommitHandler.Noop.INSTANCE);
-  }
-
-  /**
-   * @deprecated This method exposes an internal class in its API. It will be removed in the next
-   *     release.
-   */
-  @Deprecated
-  public ChannelOutboundHandler createResponseHandler(
-      HttpServerResponseBeforeCommitHandler commitHandler) {
-    return new HttpServerResponseTracingHandler(instrumenter, commitHandler, protocolEventHandler);
+    return new HttpServerResponseTracingHandler(
+        instrumenter, HttpServerResponseBeforeCommitHandler.Noop.INSTANCE, protocolEventHandler);
   }
 
   /**
@@ -73,16 +63,7 @@ public final class NettyServerTelemetry {
    */
   public CombinedChannelDuplexHandler<ChannelInboundHandler, ChannelOutboundHandler>
       createCombinedHandler() {
-    return createCombinedHandler(HttpServerResponseBeforeCommitHandler.Noop.INSTANCE);
-  }
-
-  /**
-   * @deprecated This method exposes an internal class in its API. It will be removed in the next
-   *     release.
-   */
-  @Deprecated
-  public CombinedChannelDuplexHandler<ChannelInboundHandler, ChannelOutboundHandler>
-      createCombinedHandler(HttpServerResponseBeforeCommitHandler commitHandler) {
-    return new HttpServerTracingHandler(instrumenter, commitHandler, protocolEventHandler);
+    return new HttpServerTracingHandler(
+        instrumenter, HttpServerResponseBeforeCommitHandler.Noop.INSTANCE, protocolEventHandler);
   }
 }

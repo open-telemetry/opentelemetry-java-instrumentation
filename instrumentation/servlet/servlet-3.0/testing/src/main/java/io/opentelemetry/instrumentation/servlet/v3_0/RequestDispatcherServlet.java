@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.servlet.v3_0;
 
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.io.IOException;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
@@ -21,7 +22,7 @@ public class RequestDispatcherServlet {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp)
         throws ServletException, IOException {
-      String target = req.getServletPath().replace("/dispatch", "");
+      String target = getTargetSafely(req);
       ServletContext context = getServletContext();
       RequestDispatcher dispatcher = context.getRequestDispatcher(target);
       dispatcher.forward(req, resp);
@@ -33,7 +34,7 @@ public class RequestDispatcherServlet {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp)
         throws ServletException, IOException {
-      String target = req.getServletPath().replace("/dispatch", "");
+      String target = getTargetSafely(req);
       ServletContext context = getServletContext();
       RequestDispatcher dispatcher = context.getRequestDispatcher(target);
       // for HTML test case, set the content type before calling include because
@@ -45,6 +46,15 @@ public class RequestDispatcherServlet {
       }
       dispatcher.include(req, resp);
     }
+  }
+
+  private static String getTargetSafely(HttpServletRequest req) {
+    String target = req.getServletPath().replace("/dispatch", "");
+    ServerEndpoint endpoint = ServerEndpoint.forPath(target);
+    if (endpoint != null) {
+      return endpoint.getPath();
+    }
+    throw new IllegalStateException("Unexpected endpoint: " + target);
   }
 
   private RequestDispatcherServlet() {}

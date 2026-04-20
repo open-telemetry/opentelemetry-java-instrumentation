@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -18,19 +19,18 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ELASTICSEARCH;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
@@ -87,13 +87,14 @@ public abstract class AbstractElasticsearchTransportClientTest
                             addNetworkTypeAttribute(
                                 equalTo(NETWORK_PEER_ADDRESS, getAddress()),
                                 equalTo(NETWORK_PEER_PORT, getPort()),
-                                equalTo(
-                                    maybeStable(DB_SYSTEM),
-                                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                                equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "ClusterHealthAction"),
-                                equalTo(ELASTICSEARCH_ACTION, experimental("ClusterHealthAction")),
                                 equalTo(
-                                    ELASTICSEARCH_REQUEST, experimental("ClusterHealthRequest")))),
+                                    stringKey("elasticsearch.action"),
+                                    experimental("ClusterHealthAction")),
+                                equalTo(
+                                    stringKey("elasticsearch.request"),
+                                    experimental("ClusterHealthRequest")))),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -103,13 +104,7 @@ public abstract class AbstractElasticsearchTransportClientTest
   private List<AttributeAssertion> addNetworkTypeAttribute(AttributeAssertion... assertions) {
     List<AttributeAssertion> result = new ArrayList<>(asList(assertions));
     if (hasNetworkType()) {
-      result.add(
-          satisfies(
-              NETWORK_TYPE,
-              k ->
-                  k.satisfiesAnyOf(
-                      val -> assertThat(val).isEqualTo("ipv4"),
-                      val -> assertThat(val).isEqualTo("ipv6"))));
+      result.add(satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6")));
     }
     return result;
   }
@@ -138,15 +133,14 @@ public abstract class AbstractElasticsearchTransportClientTest
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
-                equalTo(
-                    maybeStable(DB_SYSTEM),
-                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                 equalTo(maybeStable(DB_OPERATION), "GetAction"),
-                equalTo(ELASTICSEARCH_ACTION, experimental("GetAction")),
-                equalTo(ELASTICSEARCH_REQUEST, experimental("GetRequest")),
-                equalTo(ELASTICSEARCH_REQUEST_INDICES, experimental("invalid-index"))));
+                equalTo(stringKey("elasticsearch.action"), experimental("GetAction")),
+                equalTo(stringKey("elasticsearch.request"), experimental("GetRequest")),
+                equalTo(
+                    stringKey("elasticsearch.request.indices"), experimental("invalid-index"))));
 
-    if (SemconvStability.emitStableDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv()) {
       assertions.add(equalTo(ERROR_TYPE, "org.elasticsearch.transport.RemoteTransportException"));
     }
 
@@ -200,7 +194,7 @@ public abstract class AbstractElasticsearchTransportClientTest
     assertThat(emptyResult.getIndex()).isEqualTo(indexName);
 
     IndexResponse createResult =
-        client.prepareIndex(indexName, indexType, id).setSource(Collections.emptyMap()).get();
+        client.prepareIndex(indexName, indexType, id).setSource(emptyMap()).get();
     assertThat(createResult.getId()).isEqualTo(id);
     assertThat(createResult.getType()).isEqualTo(indexType);
     assertThat(createResult.getIndex()).isEqualTo(indexName);
@@ -227,13 +221,17 @@ public abstract class AbstractElasticsearchTransportClientTest
                             addNetworkTypeAttribute(
                                 equalTo(NETWORK_PEER_ADDRESS, getAddress()),
                                 equalTo(NETWORK_PEER_PORT, getPort()),
-                                equalTo(
-                                    maybeStable(DB_SYSTEM),
-                                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                                equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "CreateIndexAction"),
-                                equalTo(ELASTICSEARCH_ACTION, experimental("CreateIndexAction")),
-                                equalTo(ELASTICSEARCH_REQUEST, experimental("CreateIndexRequest")),
-                                equalTo(ELASTICSEARCH_REQUEST_INDICES, experimental(indexName))))),
+                                equalTo(
+                                    stringKey("elasticsearch.action"),
+                                    experimental("CreateIndexAction")),
+                                equalTo(
+                                    stringKey("elasticsearch.request"),
+                                    experimental("CreateIndexRequest")),
+                                equalTo(
+                                    stringKey("elasticsearch.request.indices"),
+                                    experimental(indexName))))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -241,12 +239,14 @@ public abstract class AbstractElasticsearchTransportClientTest
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), getPutMappingActionName()),
-                            equalTo(ELASTICSEARCH_ACTION, experimental(getPutMappingActionName())),
-                            equalTo(ELASTICSEARCH_REQUEST, experimental("PutMappingRequest")))),
+                            equalTo(
+                                stringKey("elasticsearch.action"),
+                                experimental(getPutMappingActionName())),
+                            equalTo(
+                                stringKey("elasticsearch.request"),
+                                experimental("PutMappingRequest")))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -257,13 +257,16 @@ public abstract class AbstractElasticsearchTransportClientTest
                             addNetworkTypeAttribute(
                                 equalTo(NETWORK_PEER_ADDRESS, getAddress()),
                                 equalTo(NETWORK_PEER_PORT, getPort()),
-                                equalTo(
-                                    maybeStable(DB_SYSTEM),
-                                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                                equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "IndexAction"),
-                                equalTo(ELASTICSEARCH_ACTION, experimental("IndexAction")),
-                                equalTo(ELASTICSEARCH_REQUEST, experimental("IndexRequest")),
-                                equalTo(ELASTICSEARCH_REQUEST_INDICES, experimental(indexName)),
+                                equalTo(
+                                    stringKey("elasticsearch.action"), experimental("IndexAction")),
+                                equalTo(
+                                    stringKey("elasticsearch.request"),
+                                    experimental("IndexRequest")),
+                                equalTo(
+                                    stringKey("elasticsearch.request.indices"),
+                                    experimental(indexName)),
                                 equalTo(
                                     stringKey("elasticsearch.request.write.type"),
                                     experimental(indexType)),
@@ -306,16 +309,14 @@ public abstract class AbstractElasticsearchTransportClientTest
         addNetworkTypeAttribute(
             equalTo(NETWORK_PEER_ADDRESS, getAddress()),
             equalTo(NETWORK_PEER_PORT, getPort()),
-            equalTo(
-                maybeStable(DB_SYSTEM),
-                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
             equalTo(maybeStable(DB_OPERATION), "GetAction"),
-            equalTo(ELASTICSEARCH_ACTION, experimental("GetAction")),
-            equalTo(ELASTICSEARCH_REQUEST, experimental("GetRequest")),
-            equalTo(ELASTICSEARCH_REQUEST_INDICES, experimental(indexName)),
-            equalTo(ELASTICSEARCH_TYPE, experimental(indexType)),
-            equalTo(ELASTICSEARCH_ID, experimental(id)),
-            equalTo(ELASTICSEARCH_VERSION, experimental(version))));
+            equalTo(stringKey("elasticsearch.action"), experimental("GetAction")),
+            equalTo(stringKey("elasticsearch.request"), experimental("GetRequest")),
+            equalTo(stringKey("elasticsearch.request.indices"), experimental(indexName)),
+            equalTo(stringKey("elasticsearch.type"), experimental(indexType)),
+            equalTo(stringKey("elasticsearch.id"), experimental(id)),
+            equalTo(longKey("elasticsearch.version"), experimental(version))));
   }
 
   protected boolean hasWriteVersion() {

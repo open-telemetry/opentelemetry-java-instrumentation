@@ -7,15 +7,15 @@ package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
 import static io.opentelemetry.instrumentation.apachehttpclient.v4_3.ApacheHttpClientRequest.headersToList;
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.http.HttpResponse;
 
-enum ApacheHttpClientHttpAttributesGetter
+class ApacheHttpClientHttpAttributesGetter
     implements HttpClientAttributesGetter<ApacheHttpClientRequest, HttpResponse> {
-  INSTANCE;
 
   @Override
   public String getHttpRequestMethod(ApacheHttpClientRequest request) {
@@ -57,29 +57,20 @@ enum ApacheHttpClientHttpAttributesGetter
     return request.getProtocolVersion();
   }
 
-  // internal usage of deprecated methods - these will only be changed to package visibility, not
-  // removed, and these accesses will be fine since in same package
-  @SuppressWarnings("deprecation")
   @Override
   @Nullable
   public String getServerAddress(ApacheHttpClientRequest request) {
     return request.getServerAddress();
   }
 
-  // internal usage of deprecated methods - these will only be changed to package visibility, not
-  // removed, and these accesses will be fine since in same package
-  @SuppressWarnings("deprecation")
   @Override
   @Nullable
   public Integer getServerPort(ApacheHttpClientRequest request) {
-    return request.getServerPort();
+    return HttpConstants.portOrDefaultFromScheme(request.getServerPort(), request.getScheme());
   }
 
-  // internal usage of deprecated methods - these will only be changed to package visibility, not
-  // removed, and these accesses will be fine since in same package
-  @SuppressWarnings("deprecation")
-  @Nullable
   @Override
+  @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       ApacheHttpClientRequest request, @Nullable HttpResponse response) {
     return request.getNetworkPeerAddress();

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toSet;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
@@ -14,13 +15,12 @@ import io.opentelemetry.javaagent.tooling.muzzle.references.FieldRef;
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag;
 import io.opentelemetry.javaagent.tooling.muzzle.references.MethodRef;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -116,10 +116,11 @@ public final class ReferenceMatcher {
         return checkThirdPartyTypeMatch(reference, resolution.resolve());
       }
     } catch (RuntimeException e) {
-      if (e.getMessage().startsWith("Cannot resolve type description for ")) {
+      String message = e.getMessage();
+      if (message != null && message.startsWith("Cannot resolve type description for ")) {
         // bytebuddy throws an illegal state exception with this message if it cannot resolve types
         // TODO: handle missing type resolutions without catching bytebuddy's exceptions
-        String className = e.getMessage().replace("Cannot resolve type description for ", "");
+        String className = message.replace("Cannot resolve type description for ", "");
         return singletonList(new Mismatch.MissingClass(reference, className));
       } else {
         // Shouldn't happen. Fail the reference check and add a mismatch for debug logging.
@@ -141,7 +142,7 @@ public final class ReferenceMatcher {
         helperClass.getFields().stream()
             .filter(f -> !f.isDeclared())
             .map(f -> new HelperReferenceWrapper.Field(f.getName(), f.getDescriptor()))
-            .collect(Collectors.toSet());
+            .collect(toSet());
 
     // if there are any fields in this helper class that's not declared here, check the type
     // hierarchy
@@ -196,7 +197,7 @@ public final class ReferenceMatcher {
 
   private static List<Mismatch> checkThirdPartyTypeMatch(
       ClassRef reference, TypeDescription typeOnClasspath) {
-    List<Mismatch> mismatches = Collections.emptyList();
+    List<Mismatch> mismatches = emptyList();
 
     for (Flag flag : reference.getFlags()) {
       if (!flag.matches(typeOnClasspath.getActualModifiers(false))) {
@@ -252,6 +253,7 @@ public final class ReferenceMatcher {
     return mismatches;
   }
 
+  @Nullable
   private static FieldDescription.InDefinedShape findField(
       FieldRef fieldRef, TypeDescription typeOnClasspath) {
     for (FieldDescription.InDefinedShape fieldType : typeOnClasspath.getDeclaredFields()) {
@@ -277,6 +279,7 @@ public final class ReferenceMatcher {
     return null;
   }
 
+  @Nullable
   private static MethodDescription.InDefinedShape findMethod(
       MethodRef methodRef, TypeDescription typeOnClasspath) {
 

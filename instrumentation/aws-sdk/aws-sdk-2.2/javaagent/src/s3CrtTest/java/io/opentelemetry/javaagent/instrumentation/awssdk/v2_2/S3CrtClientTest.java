@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.time.Duration;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -28,6 +28,8 @@ class S3CrtClientTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   static LocalStackContainer localStack;
   static S3AsyncClient s3Client;
 
@@ -38,6 +40,7 @@ class S3CrtClientTest {
             .withServices("s3")
             .withEnv("DEBUG", "1")
             .withStartupTimeout(Duration.ofMinutes(2));
+    cleanup.deferAfterAll(localStack::stop);
     localStack.start();
     localStack.followOutput(new Slf4jLogConsumer(LoggerFactory.getLogger("test")));
 
@@ -51,11 +54,7 @@ class S3CrtClientTest {
             .credentialsProvider(credentialsProvider)
             .region(Region.of(localStack.getRegion()))
             .build();
-  }
-
-  @AfterAll
-  static void cleanUp() {
-    localStack.stop();
+    cleanup.deferAfterAll(s3Client);
   }
 
   @Test

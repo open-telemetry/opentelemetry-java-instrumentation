@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.graphql.v12_0;
 
 import graphql.GraphQL;
-import io.opentelemetry.instrumentation.graphql.AbstractGraphqlTest;
+import io.opentelemetry.instrumentation.graphql.common.v12_0.AbstractGraphqlTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;

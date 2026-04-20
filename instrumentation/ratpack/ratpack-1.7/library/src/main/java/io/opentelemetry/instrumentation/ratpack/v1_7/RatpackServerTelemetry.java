@@ -35,6 +35,7 @@ import ratpack.registry.RegistrySpec;
  * }</pre>
  */
 public final class RatpackServerTelemetry {
+  private final Instrumenter<Request, Response> instrumenter;
 
   /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static RatpackServerTelemetry create(OpenTelemetry openTelemetry) {
@@ -46,20 +47,8 @@ public final class RatpackServerTelemetry {
     return new RatpackServerTelemetryBuilder(openTelemetry);
   }
 
-  private final Instrumenter<Request, Response> instrumenter;
-
   RatpackServerTelemetry(Instrumenter<Request, Response> instrumenter) {
     this.instrumenter = instrumenter;
-  }
-
-  /**
-   * Returns a {@link Handler} to support Ratpack Registry binding.
-   *
-   * @deprecated Use {@link #createHandler()} instead.
-   */
-  @Deprecated
-  public Handler getHandler() {
-    return createHandler();
   }
 
   /** Creates a new {@link Handler} to support Ratpack Registry binding. */
@@ -67,29 +56,9 @@ public final class RatpackServerTelemetry {
     return new OpenTelemetryServerHandler(instrumenter);
   }
 
-  /**
-   * Returns {@link ExecInterceptor} instance to support Ratpack Registry binding.
-   *
-   * @deprecated Use {@link #createExecInterceptor()} instead.
-   */
-  @Deprecated
-  public ExecInterceptor getExecInterceptor() {
-    return createExecInterceptor();
-  }
-
   /** Creates an {@link ExecInterceptor} instance to support Ratpack Registry binding. */
   public ExecInterceptor createExecInterceptor() {
     return OpenTelemetryExecInterceptor.INSTANCE;
-  }
-
-  /**
-   * Returns {@link ExecInitializer} instance to support Ratpack Registry binding.
-   *
-   * @deprecated Use {@link #createExecInitializer()} instead.
-   */
-  @Deprecated
-  public ExecInitializer getExecInitializer() {
-    return createExecInitializer();
   }
 
   /** Creates an {@link ExecInitializer} instance to support Ratpack Registry binding. */

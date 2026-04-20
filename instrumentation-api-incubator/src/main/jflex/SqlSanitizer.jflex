@@ -43,9 +43,9 @@ POSTGRE_PARAM_MARKER = "$"[0-9]*
 WHITESPACE           = [ \t\r\n]+
 
 %{
-  static SqlStatementInfo sanitize(String statement, SqlDialect dialect) {
+  static SqlQuery sanitize(String statement, SqlDialect dialect) {
     AutoSqlSanitizer sanitizer = new AutoSqlSanitizer(new java.io.StringReader(statement));
-    sanitizer.dialect = dialect;
+    sanitizer.doubleQuotesAreIdentifiers = dialect.doubleQuotesAreIdentifiers();
     try {
       while (!sanitizer.yyatEOF()) {
         int token = sanitizer.yylex();
@@ -57,7 +57,7 @@ WHITESPACE           = [ \t\r\n]+
       return sanitizer.getResult();
     } catch (java.io.IOException e) {
       // should never happen
-      return SqlStatementInfo.create(null, null, null);
+      return SqlQuery.create(null, null, null);
     }
   }
 
@@ -119,7 +119,7 @@ WHITESPACE           = [ \t\r\n]+
   private boolean insideComment = false;
   private Operation operation = NoOp.INSTANCE;
   private boolean extractionDone = false;
-  private SqlDialect dialect;
+  private boolean doubleQuotesAreIdentifiers;
 
   private void setOperation(Operation operation) {
     if (this.operation == NoOp.INSTANCE) {
@@ -169,8 +169,8 @@ WHITESPACE           = [ \t\r\n]+
       return false;
     }
 
-    SqlStatementInfo getResult(String fullStatement) {
-      return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT), mainIdentifier);
+    SqlQuery getResult(String fullStatement) {
+      return SqlQuery.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT), mainIdentifier);
     }
   }
 
@@ -200,9 +200,9 @@ WHITESPACE           = [ \t\r\n]+
       return true;
     }
 
-    SqlStatementInfo getResult(String fullStatement) {
+    SqlQuery getResult(String fullStatement) {
       if (!"".equals(operationTarget)) {
-        return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT) + " " + operationTarget, mainIdentifier);
+        return SqlQuery.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT) + " " + operationTarget, mainIdentifier);
       }
       return super.getResult(fullStatement);
     }
@@ -211,8 +211,8 @@ WHITESPACE           = [ \t\r\n]+
   private static class NoOp extends Operation {
     static final Operation INSTANCE = new NoOp();
 
-    SqlStatementInfo getResult(String fullStatement) {
-      return SqlStatementInfo.create(fullStatement, null, null);
+    SqlQuery getResult(String fullStatement) {
+      return SqlQuery.create(fullStatement, null, null);
     }
   }
 
@@ -349,7 +349,7 @@ WHITESPACE           = [ \t\r\n]+
   private class Drop extends DdlOperation {}
   private class Alter extends DdlOperation {}
 
-  private SqlStatementInfo getResult() {
+  private SqlQuery getResult() {
     if (builder.length() > LIMIT) {
       builder.delete(LIMIT, builder.length());
     }
@@ -560,13 +560,21 @@ WHITESPACE           = [ \t\r\n]+
       }
 
   {DOUBLE_QUOTED_STR} {
-          if (dialect == SqlDialect.COUCHBASE) {
-            builder.append('?');
-          } else {
-            if (!insideComment && !extractionDone) {
-              extractionDone = operation.handleIdentifier();
-            }
+          // Always notify the operation about double-quoted tokens regardless of dialect so
+          // that table name extraction works correctly even when the dialect treats them as
+          // string literals. For example, SELECT * FROM "my_table" should extract the table
+          // name "my_table" whether or not the dialect sanitizes the token.
+          //
+          // The extractionDone guard ensures handleIdentifier() is a no-op once extraction
+          // is complete, so there is no risk of leaking sensitive string content into the
+          // span name.
+          if (!insideComment && !extractionDone) {
+            extractionDone = operation.handleIdentifier();
+          }
+          if (doubleQuotesAreIdentifiers) {
             appendCurrentFragment();
+          } else {
+            builder.append('?');
           }
           if (isOverLimit()) return YYEOF;
       }

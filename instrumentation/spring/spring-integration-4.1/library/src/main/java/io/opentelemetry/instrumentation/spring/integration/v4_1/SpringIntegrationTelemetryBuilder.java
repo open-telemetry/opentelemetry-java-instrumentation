@@ -88,7 +88,7 @@ public final class SpringIntegrationTelemetryBuilder {
             .addAttributesExtractors(additionalAttributeExtractors)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
-                    SpringMessagingAttributesGetter.INSTANCE,
+                    new SpringMessagingAttributesGetter(),
                     MessageOperation.PROCESS,
                     capturedHeaders))
             .buildConsumerInstrumenter(MessageHeadersGetter.INSTANCE);
@@ -101,7 +101,7 @@ public final class SpringIntegrationTelemetryBuilder {
             .addAttributesExtractors(additionalAttributeExtractors)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
-                    SpringMessagingAttributesGetter.INSTANCE,
+                    new SpringMessagingAttributesGetter(),
                     MessageOperation.PUBLISH,
                     capturedHeaders))
             .buildInstrumenter(SpanKindExtractor.alwaysProducer());

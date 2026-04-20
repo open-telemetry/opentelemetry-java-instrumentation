@@ -9,8 +9,7 @@ import io.opentelemetry.context.propagation.TextMapSetter;
 import javax.annotation.Nullable;
 import org.springframework.http.HttpRequest;
 
-enum HttpRequestSetter implements TextMapSetter<HttpRequest> {
-  INSTANCE;
+class HttpRequestSetter implements TextMapSetter<HttpRequest> {
 
   @Override
   public void set(@Nullable HttpRequest httpRequest, String key, String value) {

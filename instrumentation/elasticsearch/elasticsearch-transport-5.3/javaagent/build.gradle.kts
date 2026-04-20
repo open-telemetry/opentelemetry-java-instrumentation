@@ -7,10 +7,6 @@ muzzle {
     group.set("org.elasticsearch.client")
     module.set("transport")
     versions.set("[5.3.0,6.0.0)")
-    // version 7.11.0 depends on org.elasticsearch:elasticsearch:7.11.0 which depends on
-    // org.elasticsearch:elasticsearch-plugin-classloader:7.11.0 which does not exist
-    // version 7.17.8 has broken module metadata
-    skip("7.11.0", "7.17.8")
     // version 8.8.0 depends on elasticsearch:elasticsearch-preallocate which doesn't exist
     excludeDependency("org.elasticsearch:elasticsearch-preallocate")
     assertInverse.set(true)
@@ -19,18 +15,13 @@ muzzle {
     group.set("org.elasticsearch")
     module.set("elasticsearch")
     versions.set("[5.3.0,6.0.0)")
-    // version 7.11.0 depends on org.elasticsearch:elasticsearch-plugin-classloader:7.11.0
-    // which does not exist
-    // 9.3.0 has missing org.elasticsearch:exponential-histogram
-    // see https://github.com/elastic/elasticsearch/issues/141846
-    skip("7.11.0", "9.3.0")
     // version 8.8.0 depends on elasticsearch:elasticsearch-preallocate which doesn't exist
     excludeDependency("org.elasticsearch:elasticsearch-preallocate")
     assertInverse.set(true)
   }
 }
 
-if (findProperty("testLatestDeps") as Boolean) {
+if (otelProps.testLatestDeps) {
   // when running on jdk 21 Elasticsearch53SpringRepositoryTest occasionally fails with timeout
   otelJava {
     maxJavaVersionForTests.set(JavaVersion.VERSION_17)
@@ -70,21 +61,21 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
 
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,code,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   val testExperimental by registering(Test::class) {
@@ -99,7 +90,7 @@ tasks {
     dependsOn(testStableSemconv, testExperimental)
   }
 
-  if (findProperty("denyUnsafe") as Boolean) {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

@@ -5,8 +5,7 @@
 
 package io.opentelemetry.javaagent;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ServiceLoader;
 import org.junit.jupiter.api.Test;
@@ -31,13 +30,13 @@ class ResourceProviderTest {
           .getName()
           .equals("io.opentelemetry.instrumentation.resources.ContainerResourceProvider")) {
         containerProviderFound = true;
-        assertFalse(awsProviderFound);
+        assertThat(awsProviderFound).isFalse();
       } else if (clazz.getName().startsWith("io.opentelemetry.contrib.aws.resource.")) {
         awsProviderFound = true;
-        assertTrue(containerProviderFound);
+        assertThat(containerProviderFound).isTrue();
       }
     }
-    assertTrue(containerProviderFound);
-    assertTrue(awsProviderFound);
+    assertThat(containerProviderFound).isTrue();
+    assertThat(awsProviderFound).isTrue();
   }
 }

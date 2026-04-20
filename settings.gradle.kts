@@ -1,20 +1,20 @@
 pluginManagement {
   plugins {
-    id("com.github.jk1.dependency-license-report") version "3.0.1"
-    id("com.google.cloud.tools.jib") version "3.5.2"
-    id("com.gradle.plugin-publish") version "2.0.0"
+    id("com.github.jk1.dependency-license-report") version "3.1.2"
+    id("com.google.cloud.tools.jib") version "3.5.3"
+    id("com.gradle.plugin-publish") version "2.1.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("org.jetbrains.kotlin.jvm") version "2.2.21"
+    id("org.jetbrains.kotlin.jvm") version "2.3.20"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.9.0"
-    id("org.graalvm.buildtools.native") version "0.11.4"
+    id("org.graalvm.buildtools.native") version "0.11.5"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.9.6"
   }
 }
 
 plugins {
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.4.0"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.6.0"
   id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
   // this can't live in pluginManagement currently due to
   // https://github.com/bmuschko/gradle-docker-plugin/issues/1123
@@ -22,7 +22,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:pushLinuxImages -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:pushWindowsImages -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "10.0.0" apply false
-  id("com.gradle.develocity") version "4.3.2"
+  id("com.gradle.develocity") version "4.4.0"
 }
 
 dependencyResolutionManagement {
@@ -229,7 +229,7 @@ include(":instrumentation:cassandra:cassandra-4.0:javaagent")
 include(":instrumentation:cassandra:cassandra-4.4:javaagent")
 include(":instrumentation:cassandra:cassandra-4.4:library")
 include(":instrumentation:cassandra:cassandra-4.4:testing")
-include(":instrumentation:cassandra:cassandra-4-common:testing")
+include(":instrumentation:cassandra:cassandra-common-4.0:testing")
 include(":instrumentation:cdi-testing")
 include(":instrumentation:clickhouse:clickhouse-client-common:javaagent")
 include(":instrumentation:clickhouse:clickhouse-client-v1-0.5:javaagent")
@@ -280,8 +280,8 @@ include(":instrumentation:graphql-java:graphql-java-12.0:javaagent")
 include(":instrumentation:graphql-java:graphql-java-12.0:library")
 include(":instrumentation:graphql-java:graphql-java-20.0:javaagent")
 include(":instrumentation:graphql-java:graphql-java-20.0:library")
-include(":instrumentation:graphql-java:graphql-java-common:library")
-include(":instrumentation:graphql-java:graphql-java-common:testing")
+include(":instrumentation:graphql-java:graphql-java-common-12.0:library")
+include(":instrumentation:graphql-java:graphql-java-common-12.0:testing")
 include(":instrumentation:grizzly-2.3:javaagent")
 include(":instrumentation:grpc-1.6:javaagent")
 include(":instrumentation:grpc-1.6:library")
@@ -328,7 +328,9 @@ include(":instrumentation:java-http-server:library")
 include(":instrumentation:java-http-server:testing")
 include(":instrumentation:java-util-logging:javaagent")
 include(":instrumentation:java-util-logging:shaded-stub-for-instrumenting")
-include(":instrumentation:javalin-5.0:javaagent")
+include(":instrumentation:javalin:javalin-5.0:javaagent")
+include(":instrumentation:javalin:javalin-7.0:javaagent")
+include(":instrumentation:javalin:testing")
 include(":instrumentation:jaxrs:jaxrs-1.0:javaagent")
 include(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent")
 include(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-arquillian-testing")
@@ -396,7 +398,8 @@ include(":instrumentation:jms:jms-common:javaagent")
 include(":instrumentation:jms:jms-common:javaagent-unit-tests")
 include(":instrumentation:jmx-metrics:javaagent")
 include(":instrumentation:jmx-metrics:library")
-include(":instrumentation:jmx-metrics:testing-webapp")
+include(":instrumentation:jmx-metrics:testing-apps:camel-testing-app")
+include(":instrumentation:jmx-metrics:testing-apps:testing-webapp")
 include(":instrumentation:jodd-http-4.2:javaagent")
 include(":instrumentation:jodd-http-4.2:javaagent-unit-tests")
 include(":instrumentation:jsf:jsf-jakarta-common:javaagent")
@@ -423,11 +426,10 @@ include(":instrumentation:ktor:ktor-1.0:library")
 include(":instrumentation:ktor:ktor-2.0:javaagent")
 include(":instrumentation:ktor:ktor-2.0:library")
 include(":instrumentation:ktor:ktor-2.0:testing")
-include(":instrumentation:ktor:ktor-2-common:library")
+include(":instrumentation:ktor:ktor-common-2.0:library")
 include(":instrumentation:ktor:ktor-3.0:javaagent")
 include(":instrumentation:ktor:ktor-3.0:library")
 include(":instrumentation:ktor:ktor-3.0:testing")
-include(":instrumentation:ktor:ktor-common:library")
 include(":instrumentation:kubernetes-client-7.0:javaagent")
 include(":instrumentation:kubernetes-client-7.0:javaagent-unit-tests")
 include(":instrumentation:lettuce:lettuce-4.0:javaagent")
@@ -505,9 +507,11 @@ include(":instrumentation:opentelemetry-api:opentelemetry-api-1.40:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.42:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.47:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.50:javaagent")
-include(":instrumentation:opentelemetry-api:opentelemetry-api-1.52:javaagent")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-1.52:testing")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.56:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.57:javaagent")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-1.59:javaagent")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-1.61:testing")
 include(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent")
 include(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent")
 include(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent")
@@ -532,12 +536,15 @@ include(":instrumentation:play:play-ws:play-ws-common:testing")
 include(":instrumentation:powerjob-4.0:javaagent")
 include(":instrumentation:pulsar:pulsar-2.8:javaagent")
 include(":instrumentation:pulsar:pulsar-2.8:javaagent-unit-tests")
-include(":instrumentation:quarkus-resteasy-reactive:common-testing")
 include(":instrumentation:quarkus-resteasy-reactive:javaagent")
-includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus2-plugin")
-include(":instrumentation:quarkus-resteasy-reactive:quarkus2-testing")
-includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus3-plugin")
-include(":instrumentation:quarkus-resteasy-reactive:quarkus3-testing")
+include(":instrumentation:quarkus-resteasy-reactive:quarkus-common-testing")
+includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus-common-plugin")
+includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus-2.0-plugin")
+include(":instrumentation:quarkus-resteasy-reactive:quarkus-2.0-testing")
+includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus-3.0-plugin")
+include(":instrumentation:quarkus-resteasy-reactive:quarkus-3.0-testing")
+includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus-3.9-plugin")
+include(":instrumentation:quarkus-resteasy-reactive:quarkus-3.9-testing")
 include(":instrumentation:quartz-2.0:javaagent")
 include(":instrumentation:quartz-2.0:library")
 include(":instrumentation:quartz-2.0:testing")
@@ -577,10 +584,11 @@ include(":instrumentation:rocketmq:rocketmq-client-4.8:javaagent")
 include(":instrumentation:rocketmq:rocketmq-client-4.8:library")
 include(":instrumentation:rocketmq:rocketmq-client-4.8:testing")
 include(":instrumentation:rocketmq:rocketmq-client-5.0:javaagent")
-include(":instrumentation:rocketmq:rocketmq-client-5.0:testing")
+include(":instrumentation:runtime-telemetry:javaagent")
+include(":instrumentation:runtime-telemetry:library")
+include(":instrumentation:runtime-telemetry:testing")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java8:javaagent")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java8:library")
-include(":instrumentation:runtime-telemetry:runtime-telemetry-java8:testing")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java17:javaagent")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java17:library")
 include(":instrumentation:rxjava:rxjava-1.0:library")
@@ -591,8 +599,8 @@ include(":instrumentation:rxjava:rxjava-3.0:javaagent")
 include(":instrumentation:rxjava:rxjava-3.0:library")
 include(":instrumentation:rxjava:rxjava-3.1.1:javaagent")
 include(":instrumentation:rxjava:rxjava-3.1.1:library")
-include(":instrumentation:rxjava:rxjava-3-common:library")
-include(":instrumentation:rxjava:rxjava-3-common:testing")
+include(":instrumentation:rxjava:rxjava-common-3.0:library")
+include(":instrumentation:rxjava:rxjava-common-3.0:testing")
 include(":instrumentation:scala-fork-join-2.8:javaagent")
 include(":instrumentation:servlet:servlet-2.2:javaagent")
 include(":instrumentation:servlet:servlet-3.0:javaagent")
@@ -610,7 +618,7 @@ include(":instrumentation:servlet:servlet-5.0:tomcat-testing")
 include(":instrumentation:servlet:servlet-common:bootstrap")
 include(":instrumentation:servlet:servlet-common:javaagent")
 include(":instrumentation:servlet:servlet-common:library")
-include(":instrumentation:servlet:servlet-javax-common:library")
+include(":instrumentation:servlet:servlet-common-javax:library")
 include(":instrumentation:sofa-rpc-5.4:javaagent")
 include(":instrumentation:sofa-rpc-5.4:library-autoconfigure")
 include(":instrumentation:sofa-rpc-5.4:testing")
@@ -650,8 +658,8 @@ include(":instrumentation:spring:spring-scheduling-3.1:bootstrap")
 include(":instrumentation:spring:spring-scheduling-3.1:javaagent")
 include(":instrumentation:spring:spring-security-config-6.0:javaagent")
 include(":instrumentation:spring:spring-security-config-6.0:library")
-include(":instrumentation:spring:spring-web:spring-web-3.1:javaagent")
 include(":instrumentation:spring:spring-web:spring-web-3.1:library")
+include(":instrumentation:spring:spring-web:spring-web-3.1:testing")
 include(":instrumentation:spring:spring-web:spring-web-6.0:javaagent")
 include(":instrumentation:spring:spring-webflux:spring-webflux-5.0:javaagent")
 include(":instrumentation:spring:spring-webflux:spring-webflux-5.0:testing")
@@ -712,6 +720,7 @@ include(":instrumentation:xxl-job:xxl-job-2.3.0:javaagent")
 include(":instrumentation:xxl-job:xxl-job-common:javaagent")
 include(":instrumentation:xxl-job:xxl-job-common:testing")
 include(":instrumentation:zio:zio-2.0:javaagent")
+include(":instrumentation:zio:zio-http-3.0:javaagent")
 
 // benchmark
 include(":benchmark-overhead-jmh")

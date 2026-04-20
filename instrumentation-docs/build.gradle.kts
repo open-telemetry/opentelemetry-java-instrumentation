@@ -8,9 +8,13 @@ otelJava {
 }
 
 dependencies {
-  implementation("org.yaml:snakeyaml:2.5")
+  implementation("org.yaml:snakeyaml:2.6")
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
   implementation("io.opentelemetry:opentelemetry-sdk-common")
+
+  testImplementation(project(":declarative-config-bridge"))
+  testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
+  testImplementation("io.opentelemetry:opentelemetry-api-incubator")
 }
 
 tasks {

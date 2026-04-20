@@ -18,15 +18,14 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.Arrays.asList;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,12 +66,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                 equalTo(MESSAGING_SYSTEM, "kafka"),
                                 equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                                 equalTo(MESSAGING_OPERATION, "publish"),
+                                satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
                                 satisfies(
-                                    MESSAGING_CLIENT_ID,
-                                    stringAssert -> stringAssert.startsWith("producer")),
-                                satisfies(
-                                    MessagingIncubatingAttributes
-                                        .MESSAGING_DESTINATION_PARTITION_ID,
+                                    MESSAGING_DESTINATION_PARTITION_ID,
                                     AbstractStringAssert::isNotEmpty),
                                 satisfies(
                                     MESSAGING_KAFKA_MESSAGE_OFFSET,
@@ -89,17 +85,14 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                 satisfies(
                                     MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative),
                                 satisfies(
-                                    MessagingIncubatingAttributes
-                                        .MESSAGING_DESTINATION_PARTITION_ID,
+                                    MESSAGING_DESTINATION_PARTITION_ID,
                                     AbstractStringAssert::isNotEmpty),
                                 satisfies(
                                     MESSAGING_KAFKA_MESSAGE_OFFSET,
                                     AbstractLongAssert::isNotNegative),
                                 equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
                                 equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testSingleListener"),
-                                satisfies(
-                                    MESSAGING_CLIENT_ID,
-                                    stringAssert -> stringAssert.startsWith("consumer"))),
+                                satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer"))),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 
@@ -117,7 +110,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
             });
 
     List<AttributeAssertion> processAttributes =
-        Arrays.asList(
+        asList(
             equalTo(MESSAGING_SYSTEM, "kafka"),
             equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
             equalTo(MESSAGING_OPERATION, "process"),
@@ -126,14 +119,14 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
             satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
             equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testSingleListener"),
-            satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer")));
+            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")));
 
     testing()
         .waitAndAssertTraces(
             trace -> {
               List<Consumer<SpanDataAssert>> assertions =
                   new ArrayList<>(
-                      Arrays.asList(
+                      asList(
                           span -> span.hasName("producer"),
                           span ->
                               span.hasName("testSingleTopic publish")
@@ -144,11 +137,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                       equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                                       equalTo(MESSAGING_OPERATION, "publish"),
                                       satisfies(
-                                          MESSAGING_CLIENT_ID,
-                                          stringAssert -> stringAssert.startsWith("producer")),
+                                          MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
                                       satisfies(
-                                          MessagingIncubatingAttributes
-                                              .MESSAGING_DESTINATION_PARTITION_ID,
+                                          MESSAGING_DESTINATION_PARTITION_ID,
                                           AbstractStringAssert::isNotEmpty),
                                       satisfies(
                                           MESSAGING_KAFKA_MESSAGE_OFFSET,
@@ -167,7 +158,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                     span -> span.hasName("handle exception").hasParent(trace.getSpan(2)));
               }
               assertions.addAll(
-                  Arrays.asList(
+                  asList(
                       span ->
                           span.hasName("testSingleTopic process")
                               .hasKind(SpanKind.CONSUMER)
@@ -184,7 +175,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                     span -> span.hasName("handle exception").hasParent(trace.getSpan(5)));
               }
               assertions.addAll(
-                  Arrays.asList(
+                  asList(
                       span ->
                           span.hasName("testSingleTopic process")
                               .hasKind(SpanKind.CONSUMER)
@@ -224,9 +215,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                               equalTo(MESSAGING_SYSTEM, "kafka"),
                               equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                               equalTo(MESSAGING_OPERATION, "publish"),
-                              satisfies(
-                                  MESSAGING_CLIENT_ID,
-                                  stringAssert -> stringAssert.startsWith("producer")),
+                              satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
                               satisfies(
                                   MESSAGING_DESTINATION_PARTITION_ID,
                                   AbstractStringAssert::isNotEmpty),
@@ -242,9 +231,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                               equalTo(MESSAGING_SYSTEM, "kafka"),
                               equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                               equalTo(MESSAGING_OPERATION, "publish"),
-                              satisfies(
-                                  MESSAGING_CLIENT_ID,
-                                  stringAssert -> stringAssert.startsWith("producer")),
+                              satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
                               satisfies(
                                   MESSAGING_DESTINATION_PARTITION_ID,
                                   AbstractStringAssert::isNotEmpty),
@@ -271,9 +258,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                 equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                                 equalTo(MESSAGING_OPERATION, "process"),
                                 equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testBatchListener"),
-                                satisfies(
-                                    MESSAGING_CLIENT_ID,
-                                    stringAssert -> stringAssert.startsWith("consumer")),
+                                satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
                                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2)),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(0))));
   }
@@ -294,12 +279,12 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
     AtomicReference<SpanData> producer = new AtomicReference<>();
 
     List<AttributeAssertion> processAttributes =
-        Arrays.asList(
+        asList(
             equalTo(MESSAGING_SYSTEM, "kafka"),
             equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
             equalTo(MESSAGING_OPERATION, "process"),
             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testBatchListener"),
-            satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer")),
+            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
 
     testing()
@@ -316,9 +301,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                               equalTo(MESSAGING_SYSTEM, "kafka"),
                               equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                               equalTo(MESSAGING_OPERATION, "publish"),
-                              satisfies(
-                                  MESSAGING_CLIENT_ID,
-                                  stringAssert -> stringAssert.startsWith("producer")),
+                              satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
                               satisfies(
                                   MESSAGING_DESTINATION_PARTITION_ID,
                                   AbstractStringAssert::isNotEmpty),

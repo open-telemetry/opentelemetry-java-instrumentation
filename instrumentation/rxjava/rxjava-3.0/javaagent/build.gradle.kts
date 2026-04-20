@@ -18,7 +18,7 @@ dependencies {
   implementation(project(":instrumentation:rxjava:rxjava-3.0:library"))
 
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
-  testImplementation(project(":instrumentation:rxjava:rxjava-3-common:testing"))
+  testImplementation(project(":instrumentation:rxjava:rxjava-common-3.0:testing"))
 
   testInstrumentation(project(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent"))
   testInstrumentation(project(":instrumentation:rxjava:rxjava-3.1.1:javaagent"))
@@ -26,7 +26,15 @@ dependencies {
   latestDepTestLibrary("io.reactivex.rxjava3:rxjava:3.1.0") // see rxjava-3.1.1 module
 }
 
-tasks.withType<Test>().configureEach {
-  // TODO run tests both with and without experimental span attributes
-  jvmArgs("-Dotel.instrumentation.rxjava.experimental-span-attributes=true")
+tasks {
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.rxjava.experimental-span-attributes=true")
+  }
+
+  check {
+    dependsOn(testExperimental)
+  }
 }

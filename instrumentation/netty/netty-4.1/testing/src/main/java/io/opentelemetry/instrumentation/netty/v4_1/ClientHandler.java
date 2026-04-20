@@ -41,7 +41,13 @@ public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
       ctx.channel().attr(HTTP_RESPONSE).set((HttpResponse) msg);
     } else if (msg instanceof LastHttpContent) {
       ctx.pipeline().remove(this);
-      responseCode.complete(ctx.channel().attr(HTTP_RESPONSE).get().status().code());
+      HttpResponse response = ctx.channel().attr(HTTP_RESPONSE).get();
+      if (response == null) {
+        responseCode.completeExceptionally(
+            new IllegalStateException("LastHttpContent received before HttpResponse"));
+      } else {
+        responseCode.complete(response.status().code());
+      }
     }
   }
 

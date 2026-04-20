@@ -13,19 +13,19 @@ import io.opentelemetry.instrumentation.netty.common.v4_0.internal.server.HttpRe
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.server.NettyHttpServerAttributesGetter;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
 
-public final class NettyServerSingletons {
+public class NettyServerSingletons {
 
-  private static final Instrumenter<NettyCommonRequest, HttpResponse> INSTRUMENTER =
+  private static final Instrumenter<NettyCommonRequest, HttpResponse> instrumenter =
       JavaagentHttpServerInstrumenters.create(
           "io.opentelemetry.netty-4.0",
           new NettyHttpServerAttributesGetter(),
-          HttpRequestHeadersGetter.INSTANCE,
+          new HttpRequestHeadersGetter(),
           builder ->
               builder.addContextCustomizer(
                   (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context)));
 
   public static Instrumenter<NettyCommonRequest, HttpResponse> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private NettyServerSingletons() {}

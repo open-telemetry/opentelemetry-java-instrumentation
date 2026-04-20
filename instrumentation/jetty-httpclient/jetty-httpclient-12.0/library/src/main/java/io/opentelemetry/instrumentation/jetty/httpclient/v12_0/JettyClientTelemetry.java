@@ -14,6 +14,7 @@ import org.eclipse.jetty.client.Response;
 
 /** Entrypoint for instrumenting Jetty client. */
 public final class JettyClientTelemetry {
+  private final Instrumenter<Request, Response> instrumenter;
 
   /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static JettyClientTelemetry create(OpenTelemetry openTelemetry) {
@@ -26,31 +27,8 @@ public final class JettyClientTelemetry {
     return new JettyClientTelemetryBuilder(openTelemetry);
   }
 
-  private final Instrumenter<Request, Response> instrumenter;
-
   JettyClientTelemetry(Instrumenter<Request, Response> instrumenter) {
     this.instrumenter = instrumenter;
-  }
-
-  /**
-   * Returns an instrumented HTTP client.
-   *
-   * @deprecated Use {@link #createHttpClient()} instead.
-   */
-  @Deprecated
-  public HttpClient newHttpClient() {
-    return createHttpClient();
-  }
-
-  /**
-   * Returns a new {@link HttpClient} with the specified transport and tracing configured.
-   *
-   * @param httpClientTransport the HTTP client transport to use
-   * @deprecated Use {@link #createHttpClient(HttpClientTransport)} instead.
-   */
-  @Deprecated
-  public HttpClient newHttpClient(HttpClientTransport httpClientTransport) {
-    return createHttpClient(httpClientTransport);
   }
 
   /** Returns an instrumented HTTP client. */
