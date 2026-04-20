@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
 
 class CouchbaseSpanNameExtractor implements SpanNameExtractor<CouchbaseRequestInfo> {
   private final SpanNameExtractor<CouchbaseRequestInfo> dbSpanNameExtractor;
