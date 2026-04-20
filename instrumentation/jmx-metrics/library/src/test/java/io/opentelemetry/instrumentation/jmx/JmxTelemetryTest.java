@@ -22,7 +22,8 @@ class JmxTelemetryTest {
 
   @Test
   void createDefault() {
-    assertThat(JmxTelemetry.create(OpenTelemetry.noop())).isNotNull();
+    JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
+    assertThat(builder.build()).isNotNull();
   }
 
   @Test

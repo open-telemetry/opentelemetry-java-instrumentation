@@ -19,11 +19,6 @@ public final class JmxTelemetry {
   private final JmxMetricInsight service;
   private final MetricConfiguration metricConfiguration;
 
-  /** Returns a new {@link JmxTelemetry} configured with the given {@link OpenTelemetry}. */
-  public static JmxTelemetry create(OpenTelemetry openTelemetry) {
-    return builder(openTelemetry).build();
-  }
-
   /** Returns a new {@link JmxTelemetryBuilder} configured with the given {@link OpenTelemetry}. */
   public static JmxTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new JmxTelemetryBuilder(openTelemetry);
