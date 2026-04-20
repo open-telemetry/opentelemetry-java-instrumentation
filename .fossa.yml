@@ -429,9 +429,6 @@ targets:
       target: ':instrumentation:clickhouse:clickhouse-client-v2-0.8:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:couchbase:couchbase-common-2.0:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:couchbase:couchbase-2.0:javaagent'
     - type: gradle
       path: ./
@@ -448,6 +445,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:couchbase:couchbase-3.4:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:couchbase:couchbase-common-2.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:dropwizard:dropwizard-metrics-4.0:javaagent'
