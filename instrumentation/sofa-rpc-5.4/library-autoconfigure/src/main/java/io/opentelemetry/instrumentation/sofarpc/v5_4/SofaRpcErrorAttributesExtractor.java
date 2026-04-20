@@ -6,12 +6,12 @@
 package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 
 import com.alipay.sofa.rpc.core.response.SofaResponse;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.ErrorAttributes;
 import javax.annotation.Nullable;
 
 /**
@@ -42,7 +42,7 @@ final class SofaRpcErrorAttributesExtractor
       @Nullable Throwable error) {
     if (error != null) {
       // Use exception class name as error type
-      internalSet(attributes, ErrorAttributes.ERROR_TYPE, error.getClass().getName());
+      internalSet(attributes, ERROR_TYPE, error.getClass().getName());
     }
   }
 }

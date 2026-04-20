@@ -17,8 +17,6 @@ dependencies {
   library("com.alipay.sofa:sofa-rpc-all:5.4.0")
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
-
 testing {
   suites {
     // using a test suite to ensure that project(":instrumentation:sofa-rpc-5.4:library-autoconfigure")
@@ -27,7 +25,7 @@ testing {
     val testSofaRpc by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project(":instrumentation:sofa-rpc-5.4:testing"))
-        if (latestDepTest) {
+        if (otelProps.testLatestDeps) {
           implementation("com.alipay.sofa:sofa-rpc-all:latest.release")
         } else {
           implementation("com.alipay.sofa:sofa-rpc-all:5.4.0")
@@ -41,26 +39,19 @@ testing {
 }
 
 tasks.withType<Test>().configureEach {
-  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  systemProperty("testLatestDeps", otelProps.testLatestDeps)
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   // to suppress non-fatal errors on jdk17
   jvmArgs("--add-opens=java.base/java.math=ALL-UNNAMED")
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
 
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  systemProperty("collectMetadata", otelProps.collectMetadata)
 }
 
 tasks {
   check {
     dependsOn(testing.suites)
-  }
-
-  if (findProperty("denyUnsafe") as Boolean) {
-    // SOFA RPC's tracer module uses Disruptor which requires sun.misc.Unsafe.
-    withType<Test>().configureEach {
-      enabled = false
-    }
   }
 }
 

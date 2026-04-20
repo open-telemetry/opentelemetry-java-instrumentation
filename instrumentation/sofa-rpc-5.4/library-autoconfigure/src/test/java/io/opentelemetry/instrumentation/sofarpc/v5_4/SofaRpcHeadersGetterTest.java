@@ -5,11 +5,12 @@
 
 package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.rpc.core.request.SofaRequest;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,7 @@ class SofaRpcHeadersGetterTest {
 
   @Test
   void testKeys() {
-    Map<String, Object> requestProps = Collections.singletonMap("key", "value");
+    Map<String, Object> requestProps = singletonMap("key", "value");
     when(sofaRequest.getRequestProps()).thenReturn(requestProps);
 
     SofaRpcRequest request = SofaRpcRequest.create(sofaRequest);
@@ -37,7 +38,7 @@ class SofaRpcHeadersGetterTest {
 
   @Test
   void testKeysEmpty() {
-    when(sofaRequest.getRequestProps()).thenReturn(Collections.emptyMap());
+    when(sofaRequest.getRequestProps()).thenReturn(emptyMap());
 
     SofaRpcRequest request = SofaRpcRequest.create(sofaRequest);
 

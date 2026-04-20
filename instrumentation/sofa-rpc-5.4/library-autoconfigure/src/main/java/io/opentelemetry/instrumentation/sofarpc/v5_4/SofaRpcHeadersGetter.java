@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
+import static java.util.Collections.emptySet;
+
 import com.alipay.sofa.rpc.core.request.SofaRequest;
 import io.opentelemetry.context.propagation.TextMapGetter;
-import java.util.Collections;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -21,7 +22,7 @@ enum SofaRpcHeadersGetter implements TextMapGetter<SofaRpcRequest> {
     if (requestProps != null && !requestProps.isEmpty()) {
       return requestProps.keySet();
     }
-    return Collections.emptySet();
+    return emptySet();
   }
 
   @Override
