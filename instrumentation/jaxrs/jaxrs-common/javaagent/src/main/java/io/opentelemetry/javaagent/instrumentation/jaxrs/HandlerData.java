@@ -22,11 +22,11 @@ public abstract class HandlerData {
     this.method = method;
   }
 
-  public Class<?> codeClass() {
+  Class<?> codeClass() {
     return target;
   }
 
-  public String methodName() {
+  String methodName() {
     return method.getName();
   }
 
