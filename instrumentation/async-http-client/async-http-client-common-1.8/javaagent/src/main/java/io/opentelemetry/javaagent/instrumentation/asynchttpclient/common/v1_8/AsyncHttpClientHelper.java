@@ -23,8 +23,9 @@ public interface AsyncHttpClientHelper {
    * Get the server address (host) from the request.
    *
    * @param request the HTTP request
-   * @return the server address
+   * @return the server address, or {@code null} if the request URI has no host
    */
+  @Nullable
   String getServerAddress(Request request);
 
   /**
