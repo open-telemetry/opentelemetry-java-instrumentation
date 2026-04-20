@@ -25,6 +25,8 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -37,7 +39,6 @@ import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.assertj.core.api.AbstractAssert;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -69,33 +70,23 @@ abstract class AbstractJms1Test {
             .withExposedPorts(61616, 8161)
             .withLogConsumer(new Slf4jLogConsumer(logger));
     broker.start();
+    cleanup.deferAfterAll(broker);
 
     connectionFactory =
         new ActiveMQConnectionFactory(
             "tcp://" + broker.getHost() + ":" + broker.getMappedPort(61616));
     connection = connectionFactory.createConnection();
     connection.start();
+    cleanup.deferAfterAll(connection::close);
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-  }
-
-  @AfterAll
-  static void tearDown() throws JMSException {
-    if (session != null) {
-      session.close();
-    }
-    if (connection != null) {
-      connection.close();
-    }
-    if (broker != null) {
-      broker.close();
-    }
+    cleanup.deferAfterAll(session::close);
   }
 
   @ParameterizedTest
   @MethodSource("destinationArguments")
   void testMessageListener(
       DestinationFactory destinationFactory, String destinationName, boolean isTemporary)
-      throws Exception {
+      throws JMSException {
 
     // given
     Destination destination = destinationFactory.create(session);
@@ -116,7 +107,7 @@ abstract class AbstractJms1Test {
     testing.runWithSpan("producer parent", () -> producer.send(destination, sentMessage));
 
     // then
-    TextMessage receivedMessage = receivedMessageFuture.get(10, SECONDS);
+    TextMessage receivedMessage = waitForMessage(receivedMessageFuture);
     assertThat(receivedMessage.getText()).isEqualTo(sentMessage.getText());
 
     String messageId = receivedMessage.getJMSMessageID();
@@ -172,7 +163,7 @@ abstract class AbstractJms1Test {
   @MethodSource("destinationArguments")
   void shouldCaptureMessageHeaders(
       DestinationFactory destinationFactory, String destinationName, boolean isTemporary)
-      throws Exception {
+      throws JMSException {
 
     // given
     Destination destination = destinationFactory.create(session);
@@ -195,7 +186,7 @@ abstract class AbstractJms1Test {
     testing.runWithSpan("producer parent", () -> producer.send(sentMessage));
 
     // then
-    TextMessage receivedMessage = receivedMessageFuture.get(10, SECONDS);
+    TextMessage receivedMessage = waitForMessage(receivedMessageFuture);
     assertThat(receivedMessage.getText()).isEqualTo(sentMessage.getText());
 
     String messageId = receivedMessage.getJMSMessageID();
@@ -243,7 +234,7 @@ abstract class AbstractJms1Test {
   @MethodSource("destinationArguments")
   void shouldFailWhenSendingReadOnlyMessage(
       DestinationFactory destinationFactory, String destinationName, boolean isTemporary)
-      throws Exception {
+      throws JMSException {
 
     // given
     Destination destination = destinationFactory.create(session);
@@ -303,6 +294,17 @@ abstract class AbstractJms1Test {
     return isTemporary
         ? equalTo(MESSAGING_DESTINATION_TEMPORARY, true)
         : satisfies(MESSAGING_DESTINATION_TEMPORARY, AbstractAssert::isNull);
+  }
+
+  private static TextMessage waitForMessage(CompletableFuture<TextMessage> receivedMessageFuture) {
+    try {
+      return receivedMessageFuture.get(10, SECONDS);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new AssertionError("Interrupted while waiting for the JMS message", e);
+    } catch (ExecutionException | TimeoutException e) {
+      throw new AssertionError("Timed out while waiting for the JMS message", e);
+    }
   }
 
   private static Stream<Arguments> emptyReceiveArguments() {

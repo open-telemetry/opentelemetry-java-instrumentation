@@ -29,6 +29,8 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import javax.jms.Connection;
@@ -55,7 +57,6 @@ import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
 import org.hornetq.core.server.HornetQServer;
 import org.hornetq.core.server.HornetQServers;
 import org.hornetq.jms.client.HornetQConnectionFactory;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -95,6 +96,7 @@ class Jms2InstrumentationTest {
 
     server = HornetQServers.newHornetQServer(config);
     server.start();
+    cleanup.deferAfterAll(server::stop);
 
     ServerLocator serverLocator =
         HornetQClient.createServerLocatorWithoutHA(
@@ -110,26 +112,13 @@ class Jms2InstrumentationTest {
     connectionFactory =
         HornetQJMSClient.createConnectionFactoryWithoutHA(
             JMSFactoryType.CF, new TransportConfiguration(InVMConnectorFactory.class.getName()));
+    cleanup.deferAfterAll(connectionFactory::close);
     connection = connectionFactory.createConnection();
     connection.start();
+    cleanup.deferAfterAll(connection);
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
     session.run();
-  }
-
-  @AfterAll
-  static void tearDown() throws Exception {
-    if (session != null) {
-      session.close();
-    }
-    if (connection != null) {
-      connection.close();
-    }
-    if (connectionFactory != null) {
-      connectionFactory.close();
-    }
-    if (server != null) {
-      server.stop();
-    }
+    cleanup.deferAfterAll(session);
   }
 
   @MethodSource("destinationArguments")
@@ -196,7 +185,7 @@ class Jms2InstrumentationTest {
   @ParameterizedTest
   void testMessageListener(
       DestinationFactory destinationFactory, String destinationName, boolean isTemporary)
-      throws Exception {
+      throws JMSException {
 
     // given
     Destination destination = destinationFactory.create(session);
@@ -217,7 +206,7 @@ class Jms2InstrumentationTest {
     testing.runWithSpan("producer parent", () -> producer.send(destination, sentMessage));
 
     // then
-    TextMessage receivedMessage = receivedMessageFuture.get(10, SECONDS);
+    TextMessage receivedMessage = waitForMessage(receivedMessageFuture);
     assertThat(receivedMessage.getText()).isEqualTo(sentMessage.getText());
 
     String messageId = receivedMessage.getJMSMessageID();
@@ -273,6 +262,17 @@ class Jms2InstrumentationTest {
     return isTemporary
         ? equalTo(MESSAGING_DESTINATION_TEMPORARY, true)
         : satisfies(MESSAGING_DESTINATION_TEMPORARY, AbstractAssert::isNull);
+  }
+
+  private static TextMessage waitForMessage(CompletableFuture<TextMessage> receivedMessageFuture) {
+    try {
+      return receivedMessageFuture.get(10, SECONDS);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new AssertionError("Interrupted while waiting for the JMS message", e);
+    } catch (ExecutionException | TimeoutException e) {
+      throw new AssertionError("Timed out while waiting for the JMS message", e);
+    }
   }
 
   private static Stream<Arguments> emptyReceiveArguments() {
