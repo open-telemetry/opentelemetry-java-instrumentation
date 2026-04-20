@@ -86,6 +86,7 @@
   "com.twitter:finatra-http_2.13#+": "21.2.0",
   "com.typesafe.akka:akka-actor_2.11#+": "2.5.32",
   "com.typesafe.akka:akka-actor_2.12#+": "2.8.8",
+  "com.typesafe.akka:akka-actor_2.13#2.5.+": "2.5.32",
   "com.typesafe.akka:akka-actor_2.13#+": "2.8.8",
   "com.typesafe.akka:akka-http_2.11#+": "10.1.15",
   "com.typesafe.akka:akka-http_2.12#+": "10.5.3",
