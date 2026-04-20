@@ -1,8 +1,7 @@
-import io.opentelemetry.javaagent.muzzle.AcceptableVersions
-
 /** Common setup for manual instrumentation of libraries and javaagent instrumentation. */
 
 import io.opentelemetry.instrumentation.gradle.OtelPropsExtension
+import io.opentelemetry.javaagent.muzzle.AcceptableVersions
 
 plugins {
   `java-library`

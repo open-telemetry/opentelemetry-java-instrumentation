@@ -59,7 +59,7 @@ val muzzlePinnedVersions: Map<String, String> by lazy {
  * manually add {@code "group:module#+": "0.0"} to
  * {@code .github/config/latest-dep-versions.json}.
  */
-fun resolveUpperBound(group: String, module: String, system: RepositorySystem, session: RepositorySystemSession, repos: List<RemoteRepository>): Version {
+fun resolveUpperBound(group: String, module: String): Version {
   val key = "$group:$module#+"
   val pinnedVersion = muzzlePinnedVersions[key]
     ?: throw GradleException(
@@ -394,7 +394,7 @@ fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, sessio
 
   val directiveGroup = muzzleDirective.group.get()
   val directiveModule = muzzleDirective.module.get()
-  val upperBound = resolveUpperBound(directiveGroup, directiveModule, system, session, repos)
+  val upperBound = resolveUpperBound(directiveGroup, directiveModule)
   val allVersionsArtifact = DefaultArtifact(
     directiveGroup,
     directiveModule,
@@ -466,7 +466,7 @@ fun filterVersions(range: VersionRangeResult, skipVersions: Set<String>, upperBo
 fun muzzleDirectiveToArtifacts(muzzleDirective: MuzzleDirective, system: RepositorySystem, session: RepositorySystemSession, repos: List<RemoteRepository>) = sequence<Artifact> {
   val group = muzzleDirective.group.get()
   val module = muzzleDirective.module.get()
-  val upperBound = resolveUpperBound(group, module, system, session, repos)
+  val upperBound = resolveUpperBound(group, module)
   val directiveArtifact: Artifact = DefaultArtifact(
     group,
     module,
