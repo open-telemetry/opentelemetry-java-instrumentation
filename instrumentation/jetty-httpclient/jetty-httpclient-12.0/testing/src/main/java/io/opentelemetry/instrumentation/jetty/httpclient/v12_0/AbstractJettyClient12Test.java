@@ -115,7 +115,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
   }
 
   @Test
-  void callbacksCalled() throws InterruptedException, ExecutionException {
+  void callbacksCalled() {
     URI uri = resolveAddress("/success");
     Request request = client.newRequest(uri).method("GET");
 
@@ -123,7 +123,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
     TracingResponseListener responseListener = new TracingResponseListener(responseFuture);
 
     testing.runWithSpan("parent", () -> request.send(responseListener));
-    Response response = responseFuture.get();
+    Response response = responseFuture.join();
 
     assertThat(response.getStatus()).isEqualTo(200);
     testing.waitAndAssertTraces(
