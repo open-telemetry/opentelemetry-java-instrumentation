@@ -209,3 +209,4 @@ jboss-logmanager-mdc-1.1:javaagent
 jboss-logmanager-appender-1.1:javaagent
 jdbc:javaagent
 jdbc:library
+jedis-1.4:javaagent
