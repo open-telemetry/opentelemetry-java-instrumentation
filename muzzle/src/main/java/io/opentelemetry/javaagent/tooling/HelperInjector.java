@@ -128,17 +128,17 @@ public class HelperInjector implements Transformer {
       @Nullable Instrumentation instrumentation) {
     this.requestingName = requestingName;
 
+    if (!helperClassNames.isEmpty()) {
+      requireNonNull(
+          helpersSource, "helpersSource must not be null when helperClassNames is non-empty");
+    }
     List<HelperClassDefinition> helpers =
         helperClassNames.stream()
             .distinct()
             .map(
                 className ->
                     HelperClassDefinition.create(
-                        className,
-                        requireNonNull(
-                            helpersSource,
-                            "helpersSource must not be null when helperClassNames is non-empty"),
-                        InjectionMode.CLASS_ONLY))
+                        className, helpersSource, InjectionMode.CLASS_ONLY))
             .collect(toList());
 
     this.helperClassesGenerator = (cl) -> helpers;

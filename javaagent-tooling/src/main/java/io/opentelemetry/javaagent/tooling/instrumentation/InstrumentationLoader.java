@@ -26,11 +26,8 @@ public class InstrumentationLoader implements AgentExtension {
 
   @Override
   public AgentBuilder extend(AgentBuilder agentBuilder, ConfigProperties config) {
-    Instrumentation instrumentation =
-        requireNonNull(
-            InstrumentationHolder.getInstrumentation(), "Instrumentation must not be null");
     InstrumentationModuleInstaller instrumentationModuleInstaller =
-        new InstrumentationModuleInstaller(instrumentation);
+        new InstrumentationModuleInstaller(InstrumentationHolder.getInstrumentation());
     int numberOfLoadedModules = 0;
     ClassLoader extensionsClassLoader =
         requireNonNull(
