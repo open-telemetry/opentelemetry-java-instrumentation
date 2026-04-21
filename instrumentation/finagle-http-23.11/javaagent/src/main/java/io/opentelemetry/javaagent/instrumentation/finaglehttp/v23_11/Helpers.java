@@ -35,10 +35,10 @@ import io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyServerSingleto
 
 public class Helpers {
 
-  private static final VirtualField<FullHttpRequest, Context> FULL_HTTP_REQUEST_CONTEXT = VirtualField.find(
-      FullHttpRequest.class, Context.class);
-  private static final VirtualField<HttpRequest, Context> HTTP_REQUEST_CONTEXT = VirtualField.find(
-      HttpRequest.class, Context.class);
+  private static final VirtualField<FullHttpRequest, Context> FULL_HTTP_REQUEST_CONTEXT =
+      VirtualField.find(FullHttpRequest.class, Context.class);
+  private static final VirtualField<HttpRequest, Context> HTTP_REQUEST_CONTEXT =
+      VirtualField.find(HttpRequest.class, Context.class);
 
   public static final RecordSchema.Field<Context> OTEL_CONTEXT_KEY =
       Request$.MODULE$.Schema().newField();
@@ -135,10 +135,13 @@ public class Helpers {
 
     // h1 server handler || h2 server handler;
     // private class on a semi-private type -- not bothering to extract that any other way
-    if (
-        h1Handler instanceof HttpServerCodec || (h2Handler != null && h2Handler.getClass().getName()
-            .equals(
-                "com.twitter.finagle.http2.transport.common.Http2StreamMessageHandler$ServerHttp2StreamMessageHandler"))) {
+    if (h1Handler instanceof HttpServerCodec
+        || (h2Handler != null
+            && h2Handler
+                .getClass()
+                .getName()
+                .equals(
+                    "com.twitter.finagle.http2.transport.common.Http2StreamMessageHandler$ServerHttp2StreamMessageHandler"))) {
       // ensure we capture the server context and assign it to the outgoing request before offering
       // to the AsyncQueue;
       // not applicable to clients
