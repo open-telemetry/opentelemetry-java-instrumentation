@@ -2,13 +2,6 @@
 
 ## Unreleased
 
-This release targets the OpenTelemetry SDK 1.61.0.
-
-Note that many artifacts have the `-alpha` suffix attached to their version
-number, reflecting that they will continue to have breaking changes.
-Please see the [VERSIONING.md](VERSIONING.md#opentelemetry-java-instrumentation-versioning)
-for more details.
-
 ### ⚠️ Breaking changes to non-stable APIs
 
 - Make `AbstractKtorServerTelemetryBuilder.isOpenTelemetryInitialized()` protected (previously
@@ -30,7 +23,7 @@ for more details.
 - Deprecated GraphQL builder methods `setSanitizeQuery()` and `setAddOperationNameToSpanName()`, and
   deprecated config key `otel.instrumentation.graphql.add-operation-name-to-span-name.enabled` in
   favor of `setQuerySanitizationEnabled()`, `setOperationNameInSpanNameEnabled()`, and
-  `otel.instrumentation.graphql.operation-name-in-span-name.enabled`
+  `otel.instrumentation.graphql.operation-name-in-span-name.enabled`.
   ([#17093](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17093))
 - Deprecate `Experimental.setEnableSqlCommenter()` in JDBC and R2DBC instrumentation in favor of
   `Experimental.setSqlCommenterEnabled()`.
@@ -44,7 +37,7 @@ for more details.
 - Deprecated the declarative config name `statement_sanitizer` in favor of `query_sanitization`, and
   the declarative config group `common.database` in favor of `common.db`.
   ([#17116](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17116))
-- Deprecated the GraphQL declarative config name `query_sanitizer` in favor of `query_sanitization`
+- Deprecated the GraphQL declarative config name `query_sanitizer` in favor of `query_sanitization`.
   ([#17455](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17455))
 - Deprecated the DB query sanitization system property names
   `otel.instrumentation.common.db-statement-sanitizer.enabled`,
@@ -55,7 +48,7 @@ for more details.
   `otel.instrumentation.common.experimental.db-sqlcommenter.enabled` in favor of
   `otel.instrumentation.common.db.experimental.sqlcommenter.enabled`, and deprecated
   `otel.instrumentation.graphql.query-sanitizer.enabled` in favor of
-  `otel.instrumentation.graphql.query-sanitization.enabled`
+  `otel.instrumentation.graphql.query-sanitization.enabled`.
   ([#17464](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17464))
 - Deprecate `InstrumentationModule.isIndyModule()`; indy mode is now determined by the agent
   distribution configuration instead of per-module overrides.
@@ -101,14 +94,13 @@ for more details.
 - Preserve original casing of servlet request parameter names in attribute keys when
   `otel.instrumentation.common.v3-preview` is enabled.
   ([#17822](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17822))
-- Fix warning printed on JDK 26 about changing the value of a final field with reflection.
+- Replace reflective mutation of Byte Buddy's `AgentBuilder.Default.transformations` with a
+  `ClassFileTransformer` hook, avoiding a JDK 26 JEP 500 warning about writing to a final field
+  via reflection.
   ([#17824](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17824))
 - Add javaagent bridging support for OpenTelemetry API 1.61 stable methods including
-  `Tracer.isEnabled()`, metric instrument `isEnabled()`, and `Logger.setBody(Body)`
+  `Tracer.isEnabled()`, metric instrument `isEnabled()`, and `Logger.setBody(Body)`.
   ([#17849](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17849))
-- Align RMI context propagation limits with Tomcat defaults, reducing max entries from 1000 to 100
-  and adding an 8 KB total size limit to prevent excessively large payloads.
-  ([#17870](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17870))
 
 ### 🛠️ Bug fixes
 
@@ -188,6 +180,9 @@ for more details.
 - Fix `ClassNotFoundException` in `MicrometerBridgeAutoConfiguration` when Spring Boot Actuator
   metrics module is not on the classpath in Spring Boot 4.
   ([#17723](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17723))
+- Align RMI context propagation limits with Tomcat defaults, reducing max entries from 1000 to 100
+  and adding an 8 KB total size limit to prevent excessively large payloads.
+  ([#17870](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17870))
 - Fix runtime-telemetry unconditionally enabling experimental JFR-based metrics when
   `otel.instrumentation.runtime-telemetry.emit-experimental-metrics=true`, which could impose
   unwanted JFR recording overhead on users who only wanted the JMX-based experimental metrics.

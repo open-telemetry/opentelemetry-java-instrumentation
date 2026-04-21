@@ -23,36 +23,23 @@ else
   range="v$major.$((minor - 1)).0..HEAD"
 fi
 
-sdk_version=$(grep -Po "val otelSdkVersion = \"\K[0-9]+\.[0-9]+\.[0-9]+" dependencyManagement/build.gradle.kts)
-
-cat << EOF
-# Changelog
-
-## Unreleased
-
-This release targets the OpenTelemetry SDK $sdk_version.
-
-Note that many artifacts have the \`-alpha\` suffix attached to their version
-number, reflecting that they will continue to have breaking changes.
-Please see the [VERSIONING.md](VERSIONING.md#opentelemetry-java-instrumentation-versioning)
-for more details.
-
-EOF
+echo "# Changelog"
+echo
+echo "## Unreleased"
+echo
 
 "$(dirname "$0")/extract-labeled-prs.sh" "$range"
 
-cat << 'EOF'
-### 🌟 New javaagent instrumentation
-
-### 🌟 New library instrumentation
-
-### 📈 Enhancements
-
-### 🛠️ Bug fixes
-
-### 🧰 Tooling
-
-EOF
+echo "### 🌟 New javaagent instrumentation"
+echo
+echo "### 🌟 New library instrumentation"
+echo
+echo "### 📈 Enhancements"
+echo
+echo "### 🛠️ Bug fixes"
+echo
+echo "### 🧰 Tooling"
+echo
 
 # Group commits by file type and @Deprecated detection
 declare -A src_main_commits
