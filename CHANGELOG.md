@@ -109,7 +109,7 @@
   registered.
   ([#15546](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15546))
 - Fix memory leak where bridged observable metric callbacks were never closed when the
-  application-side instrument was garbage collected
+  application-side instrument was garbage collected.
   ([#16219](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16219))
 - Fix Ktor server instrumentation leaking scope across requests due to `restoreThreadContext` not
   always being called by Ktor coroutine machinery.
@@ -129,8 +129,9 @@
   through the javaagent API bridge.
   ([#16750](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16750))
 - Fix unsafe deserialization in RMI instrumentation that could lead to remote code execution
-  (CVE-2026-33701)
-  ([#16986](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16986))
+  ([CVE-2026-33701](https://github.com/open-telemetry/opentelemetry-java-instrumentation/security/advisories/GHSA-xw7x-h9fj-p2c7),
+   [#16986](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16986),
+   also released in 2.26.1)
 - Fix boot loader class injection for `httpurlconnection`, `methods`, and `rmi` instrumentations to
   use `MethodHandles.Lookup` instead of unsafe fallback on JDK 23+.
   ([#17050](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17050))

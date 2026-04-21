@@ -46,8 +46,7 @@ jobs:
       - name: Update the change log with the approximate release date
         run: |
           date=$(date "+%Y-%m-%d")
-          preamble=$(.github/scripts/get-changelog-preamble.sh)
-          sed -Ei "s|^## Unreleased$|## Version $VERSION ($date)\n\n$preamble|" CHANGELOG.md
+          .github/scripts/update-changelog-for-release.sh "$VERSION" "$date"
 
       - name: Use CLA approved bot
         run: .github/scripts/use-cla-approved-bot.sh
