@@ -24,7 +24,7 @@ public class GreetingForm {
 
   public void submit() {
     message = "Hello " + name;
-    if (name.equals("exception")) {
+    if ("exception".equals(name)) {
       throw new IllegalStateException("submit exception");
     }
   }
