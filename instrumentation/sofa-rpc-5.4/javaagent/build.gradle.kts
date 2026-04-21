@@ -83,3 +83,9 @@ configurations.named("testSofaRpcRuntimeClasspath") {
     force("org.slf4j:slf4j-api:1.7.21")
   }
 }
+
+if (otelProps.denyUnsafe) {
+  tasks.withType<Test>().configureEach {
+    enabled = false
+  }
+}
