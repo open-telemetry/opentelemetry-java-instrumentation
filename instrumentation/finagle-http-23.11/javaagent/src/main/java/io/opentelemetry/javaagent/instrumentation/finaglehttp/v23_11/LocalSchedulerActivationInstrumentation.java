@@ -46,10 +46,8 @@ class LocalSchedulerActivationInstrumentation implements TypeInstrumentation {
         return null;
       }
 
+      // always set it: you never know what might be polluting the thread local context at the time
       Context context = Java8BytecodeBridge.currentContext();
-      if (context == Context.root()) {
-        return task;
-      }
       return ContextPropagatingRunnable.propagateContext(task, context);
     }
   }

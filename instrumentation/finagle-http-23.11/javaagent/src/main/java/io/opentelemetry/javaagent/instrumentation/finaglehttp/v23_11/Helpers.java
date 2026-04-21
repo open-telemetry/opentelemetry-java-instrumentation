@@ -13,6 +13,7 @@ import com.twitter.finagle.Netty4HttpPackageHelpers;
 import com.twitter.finagle.http.Request;
 import com.twitter.finagle.http.Request$;
 import com.twitter.finagle.http.collection.RecordSchema;
+import com.twitter.finagle.http2.transport.common.Http2StreamMessageHandler;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -26,16 +27,18 @@ import io.netty.handler.codec.http2.Http2StreamFrameToHttpObjectCodec;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
-import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContext;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContexts;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerTracingHandler;
+import io.opentelemetry.javaagent.instrumentation.netty.common.v4_0.VirtualFieldHelper;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyServerSingletons;
 
 public class Helpers {
 
-  private static final VirtualField<ChannelHandler, ChannelHandler> CHANNEL_HANDLER =
-      VirtualField.find(ChannelHandler.class, ChannelHandler.class);
+  private static final VirtualField<FullHttpRequest, Context> FULL_HTTP_REQUEST_CONTEXT = VirtualField.find(
+      FullHttpRequest.class, Context.class);
+  private static final VirtualField<HttpRequest, Context> HTTP_REQUEST_CONTEXT = VirtualField.find(
+      HttpRequest.class, Context.class);
 
   public static final RecordSchema.Field<Context> OTEL_CONTEXT_KEY =
       Request$.MODULE$.Schema().newField();
@@ -76,7 +79,7 @@ public class Helpers {
                 .pipeline()
                 .addAfter(codecCtx.name(), ourHandler.getClass().getName(), ourHandler);
             // attach this in this way to match up with how netty instrumentation expects things
-            CHANNEL_HANDLER.set(codecCtx.handler(), ourHandler);
+            VirtualFieldHelper.CHANNEL_HANDLER.set(codecCtx.handler(), ourHandler);
           }
         }
       }
@@ -116,7 +119,7 @@ public class Helpers {
                 .pipeline()
                 .addAfter(codecCtx.name(), ourHandler.getClass().getName(), ourHandler);
             // attach this in this way to match up with how netty instrumentation expects things
-            CHANNEL_HANDLER.set(codecCtx.handler(), ourHandler);
+            VirtualFieldHelper.CHANNEL_HANDLER.set(codecCtx.handler(), ourHandler);
           }
         }
       }
@@ -127,9 +130,15 @@ public class Helpers {
   Part 1/3 of bridging the otel Context from netty to finagle (for h2).
    */
   public static void mutateHandlerPipeline(Channel ch) {
-    ChannelHandler codec = ch.pipeline().get(Netty4HttpPackageHelpers.getHttpCodecName());
+    ChannelHandler h1Handler = ch.pipeline().get(Netty4HttpPackageHelpers.getHttpCodecName());
+    Http2StreamMessageHandler h2Handler = ch.pipeline().get(Http2StreamMessageHandler.class);
 
-    if (codec instanceof HttpServerCodec) {
+    // h1 server handler || h2 server handler;
+    // private class on a semi-private type -- not bothering to extract that any other way
+    if (
+        h1Handler instanceof HttpServerCodec || (h2Handler != null && h2Handler.getClass().getName()
+            .equals(
+                "com.twitter.finagle.http2.transport.common.Http2StreamMessageHandler$ServerHttp2StreamMessageHandler"))) {
       // ensure we capture the server context and assign it to the outgoing request before offering
       // to the AsyncQueue;
       // not applicable to clients
@@ -145,26 +154,12 @@ public class Helpers {
                  */
                 @Override
                 public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-                  ServerContexts serverContexts = ServerContexts.get(ctx.channel());
-                  if (serverContexts == null) {
-                    super.channelRead(ctx, msg);
-                    return;
-                  }
-
-                  ServerContext serverContext = serverContexts.peekLast();
-
                   // type switch courtesy of
                   // com.twitter.finagle.netty4.http.Netty4ServerStreamTransport.read()
                   if (msg instanceof FullHttpRequest) {
-                    VirtualField.find(FullHttpRequest.class, Context.class)
-                        .set(
-                            (FullHttpRequest) msg,
-                            serverContext != null ? serverContext.context() : null);
+                    FULL_HTTP_REQUEST_CONTEXT.set((FullHttpRequest) msg, Context.current());
                   } else if (msg instanceof HttpRequest) {
-                    VirtualField.find(HttpRequest.class, Context.class)
-                        .set(
-                            (HttpRequest) msg,
-                            serverContext != null ? serverContext.context() : null);
+                    HTTP_REQUEST_CONTEXT.set((HttpRequest) msg, Context.current());
                   } else {
                     throw new IllegalArgumentException("unexpected request type: " + msg);
                   }
@@ -182,9 +177,9 @@ public class Helpers {
     Context context;
     // type switch courtesy of com.twitter.finagle.netty4.http.Netty4ServerStreamTransport.read()
     if (msg instanceof FullHttpRequest) {
-      context = VirtualField.find(FullHttpRequest.class, Context.class).get((FullHttpRequest) msg);
+      context = FULL_HTTP_REQUEST_CONTEXT.get((FullHttpRequest) msg);
     } else if (msg instanceof HttpRequest) {
-      context = VirtualField.find(HttpRequest.class, Context.class).get((HttpRequest) msg);
+      context = HTTP_REQUEST_CONTEXT.get((HttpRequest) msg);
     } else {
       // shouldn't practically reach here
       throw new IllegalArgumentException("unexpected request type: " + msg);

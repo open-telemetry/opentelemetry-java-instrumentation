@@ -18,6 +18,7 @@ import com.twitter.finagle.http.Response;
 import com.twitter.finagle.http2.param.PriorKnowledge;
 import com.twitter.util.Await;
 import com.twitter.util.Duration;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolSpecificEvent;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
@@ -55,6 +56,9 @@ class ServerH2Test extends AbstractServerTest {
             equalTo(ProtocolSpecificEvent.SWITCHING_PROTOCOLS_TO_KEY, singletonList("h2c")));
   }
 
+  /*
+  Bonus is that this implicitly tests both the server & client h2 upgrades.
+   */
   @Test
   void h2ProtocolUpgrade() throws Exception {
     URI uri = URI.create("http://localhost:" + port + SUCCESS.getPath());
@@ -66,7 +70,7 @@ class ServerH2Test extends AbstractServerTest {
     cleanup.deferCleanup(client::close);
 
     Response response =
-        Await.result(
+        testing.runWithSpan("h2-upgrade-client", () -> Await.result(
             client.apply(
                 Utils.buildRequest(
                     "GET",
@@ -76,7 +80,7 @@ class ServerH2Test extends AbstractServerTest {
                         TEST_USER_AGENT,
                         HttpHeaderNames.X_FORWARDED_FOR.toString(),
                         TEST_CLIENT_IP))),
-            Duration.fromSeconds(20));
+            Duration.fromSeconds(20)));
 
     assertThat(response.status().code()).isEqualTo(SUCCESS.getStatus());
     assertThat(response.contentString()).isEqualTo(SUCCESS.getBody());
@@ -87,19 +91,23 @@ class ServerH2Test extends AbstractServerTest {
     testing.waitAndAssertTraces(
         trace -> {
           List<Consumer<SpanDataAssert>> spanAssertions = new ArrayList<>();
+          // client initiation
           spanAssertions.add(
-              s -> s.hasEventsSatisfyingExactly(ServerH2Test::assertSwitchingProtocolsEvent));
+              s -> s.hasName("h2-upgrade-client").hasNoParent().hasKind(SpanKind.INTERNAL));
+          // actual client netty span (including upgrade event)
           spanAssertions.add(
-              span -> {
-                assertServerSpan(span, method, endpoint, endpoint.getStatus());
-                span.hasEventsSatisfyingExactly(ServerH2Test::assertSwitchingProtocolsEvent);
-              });
-
-          int parentIndex = 1;
+              s -> s.hasKind(SpanKind.CLIENT).hasName(method).hasParent(trace.getSpan(0))
+                  .hasEventsSatisfyingExactly(ServerH2Test::assertSwitchingProtocolsEvent));
+          // server netty span (including upgrade event)
+          spanAssertions.add(
+              span -> assertServerSpan(span, method, endpoint, endpoint.getStatus())
+                  .hasParent(trace.getSpan(1))
+                  .hasEventsSatisfyingExactly(ServerH2Test::assertSwitchingProtocolsEvent));
+          // server controller span
           spanAssertions.add(
               span -> {
                 assertControllerSpan(span, null);
-                span.hasParent(trace.getSpan(parentIndex));
+                span.hasParent(trace.getSpan(2));
               });
 
           trace.hasSpansSatisfyingExactly(spanAssertions);

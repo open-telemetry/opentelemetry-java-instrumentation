@@ -48,8 +48,9 @@ class GenStreamingServerDispatcherInstrumentation implements TypeInstrumentation
       if (req instanceof Request) {
         // practically this will always be a Request, from HttpServerDispatcher
         Request request = (Request) req;
+        // if this is null, there's a bug in the instrumentation
         Context context = request.ctx().apply(Helpers.OTEL_CONTEXT_KEY);
-        return context != null && context != Context.root() ? context.makeCurrent() : null;
+        return context.makeCurrent();
       }
       return null;
     }

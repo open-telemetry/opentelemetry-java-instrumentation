@@ -36,6 +36,7 @@ dependencies {
 
   implementation(project(":instrumentation:netty:netty-4.1:javaagent"))
   implementation(project(":instrumentation:netty:netty-4.1:library"))
+  implementation(project(":instrumentation:netty:netty-common-4.0:javaagent"))
   implementation(project(":instrumentation:netty:netty-common-4.0:library"))
 }
 

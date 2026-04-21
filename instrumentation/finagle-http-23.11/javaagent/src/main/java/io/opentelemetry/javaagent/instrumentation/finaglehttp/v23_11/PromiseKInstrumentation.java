@@ -48,9 +48,7 @@ class PromiseKInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Promise.K thiz) {
       Context current = Context.current();
-      if (current != Context.root()) {
-        TwitterUtilCoreHelpers.PROMISE_K_CONTEXT_FIELD.set(thiz, current);
-      }
+      TwitterUtilCoreHelpers.PROMISE_K_CONTEXT_FIELD.set(thiz, current);
     }
   }
 
@@ -58,18 +56,14 @@ class PromiseKInstrumentation implements TypeInstrumentation {
   public static class ApplyAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onApplyEnter(@Advice.This Promise.K thiz) {
+      // if this is null, there's a bug in the instrumentation
       Context savedContext = TwitterUtilCoreHelpers.PROMISE_K_CONTEXT_FIELD.get(thiz);
-      if (savedContext != null) {
-        return savedContext.makeCurrent();
-      }
-      return null;
+      return savedContext.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onApplyExit(@Advice.Enter Scope scope) {
-      if (scope != null) {
-        scope.close();
-      }
+      scope.close();
     }
   }
 }

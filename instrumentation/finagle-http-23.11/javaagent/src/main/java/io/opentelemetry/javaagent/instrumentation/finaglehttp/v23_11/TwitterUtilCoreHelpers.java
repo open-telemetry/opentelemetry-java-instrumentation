@@ -49,10 +49,8 @@ public class TwitterUtilCoreHelpers {
   }
 
   public static <T, O> Function1<T, O> wrap(Context context, Function1<T, O> fn) {
-    if (context == Context.root()) {
-      return fn;
-    }
     return (t) -> {
+      // always set it: you never know what might be polluting the thread local context at the time
       try (Scope ignored = context.makeCurrent()) {
         return fn.apply(t);
       }
@@ -60,10 +58,8 @@ public class TwitterUtilCoreHelpers {
   }
 
   public static <T> Function0<T> wrap(Context context, Function0<T> fn) {
-    if (context == Context.root()) {
-      return fn;
-    }
     return () -> {
+      // always set it: you never know what might be polluting the thread local context at the time
       try (Scope ignored = context.makeCurrent()) {
         return fn.apply();
       }
