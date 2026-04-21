@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.azurecore.v1_36;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.azurecore.v1_36.SuppressNestedClientHelper.disallowNestedClientSpanMono;
 import static io.opentelemetry.javaagent.instrumentation.azurecore.v1_36.SuppressNestedClientHelper.disallowNestedClientSpanSync;
@@ -25,11 +26,16 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import reactor.core.publisher.Mono;
 
-public class AzureHttpClientInstrumentation implements TypeInstrumentation {
+class AzureHttpClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("com.azure.core.http.HttpClient"));
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("com.azure.core.http.HttpClient");
   }
 
   @Override
@@ -51,7 +57,7 @@ public class AzureHttpClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SuppressNestedClientMonoAdvice {
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Mono<HttpResponse> asyncSendExit(
         @Advice.Argument(1) Context azContext, @Advice.Return Mono<HttpResponse> mono) {
       return disallowNestedClientSpanMono(mono, azContext);
@@ -62,12 +68,12 @@ public class AzureHttpClientInstrumentation implements TypeInstrumentation {
   public static class SuppressNestedClientSyncAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope syncSendEnter(@Advice.Argument(1) Context azContext) {
       return disallowNestedClientSpanSync(azContext);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void syncSendExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();

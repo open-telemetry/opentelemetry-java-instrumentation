@@ -21,7 +21,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.tapestry5.services.ComponentEventRequestParameters;
 import org.apache.tapestry5.services.PageRenderRequestParameters;
 
-public class InitializeActivePageNameInstrumentation implements TypeInstrumentation {
+class InitializeActivePageNameInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -53,12 +53,12 @@ public class InitializeActivePageNameInstrumentation implements TypeInstrumentat
   @SuppressWarnings("unused")
   public static class HandleComponentEventAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) ComponentEventRequestParameters parameters) {
       HttpServerRoute.update(
           currentContext(),
           CONTROLLER,
-          TapestryServerSpanNaming.SERVER_SPAN_NAME,
+          TapestryServerSpanNaming.serverSpanName(),
           parameters.getActivePageName());
     }
   }
@@ -66,12 +66,12 @@ public class InitializeActivePageNameInstrumentation implements TypeInstrumentat
   @SuppressWarnings("unused")
   public static class HandlePageRenderAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) PageRenderRequestParameters parameters) {
       HttpServerRoute.update(
           currentContext(),
           CONTROLLER,
-          TapestryServerSpanNaming.SERVER_SPAN_NAME,
+          TapestryServerSpanNaming.serverSpanName(),
           parameters.getLogicalPageName());
     }
   }

@@ -14,11 +14,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HttpHandlerInstrumentation implements TypeInstrumentation {
+class HttpHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -37,14 +38,14 @@ public class HttpHandlerInstrumentation implements TypeInstrumentation {
             .and(named("service"))
             .and(takesArgument(0, named("org.glassfish.grizzly.http.server.Request")))
             .and(takesArgument(1, named("org.glassfish.grizzly.http.server.Response"))),
-        HttpHandlerInstrumentation.class.getName() + "$ServiceAdvice");
+        getClass().getName() + "$ServiceAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ServiceAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Thrown Throwable throwable) {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Thrown @Nullable Throwable throwable) {
       if (throwable != null) {
         GrizzlyErrorHolder.set(Java8BytecodeBridge.currentContext(), throwable);
       }

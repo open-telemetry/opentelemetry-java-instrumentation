@@ -50,9 +50,9 @@ public class HttpServerRequestTracingHandler extends SimpleChannelUpstreamHandle
 
     try (Scope ignored = context.makeCurrent()) {
       super.messageReceived(ctx, event);
-    } catch (Throwable throwable) {
-      instrumenter().end(context, request, null, throwable);
-      throw throwable;
+    } catch (Throwable t) {
+      instrumenter().end(context, request, null, t);
+      throw t;
     }
     // span is ended normally in HttpServerResponseTracingHandler
   }

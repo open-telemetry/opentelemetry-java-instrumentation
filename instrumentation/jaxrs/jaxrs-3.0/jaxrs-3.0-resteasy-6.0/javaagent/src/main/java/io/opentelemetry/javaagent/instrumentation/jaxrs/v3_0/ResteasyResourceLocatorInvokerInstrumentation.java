@@ -21,7 +21,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.jboss.resteasy.core.ResourceLocatorInvoker;
 
-public class ResteasyResourceLocatorInvokerInstrumentation implements TypeInstrumentation {
+class ResteasyResourceLocatorInvokerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.jboss.resteasy.core.ResourceLocatorInvoker");
@@ -41,7 +41,7 @@ public class ResteasyResourceLocatorInvokerInstrumentation implements TypeInstru
   public static class InvokeOnTargetObjectAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.This ResourceLocatorInvoker resourceInvoker) {
 
       Context currentContext = Java8BytecodeBridge.currentContext();
@@ -56,7 +56,7 @@ public class ResteasyResourceLocatorInvokerInstrumentation implements TypeInstru
       return context != null ? context.makeCurrent() : null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();

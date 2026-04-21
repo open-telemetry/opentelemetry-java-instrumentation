@@ -113,7 +113,7 @@ class RmiTest {
     serverRegistry.rebind(Server.RMI_ID, server);
     autoCleanup.deferCleanup(() -> serverRegistry.unbind(Server.RMI_ID));
 
-    Throwable thrown =
+    IllegalStateException thrown =
         catchThrowableOfType(
             IllegalStateException.class,
             () ->
@@ -123,6 +123,8 @@ class RmiTest {
                       Greeter client = (Greeter) clientRegistry.lookup(Server.RMI_ID);
                       client.exceptional();
                     }));
+
+    assertThat(thrown).isNotNull();
 
     testing.waitAndAssertTraces(
         trace ->

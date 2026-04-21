@@ -28,7 +28,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * This instrumentation inserts loading of our injected helper classes at the start of {@code
  * ClassLoader.loadClass} method.
  */
-public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
+class LoadInjectedClassInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -66,6 +66,15 @@ public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
             io.opentelemetry.javaagent.instrumentation.internal.classloader.stub.ClassLoader
                 classLoaderStub,
         @Advice.Argument(0) String name) {
+
+      // first check whether this is an exposed class and load it from the instrumentation class
+      // loader
+      Class<?> exposedClass = InjectedClassHelper.loadExposedClass(classLoader, name);
+      if (exposedClass != null) {
+        return exposedClass;
+      }
+
+      // if this class is a helper class fetch its bytes and define it
       InjectedClassHelper.HelperClassInfo helperClassInfo =
           InjectedClassHelper.getHelperClassInfo(classLoader, name);
       if (helperClassInfo != null) {
@@ -89,7 +98,7 @@ public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    @Advice.OnMethodExit
     public static Class<?> onExit(
         @Advice.Return Class<?> originalResult, @Advice.Enter Class<?> loadedClass) {
       return loadedClass != null ? loadedClass : originalResult;

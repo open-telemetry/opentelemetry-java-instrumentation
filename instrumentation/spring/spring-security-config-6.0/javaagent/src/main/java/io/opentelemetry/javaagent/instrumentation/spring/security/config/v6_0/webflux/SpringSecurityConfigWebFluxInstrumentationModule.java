@@ -29,10 +29,13 @@ public class SpringSecurityConfigWebFluxInstrumentationModule extends Instrument
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // Ensure this module is only applied to Spring Security >= 6.0. This instrumentation might
-    // work with older versions of Spring Security, but since it is bundled together with the
-    // servlet based instrumentation, that does not work with oder versions, we also limit this
-    // module to only work with Spring Security >= 6.0.
+    /*
+     * Ensure this module is only applied to Spring Security >= 6.0. This instrumentation might
+     * work with older versions of Spring Security, but since it is bundled together with the
+     * servlet-based instrumentation, which does not work with older versions, we also limit this
+     * module to only work with Spring Security >= 6.0.
+     */
+    // added in 6.0
     return hasClassesNamed(
         "org.springframework.security.authentication.ObservationAuthenticationManager");
   }

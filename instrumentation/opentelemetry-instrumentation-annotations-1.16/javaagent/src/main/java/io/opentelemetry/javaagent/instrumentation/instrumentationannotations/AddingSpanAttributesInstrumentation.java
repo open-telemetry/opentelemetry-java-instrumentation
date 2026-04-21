@@ -25,7 +25,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AddingSpanAttributesInstrumentation implements TypeInstrumentation {
+class AddingSpanAttributesInstrumentation implements TypeInstrumentation {
 
   private final ElementMatcher.Junction<AnnotationSource> annotatedMethodMatcher;
   private final ElementMatcher.Junction<MethodDescription> annotatedParametersMatcher;
@@ -69,7 +69,7 @@ public class AddingSpanAttributesInstrumentation implements TypeInstrumentation 
   @SuppressWarnings("unused")
   public static class AddingSpanAttributesAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.Origin Method method,
         @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] args) {

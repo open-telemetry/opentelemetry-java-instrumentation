@@ -18,7 +18,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.kafka.listener.RecordInterceptor;
 
-public class AbstractMessageListenerContainerInstrumentation implements TypeInstrumentation {
+class AbstractMessageListenerContainerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -43,7 +43,7 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
   public static class GetRecordInterceptorAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static <K, V> RecordInterceptor<K, V> onExit(
         @Advice.Return RecordInterceptor<K, V> originalInterceptor) {
       RecordInterceptor<K, V> interceptor = originalInterceptor;

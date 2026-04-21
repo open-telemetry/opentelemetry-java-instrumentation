@@ -26,7 +26,7 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.Status;
 
-public class ServerInstrumentation implements TypeInstrumentation {
+class ServerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.restlet.Server");
@@ -87,13 +87,13 @@ public class ServerInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope beginRequest(
         @Advice.Argument(0) Request request, @Advice.Argument(1) Response response) {
       return AdviceScope.start(request);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void finishRequest(
         @Advice.Argument(0) Request request,
         @Advice.Argument(1) Response response,

@@ -21,7 +21,7 @@ import org.apache.shenyu.common.constant.Constants;
 import org.apache.shenyu.common.dto.MetaData;
 import org.springframework.web.server.ServerWebExchange;
 
-public class ContextBuilderInstrumentation implements TypeInstrumentation {
+class ContextBuilderInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.shenyu.plugin.global.DefaultShenyuContextBuilder");
@@ -38,7 +38,7 @@ public class ContextBuilderInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class BuildAdvice {
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Argument(0) ServerWebExchange exchange) {
       Context context = Context.current();
       MetaData metaData = exchange.getAttribute(Constants.META_DATA);

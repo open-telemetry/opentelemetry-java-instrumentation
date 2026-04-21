@@ -24,7 +24,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * This adds the filter class name to the request properties. The class name is used by <code>
  * DefaultRequestContextInstrumentation</code>
  */
-public class ContainerRequestFilterInstrumentation implements TypeInstrumentation {
+class ContainerRequestFilterInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -48,7 +48,7 @@ public class ContainerRequestFilterInstrumentation implements TypeInstrumentatio
   @SuppressWarnings("unused")
   public static class RequestFilterAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void setFilterClass(
         @Advice.This ContainerRequestFilter filter,
         @Advice.Argument(0) ContainerRequestContext context) {

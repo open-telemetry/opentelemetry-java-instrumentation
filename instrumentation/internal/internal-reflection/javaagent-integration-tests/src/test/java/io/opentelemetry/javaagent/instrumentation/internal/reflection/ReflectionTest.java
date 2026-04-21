@@ -38,7 +38,6 @@ class ReflectionTest {
     // to them
     assertThat(VirtualFieldInstalledMarker.class.isAssignableFrom(TestClass.class)).isTrue();
     assertThat(VirtualFieldAccessorMarker.class.isAssignableFrom(TestClass.class)).isTrue();
-    assertThat(TestClass.class.getInterfaces()).hasSize(2);
     assertThat(TestClass.class.getInterfaces())
         .containsExactlyInAnyOrder(Runnable.class, Serializable.class);
   }
@@ -55,24 +54,18 @@ class ReflectionTest {
   void testInjectedClassProxyUnwrap() throws Exception {
     TestClass testClass = new TestClass();
     Class<?> helperType = testClass.testHelperClass();
-    assertThat(helperType)
-        .describedAs("unable to resolve injected class from instrumented class")
-        .isNotNull();
+    assertThat(helperType).isNotNull();
 
     Object instance = helperType.getConstructor().newInstance();
     if (InstrumentationProxy.class.isAssignableFrom(helperType)) {
       // indy advice: must be an indy proxy
 
       for (Method method : helperType.getMethods()) {
-        assertThat(method.getName())
-            .describedAs("proxy method must be hidden from reflection")
-            .isNotEqualTo("__getIndyProxyDelegate");
+        assertThat(method.getName()).isNotEqualTo("__getIndyProxyDelegate");
       }
 
       for (Class<?> interfaceType : helperType.getInterfaces()) {
-        assertThat(interfaceType)
-            .describedAs("indy proxy interface must be hidden from reflection")
-            .isNotEqualTo(InstrumentationProxy.class);
+        assertThat(interfaceType).isNotEqualTo(InstrumentationProxy.class);
       }
 
       assertThat(instance).isInstanceOf(InstrumentationProxy.class);

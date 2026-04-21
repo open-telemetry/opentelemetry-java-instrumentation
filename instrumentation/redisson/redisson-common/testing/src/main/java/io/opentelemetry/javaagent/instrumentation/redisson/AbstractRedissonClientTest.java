@@ -232,7 +232,7 @@ public abstract class AbstractRedissonClientTest {
     try {
       // available since 3.7.2
       Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       Assumptions.abort();
     }
 
@@ -443,9 +443,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NETWORK_PEER_PORT, (long) port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_OPERATION), "EVAL"),
-                            satisfies(
-                                maybeStable(DB_STATEMENT),
-                                stringAssert -> stringAssert.startsWith("EVAL")))));
+                            satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("EVAL")))));
     traceAsserts.add(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -458,9 +456,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NETWORK_PEER_PORT, (long) port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_OPERATION), "EVAL"),
-                            satisfies(
-                                maybeStable(DB_STATEMENT),
-                                stringAssert -> stringAssert.startsWith("EVAL")))));
+                            satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("EVAL")))));
     if (lockHas3Traces()) {
       traceAsserts.add(
           trace ->
@@ -474,9 +470,7 @@ public abstract class AbstractRedissonClientTest {
                               equalTo(NETWORK_PEER_PORT, (long) port),
                               equalTo(maybeStable(DB_SYSTEM), REDIS),
                               equalTo(maybeStable(DB_OPERATION), "DEL"),
-                              satisfies(
-                                  maybeStable(DB_STATEMENT),
-                                  stringAssert -> stringAssert.startsWith("DEL")))));
+                              satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("DEL")))));
     }
 
     testing.waitAndAssertSortedTraces(orderByRootSpanKind(SpanKind.CLIENT), traceAsserts);

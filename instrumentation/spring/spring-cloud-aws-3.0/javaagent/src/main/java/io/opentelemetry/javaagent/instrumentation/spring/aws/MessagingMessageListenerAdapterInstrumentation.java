@@ -16,7 +16,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.messaging.Message;
 
-public class MessagingMessageListenerAdapterInstrumentation implements TypeInstrumentation {
+class MessagingMessageListenerAdapterInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -33,13 +33,13 @@ public class MessagingMessageListenerAdapterInstrumentation implements TypeInstr
 
   @SuppressWarnings("unused")
   public static class OnMessageAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static SpringAwsUtil.MessageScope methodEnter(@Advice.Argument(0) Message<?> message) {
       return SpringAwsUtil.handleMessage(message);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Enter SpringAwsUtil.MessageScope scope, @Advice.Thrown Throwable throwable) {
       if (scope != null) {

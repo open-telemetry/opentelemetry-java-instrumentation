@@ -14,7 +14,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class StreamThreadInstrumentation implements TypeInstrumentation {
+class StreamThreadInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -29,12 +29,12 @@ public class StreamThreadInstrumentation implements TypeInstrumentation {
   // this advice suppresses the CONSUMER spans created by the kafka-clients instrumentation
   @SuppressWarnings("unused")
   public static class RunLoopAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static boolean onEnter() {
       return KafkaClientsConsumerProcessTracing.setEnabled(false);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter boolean previousValue) {
       KafkaClientsConsumerProcessTracing.setEnabled(previousValue);
     }

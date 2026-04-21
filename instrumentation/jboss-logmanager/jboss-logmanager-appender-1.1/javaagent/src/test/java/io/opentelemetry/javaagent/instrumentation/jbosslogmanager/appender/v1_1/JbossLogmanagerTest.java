@@ -62,7 +62,7 @@ class JbossLogmanagerTest {
 
   @ParameterizedTest
   @MethodSource("provideParameters")
-  public void test(boolean withParam, boolean logException, boolean withParent)
+  void test(boolean withParam, boolean logException, boolean withParent)
       throws InterruptedException {
     test(
         java.util.logging.Level.FINE,
@@ -158,7 +158,7 @@ class JbossLogmanagerTest {
                       equalTo(EXCEPTION_MESSAGE, "hello"),
                       satisfies(
                           EXCEPTION_STACKTRACE,
-                          v -> v.contains(JbossLogmanagerTest.class.getName()))));
+                          val -> val.contains(JbossLogmanagerTest.class.getName()))));
             }
             logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
 

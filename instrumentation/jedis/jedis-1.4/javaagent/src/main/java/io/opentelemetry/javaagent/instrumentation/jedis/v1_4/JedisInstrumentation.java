@@ -18,7 +18,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JedisInstrumentation implements TypeInstrumentation {
+class JedisInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return namedOneOf("redis.clients.jedis.Jedis", "redis.clients.jedis.BinaryJedis");
@@ -47,12 +47,12 @@ public class JedisInstrumentation implements TypeInstrumentation {
   public static class JedisMethodAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static JedisRequestContext<JedisRequest> onEnter() {
       return JedisRequestContext.attach();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Enter @Nullable JedisRequestContext<JedisRequest> requestContext) {
       if (requestContext != null) {

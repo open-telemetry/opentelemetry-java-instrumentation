@@ -25,6 +25,7 @@ dependencies {
   compileOnly("javax.servlet:servlet-api:2.2")
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
+  testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
 
   testLibrary("org.eclipse.jetty:jetty-server:7.0.0.v20091005")
   testLibrary("org.eclipse.jetty:jetty-servlet:7.0.0.v20091005")
@@ -34,5 +35,5 @@ dependencies {
 }
 
 tasks.test {
-  systemProperty("collectMetadata", findProperty("collectMetadata"))
+  systemProperty("collectMetadata", otelProps.collectMetadata)
 }

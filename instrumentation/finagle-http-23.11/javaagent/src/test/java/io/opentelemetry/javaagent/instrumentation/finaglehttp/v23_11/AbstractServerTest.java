@@ -84,8 +84,8 @@ abstract class AbstractServerTest extends AbstractHttpServerTest<ListeningServer
             } else if (EXCEPTION.equals(endpoint)) {
               throw new IllegalStateException(endpoint.getBody());
             } else {
-              response.content(Buf.Utf8$.MODULE$.apply(NOT_FOUND.getBody()));
               response = Response.apply().status(Status.apply(NOT_FOUND.getStatus()));
+              response.content(Buf.Utf8$.MODULE$.apply(NOT_FOUND.getBody()));
             }
             return Future.value(response);
           });

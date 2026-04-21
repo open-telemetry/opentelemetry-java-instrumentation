@@ -12,7 +12,7 @@ import com.sun.xml.ws.api.server.WSEndpoint;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 
-public final class MetroHelper {
+public class MetroHelper {
   private static final String REQUEST_KEY = MetroHelper.class.getName() + ".Request";
   private static final String CONTEXT_KEY = MetroHelper.class.getName() + ".Context";
   private static final String SCOPE_KEY = MetroHelper.class.getName() + ".Scope";

@@ -26,7 +26,7 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     jvmArgs("-Dotel.instrumentation.graphql.operation-name-in-span-name.enabled=true")
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testDataFetcher by registering(Test::class) {
@@ -42,7 +42,7 @@ tasks {
   }
 }
 
-if (findProperty("testLatestDeps") == "true") {
+if (otelProps.testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }

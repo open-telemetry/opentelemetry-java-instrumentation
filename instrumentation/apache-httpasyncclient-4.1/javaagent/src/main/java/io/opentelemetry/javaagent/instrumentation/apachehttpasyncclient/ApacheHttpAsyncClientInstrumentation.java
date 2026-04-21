@@ -36,7 +36,7 @@ import org.apache.http.nio.protocol.HttpAsyncRequestProducer;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpCoreContext;
 
-public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
+class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -67,7 +67,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
       @ToArgument(value = 0, index = 0),
       @ToArgument(value = 3, index = 1)
     })
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] methodEnter(
         @Advice.Argument(0) HttpAsyncRequestProducer requestProducer,
         @Advice.Argument(2) HttpContext httpContext,
@@ -156,8 +156,8 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     @Nullable private final HttpContext httpContext;
     @Nullable private final FutureCallback<T> delegate;
 
-    private volatile Context context;
-    private volatile ApacheHttpClientRequest otelRequest;
+    @Nullable private volatile Context context;
+    @Nullable private volatile ApacheHttpClientRequest otelRequest;
 
     public WrappedFutureCallback(
         Context parentContext,

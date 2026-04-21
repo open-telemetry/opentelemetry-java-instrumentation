@@ -932,9 +932,9 @@ public abstract class AbstractRxJava3WithSpanTest {
                                 canceledAttributesAssertions("publisher"))));
   }
 
-  static class CustomPublisher implements Publisher<String>, Subscription {
+  private static class CustomPublisher implements Publisher<String>, Subscription {
 
-    Subscriber<? super String> subscriber;
+    private Subscriber<? super String> subscriber;
 
     @Override
     public void subscribe(Subscriber<? super String> subscriber) {

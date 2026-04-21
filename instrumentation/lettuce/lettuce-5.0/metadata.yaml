@@ -1,3 +1,4 @@
+display_name: Lettuce
 description: >
   This instrumentation enables database client spans and database client metrics for the Lettuce
   Redis client.
@@ -16,8 +17,8 @@ configurations:
       `lettuce.command.results.count`.
     type: boolean
     default: false
-  - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-    description: Enables statement sanitization for database queries.
+  - name: otel.instrumentation.common.db.query-sanitization.enabled
+    description: Enables query sanitization for database queries.
     type: boolean
     default: true
   - name: otel.instrumentation.common.peer-service-mapping

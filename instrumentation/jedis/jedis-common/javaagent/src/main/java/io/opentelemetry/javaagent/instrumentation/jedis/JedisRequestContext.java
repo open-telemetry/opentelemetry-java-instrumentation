@@ -9,12 +9,12 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import javax.annotation.Nullable;
 
-public final class JedisRequestContext<T> {
+public class JedisRequestContext<T> {
   private static final ThreadLocal<JedisRequestContext<?>> contextThreadLocal = new ThreadLocal<>();
 
-  private Instrumenter<T, Void> instrumenter;
-  private T request;
-  private Context context;
+  @Nullable private Instrumenter<T, Void> instrumenter;
+  @Nullable private T request;
+  @Nullable private Context context;
   @Nullable private Throwable throwable;
 
   private JedisRequestContext() {}
@@ -58,6 +58,7 @@ public final class JedisRequestContext<T> {
     }
   }
 
+  @Nullable
   @SuppressWarnings("unchecked") // we lose the generic type in ThreadLocal
   private static <T> JedisRequestContext<T> current() {
     return (JedisRequestContext<T>) contextThreadLocal.get();

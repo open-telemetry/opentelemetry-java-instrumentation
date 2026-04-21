@@ -23,7 +23,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /** Instrument the Twilio SDK to identify calls as a separate service. */
-public class TwilioSyncInstrumentation implements TypeInstrumentation {
+class TwilioSyncInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -93,14 +93,14 @@ public class TwilioSyncInstrumentation implements TypeInstrumentation {
 
     /** Method entry instrumentation. */
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope methodEnter(
         @Advice.This Object that, @Advice.Origin("#m") String methodName) {
       return AdviceScope.start(that, methodName);
     }
 
     /** Method exit instrumentation. */
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope,

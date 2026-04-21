@@ -20,7 +20,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import oracle.ucp.UniversalConnectionPool;
 
-public class UniversalConnectionPoolInstrumentation implements TypeInstrumentation {
+class UniversalConnectionPoolInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -43,7 +43,7 @@ public class UniversalConnectionPoolInstrumentation implements TypeInstrumentati
   @SuppressWarnings("unused")
   public static class StartAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This UniversalConnectionPool connectionPool) {
       telemetry().registerMetrics(connectionPool);
     }
@@ -52,14 +52,14 @@ public class UniversalConnectionPoolInstrumentation implements TypeInstrumentati
   @SuppressWarnings("unused")
   public static class StopAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth onEnter() {
       CallDepth callDepth = CallDepth.forClass(UniversalConnectionPool.class);
       callDepth.getAndIncrement();
       return callDepth;
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This UniversalConnectionPool connectionPool, @Advice.Enter CallDepth callDepth) {
       if (callDepth.decrementAndGet() > 0) {

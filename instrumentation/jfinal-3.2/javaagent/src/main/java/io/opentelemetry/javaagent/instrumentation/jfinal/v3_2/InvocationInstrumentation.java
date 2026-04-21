@@ -22,7 +22,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class InvocationInstrumentation implements TypeInstrumentation {
+class InvocationInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -77,13 +77,13 @@ public class InvocationInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.FieldValue("action") Action action) {
       CallDepth callDepth = CallDepth.forClass(Invocation.class);
       return AdviceScope.start(callDepth, action);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopTraceOnResponse(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope actionScope) {
       actionScope.end(throwable);

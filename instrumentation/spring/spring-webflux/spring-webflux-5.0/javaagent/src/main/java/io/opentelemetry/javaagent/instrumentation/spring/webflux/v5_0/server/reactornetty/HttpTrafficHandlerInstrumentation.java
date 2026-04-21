@@ -20,7 +20,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 // used since reactor-netty-0.8
-public class HttpTrafficHandlerInstrumentation implements TypeInstrumentation {
+class HttpTrafficHandlerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("reactor.netty.http.server.HttpTrafficHandler");
@@ -36,7 +36,7 @@ public class HttpTrafficHandlerInstrumentation implements TypeInstrumentation {
   public static class RunAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(
         @Advice.FieldValue("ctx") ChannelHandlerContext channelHandlerContext) {
       // set context to the first unprocessed request
@@ -47,7 +47,7 @@ public class HttpTrafficHandlerInstrumentation implements TypeInstrumentation {
       return null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();

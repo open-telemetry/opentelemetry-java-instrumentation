@@ -21,7 +21,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JexInstrumentation implements TypeInstrumentation {
+class JexInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -43,7 +43,7 @@ public class JexInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class HandlerAdapterAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onMethodExecute(@Advice.Argument(0) Context ctx) {
       HttpServerRoute.update(
           io.opentelemetry.context.Context.current(),

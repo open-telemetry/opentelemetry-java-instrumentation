@@ -35,15 +35,13 @@ dependencies {
   testLibrary("io.projectreactor.kafka:reactor-kafka:1.0.0.RELEASE")
 }
 
-val testLatestDeps = findProperty("testLatestDeps") == "true"
-
 testing {
   suites {
     val testV1_3_3 by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project(":instrumentation:reactor:reactor-kafka-1.0:testing"))
 
-        if (testLatestDeps) {
+        if (otelProps.testLatestDeps) {
           implementation("io.projectreactor.kafka:reactor-kafka:latest.release")
           implementation("io.projectreactor:reactor-core:3.4.+")
         } else {
@@ -64,7 +62,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:reactor:reactor-kafka-1.0:testing"))
 
-        if (testLatestDeps) {
+        if (otelProps.testLatestDeps) {
           implementation("io.projectreactor.kafka:reactor-kafka:latest.release")
           implementation("io.projectreactor:reactor-core:3.4.+")
         } else {
@@ -86,7 +84,7 @@ testing {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testExperimental by registering(Test::class) {
@@ -95,18 +93,18 @@ tasks {
 
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
     systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
-    systemProperty("hasConsumerGroup", testLatestDeps)
+    systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
   }
 
   val testReceiveSpansDisabled by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    systemProperty("hasConsumerGroup", testLatestDeps)
+    systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
   }
 
   test {
-    systemProperty("hasConsumerGroup", testLatestDeps)
+    systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
   }
 

@@ -15,7 +15,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import software.amazon.awssdk.services.sqs.SqsClient;
 
-public class DefaultSqsClientBuilderInstrumentation implements TypeInstrumentation {
+class DefaultSqsClientBuilderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -32,7 +32,7 @@ public class DefaultSqsClientBuilderInstrumentation implements TypeInstrumentati
   public static class BuildClientAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static SqsClient methodExit(@Advice.Return SqsClient sqsClient) {
       return AwsSdkSingletons.telemetry().wrap(sqsClient);
     }

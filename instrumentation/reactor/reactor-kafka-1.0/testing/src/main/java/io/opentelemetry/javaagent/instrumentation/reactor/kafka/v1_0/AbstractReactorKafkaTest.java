@@ -45,7 +45,6 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
@@ -86,18 +85,12 @@ public abstract class AbstractReactorKafkaTest {
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.Kafka.*Server\\).*", 1))
             .withStartupTimeout(Duration.ofMinutes(1));
+    cleanup.deferAfterAll(kafka::stop);
     kafka.start();
 
     sender = KafkaSender.create(senderOptions());
+    cleanup.deferAfterAll(sender::close);
     receiver = KafkaReceiver.create(receiverOptions());
-  }
-
-  @AfterAll
-  static void tearDownAll() {
-    if (sender != null) {
-      sender.close();
-    }
-    kafka.stop();
   }
 
   @SuppressWarnings("unchecked")
@@ -221,11 +214,13 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, record.topic()),
                 equalTo(MESSAGING_OPERATION, "publish"),
-                satisfies(
-                    stringKey("messaging.client_id"),
-                    stringAssert -> stringAssert.startsWith("producer")),
+                satisfies(stringKey("messaging.client_id"), val -> val.startsWith("producer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
+    if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
+      assertions.add(
+          equalTo(stringKey("messaging.kafka.bootstrap.servers"), kafka.getBootstrapServers()));
+    }
     String messageKey = record.key();
     if (messageKey != null) {
       assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
@@ -241,9 +236,7 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                 equalTo(MESSAGING_OPERATION, "receive"),
-                satisfies(
-                    stringKey("messaging.client_id"),
-                    stringAssert -> stringAssert.startsWith("consumer")),
+                satisfies(stringKey("messaging.client_id"), val -> val.startsWith("consumer")),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
     if (Boolean.getBoolean("hasConsumerGroup")) {
       assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
@@ -260,9 +253,7 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, record.topic()),
                 equalTo(MESSAGING_OPERATION, "process"),
-                satisfies(
-                    stringKey("messaging.client_id"),
-                    stringAssert -> stringAssert.startsWith("consumer")),
+                satisfies(stringKey("messaging.client_id"), val -> val.startsWith("consumer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
     if (Boolean.getBoolean("hasConsumerGroup")) {

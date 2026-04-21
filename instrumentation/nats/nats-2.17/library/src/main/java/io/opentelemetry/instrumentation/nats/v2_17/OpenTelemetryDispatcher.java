@@ -48,8 +48,8 @@ final class OpenTelemetryDispatcher implements InvocationHandler {
   private static Object invokeMethod(Method method, Object target, Object[] args) throws Throwable {
     try {
       return method.invoke(target, args);
-    } catch (InvocationTargetException exception) {
-      throw exception.getCause();
+    } catch (InvocationTargetException e) {
+      throw e.getCause();
     }
   }
 

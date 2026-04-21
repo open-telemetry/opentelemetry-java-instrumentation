@@ -14,7 +14,7 @@ import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
 import scala.runtime.AbstractFunction1;
 
-public final class ResponseFutureWrapper {
+public class ResponseFutureWrapper {
 
   public static Future<Result> wrap(
       Future<Result> future, Context context, ExecutionContext executionContext) {

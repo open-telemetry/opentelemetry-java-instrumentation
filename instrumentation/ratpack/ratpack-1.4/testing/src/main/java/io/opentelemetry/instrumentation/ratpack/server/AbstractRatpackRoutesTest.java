@@ -22,7 +22,6 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -156,7 +155,7 @@ public abstract class AbstractRatpackRoutesTest {
                         span.hasName("/" + route)
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
-                            .hasAttributes(Attributes.empty()));
+                            .hasTotalAttributeCount(0));
               }
 
               trace.hasSpansSatisfyingExactly(assertions);

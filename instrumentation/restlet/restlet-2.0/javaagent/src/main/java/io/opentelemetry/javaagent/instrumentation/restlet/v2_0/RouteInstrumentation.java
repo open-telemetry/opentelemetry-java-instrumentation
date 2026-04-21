@@ -21,7 +21,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.restlet.Request;
 import org.restlet.routing.TemplateRoute;
 
-public class RouteInstrumentation implements TypeInstrumentation {
+class RouteInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return namedOneOf("org.restlet.routing.TemplateRoute", "org.restlet.routing.Route");
@@ -39,7 +39,7 @@ public class RouteInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RouteBeforeHandleAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void getRouteInfo(
         @Advice.This TemplateRoute route, @Advice.Argument(0) Request request) {
       String pattern = route.getTemplate().getPattern();

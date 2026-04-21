@@ -16,7 +16,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AwsAsyncClientHandlerInstrumentation implements TypeInstrumentation {
+class AwsAsyncClientHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -37,7 +37,7 @@ public class AwsAsyncClientHandlerInstrumentation implements TypeInstrumentation
   public static class WrapFutureAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static CompletableFuture<?> methodExit(@Advice.Return CompletableFuture<?> future) {
 
       // propagate context into CompletableFuture returned from aws async client methods

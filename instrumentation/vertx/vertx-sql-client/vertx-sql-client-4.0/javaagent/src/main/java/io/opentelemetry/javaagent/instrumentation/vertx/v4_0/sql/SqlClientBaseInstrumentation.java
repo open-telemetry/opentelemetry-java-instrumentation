@@ -22,7 +22,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class SqlClientBaseInstrumentation implements TypeInstrumentation {
+class SqlClientBaseInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -38,7 +38,7 @@ public class SqlClientBaseInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This SqlClientBase<?> sqlClientBase) {
       // copy connection options from ThreadLocal to VirtualField
       attachConnectOptions(sqlClientBase, getSqlConnectOptions());
@@ -47,7 +47,7 @@ public class SqlClientBaseInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class QueryAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth onEnter(@Advice.This SqlClientBase<?> sqlClientBase) {
       CallDepth callDepth = CallDepth.forClass(SqlClientBase.class);
       if (callDepth.getAndIncrement() > 0) {
@@ -60,7 +60,7 @@ public class SqlClientBaseInstrumentation implements TypeInstrumentation {
       return callDepth;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown Throwable throwable, @Advice.Enter CallDepth callDepth) {
       if (callDepth.decrementAndGet() > 0) {

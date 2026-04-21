@@ -19,6 +19,8 @@ jobs:
   # Job 1: Determine which modules to review
   # ---------------------------------------------------------------------------
   dispatch:
+    # Only run on official repo, not forks
+    if: github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.build-matrix.outputs.matrix }}
@@ -82,7 +84,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f # v6.0.1
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
         with:
           cache-read-only: true
 
@@ -179,7 +181,7 @@ jobs:
       - name: Upload review diagnostics artifact
         if: always()
         id: upload-review-diagnostics
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ steps.diagnostics-artifact-name.outputs.name }}
           path: |
@@ -229,7 +231,7 @@ jobs:
           git push -f origin "$branch"
           echo "pushed=true" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
+      - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
         id: otelbot-token
         if: steps.commit.outputs.pushed == 'true'
         with:

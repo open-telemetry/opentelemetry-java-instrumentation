@@ -16,6 +16,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.common.AttributeKey.valueKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
@@ -28,7 +29,6 @@ import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -245,12 +245,12 @@ class ValueAttributeTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test-span").hasAttributesSatisfyingExactly()));
+                span -> span.hasName("test-span").hasTotalAttributeCount(0)));
   }
 
   @Test
   void emptyArrayValue() {
-    Value<?> value = Value.of(Collections.<Value<?>>emptyList());
+    Value<?> value = Value.of(emptyList());
     testing.runWithSpan("test-span", () -> Span.current().setAttribute(valueKey("key"), value));
 
     testing.waitAndAssertTraces(

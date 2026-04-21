@@ -8,12 +8,8 @@ muzzle {
     group.set("org.springframework.amqp")
     module.set("spring-rabbit")
     versions.set("(,)")
-    // Problematic release depending on snapshots
-    skip("1.6.4.RELEASE", "2.1.1.RELEASE")
   }
 }
-
-val latestDepTest = findProperty("testLatestDeps") == "true"
 
 dependencies {
   library("org.springframework.amqp:spring-rabbit:1.0.0.RELEASE")
@@ -27,7 +23,7 @@ dependencies {
   // spring-retry is required by org.springframework.amqp:spring-rabbit:4.0.0
   testLibrary("org.springframework.retry:spring-retry")
 
-  if (latestDepTest) {
+  if (otelProps.testLatestDeps) {
     testLibrary("org.springframework.boot:spring-boot-starter-amqp:latest.release")
   }
 }
@@ -35,19 +31,19 @@ dependencies {
 tasks {
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 }
 
 // spring 6 requires java 17
-if (latestDepTest) {
+if (otelProps.testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_17)
   }
 }
 
 // spring 6 uses slf4j 2.0
-if (!latestDepTest) {
+if (!otelProps.testLatestDeps) {
   configurations.testRuntimeClasspath {
     resolutionStrategy {
       // requires old logback (and therefore also old slf4j)

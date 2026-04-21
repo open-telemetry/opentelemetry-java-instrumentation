@@ -495,7 +495,7 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
     public void metricChange(KafkaMetric kafkaMetric) {
       try {
         kafkaMetric.measurable();
-      } catch (IllegalStateException exception) {
+      } catch (IllegalStateException ignored) {
         // ignore non-measurable metrics, we don't report them
         return;
       }

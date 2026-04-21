@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class FinatraExceptionManagerInstrumentation implements TypeInstrumentation {
+class FinatraExceptionManagerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.twitter.finatra.http.exceptions.ExceptionManager");
@@ -35,7 +35,7 @@ public class FinatraExceptionManagerInstrumentation implements TypeInstrumentati
   @SuppressWarnings("unused")
   public static class HandleExceptionAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void handleException(
         @Advice.Return Response response, @Advice.Argument(1) Throwable throwable) {
 

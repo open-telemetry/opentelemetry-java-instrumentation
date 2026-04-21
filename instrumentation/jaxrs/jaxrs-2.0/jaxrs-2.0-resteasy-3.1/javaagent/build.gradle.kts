@@ -22,8 +22,6 @@ muzzle {
     group.set("org.jboss.resteasy")
     module.set("resteasy-jaxrs")
     versions.set("(2.1.0.GA,3.1.0.Final)")
-    // missing dependencies
-    skip("2.3.10.Final")
   }
 
   fail {
@@ -70,10 +68,10 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testExperimental by registering(Test::class) {
@@ -89,7 +87,7 @@ tasks {
   }
 }
 
-if (findProperty("testLatestDeps") == "true") {
+if (otelProps.testLatestDeps) {
   configurations {
     // artifact name changed from 'resteasy-jaxrs' to 'resteasy-core' starting from version 4.0.0
     testImplementation {

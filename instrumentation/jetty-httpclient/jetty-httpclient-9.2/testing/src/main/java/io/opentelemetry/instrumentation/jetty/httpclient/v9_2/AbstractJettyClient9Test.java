@@ -84,7 +84,6 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
     JettyClientListener jcl = new JettyClientListener();
     request.onRequestFailure(jcl);
     request.onResponseFailure(jcl);
-    headers.forEach(request::header);
     request.send(
         result -> {
           if (jcl.failure != null) {

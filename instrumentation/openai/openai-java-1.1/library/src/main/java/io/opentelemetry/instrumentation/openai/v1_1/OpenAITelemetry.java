@@ -18,6 +18,11 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 /** Entrypoint for instrumenting OpenAI clients. */
 @SuppressWarnings("IdentifierName") // Want to match library's convention
 public final class OpenAITelemetry {
+  private final Instrumenter<ChatCompletionCreateParams, ChatCompletion> chatInstrumenter;
+  private final Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> embeddingsInstrumenter;
+  private final Logger eventLogger;
+  private final boolean captureMessageContent;
+
   /** Returns a new {@link OpenAITelemetry} configured with the given {@link OpenTelemetry}. */
   public static OpenAITelemetry create(OpenTelemetry openTelemetry) {
     return builder(openTelemetry).build();
@@ -29,13 +34,6 @@ public final class OpenAITelemetry {
   public static OpenAITelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new OpenAITelemetryBuilder(openTelemetry);
   }
-
-  private final Instrumenter<ChatCompletionCreateParams, ChatCompletion> chatInstrumenter;
-  private final Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> embeddingsInstrumenter;
-
-  private final Logger eventLogger;
-
-  private final boolean captureMessageContent;
 
   OpenAITelemetry(
       Instrumenter<ChatCompletionCreateParams, ChatCompletion> chatInstrumenter,

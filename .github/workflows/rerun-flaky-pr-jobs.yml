@@ -1,0 +1,26 @@
+name: Rerun flaky PR jobs
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: rerun-flaky-pr-jobs
+  cancel-in-progress: false
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  rerun-failed-jobs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Rerun eligible failed jobs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python .github/scripts/rerun-flaky-pr-jobs.py

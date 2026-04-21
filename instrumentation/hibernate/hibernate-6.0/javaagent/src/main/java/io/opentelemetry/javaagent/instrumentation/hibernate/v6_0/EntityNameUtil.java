@@ -10,9 +10,7 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.internal.StatelessSessionImpl;
 
-public final class EntityNameUtil {
-
-  private EntityNameUtil() {}
+public class EntityNameUtil {
 
   private static String bestGuessEntityName(SharedSessionContract session, Object entity) {
     if (entity == null) {
@@ -31,4 +29,6 @@ public final class EntityNameUtil {
   public static Function<Object, String> bestGuessEntityName(SharedSessionContract session) {
     return (entity) -> bestGuessEntityName(session, entity);
   }
+
+  private EntityNameUtil() {}
 }

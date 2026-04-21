@@ -1,8 +1,9 @@
 otel:
   instrumentation:
     common:
-      db-statement-sanitizer:
-        enabled: false
+      db:
+        query-sanitization:
+          enabled: false
     http:
       client:
         emit-experimental-telemetry: true

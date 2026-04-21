@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.elasticsearch.client.Request;
 
 // up to 8.8 (included)
-public class RestClientTransportInstrumentation implements TypeInstrumentation {
+class RestClientTransportInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -38,7 +38,7 @@ public class RestClientTransportInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RestClientTransportAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onPrepareLowLevelRequest(
         @Advice.Argument(1) Endpoint<?, ?, ?> endpoint, @Advice.Return Request request) {
       String endpointId = endpoint.id();

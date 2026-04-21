@@ -24,7 +24,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.AfterAll;
@@ -68,7 +67,7 @@ class SpringJpaTest {
                     span.hasName("parent")
                         .hasKind(INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName("SELECT spring.jpa.Customer")
                         .hasKind(INTERNAL)
@@ -130,7 +129,7 @@ class SpringJpaTest {
                     span.hasName("parent")
                         .hasKind(INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName("Session.persist spring.jpa.Customer")
                         .hasKind(INTERNAL)
@@ -209,7 +208,7 @@ class SpringJpaTest {
                     span.hasName("parent")
                         .hasKind(INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName("Session.merge spring.jpa.Customer")
                         .hasKind(INTERNAL)
@@ -296,7 +295,7 @@ class SpringJpaTest {
                     span.hasName("parent")
                         .hasKind(INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.satisfies(
                             val ->
@@ -351,7 +350,7 @@ class SpringJpaTest {
                     span.hasName("parent")
                         .hasKind(INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.satisfies(
                             val ->

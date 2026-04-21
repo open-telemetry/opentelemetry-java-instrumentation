@@ -1,3 +1,4 @@
+display_name: Google HTTP Client
 description: This instrumentation enables HTTP client spans and HTTP client metrics for the Google HTTP Client.
 semantic_conventions:
   - HTTP_CLIENT_SPANS

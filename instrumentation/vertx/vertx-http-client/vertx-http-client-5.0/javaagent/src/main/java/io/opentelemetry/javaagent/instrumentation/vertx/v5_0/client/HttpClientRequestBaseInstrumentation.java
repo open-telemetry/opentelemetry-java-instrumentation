@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HttpClientRequestBaseInstrumentation implements TypeInstrumentation {
+class HttpClientRequestBaseInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -35,7 +35,7 @@ public class HttpClientRequestBaseInstrumentation implements TypeInstrumentation
 
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This HttpClientRequestBase request,
         @Advice.FieldValue("authority") HostAndPort authority) {
@@ -45,7 +45,7 @@ public class HttpClientRequestBaseInstrumentation implements TypeInstrumentation
 
   @SuppressWarnings("unused")
   public static class SetAuthorityAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This HttpClientRequestBase request, @Advice.Argument(0) HostAndPort authority) {
       VertxClientSingletons.setAuthority(request, authority);

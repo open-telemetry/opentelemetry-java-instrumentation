@@ -10,13 +10,13 @@ import com.xxl.job.core.handler.IJobHandler;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 
-public final class XxlJobProcessRequest {
+public class XxlJobProcessRequest {
 
   @Nullable private final String methodName;
   private final int jobId;
   @Nullable private final Class<?> declaringClass;
-  private boolean failed;
   private final GlueTypeEnum glueType;
+  private boolean failed;
 
   public static XxlJobProcessRequest createRequestForMethod(
       GlueTypeEnum glueType, Class<?> declaringClass, @Nullable String methodName) {

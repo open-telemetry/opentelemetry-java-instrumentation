@@ -18,7 +18,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class PathMatcherInstrumentation implements TypeInstrumentation {
+class PathMatcherInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("akka.http.scaladsl.server.PathMatcher$");
@@ -36,7 +36,7 @@ public class PathMatcherInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ApplyAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(0) Uri.Path prefix, @Advice.Return PathMatcher<?> result) {
       // store the path being matched inside a VirtualField on the given matcher, so it can be used

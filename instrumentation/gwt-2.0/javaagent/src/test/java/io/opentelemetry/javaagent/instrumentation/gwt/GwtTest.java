@@ -14,6 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.File;
@@ -25,7 +26,6 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.webapp.WebAppContext;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -43,13 +43,16 @@ class GwtTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private static final Logger logger = LoggerFactory.getLogger(GwtTest.class);
-  static int port;
-  static Server server;
-  static BrowserWebDriverContainer browser;
-  static URI address;
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  static void startServer() throws Exception {
+  private static final Logger logger = LoggerFactory.getLogger(GwtTest.class);
+  private static int port;
+  private static Server server;
+  private static BrowserWebDriverContainer browser;
+  private static URI address;
+
+  private static void startServer() throws Exception {
     port = PortUtils.findOpenPort();
     server = new Server(port);
     for (Connector connector : server.getConnectors()) {
@@ -64,7 +67,7 @@ class GwtTest {
     server.start();
   }
 
-  static void stopServer() throws Exception {
+  private static void stopServer() throws Exception {
     server.stop();
     server.destroy();
   }
@@ -72,28 +75,24 @@ class GwtTest {
   @BeforeAll
   static void setup() throws Exception {
     startServer();
+    cleanup.deferAfterAll(GwtTest::stopServer);
 
     Testcontainers.exposeHostPorts(port);
 
     browser =
         new BrowserWebDriverContainer("selenium/standalone-chrome")
             .withLogConsumer(new Slf4jLogConsumer(logger));
+    cleanup.deferAfterAll(browser::stop);
     browser.start();
 
     address = new URI("http://host.testcontainers.internal:" + port + getContextPath() + "/");
   }
 
-  @AfterAll
-  static void cleanup() throws Exception {
-    stopServer();
-    browser.stop();
-  }
-
-  static String getContextPath() {
+  private static String getContextPath() {
     return "/xyz";
   }
 
-  RemoteWebDriver getDriver() {
+  private static RemoteWebDriver getDriver() {
     RemoteWebDriver driver =
         new RemoteWebDriver(browser.getSeleniumAddress(), new ChromeOptions(), false);
     driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(30));
@@ -104,6 +103,7 @@ class GwtTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   void testGwt() {
     RemoteWebDriver driver = getDriver();
+    cleanup.deferCleanup(driver::close);
 
     // fetch the test page
     driver.get(address.resolve("greeting.html").toString());
@@ -186,7 +186,5 @@ class GwtTest {
                             equalTo(RPC_SYSTEM, "gwt"),
                             equalTo(RPC_SERVICE, "test.gwt.shared.MessageService"),
                             equalTo(RPC_METHOD, "sendMessage"))));
-
-    driver.close();
   }
 }

@@ -29,7 +29,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -38,15 +37,16 @@ import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
 import com.datastax.oss.driver.api.core.config.DriverConfigLoader;
 import com.datastax.oss.driver.internal.core.config.typesafe.DefaultDriverConfigLoader;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -59,6 +59,8 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 public abstract class AbstractCassandraTest {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractCassandraTest.class);
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private static GenericContainer<?> cassandra;
 
@@ -82,6 +84,7 @@ public abstract class AbstractCassandraTest {
             .withExposedPorts(9042)
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .withStartupTimeout(Duration.ofMinutes(2));
+    cleanup.deferAfterAll(cassandra::stop);
     cassandra.start();
 
     cassandraHost = cassandra.getHost();
@@ -92,6 +95,7 @@ public abstract class AbstractCassandraTest {
   @Test
   void testMetrics() {
     CqlSession session = getSession(null);
+    cleanup.deferCleanup(session);
 
     session.execute("DROP KEYSPACE IF EXISTS non_existent");
 
@@ -104,19 +108,13 @@ public abstract class AbstractCassandraTest {
         NETWORK_PEER_PORT,
         SERVER_ADDRESS,
         SERVER_PORT);
-
-    session.close();
-  }
-
-  @AfterAll
-  static void afterAll() {
-    cassandra.stop();
   }
 
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideSyncParameters")
   void syncTest(Parameter parameter) {
     CqlSession session = getSession(parameter.keyspace);
+    cleanup.deferCleanup(session);
 
     session.execute(parameter.queryText);
 
@@ -129,12 +127,7 @@ public abstract class AbstractCassandraTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    NETWORK_TYPE,
-                                    val ->
-                                        val.satisfiesAnyOf(
-                                            v -> assertThat(v).isEqualTo("ipv4"),
-                                            v -> assertThat(v).isEqualTo("ipv6"))),
+                                satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6")),
                                 equalTo(SERVER_ADDRESS, cassandraHost),
                                 equalTo(SERVER_PORT, cassandraPort),
                                 equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
@@ -161,14 +154,13 @@ public abstract class AbstractCassandraTest {
                                 equalTo(
                                     maybeStable(DB_CASSANDRA_TABLE),
                                     emitStableDatabaseSemconv() ? null : parameter.table))));
-
-    session.close();
   }
 
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideAsyncParameters")
   void asyncTest(Parameter parameter) throws Exception {
     CqlSession session = getSession(parameter.keyspace);
+    cleanup.deferCleanup(session);
 
     testing()
         .runWithSpan(
@@ -190,12 +182,7 @@ public abstract class AbstractCassandraTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    NETWORK_TYPE,
-                                    val ->
-                                        val.satisfiesAnyOf(
-                                            v -> assertThat(v).isEqualTo("ipv4"),
-                                            v -> assertThat(v).isEqualTo("ipv6"))),
+                                satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6")),
                                 equalTo(SERVER_ADDRESS, cassandraHost),
                                 equalTo(SERVER_PORT, cassandraPort),
                                 equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
@@ -226,8 +213,6 @@ public abstract class AbstractCassandraTest {
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))));
-
-    session.close();
   }
 
   private static Stream<Arguments> provideSyncParameters() {

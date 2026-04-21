@@ -27,7 +27,7 @@ import play.api.mvc.Request;
 import play.api.mvc.Result;
 import scala.concurrent.Future;
 
-public class ActionInstrumentation implements TypeInstrumentation {
+class ActionInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("play.api.mvc.Action");
@@ -87,12 +87,12 @@ public class ActionInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(0) Request<?> req) {
       return AdviceScope.start(currentContext());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopTraceOnResponse(
         @Advice.This Action<?> thisAction,
         @Advice.Thrown Throwable throwable,

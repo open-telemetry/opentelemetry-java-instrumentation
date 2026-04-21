@@ -29,7 +29,7 @@ import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
-public class KafkaConsumerInstrumentation implements TypeInstrumentation {
+class KafkaConsumerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -49,12 +49,12 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class PollAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Timer onEnter() {
       return Timer.start();
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Enter Timer timer,
         @Advice.This Consumer<?, ?> consumer,

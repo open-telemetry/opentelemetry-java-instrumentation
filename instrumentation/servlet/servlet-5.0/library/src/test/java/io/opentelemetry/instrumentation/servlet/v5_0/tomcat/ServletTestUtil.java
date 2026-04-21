@@ -19,7 +19,7 @@ import org.apache.tomcat.util.descriptor.web.FilterMap;
 
 class ServletTestUtil {
 
-  public static Filter newFilter(OpenTelemetry openTelemetry) {
+  static Filter newFilter(OpenTelemetry openTelemetry) {
     ServletTelemetryBuilder builder =
         ServletTelemetry.builder(openTelemetry)
             .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
@@ -29,7 +29,7 @@ class ServletTestUtil {
     return builder.build().createFilter();
   }
 
-  public static void configureTomcat(OpenTelemetry openTelemetry, Context servletContext) {
+  static void configureTomcat(OpenTelemetry openTelemetry, Context servletContext) {
     Filter filter = newFilter(openTelemetry);
 
     FilterDef filterDef = new FilterDef();

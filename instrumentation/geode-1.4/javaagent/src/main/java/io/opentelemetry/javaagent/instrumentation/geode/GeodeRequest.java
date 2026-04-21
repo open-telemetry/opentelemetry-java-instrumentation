@@ -10,17 +10,17 @@ import javax.annotation.Nullable;
 import org.apache.geode.cache.Region;
 
 @AutoValue
-public abstract class GeodeRequest {
+abstract class GeodeRequest {
 
-  public static GeodeRequest create(
+  static GeodeRequest create(
       Region<?, ?> region, String operationName, @Nullable String queryText) {
     return new AutoValue_GeodeRequest(region, operationName, queryText);
   }
 
-  public abstract Region<?, ?> getRegion();
+  abstract Region<?, ?> getRegion();
 
-  public abstract String getOperationName();
+  abstract String getOperationName();
 
   @Nullable
-  public abstract String getQueryText();
+  abstract String getQueryText();
 }

@@ -63,7 +63,7 @@ public class AbstractOtelReactiveSpringStarterSmokeTest extends AbstractSpringSt
                                     .isEqualToIgnoringCase("SELECT testdb.PLAYER"))
                         .hasAttribute(DB_NAME, "testdb")
                         // 2 is not replaced by ?,
-                        // otel.instrumentation.common.db-statement-sanitizer.enabled=false
+                        // otel.instrumentation.common.db.query-sanitization.enabled=false
                         .hasAttributesSatisfying(
                             a ->
                                 assertThat(a.get(DB_STATEMENT))

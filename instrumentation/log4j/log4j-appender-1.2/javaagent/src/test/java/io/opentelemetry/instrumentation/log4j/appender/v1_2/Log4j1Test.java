@@ -150,7 +150,7 @@ class Log4j1Test {
                       equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
                       equalTo(EXCEPTION_MESSAGE, "hello"),
                       satisfies(
-                          EXCEPTION_STACKTRACE, v -> v.contains(Log4j1Test.class.getName()))));
+                          EXCEPTION_STACKTRACE, val -> val.contains(Log4j1Test.class.getName()))));
             }
             attributeAsserts.addAll(
                 SemconvCodeStabilityUtil.codeFunctionAssertions(

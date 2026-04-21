@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class SqsTemplateInstrumentation implements TypeInstrumentation {
+class SqsTemplateInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -34,7 +34,7 @@ public class SqsTemplateInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetQueueAttributesAdvice {
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static CompletableFuture<?> methodExit(@Advice.Return CompletableFuture<?> result) {
       return CompletableFutureWrapper.wrap(result, Java8BytecodeBridge.currentContext());
     }

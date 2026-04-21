@@ -15,7 +15,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class SingleThreadEventExecutorInstrumentation implements TypeInstrumentation {
+class SingleThreadEventExecutorInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.netty.util.concurrent.SingleThreadEventExecutor");
@@ -31,7 +31,7 @@ public class SingleThreadEventExecutorInstrumentation implements TypeInstrumenta
 
   @SuppressWarnings("unused")
   public static class DisablePropagationAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter() {
       if (Java8BytecodeBridge.currentContext() != Java8BytecodeBridge.rootContext()) {
         // Prevent context from leaking by running this method under root context.
@@ -41,7 +41,7 @@ public class SingleThreadEventExecutorInstrumentation implements TypeInstrumenta
       return null;
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();

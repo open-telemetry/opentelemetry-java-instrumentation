@@ -19,9 +19,8 @@ import java.net.URI;
 import java.util.concurrent.CountDownLatch;
 import javax.ws.rs.client.Client;
 import org.glassfish.jersey.client.JerseyClientBuilder;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JaxMultithreadedClientTest {
@@ -29,7 +28,8 @@ class JaxMultithreadedClientTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  static ServerExtension server =
+  @RegisterExtension
+  static final ServerExtension server =
       new ServerExtension() {
         @Override
         protected void configure(ServerBuilder sb) {
@@ -38,16 +38,6 @@ class JaxMultithreadedClientTest {
               (ctx, req) -> HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT, "Hello."));
         }
       };
-
-  @BeforeAll
-  static void setUp() {
-    server.start();
-  }
-
-  @AfterAll
-  static void cleanUp() {
-    server.stop();
-  }
 
   @SuppressWarnings("CatchingUnchecked")
   boolean checkUri(JerseyClientBuilder builder, URI uri) {
@@ -61,6 +51,7 @@ class JaxMultithreadedClientTest {
   }
 
   @DisplayName("multiple threads using the same builder works")
+  @Test
   void testMultipleThreads() throws InterruptedException {
     URI uri = server.httpUri().resolve("/success");
     JerseyClientBuilder builder = new JerseyClientBuilder();
@@ -83,6 +74,6 @@ class JaxMultithreadedClientTest {
           .start();
     }
 
-    latch.await(10, SECONDS);
+    assertThat(latch.await(10, SECONDS)).isTrue();
   }
 }

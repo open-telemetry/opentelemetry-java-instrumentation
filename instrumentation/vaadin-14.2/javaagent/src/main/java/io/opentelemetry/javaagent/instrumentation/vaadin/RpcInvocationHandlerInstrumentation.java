@@ -23,7 +23,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 // add span around rpc calls from javascript
-public class RpcInvocationHandlerInstrumentation implements TypeInstrumentation {
+class RpcInvocationHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -80,7 +80,7 @@ public class RpcInvocationHandlerInstrumentation implements TypeInstrumentation 
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This RpcInvocationHandler rpcInvocationHandler,
         @Advice.Origin("#m") String methodName,
@@ -88,7 +88,7 @@ public class RpcInvocationHandlerInstrumentation implements TypeInstrumentation 
       return AdviceScope.start(rpcInvocationHandler, methodName, jsonObject);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

@@ -61,8 +61,8 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
   protected CouchbaseCluster prepareCluster(BucketSettings bucketSettings) {
     CouchbaseEnvironment environment = envBuilder(bucketSettings).build();
     CouchbaseCluster cluster = CouchbaseCluster.create(environment, singletonList("127.0.0.1"));
-    cleanup.deferCleanup(cluster::disconnect);
     cleanup.deferCleanup(environment::shutdown);
+    cleanup.deferCleanup(cluster::disconnect);
 
     return cluster;
   }
@@ -204,7 +204,7 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"),
                             satisfies(
-                                maybeStable(DB_STATEMENT), s -> s.startsWith("SELECT mockrow")),
+                                maybeStable(DB_STATEMENT), val -> val.startsWith("SELECT mockrow")),
                             equalTo(
                                 DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "SELECT" : null),
                             equalTo(NETWORK_TYPE, networkType()),

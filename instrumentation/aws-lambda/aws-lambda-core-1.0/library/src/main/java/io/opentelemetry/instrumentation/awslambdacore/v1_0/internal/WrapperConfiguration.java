@@ -24,7 +24,7 @@ public final class WrapperConfiguration {
     if (lambdaFlushTimeout != null && !lambdaFlushTimeout.isEmpty()) {
       try {
         return Duration.ofMillis(Long.parseLong(lambdaFlushTimeout));
-      } catch (NumberFormatException nfe) {
+      } catch (NumberFormatException ignored) {
         // ignored - default used
       }
     }

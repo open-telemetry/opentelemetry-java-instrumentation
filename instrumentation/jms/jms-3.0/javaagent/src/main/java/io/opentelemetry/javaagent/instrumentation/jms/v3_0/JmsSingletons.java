@@ -11,12 +11,12 @@ import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.instrumentation.jms.JmsInstrumenterFactory;
 import io.opentelemetry.javaagent.instrumentation.jms.MessageWithDestination;
 
-public final class JmsSingletons {
+public class JmsSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jms-3.0";
 
-  private static final Instrumenter<MessageWithDestination, Void> PRODUCER_INSTRUMENTER;
-  private static final Instrumenter<MessageWithDestination, Void> CONSUMER_RECEIVE_INSTRUMENTER;
-  private static final Instrumenter<MessageWithDestination, Void> CONSUMER_PROCESS_INSTRUMENTER;
+  private static final Instrumenter<MessageWithDestination, Void> producerInstrumenter;
+  private static final Instrumenter<MessageWithDestination, Void> consumerReceiveInstrumenter;
+  private static final Instrumenter<MessageWithDestination, Void> consumerProcessInstrumenter;
 
   static {
     JmsInstrumenterFactory factory =
@@ -25,21 +25,21 @@ public final class JmsSingletons {
             .setMessagingReceiveTelemetryEnabled(
                 ExperimentalConfig.get().messagingReceiveInstrumentationEnabled());
 
-    PRODUCER_INSTRUMENTER = factory.createProducerInstrumenter();
-    CONSUMER_RECEIVE_INSTRUMENTER = factory.createConsumerReceiveInstrumenter();
-    CONSUMER_PROCESS_INSTRUMENTER = factory.createConsumerProcessInstrumenter(false);
+    producerInstrumenter = factory.createProducerInstrumenter();
+    consumerReceiveInstrumenter = factory.createConsumerReceiveInstrumenter();
+    consumerProcessInstrumenter = factory.createConsumerProcessInstrumenter(false);
   }
 
   public static Instrumenter<MessageWithDestination, Void> producerInstrumenter() {
-    return PRODUCER_INSTRUMENTER;
+    return producerInstrumenter;
   }
 
   public static Instrumenter<MessageWithDestination, Void> consumerReceiveInstrumenter() {
-    return CONSUMER_RECEIVE_INSTRUMENTER;
+    return consumerReceiveInstrumenter;
   }
 
   public static Instrumenter<MessageWithDestination, Void> consumerProcessInstrumenter() {
-    return CONSUMER_PROCESS_INSTRUMENTER;
+    return consumerProcessInstrumenter;
   }
 
   private JmsSingletons() {}

@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class OkHttpClientInstrumentation implements TypeInstrumentation {
+class OkHttpClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.squareup.okhttp.OkHttpClient");
@@ -31,7 +31,7 @@ public class OkHttpClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(inline = false)
     public static void addTracingInterceptor(@Advice.This OkHttpClient client) {
       for (Interceptor interceptor : client.interceptors()) {
         if (interceptor instanceof TracingInterceptor) {

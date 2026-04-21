@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegist
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
 import java.util.Iterator;
 
-public final class MicrometerSingletons {
+public class MicrometerSingletons {
 
   private static final MeterRegistry METER_REGISTRY;
 

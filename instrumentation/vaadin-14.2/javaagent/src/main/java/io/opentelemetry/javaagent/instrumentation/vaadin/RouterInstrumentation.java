@@ -19,7 +19,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 // set server span name on initial page load
-public class RouterInstrumentation implements TypeInstrumentation {
+class RouterInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -39,7 +39,7 @@ public class RouterInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class NavigateAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.Argument(1) Location location,
         @Advice.Argument(2) NavigationTrigger navigationTrigger) {

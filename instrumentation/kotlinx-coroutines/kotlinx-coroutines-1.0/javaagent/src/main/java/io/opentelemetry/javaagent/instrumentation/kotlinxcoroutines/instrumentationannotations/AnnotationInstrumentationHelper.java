@@ -12,6 +12,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import javax.annotation.Nullable;
 import kotlin.coroutines.Continuation;
 import kotlin.coroutines.intrinsics.IntrinsicsKt;
 
@@ -23,18 +24,21 @@ import kotlin.coroutines.intrinsics.IntrinsicsKt;
  * Object} as it allows to avoid having to inject extra classes in the target classloader
  */
 @SuppressWarnings("unused") // methods calls injected through bytecode instrumentation
-public final class AnnotationInstrumentationHelper {
+public class AnnotationInstrumentationHelper {
 
   private static final VirtualField<Continuation<?>, Context> contextField =
       VirtualField.find(Continuation.class, Context.class);
 
   public static Object createMethodRequest(
-      Class<?> declaringClass, String methodName, String withSpanValue, String spanKindString) {
+      Class<?> declaringClass,
+      String methodName,
+      @Nullable String withSpanValue,
+      @Nullable String spanKindString) {
     SpanKind spanKind = SpanKind.INTERNAL;
     if (spanKindString != null) {
       try {
         spanKind = SpanKind.valueOf(spanKindString);
-      } catch (IllegalArgumentException exception) {
+      } catch (IllegalArgumentException ignored) {
         // ignore
       }
     }
@@ -42,7 +46,9 @@ public final class AnnotationInstrumentationHelper {
     return MethodRequest.create(declaringClass, methodName, withSpanValue, spanKind);
   }
 
-  public static Context enterCoroutine(int label, Continuation<?> continuation, Object request) {
+  @Nullable
+  public static Context enterCoroutine(
+      int label, @Nullable Continuation<?> continuation, Object request) {
     // label 0 means that coroutine is started, any other label means that coroutine is resumed
     if (label == 0) {
       Context context = instrumenter().start(Context.current(), (MethodRequest) request);
@@ -57,22 +63,27 @@ public final class AnnotationInstrumentationHelper {
     }
   }
 
-  public static Scope openScope(Context context) {
+  @Nullable
+  public static Scope openScope(@Nullable Context context) {
     return context != null ? context.makeCurrent() : null;
   }
 
   public static void exitCoroutine(
-      Object result, Object request, Continuation<?> continuation, Context context, Scope scope) {
+      @Nullable Object result,
+      @Nullable Object request,
+      @Nullable Continuation<?> continuation,
+      @Nullable Context context,
+      @Nullable Scope scope) {
     exitCoroutine(null, result, request, continuation, context, scope);
   }
 
   public static void exitCoroutine(
-      Throwable error,
-      Object result,
-      Object request,
-      Continuation<?> continuation,
-      Context context,
-      Scope scope) {
+      @Nullable Throwable error,
+      @Nullable Object result,
+      @Nullable Object request,
+      @Nullable Continuation<?> continuation,
+      @Nullable Context context,
+      @Nullable Scope scope) {
     if (scope == null) {
       return;
     }

@@ -22,7 +22,7 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
@@ -46,7 +46,7 @@ tasks {
     dependsOn(testReceiveSpanDisabled)
   }
 
-  if (findProperty("denyUnsafe") == "true") {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

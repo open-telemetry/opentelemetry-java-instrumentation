@@ -22,7 +22,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HttpServerConnectionInstrumentation implements TypeInstrumentation {
+class HttpServerConnectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -45,7 +45,7 @@ public class HttpServerConnectionInstrumentation implements TypeInstrumentation 
   @SuppressWarnings("unused")
   public static class ResponseAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth onEnter(@Advice.Argument(0) HttpServerExchange exchange) {
       CallDepth callDepth = CallDepth.forClass(ServerConnection.class);
       if (callDepth.getAndIncrement() > 0) {
@@ -58,7 +58,7 @@ public class HttpServerConnectionInstrumentation implements TypeInstrumentation 
       return callDepth;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter CallDepth callDepth) {
       callDepth.decrementAndGet();
     }

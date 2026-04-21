@@ -54,7 +54,7 @@ import java.util.List;
  * An implementation of {@link InstrumentationTestRunner} that initializes OpenTelemetry SDK and
  * uses in-memory exporter to collect traces and metrics.
  */
-public final class LibraryTestRunner extends InstrumentationTestRunner {
+public class LibraryTestRunner extends InstrumentationTestRunner {
 
   private static final OpenTelemetrySdk openTelemetrySdk;
   private static final OpenTelemetry openTelemetry;

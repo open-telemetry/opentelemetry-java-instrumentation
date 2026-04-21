@@ -3,12 +3,55 @@
 ## Quick Reference
 
 - Use when: test files (`**/src/test/**`) are in scope
-- Review focus: assertion style, test class visibility, attribute assertion patterns
+- Review focus: assertion style, test class visibility, test method signatures and throws clauses, resource cleanup patterns, attribute assertion patterns
 
 ## Assertion Framework
 
 - JUnit 5, AssertJ assertions (not JUnit `assertEquals`/`assertTrue`).
 - Test classes and methods should be package-private (no `public`).
+- Do not use AssertJ `.as(...)` descriptions or `.withFailMessage(...)` in tests.
+  Prefer direct assertions whose failure output shows the unexpected values.
+
+## Test Method Throws Clauses
+
+- On methods annotated with `@Test`, keep the `throws` clause to a single exception type.
+  Do not declare multiple checked exception types on a test method.
+- Be as specific as possible. Prefer the narrowest single checked type that the test body
+  actually exposes instead of broad forms such as `throws Exception` or a multi-exception list.
+- Apply this guidance only to JUnit test entry points such as `@Test`,
+  `@ParameterizedTest`, `@RepeatedTest`, `@TestFactory`, and `@TestTemplate`.
+  Do **not** rewrite nearby helpers or utilities, and do **not** introduce new wrapper
+  helpers (for example, a `waitForMessage(...)` that catches
+  `InterruptedException` / `ExecutionException` / `TimeoutException` and rethrows
+  `AssertionError`), solely to narrow a test method's `throws` clause. Do not apply
+  this rule to every method in a testing module or abstract test base.
+- If the test only blocks on `Future.get(...)` / `CompletableFuture.get(...)`, prefer refactoring to
+  `join()` or another non-checked wait path when that keeps the test clear. If no clean
+  non-checked wait path exists (for example, when a timeout is required via
+  `get(timeout, unit)`), leave the test's `throws` clause as-is — including `throws Exception`
+  — rather than inventing a new helper just to narrow it.
+
+## Test Resource Cleanup
+
+- In JUnit tests, when an `AutoCloseable` is intended to remain live for most or all of the test
+  and only needs cleanup at test end, prefer `AutoCleanupExtension` with `deferCleanup(...)`
+  over wrapping most of the test body in try-with-resources.
+- For resources created in `@BeforeAll` or other class-scoped setup, prefer
+  `AutoCleanupExtension` with `deferAfterAll(...)` over nested `@AfterAll` cleanup
+  chains. Do not introduce or keep `AutoCleanupExtension` solely for a single
+  `deferAfterAll(...)` call — use a plain `@AfterAll` instead.
+- Reuse an existing `cleanup` extension when one is already in scope.
+  Otherwise, add a `@RegisterExtension` field when the deferred-cleanup pattern improves
+  clarity or avoids wrapping most of the test body.
+- Keep try-with-resources for semantically scoped resources whose lifetime must end before the
+  rest of the test continues, such as `Scope` / `Context.makeCurrent()`, Mockito
+  `MockedStatic`, and short-lived readers, writers, streams, response bodies, or parsers.
+- Keep `AutoCleanupExtension` usage scoped to JUnit-managed test classes; do not introduce it in
+  generic helper utilities or other non-JUnit code.
+- In `@BeforeAll` or other shared setup code where cleanup is not tied to a single test method,
+  use `deferAfterAll(...)` instead of `deferCleanup(...)`.
+- If the test intentionally closes the resource mid-test or asserts behavior around explicit
+  close, keep the direct close or try-with-resources in the test body.
 
 ## Span Attribute Assertions
 
@@ -30,14 +73,25 @@
   `equalTo(AttributeKey<Long>, int)` overload, so `equalTo(longKey("iteration"), iteration)` is
   preferred over `equalTo(longKey("iteration"), (long) iteration)`.
 
-## `satisfies()` Lambda Parameters
+## Attribute Assertion `satisfies()` Lambda Parameters
 
-**`satisfies()` lambda parameters are `AbstractAssert` instances, not raw values.**
-Inside a `satisfies(AttributeKey, Consumer)` lambda the parameter (e.g., `taskId`) is an
-`AbstractStringAssert<?>` (for string keys), `AbstractLongAssert<?>` (for long keys), etc.
+**Attribute-assertion `satisfies()` lambda parameters are `AbstractAssert` instances, not raw
+values.** Inside a `satisfies(AttributeKey, Consumer)` lambda the parameter (e.g., `taskId`) is
+an `AbstractStringAssert<?>` (for string keys), `AbstractLongAssert<?>` (for long keys), etc.
 Fluent assertion calls like `taskId.contains(jobName)` or `taskId.startsWith(prefix)` are
-already proper AssertJ assertions — they throw on failure. Do **not** wrap them in
+already proper AssertJ assertions - they throw on failure. Do **not** wrap them in
 `assertThat(value.contains(x)).isTrue()`, which degrades the failure message.
+
+- For `satisfies(AttributeKey, lambda)` outer parameters, use `val` in Java.
+  In Scala, use `value` instead, since `val` is a reserved word.
+  Do not use short generic alternatives like `k` or `v` for the outer parameter.
+- If an attribute-assertion `satisfies(...)` lambda contains a nested inner lambda and a second
+  parameter name is required, keep the outer parameter as `val` in Java or `value` in Scala,
+  and use `v` for the nested parameter.
+- This naming guidance does **not** apply to non-attribute `satisfies(...)` usages such as
+  `span.satisfies(...)`, `point.satisfies(...)`, or `assertThat(result).satisfies(...)`.
+  In those cases, prefer a descriptive subject name like `spanData`, `pointData`, `resource`,
+  or `result` instead of generic names like `val`.
 
 ## AssertJ Idiomatic Simplifications
 

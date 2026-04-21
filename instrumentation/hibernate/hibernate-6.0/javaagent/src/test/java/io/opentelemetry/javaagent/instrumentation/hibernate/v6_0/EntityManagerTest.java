@@ -49,7 +49,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class EntityManagerTest extends AbstractHibernateTest {
-  static final EntityManagerFactory entityManagerFactory =
+  private static final EntityManagerFactory entityManagerFactory =
       Persistence.createEntityManagerFactory("test-pu");
 
   @ParameterizedTest(name = "{index}: {0}")

@@ -23,7 +23,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import rx.Observable;
 
-public class HystrixCommandInstrumentation implements TypeInstrumentation {
+class HystrixCommandInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed(
@@ -51,7 +51,7 @@ public class HystrixCommandInstrumentation implements TypeInstrumentation {
   public static class ExecuteAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Observable<?> stopSpan(
         @Advice.This HystrixInvokableInfo<?> command,
         @Advice.Return @Nullable Observable<?> result) {
@@ -65,7 +65,7 @@ public class HystrixCommandInstrumentation implements TypeInstrumentation {
   public static class FallbackAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Observable<?> stopSpan(
         @Advice.This HystrixInvokableInfo<?> command,
         @Advice.Return @Nullable Observable<?> result) {

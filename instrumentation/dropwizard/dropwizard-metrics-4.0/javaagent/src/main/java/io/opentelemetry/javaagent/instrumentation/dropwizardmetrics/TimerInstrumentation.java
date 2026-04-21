@@ -16,7 +16,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class TimerInstrumentation implements TypeInstrumentation {
+class TimerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -32,7 +32,7 @@ public class TimerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class UpdateAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This Timer timer, @Advice.Argument(0) long nanos) {
       metrics().timerUpdate(timer, nanos);
     }

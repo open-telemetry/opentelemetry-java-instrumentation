@@ -218,8 +218,8 @@ public class AgentClassLoader extends URLClassLoader {
       byte[] bytes;
       try {
         bytes = getJarEntryBytes(jarResource.getJarEntry());
-      } catch (IOException exception) {
-        throw new ClassNotFoundException(name, exception);
+      } catch (IOException e) {
+        throw new ClassNotFoundException(name, e);
       }
 
       definePackageIfNeeded(name);
@@ -267,9 +267,9 @@ public class AgentClassLoader extends URLClassLoader {
     if (getPackage(packageName) == null) {
       try {
         definePackage(packageName, manifest, codeSource.getLocation());
-      } catch (IllegalArgumentException exception) {
+      } catch (IllegalArgumentException e) {
         if (getPackage(packageName) == null) {
-          throw new IllegalStateException("Failed to define package", exception);
+          throw new IllegalStateException("Failed to define package", e);
         }
       }
     }
@@ -327,7 +327,7 @@ public class AgentClassLoader extends URLClassLoader {
   @Override
   public URL getResource(String resourceName) {
     URL bootstrapResource = bootstrapProxy.getResource(resourceName);
-    if (null == bootstrapResource) {
+    if (bootstrapResource == null) {
       return super.getResource(resourceName);
     } else {
       return bootstrapResource;
@@ -576,10 +576,8 @@ public class AgentClassLoader extends URLClassLoader {
       try {
         Method method = ClassLoader.class.getDeclaredMethod("getPlatformClassLoader");
         return (ClassLoader) method.invoke(null);
-      } catch (InvocationTargetException
-          | NoSuchMethodException
-          | IllegalAccessException exception) {
-        throw new IllegalStateException(exception);
+      } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
+        throw new IllegalStateException(e);
       }
     }
   }

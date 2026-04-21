@@ -14,7 +14,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ActionMappingInstrumentation implements TypeInstrumentation {
+class ActionMappingInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -29,7 +29,7 @@ public class ActionMappingInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetActionAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void exitGetAction(@Advice.Return Action action) {
       JFinalSingletons.updateRoute(action);
     }

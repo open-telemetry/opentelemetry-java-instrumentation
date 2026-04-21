@@ -40,7 +40,7 @@ abstract class AbstractSpringIntegrationTracingTest {
 
   private final Class<?> additionalContextClass;
 
-  ConfigurableApplicationContext applicationContext;
+  private ConfigurableApplicationContext applicationContext;
 
   AbstractSpringIntegrationTracingTest(
       InstrumentationExtension testing, Class<?> additionalContextClass) {
@@ -209,7 +209,7 @@ abstract class AbstractSpringIntegrationTracingTest {
   @EnableAutoConfiguration
   public static class MessageChannelsConfig {
 
-    SubscribableChannel problematicSharedChannel = new DirectChannel();
+    private final SubscribableChannel problematicSharedChannel = new DirectChannel();
 
     @Bean
     public SubscribableChannel directChannel() {

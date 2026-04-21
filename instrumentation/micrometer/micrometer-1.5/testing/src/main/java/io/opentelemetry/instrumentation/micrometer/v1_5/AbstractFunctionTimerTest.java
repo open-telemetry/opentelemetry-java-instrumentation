@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -70,8 +71,8 @@ public abstract class AbstractFunctionTimerTest {
                                             point ->
                                                 point
                                                     .hasValue(1)
-                                                    .hasAttributes(
-                                                        attributeEntry("tag", "value"))))));
+                                                    .hasAttributesSatisfyingExactly(
+                                                        equalTo(stringKey("tag"), "value"))))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -88,7 +89,8 @@ public abstract class AbstractFunctionTimerTest {
                                         point ->
                                             point
                                                 .hasValue(42)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "value"))))));
 
     // when
     Metrics.globalRegistry.remove(functionTimer);
@@ -153,8 +155,8 @@ public abstract class AbstractFunctionTimerTest {
                                             point ->
                                                 point
                                                     .hasValue(1)
-                                                    .hasAttributes(
-                                                        attributeEntry("tag", "value"))))));
+                                                    .hasAttributesSatisfyingExactly(
+                                                        equalTo(stringKey("tag"), "value"))))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -171,7 +173,8 @@ public abstract class AbstractFunctionTimerTest {
                                         point ->
                                             point
                                                 .hasValue(42)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "value"))))));
 
     // when
     Metrics.globalRegistry.remove(functionTimer);
@@ -256,10 +259,12 @@ public abstract class AbstractFunctionTimerTest {
                                         point ->
                                             point
                                                 .hasValue(12)
-                                                .hasAttributes(attributeEntry("tag", "1")),
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "1")),
                                         point ->
                                             point
                                                 .hasValue(42)
-                                                .hasAttributes(attributeEntry("tag", "2"))))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "2"))))));
   }
 }

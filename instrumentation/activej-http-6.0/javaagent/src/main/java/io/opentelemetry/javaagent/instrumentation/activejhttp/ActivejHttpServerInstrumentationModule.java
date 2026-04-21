@@ -11,21 +11,14 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class ActivejHttpServerInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class ActivejHttpServerInstrumentationModule extends InstrumentationModule {
 
   public ActivejHttpServerInstrumentationModule() {
     super("activej-http", "activej-http-6.0");
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 
   @Override
@@ -35,7 +28,7 @@ public class ActivejHttpServerInstrumentationModule extends InstrumentationModul
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // class which was added in 6.0, the minimum version we support.
+    // added in 6.0
     return hasClassesNamed("io.activej.http.HttpServer");
   }
 }

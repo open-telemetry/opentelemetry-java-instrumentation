@@ -16,7 +16,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class SystemInfoInstrumentation implements TypeInstrumentation {
+class SystemInfoInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("oshi.SystemInfo");
@@ -32,7 +32,7 @@ public class SystemInfoInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetCurrentPlatformEnumAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter() {
       MetricsRegistration.register();
     }

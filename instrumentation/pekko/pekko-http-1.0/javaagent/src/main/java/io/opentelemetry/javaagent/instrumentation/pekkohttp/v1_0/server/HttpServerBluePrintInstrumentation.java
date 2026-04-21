@@ -17,7 +17,7 @@ import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
 import org.apache.pekko.stream.scaladsl.BidiFlow;
 
-public class HttpServerBluePrintInstrumentation implements TypeInstrumentation {
+class HttpServerBluePrintInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.pekko.http.impl.engine.server.HttpServerBluePrint$");
@@ -35,7 +35,7 @@ public class HttpServerBluePrintInstrumentation implements TypeInstrumentation {
   public static class PekkoBindAndHandleAdvice {
 
     @Advice.AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static BidiFlow<HttpResponse, ?, ?, HttpRequest, ?> wrapHandler(
         @Advice.Return BidiFlow<HttpResponse, ?, ?, HttpRequest, ?> handler) {
 

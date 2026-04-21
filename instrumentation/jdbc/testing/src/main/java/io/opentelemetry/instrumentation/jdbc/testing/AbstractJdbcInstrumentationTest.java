@@ -140,8 +140,8 @@ public abstract class AbstractJdbcInstrumentationTest {
                           if (dataSource instanceof Closeable) {
                             try {
                               ((Closeable) dataSource).close();
-                            } catch (IOException ignore) {
-                              // ignore
+                            } catch (IOException ignored) {
+                              // ignore exceptions during close
                             }
                           }
                         }));
@@ -209,17 +209,16 @@ public abstract class AbstractJdbcInstrumentationTest {
   }
 
   static DataSource createDs(String connectionPoolName, String dbType, String jdbcUrl) {
-    DataSource ds = null;
-    if (connectionPoolName.equals("tomcat")) {
-      ds = createTomcatDs(dbType, jdbcUrl);
+    switch (connectionPoolName) {
+      case "tomcat":
+        return createTomcatDs(dbType, jdbcUrl);
+      case "hikari":
+        return createHikariDs(dbType, jdbcUrl);
+      case "c3p0":
+        return createC3P0Ds(dbType, jdbcUrl);
+      default:
+        throw new IllegalArgumentException("Unknown connection pool: " + connectionPoolName);
     }
-    if (connectionPoolName.equals("hikari")) {
-      ds = createHikariDs(dbType, jdbcUrl);
-    }
-    if (connectionPoolName.equals("c3p0")) {
-      ds = createC3P0Ds(dbType, jdbcUrl);
-    }
-    return ds;
   }
 
   static Stream<Arguments> basicStatementStream() throws SQLException {
@@ -1587,10 +1586,9 @@ public abstract class AbstractJdbcInstrumentationTest {
   @Test
   void testProxyStatement() throws Exception {
     Connection connection = wrap(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
+    cleanup.deferCleanup(connection);
     Statement statement = connection.createStatement();
     cleanup.deferCleanup(statement);
-    cleanup.deferCleanup(connection);
-
     Statement proxyStatement = ProxyStatementFactory.proxyStatementWithCustomClassLoader(statement);
     ResultSet resultSet =
         testing().runWithSpan("parent", () -> proxyStatement.executeQuery("SELECT 3"));
@@ -1617,9 +1615,9 @@ public abstract class AbstractJdbcInstrumentationTest {
   @Test
   void testProxyPreparedStatement() throws SQLException {
     Connection connection = wrap(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
+    cleanup.deferCleanup(connection);
     PreparedStatement statement = connection.prepareStatement("SELECT 3");
     cleanup.deferCleanup(statement);
-    cleanup.deferCleanup(connection);
 
     PreparedStatement proxyStatement = ProxyStatementFactory.proxyPreparedStatement(statement);
     ResultSet resultSet = testing().runWithSpan("parent", () -> proxyStatement.executeQuery());
@@ -1920,10 +1918,9 @@ public abstract class AbstractJdbcInstrumentationTest {
   void testSqlCommenterNotEnabled() throws SQLException {
     List<String> executedSql = new ArrayList<>();
     Connection connection = new TestConnection(executedSql::add);
-    Statement statement = connection.createStatement();
-
-    cleanup.deferCleanup(statement);
     cleanup.deferCleanup(connection);
+    Statement statement = connection.createStatement();
+    cleanup.deferCleanup(statement);
 
     String query = "SELECT 1";
     testing().runWithSpan("parent", () -> statement.execute(query));
@@ -2113,6 +2110,7 @@ public abstract class AbstractJdbcInstrumentationTest {
   @Test
   void testPreparedStatementWrapper() throws SQLException {
     Connection connection = wrap(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
+    cleanup.deferCleanup(connection);
     Connection proxyConnection =
         ProxyStatementFactory.proxy(
             Connection.class,
@@ -2126,7 +2124,6 @@ public abstract class AbstractJdbcInstrumentationTest {
             });
     PreparedStatement statement = proxyConnection.prepareStatement("SELECT 3");
     cleanup.deferCleanup(statement);
-    cleanup.deferCleanup(connection);
 
     ResultSet resultSet = testing().runWithSpan("parent", () -> statement.executeQuery());
 
@@ -2156,9 +2153,9 @@ public abstract class AbstractJdbcInstrumentationTest {
   @Test
   void testStatementWrapper() throws SQLException {
     Connection connection = wrap(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
+    cleanup.deferCleanup(connection);
     Statement statement = connection.createStatement();
     cleanup.deferCleanup(statement);
-    cleanup.deferCleanup(connection);
 
     Statement proxyStatement =
         ProxyStatementFactory.proxyStatement(

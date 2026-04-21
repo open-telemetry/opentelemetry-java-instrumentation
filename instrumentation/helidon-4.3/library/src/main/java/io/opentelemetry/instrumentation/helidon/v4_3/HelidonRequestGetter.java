@@ -25,6 +25,7 @@ class HelidonRequestGetter implements TextMapGetter<ServerRequest> {
   }
 
   @Override
+  @Nullable
   public String get(@Nullable ServerRequest carrier, String key) {
     if (carrier == null) {
       return null;

@@ -172,10 +172,10 @@ public class JfrConfig {
 
       try {
         recordingStream.start();
-      } catch (IllegalStateException exception) {
+      } catch (IllegalStateException e) {
         // Can happen when close is called at the same time as start
         if (!closed) {
-          throw exception;
+          throw e;
         }
       }
     }

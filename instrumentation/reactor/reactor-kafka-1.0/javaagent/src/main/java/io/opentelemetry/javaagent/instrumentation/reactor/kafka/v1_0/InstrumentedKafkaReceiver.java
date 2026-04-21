@@ -14,7 +14,7 @@ import reactor.kafka.receiver.KafkaReceiver;
 import reactor.kafka.receiver.ReceiverRecord;
 import reactor.kafka.sender.TransactionManager;
 
-public final class InstrumentedKafkaReceiver<K, V> implements KafkaReceiver<K, V> {
+public class InstrumentedKafkaReceiver<K, V> implements KafkaReceiver<K, V> {
 
   private final KafkaReceiver<K, V> actual;
 

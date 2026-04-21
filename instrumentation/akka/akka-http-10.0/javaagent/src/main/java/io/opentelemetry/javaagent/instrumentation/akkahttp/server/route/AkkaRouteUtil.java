@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp.server.route;
 import akka.http.scaladsl.server.PathMatcher;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 
-public final class AkkaRouteUtil {
+public class AkkaRouteUtil {
 
   public static final VirtualField<PathMatcher<?>, String> PREFIX =
       VirtualField.find(PathMatcher.class, String.class);

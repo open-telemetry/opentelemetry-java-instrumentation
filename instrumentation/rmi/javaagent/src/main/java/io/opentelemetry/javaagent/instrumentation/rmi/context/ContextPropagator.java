@@ -14,6 +14,7 @@ import java.io.ObjectOutput;
 import java.rmi.NoSuchObjectException;
 import java.rmi.server.ObjID;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import sun.rmi.transport.Connection;
 import sun.rmi.transport.StreamRemoteCall;
 import sun.rmi.transport.TransportConstants;
@@ -41,7 +42,11 @@ public class ContextPropagator {
   // Seconds step of context propagation which contains actual payload
   private static final int CONTEXT_PAYLOAD_OPERATION_ID = -2;
 
-  public static final ContextPropagator PROPAGATOR = new ContextPropagator();
+  private static final ContextPropagator propagator = new ContextPropagator();
+
+  public static ContextPropagator propagator() {
+    return propagator;
+  }
 
   public boolean isRmiInternalObject(ObjID id) {
     return ACTIVATOR_ID.equals(id) || DGC_ID.equals(id) || REGISTRY_ID.equals(id);
@@ -71,7 +76,8 @@ public class ContextPropagator {
   }
 
   /** Returns true when no error happened during call. */
-  private static boolean syntheticCall(Connection c, ContextPayload payload, int operationId) {
+  private static boolean syntheticCall(
+      Connection c, @Nullable ContextPayload payload, int operationId) {
     StreamRemoteCall shareContextCall = new StreamRemoteCall(c);
     try {
       c.getOutputStream().write(TransportConstants.Call);

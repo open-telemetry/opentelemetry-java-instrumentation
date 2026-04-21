@@ -16,7 +16,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AgentSpanTestingInstrumentation implements TypeInstrumentation {
+class AgentSpanTestingInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -31,20 +31,20 @@ public class AgentSpanTestingInstrumentation implements TypeInstrumentation {
         named("runWithAllSpanKeys"), getClass().getName() + "$RunWithAllSpanKeysAdvice");
   }
 
-  public static class AdviceScope {
+  private static class AdviceScope {
     private final Context context;
     private final Scope scope;
 
-    public AdviceScope(Context context, Scope scope) {
+    private AdviceScope(Context context, Scope scope) {
       this.context = context;
       this.scope = scope;
     }
 
-    public Context getContext() {
+    private Context getContext() {
       return context;
     }
 
-    public void end() {
+    private void end() {
       scope.close();
     }
   }
@@ -52,13 +52,13 @@ public class AgentSpanTestingInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RunWithHttpServerSpanAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(0) String spanName) {
       Context context = AgentSpanTestingInstrumenter.startHttpServerSpan(spanName);
       return new AdviceScope(context, context.makeCurrent());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
       adviceScope.end();
@@ -69,13 +69,13 @@ public class AgentSpanTestingInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RunWithAllSpanKeysAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(0) String spanName) {
       Context context = AgentSpanTestingInstrumenter.startSpanWithAllKeys(spanName);
       return new AdviceScope(context, context.makeCurrent());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
       adviceScope.end();

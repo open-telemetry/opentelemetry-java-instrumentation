@@ -15,7 +15,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class LoggingApplicationListenerInstrumentation implements TypeInstrumentation {
+class LoggingApplicationListenerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -36,7 +36,7 @@ public class LoggingApplicationListenerInstrumentation implements TypeInstrument
   @SuppressWarnings("unused")
   public static class InitializeAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit() {
       if (ApplicationLoggerFlags.bridgeSpringBootLogging()) {
         Slf4jApplicationLoggerBridge.install();

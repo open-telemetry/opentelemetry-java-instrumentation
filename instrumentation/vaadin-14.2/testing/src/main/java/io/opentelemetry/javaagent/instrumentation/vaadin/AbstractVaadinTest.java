@@ -7,11 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.vaadin;
 
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.Objects.requireNonNull;
 import static org.awaitility.Awaitility.await;
 
 import com.vaadin.flow.server.Version;
 import com.vaadin.flow.spring.annotation.EnableVaadin;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
@@ -50,6 +52,8 @@ public abstract class AbstractVaadinTest
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private BrowserWebDriverContainer browser;
 
@@ -95,7 +99,10 @@ public abstract class AbstractVaadinTest
 
   protected static void copyClasspathResource(String resource, Path destination) {
     if (!Files.exists(destination)) {
-      try (InputStream inputStream = AbstractVaadinTest.class.getResourceAsStream(resource)) {
+      try (InputStream inputStream =
+          requireNonNull(
+              AbstractVaadinTest.class.getResourceAsStream(resource),
+              "Missing resource: " + resource)) {
         Files.copy(inputStream, destination);
       } catch (IOException e) {
         throw new IllegalStateException(e);
@@ -184,26 +191,24 @@ public abstract class AbstractVaadinTest
   @Test
   void navigateFromMainToOtherView() {
     RemoteWebDriver driver = getWebDriver();
-    try {
-      waitForStart(driver);
+    cleanup.deferCleanup(driver::quit);
 
-      // fetch the test page
-      driver.get(address.resolve("main").toString());
+    waitForStart(driver);
 
-      // wait for page to load
-      assertThat(driver.findElement(By.id("main.label")).getText()).isEqualTo("Main view");
-      assertFirstRequest();
+    // fetch the test page
+    driver.get(address.resolve("main").toString());
 
-      testing.clearData();
+    // wait for page to load
+    assertThat(driver.findElement(By.id("main.label")).getText()).isEqualTo("Main view");
+    assertFirstRequest();
 
-      // click a button to trigger calling java code in MainView
-      driver.findElement(By.id("main.button")).click();
+    testing.clearData();
 
-      // wait for page to load
-      assertThat(driver.findElement(By.id("other.label")).getText()).isEqualTo("Other view");
-      assertButtonClick();
-    } finally {
-      driver.quit();
-    }
+    // click a button to trigger calling java code in MainView
+    driver.findElement(By.id("main.button")).click();
+
+    // wait for page to load
+    assertThat(driver.findElement(By.id("other.label")).getText()).isEqualTo("Other view");
+    assertButtonClick();
   }
 }

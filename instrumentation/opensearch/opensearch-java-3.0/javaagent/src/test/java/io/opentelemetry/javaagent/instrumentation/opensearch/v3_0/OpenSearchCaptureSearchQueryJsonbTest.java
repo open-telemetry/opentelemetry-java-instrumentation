@@ -101,8 +101,8 @@ class OpenSearchCaptureSearchQueryJsonbTest extends AbstractOpenSearchQueryTest 
                                 equalTo(HTTP_REQUEST_METHOD, "POST"),
                                 satisfies(
                                     URL_FULL,
-                                    url ->
-                                        url.asString()
+                                    val ->
+                                        val.asString()
                                             .startsWith(httpHost + "/" + INDEX_NAME + "/_search")),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
                                 equalTo(maybeStablePeerService(), "test-peer-service"))));

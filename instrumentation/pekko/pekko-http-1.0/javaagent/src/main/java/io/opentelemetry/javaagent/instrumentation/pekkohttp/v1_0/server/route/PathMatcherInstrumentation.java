@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pekko.http.scaladsl.model.Uri;
 import org.apache.pekko.http.scaladsl.server.PathMatcher;
 
-public class PathMatcherInstrumentation implements TypeInstrumentation {
+class PathMatcherInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.pekko.http.scaladsl.server.PathMatcher$");
@@ -36,7 +36,7 @@ public class PathMatcherInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ApplyAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.Argument(0) Uri.Path prefix, @Advice.Return PathMatcher<?> result) {
       // store the path being matched inside a VirtualField on the given matcher, so it can be used

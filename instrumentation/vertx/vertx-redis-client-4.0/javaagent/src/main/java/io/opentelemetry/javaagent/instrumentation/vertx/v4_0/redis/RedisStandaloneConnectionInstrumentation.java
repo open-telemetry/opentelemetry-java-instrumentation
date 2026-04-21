@@ -26,7 +26,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class RedisStandaloneConnectionInstrumentation implements TypeInstrumentation {
+class RedisStandaloneConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.vertx.redis.client.impl.RedisStandaloneConnection");
@@ -79,10 +79,6 @@ public class RedisStandaloneConnectionInstrumentation implements TypeInstrumenta
       @Nullable
       public Future<Response> end(
           @Nullable Future<Response> responseFuture, @Nullable Throwable throwable) {
-        if (scope == null) {
-          return responseFuture;
-        }
-
         scope.close();
         if (throwable != null) {
           instrumenter().end(context, otelRequest, null, throwable);
@@ -95,7 +91,7 @@ public class RedisStandaloneConnectionInstrumentation implements TypeInstrumenta
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This RedisStandaloneConnection connection,
         @Advice.Argument(0) @Nullable Request request,
@@ -106,7 +102,7 @@ public class RedisStandaloneConnectionInstrumentation implements TypeInstrumenta
 
     @Nullable
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Future<Response> onExit(
         @Advice.Thrown Throwable throwable,
         @Advice.Return @Nullable Future<Response> responseFuture,
@@ -122,7 +118,7 @@ public class RedisStandaloneConnectionInstrumentation implements TypeInstrumenta
 
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This RedisStandaloneConnection connection) {
       // used in 4.1.0, for 4.0.0 it is set in RedisConnectionProviderInstrumentation
       VertxRedisClientSingletons.setRedisUri(

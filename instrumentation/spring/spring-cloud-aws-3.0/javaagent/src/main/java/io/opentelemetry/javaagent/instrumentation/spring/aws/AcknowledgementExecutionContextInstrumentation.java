@@ -17,7 +17,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.messaging.Message;
 
-public class AcknowledgementExecutionContextInstrumentation implements TypeInstrumentation {
+class AcknowledgementExecutionContextInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -32,13 +32,13 @@ public class AcknowledgementExecutionContextInstrumentation implements TypeInstr
 
   @SuppressWarnings("unused")
   public static class ExecuteAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Scope methodEnter(@Advice.Argument(0) Collection<Message<?>> messages) {
       return SpringAwsUtil.handleBatch(messages);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();

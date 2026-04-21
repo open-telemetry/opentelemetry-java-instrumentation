@@ -16,7 +16,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HistogramInstrumentation implements TypeInstrumentation {
+class HistogramInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -32,7 +32,7 @@ public class HistogramInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class UpdateAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This Histogram histogram, @Advice.Argument(0) long value) {
       metrics().histogramUpdate(histogram, value);
     }

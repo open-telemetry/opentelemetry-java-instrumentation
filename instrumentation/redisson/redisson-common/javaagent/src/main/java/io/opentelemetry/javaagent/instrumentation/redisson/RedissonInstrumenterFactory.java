@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNam
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
-public final class RedissonInstrumenterFactory {
+public class RedissonInstrumenterFactory {
 
   public static Instrumenter<RedissonRequest, Void> createInstrumenter(String instrumentationName) {
     RedissonDbAttributesGetter dbAttributesGetter = new RedissonDbAttributesGetter();

@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ArmeriaGrpcServiceBuilderInstrumentation implements TypeInstrumentation {
+class ArmeriaGrpcServiceBuilderInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.linecorp.armeria.server.grpc.GrpcServiceBuilder");
@@ -32,7 +32,7 @@ public class ArmeriaGrpcServiceBuilderInstrumentation implements TypeInstrumenta
   @SuppressWarnings("unused")
   public static class BuildAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This GrpcServiceBuilder builder) {
       builder.intercept(GrpcTelemetry.create(GlobalOpenTelemetry.get()).createServerInterceptor());
     }

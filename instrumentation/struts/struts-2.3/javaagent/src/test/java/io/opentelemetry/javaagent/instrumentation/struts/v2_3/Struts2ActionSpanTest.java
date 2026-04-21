@@ -69,7 +69,7 @@ class Struts2ActionSpanTest extends AbstractHttpServerTest<Server> {
       // struts 2.3
       strutsFilterClass =
           Class.forName("org.apache.struts2.dispatcher.ng.filter.StrutsPrepareAndExecuteFilter");
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       // struts 2.5
       strutsFilterClass =
           Class.forName("org.apache.struts2.dispatcher.filter.StrutsPrepareAndExecuteFilter");

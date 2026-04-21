@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.testing.common;
 
 import java.lang.reflect.Method;
 
-public final class AgentClassLoaderAccess {
+public class AgentClassLoaderAccess {
 
   private static final ClassLoader agentClassLoader;
 

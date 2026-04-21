@@ -19,7 +19,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AkkaHttpServerSourceInstrumentation implements TypeInstrumentation {
+class AkkaHttpServerSourceInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("akka.http.scaladsl.Http$IncomingConnection");
@@ -36,7 +36,7 @@ public class AkkaHttpServerSourceInstrumentation implements TypeInstrumentation 
   public static class AkkaBindAndHandleAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Flow<HttpRequest, HttpResponse, ?> wrapHandler(
         @Advice.Argument(0) Flow<HttpRequest, HttpResponse, ?> handler) {
       return AkkaFlowWrapper.wrap(handler);

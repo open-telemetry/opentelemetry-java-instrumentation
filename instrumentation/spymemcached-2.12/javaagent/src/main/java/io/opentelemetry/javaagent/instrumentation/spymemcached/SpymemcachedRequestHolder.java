@@ -15,7 +15,7 @@ import java.net.SocketAddress;
 import javax.annotation.Nullable;
 import net.spy.memcached.MemcachedNode;
 
-public final class SpymemcachedRequestHolder implements ImplicitContextKeyed {
+public class SpymemcachedRequestHolder implements ImplicitContextKeyed {
 
   private static final ContextKey<SpymemcachedRequestHolder> KEY =
       named("opentelemetry-spymemcached-request-holder");

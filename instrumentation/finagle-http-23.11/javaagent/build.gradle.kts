@@ -41,10 +41,13 @@ dependencies {
 }
 
 tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
   test {
     jvmArgs("-Dotel.instrumentation.http.client.emit-experimental-telemetry=true")
     jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
 
     systemProperty(
       "metadataConfig",
@@ -71,7 +74,7 @@ tasks {
     dependsOn(testStableSemconv)
   }
 
-  if (findProperty("denyUnsafe") == "true") {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

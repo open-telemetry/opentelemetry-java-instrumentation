@@ -18,7 +18,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class DefaultConnectionPoolInstrumentation implements TypeInstrumentation {
+class DefaultConnectionPoolInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.mongodb.internal.connection.DefaultConnectionPool");
@@ -37,7 +37,7 @@ public class DefaultConnectionPoolInstrumentation implements TypeInstrumentation
   public static class SingleResultCallbackAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static SingleResultCallback<Object> wrapCallback(
         @Advice.Argument(0) SingleResultCallback<Object> callback) {
       return new SingleResultCallbackWrapper(Java8BytecodeBridge.currentContext(), callback);

@@ -21,7 +21,7 @@ import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.integration.channel.interceptor.GlobalChannelInterceptorWrapper;
 
-public class ApplicationContextInstrumentation implements TypeInstrumentation {
+class ApplicationContextInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("org.springframework.context.support.AbstractApplicationContext");
@@ -46,7 +46,7 @@ public class ApplicationContextInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class PostProcessBeanFactoryAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) ConfigurableListableBeanFactory beanFactory) {
       if (beanFactory instanceof BeanDefinitionRegistry
           && !beanFactory.containsBean("otelGlobalChannelInterceptor")) {

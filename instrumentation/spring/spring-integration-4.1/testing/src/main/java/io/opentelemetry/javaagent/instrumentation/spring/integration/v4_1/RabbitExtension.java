@@ -31,11 +31,11 @@ import org.testcontainers.containers.wait.strategy.Wait;
 
 public class RabbitExtension implements BeforeEachCallback, AfterEachCallback {
 
-  private GenericContainer<?> rabbitMqContainer;
-  protected ConfigurableApplicationContext producerContext;
-  private ConfigurableApplicationContext consumerContext;
-
   private final Class<?> additionalContextClass;
+
+  private GenericContainer<?> rabbitMqContainer;
+  private ConfigurableApplicationContext producerContext;
+  private ConfigurableApplicationContext consumerContext;
 
   public RabbitExtension(Class<?> additionalContextClass) {
     this.additionalContextClass = additionalContextClass;

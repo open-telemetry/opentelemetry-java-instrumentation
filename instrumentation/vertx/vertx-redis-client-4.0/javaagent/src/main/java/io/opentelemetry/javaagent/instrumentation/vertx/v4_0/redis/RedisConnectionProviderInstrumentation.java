@@ -18,7 +18,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class RedisConnectionProviderInstrumentation implements TypeInstrumentation {
+class RedisConnectionProviderInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.vertx.redis.client.impl.RedisConnectionManager$RedisConnectionProvider");
@@ -38,7 +38,7 @@ public class RedisConnectionProviderInstrumentation implements TypeInstrumentati
 
   @SuppressWarnings("unused")
   public static class InitAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.FieldValue("redisURI") RedisURI redisUri) {
       // for 4.1.0 and later we set RedisURI in a ThreadLocal that is used in advice added in
       // RedisStandaloneConnectionInstrumentation that attaches RedisURI to
@@ -46,7 +46,7 @@ public class RedisConnectionProviderInstrumentation implements TypeInstrumentati
       VertxRedisClientSingletons.setRedisUriThreadLocal(redisUri);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit() {
       VertxRedisClientSingletons.setRedisUriThreadLocal(null);
     }
@@ -54,7 +54,7 @@ public class RedisConnectionProviderInstrumentation implements TypeInstrumentati
 
   @SuppressWarnings("unused")
   public static class InitWithConnectionAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.Argument(0) RedisConnection connection,
         @Advice.FieldValue("redisURI") RedisURI redisUri) {

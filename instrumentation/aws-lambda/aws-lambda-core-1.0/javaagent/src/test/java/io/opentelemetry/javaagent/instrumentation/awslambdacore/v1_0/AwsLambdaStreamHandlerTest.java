@@ -90,14 +90,14 @@ class AwsLambdaStreamHandlerTest {
                         .hasAttributesSatisfyingExactly(equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
-  static final class RequestStreamHandlerTestImpl implements RequestStreamHandler {
+  private static class RequestStreamHandlerTestImpl implements RequestStreamHandler {
     @Override
     public void handleRequest(InputStream input, OutputStream output, Context context)
         throws IOException {
       BufferedReader reader = new BufferedReader(new InputStreamReader(input, UTF_8));
       BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(output, UTF_8));
       String line = reader.readLine();
-      if (line.equals("hello")) {
+      if ("hello".equals(line)) {
         writer.write("world");
         writer.flush();
         writer.close();

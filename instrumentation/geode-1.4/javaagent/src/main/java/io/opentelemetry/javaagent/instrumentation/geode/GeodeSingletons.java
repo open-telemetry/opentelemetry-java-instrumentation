@@ -12,15 +12,15 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNam
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
-public final class GeodeSingletons {
+class GeodeSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.geode-1.4";
 
-  private static final Instrumenter<GeodeRequest, Void> INSTRUMENTER;
+  private static final Instrumenter<GeodeRequest, Void> instrumenter;
 
   static {
     GeodeDbAttributesGetter dbClientAttributesGetter = new GeodeDbAttributesGetter();
 
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<GeodeRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
@@ -30,8 +30,8 @@ public final class GeodeSingletons {
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
-  public static Instrumenter<GeodeRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+  static Instrumenter<GeodeRequest, Void> instrumenter() {
+    return instrumenter;
   }
 
   private GeodeSingletons() {}

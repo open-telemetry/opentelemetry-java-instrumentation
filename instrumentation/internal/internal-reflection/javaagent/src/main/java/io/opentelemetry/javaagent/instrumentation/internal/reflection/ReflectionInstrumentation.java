@@ -20,7 +20,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ReflectionInstrumentation implements TypeInstrumentation {
+class ReflectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -54,7 +54,7 @@ public class ReflectionInstrumentation implements TypeInstrumentation {
     // using AsScalar is needed to return the array itself instead of "advice Object[] return"
     @Advice.AssignReturned.ToReturned
     @Advice.AssignReturned.AsScalar
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Field[] filter(
         @Advice.Argument(0) Class<?> containingClass, @Advice.Return Field[] fields) {
       return ReflectionHelper.filterFields(containingClass, fields);
@@ -67,7 +67,7 @@ public class ReflectionInstrumentation implements TypeInstrumentation {
     // using AsScalar is needed to return the array itself instead of "advice Object[] return"
     @Advice.AssignReturned.ToReturned
     @Advice.AssignReturned.AsScalar
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Method[] filter(
         @Advice.Argument(0) Class<?> containingClass, @Advice.Return Method[] methods) {
       return ReflectionHelper.filterMethods(containingClass, methods);

@@ -32,6 +32,7 @@ public class InstrumentationModule {
   private Map<String, List<EmittedMetrics.Metric>> metrics;
   private Map<String, List<EmittedSpans.Span>> spans;
   private boolean hasStandaloneLibrary;
+  private boolean hasJavaAgent;
 
   @Nullable private Set<String> agentTargetVersions;
 
@@ -53,6 +54,7 @@ public class InstrumentationModule {
     this.metrics = requireNonNullElseGet(builder.metrics, HashMap::new);
     this.spans = requireNonNullElseGet(builder.spans, HashMap::new);
     this.hasStandaloneLibrary = builder.hasStandaloneLibrary;
+    this.hasJavaAgent = builder.hasJavaAgent;
     this.metadata = builder.metadata;
     this.agentTargetVersions = builder.agentTargetVersions;
     this.minJavaVersion = builder.minJavaVersion;
@@ -76,6 +78,10 @@ public class InstrumentationModule {
 
   public boolean hasStandaloneLibrary() {
     return hasStandaloneLibrary;
+  }
+
+  public boolean hasJavaAgent() {
+    return hasJavaAgent;
   }
 
   public String getGroup() {
@@ -128,6 +134,10 @@ public class InstrumentationModule {
     this.hasStandaloneLibrary = hasStandaloneLibrary;
   }
 
+  public void setHasJavaAgent(boolean hasJavaAgent) {
+    this.hasJavaAgent = hasJavaAgent;
+  }
+
   public void setMinJavaVersion(Integer minJavaVersion) {
     this.minJavaVersion = minJavaVersion;
   }
@@ -156,6 +166,7 @@ public class InstrumentationModule {
     @Nullable private Map<String, List<EmittedMetrics.Metric>> metrics;
     @Nullable private Map<String, List<EmittedSpans.Span>> spans;
     private boolean hasStandaloneLibrary;
+    private boolean hasJavaAgent;
 
     public Builder() {}
 
@@ -184,6 +195,12 @@ public class InstrumentationModule {
     @CanIgnoreReturnValue
     public Builder hasStandaloneLibrary(boolean hasStandaloneLibrary) {
       this.hasStandaloneLibrary = hasStandaloneLibrary;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder hasJavaAgent(boolean hasJavaAgent) {
+      this.hasJavaAgent = hasJavaAgent;
       return this;
     }
 

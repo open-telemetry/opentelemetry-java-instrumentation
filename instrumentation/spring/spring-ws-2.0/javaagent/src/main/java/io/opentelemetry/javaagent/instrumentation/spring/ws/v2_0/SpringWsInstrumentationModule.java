@@ -11,12 +11,10 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class SpringWsInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class SpringWsInstrumentationModule extends InstrumentationModule {
   public SpringWsInstrumentationModule() {
     super("spring-ws", "spring-ws-2.0");
   }
@@ -30,10 +28,5 @@ public class SpringWsInstrumentationModule extends InstrumentationModule
   public boolean defaultEnabled() {
     // this instrumentation only produces controller telemetry
     return super.defaultEnabled() && ExperimentalConfig.get().controllerTelemetryEnabled();
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

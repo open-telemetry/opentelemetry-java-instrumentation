@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class StreamTaskInstrumentation implements TypeInstrumentation {
+class StreamTaskInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -35,14 +35,14 @@ public class StreamTaskInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ProcessAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static StateHolder onEnter() {
       StateHolder holder = new StateHolder();
       HOLDER.set(holder);
       return holder;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Enter StateHolder holder, @Advice.Thrown Throwable throwable) {
       HOLDER.remove();

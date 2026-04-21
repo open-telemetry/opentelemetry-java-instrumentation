@@ -27,7 +27,7 @@ import net.spy.memcached.internal.BulkFuture;
 import net.spy.memcached.internal.GetFuture;
 import net.spy.memcached.internal.OperationFuture;
 
-public class MemcachedClientInstrumentation implements TypeInstrumentation {
+class MemcachedClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("net.spy.memcached.MemcachedClient");
@@ -56,13 +56,13 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AsyncOperationAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope<OperationFuture<?>, OperationCompletionListener> methodEnter(
         @Advice.This MemcachedClient client, @Advice.Origin("#m") String methodName) {
       return AdviceScope.start(AsyncOperationHandler.INSTANCE, client, methodName);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Return @Nullable OperationFuture<?> future,
         @Advice.Thrown @Nullable Throwable thrown,
@@ -74,13 +74,13 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AsyncGetAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope<GetFuture<?>, GetCompletionListener> methodEnter(
         @Advice.This MemcachedClient client, @Advice.Origin("#m") String methodName) {
       return AdviceScope.start(AsyncGetHandler.INSTANCE, client, methodName);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Return @Nullable GetFuture<?> future,
         @Advice.Thrown @Nullable Throwable thrown,
@@ -92,13 +92,13 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AsyncBulkAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope<BulkFuture<?>, BulkGetCompletionListener> methodEnter(
         @Advice.This MemcachedClient client, @Advice.Origin("#m") String methodName) {
       return AdviceScope.start(AsyncBulkHandler.INSTANCE, client, methodName);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Return @Nullable BulkFuture<?> future,
         @Advice.Thrown @Nullable Throwable thrown,
@@ -110,13 +110,13 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SyncOperationAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope<Void, SyncCompletionListener> methodEnter(
         @Advice.This MemcachedClient client, @Advice.Origin("#m") String methodName) {
       return AdviceScope.start(SyncHandler.INSTANCE, client, methodName);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Thrown @Nullable Throwable thrown,
         @Advice.Enter AdviceScope<Void, SyncCompletionListener> adviceScope) {

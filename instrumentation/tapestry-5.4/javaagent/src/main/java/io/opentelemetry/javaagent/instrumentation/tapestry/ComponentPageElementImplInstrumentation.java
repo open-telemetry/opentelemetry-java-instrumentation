@@ -20,7 +20,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.tapestry5.internal.structure.ComponentPageElementImpl;
 
-public class ComponentPageElementImplInstrumentation implements TypeInstrumentation {
+class ComponentPageElementImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -75,14 +75,14 @@ public class ComponentPageElementImplInstrumentation implements TypeInstrumentat
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This ComponentPageElementImpl componentPageElementImpl,
         @Advice.Argument(0) String eventType) {
       return AdviceScope.start(componentPageElementImpl, eventType);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

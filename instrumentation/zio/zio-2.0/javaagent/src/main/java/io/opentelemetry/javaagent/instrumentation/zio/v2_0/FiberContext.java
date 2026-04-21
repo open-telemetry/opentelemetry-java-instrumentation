@@ -11,7 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import javax.annotation.Nullable;
 
-public final class FiberContext {
+class FiberContext {
   private Context context;
   @Nullable private Context initialContext;
   @Nullable private Scope scope;
@@ -20,11 +20,11 @@ public final class FiberContext {
     this.context = context;
   }
 
-  public static FiberContext create() {
+  static FiberContext create() {
     return new FiberContext(Context.current());
   }
 
-  public void onSuspend() {
+  void onSuspend() {
     context = Context.current();
 
     // First we try closing the scope that was opened in onResume. This may fail if user code has
@@ -39,7 +39,7 @@ public final class FiberContext {
     }
   }
 
-  public void onResume() {
+  void onResume() {
     initialContext = Context.current();
     scope = context.makeCurrent();
   }

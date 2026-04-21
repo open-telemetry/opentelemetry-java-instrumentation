@@ -96,7 +96,8 @@ public class VertxReactiveWebServer extends AbstractVerticle {
               .createHttpServer()
               .requestHandler(router)
               .listen(port, h -> startPromise.complete());
-        });
+        },
+        throwable -> startPromise.fail(throwable));
   }
 
   @SuppressWarnings("CheckReturnValue")
@@ -148,11 +149,12 @@ public class VertxReactiveWebServer extends AbstractVerticle {
     }
   }
 
-  private static void setUpInitialData(Handler<Void> done) {
+  private static void setUpInitialData(Handler<Void> done, Handler<Throwable> onError) {
     client.getConnection(
         res -> {
           if (res.failed()) {
-            throw new IllegalStateException(res.cause());
+            onError.handle(res.cause());
+            return;
           }
 
           SQLConnection conn = res.result();
@@ -161,14 +163,16 @@ public class VertxReactiveWebServer extends AbstractVerticle {
               "CREATE TABLE IF NOT EXISTS products(id INT IDENTITY, name VARCHAR(255), price FLOAT, weight INT)",
               ddl -> {
                 if (ddl.failed()) {
-                  throw new IllegalStateException(ddl.cause());
+                  onError.handle(ddl.cause());
+                  return;
                 }
 
                 conn.execute(
                     "INSERT INTO products (name, price, weight) VALUES ('Egg Whisk', 3.99, 150), ('Tea Cosy', 5.99, 100), ('Spatula', 1.00, 80)",
                     fixtures -> {
                       if (fixtures.failed()) {
-                        throw new IllegalStateException(fixtures.cause());
+                        onError.handle(fixtures.cause());
+                        return;
                       }
 
                       done.handle(null);

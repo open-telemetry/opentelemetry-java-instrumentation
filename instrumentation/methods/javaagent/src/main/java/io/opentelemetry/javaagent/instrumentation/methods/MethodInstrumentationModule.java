@@ -14,12 +14,10 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class MethodInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class MethodInstrumentationModule extends InstrumentationModule {
 
   private final List<TypeInstrumentation> typeInstrumentations;
 
@@ -43,10 +41,5 @@ public class MethodInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return typeInstrumentations;
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

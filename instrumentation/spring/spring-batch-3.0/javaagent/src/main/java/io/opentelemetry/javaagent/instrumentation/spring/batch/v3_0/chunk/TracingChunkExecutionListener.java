@@ -18,7 +18,7 @@ import org.springframework.batch.core.ChunkListener;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.core.Ordered;
 
-public final class TracingChunkExecutionListener implements ChunkListener, Ordered {
+public class TracingChunkExecutionListener implements ChunkListener, Ordered {
   private static final VirtualField<ChunkContext, ContextAndScope> CONTEXT_AND_SCOPE =
       VirtualField.find(ChunkContext.class, ContextAndScope.class);
   private final Class<?> builderClass;
