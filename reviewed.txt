@@ -244,3 +244,4 @@ jaxrs-2.0-resteasy-common-3.0:javaagent
 jsf-jakarta-common:javaagent
 jsf-common-javax:javaagent
 jsf-common-javax:testing
+jsf-jakarta-common:testing
