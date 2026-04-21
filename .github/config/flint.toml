@@ -1,5 +1,10 @@
 [settings]
-exclude = "gradlew|buildscripts/spotless\\.license\\.java|CHANGELOG\\.md|licenses/licenses\\.md"
+exclude = [
+  "gradlew",
+  "buildscripts/spotless.license.java",
+  "CHANGELOG.md",
+  "licenses/licenses.md",
+]
 
 [checks.license-header]
 text = """
