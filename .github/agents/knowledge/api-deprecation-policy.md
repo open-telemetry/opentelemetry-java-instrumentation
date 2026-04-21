@@ -18,6 +18,15 @@ The CHANGELOG uses distinct headings to distinguish:
 - `⚠️ Breaking changes to non-stable APIs` — alpha/non-stable modules (routine)
 - `⚠️ Breaking Changes` — stable module changes (rare, requires strong justification)
 
+### Javaagent modules are not a public API
+
+Javaagent modules (Gradle path ends with `:javaagent`, including shared `-common` javaagent
+modules) are bundled into the agent jar and are **not** published for external consumption.
+Do **not** apply a deprecation cycle to symbols in javaagent modules — rename or change the
+API directly and update all in-repo callers in the same commit. The deprecate-then-remove
+cycle described below applies only to non-stable modules whose artifacts are published
+(e.g., `:library`, `:testing`, `instrumentation-api*`).
+
 ## The Deprecate-Then-Remove Cycle
 
 ### Alpha (non-stable) modules
