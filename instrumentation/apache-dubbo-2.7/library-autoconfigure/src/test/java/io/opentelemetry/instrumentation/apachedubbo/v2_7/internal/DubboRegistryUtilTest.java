@@ -30,7 +30,7 @@ class DubboRegistryUtilTest {
 
   @AfterEach
   void tearDown() {
-    DubboRegistryUtil.clearCapturedRegistryAddress();
+    DubboRegistryUtil.restoreCapturedRegistryAddress(null);
   }
 
   @ParameterizedTest
@@ -76,7 +76,7 @@ class DubboRegistryUtilTest {
         .isEqualTo("zookeeper://10.0.0.1:2181");
   }
 
-  @SuppressWarnings("all")
+  @SuppressWarnings("UnusedVariable")
   abstract static class MockableRegistryDirectory implements Directory<Object> {
     Object registry;
   }

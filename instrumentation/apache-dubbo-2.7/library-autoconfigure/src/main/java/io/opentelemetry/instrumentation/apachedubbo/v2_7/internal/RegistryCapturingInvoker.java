@@ -49,11 +49,11 @@ final class RegistryCapturingInvoker<T> implements Invoker<T> {
 
   @Override
   public Result invoke(Invocation invocation) {
-    DubboRegistryUtil.pushCapturedRegistryAddress(registryAddress);
+    String previous = DubboRegistryUtil.pushCapturedRegistryAddress(registryAddress);
     try {
       return delegate.invoke(invocation);
     } finally {
-      DubboRegistryUtil.clearCapturedRegistryAddress();
+      DubboRegistryUtil.restoreCapturedRegistryAddress(previous);
     }
   }
 }

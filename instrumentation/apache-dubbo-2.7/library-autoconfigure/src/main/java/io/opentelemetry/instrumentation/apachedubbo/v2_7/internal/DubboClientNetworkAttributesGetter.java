@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.apachedubbo.v2_7.internal;
 
 import static io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboRegistryUtil.buildServiceTarget;
-import static io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboRegistryUtil.extractRegistryAddress;
 
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboRequest;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
@@ -25,7 +24,7 @@ public final class DubboClientNetworkAttributesGetter
   @Nullable
   @Override
   public String getServerAddress(DubboRequest request) {
-    String registryAddress = extractRegistryAddress(request.invocation());
+    String registryAddress = request.registryAddress();
     if (registryAddress != null) {
       return registryAddress + "/" + buildServiceTarget(request.url());
     }
@@ -35,7 +34,7 @@ public final class DubboClientNetworkAttributesGetter
   @Nullable
   @Override
   public Integer getServerPort(DubboRequest request) {
-    if (extractRegistryAddress(request.invocation()) != null) {
+    if (request.registryAddress() != null) {
       return null;
     }
     return request.url().getPort();

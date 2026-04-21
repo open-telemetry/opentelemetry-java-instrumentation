@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboRegistryUtil;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import org.apache.dubbo.common.URL;
@@ -26,7 +27,12 @@ public abstract class DubboRequest {
         context.getLocalAddress());
   }
 
-  public abstract RpcInvocation invocation();
+  abstract RpcInvocation invocation();
+
+  @Nullable
+  public String registryAddress() {
+    return DubboRegistryUtil.extractRegistryAddress(invocation());
+  }
 
   public abstract RpcContext context();
 

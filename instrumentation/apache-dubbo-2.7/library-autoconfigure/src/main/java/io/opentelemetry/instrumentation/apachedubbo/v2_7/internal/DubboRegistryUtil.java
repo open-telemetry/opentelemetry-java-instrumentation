@@ -37,14 +37,21 @@ public final class DubboRegistryUtil {
 
   /**
    * Used by {@link RegistryCapturingInvoker} while the cluster delegate runs (including into
-   * consumer protocol filters).
+   * consumer protocol filters). Returns the previous value so callers can restore it.
    */
-  static void pushCapturedRegistryAddress(String address) {
+  @Nullable
+  static String pushCapturedRegistryAddress(String address) {
+    String previous = CAPTURED_REGISTRY_ADDRESS.get();
     CAPTURED_REGISTRY_ADDRESS.set(address);
+    return previous;
   }
 
-  public static void clearCapturedRegistryAddress() {
-    CAPTURED_REGISTRY_ADDRESS.remove();
+  public static void restoreCapturedRegistryAddress(@Nullable String previous) {
+    if (previous == null) {
+      CAPTURED_REGISTRY_ADDRESS.remove();
+    } else {
+      CAPTURED_REGISTRY_ADDRESS.set(previous);
+    }
   }
 
   @Nullable
@@ -68,17 +75,6 @@ public final class DubboRegistryUtil {
     }
 
     return null;
-  }
-
-  /**
-   * Resolves {@code protocol://host:port} from a registry-backed directory (for example {@code
-   * RegistryDirectory}), using {@code getRegistry()} when present and otherwise the {@code
-   * registry} field. Called once per consumer refer when {@link RegistryCapturingClusterWrapper}
-   * wraps the cluster invoker.
-   */
-  @Nullable
-  public static String tryExtractRegistryAddressFromDirectory(Directory<?> directory) {
-    return extractRegistryAddressFromDirectory(directory);
   }
 
   public static String buildServiceTarget(URL url) {
@@ -125,8 +121,14 @@ public final class DubboRegistryUtil {
     }
   }
 
+  /**
+   * Resolves {@code protocol://host:port} from a registry-backed directory (for example {@code
+   * RegistryDirectory}), using {@code getRegistry()} when present and otherwise the {@code
+   * registry} field. Called once per consumer refer when {@link RegistryCapturingClusterWrapper}
+   * wraps the cluster invoker.
+   */
   @Nullable
-  private static String extractRegistryAddressFromDirectory(Directory<?> directory) {
+  public static String tryExtractRegistryAddressFromDirectory(Directory<?> directory) {
     MethodHandle getRegistry =
         findAccessor(directory.getClass(), "getRegistry", "registry", REGISTRY_ACCESSOR_CACHE);
     if (getRegistry == null) {
@@ -183,7 +185,7 @@ public final class DubboRegistryUtil {
       Method m = clazz.getMethod(name);
       m.setAccessible(true);
       return LOOKUP.unreflect(m);
-    } catch (NoSuchMethodException | IllegalAccessException e) {
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
       // ignore
     }
     return null;
@@ -196,7 +198,7 @@ public final class DubboRegistryUtil {
         Field f = c.getDeclaredField(name);
         f.setAccessible(true);
         return LOOKUP.unreflectGetter(f);
-      } catch (NoSuchFieldException | IllegalAccessException e) {
+      } catch (NoSuchFieldException | IllegalAccessException ignored) {
         // ignore
       }
     }

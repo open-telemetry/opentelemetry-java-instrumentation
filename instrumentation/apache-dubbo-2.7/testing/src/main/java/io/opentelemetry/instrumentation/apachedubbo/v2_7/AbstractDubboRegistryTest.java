@@ -183,17 +183,18 @@ public abstract class AbstractDubboRegistryTest {
                                 equalTo(SERVER_PORT, null),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS,
-                                    k -> assertLatestDeps(k, a -> a.isInstanceOf(String.class))),
+                                    val ->
+                                        assertLatestDeps(val, v -> v.isInstanceOf(String.class))),
                                 satisfies(
                                     NETWORK_PEER_PORT,
-                                    k -> assertLatestDeps(k, a -> a.isInstanceOf(Long.class))),
+                                    val -> assertLatestDeps(val, v -> v.isInstanceOf(Long.class))),
                                 satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType)),
                     span ->
                         span.hasName(
                                 "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
                                 equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "dubbo" : null),
                                 equalTo(
@@ -206,7 +207,9 @@ public abstract class AbstractDubboRegistryTest {
                                     emitStableRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"
                                         : "hello"),
-                                satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
-                                satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)))));
+                                satisfies(
+                                    NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
+                                satisfies(
+                                    NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)))));
   }
 }
