@@ -13,12 +13,6 @@ for dir in $(find instrumentation -name "*.java" | grep library/src/main/java | 
   if [[ "$module_name" == "runtime-telemetry" ]]; then
     continue
   fi
-  if [[ "$module_name" == "runtime-telemetry-java8" ]]; then
-    continue
-  fi
-  if [[ "$module_name" == "runtime-telemetry-java17" ]]; then
-    continue
-  fi
   if [[ "$module_name" == "servlet-common" ]]; then
     continue
   fi
