@@ -86,6 +86,13 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
+  void testAgentPrefixWithoutChild() {
+    DeclarativeConfigProperties config = createConfig("otel.javaagent.experimental.indy", "true");
+
+    assertThat(config.getStructured("java").getString("agent")).isNull();
+  }
+
+  @Test
   void testJmxPrefix() {
     DeclarativeConfigProperties config = createConfig("otel.jmx.enabled", "true");
 

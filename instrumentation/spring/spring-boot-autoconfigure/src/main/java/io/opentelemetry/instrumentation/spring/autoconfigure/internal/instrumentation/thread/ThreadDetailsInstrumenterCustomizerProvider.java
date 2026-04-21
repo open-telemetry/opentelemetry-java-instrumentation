@@ -15,6 +15,10 @@ import org.springframework.core.env.Environment;
  * any time.
  */
 public class ThreadDetailsInstrumenterCustomizerProvider implements InstrumenterCustomizerProvider {
+  private static final String LEGACY_PROPERTY =
+      "otel.instrumentation.common.thread-details.enabled";
+  private static final String DECLARATIVE_PROPERTY =
+      "otel.distribution.spring_starter.thread_details_enabled";
 
   // Static because this class is loaded via ServiceLoader (SPI), not managed by Spring DI.
   // Set by OpenTelemetryAutoConfiguration#openTelemetry before instrumenters are built,
@@ -24,18 +28,16 @@ public class ThreadDetailsInstrumenterCustomizerProvider implements Instrumenter
 
   /** Called from OpenTelemetryAutoConfiguration for declarative config. */
   public static void configureDeclarativeConfig(Environment environment) {
-    enabled =
-        Boolean.TRUE.equals(
-            environment.getProperty(
-                "otel.distribution.spring_starter.thread_details_enabled", Boolean.class));
+    // Declarative config uses the distro-scoped key, but we still accept the legacy property so
+    // both Spring configuration paths resolve the same feature flag.
+    enabled = readEnabled(environment, DECLARATIVE_PROPERTY, LEGACY_PROPERTY);
   }
 
   /** Called from OpenTelemetryAutoConfiguration for properties-based config. */
   public static void configureProperties(Environment environment) {
-    enabled =
-        Boolean.TRUE.equals(
-            environment.getProperty(
-                "otel.instrumentation.common.thread-details.enabled", Boolean.class));
+    // Properties-based config keeps the legacy toggle, but we fall back to the declarative key so
+    // a single setting still works if it is shared across config styles.
+    enabled = readEnabled(environment, LEGACY_PROPERTY, DECLARATIVE_PROPERTY);
   }
 
   @Override
@@ -43,5 +45,15 @@ public class ThreadDetailsInstrumenterCustomizerProvider implements Instrumenter
     if (enabled) {
       customizer.addAttributesExtractor(new ThreadDetailsAttributesExtractor<>());
     }
+  }
+
+  private static boolean readEnabled(
+      Environment environment, String primaryProperty, String fallbackProperty) {
+    Boolean enabled = environment.getProperty(primaryProperty, Boolean.class);
+    if (enabled != null) {
+      return enabled;
+    }
+    enabled = environment.getProperty(fallbackProperty, Boolean.class);
+    return Boolean.TRUE.equals(enabled);
   }
 }

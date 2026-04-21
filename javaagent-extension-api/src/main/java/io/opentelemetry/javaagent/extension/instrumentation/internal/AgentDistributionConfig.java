@@ -234,7 +234,9 @@ public class AgentDistributionConfig {
               "otel.javaagent.experimental.force-synchronous-agent-listeners", false),
           configProperties.getList("otel.javaagent.exclude-classes"),
           configProperties.getList("otel.javaagent.exclude-class-loaders"),
-          configProperties.getBoolean("otel.javaagent.add-thread-details", true),
+          configProperties.getBoolean(
+              "otel.javaagent.add-thread-details",
+              !configProperties.getBoolean("otel.instrumentation.common.v3-preview", false)),
           null);
       this.configProperties = configProperties;
     }

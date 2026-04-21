@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling.config;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.api.common.Attributes.empty;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.Collections.emptyMap;
@@ -43,21 +44,16 @@ class ThreadDetailsInstrumenterCustomizerProviderTest {
             (Consumer<SpanDataAssert>)
                 span ->
                     span.hasAttributesSatisfying(
-                        satisfies(THREAD_ID, n -> n.isNotNull()),
-                        satisfies(THREAD_NAME, n -> n.isNotBlank()))),
+                        satisfies(THREAD_ID, n -> n.isEqualTo(Thread.currentThread().getId())),
+                        satisfies(THREAD_NAME, n -> n.isEqualTo(Thread.currentThread().getName())))),
         Arguments.of(
             false,
-            (Consumer<SpanDataAssert>)
-                span ->
-                    span.hasAttributesSatisfying(
-                        satisfies(THREAD_ID, n -> n.isNull()),
-                        satisfies(THREAD_NAME, n -> n.isNull()))));
+            (Consumer<SpanDataAssert>) span -> span.hasAttributes(empty())));
   }
 
   @ParameterizedTest(name = "enabled={0}")
   @MethodSource("allEnabledAndDisabledValues")
   void enabled(boolean enabled, Consumer<SpanDataAssert> spanAttributesConsumer) {
-    AgentDistributionConfig.resetForTest();
     AgentDistributionConfig.set(
         AgentDistributionConfig.fromConfigProperties(
             DefaultConfigProperties.createFromMap(

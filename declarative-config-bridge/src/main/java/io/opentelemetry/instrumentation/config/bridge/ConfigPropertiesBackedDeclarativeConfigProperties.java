@@ -227,7 +227,10 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
 
     // java.agent.* maps to otel.javaagent.* (not otel.instrumentation.agent.*)
     if (segments.length > 0 && segments[0].equals("agent")) {
-      return "otel.javaagent." + translatedPath.toString().substring("agent.".length());
+      if (translatedPath.length() == "agent".length()) {
+        return "otel.javaagent";
+      }
+      return "otel.javaagent." + translatedPath.substring("agent.".length());
     }
 
     return "otel.instrumentation." + translatedPath;

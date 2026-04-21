@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.instrumenter.internal;
 
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.instrumenter.InstrumenterCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
@@ -46,11 +45,6 @@ public final class InstrumenterCustomizerImpl implements InstrumenterCustomizer 
   @Override
   public String getInstrumentationName() {
     return customizer.getInstrumentationName();
-  }
-
-  @Override
-  public OpenTelemetry getOpenTelemetry() {
-    return customizer.getOpenTelemetry();
   }
 
   @Override
