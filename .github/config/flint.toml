@@ -1,2 +1,5 @@
+[settings]
+exclude = ["CHANGELOG.md"]
+
 [checks.lychee]
 check_all_local = true
