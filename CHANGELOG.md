@@ -155,6 +155,9 @@ for more details.
 - Fix Apache Dubbo 2.7 instrumentation SPI resource path so that filters are properly discovered by
   Dubbo's extension loader.
   ([#17210](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17210))
+- Log suppressed failures from Netty HTTP server response customization instead of swallowing
+  them.
+  ([#17220](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17220))
 - Fix span leak on cancelled requests in Spring WebFlux server library instrumentation.
   ([#17222](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17222))
 - Fix Kafka wrapped producer to respect `setPropagationEnabled(false)` and not inject trace context
