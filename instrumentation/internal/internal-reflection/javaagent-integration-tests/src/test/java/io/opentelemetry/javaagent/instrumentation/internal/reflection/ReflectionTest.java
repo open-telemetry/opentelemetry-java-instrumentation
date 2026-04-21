@@ -44,7 +44,7 @@ class ReflectionTest {
   void testGeneratedSerialVersionUid() {
     // expected value is computed with serialver utility that comes with jdk
     assertThat(ObjectStreamClass.lookup(TestClass.class).getSerialVersionUID())
-        .isEqualTo(1115158932483123524L);
+        .isEqualTo(-1006206785953990857L);
     assertThat(TestClass.class.getDeclaredFields()).isEmpty();
   }
 }
