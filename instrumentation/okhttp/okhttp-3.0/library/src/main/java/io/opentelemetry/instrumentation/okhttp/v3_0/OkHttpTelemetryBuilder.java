@@ -51,8 +51,8 @@ public final class OkHttpTelemetryBuilder {
    * @param requestHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
-  public OkHttpTelemetryBuilder setCapturedRequestHeaders(Collection<String> requestHeaders) {
-    builder.setCapturedRequestHeaders(requestHeaders);
+  public OkHttpTelemetryBuilder setCaptureRequestHeaders(Collection<String> requestHeaders) {
+    builder.setCaptureRequestHeaders(requestHeaders);
     return this;
   }
 
@@ -62,8 +62,8 @@ public final class OkHttpTelemetryBuilder {
    * @param responseHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
-  public OkHttpTelemetryBuilder setCapturedResponseHeaders(Collection<String> responseHeaders) {
-    builder.setCapturedResponseHeaders(responseHeaders);
+  public OkHttpTelemetryBuilder setCaptureResponseHeaders(Collection<String> responseHeaders) {
+    builder.setCaptureResponseHeaders(responseHeaders);
     return this;
   }
 

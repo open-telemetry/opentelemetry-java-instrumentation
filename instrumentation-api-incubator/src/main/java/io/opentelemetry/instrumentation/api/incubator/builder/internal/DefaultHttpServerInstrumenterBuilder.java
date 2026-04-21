@@ -122,10 +122,20 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
    * @param requestHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
+  public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setCaptureRequestHeaders(
+      Collection<String> requestHeaders) {
+    httpAttributesExtractorBuilder.setCaptureRequestHeaders(requestHeaders);
+    return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setCaptureRequestHeaders(Collection)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
   public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setCapturedRequestHeaders(
       Collection<String> requestHeaders) {
-    httpAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders);
-    return this;
+    return setCaptureRequestHeaders(requestHeaders);
   }
 
   /**
@@ -134,10 +144,20 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
    * @param responseHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
+  public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setCaptureResponseHeaders(
+      Collection<String> responseHeaders) {
+    httpAttributesExtractorBuilder.setCaptureResponseHeaders(responseHeaders);
+    return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setCaptureResponseHeaders(Collection)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
   public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setCapturedResponseHeaders(
       Collection<String> responseHeaders) {
-    httpAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
-    return this;
+    return setCaptureResponseHeaders(responseHeaders);
   }
 
   /**
@@ -243,8 +263,8 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> configure(CommonConfig config) {
     set(config::getKnownHttpRequestMethods, this::setKnownMethods);
-    set(config::getServerRequestHeaders, this::setCapturedRequestHeaders);
-    set(config::getServerResponseHeaders, this::setCapturedResponseHeaders);
+    set(config::getServerRequestHeaders, this::setCaptureRequestHeaders);
+    set(config::getServerResponseHeaders, this::setCaptureResponseHeaders);
     set(
         config::shouldEmitExperimentalHttpServerTelemetry,
         this::setEmitExperimentalHttpServerTelemetry);

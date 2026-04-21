@@ -51,10 +51,19 @@ public final class RatpackServerTelemetryBuilder {
    * @param requestHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
+  public RatpackServerTelemetryBuilder setCaptureRequestHeaders(Collection<String> requestHeaders) {
+    builder.setCaptureRequestHeaders(requestHeaders);
+    return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setCaptureRequestHeaders(Collection)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
   public RatpackServerTelemetryBuilder setCapturedRequestHeaders(
       Collection<String> requestHeaders) {
-    builder.setCapturedRequestHeaders(requestHeaders);
-    return this;
+    return setCaptureRequestHeaders(requestHeaders);
   }
 
   /**
@@ -63,10 +72,20 @@ public final class RatpackServerTelemetryBuilder {
    * @param responseHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
+  public RatpackServerTelemetryBuilder setCaptureResponseHeaders(
+      Collection<String> responseHeaders) {
+    builder.setCaptureResponseHeaders(responseHeaders);
+    return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setCaptureResponseHeaders(Collection)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
   public RatpackServerTelemetryBuilder setCapturedResponseHeaders(
       Collection<String> responseHeaders) {
-    builder.setCapturedResponseHeaders(responseHeaders);
-    return this;
+    return setCaptureResponseHeaders(responseHeaders);
   }
 
   /**

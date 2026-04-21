@@ -25,8 +25,8 @@ class RatpackHttpServerTest extends AbstractRatpackHttpServerTest {
   protected void configure(RatpackServerSpec serverSpec) throws Exception {
     RatpackServerTelemetry telemetry =
         RatpackServerTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
-            .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
+            .setCaptureRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
+            .setCaptureResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
             .build();
     serverSpec.registryOf(telemetry::configureRegistry);
   }

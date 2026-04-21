@@ -67,8 +67,8 @@ public final class HelidonTelemetryBuilder {
    * @param requestHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
-  public HelidonTelemetryBuilder setCapturedRequestHeaders(Collection<String> requestHeaders) {
-    builder.setCapturedRequestHeaders(requestHeaders);
+  public HelidonTelemetryBuilder setCaptureRequestHeaders(Collection<String> requestHeaders) {
+    builder.setCaptureRequestHeaders(requestHeaders);
     return this;
   }
 
@@ -78,8 +78,8 @@ public final class HelidonTelemetryBuilder {
    * @param responseHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
-  public HelidonTelemetryBuilder setCapturedResponseHeaders(Collection<String> responseHeaders) {
-    builder.setCapturedResponseHeaders(responseHeaders);
+  public HelidonTelemetryBuilder setCaptureResponseHeaders(Collection<String> responseHeaders) {
+    builder.setCaptureResponseHeaders(responseHeaders);
     return this;
   }
 

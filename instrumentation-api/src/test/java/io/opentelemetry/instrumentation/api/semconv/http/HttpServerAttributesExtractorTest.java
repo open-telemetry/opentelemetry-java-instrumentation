@@ -199,8 +199,8 @@ class HttpServerAttributesExtractorTest {
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
-            .setCapturedRequestHeaders(singletonList("Custom-Request-Header"))
-            .setCapturedResponseHeaders(singletonList("Custom-Response-Header"))
+            .setCaptureRequestHeaders(singletonList("Custom-Request-Header"))
+            .setCaptureResponseHeaders(singletonList("Custom-Response-Header"))
             .setHttpRouteGetter(routeFromContext)
             .build();
 

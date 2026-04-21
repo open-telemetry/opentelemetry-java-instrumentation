@@ -126,13 +126,13 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
   fun capturedRequestHeaders(vararg headers: String) = capturedRequestHeaders(headers.asIterable())
 
   fun capturedRequestHeaders(headers: Iterable<String>) {
-    builder.setCapturedRequestHeaders(headers.toList())
+    builder.setCaptureRequestHeaders(headers.toList())
   }
 
   fun capturedResponseHeaders(vararg headers: String) = capturedResponseHeaders(headers.asIterable())
 
   fun capturedResponseHeaders(headers: Iterable<String>) {
-    builder.setCapturedResponseHeaders(headers.toList())
+    builder.setCaptureResponseHeaders(headers.toList())
   }
 
   fun knownMethods(vararg methods: String) = knownMethods(methods.asIterable())

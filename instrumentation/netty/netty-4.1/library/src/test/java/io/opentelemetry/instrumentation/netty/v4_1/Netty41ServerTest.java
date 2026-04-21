@@ -25,8 +25,8 @@ class Netty41ServerTest extends AbstractNetty41ServerTest {
         HttpServerCodec.class.getSimpleName() + "#0",
         NettyServerTelemetry.class.getName(),
         NettyServerTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
-            .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
+            .setCaptureRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
+            .setCaptureResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
             .build()
             .createCombinedHandler());
   }

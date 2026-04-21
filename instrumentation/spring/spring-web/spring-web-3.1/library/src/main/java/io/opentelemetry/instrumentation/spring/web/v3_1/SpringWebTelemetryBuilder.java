@@ -59,8 +59,8 @@ public final class SpringWebTelemetryBuilder {
    * @param requestHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
-  public SpringWebTelemetryBuilder setCapturedRequestHeaders(Collection<String> requestHeaders) {
-    builder.setCapturedRequestHeaders(requestHeaders);
+  public SpringWebTelemetryBuilder setCaptureRequestHeaders(Collection<String> requestHeaders) {
+    builder.setCaptureRequestHeaders(requestHeaders);
     return this;
   }
 
@@ -70,8 +70,8 @@ public final class SpringWebTelemetryBuilder {
    * @param responseHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
-  public SpringWebTelemetryBuilder setCapturedResponseHeaders(Collection<String> responseHeaders) {
-    builder.setCapturedResponseHeaders(responseHeaders);
+  public SpringWebTelemetryBuilder setCaptureResponseHeaders(Collection<String> responseHeaders) {
+    builder.setCaptureResponseHeaders(responseHeaders);
     return this;
   }
 

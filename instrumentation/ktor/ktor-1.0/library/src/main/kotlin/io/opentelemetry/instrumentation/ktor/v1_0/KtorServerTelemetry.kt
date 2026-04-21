@@ -73,12 +73,22 @@ class KtorServerTelemetry private constructor(
       builder.addAttributesExtractor(extractor)
     }
 
-    fun setCapturedRequestHeaders(requestHeaders: List<String>) {
-      builder.setCapturedRequestHeaders(requestHeaders)
+    fun setCaptureRequestHeaders(requestHeaders: List<String>) {
+      builder.setCaptureRequestHeaders(requestHeaders)
     }
 
+    @Deprecated("Use setCaptureRequestHeaders instead.")
+    fun setCapturedRequestHeaders(requestHeaders: List<String>) {
+      setCaptureRequestHeaders(requestHeaders)
+    }
+
+    fun setCaptureResponseHeaders(responseHeaders: List<String>) {
+      builder.setCaptureResponseHeaders(responseHeaders)
+    }
+
+    @Deprecated("Use setCaptureResponseHeaders instead.")
     fun setCapturedResponseHeaders(responseHeaders: List<String>) {
-      builder.setCapturedResponseHeaders(responseHeaders)
+      setCaptureResponseHeaders(responseHeaders)
     }
 
     fun setKnownMethods(knownMethods: Collection<String>) {

@@ -24,8 +24,8 @@ class RestletServerTest extends AbstractRestletServerTest {
   protected Restlet wrapRestlet(Restlet restlet, String path) {
     RestletTelemetry telemetry =
         RestletTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
-            .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
+            .setCaptureRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
+            .setCaptureResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
             .build();
 
     Filter tracingFilter = telemetry.createFilter(path);

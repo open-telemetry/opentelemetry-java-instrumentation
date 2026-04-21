@@ -170,8 +170,8 @@ class HttpClientAttributesExtractorTest {
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpClientAttributesExtractor.builder(new TestHttpClientAttributesGetter())
-            .setCapturedRequestHeaders(singletonList("Custom-Request-Header"))
-            .setCapturedResponseHeaders(singletonList("Custom-Response-Header"))
+            .setCaptureRequestHeaders(singletonList("Custom-Request-Header"))
+            .setCaptureResponseHeaders(singletonList("Custom-Response-Header"))
             .setResendCountIncrementer(resendCountFromContext)
             .build();
 
