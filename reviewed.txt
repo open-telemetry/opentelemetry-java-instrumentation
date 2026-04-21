@@ -242,3 +242,4 @@ jodd-http-4.2:javaagent
 jodd-http-4.2:javaagent-unit-tests
 jaxrs-2.0-resteasy-common-3.0:javaagent
 jsf-jakarta-common:javaagent
+jsf-common-javax:javaagent
