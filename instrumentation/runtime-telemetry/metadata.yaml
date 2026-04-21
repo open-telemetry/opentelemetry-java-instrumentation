@@ -11,17 +11,17 @@ configurations:
     description: Enables the capture of experimental JMX-based JVM runtime metrics.
     type: boolean
     default: false
-  - name: otel.instrumentation.runtime-telemetry.jfr.enabled
-    declarative_name: java.runtime_telemetry.jfr.enabled
+  - name: otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics
+    declarative_name: java.runtime_telemetry.emit_experimental_jfr_metrics/development
     description: >
-      Enables the default JFR-based JVM runtime metrics on Java 17+.
+      Enables the capture of experimental JFR-based JVM runtime metrics on Java 17+.
     type: boolean
     default: false
-  - name: otel.instrumentation.runtime-telemetry.jfr.enable-all
-    declarative_name: java.runtime_telemetry.jfr.enable_all
+  - name: otel.instrumentation.runtime-telemetry.experimental.prefer-jfr
+    declarative_name: java.runtime_telemetry.prefer_jfr/development
     description: >
-      Enables all JFR-based JVM runtime metrics, including metrics that overlap with JMX, on Java
-      17+.
+      Prefer JFR over JMX for metrics available from both sources, on Java 17+. When enabled,
+      overlapping metrics are collected via JFR and the corresponding JMX metrics are suppressed.
     type: boolean
     default: false
   - name: otel.instrumentation.runtime-telemetry.experimental.package-emitter.enabled

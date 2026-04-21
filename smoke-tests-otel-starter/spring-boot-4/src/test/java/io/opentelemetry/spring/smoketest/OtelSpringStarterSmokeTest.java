@@ -32,7 +32,8 @@ import org.springframework.web.client.RestTemplate;
       // The headers are simply set here to make sure that headers can be parsed
       "otel.exporter.otlp.headers.c=3",
       "otel.instrumentation.runtime-telemetry.emit-experimental-metrics=true",
-      "otel.instrumentation.runtime-telemetry.jfr.enable-all=true",
+      "otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics=true",
+      "otel.instrumentation.runtime-telemetry.experimental.prefer-jfr=true",
       "otel.instrumentation.common.thread_details.enabled=true",
       "logging.level.org.springframework.boot.autoconfigure=DEBUG",
     })

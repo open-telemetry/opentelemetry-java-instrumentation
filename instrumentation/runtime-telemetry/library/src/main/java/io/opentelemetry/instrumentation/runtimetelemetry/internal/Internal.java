@@ -284,8 +284,8 @@ public final class Internal {
       RuntimeTelemetryBuilder builder, DeclarativeConfigProperties config) {
     logger.warning(
         "otel.instrumentation.runtime-telemetry-java17.enable-all is deprecated and will be"
-            + " removed in 3.0. Use otel.instrumentation.runtime-telemetry.jfr.enable-all"
-            + " instead.");
+            + " removed in 3.0. Use otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics"
+            + " and otel.instrumentation.runtime-telemetry.experimental.prefer-jfr instead.");
     // For backward compatibility: route JMX metrics to java8 scope, JFR metrics to java17 scope
     Internal.setJmxInstrumentationName(builder, "io.opentelemetry.runtime-telemetry-java8");
     Internal.setJfrInstrumentationName(builder, "io.opentelemetry.runtime-telemetry-java17");
@@ -311,7 +311,8 @@ public final class Internal {
   private static void configureJava17Enabled(RuntimeTelemetryBuilder builder) {
     logger.warning(
         "otel.instrumentation.runtime-telemetry-java17.enabled is deprecated and will be"
-            + " removed in 3.0. Use otel.instrumentation.runtime-telemetry.jfr.enabled instead.");
+            + " removed in 3.0. Use"
+            + " otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics instead.");
     enableDefaultJfrFeatures(builder);
     // Preserve legacy behavior of the deprecated runtime-telemetry-java17 module, which enabled
     // CPU_COUNT_METRICS by default (emitted as jvm.cpu.limit via useLegacyJfrCpuCountMetric).
@@ -331,23 +332,12 @@ public final class Internal {
 
   private static void configureUnified(
       RuntimeTelemetryBuilder builder, DeclarativeConfigProperties config) {
-    // Check if user is using new unified config options
     boolean emitExperimentalMetrics =
         config.getBoolean("emit_experimental_metrics/development", false);
-    Boolean jfrEnabled = config.get("jfr").getBoolean("enabled");
-    Boolean jfrEnableAll = config.get("jfr").getBoolean("enable_all");
-    Boolean deprecatedPreferJfr = config.getBoolean("prefer_jfr/development");
-    if (deprecatedPreferJfr != null) {
-      logger.warning(
-          "otel.instrumentation.runtime-telemetry.experimental.prefer-jfr is deprecated and"
-              + " will be removed in 3.0. Use"
-              + " otel.instrumentation.runtime-telemetry.jfr.enable-all instead.");
-    }
-
-    boolean enableAllJfr =
-        jfrEnableAll != null ? jfrEnableAll : Boolean.TRUE.equals(deprecatedPreferJfr);
-    boolean enableDefaultJfr = Boolean.TRUE.equals(jfrEnabled);
-    boolean newConfig = emitExperimentalMetrics || enableDefaultJfr || enableAllJfr;
+    boolean emitExperimentalJfrMetrics =
+        config.getBoolean("emit_experimental_jfr_metrics/development", false);
+    boolean preferJfrMetrics = config.getBoolean("prefer_jfr/development", false);
+    boolean newConfig = emitExperimentalMetrics || emitExperimentalJfrMetrics || preferJfrMetrics;
 
     if (newConfig) {
       // New unified config: Use new instrumentation name for both JMX and JFR
@@ -373,11 +363,11 @@ public final class Internal {
       Experimental.setEmitExperimentalMetrics(builder, true);
     }
 
-    if (enableAllJfr) {
-      Experimental.setPreferJfrMetrics(builder, true);
+    if (emitExperimentalJfrMetrics) {
+      Experimental.setEmitExperimentalJfrMetrics(builder, true);
     }
-    if (enableDefaultJfr || enableAllJfr) {
-      enableDefaultJfrFeatures(builder);
+    if (preferJfrMetrics) {
+      Experimental.setPreferJfrMetrics(builder, true);
     }
 
     // Apply capture_gc_cause

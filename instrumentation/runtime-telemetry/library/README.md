@@ -96,11 +96,10 @@ builder methods.
 - `otel.instrumentation.runtime-telemetry.emit-experimental-metrics=true`
   (`emitExperimentalMetrics()`): enables additional JMX-based metrics that are not yet
   stable in the semantic conventions.
-- `otel.instrumentation.runtime-telemetry.jfr.enabled=true` (Java 17+): enables the
-  default set of JFR-based metrics. These metrics have no JMX equivalent, so they
-  complement the JMX metrics without duplication.
-- `otel.instrumentation.runtime-telemetry.jfr.enable-all=true` (Java 17+): additionally
-  sources metrics from JFR instead of JMX wherever a JFR equivalent exists (see
+- `otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics=true` (Java 17+):
+  enables additional JFR-based metrics that are not yet stable in the semantic conventions.
+- `otel.instrumentation.runtime-telemetry.experimental.prefer-jfr=true` (Java 17+): sources
+  metrics from JFR instead of JMX wherever a JFR equivalent exists (see
   [JFR-based (Overlap with JMX)](#jfr-based-overlap-with-jmx) below). The corresponding
   JMX metrics are suppressed.
 
@@ -152,7 +151,7 @@ These metrics are collected via JMX on all Java versions:
 
 #### JFR-based (Overlap with JMX)
 
-When `jfr.enable-all=true`, the following metrics are sourced from JFR instead of JMX
+When `experimental.prefer-jfr=true`, the following metrics are sourced from JFR instead of JMX
 (the JMX-based registration is suppressed to avoid duplicates):
 
 | Metric |
