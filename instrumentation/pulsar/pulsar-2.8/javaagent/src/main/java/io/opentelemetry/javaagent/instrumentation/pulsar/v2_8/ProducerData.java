@@ -9,12 +9,12 @@ public class ProducerData {
   public final String url;
   public final String topic;
 
+  public static ProducerData create(String url, String topic) {
+    return new ProducerData(url, topic);
+  }
+
   private ProducerData(String url, String topic) {
     this.url = url;
     this.topic = topic;
-  }
-
-  public static ProducerData create(String url, String topic) {
-    return new ProducerData(url, topic);
   }
 }

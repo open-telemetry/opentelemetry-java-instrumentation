@@ -1,3 +1,4 @@
+display_name: JMX Metrics
 classification: custom
 description: >
   Collects and reports metrics exposed through Java Management Extensions (JMX). It can be

@@ -31,7 +31,7 @@ class OpenAiClientAsyncInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class BuildAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToReturned
     public static OpenAIClientAsync onExit(@Advice.Return OpenAIClientAsync client) {
       return telemetry().wrap(client);

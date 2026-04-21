@@ -44,7 +44,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
   private static final Logger logger =
-      Logger.getLogger(ExternalAnnotationInstrumentationModule.class.getName());
+      Logger.getLogger(ExternalAnnotationInstrumentation.class.getName());
 
   private static final String PACKAGE_CLASS_NAME_REGEX = "[\\w.$]+";
 

@@ -10,13 +10,12 @@ import org.apache.commons.dbcp2.BasicDataSourceMXBean;
 
 /** Entrypoint for instrumenting Apache DBCP database connection pools. */
 public final class ApacheDbcpTelemetry {
+  private final OpenTelemetry openTelemetry;
 
   /** Returns a new {@link ApacheDbcpTelemetry} configured with the given {@link OpenTelemetry}. */
   public static ApacheDbcpTelemetry create(OpenTelemetry openTelemetry) {
     return new ApacheDbcpTelemetry(openTelemetry);
   }
-
-  private final OpenTelemetry openTelemetry;
 
   private ApacheDbcpTelemetry(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;

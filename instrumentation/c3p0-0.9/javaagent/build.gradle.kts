@@ -7,8 +7,6 @@ muzzle {
     group.set("com.mchange")
     module.set("c3p0")
     versions.set("(,)")
-    // these versions have missing dependencies in maven central
-    skip("0.9.2-pre2-RELEASE", "0.9.2-pre3")
   }
 }
 

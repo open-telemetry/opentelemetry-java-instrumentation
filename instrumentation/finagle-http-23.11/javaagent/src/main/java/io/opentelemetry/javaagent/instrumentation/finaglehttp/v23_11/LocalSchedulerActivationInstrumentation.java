@@ -35,7 +35,7 @@ class LocalSchedulerActivationInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class WrapRunnableAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static Runnable wrap(@Advice.Argument(0) Runnable task) {
       if (task == null) {

@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.util.Map;
@@ -28,7 +29,6 @@ import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseListener;
 import org.elasticsearch.client.RestClient;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -38,6 +38,8 @@ import org.testcontainers.elasticsearch.ElasticsearchContainer;
 class ElasticsearchRest7Test {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   static ElasticsearchContainer elasticsearch;
 
@@ -51,6 +53,7 @@ class ElasticsearchRest7Test {
   static void setUp() {
     elasticsearch =
         new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2");
+    cleanup.deferAfterAll(elasticsearch::stop);
     // limit memory usage
     elasticsearch.withEnv(
         "ES_JAVA_OPTS",
@@ -67,15 +70,10 @@ class ElasticsearchRest7Test {
                         .setConnectTimeout(Integer.MAX_VALUE)
                         .setSocketTimeout(Integer.MAX_VALUE))
             .build();
+    cleanup.deferAfterAll(client);
     client = ElasticsearchRest7Telemetry.create(testing.getOpenTelemetry()).wrap(client);
 
     objectMapper = new ObjectMapper();
-  }
-
-  @AfterAll
-  static void cleanUp() throws Exception {
-    client.close();
-    elasticsearch.stop();
   }
 
   @Test

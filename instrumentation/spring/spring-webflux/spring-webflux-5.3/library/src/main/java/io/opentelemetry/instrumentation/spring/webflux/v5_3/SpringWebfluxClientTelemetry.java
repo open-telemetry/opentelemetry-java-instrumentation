@@ -17,6 +17,8 @@ import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 
 /** Entrypoint for instrumenting Spring Webflux HTTP clients. */
 public final class SpringWebfluxClientTelemetry {
+  private final Instrumenter<ClientRequest, ClientResponse> clientInstrumenter;
+  private final ContextPropagators propagators;
 
   /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static SpringWebfluxClientTelemetry create(OpenTelemetry openTelemetry) {
@@ -27,9 +29,6 @@ public final class SpringWebfluxClientTelemetry {
   public static SpringWebfluxClientTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new SpringWebfluxClientTelemetryBuilder(openTelemetry);
   }
-
-  private final Instrumenter<ClientRequest, ClientResponse> clientInstrumenter;
-  private final ContextPropagators propagators;
 
   SpringWebfluxClientTelemetry(
       Instrumenter<ClientRequest, ClientResponse> clientInstrumenter,

@@ -101,7 +101,7 @@ public class IndyModuleRegistry {
     ClassLoader agentOrExtensionCl = module.getClass().getClassLoader();
     InstrumentationModuleClassLoader cl =
         new InstrumentationModuleClassLoader(instrumentedClassLoader, agentOrExtensionCl);
-    cl.installModule(module);
+    cl.installModule(module, true);
     return cl;
   }
 

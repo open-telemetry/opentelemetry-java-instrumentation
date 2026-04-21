@@ -49,7 +49,7 @@ import net.bytebuddy.utility.JavaModule;
 
 public final class InstrumentationModuleInstaller {
 
-  static final TransformSafeLogger logger =
+  private static final TransformSafeLogger logger =
       TransformSafeLogger.getLogger(InstrumentationModule.class);
 
   // Added here instead of AgentInstaller's ignores because it's relatively

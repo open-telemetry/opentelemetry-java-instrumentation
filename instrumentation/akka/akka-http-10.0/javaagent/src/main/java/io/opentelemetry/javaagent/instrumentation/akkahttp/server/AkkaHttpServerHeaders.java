@@ -28,6 +28,7 @@ final class AkkaHttpServerHeaders implements TextMapGetter<HttpRequest> {
         .collect(toList());
   }
 
+  @Nullable
   @Override
   public String get(@Nullable HttpRequest carrier, String key) {
     if (carrier == null) {

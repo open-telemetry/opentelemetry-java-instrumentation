@@ -36,8 +36,7 @@ public final class RuntimeMetricsBuilder {
   }
 
   /**
-   * Enable experimental JMX telemetry collection. When running on Java 17+, this will also enable
-   * experimental JFR metrics. To drop unwanted JFR metrics, configure metric views.
+   * Enable experimental JMX telemetry collection.
    *
    * @deprecated Use {@link Experimental#setEmitExperimentalMetrics(RuntimeTelemetryBuilder,
    *     boolean)} instead.

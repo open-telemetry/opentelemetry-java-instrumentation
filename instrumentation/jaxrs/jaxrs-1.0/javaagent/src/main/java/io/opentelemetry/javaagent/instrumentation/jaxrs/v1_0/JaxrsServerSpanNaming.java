@@ -11,7 +11,7 @@ import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 
 public class JaxrsServerSpanNaming {
 
-  public static final HttpServerRouteGetter<HandlerData> SERVER_SPAN_NAME =
+  private static final HttpServerRouteGetter<HandlerData> serverSpanName =
       (context, handlerData) -> {
         String pathBasedSpanName = handlerData.getServerSpanName();
         // If path based name is empty skip prepending context path so that path based name would
@@ -24,6 +24,10 @@ public class JaxrsServerSpanNaming {
         }
         return pathBasedSpanName;
       };
+
+  public static HttpServerRouteGetter<HandlerData> serverSpanName() {
+    return serverSpanName;
+  }
 
   private JaxrsServerSpanNaming() {}
 }

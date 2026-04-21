@@ -28,7 +28,7 @@ class ZioRuntimeInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static final class DefaultSupervisorAdvice {
+  public static class DefaultSupervisorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToReturned

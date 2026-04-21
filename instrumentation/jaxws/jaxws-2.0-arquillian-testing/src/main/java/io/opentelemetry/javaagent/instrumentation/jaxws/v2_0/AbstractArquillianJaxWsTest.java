@@ -38,7 +38,7 @@ import test.HelloServiceImpl;
 abstract class AbstractArquillianJaxWsTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private final WebClient client = WebClient.of();
 

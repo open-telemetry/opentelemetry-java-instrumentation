@@ -6,8 +6,8 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
-import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -458,7 +458,7 @@ abstract class AbstractRocketMqClientTest {
                                     stringKey("messaging.rocketmq.send_result"),
                                     experimental("SEND_OK")),
                                 equalTo(
-                                    stringArrayKey("messaging.header.Test_Message_Header"),
+                                    headerAttributeKey("Test-Message-Header"),
                                     singletonList("test"))),
                     span ->
                         span.hasName(sharedTopic + " process")
@@ -484,7 +484,7 @@ abstract class AbstractRocketMqClientTest {
                                     longKey("messaging.rocketmq.queue_offset"),
                                     val -> experimentalLong(val)),
                                 equalTo(
-                                    stringArrayKey("messaging.header.Test_Message_Header"),
+                                    headerAttributeKey("Test-Message-Header"),
                                     singletonList("test"))),
                     span ->
                         span.hasName("messageListener")

@@ -51,17 +51,6 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
   private final Map<String, SpringDeclarativeConfigProperties> mapEntries;
   private final ComponentLoader componentLoader;
 
-  private SpringDeclarativeConfigProperties(
-      Map<String, Object> simpleEntries,
-      Map<String, List<SpringDeclarativeConfigProperties>> listEntries,
-      Map<String, SpringDeclarativeConfigProperties> mapEntries,
-      ComponentLoader componentLoader) {
-    this.simpleEntries = simpleEntries;
-    this.listEntries = listEntries;
-    this.mapEntries = mapEntries;
-    this.componentLoader = componentLoader;
-  }
-
   /**
    * Create a {@link SpringDeclarativeConfigProperties} from the {@code properties} map.
    *
@@ -113,6 +102,17 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
     }
     return new SpringDeclarativeConfigProperties(
         simpleEntries, listEntries, mapEntries, componentLoader);
+  }
+
+  private SpringDeclarativeConfigProperties(
+      Map<String, Object> simpleEntries,
+      Map<String, List<SpringDeclarativeConfigProperties>> listEntries,
+      Map<String, SpringDeclarativeConfigProperties> mapEntries,
+      ComponentLoader componentLoader) {
+    this.simpleEntries = simpleEntries;
+    this.listEntries = listEntries;
+    this.mapEntries = mapEntries;
+    this.componentLoader = componentLoader;
   }
 
   private static boolean isPrimitiveList(Object object) {

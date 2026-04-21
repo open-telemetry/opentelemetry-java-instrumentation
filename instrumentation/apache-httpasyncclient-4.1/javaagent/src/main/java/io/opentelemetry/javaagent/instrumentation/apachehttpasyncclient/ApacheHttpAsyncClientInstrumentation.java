@@ -156,8 +156,8 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     @Nullable private final HttpContext httpContext;
     @Nullable private final FutureCallback<T> delegate;
 
-    private volatile Context context;
-    private volatile ApacheHttpClientRequest otelRequest;
+    @Nullable private volatile Context context;
+    @Nullable private volatile ApacheHttpClientRequest otelRequest;
 
     public WrappedFutureCallback(
         Context parentContext,

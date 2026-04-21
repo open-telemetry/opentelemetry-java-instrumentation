@@ -18,6 +18,20 @@ public class ApplicationTracerProvider
   protected final ApplicationTracerFactory tracerFactory;
   protected final TracerProvider agentTracerProvider;
 
+  public static application.io.opentelemetry.api.trace.TracerProvider create(
+      TracerProvider agentTracerProvider) {
+    if (TRACE_PROVIDER_14 != null) {
+      try {
+        return (application.io.opentelemetry.api.trace.TracerProvider)
+            TRACE_PROVIDER_14.invoke(agentTracerProvider);
+      } catch (Throwable t) {
+        throw new IllegalStateException("Failed to create ApplicationTracerProvider", t);
+      }
+    }
+
+    return new ApplicationTracerProvider(ApplicationTracer::new, agentTracerProvider);
+  }
+
   protected ApplicationTracerProvider(
       ApplicationTracerFactory tracerFactory, TracerProvider agentTracerProvider) {
     this.tracerFactory = tracerFactory;
@@ -35,20 +49,6 @@ public class ApplicationTracerProvider
     } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException ignored) {
       return null;
     }
-  }
-
-  public static application.io.opentelemetry.api.trace.TracerProvider create(
-      TracerProvider agentTracerProvider) {
-    if (TRACE_PROVIDER_14 != null) {
-      try {
-        return (application.io.opentelemetry.api.trace.TracerProvider)
-            TRACE_PROVIDER_14.invoke(agentTracerProvider);
-      } catch (Throwable t) {
-        throw new IllegalStateException("Failed to create ApplicationTracerProvider", t);
-      }
-    }
-
-    return new ApplicationTracerProvider(ApplicationTracer::new, agentTracerProvider);
   }
 
   @Override

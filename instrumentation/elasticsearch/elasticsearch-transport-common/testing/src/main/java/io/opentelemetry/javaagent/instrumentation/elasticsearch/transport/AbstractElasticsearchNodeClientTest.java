@@ -77,8 +77,12 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), "ClusterHealthAction"),
-                            equalTo(ELASTICSEARCH_ACTION, experimental("ClusterHealthAction")),
-                            equalTo(ELASTICSEARCH_REQUEST, experimental("ClusterHealthRequest"))),
+                            equalTo(
+                                stringKey("elasticsearch.action"),
+                                experimental("ClusterHealthAction")),
+                            equalTo(
+                                stringKey("elasticsearch.request"),
+                                experimental("ClusterHealthRequest"))),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -111,9 +115,10 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
             asList(
                 equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                 equalTo(maybeStable(DB_OPERATION), "GetAction"),
-                equalTo(ELASTICSEARCH_ACTION, experimental("GetAction")),
-                equalTo(ELASTICSEARCH_REQUEST, experimental("GetRequest")),
-                equalTo(ELASTICSEARCH_REQUEST_INDICES, experimental("invalid-index"))));
+                equalTo(stringKey("elasticsearch.action"), experimental("GetAction")),
+                equalTo(stringKey("elasticsearch.request"), experimental("GetRequest")),
+                equalTo(
+                    stringKey("elasticsearch.request.indices"), experimental("invalid-index"))));
 
     if (emitStableDatabaseSemconv()) {
       assertions.add(equalTo(ERROR_TYPE, "org.elasticsearch.index.IndexNotFoundException"));
@@ -157,12 +162,12 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
         asList(
             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
             equalTo(maybeStable(DB_OPERATION), "GetAction"),
-            equalTo(ELASTICSEARCH_ACTION, experimental("GetAction")),
-            equalTo(ELASTICSEARCH_REQUEST, experimental("GetRequest")),
-            equalTo(ELASTICSEARCH_REQUEST_INDICES, experimental(indexName)),
-            equalTo(ELASTICSEARCH_TYPE, experimental(indexType)),
-            equalTo(ELASTICSEARCH_ID, experimental(id)),
-            equalTo(ELASTICSEARCH_VERSION, experimental(version))));
+            equalTo(stringKey("elasticsearch.action"), experimental("GetAction")),
+            equalTo(stringKey("elasticsearch.request"), experimental("GetRequest")),
+            equalTo(stringKey("elasticsearch.request.indices"), experimental(indexName)),
+            equalTo(stringKey("elasticsearch.type"), experimental(indexType)),
+            equalTo(stringKey("elasticsearch.id"), experimental(id)),
+            equalTo(longKey("elasticsearch.version"), experimental(version))));
   }
 
   @Test
@@ -206,9 +211,15 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), "CreateIndexAction"),
-                            equalTo(ELASTICSEARCH_ACTION, experimental("CreateIndexAction")),
-                            equalTo(ELASTICSEARCH_REQUEST, experimental("CreateIndexRequest")),
-                            equalTo(ELASTICSEARCH_REQUEST_INDICES, experimental(indexName)))),
+                            equalTo(
+                                stringKey("elasticsearch.action"),
+                                experimental("CreateIndexAction")),
+                            equalTo(
+                                stringKey("elasticsearch.request"),
+                                experimental("CreateIndexRequest")),
+                            equalTo(
+                                stringKey("elasticsearch.request.indices"),
+                                experimental(indexName)))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -218,8 +229,12 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), "ClusterHealthAction"),
-                            equalTo(ELASTICSEARCH_ACTION, experimental("ClusterHealthAction")),
-                            equalTo(ELASTICSEARCH_REQUEST, experimental("ClusterHealthRequest")))),
+                            equalTo(
+                                stringKey("elasticsearch.action"),
+                                experimental("ClusterHealthAction")),
+                            equalTo(
+                                stringKey("elasticsearch.request"),
+                                experimental("ClusterHealthRequest")))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -237,9 +252,12 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), "IndexAction"),
-                            equalTo(ELASTICSEARCH_ACTION, experimental("IndexAction")),
-                            equalTo(ELASTICSEARCH_REQUEST, experimental("IndexRequest")),
-                            equalTo(ELASTICSEARCH_REQUEST_INDICES, experimental(indexName)),
+                            equalTo(stringKey("elasticsearch.action"), experimental("IndexAction")),
+                            equalTo(
+                                stringKey("elasticsearch.request"), experimental("IndexRequest")),
+                            equalTo(
+                                stringKey("elasticsearch.request.indices"),
+                                experimental(indexName)),
                             equalTo(
                                 stringKey("elasticsearch.request.write.type"),
                                 experimental(indexType)),

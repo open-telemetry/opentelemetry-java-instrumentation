@@ -49,7 +49,7 @@ class UrlMappingsInfoHandlerAdapterInstrumentation implements TypeInstrumentatio
         HttpServerRoute.update(
             parentContext,
             HttpServerRouteSource.CONTROLLER,
-            GrailsServerSpanNaming.SERVER_SPAN_NAME,
+            GrailsServerSpanNaming.serverSpanName(),
             (GrailsControllerUrlMappingInfo) handler);
       }
     }

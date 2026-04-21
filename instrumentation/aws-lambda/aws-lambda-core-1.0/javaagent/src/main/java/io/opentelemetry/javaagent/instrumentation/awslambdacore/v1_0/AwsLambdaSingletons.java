@@ -14,7 +14,7 @@ import java.time.Duration;
 
 public class AwsLambdaSingletons {
 
-  private static final AwsLambdaFunctionInstrumenter FUNCTION_INSTRUMENTER =
+  private static final AwsLambdaFunctionInstrumenter functionInstrumenter =
       AwsLambdaFunctionInstrumenterFactory.createInstrumenter(GlobalOpenTelemetry.get());
   private static final Duration FLUSH_TIMEOUT =
       Duration.ofMillis(
@@ -24,7 +24,7 @@ public class AwsLambdaSingletons {
                   WrapperConfiguration.OTEL_LAMBDA_FLUSH_TIMEOUT_DEFAULT.toMillis()));
 
   public static AwsLambdaFunctionInstrumenter functionInstrumenter() {
-    return FUNCTION_INSTRUMENTER;
+    return functionInstrumenter;
   }
 
   public static Duration flushTimeout() {

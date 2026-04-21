@@ -18,6 +18,8 @@ import io.r2dbc.spi.ConnectionFactoryOptions;
 
 /** Entrypoint for instrumenting R2dbc. */
 public final class R2dbcTelemetry {
+  private final Instrumenter<DbExecution, Void> instrumenter;
+  private final SqlCommenter sqlCommenter;
 
   /** Returns a new {@link R2dbcTelemetry} configured with the given {@link OpenTelemetry}. */
   public static R2dbcTelemetry create(OpenTelemetry openTelemetry) {
@@ -30,9 +32,6 @@ public final class R2dbcTelemetry {
   public static R2dbcTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new R2dbcTelemetryBuilder(openTelemetry);
   }
-
-  private final Instrumenter<DbExecution, Void> instrumenter;
-  private final SqlCommenter sqlCommenter;
 
   R2dbcTelemetry(Instrumenter<DbExecution, Void> instrumenter, SqlCommenter sqlCommenter) {
     this.instrumenter = instrumenter;

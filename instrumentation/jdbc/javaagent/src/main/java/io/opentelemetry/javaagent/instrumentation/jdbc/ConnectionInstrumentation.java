@@ -130,7 +130,7 @@ class ConnectionInstrumentation implements TypeInstrumentation {
       }
 
       String originalSql = prepareContext.get();
-      JdbcData.preparedStatement.set(statement, originalSql);
+      JdbcData.PREPARED_STATEMENT.set(statement, originalSql);
     }
   }
 

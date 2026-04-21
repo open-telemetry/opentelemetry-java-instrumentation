@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
@@ -23,7 +24,6 @@ import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.nio.client.HttpAsyncClient;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.TestInstance;
@@ -34,6 +34,8 @@ class ApacheHttpAsyncClientTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private final RequestConfig requestConfig =
       RequestConfig.custom()
@@ -52,14 +54,10 @@ class ApacheHttpAsyncClientTest {
 
   @BeforeAll
   void setUp() {
+    cleanup.deferAfterAll(client);
+    cleanup.deferAfterAll(clientWithReadTimeout);
     client.start();
     clientWithReadTimeout.start();
-  }
-
-  @AfterAll
-  void tearDown() throws Exception {
-    client.close();
-    clientWithReadTimeout.close();
   }
 
   HttpAsyncClient getClient(URI uri) {

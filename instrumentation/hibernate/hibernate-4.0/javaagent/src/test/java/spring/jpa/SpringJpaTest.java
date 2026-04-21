@@ -54,7 +54,7 @@ class SpringJpaTest {
 
     boolean result = testing.runWithSpan("parent", () -> repo.findAll().iterator().hasNext());
 
-    assertThat(result).isEqualTo(false);
+    assertThat(result).isFalse();
 
     testing.waitAndAssertTraces(
         trace ->

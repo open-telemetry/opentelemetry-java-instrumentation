@@ -1,3 +1,4 @@
+display_name: AWS Lambda Core
 description: >
   Provides lightweight instrumentation of the Lambda core library, supporting all versions. It
   generates FaaS server spans with the `faas.invocation_id` attribute. Use this package if you only

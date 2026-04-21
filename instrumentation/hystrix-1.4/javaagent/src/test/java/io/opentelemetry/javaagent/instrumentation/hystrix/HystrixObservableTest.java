@@ -440,8 +440,8 @@ class HystrixObservableTest {
                           subscription.unsubscribe();
                           try {
                             throw returnValue;
-                          } catch (Throwable e) {
-                            throw (HystrixRuntimeException) e;
+                          } catch (Throwable t) {
+                            throw (HystrixRuntimeException) t;
                           }
                         })))));
   }

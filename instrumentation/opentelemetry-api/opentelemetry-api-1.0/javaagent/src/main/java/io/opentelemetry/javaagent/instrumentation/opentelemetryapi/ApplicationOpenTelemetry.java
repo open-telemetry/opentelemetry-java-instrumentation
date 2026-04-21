@@ -12,7 +12,6 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Applica
 import javax.annotation.Nullable;
 
 public class ApplicationOpenTelemetry implements application.io.opentelemetry.api.OpenTelemetry {
-
   public static final application.io.opentelemetry.api.OpenTelemetry INSTANCE;
 
   static {

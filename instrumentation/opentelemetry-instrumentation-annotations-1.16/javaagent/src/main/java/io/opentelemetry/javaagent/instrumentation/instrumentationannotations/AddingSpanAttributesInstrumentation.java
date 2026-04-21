@@ -69,7 +69,7 @@ class AddingSpanAttributesInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AddingSpanAttributesAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.Origin Method method,
         @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] args) {

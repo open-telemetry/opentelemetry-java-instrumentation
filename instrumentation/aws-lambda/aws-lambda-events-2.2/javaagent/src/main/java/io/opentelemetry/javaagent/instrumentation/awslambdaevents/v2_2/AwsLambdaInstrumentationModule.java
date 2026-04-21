@@ -11,19 +11,18 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class AwsLambdaInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class AwsLambdaInstrumentationModule extends InstrumentationModule {
   public AwsLambdaInstrumentationModule() {
     super("aws-lambda-events", "aws-lambda-events-2.2", "aws-lambda");
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 2.2.0
     return hasClassesNamed("com.amazonaws.services.lambda.runtime.events.SQSEvent");
   }
 
@@ -37,10 +36,5 @@ public class AwsLambdaInstrumentationModule extends InstrumentationModule
     return asList(
         new AwsLambdaRequestHandlerInstrumentation(),
         new AwsLambdaRequestStreamHandlerInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

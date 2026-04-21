@@ -42,7 +42,7 @@ final class HttpRouteStateInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class UpdateAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.Argument(0) application.io.opentelemetry.context.Context applicationContext,
         @Advice.Argument(1) int updatedBySourceOrder,
@@ -61,7 +61,7 @@ final class HttpRouteStateInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class UpdateSpanAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.Argument(0) application.io.opentelemetry.context.Context applicationContext,
         @Advice.Argument(1) application.io.opentelemetry.api.trace.Span applicationSpan) {

@@ -24,7 +24,7 @@ version = "1.0"
 
 val versions = mapOf(
   // this line is managed by .github/scripts/update-sdk-version.sh
-  "opentelemetrySdk" to "1.60.1",
+  "opentelemetrySdk" to "1.61.0",
 
   // these lines are managed by .github/scripts/update-version.sh
   "opentelemetryJavaagent" to "2.27.0-SNAPSHOT",
@@ -100,7 +100,7 @@ dependencies {
   implementation("org.apache.commons:commons-lang3:3.20.0")
 
   //All dependencies below are only for tests
-  testImplementation("org.testcontainers:testcontainers:2.0.4")
+  testImplementation("org.testcontainers:testcontainers:2.0.5")
   testImplementation("com.fasterxml.jackson.core:jackson-databind:2.21.2")
   testImplementation("com.google.protobuf:protobuf-java-util:4.34.1")
   testImplementation("com.squareup.okhttp3:okhttp:5.3.2")

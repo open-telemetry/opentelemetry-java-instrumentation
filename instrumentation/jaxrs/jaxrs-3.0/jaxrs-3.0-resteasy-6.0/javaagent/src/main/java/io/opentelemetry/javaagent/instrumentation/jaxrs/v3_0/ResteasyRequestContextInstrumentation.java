@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0;
 
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.ResteasySingletons.instrumenter;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsConstants;
@@ -51,7 +53,7 @@ public class ResteasyRequestContextInstrumentation extends AbstractRequestContex
         Jaxrs3HandlerData handlerData = new Jaxrs3HandlerData(resourceClass, method);
         Context context =
             Jaxrs3RequestContextHelper.createOrUpdateAbortSpan(
-                ResteasySingletons.instrumenter(), requestContext, handlerData);
+                instrumenter(), requestContext, handlerData);
         if (context == null) {
           return null;
         }
@@ -60,7 +62,7 @@ public class ResteasyRequestContextInstrumentation extends AbstractRequestContex
 
       public void end(@Nullable Throwable throwable) {
         scope.close();
-        ResteasySingletons.instrumenter().end(context, handlerData, null, throwable);
+        instrumenter().end(context, handlerData, null, throwable);
       }
     }
 

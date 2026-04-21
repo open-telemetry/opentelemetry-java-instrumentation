@@ -12,12 +12,14 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAccessor;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.LogEventMapper;
 import io.opentelemetry.instrumentation.log4j.contextdata.v2_17.internal.ContextDataKeys;
@@ -253,8 +255,12 @@ public class OpenTelemetryAppender extends AbstractAppender {
       boolean captureEventName,
       int numLogsCapturedBeforeOtelInstall,
       OpenTelemetry openTelemetry) {
-
     super(name, filter, layout, ignoreExceptions, properties);
+
+    DeclarativeConfigProperties comonConfig =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
+    boolean v3Preview = comonConfig.getBoolean("v3_preview", false);
+
     this.mapper =
         new LogEventMapper<>(
             ContextDataAccessorImpl.INSTANCE,
@@ -263,7 +269,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
             captureMapMessageAttributes,
             captureMarkerAttribute,
             splitAndFilterBlanksAndNulls(captureContextDataAttributes),
-            captureEventName);
+            captureEventName,
+            v3Preview);
     this.openTelemetry = openTelemetry;
     this.captureCodeAttributes = captureCodeAttributes;
     if (numLogsCapturedBeforeOtelInstall != 0) {
