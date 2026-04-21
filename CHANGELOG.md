@@ -5,8 +5,7 @@
 This release targets the OpenTelemetry SDK 1.61.0.
 
 Note that many artifacts have the `-alpha` suffix attached to their version
-number, reflecting that they are still alpha quality and will continue to have
-breaking changes.
+number, reflecting that they will continue to have breaking changes.
 Please see the [VERSIONING.md](VERSIONING.md#opentelemetry-java-instrumentation-versioning)
 for more details.
 
