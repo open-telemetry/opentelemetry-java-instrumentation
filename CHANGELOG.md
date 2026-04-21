@@ -102,11 +102,11 @@ for more details.
 - Preserve original casing of servlet request parameter names in attribute keys when
   `otel.instrumentation.common.v3-preview` is enabled.
   ([#17822](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17822))
+- Fix warning printed on JDK 26 about changing the value of a final field with reflection.
+  ([#17824](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17824))
 - Add javaagent bridging support for OpenTelemetry API 1.61 stable methods including
   `Tracer.isEnabled()`, metric instrument `isEnabled()`, and `Logger.setBody(Body)`
   ([#17849](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17849))
-- Fix warning printed on JDK 26 about changing the value of a final field with reflection.
-  ([#17824](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17824))
 - Align RMI context propagation limits with Tomcat defaults, reducing max entries from 1000 to 100
   and adding an 8 KB total size limit to prevent excessively large payloads.
   ([#17870](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17870))
@@ -189,6 +189,12 @@ for more details.
 - Fix `ClassNotFoundException` in `MicrometerBridgeAutoConfiguration` when Spring Boot Actuator
   metrics module is not on the classpath in Spring Boot 4.
   ([#17723](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17723))
+- Fix runtime-telemetry unconditionally enabling experimental JFR-based metrics when
+  `otel.instrumentation.runtime-telemetry.emit-experimental-metrics=true`, which could impose
+  unwanted JFR recording overhead on users who only wanted the JMX-based experimental metrics.
+  JFR-based experimental metrics are now gated by a separate
+  `otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics` property.
+  ([#18110](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18110))
 
 ## Version 2.26.1 (2026-03-23)
 
