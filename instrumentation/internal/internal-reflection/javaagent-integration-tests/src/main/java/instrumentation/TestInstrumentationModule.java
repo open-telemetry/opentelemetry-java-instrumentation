@@ -23,4 +23,9 @@ public class TestInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new TestTypeInstrumentation());
   }
+
+  @Override
+  public boolean isHelperClass(String className) {
+    return "instrumentation.TestSingletons".equals(className);
+  }
 }
