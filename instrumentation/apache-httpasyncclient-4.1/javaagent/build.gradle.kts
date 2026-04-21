@@ -15,6 +15,7 @@ muzzle {
 
 dependencies {
   library("org.apache.httpcomponents:httpasyncclient:4.1")
+  latestDepTestLibrary("org.apache.httpcomponents:httpasyncclient:4.1.4") // documented limitation
 }
 
 tasks {
