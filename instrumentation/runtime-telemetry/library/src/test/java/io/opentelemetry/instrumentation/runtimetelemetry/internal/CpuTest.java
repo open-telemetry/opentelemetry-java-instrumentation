@@ -10,7 +10,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -22,15 +21,11 @@ class CpuTest {
 
   @Test
   void registerObservers() {
-    IntSupplier availableProcessors = () -> 8;
     Supplier<Long> processCpuTime = () -> SECONDS.toNanos(42);
     Supplier<Double> processCpuUtilization = () -> 0.05;
 
     Cpu.INSTANCE.registerObservers(
-        testing.getOpenTelemetry().getMeter("test"),
-        availableProcessors,
-        processCpuTime,
-        processCpuUtilization);
+        testing.getOpenTelemetry().getMeter("test"), processCpuTime, processCpuUtilization);
 
     testing.waitAndAssertMetrics(
         "test",
@@ -46,21 +41,6 @@ class CpuTest {
                                 count
                                     .isMonotonic()
                                     .hasPointsSatisfying(point -> point.hasValue(42)))));
-    testing.waitAndAssertMetrics(
-        "test",
-        "jvm.cpu.count",
-        metrics ->
-            metrics.anySatisfy(
-                metricData ->
-                    assertThat(metricData)
-                        .hasDescription(
-                            "Number of processors available to the Java virtual machine.")
-                        .hasUnit("{cpu}")
-                        .hasLongSumSatisfying(
-                            count ->
-                                count
-                                    .isNotMonotonic()
-                                    .hasPointsSatisfying(point -> point.hasValue(8)))));
     testing.waitAndAssertMetrics(
         "test",
         "jvm.cpu.recent_utilization",
