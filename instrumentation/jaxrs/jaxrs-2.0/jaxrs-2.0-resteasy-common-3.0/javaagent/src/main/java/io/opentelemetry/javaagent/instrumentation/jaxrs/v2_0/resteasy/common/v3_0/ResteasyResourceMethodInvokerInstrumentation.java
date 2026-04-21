@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
+package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.resteasy.common.v3_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.ResteasySingletons.INVOKER_NAME;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.resteasy.common.v3_0.ResteasySingletons.INVOKER_NAME;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -17,7 +17,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.jboss.resteasy.core.ResourceMethodInvoker;
 
-class ResteasyResourceMethodInvokerInstrumentation implements TypeInstrumentation {
+public class ResteasyResourceMethodInvokerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.jboss.resteasy.core.ResourceMethodInvoker");
