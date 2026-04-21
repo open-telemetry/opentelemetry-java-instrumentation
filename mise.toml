@@ -1,5 +1,5 @@
 [tools]
-"cargo:https://github.com/grafana/flint" = "rev:113b8cd5910bfd58881cd520daf02040d25b640e"
+"cargo:https://github.com/grafana/flint" = "rev:ae763aa491a26b3005dc25bfd3aabda1a2f16954"
 lychee = "0.23.0"
 markdownlint-cli2 = "0.22.0"
 "github:google/google-java-format" = "1.35.0"
