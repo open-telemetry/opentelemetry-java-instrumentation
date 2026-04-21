@@ -5,11 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms;
 
+import static java.util.logging.Level.FINE;
+
 import com.google.auto.value.AutoValue;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 @AutoValue
 public abstract class MessageWithDestination {
+
+  private static final Logger logger = Logger.getLogger(MessageWithDestination.class.getName());
 
   // visible for tests
   static final String TIBCO_TMP_PREFIX = "$TMP$";
@@ -25,8 +30,8 @@ public abstract class MessageWithDestination {
     DestinationAdapter jmsDestination = null;
     try {
       jmsDestination = message.getJmsDestination();
-    } catch (Exception ignored) {
-      // Ignore
+    } catch (Exception e) {
+      logger.log(FINE, "Failure getting JMS destination", e);
     }
     if (jmsDestination == null) {
       jmsDestination = fallbackDestination;
@@ -66,6 +71,7 @@ public abstract class MessageWithDestination {
     try {
       return nameGetter.getName(destination);
     } catch (Exception e) {
+      logger.log(FINE, "Failure getting JMS destination name", e);
       return "unknown";
     }
   }
