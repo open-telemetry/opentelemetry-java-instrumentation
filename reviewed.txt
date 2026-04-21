@@ -237,3 +237,4 @@ jmx-metrics:library
 async-http-client-common-1.8:javaagent
 couchbase-common-2.0:javaagent
 couchbase-common-2.0:javaagent-unit-tests
+testing-apps:testing-webapp
