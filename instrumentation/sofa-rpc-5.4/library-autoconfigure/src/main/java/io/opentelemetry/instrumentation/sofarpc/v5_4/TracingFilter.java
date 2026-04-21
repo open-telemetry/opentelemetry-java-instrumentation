@@ -69,6 +69,11 @@ final class TracingFilter extends Filter {
     return response;
   }
 
+  /**
+   * Returns {@code true} if this is an in-JVM (local) consumer invocation that should not be
+   * traced. Only checks the client (consumer) side; on the provider side there is no equivalent
+   * concept of an "in-JVM" call, so the filter always runs and creates a SERVER span there.
+   */
   private static boolean shouldSkipLocalCall(FilterInvoker invoker) {
     AbstractInterfaceConfig<?, ?> config = invoker.getConfig();
 
