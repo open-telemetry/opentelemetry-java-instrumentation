@@ -240,3 +240,4 @@ couchbase-common-2.0:javaagent-unit-tests
 testing-apps:testing-webapp
 jodd-http-4.2:javaagent
 jodd-http-4.2:javaagent-unit-tests
+jaxrs-2.0-resteasy-common-3.0:javaagent
