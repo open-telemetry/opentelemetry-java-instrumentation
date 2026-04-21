@@ -25,11 +25,8 @@ jobs:
   muzzle:
     uses: ./.github/workflows/reusable-muzzle.yml
 
-  link-check:
-    uses: ./.github/workflows/reusable-link-check.yml
-
-  markdown-lint-check:
-    uses: ./.github/workflows/reusable-markdown-lint-check.yml
+  lint:
+    uses: ./.github/workflows/reusable-lint-check.yml
 
   publish-snapshots:
     environment: protected
@@ -78,7 +75,7 @@ jobs:
       - common
       - test-latest-deps
       - muzzle
-      - link-check
+      - lint
       - publish-snapshots
     if: always()
     uses: ./.github/workflows/reusable-workflow-notification.yml
@@ -88,6 +85,6 @@ jobs:
           needs.common.result == 'success' &&
           needs.test-latest-deps.result == 'success' &&
           needs.muzzle.result == 'success' &&
-          needs.link-check.result == 'success' &&
+          needs.lint.result == 'success' &&
           needs.publish-snapshots.result == 'success'
         }}
