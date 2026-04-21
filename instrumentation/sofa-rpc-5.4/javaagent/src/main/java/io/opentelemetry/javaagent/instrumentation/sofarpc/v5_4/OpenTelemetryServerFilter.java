@@ -20,7 +20,7 @@ public final class OpenTelemetryServerFilter extends Filter {
   private final Filter delegate;
 
   public OpenTelemetryServerFilter() {
-    delegate = SofaRpcSingletons.SERVER_FILTER;
+    delegate = SofaRpcSingletons.serverFilter();
   }
 
   @Override

@@ -21,7 +21,7 @@ public final class OpenTelemetryClientFilter extends Filter {
   private final Filter delegate;
 
   public OpenTelemetryClientFilter() {
-    delegate = SofaRpcSingletons.CLIENT_FILTER;
+    delegate = SofaRpcSingletons.clientFilter();
   }
 
   @Override
