@@ -17,10 +17,6 @@ windows_executable_extensions = ["sh"]
 windows_default_file_shell_args = "bash"
 use_file_shell_for_executable_tasks = true
 
-[tasks."lint:links"]
-description = "Check for broken links in changed files + all local links"
-run = "flint run lychee"
-
 [tasks.lint]
 description = "Run markdown and link linting"
 run = "flint run"
