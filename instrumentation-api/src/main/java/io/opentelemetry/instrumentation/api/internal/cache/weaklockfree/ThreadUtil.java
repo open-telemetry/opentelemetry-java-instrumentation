@@ -5,36 +5,23 @@
 
 package io.opentelemetry.instrumentation.api.internal.cache.weaklockfree;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import javax.annotation.Nullable;
 
 class ThreadUtil {
 
-  @Nullable private static final MethodHandle isVirtual = findIsVirtual();
+  @Nullable private static final Class<?> virtualThreadClass = findVirtualThreadClass();
 
   @Nullable
-  private static MethodHandle findIsVirtual() {
+  private static Class<?> findVirtualThreadClass() {
     try {
-      return MethodHandles.lookup()
-          .findVirtual(Thread.class, "isVirtual", MethodType.methodType(boolean.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
-      // isVirtual method is not available in Java 8
+      return Class.forName("java.lang.BaseVirtualThread");
+    } catch (ClassNotFoundException e) {
       return null;
     }
   }
 
   static boolean isVirtualThread(Thread thread) {
-    if (isVirtual == null) {
-      return false;
-    }
-    try {
-      return (boolean) isVirtual.invoke(thread);
-    } catch (Throwable t) {
-      // should never happen, but if it does, we just assume it's not a virtual thread
-      return false;
-    }
+    return virtualThreadClass != null && virtualThreadClass.isInstance(thread);
   }
 
   private ThreadUtil() {}
