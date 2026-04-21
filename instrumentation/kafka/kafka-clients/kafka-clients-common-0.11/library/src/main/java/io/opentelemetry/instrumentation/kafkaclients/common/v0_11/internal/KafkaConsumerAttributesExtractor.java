@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -25,6 +28,8 @@ final class KafkaConsumerAttributesExtractor
       AttributeKey.stringKey("messaging.kafka.message.key");
   private static final AttributeKey<Long> MESSAGING_KAFKA_MESSAGE_OFFSET =
       AttributeKey.longKey("messaging.kafka.message.offset");
+  private static final AttributeKey<Long> MESSAGING_KAFKA_OFFSET =
+      AttributeKey.longKey("messaging.kafka.offset");
   private static final AttributeKey<Boolean> MESSAGING_KAFKA_MESSAGE_TOMBSTONE =
       AttributeKey.booleanKey("messaging.kafka.message.tombstone");
 
@@ -35,8 +40,12 @@ final class KafkaConsumerAttributesExtractor
     ConsumerRecord<?, ?> record = request.getRecord();
 
     attributes.put(MESSAGING_DESTINATION_PARTITION_ID, String.valueOf(record.partition()));
-    attributes.put(MESSAGING_KAFKA_MESSAGE_OFFSET, record.offset());
-
+    if (emitStableMessagingSemconv()) {
+      attributes.put(MESSAGING_KAFKA_OFFSET, record.offset());
+    }
+    if (emitOldMessagingSemconv()) {
+      attributes.put(MESSAGING_KAFKA_MESSAGE_OFFSET, record.offset());
+    }
     Object key = record.key();
     if (key != null && canSerialize(key.getClass())) {
       attributes.put(MESSAGING_KAFKA_MESSAGE_KEY, key.toString());

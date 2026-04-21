@@ -24,7 +24,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
@@ -307,6 +306,6 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
     sqsClient.receiveMessage(receive);
     sqsClient.sendMessage(send);
     sqsClient.receiveMessage(receive);
-    assertThat(receive.getAttributeNames()).isEqualTo(singletonList("AWSTraceHeader"));
+    assertThat(receive.getAttributeNames()).containsExactly("AWSTraceHeader");
   }
 }

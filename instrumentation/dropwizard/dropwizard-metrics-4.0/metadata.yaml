@@ -10,6 +10,7 @@ library_link: https://metrics.dropwizard.io/4.2.0/
 disabled_by_default: true
 configurations:
   - name: otel.instrumentation.dropwizard-metrics.enabled
+    declarative_name: java.dropwizard_metrics.enabled
     description: Enables the dropwizard metrics instrumentation.
     type: boolean
     default: false

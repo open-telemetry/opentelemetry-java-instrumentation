@@ -44,10 +44,10 @@ class PutGetTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  static ClientCache cache = new ClientCacheFactory().create();
-  static ClientRegionFactory<Object, Object> regionFactory =
+  private static final ClientCache cache = new ClientCacheFactory().create();
+  private static final ClientRegionFactory<Object, Object> regionFactory =
       cache.createClientRegionFactory(ClientRegionShortcut.LOCAL);
-  static Region<Object, Object> region = regionFactory.create("test-region");
+  private static final Region<Object, Object> region = regionFactory.create("test-region");
 
   private static Stream<Arguments> provideParameters() {
     return Stream.of(
@@ -266,8 +266,8 @@ class PutGetTest {
   }
 
   static class Card implements DataSerializable {
-    String cardNumber;
-    String expDate;
+    private String cardNumber;
+    private String expDate;
 
     public Card(String cardNumber, String expDate) {
       this.cardNumber = cardNumber;

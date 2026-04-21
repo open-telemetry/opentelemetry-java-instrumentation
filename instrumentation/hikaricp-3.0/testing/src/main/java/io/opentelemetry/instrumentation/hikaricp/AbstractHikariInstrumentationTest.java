@@ -54,8 +54,6 @@ public abstract class AbstractHikariInstrumentationTest {
     hikariDataSource.setDataSource(dataSourceMock);
     configure(hikariDataSource, null);
 
-    cleanup.deferCleanup(hikariDataSource);
-
     // when
     Connection hikariConnection = hikariDataSource.getConnection();
     MILLISECONDS.sleep(100);

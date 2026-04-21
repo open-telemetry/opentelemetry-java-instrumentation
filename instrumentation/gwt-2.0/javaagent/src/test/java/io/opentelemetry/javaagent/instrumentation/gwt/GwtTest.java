@@ -26,7 +26,6 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.webapp.WebAppContext;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -44,15 +43,16 @@ class GwtTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private static final Logger logger = LoggerFactory.getLogger(GwtTest.class);
-  static int port;
-  static Server server;
-  static BrowserWebDriverContainer browser;
-  static URI address;
+  private static int port;
+  private static Server server;
+  private static BrowserWebDriverContainer browser;
+  private static URI address;
 
-  static void startServer() throws Exception {
+  private static void startServer() throws Exception {
     port = PortUtils.findOpenPort();
     server = new Server(port);
     for (Connector connector : server.getConnectors()) {
@@ -67,7 +67,7 @@ class GwtTest {
     server.start();
   }
 
-  static void stopServer() throws Exception {
+  private static void stopServer() throws Exception {
     server.stop();
     server.destroy();
   }
@@ -75,24 +75,20 @@ class GwtTest {
   @BeforeAll
   static void setup() throws Exception {
     startServer();
+    cleanup.deferAfterAll(GwtTest::stopServer);
 
     Testcontainers.exposeHostPorts(port);
 
     browser =
         new BrowserWebDriverContainer("selenium/standalone-chrome")
             .withLogConsumer(new Slf4jLogConsumer(logger));
+    cleanup.deferAfterAll(browser::stop);
     browser.start();
 
     address = new URI("http://host.testcontainers.internal:" + port + getContextPath() + "/");
   }
 
-  @AfterAll
-  static void cleanup() throws Exception {
-    stopServer();
-    browser.stop();
-  }
-
-  static String getContextPath() {
+  private static String getContextPath() {
     return "/xyz";
   }
 

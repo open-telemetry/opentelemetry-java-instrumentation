@@ -105,13 +105,15 @@ public final class OpenTelemetryInstrumentationHelper {
 
     return SimpleInstrumentationContext.whenCompleted(
         (result, throwable) -> {
-          Span span = Span.fromContext(context);
-          for (GraphQLError error : result.getErrors()) {
-            AttributesBuilder attributes = Attributes.builder();
-            attributes.put(EXCEPTION_TYPE, String.valueOf(error.getErrorType()));
-            attributes.put(EXCEPTION_MESSAGE, error.getMessage());
+          if (result != null) {
+            Span span = Span.fromContext(context);
+            for (GraphQLError error : result.getErrors()) {
+              AttributesBuilder attributes = Attributes.builder();
+              attributes.put(EXCEPTION_TYPE, String.valueOf(error.getErrorType()));
+              attributes.put(EXCEPTION_MESSAGE, error.getMessage());
 
-            span.addEvent("exception", attributes.build());
+              span.addEvent("exception", attributes.build());
+            }
           }
 
           instrumenter.end(context, state, result, throwable);

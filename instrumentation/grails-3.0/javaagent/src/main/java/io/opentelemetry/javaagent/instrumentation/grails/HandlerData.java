@@ -15,11 +15,11 @@ public class HandlerData {
     this.action = action;
   }
 
-  public Object getController() {
+  Object getController() {
     return controller;
   }
 
-  public String getAction() {
+  String getAction() {
     return action;
   }
 }

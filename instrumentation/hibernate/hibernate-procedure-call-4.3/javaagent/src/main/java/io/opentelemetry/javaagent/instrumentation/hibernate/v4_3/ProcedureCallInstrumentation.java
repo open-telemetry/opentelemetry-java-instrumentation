@@ -37,8 +37,7 @@ class ProcedureCallInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("getOutputs"),
-        ProcedureCallInstrumentation.class.getName() + "$ProcedureCallMethodAdvice");
+        named("getOutputs"), getClass().getName() + "$ProcedureCallMethodAdvice");
   }
 
   @SuppressWarnings("unused")

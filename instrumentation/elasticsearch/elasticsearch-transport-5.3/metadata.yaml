@@ -9,6 +9,7 @@ semantic_conventions:
 library_link: https://www.elastic.co/guide/en/elasticsearch/client/java-api/
 configurations:
   - name: otel.instrumentation.elasticsearch.experimental-span-attributes
+    declarative_name: java.elasticsearch.experimental_span_attributes/development
     description: >
       Enable the capture of `elasticsearch.action`, `elasticsearch.id`, `elasticsearch.request`,
       `elasticsearch.request.indices`, `elasticsearch.request.search.types`,

@@ -59,11 +59,13 @@ final class ClickHouseAttributesGetter
     return errorCodeExtractor.apply(error);
   }
 
+  @Nullable
   @Override
   public String getServerAddress(ClickHouseDbRequest request) {
     return request.getHost();
   }
 
+  @Nullable
   @Override
   public Integer getServerPort(ClickHouseDbRequest request) {
     return request.getPort();

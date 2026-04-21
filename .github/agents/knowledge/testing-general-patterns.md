@@ -3,7 +3,7 @@
 ## Quick Reference
 
 - Use when: test files (`**/src/test/**`) are in scope
-- Review focus: assertion style, test class visibility, resource cleanup patterns, attribute assertion patterns
+- Review focus: assertion style, test class visibility, test method signatures and throws clauses, resource cleanup patterns, attribute assertion patterns
 
 ## Assertion Framework
 
@@ -12,6 +12,25 @@
 - Do not use AssertJ `.as(...)` descriptions or `.withFailMessage(...)` in tests.
   Prefer direct assertions whose failure output shows the unexpected values.
 
+## Test Method Throws Clauses
+
+- On methods annotated with `@Test`, keep the `throws` clause to a single exception type.
+  Do not declare multiple checked exception types on a test method.
+- Be as specific as possible. Prefer the narrowest single checked type that the test body
+  actually exposes instead of broad forms such as `throws Exception` or a multi-exception list.
+- Apply this guidance only to JUnit test entry points such as `@Test`,
+  `@ParameterizedTest`, `@RepeatedTest`, `@TestFactory`, and `@TestTemplate`.
+  Do **not** rewrite nearby helpers or utilities, and do **not** introduce new wrapper
+  helpers (for example, a `waitForMessage(...)` that catches
+  `InterruptedException` / `ExecutionException` / `TimeoutException` and rethrows
+  `AssertionError`), solely to narrow a test method's `throws` clause. Do not apply
+  this rule to every method in a testing module or abstract test base.
+- If the test only blocks on `Future.get(...)` / `CompletableFuture.get(...)`, prefer refactoring to
+  `join()` or another non-checked wait path when that keeps the test clear. If no clean
+  non-checked wait path exists (for example, when a timeout is required via
+  `get(timeout, unit)`), leave the test's `throws` clause as-is — including `throws Exception`
+  — rather than inventing a new helper just to narrow it.
+
 ## Test Resource Cleanup
 
 - In JUnit tests, when an `AutoCloseable` is intended to remain live for most or all of the test
@@ -19,7 +38,8 @@
   over wrapping most of the test body in try-with-resources.
 - For resources created in `@BeforeAll` or other class-scoped setup, prefer
   `AutoCleanupExtension` with `deferAfterAll(...)` over nested `@AfterAll` cleanup
-  chains.
+  chains. Do not introduce or keep `AutoCleanupExtension` solely for a single
+  `deferAfterAll(...)` call — use a plain `@AfterAll` instead.
 - Reuse an existing `cleanup` extension when one is already in scope.
   Otherwise, add a `@RegisterExtension` field when the deferred-cleanup pattern improves
   clarity or avoids wrapping most of the test body.

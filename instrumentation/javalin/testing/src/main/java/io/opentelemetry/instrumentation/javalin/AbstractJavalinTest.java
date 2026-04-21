@@ -26,16 +26,19 @@ import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 import io.javalin.Javalin;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 @TestInstance(PER_CLASS)
 public abstract class AbstractJavalinTest {
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected abstract InstrumentationExtension testing();
 
@@ -43,22 +46,15 @@ public abstract class AbstractJavalinTest {
 
   protected abstract String getJettyInstrumentation();
 
-  private Javalin app;
   private int port;
   private WebClient client;
 
   @BeforeAll
   void setup() {
     port = PortUtils.findOpenPort();
-    app = setupJavalin(port);
+    Javalin app = setupJavalin(port);
+    cleanup.deferAfterAll(app::stop);
     client = WebClient.of("http://localhost:" + port);
-  }
-
-  @AfterAll
-  void cleanup() {
-    if (app != null) {
-      app.stop();
-    }
   }
 
   @Test
