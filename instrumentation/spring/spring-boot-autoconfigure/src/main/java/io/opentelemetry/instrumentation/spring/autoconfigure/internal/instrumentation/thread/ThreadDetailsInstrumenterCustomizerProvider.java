@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.thread;
 
+import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.instrumentation.api.incubator.instrumenter.InstrumenterCustomizer;
 import io.opentelemetry.instrumentation.api.incubator.instrumenter.InstrumenterCustomizerProvider;
 import io.opentelemetry.instrumentation.api.incubator.thread.ThreadDetailsAttributesExtractor;
@@ -17,8 +18,6 @@ import org.springframework.core.env.Environment;
 public class ThreadDetailsInstrumenterCustomizerProvider implements InstrumenterCustomizerProvider {
   private static final String LEGACY_PROPERTY =
       "otel.instrumentation.common.thread-details.enabled";
-  private static final String DECLARATIVE_PROPERTY =
-      "otel.distribution.spring_starter.thread_details_enabled";
 
   // Static because this class is loaded via ServiceLoader (SPI), not managed by Spring DI.
   // Set by OpenTelemetryAutoConfiguration#openTelemetry before instrumenters are built,
@@ -27,17 +26,19 @@ public class ThreadDetailsInstrumenterCustomizerProvider implements Instrumenter
   private static volatile boolean enabled;
 
   /** Called from OpenTelemetryAutoConfiguration for declarative config. */
-  public static void configureDeclarativeConfig(Environment environment) {
-    // Declarative config uses the distro-scoped key, but we still accept the legacy property so
-    // both Spring configuration paths resolve the same feature flag.
-    enabled = readEnabled(environment, DECLARATIVE_PROPERTY, LEGACY_PROPERTY);
+  public static void configureDeclarativeConfig(ConfigProvider configProvider) {
+    enabled =
+        configProvider
+            .getInstrumentationConfig()
+            .get("java")
+            .get("spring_starter")
+            .get("thread_details")
+            .getBoolean("enabled", false);
   }
 
   /** Called from OpenTelemetryAutoConfiguration for properties-based config. */
   public static void configureProperties(Environment environment) {
-    // Properties-based config keeps the legacy toggle, but we fall back to the declarative key so
-    // a single setting still works if it is shared across config styles.
-    enabled = readEnabled(environment, LEGACY_PROPERTY, DECLARATIVE_PROPERTY);
+    enabled = Boolean.TRUE.equals(environment.getProperty(LEGACY_PROPERTY, Boolean.class));
   }
 
   @Override
@@ -45,15 +46,5 @@ public class ThreadDetailsInstrumenterCustomizerProvider implements Instrumenter
     if (enabled) {
       customizer.addAttributesExtractor(new ThreadDetailsAttributesExtractor<>());
     }
-  }
-
-  private static boolean readEnabled(
-      Environment environment, String primaryProperty, String fallbackProperty) {
-    Boolean enabled = environment.getProperty(primaryProperty, Boolean.class);
-    if (enabled != null) {
-      return enabled;
-    }
-    enabled = environment.getProperty(fallbackProperty, Boolean.class);
-    return Boolean.TRUE.equals(enabled);
   }
 }
