@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
+import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.joining;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
