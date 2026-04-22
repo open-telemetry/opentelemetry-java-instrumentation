@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
+package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.jersey.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsPathUtil.normalizePath;
 
