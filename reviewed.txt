@@ -242,3 +242,4 @@ apache-httpclient-5.2:library
 apache-shenyu-2.4:javaagent
 couchbase-common-2.0:javaagent
 elasticsearch-api-client-7.16:javaagent
+clickhouse-client-v2-0.8:javaagent
