@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1;
+package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.jws.api.v1_1;
 
 import static java.util.Collections.singletonList;
 
@@ -17,7 +17,7 @@ import java.util.List;
 public class JwsInstrumentationModule extends InstrumentationModule {
 
   public JwsInstrumentationModule() {
-    super("jaxws-jws-api", "jaxws-jws-api-1.1", "jaxws");
+    super("jaxws-jws-api", "jaxws-2.0-jws-api-1.1", "jaxws");
   }
 
   @Override

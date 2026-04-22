@@ -28,7 +28,7 @@ dependencies {
   testImplementation(project(":instrumentation:jaxws:jaxws-2.0-common-testing"))
 
   testInstrumentation(project(":instrumentation:jaxws:jaxws-2.0:javaagent"))
-  testInstrumentation(project(":instrumentation:jaxws:jaxws-jws-api-1.1:javaagent"))
+  testInstrumentation(project(":instrumentation:jaxws:jaxws-2.0-jws-api-1.1:javaagent"))
   testInstrumentation(project(":instrumentation:jaxws:jaxws-2.0-axis2-1.6:javaagent"))
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
