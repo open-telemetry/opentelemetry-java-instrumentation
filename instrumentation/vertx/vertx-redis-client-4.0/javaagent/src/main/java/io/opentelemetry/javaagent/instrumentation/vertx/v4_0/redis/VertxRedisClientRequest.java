@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Locale;
 import javax.annotation.Nullable;
 
-public class VertxRedisClientRequest {
+class VertxRedisClientRequest {
   private final String command;
   private final List<byte[]> args;
   private final RedisURI redisUri;
@@ -33,6 +33,7 @@ public class VertxRedisClientRequest {
     return args;
   }
 
+  @Nullable
   public String getUser() {
     return redisUri.user();
   }

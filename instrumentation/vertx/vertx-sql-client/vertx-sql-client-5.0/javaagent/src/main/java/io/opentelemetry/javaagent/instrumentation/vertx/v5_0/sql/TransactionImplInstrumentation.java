@@ -33,7 +33,7 @@ class TransactionImplInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class WrapHandlerAdvice {
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Completable<?> wrapHandler(@Advice.Return Completable<?> handler) {
       return CompletableWrapper.wrap(handler);
     }

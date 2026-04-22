@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8;
 
+import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8.RocketMqSingletons.consumeMessageHook;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -31,14 +32,13 @@ class RocketMqConsumerInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class StartAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.FieldValue(
                 value = "defaultMQPushConsumerImpl",
                 declaringType = DefaultMQPushConsumer.class)
             DefaultMQPushConsumerImpl defaultMqPushConsumerImpl) {
-      defaultMqPushConsumerImpl.registerConsumeMessageHook(
-          RocketMqClientHooks.CONSUME_MESSAGE_HOOK);
+      defaultMqPushConsumerImpl.registerConsumeMessageHook(consumeMessageHook());
     }
   }
 }

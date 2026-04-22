@@ -114,7 +114,7 @@ class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
         HttpServerRoute.update(
             parentContext,
             HttpServerRouteSource.CONTROLLER,
-            JaxrsServerSpanNaming.SERVER_SPAN_NAME,
+            JaxrsServerSpanNaming.serverSpanName(),
             handlerData);
 
         if (!instrumenter().shouldStart(parentContext, handlerData)) {
@@ -160,7 +160,7 @@ class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope nameSpan(
         @Advice.This Object target,
         @Advice.Origin Method method,
@@ -169,7 +169,7 @@ class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Object stopSpan(
         @Advice.Return(typing = Typing.DYNAMIC) Object returnValue,
         @Advice.Thrown @Nullable Throwable throwable,

@@ -38,7 +38,7 @@ class JmsDestinationAccessorInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ReceiveAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Scope onEnter() {
       if (isReceiveTelemetryEnabled()) {
@@ -51,7 +51,7 @@ class JmsDestinationAccessorInstrumentation implements TypeInstrumentation {
       return context.makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope == null) {
         return;

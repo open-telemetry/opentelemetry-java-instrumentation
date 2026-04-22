@@ -22,8 +22,10 @@ final class GrpcNetworkServerAttributesGetter
   }
 
   @Override
+  @Nullable
   public Integer getServerPort(GrpcRequest grpcRequest) {
-    return grpcRequest.getLogicalPort();
+    int port = grpcRequest.getLogicalPort();
+    return port == -1 ? null : port;
   }
 
   @Nullable

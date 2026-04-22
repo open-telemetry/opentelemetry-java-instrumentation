@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.hello;
 
-public class BaseHelloService {
+class BaseHelloService {
 
   public String hello2(String name) {
     if ("exception".equals(name)) {

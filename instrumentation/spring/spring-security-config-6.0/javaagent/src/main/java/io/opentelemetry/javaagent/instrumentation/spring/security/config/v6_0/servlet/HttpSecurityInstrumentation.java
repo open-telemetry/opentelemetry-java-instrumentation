@@ -36,7 +36,7 @@ class HttpSecurityInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class PerformBuildAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This HttpSecurity httpSecurity) {
       new EnduserAttributesHttpSecurityCustomizer(enduserAttributesCapturer())
           .customize(httpSecurity);

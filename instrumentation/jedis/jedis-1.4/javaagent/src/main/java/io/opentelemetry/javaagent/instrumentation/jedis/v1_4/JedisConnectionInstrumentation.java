@@ -89,7 +89,7 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
   public static class SendCommandNoArgsAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(value = 0, typing = Assigner.Typing.DYNAMIC) Protocol.Command command) {
@@ -97,7 +97,7 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
       return AdviceScope.start(request);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
@@ -111,7 +111,7 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
   public static class SendCommandWithArgsAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(value = 0, typing = Assigner.Typing.DYNAMIC) Protocol.Command command,
@@ -120,7 +120,7 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
       return AdviceScope.start(request);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

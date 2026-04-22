@@ -33,16 +33,27 @@ public final class UndertowActiveHandlers {
    * @param context server context
    */
   public static void increment(Context context) {
-    context.get(CONTEXT_KEY).incrementAndGet();
+    AtomicInteger counter = context.get(CONTEXT_KEY);
+    // checking for null because of
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/16128
+    if (counter != null) {
+      counter.incrementAndGet();
+    }
   }
 
   /**
    * Decrement counter.
    *
    * @param context server context
-   * @return value of counter after decrementing it
+   * @return value of counter after decrementing it, or {@code -1} if counter is absent
    */
   public static int decrementAndGet(Context context) {
-    return context.get(CONTEXT_KEY).decrementAndGet();
+    AtomicInteger counter = context.get(CONTEXT_KEY);
+    // checking for null because of
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/16128
+    if (counter == null) {
+      return -1;
+    }
+    return counter.decrementAndGet();
   }
 }

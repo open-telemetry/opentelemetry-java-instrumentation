@@ -10,8 +10,6 @@ import static java.util.logging.Level.FINE;
 import java.util.logging.Logger;
 
 final class PluginImplUtil { // TODO: Copy & paste from v2
-  private PluginImplUtil() {}
-
   private static final Logger logger = Logger.getLogger(PluginImplUtil.class.getName());
 
   /**
@@ -56,4 +54,6 @@ final class PluginImplUtil { // TODO: Copy & paste from v2
       return false;
     }
   }
+
+  private PluginImplUtil() {}
 }

@@ -45,7 +45,6 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
@@ -86,18 +85,12 @@ public abstract class AbstractReactorKafkaTest {
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.Kafka.*Server\\).*", 1))
             .withStartupTimeout(Duration.ofMinutes(1));
+    cleanup.deferAfterAll(kafka::stop);
     kafka.start();
 
     sender = KafkaSender.create(senderOptions());
+    cleanup.deferAfterAll(sender::close);
     receiver = KafkaReceiver.create(receiverOptions());
-  }
-
-  @AfterAll
-  static void tearDownAll() {
-    if (sender != null) {
-      sender.close();
-    }
-    kafka.stop();
   }
 
   @SuppressWarnings("unchecked")
@@ -224,6 +217,10 @@ public abstract class AbstractReactorKafkaTest {
                 satisfies(stringKey("messaging.client_id"), val -> val.startsWith("producer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
+    if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
+      assertions.add(
+          equalTo(stringKey("messaging.kafka.bootstrap.servers"), kafka.getBootstrapServers()));
+    }
     String messageKey = record.key();
     if (messageKey != null) {
       assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));

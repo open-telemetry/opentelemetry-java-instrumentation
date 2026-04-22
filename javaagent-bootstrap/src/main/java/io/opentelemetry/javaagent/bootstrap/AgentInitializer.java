@@ -139,7 +139,7 @@ public final class AgentInitializer {
       if (version >= 40) {
         return false;
       }
-    } catch (NumberFormatException exception) {
+    } catch (NumberFormatException ignored) {
       return false;
     }
 

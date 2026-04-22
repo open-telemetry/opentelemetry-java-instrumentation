@@ -47,7 +47,7 @@ class DriverInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class NewPoolAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Object driver, @Advice.Return Pool pool) {
       if (pool != null) {
         storePoolDbSystem(pool, getDbSystemNameFromClassName(driver));

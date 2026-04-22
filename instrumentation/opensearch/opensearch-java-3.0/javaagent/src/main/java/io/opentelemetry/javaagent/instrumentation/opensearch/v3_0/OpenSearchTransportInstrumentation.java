@@ -111,7 +111,7 @@ class OpenSearchTransportInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class PerformRequestAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This OpenSearchTransport openSearchTransport,
         @Advice.Argument(0) Object request,
@@ -119,7 +119,7 @@ class OpenSearchTransportInstrumentation implements TypeInstrumentation {
       return AdviceScope.start(request, endpoint, openSearchTransport.jsonpMapper());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
@@ -132,7 +132,7 @@ class OpenSearchTransportInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class PerformRequestAsyncAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.This OpenSearchTransport openSearchTransport,
         @Advice.Argument(0) Object request,
@@ -142,7 +142,7 @@ class OpenSearchTransportInstrumentation implements TypeInstrumentation {
       return new Object[] {adviceScope};
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToReturned
     public static CompletableFuture<Object> stopSpan(
         @Advice.Return CompletableFuture<Object> future,

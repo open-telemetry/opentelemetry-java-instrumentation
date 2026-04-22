@@ -48,12 +48,12 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RunLoopAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static boolean onEnter() {
       return KafkaClientsConsumerProcessTracing.setEnabled(false);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter boolean previousValue) {
       KafkaClientsConsumerProcessTracing.setEnabled(previousValue);
     }
@@ -63,14 +63,14 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static boolean onEnter() {
-      return SpringSchedulingTaskTracing.setEnabled(false);
+      return SpringSchedulingTaskTracing.setWrappingEnabled(false);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter boolean previousValue) {
-      SpringSchedulingTaskTracing.setEnabled(previousValue);
+      SpringSchedulingTaskTracing.setWrappingEnabled(previousValue);
     }
   }
 
@@ -110,7 +110,7 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static AdviceScope onEnter(
         @Advice.Argument(0) ConsumerRecords<?, ?> records,
@@ -118,7 +118,7 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
       return AdviceScope.enter(records, consumer);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

@@ -21,9 +21,9 @@ public class Servlet2ResponseSendAdvice {
 
   public static class AdviceScope {
     private final CallDepth callDepth;
-    private final ClassAndMethod classAndMethod;
-    private final Context context;
-    private final Scope scope;
+    @Nullable private final ClassAndMethod classAndMethod;
+    @Nullable private final Context context;
+    @Nullable private final Scope scope;
 
     public AdviceScope(CallDepth callDepth, Class<?> declaringClass, String methodName) {
       this.callDepth = callDepth;
@@ -58,14 +58,14 @@ public class Servlet2ResponseSendAdvice {
   }
 
   @Nullable
-  @Advice.OnMethodEnter(suppress = Throwable.class)
+  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
   public static AdviceScope start(
       @Advice.Origin("#t") Class<?> declaringClass, @Advice.Origin("#m") String methodName) {
     return new AdviceScope(
         CallDepth.forClass(HttpServletResponse.class), declaringClass, methodName);
   }
 
-  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
   public static void stopSpan(
       @Advice.Thrown @Nullable Throwable throwable,
       @Advice.Enter @Nullable AdviceScope adviceScope) {

@@ -98,7 +98,7 @@ class ConnectionInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToArguments(@ToArgument(value = 0, index = 0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] processSql(
         @Advice.This Connection connection, @Advice.Argument(0) String sql) {
       Context context = Java8BytecodeBridge.currentContext();
@@ -112,7 +112,7 @@ class ConnectionInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void addDbInfo(
         @Advice.Return PreparedStatement statement,
         @Advice.Enter Object[] enterResult,
@@ -130,7 +130,7 @@ class ConnectionInstrumentation implements TypeInstrumentation {
       }
 
       String originalSql = prepareContext.get();
-      JdbcData.preparedStatement.set(statement, originalSql);
+      JdbcData.PREPARED_STATEMENT.set(statement, originalSql);
     }
   }
 
@@ -170,7 +170,7 @@ class ConnectionInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This Connection connection, @Advice.Origin("#m") String methodName) {
       if (JdbcSingletons.isWrapper(connection, Connection.class)) {
@@ -180,7 +180,7 @@ class ConnectionInstrumentation implements TypeInstrumentation {
       return AdviceScope.start(connection, methodName);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

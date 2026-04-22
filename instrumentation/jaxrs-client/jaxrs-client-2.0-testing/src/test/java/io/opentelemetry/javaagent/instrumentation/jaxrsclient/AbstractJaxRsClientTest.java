@@ -64,11 +64,11 @@ abstract class AbstractJaxRsClientTest extends AbstractHttpClientTest<Invocation
       response.readEntity(String.class);
       response.close();
       return response.getStatus();
-    } catch (ProcessingException exception) {
-      if (exception.getCause() instanceof Exception) {
-        throw (Exception) exception.getCause();
+    } catch (ProcessingException e) {
+      if (e.getCause() instanceof Exception) {
+        throw (Exception) e.getCause();
       }
-      throw exception;
+      throw e;
     }
   }
 

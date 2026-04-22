@@ -49,9 +49,9 @@ muzzle {
 dependencies {
   compileOnly("javax.faces:jsf-api:1.2")
 
-  implementation(project(":instrumentation:jsf:jsf-javax-common:javaagent"))
+  implementation(project(":instrumentation:jsf:jsf-common-javax:javaagent"))
 
-  testImplementation(project(":instrumentation:jsf:jsf-javax-common:testing"))
+  testImplementation(project(":instrumentation:jsf:jsf-common-javax:testing"))
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jsf:jsf-mojarra-3.0:javaagent"))
@@ -61,7 +61,7 @@ testing {
   suites {
     val mojarra12Test by registering(JvmTestSuite::class) {
       dependencies {
-        implementation(project(":instrumentation:jsf:jsf-javax-common:testing"))
+        implementation(project(":instrumentation:jsf:jsf-common-javax:testing"))
         implementation("javax.faces:jsf-api:1.2")
         implementation("com.sun.facelets:jsf-facelets:1.1.14")
 
@@ -72,7 +72,7 @@ testing {
 
     val mojarra2Test by registering(JvmTestSuite::class) {
       dependencies {
-        implementation(project(":instrumentation:jsf:jsf-javax-common:testing"))
+        implementation(project(":instrumentation:jsf:jsf-common-javax:testing"))
 
         val version = if (otelProps.testLatestDeps) "2.+" else "2.2.0"
         implementation("org.glassfish:javax.faces:$version")

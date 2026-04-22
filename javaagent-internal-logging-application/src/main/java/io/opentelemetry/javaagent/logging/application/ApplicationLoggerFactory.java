@@ -10,12 +10,13 @@ import io.opentelemetry.javaagent.bootstrap.logging.ApplicationLoggerBridge;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javax.annotation.Nullable;
 
 final class ApplicationLoggerFactory extends ApplicationLoggerBridge
     implements InternalLogger.Factory {
 
   private final AtomicBoolean installed = new AtomicBoolean();
-  private volatile InternalLogger.Factory actual = null;
+  @Nullable private volatile InternalLogger.Factory actual = null;
   private final ConcurrentMap<String, ApplicationLogger> inMemoryLoggers =
       new ConcurrentHashMap<>();
 
@@ -33,8 +34,8 @@ final class ApplicationLoggerFactory extends ApplicationLoggerBridge
           .create(ApplicationLoggerBridge.class.getName())
           .log(
               InternalLogger.Level.WARN,
-              "Multiple application logger implementations were provided."
-                  + " The javaagent will use the first bridge provided and ignore the following ones (this one).",
+              "Multiple application logger implementations were provided. The javaagent will use"
+                  + " the first bridge provided and ignore the following ones (this one).",
               null);
       return;
     }

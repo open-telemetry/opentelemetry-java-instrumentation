@@ -91,7 +91,7 @@ class RedisStandaloneConnectionInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This RedisStandaloneConnection connection,
         @Advice.Argument(0) @Nullable Request request,
@@ -102,7 +102,7 @@ class RedisStandaloneConnectionInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Future<Response> onExit(
         @Advice.Thrown Throwable throwable,
         @Advice.Return @Nullable Future<Response> responseFuture,
@@ -118,7 +118,7 @@ class RedisStandaloneConnectionInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This RedisStandaloneConnection connection) {
       // used in 4.1.0, for 4.0.0 it is set in RedisConnectionProviderInstrumentation
       VertxRedisClientSingletons.setRedisUri(

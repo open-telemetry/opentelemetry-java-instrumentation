@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
 import io.netty.buffer.ByteBuf;
@@ -21,12 +22,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.redisson.client.protocol.CommandData;
 import org.redisson.client.protocol.CommandsData;
 
 @AutoValue
 public abstract class RedissonRequest {
+
+  private static final Logger logger = Logger.getLogger(RedissonRequest.class.getName());
 
   private static final RedisCommandSanitizer sanitizer =
       RedisCommandSanitizer.create(
@@ -124,13 +128,15 @@ public abstract class RedissonRequest {
     if (command instanceof CommandData && COMMAND_DATA_GET_PROMISE != null) {
       try {
         return (CompletionStage<?>) COMMAND_DATA_GET_PROMISE.invoke(command);
-      } catch (Throwable ignored) {
+      } catch (Throwable t) {
+        logger.log(FINE, "Failed to get Redisson command promise", t);
         return null;
       }
     } else if (command instanceof CommandsData && COMMANDS_DATA_GET_PROMISE != null) {
       try {
         return (CompletionStage<?>) COMMANDS_DATA_GET_PROMISE.invoke(command);
-      } catch (Throwable ignored) {
+      } catch (Throwable t) {
+        logger.log(FINE, "Failed to get Redisson commands promise", t);
         return null;
       }
     }
@@ -150,13 +156,13 @@ public abstract class RedissonRequest {
               "org.redisson.misc.RPromise", false, RedissonRequest.class.getClassLoader());
       // try versions older than 3.16.8
       return lookup.findVirtual(commandClass, "getPromise", MethodType.methodType(promiseClass));
-    } catch (NoSuchMethodException | ClassNotFoundException e) {
+    } catch (NoSuchMethodException | ClassNotFoundException ignored) {
       // in 3.16.8 CommandsData#getPromise() and CommandData#getPromise() return type was changed in
       // a backwards-incompatible way from RPromise to CompletableFuture
       try {
         return lookup.findVirtual(
             commandClass, "getPromise", MethodType.methodType(CompletableFuture.class));
-      } catch (NoSuchMethodException | IllegalAccessException ignored) {
+      } catch (NoSuchMethodException | IllegalAccessException ignore) {
         return null;
       }
     } catch (IllegalAccessException ignored) {

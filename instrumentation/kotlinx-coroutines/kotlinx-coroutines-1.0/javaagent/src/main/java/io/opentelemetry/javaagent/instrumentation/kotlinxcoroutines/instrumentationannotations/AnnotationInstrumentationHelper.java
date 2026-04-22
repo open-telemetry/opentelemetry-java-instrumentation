@@ -38,7 +38,7 @@ public class AnnotationInstrumentationHelper {
     if (spanKindString != null) {
       try {
         spanKind = SpanKind.valueOf(spanKindString);
-      } catch (IllegalArgumentException exception) {
+      } catch (IllegalArgumentException ignored) {
         // ignore
       }
     }

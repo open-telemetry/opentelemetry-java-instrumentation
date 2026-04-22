@@ -55,7 +55,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
   private static String dbUriNonExistent;
   private static int incorrectPort;
 
-  private static final ImmutableMap<String, String> testHashMap =
+  private static final ImmutableMap<String, String> TEST_HASH_MAP =
       ImmutableMap.of(
           "firstname", "John",
           "lastname", "Doe",
@@ -112,8 +112,8 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
         testConnectionClient.connectAsync(
             StringCodec.UTF8, RedisURI.create("redis://" + host + ":" + port + "?timeout=3s"));
     StatefulRedisConnection<String, String> connection1 = connectionFuture.get();
-    cleanup.deferCleanup(connection1);
     cleanup.deferCleanup(testConnectionClient::shutdown);
+    cleanup.deferCleanup(connection1);
 
     assertThat(connection1).isNotNull();
     if (connectHasSpans()) {
@@ -388,7 +388,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
   void testHashSetAndThenNestApplyToHashGetall() throws Exception {
     CompletableFuture<Map<String, String>> future = new CompletableFuture<>();
 
-    RedisFuture<String> hmsetFuture = asyncCommands.hmset("TESTHM", testHashMap);
+    RedisFuture<String> hmsetFuture = asyncCommands.hmset("TESTHM", TEST_HASH_MAP);
     hmsetFuture.thenApplyAsync(
         setResult -> {
           // Wait for 'hmset' trace to get written
@@ -411,7 +411,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
           return null;
         });
 
-    assertThat(future.get(10, SECONDS)).isEqualTo(testHashMap);
+    assertThat(future.get(10, SECONDS)).isEqualTo(TEST_HASH_MAP);
 
     testing()
         .waitAndAssertTraces(

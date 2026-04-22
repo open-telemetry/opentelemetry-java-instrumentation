@@ -30,7 +30,7 @@ class InvocationListenerRegistryTypeInstrumentation implements TypeInstrumentati
   @SuppressWarnings("unused")
   public static class ClassInitializerAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit() {
       InvocationListenerRegistry.addFactory(new TracingInvocationListenerFactory());
     }

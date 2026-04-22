@@ -22,7 +22,7 @@ public class SpringSchedulingCodeAttributesGetter implements CodeAttributesGette
   private static Class<?> getOutcomeTrackingRunnableClass() {
     try {
       return Class.forName("org.springframework.scheduling.config.Task$OutcomeTrackingRunnable");
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       return null;
     }
   }
@@ -36,7 +36,7 @@ public class SpringSchedulingCodeAttributesGetter implements CodeAttributesGette
       Field field = clazz.getDeclaredField("runnable");
       field.setAccessible(true);
       return field;
-    } catch (Exception exception) {
+    } catch (Exception ignored) {
       return null;
     }
   }

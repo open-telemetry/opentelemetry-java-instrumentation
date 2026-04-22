@@ -59,7 +59,7 @@ class ConcurrentIntegrationTest {
     assertThat(logMessages).hasSize(count.get());
   }
 
-  private static final class TestLogger implements InternalLogger {
+  private static class TestLogger implements InternalLogger {
 
     private final String name;
     private final List<Integer> logMessages;

@@ -51,9 +51,4 @@ public class VertxSqlClientInstrumentationModule extends InstrumentationModule
         new QueryResultBuilderInstrumentation(),
         new TransactionImplInstrumentation());
   }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
-  }
 }

@@ -42,7 +42,7 @@ class HttpClientConnectionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CreateStreamAdvice {
     @AssignReturned.ToArguments(@ToArgument(1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Handler<?> wrapHandler(@Advice.Argument(1) Handler<?> handler) {
       return HandlerWrapper.wrap(handler);
     }

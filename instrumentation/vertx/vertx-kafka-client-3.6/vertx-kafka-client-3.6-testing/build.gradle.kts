@@ -30,8 +30,6 @@ testing {
       targets {
         all {
           testTask.configure {
-            usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-
             systemProperty(
               "metadataConfig",
               "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=false",

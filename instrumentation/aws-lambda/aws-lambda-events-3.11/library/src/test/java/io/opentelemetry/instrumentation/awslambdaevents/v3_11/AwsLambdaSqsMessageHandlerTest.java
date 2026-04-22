@@ -153,7 +153,7 @@ class AwsLambdaSqsMessageHandlerTest {
     }
   }
 
-  private static final class TestHandler extends TracingSqsMessageHandler {
+  private static class TestHandler extends TracingSqsMessageHandler {
 
     TestHandler(OpenTelemetrySdk openTelemetrySdk) {
       super(openTelemetrySdk);

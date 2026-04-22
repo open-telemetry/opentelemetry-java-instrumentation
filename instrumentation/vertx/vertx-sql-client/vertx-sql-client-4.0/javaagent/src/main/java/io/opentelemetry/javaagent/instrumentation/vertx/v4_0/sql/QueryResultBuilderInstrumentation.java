@@ -35,12 +35,12 @@ class QueryResultBuilderInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class CompleteAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.FieldValue("handler") Promise<?> promise) {
       return endQuerySpan(instrumenter(), promise, null);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();
@@ -50,13 +50,13 @@ class QueryResultBuilderInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class FailAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(
         @Advice.Argument(0) Throwable throwable, @Advice.FieldValue("handler") Promise<?> promise) {
       return endQuerySpan(instrumenter(), promise, throwable);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();

@@ -55,7 +55,6 @@ import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
 import org.hornetq.core.server.HornetQServer;
 import org.hornetq.core.server.HornetQServers;
 import org.hornetq.jms.client.HornetQConnectionFactory;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -95,6 +94,7 @@ class Jms2InstrumentationTest {
 
     server = HornetQServers.newHornetQServer(config);
     server.start();
+    cleanup.deferAfterAll(server::stop);
 
     ServerLocator serverLocator =
         HornetQClient.createServerLocatorWithoutHA(
@@ -114,22 +114,9 @@ class Jms2InstrumentationTest {
     connection.start();
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
     session.run();
-  }
-
-  @AfterAll
-  static void tearDown() throws Exception {
-    if (session != null) {
-      session.close();
-    }
-    if (connection != null) {
-      connection.close();
-    }
-    if (connectionFactory != null) {
-      connectionFactory.close();
-    }
-    if (server != null) {
-      server.stop();
-    }
+    cleanup.deferAfterAll(connectionFactory::close);
+    cleanup.deferAfterAll(connection);
+    cleanup.deferAfterAll(session);
   }
 
   @MethodSource("destinationArguments")

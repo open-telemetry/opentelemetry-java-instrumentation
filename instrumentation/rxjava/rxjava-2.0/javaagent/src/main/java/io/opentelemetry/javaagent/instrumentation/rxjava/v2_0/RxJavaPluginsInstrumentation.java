@@ -32,7 +32,7 @@ class RxJavaPluginsInstrumentation implements TypeInstrumentation {
 
     // TODO: Replace with adding a type initializer to RxJavaPlugins
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2685
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void activateOncePerClassloader() {
       TracingAssemblyActivation.activate(RxJavaPlugins.class);
     }

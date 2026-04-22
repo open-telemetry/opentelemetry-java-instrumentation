@@ -11,13 +11,12 @@ import javax.annotation.Nullable;
 
 /** Entrypoint for instrumenting Hikari database connection pools. */
 public final class HikariTelemetry {
+  private final OpenTelemetry openTelemetry;
 
   /** Returns a new {@link HikariTelemetry} configured with the given {@link OpenTelemetry}. */
   public static HikariTelemetry create(OpenTelemetry openTelemetry) {
     return new HikariTelemetry(openTelemetry);
   }
-
-  private final OpenTelemetry openTelemetry;
 
   private HikariTelemetry(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;

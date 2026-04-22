@@ -37,7 +37,7 @@ class DataSourceProxyInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class CreatePoolAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This DataSourceProxy dataSource) {
       TomcatConnectionPoolMetrics.registerMetrics(dataSource);
     }
@@ -45,7 +45,7 @@ class DataSourceProxyInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class CloseAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This DataSourceProxy dataSource) {
       TomcatConnectionPoolMetrics.unregisterMetrics(dataSource);
     }

@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-public final class MetaDataCollector {
+public class MetaDataCollector {
 
   private static final Logger logger = Logger.getLogger(MetaDataCollector.class.getName());
 

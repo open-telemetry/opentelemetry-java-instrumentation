@@ -175,7 +175,7 @@ class SnsCamelTest {
     return new SnsMetadata(queueUrl, topicArn);
   }
 
-  private static final class SnsMetadata {
+  private static class SnsMetadata {
     private final String queueUrl;
     private final String topicArn;
 

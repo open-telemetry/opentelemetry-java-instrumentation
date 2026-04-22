@@ -43,7 +43,7 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
   public static class GetRecordInterceptorAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static <K, V> RecordInterceptor<K, V> onExit(
         @Advice.Return RecordInterceptor<K, V> originalInterceptor) {
       RecordInterceptor<K, V> interceptor = originalInterceptor;

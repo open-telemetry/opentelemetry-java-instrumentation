@@ -75,7 +75,7 @@ class HttpClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CreateAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth onEnter() {
       CallDepth callDepth = CallDepth.forClass(HttpClient.class);
       callDepth.getAndIncrement();
@@ -83,7 +83,7 @@ class HttpClientInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static HttpClient stopSpan(
         @Advice.Thrown Throwable throwable,
         @Advice.Return HttpClient client,
@@ -100,7 +100,7 @@ class HttpClientInstrumentation implements TypeInstrumentation {
   public static class OnRequestAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static BiConsumer<? super HttpClientRequest, ? super Connection> onEnter(
         @Advice.Argument(0) BiConsumer<? super HttpClientRequest, ? super Connection> callback) {
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
@@ -114,7 +114,7 @@ class HttpClientInstrumentation implements TypeInstrumentation {
   public static class OnRequestErrorAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static BiConsumer<? super HttpClientRequest, ? super Throwable> onEnter(
         @Advice.Argument(0) BiConsumer<? super HttpClientRequest, ? super Throwable> callback) {
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
@@ -128,7 +128,7 @@ class HttpClientInstrumentation implements TypeInstrumentation {
   public static class OnResponseAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static BiConsumer<? super HttpClientResponse, ? super Connection> onEnter(
         @Advice.Argument(0) BiConsumer<? super HttpClientResponse, ? super Connection> callback,
         @Advice.Origin("#m") String methodName) {
@@ -144,7 +144,7 @@ class HttpClientInstrumentation implements TypeInstrumentation {
   public static class OnResponseErrorAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static BiConsumer<? super HttpClientResponse, ? super Throwable> onEnter(
         @Advice.Argument(0) BiConsumer<? super HttpClientResponse, ? super Throwable> callback) {
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
@@ -161,7 +161,7 @@ class HttpClientInstrumentation implements TypeInstrumentation {
       @ToArgument(value = 0, index = 0),
       @ToArgument(value = 1, index = 1)
     })
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.Argument(0)
             BiConsumer<? super HttpClientRequest, ? super Throwable> originalRequestCallback,

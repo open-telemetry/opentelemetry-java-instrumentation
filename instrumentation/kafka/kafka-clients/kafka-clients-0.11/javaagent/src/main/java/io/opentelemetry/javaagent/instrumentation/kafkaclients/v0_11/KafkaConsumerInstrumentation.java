@@ -49,12 +49,12 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class PollAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Timer onEnter() {
       return Timer.start();
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Enter Timer timer,
         @Advice.This Consumer<?, ?> consumer,

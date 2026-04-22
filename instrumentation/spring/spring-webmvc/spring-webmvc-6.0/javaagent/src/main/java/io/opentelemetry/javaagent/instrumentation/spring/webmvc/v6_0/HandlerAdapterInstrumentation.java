@@ -79,7 +79,7 @@ class HandlerAdapterInstrumentation implements TypeInstrumentation {
 
         // Name the parent span based on the matching pattern
         HttpServerRoute.update(
-            parentContext, CONTROLLER, SpringWebMvcServerSpanNaming.SERVER_SPAN_NAME, request);
+            parentContext, CONTROLLER, SpringWebMvcServerSpanNaming.serverSpanName(), request);
 
         if (!handlerInstrumenter().shouldStart(parentContext, handler)) {
           return null;
@@ -97,13 +97,13 @@ class HandlerAdapterInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope nameResourceAndStartSpan(
         @Advice.Argument(0) HttpServletRequest request, @Advice.Argument(2) Object handler) {
       return AdviceScope.enter(request, handler);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Argument(2) Object handler,
         @Advice.Thrown @Nullable Throwable throwable,

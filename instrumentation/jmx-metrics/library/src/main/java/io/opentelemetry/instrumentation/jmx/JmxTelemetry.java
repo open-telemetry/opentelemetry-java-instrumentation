@@ -16,7 +16,6 @@ import javax.management.MBeanServerFactory;
 
 /** Entrypoint for JMX metrics Insights */
 public final class JmxTelemetry {
-
   private final JmxMetricInsight service;
   private final MetricConfiguration metricConfiguration;
 

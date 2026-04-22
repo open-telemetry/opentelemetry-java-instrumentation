@@ -13,8 +13,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilde
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -43,19 +41,14 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
     // this line will make OpenTelemetryMeterRegistryAutoConfiguration available to all
     // classloaders, so that the bean class loader (different from the instrumented class loader)
     // can load it
-    if (!isIndyModule()) {
-      // For indy module the proxy-bytecode will be injected as resource by injectClasses()
-      helperResourceBuilder.registerForAllClassLoaders(
-          "io/opentelemetry/javaagent/instrumentation/spring/actuator/v2_0/OpenTelemetryMeterRegistryAutoConfiguration.class");
-    }
+    helperResourceBuilder.registerForAllClassLoaders(
+        "io/opentelemetry/javaagent/instrumentation/spring/actuator/v2_0/OpenTelemetryMeterRegistryAutoConfiguration.class");
   }
 
   @Override
-  public void injectClasses(ClassInjector injector) {
-    injector
-        .proxyBuilder(
-            "io.opentelemetry.javaagent.instrumentation.spring.actuator.v2_0.OpenTelemetryMeterRegistryAutoConfiguration")
-        .inject(InjectionMode.CLASS_AND_RESOURCE);
+  public List<String> exposedClassNames() {
+    return singletonList(
+        "io.opentelemetry.javaagent.instrumentation.spring.actuator.v2_0.OpenTelemetryMeterRegistryAutoConfiguration");
   }
 
   @Override
@@ -67,10 +60,5 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
   public boolean defaultEnabled() {
     // produces a lot of metrics that are already captured - e.g. JVM memory usage
     return false;
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

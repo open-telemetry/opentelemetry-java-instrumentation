@@ -13,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.InstrumentationProxyHelper;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
@@ -55,7 +54,7 @@ class DispatcherServletInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class HandlerMappingAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void afterRefresh(
         @Advice.Argument(0) ApplicationContext springCtx,
         @Advice.FieldValue("handlerMappings") List<HandlerMapping> handlerMappings) {
@@ -65,9 +64,9 @@ class DispatcherServletInstrumentation implements TypeInstrumentation {
       }
 
       Object bean = springCtx.getBean("otelAutoDispatcherFilter");
-      OpenTelemetryHandlerMappingFilter filter =
-          InstrumentationProxyHelper.unwrapIfNeeded(bean, OpenTelemetryHandlerMappingFilter.class);
-      filter.setHandlerMappings(handlerMappings);
+      if (bean instanceof OpenTelemetryHandlerMappingFilter openTelemetryHandlerMappingFilter) {
+        openTelemetryHandlerMappingFilter.setHandlerMappings(handlerMappings);
+      }
     }
   }
 
@@ -100,12 +99,12 @@ class DispatcherServletInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(0) ModelAndView mv) {
       return AdviceScope.enter(mv);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Argument(0) ModelAndView mv,
         @Advice.Thrown @Nullable Throwable throwable,

@@ -93,9 +93,9 @@ final class OpenTelemetryInstrumentation extends SimplePerformantInstrumentation
       Object fieldValue;
       try (Scope ignored = childContext.makeCurrent()) {
         fieldValue = dataFetcher.get(environment);
-      } catch (Throwable throwable) {
-        dataFetcherInstrumenter.end(childContext, environment, null, throwable);
-        throw throwable;
+      } catch (Throwable t) {
+        dataFetcherInstrumenter.end(childContext, environment, null, t);
+        throw t;
       }
 
       if (fieldValue instanceof CompletionStage) {

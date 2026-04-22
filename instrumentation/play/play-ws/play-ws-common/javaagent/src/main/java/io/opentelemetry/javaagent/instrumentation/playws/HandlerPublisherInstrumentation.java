@@ -33,7 +33,7 @@ public class HandlerPublisherInstrumentation implements TypeInstrumentation {
   public static class WrapSubscriberAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Subscriber<?> enter(@Advice.Argument(0) Subscriber<?> subscriber) {
       return new SubscriberWrapper<>(subscriber, Java8BytecodeBridge.currentContext());
     }

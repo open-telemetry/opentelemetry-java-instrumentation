@@ -38,7 +38,6 @@ import org.apache.shardingsphere.elasticjob.reg.base.CoordinatorRegistryCenter;
 import org.apache.shardingsphere.elasticjob.reg.zookeeper.ZookeeperConfiguration;
 import org.apache.shardingsphere.elasticjob.reg.zookeeper.ZookeeperRegistryCenter;
 import org.apache.shardingsphere.elasticjob.script.props.ScriptJobProperties;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -69,7 +68,9 @@ class ElasticJobTest {
     int embedZookeeperPort = PortUtils.findOpenPort();
     zookeeperConnectionString = "localhost:" + embedZookeeperPort;
     EmbedZookeeperServer.start(embedZookeeperPort);
+    cleanup.deferAfterAll(EmbedZookeeperServer::stop);
     regCenter = setUpRegistryCenter();
+    cleanup.deferAfterAll(regCenter::close);
     httpServer = HttpServer.create(new InetSocketAddress(0), 0);
     httpServer.createContext(
         "/hello",
@@ -80,17 +81,7 @@ class ElasticJobTest {
           exchange.close();
         });
     httpServer.start();
-  }
-
-  @AfterAll
-  static void stop() throws Exception {
-    if (httpServer != null) {
-      httpServer.stop(0);
-    }
-    if (regCenter != null) {
-      regCenter.close();
-    }
-    EmbedZookeeperServer.stop();
+    cleanup.deferAfterAll(() -> httpServer.stop(0));
   }
 
   @Test

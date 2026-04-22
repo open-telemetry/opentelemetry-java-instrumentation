@@ -116,7 +116,7 @@ final class InstrumentationApiContextBridging {
                     String.class,
                     int.class,
                     application.io.opentelemetry.api.trace.Span.class));
-      } catch (NoSuchMethodException exception) {
+      } catch (NoSuchMethodException ignored) {
         // older instrumentation-api has only the variant that does not take span
         applicationCreate =
             lookup.findStatic(

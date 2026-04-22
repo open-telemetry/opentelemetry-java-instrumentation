@@ -42,7 +42,7 @@ class ScalaForkJoinPoolInstrumentation implements TypeInstrumentation {
   public static class SetScalaForkJoinStateAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static PropagatedContext enterJobSubmit(@Advice.Argument(0) ForkJoinTask<?> task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
@@ -52,7 +52,7 @@ class ScalaForkJoinPoolInstrumentation implements TypeInstrumentation {
       return null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exitJobSubmit(
         @Advice.Argument(0) ForkJoinTask<?> task,
         @Advice.Enter @Nullable PropagatedContext propagatedContext,

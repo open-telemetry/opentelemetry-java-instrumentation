@@ -20,7 +20,7 @@ import software.amazon.awssdk.identity.spi.AwsCredentialsIdentity;
 import software.amazon.awssdk.identity.spi.IdentityProvider;
 import software.amazon.awssdk.identity.spi.IdentityProviders;
 
-final class FixedHostAwsV4AuthScheme implements AwsV4AuthScheme {
+class FixedHostAwsV4AuthScheme implements AwsV4AuthScheme {
 
   private final FixedHostAwsV4HttpSigner signer;
 

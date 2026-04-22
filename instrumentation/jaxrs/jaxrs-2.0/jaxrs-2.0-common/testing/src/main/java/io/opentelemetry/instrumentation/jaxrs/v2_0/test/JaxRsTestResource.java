@@ -22,6 +22,7 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -111,7 +112,16 @@ public class JaxRsTestResource {
                 }));
   }
 
-  public static final CyclicBarrier barrier = new CyclicBarrier(2);
+  private static final CyclicBarrier barrier = new CyclicBarrier(2);
+
+  public static void resetBarrier() {
+    barrier.reset();
+  }
+
+  public static int awaitBarrier(int amount, TimeUnit timeUnit)
+      throws BrokenBarrierException, InterruptedException, TimeoutException {
+    return barrier.await(amount, timeUnit);
+  }
 
   @Path("async")
   @GET
@@ -123,8 +133,8 @@ public class JaxRsTestResource {
             barrier.await(10, SECONDS);
           } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-          } catch (BrokenBarrierException | TimeoutException exception) {
-            throw new IllegalStateException(exception);
+          } catch (BrokenBarrierException | TimeoutException e) {
+            throw new IllegalStateException(e);
           }
 
           switch (action) {
@@ -155,8 +165,8 @@ public class JaxRsTestResource {
             barrier.await(10, SECONDS);
           } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-          } catch (BrokenBarrierException | TimeoutException exception) {
-            throw new IllegalStateException(exception);
+          } catch (BrokenBarrierException | TimeoutException e) {
+            throw new IllegalStateException(e);
           }
 
           switch (action) {

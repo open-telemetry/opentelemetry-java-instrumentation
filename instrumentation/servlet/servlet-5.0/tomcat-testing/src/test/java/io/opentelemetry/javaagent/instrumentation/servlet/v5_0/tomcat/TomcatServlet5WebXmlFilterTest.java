@@ -13,9 +13,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.nio.file.Files;
@@ -60,7 +58,7 @@ class TomcatServlet5WebXmlFilterTest {
     // Create the package directory for filter and servlet classes
     String packagePath = WebXmlTestFilter.class.getPackage().getName().replace('.', '/');
     File packageDir = new File(new File(webInfDir, "classes"), packagePath);
-    packageDir.mkdirs();
+    Files.createDirectories(packageDir.toPath());
 
     // Copy compiled filter and servlet .class files to WEB-INF/classes so that
     // Tomcat's WebappClassLoader loads them (rather than the parent/system classloader)
@@ -96,9 +94,7 @@ class TomcatServlet5WebXmlFilterTest {
             + "    <url-pattern>/*</url-pattern>\n"
             + "  </filter-mapping>\n"
             + "</web-app>\n";
-    try (OutputStream os = new FileOutputStream(new File(webInfDir, "web.xml"))) {
-      os.write(webXml.getBytes(UTF_8));
-    }
+    Files.write(new File(webInfDir, "web.xml").toPath(), webXml.getBytes(UTF_8));
 
     // Start embedded Tomcat with the webapp deployed via addWebapp,
     // which creates a WebappClassLoader for the context

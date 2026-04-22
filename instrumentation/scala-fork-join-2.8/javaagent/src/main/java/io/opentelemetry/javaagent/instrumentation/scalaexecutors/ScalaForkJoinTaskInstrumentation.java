@@ -64,7 +64,7 @@ class ScalaForkJoinTaskInstrumentation implements TypeInstrumentation {
      * need to use that state.
      */
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope enter(@Advice.This ForkJoinTask<?> thiz) {
       Scope scope =
           TaskAdviceHelper.makePropagatedContextCurrent(FORK_JOIN_TASK_PROPAGATED_CONTEXT, thiz);
@@ -89,7 +89,7 @@ class ScalaForkJoinTaskInstrumentation implements TypeInstrumentation {
       return scope;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();

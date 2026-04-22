@@ -114,23 +114,21 @@ class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentation {
           AwsLambdaSingletons.messageInstrumenter()
               .end(messageContext, (SQSEvent) arg, null, throwable);
         }
-        if (functionScope != null) {
-          functionScope.close();
-          functionInstrumenter().end(functionContext, lambdaRequest, result, throwable);
-        }
+        functionScope.close();
+        functionInstrumenter().end(functionContext, lambdaRequest, result, throwable);
         OpenTelemetrySdkAccess.forceFlush(flushTimeout().toNanos(), NANOSECONDS);
       }
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.Argument(value = 0, typing = Typing.DYNAMIC) Object arg,
         @Advice.Argument(1) Context context) {
       return AdviceScope.start(arg, context);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Argument(value = 0, typing = Typing.DYNAMIC) Object arg,
         @Advice.Return @Nullable Object result,

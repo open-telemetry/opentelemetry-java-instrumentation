@@ -82,7 +82,7 @@ class HttpClientInstrumentation implements TypeInstrumentation {
   public static class OnRequestAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static BiConsumer<? super HttpClientRequest, ? super Connection> onEnter(
         @Advice.Argument(0)
             BiConsumer<? super HttpClientRequest, ? super Connection> originalCallBack) {
@@ -103,7 +103,7 @@ class HttpClientInstrumentation implements TypeInstrumentation {
   public static class AfterRequestAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static BiConsumer<? super HttpClientRequest, ? super Connection> onEnter(
         @Advice.Argument(0)
             BiConsumer<? super HttpClientRequest, ? super Connection> originalCallBack) {
@@ -123,7 +123,7 @@ class HttpClientInstrumentation implements TypeInstrumentation {
   public static class OnRequestErrorAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static BiConsumer<? super HttpClientRequest, ? super Throwable> onEnter(
         @Advice.Argument(0)
             BiConsumer<? super HttpClientRequest, ? super Throwable> originalCallBack) {
@@ -143,7 +143,7 @@ class HttpClientInstrumentation implements TypeInstrumentation {
   public static class OnResponseAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static BiConsumer<? super HttpClientResponse, ? super Connection> onEnter(
         @Advice.Argument(0)
             BiConsumer<? super HttpClientResponse, ? super Connection> originalCallBack) {
@@ -163,7 +163,7 @@ class HttpClientInstrumentation implements TypeInstrumentation {
   public static class AfterResponseAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static BiConsumer<? super HttpClientResponse, ? super Connection> onEnter(
         @Advice.Argument(0)
             BiConsumer<? super HttpClientResponse, ? super Connection> originalCallback) {
@@ -182,7 +182,7 @@ class HttpClientInstrumentation implements TypeInstrumentation {
   public static class OnResponseErrorAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static BiConsumer<? super HttpClientResponse, ? super Throwable> onEnter(
         @Advice.Argument(0)
             BiConsumer<? super HttpClientResponse, ? super Throwable> originalCallback) {
@@ -205,7 +205,7 @@ class HttpClientInstrumentation implements TypeInstrumentation {
       @ToArgument(value = 0, index = 0),
       @ToArgument(value = 1, index = 1)
     })
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.Argument(0)
             BiConsumer<? super HttpClientRequest, ? super Throwable> originalRequestCallback,

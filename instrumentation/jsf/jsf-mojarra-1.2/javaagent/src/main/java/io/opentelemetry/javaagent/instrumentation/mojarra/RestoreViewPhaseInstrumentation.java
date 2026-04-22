@@ -11,7 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jsf.javax.JsfServerSpanNaming;
+import io.opentelemetry.javaagent.instrumentation.jsf.common.javax.JsfServerSpanNaming;
 import javax.faces.context.FacesContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -34,7 +34,7 @@ class RestoreViewPhaseInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ExecuteAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Argument(0) FacesContext facesContext) {
       JsfServerSpanNaming.updateViewName(currentContext(), facesContext);
     }

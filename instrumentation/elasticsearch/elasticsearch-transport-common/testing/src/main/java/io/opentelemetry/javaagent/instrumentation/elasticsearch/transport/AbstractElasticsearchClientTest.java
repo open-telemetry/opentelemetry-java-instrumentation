@@ -10,7 +10,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -32,19 +31,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 abstract class AbstractElasticsearchClientTest {
 
   protected static final long TIMEOUT = SECONDS.toMillis(10);
-
-  protected static final AttributeKey<String> ELASTICSEARCH_ACTION =
-      AttributeKey.stringKey("elasticsearch.action");
-  protected static final AttributeKey<String> ELASTICSEARCH_REQUEST =
-      AttributeKey.stringKey("elasticsearch.request");
-  protected static final AttributeKey<String> ELASTICSEARCH_REQUEST_INDICES =
-      AttributeKey.stringKey("elasticsearch.request.indices");
-  protected static final AttributeKey<String> ELASTICSEARCH_TYPE =
-      AttributeKey.stringKey("elasticsearch.type");
-  protected static final AttributeKey<String> ELASTICSEARCH_ID =
-      AttributeKey.stringKey("elasticsearch.id");
-  protected static final AttributeKey<Long> ELASTICSEARCH_VERSION =
-      AttributeKey.longKey("elasticsearch.version");
 
   protected static final String EXPERIMENTAL_FLAG =
       "otel.instrumentation.elasticsearch.experimental-span-attributes";
@@ -133,9 +119,9 @@ abstract class AbstractElasticsearchClientTest {
     RESPONSE get() {
       try {
         assertThat(latch.await(1, MINUTES)).isTrue();
-      } catch (InterruptedException exception) {
+      } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
-        throw new IllegalStateException("Interrupted while waiting for response", exception);
+        throw new IllegalStateException("Interrupted while waiting for response", e);
       }
       if (response != null) {
         return response;

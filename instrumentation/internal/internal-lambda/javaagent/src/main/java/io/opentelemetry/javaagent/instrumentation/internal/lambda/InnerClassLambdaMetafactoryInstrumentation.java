@@ -78,10 +78,10 @@ class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumentation 
       Class<?> clazz = Class.forName("java.lang.invoke.AbstractValidatingLambdaMetafactory");
       clazz.getDeclaredField("interfaceClass");
       return true;
-    } catch (NoSuchFieldException exception) {
+    } catch (NoSuchFieldException ignored) {
       return false;
-    } catch (ClassNotFoundException exception) {
-      throw new IllegalStateException(exception);
+    } catch (ClassNotFoundException e) {
+      throw new IllegalStateException(e);
     }
   }
 
@@ -146,13 +146,13 @@ class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumentation 
   @SuppressWarnings("unused")
   public static class LambdaAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(inline = false)
     public static DefineClassContext onEnter(
         @Advice.FieldValue("samBase") Class<?> lambdaInterface) {
       return DefineClassHelper.beforeDefineLambdaClass(lambdaInterface);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter DefineClassContext context) {
       DefineClassHelper.afterDefineClass(context);
     }
@@ -161,13 +161,13 @@ class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumentation 
   @SuppressWarnings("unused")
   public static class LambdaJdk17Advice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(inline = false)
     public static DefineClassContext onEnter(
         @Advice.FieldValue("interfaceClass") Class<?> lambdaInterface) {
       return DefineClassHelper.beforeDefineLambdaClass(lambdaInterface);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter DefineClassContext context) {
       DefineClassHelper.afterDefineClass(context);
     }

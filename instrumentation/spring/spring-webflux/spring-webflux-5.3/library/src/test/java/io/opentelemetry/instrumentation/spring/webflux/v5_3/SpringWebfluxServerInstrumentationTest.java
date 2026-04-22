@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
@@ -26,7 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.context.ConfigurableApplicationContext;
 
-public final class SpringWebfluxServerInstrumentationTest
+class SpringWebfluxServerInstrumentationTest
     extends AbstractHttpServerTest<ConfigurableApplicationContext> {
 
   private static final String CONTEXT_PATH = "/test";
@@ -34,13 +35,15 @@ public final class SpringWebfluxServerInstrumentationTest
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forLibrary();
 
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   @Override
   protected ConfigurableApplicationContext setupServer() {
     return TestWebfluxSpringBootApp.start(port, CONTEXT_PATH);
   }
 
   @Override
-  public void stopServer(ConfigurableApplicationContext applicationContext) {
+  protected void stopServer(ConfigurableApplicationContext applicationContext) {
     applicationContext.close();
   }
 
@@ -79,16 +82,16 @@ public final class SpringWebfluxServerInstrumentationTest
     String method = "GET";
     AggregatedHttpRequest request = request(endpoint, method);
 
-    try (ClientRequestContextCaptor captor = Clients.newContextCaptor()) {
-      CompletableFuture<AggregatedHttpResponse> future =
-          client.execute(request).aggregate().toCompletableFuture();
-      ClientRequestContext clientRequestContext = captor.get();
-      Thread.sleep(1_000);
-      clientRequestContext.cancel();
-      assertThatThrownBy(future::join)
-          .isInstanceOf(CompletionException.class)
-          .hasMessage(ResponseCancellationException.class.getName());
-    }
+    ClientRequestContextCaptor captor = Clients.newContextCaptor();
+    cleanup.deferCleanup(captor);
+    CompletableFuture<AggregatedHttpResponse> future =
+        client.execute(request).aggregate().toCompletableFuture();
+    ClientRequestContext clientRequestContext = captor.get();
+    Thread.sleep(1_000);
+    clientRequestContext.cancel();
+    assertThatThrownBy(future::join)
+        .isInstanceOf(CompletionException.class)
+        .hasMessage(ResponseCancellationException.class.getName());
 
     assertTheTraces(1, null, null, null, method, endpoint);
   }

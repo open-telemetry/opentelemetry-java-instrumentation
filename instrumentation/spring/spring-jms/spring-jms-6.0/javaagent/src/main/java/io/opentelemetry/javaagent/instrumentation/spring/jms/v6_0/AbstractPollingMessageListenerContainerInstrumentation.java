@@ -34,7 +34,7 @@ class AbstractPollingMessageListenerContainerInstrumentation implements TypeInst
   @SuppressWarnings("unused")
   public static class ReceiveAndExecuteAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Scope onEnter() {
       if (isReceiveTelemetryEnabled()) {
@@ -44,7 +44,7 @@ class AbstractPollingMessageListenerContainerInstrumentation implements TypeInst
       return null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope == null) {
         return;

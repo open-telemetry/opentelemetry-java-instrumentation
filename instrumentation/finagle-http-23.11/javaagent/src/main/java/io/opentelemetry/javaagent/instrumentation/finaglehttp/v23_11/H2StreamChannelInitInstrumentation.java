@@ -36,7 +36,7 @@ class H2StreamChannelInitInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InitServerAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToReturned
     public static ChannelInitializer<Channel> handleExit(
         @Advice.Return ChannelInitializer<Channel> initializer) {
@@ -47,7 +47,7 @@ class H2StreamChannelInitInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InitClientAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToReturned
     public static ChannelInitializer<Channel> handleExit(
         @Advice.Return ChannelInitializer<Channel> initializer) {

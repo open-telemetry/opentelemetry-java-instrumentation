@@ -41,7 +41,7 @@ class LoggingEventInstrumentation implements TypeInstrumentation {
   public static class GetMdcAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Object onExit(
         @Advice.This LoggingEvent event,
         @Advice.Argument(0) String key,

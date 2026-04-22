@@ -43,18 +43,18 @@ import redis.clients.jedis.Jedis;
 @SuppressWarnings("deprecation") // using deprecated semconv
 class Jedis30ClientTest {
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  static GenericContainer<?> redisServer =
+  private static final GenericContainer<?> redisServer =
       new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
 
-  static String host;
+  private static String host;
 
-  static String ip;
+  private static String ip;
 
-  static int port;
+  private static int port;
 
-  static Jedis jedis;
+  private static Jedis jedis;
 
   @BeforeAll
   static void setup() throws UnknownHostException {

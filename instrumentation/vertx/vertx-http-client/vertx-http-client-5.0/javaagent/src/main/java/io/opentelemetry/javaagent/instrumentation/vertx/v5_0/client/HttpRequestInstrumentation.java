@@ -112,12 +112,12 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope attachContext(@Advice.This HttpClientRequest request) {
       return AdviceScope.startAndAttachContext(request);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void endScope(
         @Advice.This HttpClientRequest request,
         @Advice.Thrown @Nullable Throwable throwable,
@@ -132,7 +132,7 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
   public static class HandleExceptionAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope handleException(
         @Advice.This HttpClientRequest request, @Advice.Argument(0) Throwable t) {
       Contexts contexts = CONTEXTS.get(request);
@@ -146,8 +146,8 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
       return contexts.parentContext.makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void handleResponseExit(@Advice.Enter @Nullable Scope scope) {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void handleExceptionExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }
@@ -158,7 +158,7 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
   public static class HandleResponseAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope handleResponseEnter(
         @Advice.This HttpClientRequest request, @Advice.Argument(1) HttpClientResponse response) {
       Contexts contexts = CONTEXTS.get(request);
@@ -173,7 +173,7 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
       return contexts.parentContext.makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void handleResponseExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
@@ -185,7 +185,7 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
   public static class MountContextAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope mountContext(@Advice.This HttpClientRequest request) {
       Contexts contexts = CONTEXTS.get(request);
       if (contexts == null) {
@@ -195,7 +195,7 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
       return contexts.context.makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void unmountContext(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
@@ -208,7 +208,7 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Handler<Throwable> wrapExceptionHandler(
         @Advice.This HttpClientRequest request,
         @Advice.Argument(0) @Nullable Handler<Throwable> handler) {

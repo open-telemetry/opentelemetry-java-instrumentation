@@ -38,7 +38,7 @@ class GatewayDelegatingRouterFunctionInstrumentation implements TypeInstrumentat
 
   @SuppressWarnings("unused")
   public static class RouteAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.This Object thisObj, @Advice.Argument(0) ServerRequest request) {
       Context context = Context.current();

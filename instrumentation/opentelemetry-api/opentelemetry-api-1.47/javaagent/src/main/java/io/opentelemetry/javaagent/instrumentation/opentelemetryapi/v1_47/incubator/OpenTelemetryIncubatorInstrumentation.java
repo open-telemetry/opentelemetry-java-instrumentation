@@ -32,7 +32,7 @@ class OpenTelemetryIncubatorInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class InitAdvice {
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(inline = false)
     @SuppressWarnings("ReturnValueIgnored")
     public static void init() {
       // the sole purpose of this advice is to ensure that ApplicationLoggerFactory147Incubator is

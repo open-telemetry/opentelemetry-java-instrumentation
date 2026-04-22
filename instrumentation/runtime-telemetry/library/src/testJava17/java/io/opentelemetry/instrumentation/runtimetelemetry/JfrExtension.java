@@ -33,7 +33,7 @@ import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
-public class JfrExtension implements BeforeEachCallback, AfterEachCallback {
+class JfrExtension implements BeforeEachCallback, AfterEachCallback {
 
   private final Consumer<JfrConfig> jfrConfigConsumer;
 
@@ -44,7 +44,7 @@ public class JfrExtension implements BeforeEachCallback, AfterEachCallback {
       new HashMap<>();
   private final Set<InstrumentationScopeInfo> instrumentationScopes = new HashSet<>();
 
-  public JfrExtension(Consumer<JfrConfig> jfrConfigConsumer) {
+  JfrExtension(Consumer<JfrConfig> jfrConfigConsumer) {
     this.jfrConfigConsumer = jfrConfigConsumer;
   }
 
@@ -52,7 +52,7 @@ public class JfrExtension implements BeforeEachCallback, AfterEachCallback {
   public void beforeEach(ExtensionContext context) throws InterruptedException {
     try {
       Class.forName("jdk.jfr.FlightRecorder");
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       Assumptions.abort("JFR not present");
     }
     Assumptions.assumeTrue(FlightRecorder.isAvailable(), "JFR not available");

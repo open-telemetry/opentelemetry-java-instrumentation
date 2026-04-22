@@ -32,14 +32,14 @@ class QueryResultBuilderInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class CompleteAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Scope onEnter(
         @Advice.Argument(1) Throwable throwable, @Advice.FieldValue("handler") Promise<?> promise) {
       return endQuerySpan(instrumenter(), promise, throwable);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();

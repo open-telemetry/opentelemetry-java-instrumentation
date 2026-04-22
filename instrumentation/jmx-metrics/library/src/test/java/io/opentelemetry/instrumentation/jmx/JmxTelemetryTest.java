@@ -10,6 +10,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.OpenTelemetry;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -54,7 +55,7 @@ class JmxTelemetryTest {
   }
 
   @Test
-  void invalidExternalYaml(@TempDir Path dir) throws Exception {
+  void invalidExternalYaml(@TempDir Path dir) throws IOException {
     Path invalid = Files.createTempFile(dir, "invalid", ".yaml");
     Files.write(invalid, ":this !is /not YAML".getBytes(UTF_8));
     JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());

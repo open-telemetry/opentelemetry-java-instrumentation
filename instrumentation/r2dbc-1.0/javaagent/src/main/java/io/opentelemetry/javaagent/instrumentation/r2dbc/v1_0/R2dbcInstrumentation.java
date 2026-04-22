@@ -39,7 +39,7 @@ class R2dbcInstrumentation implements TypeInstrumentation {
   public static class FactoryAdvice {
 
     @Advice.AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     @Nullable
     public static ConnectionFactory methodExit(
         @Advice.Return @Nullable ConnectionFactory factory,

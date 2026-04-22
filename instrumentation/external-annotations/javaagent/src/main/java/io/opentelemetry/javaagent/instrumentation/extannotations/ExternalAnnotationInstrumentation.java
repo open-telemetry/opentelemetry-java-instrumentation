@@ -44,7 +44,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
   private static final Logger logger =
-      Logger.getLogger(ExternalAnnotationInstrumentationModule.class.getName());
+      Logger.getLogger(ExternalAnnotationInstrumentation.class.getName());
 
   private static final String PACKAGE_CLASS_NAME_REGEX = "[\\w.$]+";
 
@@ -202,13 +202,13 @@ class ExternalAnnotationInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.Origin("#t") Class<?> declaringClass, @Advice.Origin("#m") String methodName) {
       return AdviceScope.start(declaringClass, methodName);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

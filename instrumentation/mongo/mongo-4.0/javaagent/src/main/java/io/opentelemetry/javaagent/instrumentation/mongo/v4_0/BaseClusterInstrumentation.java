@@ -47,7 +47,7 @@ final class BaseClusterInstrumentation implements TypeInstrumentation {
   public static class SingleResultCallbackArg1Advice {
 
     @AssignReturned.ToArguments(@ToArgument(1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static SingleResultCallback<Object> wrapCallback(
         @Advice.Argument(1) SingleResultCallback<Object> callback) {
       return new SingleResultCallbackWrapper(Java8BytecodeBridge.currentContext(), callback);
@@ -58,7 +58,7 @@ final class BaseClusterInstrumentation implements TypeInstrumentation {
   public static class SingleResultCallbackArg2Advice {
 
     @AssignReturned.ToArguments(@ToArgument(2))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static SingleResultCallback<Object> wrapCallback(
         @Advice.Argument(2) SingleResultCallback<Object> callback) {
       return new SingleResultCallbackWrapper(Java8BytecodeBridge.currentContext(), callback);
