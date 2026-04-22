@@ -249,3 +249,4 @@ hibernate-reactive-1.0:hibernate-reactive-2.0-testing
 hibernate-4.0:javaagent
 javalin-5.0:javaagent
 jaxrs-3.0-common:javaagent
+jaxws-cxf-3.0:javaagent-unit-tests
