@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.play.v2_4;
+package io.opentelemetry.javaagent.instrumentation.playmvc.v2_4;
 
-import static io.opentelemetry.javaagent.instrumentation.play.v2_4.Play24Singletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.playmvc.v2_4.Play24Singletons.instrumenter;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.context.Context;

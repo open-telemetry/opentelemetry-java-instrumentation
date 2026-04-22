@@ -3,8 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.play.v2_4.client;
+package io.opentelemetry.javaagent.instrumentation.playmvc.v2_4.client;
 
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
@@ -12,18 +15,20 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import play.libs.F;
 import play.libs.ws.WS;
 import play.libs.ws.WSClient;
 import play.libs.ws.WSRequest;
 import play.libs.ws.WSResponse;
 
-// Play 2.6+ uses a separately versioned client that shades the underlying dependency
-// This means our built in instrumentation won't work.
 class PlayWsClientTest extends AbstractHttpClientTest<WSRequest> {
 
   @RegisterExtension
@@ -78,6 +83,14 @@ class PlayWsClientTest extends AbstractHttpClientTest<WSRequest> {
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.setTestRedirects(false);
     optionsBuilder.setTestReadTimeout(false);
+    optionsBuilder.setHttpAttributes(
+        uri -> {
+          Set<AttributeKey<?>> attributes =
+              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+          attributes.remove(NETWORK_PROTOCOL_VERSION);
+          return attributes;
+        });
+
     optionsBuilder.spanEndsAfterBody();
 
     // Play HTTP client uses AsyncHttpClient internally which does not support HTTP 1.1 pipelining
@@ -91,6 +104,10 @@ class PlayWsClientTest extends AbstractHttpClientTest<WSRequest> {
 
   private static CompletionStage<WSResponse> internalSendRequest(
       WSRequest wsRequest, String method) {
-    return wsRequest.execute(method);
+    CompletableFuture<WSResponse> result = new CompletableFuture<>();
+    F.Promise<WSResponse> promise = wsRequest.execute(method);
+    promise.onRedeem(result::complete);
+    promise.onFailure(result::completeExceptionally);
+    return result;
   }
 }

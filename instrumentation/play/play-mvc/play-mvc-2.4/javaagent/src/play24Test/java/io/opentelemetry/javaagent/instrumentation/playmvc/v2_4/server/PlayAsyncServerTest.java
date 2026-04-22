@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.play.v2_4.server;
+package io.opentelemetry.javaagent.instrumentation.playmvc.v2_4.server;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -12,21 +12,17 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static java.util.Collections.singletonList;
 
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
-import java.util.concurrent.CompletableFuture;
-import org.junit.jupiter.api.extension.RegisterExtension;
-import play.libs.concurrent.HttpExecution;
-import play.mvc.Http;
+import play.libs.F;
+import play.mvc.Http.Context.Implicit;
 import play.mvc.Results;
 import play.routing.RoutingDsl;
 import play.server.Server;
+import scala.Tuple2;
+import scala.collection.JavaConverters;
 
 class PlayAsyncServerTest extends PlayServerTest {
-
-  @RegisterExtension
-  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   @Override
   protected Server setupServer() {
@@ -35,76 +31,80 @@ class PlayAsyncServerTest extends PlayServerTest {
             .GET(SUCCESS.getPath())
             .routeAsync(
                 () ->
-                    CompletableFuture.supplyAsync(
+                    F.Promise.promise(
                         () ->
                             controller(
                                 SUCCESS,
-                                () -> Results.status(SUCCESS.getStatus(), SUCCESS.getBody())),
-                        HttpExecution.defaultContext()))
+                                () -> Results.status(SUCCESS.getStatus(), SUCCESS.getBody()))))
             .GET(INDEXED_CHILD.getPath())
             .routeAsync(
                 () ->
-                    CompletableFuture.supplyAsync(
+                    F.Promise.promise(
                         () ->
                             controller(
                                 INDEXED_CHILD,
                                 () -> {
                                   INDEXED_CHILD.collectSpanAttributes(
-                                      it -> Http.Context.Implicit.request().getQueryString(it));
+                                      it -> Implicit.request().getQueryString(it));
                                   return Results.status(
                                       INDEXED_CHILD.getStatus(), INDEXED_CHILD.getBody());
-                                }),
-                        HttpExecution.defaultContext()))
+                                })))
             .GET(QUERY_PARAM.getPath())
             .routeAsync(
                 () ->
-                    CompletableFuture.supplyAsync(
+                    F.Promise.promise(
                         () ->
                             controller(
                                 QUERY_PARAM,
                                 () ->
-                                    Results.status(QUERY_PARAM.getStatus(), QUERY_PARAM.getBody())),
-                        HttpExecution.defaultContext()))
+                                    Results.status(
+                                        QUERY_PARAM.getStatus(), QUERY_PARAM.getBody()))))
             .GET(REDIRECT.getPath())
             .routeAsync(
                 () ->
-                    CompletableFuture.supplyAsync(
-                        () -> controller(REDIRECT, () -> Results.found(REDIRECT.getBody())),
-                        HttpExecution.defaultContext()))
+                    F.Promise.promise(
+                        () -> controller(REDIRECT, () -> Results.found(REDIRECT.getBody()))))
             .GET(CAPTURE_HEADERS.getPath())
             .routeAsync(
                 () ->
-                    CompletableFuture.supplyAsync(
+                    F.Promise.promise(
                         () ->
                             controller(
                                 CAPTURE_HEADERS,
-                                () ->
-                                    Results.status(
-                                            CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody())
-                                        .withHeader(
-                                            "X-Test-Response",
-                                            Http.Context.Implicit.request()
-                                                .getHeader("X-Test-Request"))),
-                        HttpExecution.defaultContext()))
+                                () -> {
+                                  Results.Status javaResult =
+                                      Results.status(
+                                          CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody());
+                                  Tuple2<String, String> header =
+                                      new Tuple2<>(
+                                          "X-Test-Response",
+                                          Implicit.request().getHeader("X-Test-Request"));
+                                  return new Results.Status(
+                                      javaResult
+                                          .toScala()
+                                          .withHeaders(
+                                              JavaConverters.asScalaIteratorConverter(
+                                                      singletonList(header).iterator())
+                                                  .asScala()
+                                                  .toSeq()));
+                                })))
             .GET(ERROR.getPath())
             .routeAsync(
                 () ->
-                    CompletableFuture.supplyAsync(
+                    F.Promise.promise(
                         () ->
                             controller(
-                                ERROR, () -> Results.status(ERROR.getStatus(), ERROR.getBody())),
-                        HttpExecution.defaultContext()))
+                                ERROR, () -> Results.status(ERROR.getStatus(), ERROR.getBody()))))
             .GET(EXCEPTION.getPath())
             .routeAsync(
                 () ->
-                    CompletableFuture.supplyAsync(
+                    F.Promise.promise(
                         () ->
                             controller(
                                 EXCEPTION,
                                 () -> {
                                   throw new IllegalArgumentException(EXCEPTION.getBody());
-                                }),
-                        HttpExecution.defaultContext()));
+                                })));
 
     return Server.forRouter(router.build(), port);
   }

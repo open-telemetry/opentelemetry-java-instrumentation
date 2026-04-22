@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.play.v2_4.server;
+package io.opentelemetry.javaagent.instrumentation.playmvc.v2_4.server;
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
@@ -14,7 +14,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
-import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -27,12 +26,10 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.HashSet;
 import java.util.Set;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import play.mvc.Http.Context.Implicit;
+import play.mvc.Http;
 import play.mvc.Results;
 import play.routing.RoutingDsl;
 import play.server.Server;
-import scala.Tuple2;
-import scala.collection.JavaConverters;
 
 class PlayServerTest extends AbstractHttpServerTest<Server> {
 
@@ -55,7 +52,7 @@ class PlayServerTest extends AbstractHttpServerTest<Server> {
                         INDEXED_CHILD,
                         () -> {
                           INDEXED_CHILD.collectSpanAttributes(
-                              it -> Implicit.request().getQueryString(it));
+                              it -> Http.Context.Implicit.request().getQueryString(it));
                           return Results.status(INDEXED_CHILD.getStatus(), INDEXED_CHILD.getBody());
                         }))
             .GET(QUERY_PARAM.getPath())
@@ -71,23 +68,11 @@ class PlayServerTest extends AbstractHttpServerTest<Server> {
                 () ->
                     controller(
                         CAPTURE_HEADERS,
-                        () -> {
-                          Results.Status javaResult =
-                              Results.status(
-                                  CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody());
-                          Tuple2<String, String> header =
-                              new Tuple2<>(
-                                  "X-Test-Response",
-                                  Implicit.request().getHeader("X-Test-Request"));
-                          return new Results.Status(
-                              javaResult
-                                  .toScala()
-                                  .withHeaders(
-                                      JavaConverters.asScalaIteratorConverter(
-                                              singletonList(header).iterator())
-                                          .asScala()
-                                          .toSeq()));
-                        }))
+                        () ->
+                            Results.status(CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody())
+                                .withHeader(
+                                    "X-Test-Response",
+                                    Http.Context.Implicit.request().getHeader("X-Test-Request"))))
             .GET(ERROR.getPath())
             .routeTo(
                 () -> controller(ERROR, () -> Results.status(ERROR.getStatus(), ERROR.getBody())))
