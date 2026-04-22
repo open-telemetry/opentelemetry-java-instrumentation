@@ -32,6 +32,7 @@ import com.clickhouse.client.api.query.QueryResponse;
 import com.clickhouse.client.api.query.QuerySettings;
 import com.clickhouse.client.api.query.Records;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -51,6 +52,8 @@ class ClickHouseClientV2Test {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private static final GenericContainer<?> clickhouseServer =
       new GenericContainer<>("clickhouse/clickhouse-server:24.4.2").withExposedPorts(8123);
@@ -106,6 +109,7 @@ class ClickHouseClientV2Test {
             .setUsername(username)
             .setPassword(password)
             .build();
+    cleanup.deferCleanup(client);
 
     QueryResponse response = client.query("select * from " + tableName).get();
     response.close();

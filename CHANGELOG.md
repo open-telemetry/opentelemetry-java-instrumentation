@@ -4,6 +4,33 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Removed previously deprecated `SqlQueryAnalyzer.analyze(String)` and
+  `SqlQueryAnalyzer.analyzeWithSummary(String)`; use the overloads that take a `SqlDialect`.
+- Removed the unused `DbClientAttributesGetter.getDbResponseStatusCode()` default method.
+- Removed previously deprecated
+  `KafkaTelemetryBuilder.setMessagingReceiveInstrumentationEnabled(boolean)`; use
+  `setMessagingReceiveTelemetryEnabled(boolean)`.
+- Removed previously deprecated `OpenTelemetryAppender.Builder.captureCodeAttributes(boolean)` in
+  the log4j-appender-2.17 module; use `setCaptureCodeAttributes(boolean)`.
+- Removed previously deprecated `Experimental.setEnableSqlCommenter()` in the JDBC and R2DBC
+  instrumentations; use `Experimental.setSqlCommenterEnabled()`.
+- Removed previously deprecated `Experimental.addTraceIdRequestAttribute()` and
+  `Experimental.setCapturedRequestParameters()` in the servlet-3.0 and servlet-5.0 instrumentations;
+  use `setTraceIdRequestAttributeEnabled()` and `setCaptureRequestParameters()` respectively.
+- Removed the `opentelemetry-runtime-telemetry-java8` and `opentelemetry-runtime-telemetry-java17`
+  library artifacts (deprecated aliases); use `opentelemetry-runtime-telemetry` instead.
+
+## Version 2.27.0 (2026-04-21)
+
+This release targets the OpenTelemetry SDK 1.61.0.
+
+Note that many artifacts have the `-alpha` suffix attached to their version
+number, reflecting that they will continue to have breaking changes. Please see
+[VERSIONING.md](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/VERSIONING.md#opentelemetry-java-instrumentation-versioning)
+for more details.
+
+### ⚠️ Breaking changes to non-stable APIs
+
 - Make `AbstractKtorServerTelemetryBuilder.isOpenTelemetryInitialized()` protected (previously
   public).
   ([#17509](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17509))

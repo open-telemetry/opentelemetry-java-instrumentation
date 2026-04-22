@@ -909,13 +909,7 @@ targets:
       target: ':instrumentation:runtime-telemetry:runtime-telemetry-java17:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:runtime-telemetry:runtime-telemetry-java17:library'
-    - type: gradle
-      path: ./
       target: ':instrumentation:runtime-telemetry:runtime-telemetry-java8:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:runtime-telemetry:runtime-telemetry-java8:library'
     - type: gradle
       path: ./
       target: ':instrumentation:rxjava:rxjava-1.0:library'

@@ -70,7 +70,7 @@ public abstract class CouchbaseRequestInfo {
   }
 
   @Nullable
-  public abstract String bucket();
+  public abstract String getBucket();
 
   @Nullable
   public abstract SqlQuery getSqlQuery();
@@ -79,7 +79,7 @@ public abstract class CouchbaseRequestInfo {
   public abstract SqlQuery getSqlQueryWithSummary();
 
   @Nullable
-  public abstract String operation();
+  public abstract String getOperation();
 
   public abstract boolean isMethodCall();
 

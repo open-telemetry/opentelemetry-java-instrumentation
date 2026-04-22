@@ -18,7 +18,7 @@ class CouchbaseSpanNameExtractor implements SpanNameExtractor<CouchbaseRequestIn
   @Override
   public String extract(CouchbaseRequestInfo couchbaseRequest) {
     if (couchbaseRequest.isMethodCall()) {
-      return couchbaseRequest.operation();
+      return couchbaseRequest.getOperation();
     }
     return dbSpanNameExtractor.extract(couchbaseRequest);
   }

@@ -9,7 +9,7 @@ import io.opentelemetry.javaagent.instrumentation.jsf.common.javax.BaseJsfTest;
 
 class Mojarra2Test extends BaseJsfTest {
   @Override
-  public String getJsfVersion() {
+  protected String getJsfVersion() {
     return "2";
   }
 }
