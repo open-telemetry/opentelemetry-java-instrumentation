@@ -121,7 +121,7 @@ public class CouchbaseQuerySanitizer {
   }
 
   @Nullable
-  private static String getQueryText(MethodHandle handle, Object query) {
+  private static String getQueryText(@Nullable MethodHandle handle, Object query) {
     if (handle == null) {
       return null;
     }

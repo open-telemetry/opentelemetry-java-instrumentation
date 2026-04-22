@@ -102,13 +102,10 @@ public final class KafkaUtil {
     if (GET_GROUP_METADATA == null || GET_GROUP_ID == null) {
       return null;
     }
-    if (consumer == null) {
-      return null;
-    }
     try {
       Object metadata = GET_GROUP_METADATA.invoke(consumer);
       return (String) GET_GROUP_ID.invoke(metadata);
-    } catch (Throwable e) {
+    } catch (Throwable t) {
       return null;
     }
   }
@@ -127,9 +124,7 @@ public final class KafkaUtil {
 
   @Nullable
   public static String extractBootstrapServers(Producer<?, ?> producer) {
-    if (PRODUCER_CONFIG_FIELD == null
-        || producer == null
-        || !KafkaProducer.class.equals(producer.getClass())) {
+    if (PRODUCER_CONFIG_FIELD == null || !KafkaProducer.class.equals(producer.getClass())) {
       return null;
     }
     try {

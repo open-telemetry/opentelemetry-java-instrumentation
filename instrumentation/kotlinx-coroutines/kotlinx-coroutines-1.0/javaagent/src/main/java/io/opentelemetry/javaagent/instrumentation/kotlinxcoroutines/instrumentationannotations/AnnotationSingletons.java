@@ -10,13 +10,13 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttribute
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.util.SpanNames;
 
-public class AnnotationSingletons {
+class AnnotationSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.kotlinx-coroutines-1.0";
 
   private static final Instrumenter<MethodRequest, Object> instrumenter = createInstrumenter();
 
-  public static Instrumenter<MethodRequest, Object> instrumenter() {
+  static Instrumenter<MethodRequest, Object> instrumenter() {
     return instrumenter;
   }
 
