@@ -1503,8 +1503,8 @@ public abstract class AbstractJdbcInstrumentationTest {
   }
 
   @FunctionalInterface
-  public interface ThrowingBiConsumer<T, U> {
-    void accept(T t, U u) throws Exception;
+  private interface ThrowingBiConsumer<T, U> {
+    void accept(T t, U u) throws SQLException;
   }
 
   static Stream<Arguments> recursiveStatementsStream() {
@@ -1539,7 +1539,7 @@ public abstract class AbstractJdbcInstrumentationTest {
       String desc,
       boolean usePreparedStatementInConnection,
       ThrowingBiConsumer<Connection, String> executeQueryFunction)
-      throws Exception {
+      throws SQLException {
     Connection connection =
         wrap(new DbCallingConnection(usePreparedStatementInConnection, "jdbc:testdb://localhost"));
 
