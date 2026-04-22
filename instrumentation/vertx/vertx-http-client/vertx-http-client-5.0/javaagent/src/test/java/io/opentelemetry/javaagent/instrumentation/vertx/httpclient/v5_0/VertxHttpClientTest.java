@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.vertxhttpclient.v5_0;
+package io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v5_0;
 
 import static java.util.Collections.emptySet;
 import static java.util.concurrent.TimeUnit.SECONDS;
