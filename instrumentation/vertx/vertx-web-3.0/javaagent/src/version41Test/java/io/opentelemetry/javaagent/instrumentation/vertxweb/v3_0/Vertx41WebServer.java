@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.vertx;
+package io.opentelemetry.javaagent.instrumentation.vertxweb.v3_0;
 
 import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.Router;
 
-public class Vertx5WebServer extends AbstractVertxWebServer {
+public class Vertx41WebServer extends AbstractVertxWebServer {
 
   @Override
   public void end(HttpServerResponse response) {
@@ -31,8 +31,8 @@ public class Vertx5WebServer extends AbstractVertxWebServer {
     vertx
         .createHttpServer()
         .requestHandler(mainRouter)
-        .listen(port)
-        .onComplete(
+        .listen(
+            port,
             result -> {
               if (result.succeeded()) {
                 startPromise.complete();
