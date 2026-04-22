@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.apachedubbo.v2_7.AbstractDubboTes
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -61,6 +62,8 @@ public abstract class AbstractDubboRegistryTest {
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected abstract InstrumentationExtension testing();
+
+  protected abstract boolean hasServicePeerName();
 
   @BeforeAll
   static void setUp() throws Exception {
@@ -207,6 +210,11 @@ public abstract class AbstractDubboRegistryTest {
                                     emitStableRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"
                                         : "hello"),
+                                equalTo(
+                                    maybeStablePeerService(),
+                                    hasServicePeerName() && Boolean.getBoolean("testLatestDeps")
+                                        ? "test-peer-service"
+                                        : null),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
                                 satisfies(
