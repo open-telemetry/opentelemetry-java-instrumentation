@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.kubernetesclient.KubernetesClientSingletons.inject;
 import static io.opentelemetry.javaagent.instrumentation.kubernetesclient.KubernetesClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -69,7 +68,7 @@ class ApiClientInstrumentation implements TypeInstrumentation {
       Context context = instrumenter().start(parentContext, originalReturnValue);
       Scope scope = context.makeCurrent();
       Request.Builder requestWithPropagation = originalReturnValue.newBuilder();
-      inject(context, requestWithPropagation);
+      KubernetesClientSingletons.inject(context, requestWithPropagation);
       Request request = requestWithPropagation.build();
       CurrentState.set(parentContext, context, scope, request);
       return request;
