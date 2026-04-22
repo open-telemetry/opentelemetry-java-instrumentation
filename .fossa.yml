@@ -564,9 +564,6 @@ targets:
       target: ':instrumentation:jaxws:jaxws-2.0-axis2-1.6:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jaxws:jaxws-common:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:jaxws:jaxws-2.0-cxf-3.0:javaagent'
     - type: gradle
       path: ./
@@ -574,6 +571,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:jaxws:jaxws-2.0-metro-2.2:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:jaxws:jaxws-common:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jboss-logmanager:jboss-logmanager-appender-1.1:javaagent'
