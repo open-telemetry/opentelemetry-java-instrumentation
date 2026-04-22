@@ -42,7 +42,7 @@ public final class SemconvStability {
   private static final boolean emitOldMessagingSemconv;
   private static final boolean emitStableMessagingSemconv;
 
-  private static boolean emitGenAiLatestExperimentalSemconv;
+  private static final boolean emitGenAiLatestExperimentalSemconv;
 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.getOrNoop();
@@ -62,7 +62,8 @@ public final class SemconvStability {
     emitOldRpcSemconv = shouldEmitOld("rpc", v3Preview, optInValues);
     emitStableRpcSemconv = shouldEmitStable("rpc", v3Preview, optInValues);
 
-    emitGenAiLatestExperimentalSemconv = shouldEmitStable("gen_ai_latest_experimental", v3Preview, optInValues);
+    emitGenAiLatestExperimentalSemconv =
+        shouldEmitStable("gen_ai_latest_experimental", v3Preview, optInValues);
 
     emitOldMessagingSemconv = shouldEmitOld("messaging", false, previewValues);
     emitStableMessagingSemconv = shouldEmitStable("messaging", false, previewValues);
