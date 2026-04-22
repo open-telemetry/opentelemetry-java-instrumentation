@@ -17,6 +17,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import javax.xml.namespace.QName;
 
 final class MetroServerSpanNameUpdater {
@@ -73,9 +74,6 @@ final class MetroServerSpanNameUpdater {
 
   public void updateServerSpanName(Context context, MetroRequest metroRequest) {
     String spanName = metroRequest.spanName();
-    if (spanName == null) {
-      return;
-    }
 
     Span serverSpan = LocalRootSpan.fromContextOrNull(context);
     if (serverSpan == null) {
@@ -141,14 +139,17 @@ final class MetroServerSpanNameUpdater {
       return httpServletRequestClass.isInstance(httpServletRequest);
     }
 
+    @Nullable
     String getServletPath(Object httpServletRequest) {
       return invokeSafely(getServletPathMethodHandle, httpServletRequest);
     }
 
+    @Nullable
     String getPathInfo(Object httpServletRequest) {
       return invokeSafely(getPathInfoMethodHandle, httpServletRequest);
     }
 
+    @Nullable
     private static String invokeSafely(MethodHandle methodHandle, Object httpServletRequest) {
       try {
         return (String) methodHandle.invoke(httpServletRequest);
