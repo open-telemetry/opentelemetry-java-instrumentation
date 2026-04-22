@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.vertx.kafka.v3_6;
+package io.opentelemetry.javaagent.instrumentation.vertxkafkaclient.v3_6;
 
-import static io.opentelemetry.javaagent.instrumentation.vertx.kafka.v3_6.VertxKafkaSingletons.processInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.vertxkafkaclient.v3_6.VertxKafkaSingletons.processInstrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
