@@ -11,12 +11,14 @@ Analyze the CI failures in the PR for the current branch and fix them, following
 1. Verify we're not on a protected branch: `git branch --show-current` should not be `main`.
 2. Check the branch is up-to-date: `git fetch && git status` — exit if `behind` or `diverged`.
 3. Find the PR and its failed jobs:
+
    ```
    BRANCH=$(git branch --show-current)
    PR=$(gh pr list --head "$BRANCH" --json number --jq '.[0].number')
    gh pr view "$PR" --json statusCheckRollup \
      --jq '.statusCheckRollup[] | select(.conclusion == "FAILURE") | {name, detailsUrl, databaseId}'
    ```
+
 4. **Ignore aggregate/rollup checks** like `required-status-check` — fixing the real underlying checks resolves them automatically.
 5. If all remaining jobs passed, exit early.
 6. **Trivial-failure fast path**: if there is exactly one failing job with an obvious single root cause (e.g., one markdownlint rule, one spotless violation, one known-flaky infra error), skip Phases 1–2 — fix directly, validate, commit.
@@ -98,6 +100,7 @@ Work through `/tmp/ci-plan.md`, checking items off. For each failed task:
 ## Phase 4: Push
 
 `git push`, then summarize:
+
 - What failures were found (including any skipped as flaky/infra).
 - What fixes were applied.
 - Which commits were created.
