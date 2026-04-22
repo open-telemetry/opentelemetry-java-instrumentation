@@ -3,49 +3,51 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.vertxweb.v3_0;
+package io.opentelemetry.javaagent.instrumentation.vertx.web.v3_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.asm.Advice.AssignReturned;
-import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-class RouteInstrumentation implements TypeInstrumentation {
+class RoutingContextInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("io.vertx.ext.web.Route");
+    return hasClassesNamed("io.vertx.ext.web.RoutingContext");
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("io.vertx.ext.web.Route"));
+    return implementsInterface(named("io.vertx.ext.web.RoutingContext"));
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("handler").and(takesArgument(0, named("io.vertx.core.Handler"))),
-        getClass().getName() + "$HandlerAdvice");
+        isPublic().and(named("next")).and(takesNoArguments()),
+        getClass().getName() + "$NextAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class HandlerAdvice {
+  public static class NextAdvice {
 
-    @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Handler<RoutingContext> wrapHandler(
-        @Advice.Argument(0) Handler<RoutingContext> handler) {
-      return new RoutingContextHandlerWrapper(handler);
+    public static void next(@Advice.This RoutingContext routingContext) {
+      // calling next tells router to move to the next matching route
+      // restore remembered route to remove currently matched route from it
+      String previousRoute = RoutingContextUtil.getRoute(routingContext);
+      if (previousRoute != null) {
+        RouteHolder.set(Java8BytecodeBridge.currentContext(), previousRoute);
+      }
     }
   }
 }
