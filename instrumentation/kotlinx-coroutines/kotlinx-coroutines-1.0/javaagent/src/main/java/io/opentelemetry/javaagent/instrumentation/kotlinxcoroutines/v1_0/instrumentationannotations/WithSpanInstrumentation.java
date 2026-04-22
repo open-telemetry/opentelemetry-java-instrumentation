@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instrumentationannotations;
 
-import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.KotlinCoroutineUtil.isKotlinSuspendMethod;
+import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v1_16.KotlinCoroutineUtil.isKotlinSuspendMethod;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -21,7 +21,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
-import io.opentelemetry.javaagent.instrumentation.instrumentationannotations.AnnotationExcludedMethods;
+import io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v1_16.AnnotationExcludedMethods;
 import io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instrumentationannotations.SpanAttributeUtil.Parameter;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import java.util.Arrays;

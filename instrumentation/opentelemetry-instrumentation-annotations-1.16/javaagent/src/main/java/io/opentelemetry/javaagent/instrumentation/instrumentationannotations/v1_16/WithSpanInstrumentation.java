@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.instrumentationannotations;
+package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v1_16;
 
-import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.AnnotationSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.AnnotationSingletons.instrumenterWithAttributes;
-import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.KotlinCoroutineUtil.isKotlinSuspendMethod;
+import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v1_16.AnnotationSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v1_16.AnnotationSingletons.instrumenterWithAttributes;
+import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v1_16.KotlinCoroutineUtil.isKotlinSuspendMethod;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.hasParameters;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
