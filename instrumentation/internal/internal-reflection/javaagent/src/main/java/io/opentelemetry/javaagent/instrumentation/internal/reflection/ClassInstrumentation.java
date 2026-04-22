@@ -98,7 +98,9 @@ class ClassInstrumentation implements TypeInstrumentation {
                         && "(Ljava/lang/Class;)[Ljava/lang/Class;".equals(descriptor))) {
                   super.visitVarInsn(Opcodes.ALOAD, 0);
                   if (isIndy) {
-                    IndyBootstrap.invokeStatic(
+                    // ReflectionHelper is in a separate class loader that is not visible to the
+                    // instrumented class, so we need to invoke it via indy bootstrap method
+                    IndyBootstrap.emitIndyStaticCall(
                         mv,
                         "filterInterfaces",
                         "([Ljava/lang/Class;Ljava/lang/Class;)[Ljava/lang/Class;",

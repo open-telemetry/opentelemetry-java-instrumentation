@@ -214,12 +214,13 @@ public class IndyBootstrap {
                 JavaConstant.Simple.ofLoaded(adviceMethod.getDeclaringType().getName()));
   }
 
-  public static void invokeStatic(
+  /** Emit invokedynamic instruction that will call the given helper class static method. */
+  public static void emitIndyStaticCall(
       MethodVisitor mv,
       String name,
       String descriptor,
       Class<?> instrumentationModule,
-      String ownerDotName) {
+      String helperClassDotName) {
     mv.visitInvokeDynamicInsn(
         name,
         descriptor,
@@ -231,6 +232,6 @@ public class IndyBootstrap {
             false),
         instrumentationModule.getName(),
         descriptor,
-        ownerDotName);
+        helperClassDotName);
   }
 }
