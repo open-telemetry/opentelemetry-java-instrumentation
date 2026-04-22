@@ -6,163 +6,98 @@ mode: agent
 
 Analyze the CI failures in the PR for the current branch and fix them, following the structured plan below.
 
-Each time this prompt is triggered, assume you are starting fresh from the beginning of the process.
-
-Do not stop a given execution until you have worked through all phases below.
-
 ## Phase 0: Validate
 
-1. Verify we're not on a protected branch: `git branch --show-current` should not be `main`
-2. Check that the branch is up-to-date with remote: `git fetch && git status` - exit if `git status` reports the branch is `behind` or has `diverged` from remote.
-3. Get the current branch name using `git branch --show-current`
-4. Find the PR for this branch using `gh pr list --head <branch-name> --json number,title` and extract the PR number
-5. Use `gh pr view <pr-number> --json statusCheckRollup --jq '.statusCheckRollup[] | select(.conclusion == "FAILURE") | {name: .name, detailsUrl: .detailsUrl, databaseId: .databaseId}'` to get the list of all failed CI jobs
-6. **Ignore aggregate/rollup checks** like `required-status-check` — they fail if and only if some real underlying check fails, so fixing the real checks resolves them automatically. Do not spend effort downloading their logs.
-7. Check if there are actually CI failures to fix - if all jobs passed (after filtering rollups), exit early
-8. **Trivial-failure fast path**: if there is exactly one failing job with an obvious single root cause (e.g., one markdownlint rule, one spotless violation, one known-flaky infra error), skip Phases 1-2 entirely — fix directly, validate, commit. The CI-PLAN.md / `.git/info/exclude` machinery is overhead for a 2-line fix.
+1. Verify we're not on a protected branch: `git branch --show-current` should not be `main`.
+2. Check the branch is up-to-date: `git fetch && git status` — exit if `behind` or `diverged`.
+3. Find the PR and its failed jobs:
+   ```
+   BRANCH=$(git branch --show-current)
+   PR=$(gh pr list --head "$BRANCH" --json number --jq '.[0].number')
+   gh pr view "$PR" --json statusCheckRollup \
+     --jq '.statusCheckRollup[] | select(.conclusion == "FAILURE") | {name, detailsUrl, databaseId}'
+   ```
+4. **Ignore aggregate/rollup checks** like `required-status-check` — fixing the real underlying checks resolves them automatically.
+5. If all remaining jobs passed, exit early.
+6. **Trivial-failure fast path**: if there is exactly one failing job with an obvious single root cause (e.g., one markdownlint rule, one spotless violation, one known-flaky infra error), skip Phases 1–2 — fix directly, validate, commit.
 
 ## Phase 1: Gather Information
 
-**Phase 1 is for gathering raw log data and identifying failed tasks.**
-**Allowed in Phase 1: downloading logs, grepping logs for error context, listing failed tasks. You may also read source files when strictly needed to classify a failure as real vs. flaky/infra.**
-**Not allowed in Phase 1: editing code, or designing / planning fixes. Defer fix design to Phase 3.**
+**Phase 1 is only for gathering raw log data and identifying failed tasks.** You may read source files when needed to classify a failure as real vs. flaky/infra. Do not edit code or design fixes yet.
 
-### Working directory discipline
+### Identify failing jobs to sample
 
-- Always `cd` back to the repository root before running any `git`, `gh pr`, or `./gradlew` command. Log downloads in `/tmp` put the shell outside the repo and subsequent `git` commands will fail with `fatal: not a git repository`.
-- Prefer one-shot invocations: `(cd /tmp && <download command>)` in a subshell, so the outer shell's cwd is preserved.
+- **Ignore pure duplicates** that only differ by matrix parameters inside parentheses (e.g., `common / test0 (8, hotspot, indy false)` vs `(11, hotspot, indy false)`).
+- **Do sample axes that plausibly change behavior**: different JDK majors, indy true vs false, `-deny-unsafe` / security-manager variants, latest-deps vs pinned. One representative per meaningfully distinct axis.
+- **Flaky / infra failures**: network timeouts, cache misses, runner OOM, or anything clearly unrelated to PR code — note in `/tmp/ci-plan.md` under "Notes" and do not invent a code fix.
 
-### Prevent CI-PLAN.md from being committed
+### Download logs
 
-Before creating `CI-PLAN.md`, add it to the repo-local ignore list so it can't be accidentally staged:
+Use the REST API (more reliable than `gh run view --log-failed`, which on Windows/Git Bash sometimes fails or silently produces a 0-byte file):
 
 ```
-grep -qxF CI-PLAN.md .git/info/exclude || echo CI-PLAN.md >> .git/info/exclude
-rm -f CI-PLAN.md
+(cd /tmp && curl -sSfL \
+  -H "Authorization: token $(gh auth token)" \
+  -o <job-name>.log \
+  "https://api.github.com/repos/<owner>/<repo>/actions/jobs/<job-id>/logs")
 ```
 
-### Collect failure logs
+Use subshells (`(cd /tmp && …)`) for `/tmp` operations so the outer shell stays in the repo root. Do not pipe `gh auth token` through `xargs` (puts the token in argv).
 
-1. Get repository info: `gh repo view --json owner,name`
-2. Identify unique failing jobs:
-   - **Ignore pure duplicates** that only differ by matrix parameters inside parentheses (e.g., `common / test0 (8, hotspot, indy false)` vs `(11, hotspot, indy false)`).
-   - **Do sample axes that plausibly change behavior**: different JDK majors, indy true vs false, any `-deny-unsafe` / security-manager variants, and latest-deps vs pinned. Grab one representative per meaningfully distinct axis, not just one per job name prefix.
-   - **Flaky / infra failures**: if a failure looks like a network timeout, cache miss, runner OOM, or anything clearly unrelated to PR code, note it in `CI-PLAN.md` under "Notes" and do not invent a code fix for it.
-3. Download logs for the selected representatives. Two equally-valid options:
+### Extract errors
 
-   **On Windows/Git Bash, default to Option B.** `gh run view --log-failed` is unreliable on that platform — it sometimes fails with `stream error: stream ID 1; CANCEL; received from peer`, and sometimes silently exits 0 while producing a 0-byte file. If you do try Option A, always verify the output is non-empty (`wc -l`) and fall back to Option B if it is empty.
-
-   **Option A: `gh run view`** (avoids putting the token in process argv; preferred on Linux/macOS):
-
-   ```
-   # For a single job's failing log only:
-   gh run view --job <job-id> --log-failed > /tmp/<job-name>.log
-
-   # Or all failed steps across the whole run in one file:
-   gh run view <run-id> --log-failed > /tmp/run-<run-id>-failed.log
-   ```
-
-   **Option B: REST API** — required on Windows/Git Bash:
-
-   ```
-   (cd /tmp && curl -sSfL \
-     -H "Authorization: token $(gh auth token)" \
-     -o <job-name>.log \
-     "https://api.github.com/repos/<owner>/<repo>/actions/jobs/<job-id>/logs")
-   ```
-
-   Token safety:
-   - Do NOT pipe `gh auth token` through `xargs` — that places the token in `argv` where other local processes can see it.
-   - Inlining it via `-H "Authorization: token $(gh auth token)"` also exposes it in the `curl` process's `argv` (visible to `ps` on multi-user systems). Acceptable on a single-user dev box; avoid on shared machines.
-
-4. For each downloaded log, extract failed Gradle tasks and error context:
-   - Failed tasks: `grep "Task.*FAILED" /tmp/<job-name>.log`
-   - Test failures: `grep "FAILED" /tmp/<job-name>.log | grep -E "(Test|test)"`
-   - Compilation error context: `grep -B 5 -A 20 "error:" /tmp/<job-name>.log`
-   - Task failure context: `grep -B 2 -A 15 "Task.*FAILED" /tmp/<job-name>.log`
+```
+grep -B2 -A20 -E "error:|Task.*FAILED" /tmp/<job-name>.log
+```
 
 ### Fan-out shortcut
 
-Large PRs often produce dozens of failures that all stem from a single upstream
-task (e.g., one `compileJava` failure cascades into every test matrix cell).
-After downloading the first 2-3 representatives, if they all report the
-**same failed upstream Gradle task with identical error text**, stop sampling —
-one fix will resolve all axes. Record the full list of failing jobs in
-`CI-PLAN.md` but don't waste time downloading each one's log.
+Large PRs often produce dozens of failures that all stem from a single upstream task (e.g., one `compileJava` failure cascades into every test matrix cell). After 2–3 representatives, if they all report the **same failed upstream Gradle task with identical error text**, stop sampling — one fix will resolve all axes. Record the full list in the plan but don't download each log.
 
-### Searching the repo
+## Phase 2: Create plan
 
-Use `rg` (ripgrep) for repo-wide text searches. It respects `.gitignore` by
-default, so `build/`, `.gradle/`, and similar generated directories are skipped
-automatically. Plain `grep -r` / `grep -rn` will descend into those
-directories and may hang on large builds. `git grep` is also acceptable.
-
-## Phase 2: Create CI-PLAN.md
-
-**ONLY:** Create the CI-PLAN.md file in the repository root with the following structure:
+Create `/tmp/ci-plan.md` (outside the repo — no risk of accidental commit):
 
 ```markdown
 # CI Failure Analysis Plan
 
 ## Failed Jobs Summary
 - Job 1: <job-name> (job ID: <id>)
-- Job 2: <job-name> (job ID: <id>)
 ...
 
 ## Unique Failed Gradle Tasks
 
 - [ ] Task: <gradle-task-path>
   - Seen in: <job-name-1>, <job-name-2>, ...
-  - Log files: /tmp/<file1>.log, /tmp/<file2>.log
-
-- [ ] Task: <gradle-task-path>
-  - Seen in: <job-name-1>, <job-name-2>, ...
-  - Log files: /tmp/<file1>.log, /tmp/<file2>.log
+  - Log files: /tmp/<file1>.log, ...
 
 ## Suspected Flaky / Infra Failures (skipped)
 - <job-name>: <reason>
 
 ## Notes
-[Any patterns or observations about the failures]
+[Patterns or observations]
 ```
 
 ## Phase 3: Fix Issues
 
-**Important**: Do not commit `CI-PLAN.md` — it's only for tracking work during the session. Phase 1 already added it to `.git/info/exclude`; do not use `git add -A` or `git commit -a` (either could still pick it up if the ignore entry was missed).
-
-### Gradle execution rules (repo-specific)
-
-- Never pipe Gradle output through `grep`, `tail`, `head`, or any other command. Piping masks Gradle's exit code, so a failing build silently appears to succeed.
-- Run Gradle with no timeout (`timeout 0`) and wait for completion — builds and tests can take several minutes.
-- Never use `--rerun-tasks`. Use `--rerun` when a task must be forced to re-execute.
-
-### Per-task workflow
-
-Work through `CI-PLAN.md`, checking items off as you complete them. For each failed task:
+Work through `/tmp/ci-plan.md`, checking items off. For each failed task:
 
 - Analyze the failure using the logs (now you may open source files).
 - Implement the fix.
-  - Spotless failures: `./gradlew :<failed-module-path>:spotlessApply`
-  - Markdown lint failures: most `markdownlint` rules have no auto-fix \u2014 edit manually. `mise run lint:markdown` only validates; there is no `lint:markdown:fix` task.
+  - Spotless failures: `./gradlew :<module-path>:spotlessApply`
+  - Markdown lint failures: most rules have no auto-fix — edit manually. `mise run lint:markdown` only validates.
 - **Test locally before committing**:
   - Markdown lint: `mise run lint:markdown`
   - Compilation errors: `./gradlew <failed-task-path>`
-  - Test failures: run the whole module's test task (e.g., `./gradlew :instrumentation:module-name:javaagent:test`) rather than just the single failing test — related tests in the module often need fixing too.
-  - Verify the fix resolves the issue.
-- Update the checkbox in `CI-PLAN.md`.
-- Commit each logical fix as a **separate commit**:
-  - Use explicit pathspecs. **Put `-m` before `--`**, because everything after `--` is treated as a pathspec by git: `git commit -m "..." -- path/one path/two`.
-  - Note that `git mv` auto-stages the rename — don't re-run `git add` on the moved paths.
-  - If `git mv` or earlier edits have already staged unrelated changes, `git reset` first and stage only the files for the current logical fix.
-  - Do not commit `CI-PLAN.md`.
+  - Test failures: run the whole module's test task rather than just the single failing test — related tests often need fixing too.
+- Commit each logical fix as a **separate commit** with explicit pathspecs. **Put `-m` before `--`** (everything after `--` is a pathspec): `git commit -m "..." -- path/one path/two`.
+  - `git mv` auto-stages the rename — don't re-run `git add` on moved paths.
+  - If unrelated changes are already staged, `git reset` first.
 - Do not `git push` in this phase.
 
-## Phase 4: Validate and Push
+## Phase 4: Push
 
-- Delete `CI-PLAN.md` (`rm -f CI-PLAN.md`) and confirm `git status` is clean of it.
-- Push the changes with plain `git push`.
-  - Only use `git push -f` / `--force-with-lease` if you rewrote history during the session (rebase, amend, reorder). Additive fix commits do not require a force push.
-- Provide a summary of:
-  - What failures were found (including any skipped as flaky/infra).
-  - What fixes were applied.
-  - Which commits were created.
+`git push`, then summarize:
+- What failures were found (including any skipped as flaky/infra).
+- What fixes were applied.
+- Which commits were created.
