@@ -267,3 +267,4 @@ ktor-2.0:testing
 ktor-3.0:library
 ktor-3.0:javaagent
 ktor-3.0:testing
+ktor-common-2.0:library
