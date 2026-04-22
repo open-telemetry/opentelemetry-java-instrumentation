@@ -14,14 +14,9 @@ import java.sql.Statement;
 
 class ProxyStatementFactory {
 
-  static Statement proxyStatementWithCustomClassLoader(Statement statement) {
+  static Statement proxyStatementWithCustomClassLoader(Statement statement) throws Exception {
     TestClassLoader classLoader = new TestClassLoader(ProxyStatementFactory.class.getClassLoader());
-    Class<?> testInterface;
-    try {
-      testInterface = classLoader.loadClass(TestInterface.class.getName());
-    } catch (ClassNotFoundException e) {
-      throw new IllegalStateException("failed to load test interface", e);
-    }
+    Class<?> testInterface = classLoader.loadClass(TestInterface.class.getName());
     if (testInterface.getClassLoader() != classLoader) {
       throw new IllegalStateException("wrong class loader");
     }
