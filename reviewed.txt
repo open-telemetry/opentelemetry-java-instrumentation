@@ -245,3 +245,4 @@ elasticsearch-api-client-7.16:javaagent
 clickhouse-client-v2-0.8:javaagent
 google-http-client-1.19:javaagent
 internal-application-logger:bootstrap
+hibernate-reactive-1.0:hibernate-reactive-2.0-testing
