@@ -15,17 +15,17 @@ import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.util.pattern.PathPattern;
 
-public final class WebfluxSingletons {
+public class WebfluxSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webflux-5.0";
 
-  private static final Instrumenter<Object, Void> INSTRUMENTER;
+  private static final Instrumenter<Object, Void> instrumenter;
 
   static {
     InstrumenterBuilder<Object, Void> builder =
         Instrumenter.builder(
             GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, new WebfluxSpanNameExtractor());
 
-    INSTRUMENTER =
+    instrumenter =
         builder
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
             .addAttributesExtractor(
@@ -34,7 +34,7 @@ public final class WebfluxSingletons {
   }
 
   public static Instrumenter<Object, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static HttpServerRouteGetter<ServerWebExchange> httpRouteGetter() {

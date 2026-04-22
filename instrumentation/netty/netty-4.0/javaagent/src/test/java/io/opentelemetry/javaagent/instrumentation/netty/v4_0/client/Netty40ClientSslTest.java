@@ -79,7 +79,7 @@ class Netty40ClientSslTest {
   }
 
   @Test
-  public void shouldFailSslHandshake() {
+  void shouldFailSslHandshake() {
     Bootstrap bootstrap = createBootstrap(eventLoopGroup, singletonList("SSLv3"));
 
     URI uri = server.resolveHttpsAddress("/success");
@@ -149,7 +149,7 @@ class Netty40ClientSslTest {
 
   @SuppressWarnings("InterruptedExceptionSwallowed")
   @Test
-  public void shouldSuccessfullyEstablishSslHandshake() throws Exception {
+  void shouldSuccessfullyEstablishSslHandshake() throws Exception {
     // given
     Bootstrap bootstrap =
         createBootstrap(eventLoopGroup, asList("TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3"));

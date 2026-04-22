@@ -26,7 +26,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class LibertyWebAppInstrumentation implements TypeInstrumentation {
+class LibertyWebAppInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -40,18 +40,18 @@ public class LibertyWebAppInstrumentation implements TypeInstrumentation {
         named("handleRequest")
             .and(takesArgument(0, named("javax.servlet.ServletRequest")))
             .and(takesArgument(1, named("javax.servlet.ServletResponse"))),
-        this.getClass().getName() + "$HandleRequestAdvice");
+        getClass().getName() + "$HandleRequestAdvice");
 
     // isForbidden is called from handleRequest
     transformer.applyAdviceToMethod(
         named("isForbidden").and(takesArgument(0, named(String.class.getName()))),
-        this.getClass().getName() + "$IsForbiddenAdvice");
+        getClass().getName() + "$IsForbiddenAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class HandleRequestAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static boolean onEnter(
         @Advice.Argument(value = 0) ServletRequest request,
         @Advice.Argument(value = 1) ServletResponse response) {
@@ -73,7 +73,7 @@ public class LibertyWebAppInstrumentation implements TypeInstrumentation {
       return true;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Argument(0) ServletRequest servletRequest,
         @Advice.Argument(1) ServletResponse servletResponse,
@@ -104,7 +104,7 @@ public class LibertyWebAppInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class IsForbiddenAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter() {
       ThreadLocalContext requestInfo = ThreadLocalContext.get();
       if (requestInfo == null || !requestInfo.startSpan()) {
@@ -129,8 +129,7 @@ public class LibertyWebAppInstrumentation implements TypeInstrumentation {
       helper().setAsyncListenerResponse(context, requestInfo.getResponse());
 
       HttpServerResponseCustomizerHolder.getCustomizer()
-          .customize(
-              context, requestInfo.getResponse(), Servlet3HttpServerResponseMutator.INSTANCE);
+          .customize(context, requestInfo.getResponse(), new Servlet3HttpServerResponseMutator());
     }
   }
 }

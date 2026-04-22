@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.netty.common.v4_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.netty.common.v4_0.VirtualFieldHelper.CHANNEL_HANDLER;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -41,37 +40,33 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(namedOneOf("remove", "replace"))
+        namedOneOf("remove", "replace")
             .and(takesArgument(0, named("io.netty.channel.ChannelHandler"))),
         AbstractNettyChannelPipelineInstrumentation.class.getName() + "$RemoveAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(namedOneOf("remove", "replace")).and(takesArgument(0, String.class)),
+        namedOneOf("remove", "replace").and(takesArgument(0, String.class)),
         AbstractNettyChannelPipelineInstrumentation.class.getName() + "$RemoveByNameAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(namedOneOf("remove", "replace")).and(takesArgument(0, Class.class)),
+        namedOneOf("remove", "replace").and(takesArgument(0, Class.class)),
         AbstractNettyChannelPipelineInstrumentation.class.getName() + "$RemoveByClassAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(named("removeFirst")).and(returns(named("io.netty.channel.ChannelHandler"))),
+        named("removeFirst").and(returns(named("io.netty.channel.ChannelHandler"))),
         AbstractNettyChannelPipelineInstrumentation.class.getName() + "$RemoveFirstAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(named("removeLast")).and(returns(named("io.netty.channel.ChannelHandler"))),
+        named("removeLast").and(returns(named("io.netty.channel.ChannelHandler"))),
         AbstractNettyChannelPipelineInstrumentation.class.getName() + "$RemoveLastAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("addAfter"))
-            .and(takesArgument(1, String.class))
-            .and(takesArguments(4)),
+        named("addAfter").and(takesArgument(1, String.class)).and(takesArguments(4)),
         AbstractNettyChannelPipelineInstrumentation.class.getName() + "$AddAfterAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(named("toMap")).and(takesArguments(0)).and(returns(Map.class)),
+        named("toMap").and(takesArguments(0)).and(returns(Map.class)),
         AbstractNettyChannelPipelineInstrumentation.class.getName() + "$ToMapAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class RemoveAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void removeHandler(
         @Advice.This ChannelPipeline pipeline, @Advice.Argument(0) ChannelHandler handler) {
       ChannelHandler ourHandler = CHANNEL_HANDLER.get(handler);
@@ -87,7 +82,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
   @SuppressWarnings("unused")
   public static class RemoveByNameAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void removeHandler(
         @Advice.This ChannelPipeline pipeline, @Advice.Argument(0) String name) {
       ChannelHandler handler = pipeline.get(name);
@@ -108,10 +103,10 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
   @SuppressWarnings("unused")
   public static class RemoveByClassAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void removeHandler(
         @Advice.This ChannelPipeline pipeline,
-        @Advice.Argument(0) Class<ChannelHandler> handlerClass) {
+        @Advice.Argument(0) Class<? extends ChannelHandler> handlerClass) {
       ChannelHandler handler = pipeline.get(handlerClass);
       if (handler == null) {
         return;
@@ -130,7 +125,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
   @SuppressWarnings("unused")
   public static class RemoveFirstAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void removeHandler(
         @Advice.This ChannelPipeline pipeline, @Advice.Return ChannelHandler handler) {
       ChannelHandler ourHandler = CHANNEL_HANDLER.get(handler);
@@ -146,7 +141,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
   @SuppressWarnings("unused")
   public static class RemoveLastAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToReturned
     public static ChannelHandler removeHandler(
         @Advice.This ChannelPipeline pipeline, @Advice.Return ChannelHandler returnHandler) {
@@ -176,7 +171,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
   @SuppressWarnings("unused")
   public static class AddAfterAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToArguments(@ToArgument(1))
     public static String addAfterHandler(
         @Advice.This ChannelPipeline pipeline, @Advice.Argument(value = 1) String nameArg) {
@@ -199,7 +194,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
   @SuppressWarnings("unused")
   public static class ToMapAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void wrapIterator(@Advice.Return Map<String, ChannelHandler> map) {
       for (Iterator<ChannelHandler> iterator = map.values().iterator(); iterator.hasNext(); ) {
         ChannelHandler handler = iterator.next();

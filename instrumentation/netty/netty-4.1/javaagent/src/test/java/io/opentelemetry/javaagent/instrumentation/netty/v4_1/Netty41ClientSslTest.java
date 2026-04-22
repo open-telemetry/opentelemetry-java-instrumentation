@@ -16,7 +16,6 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.netty.bootstrap.Bootstrap;
@@ -108,7 +107,7 @@ class Netty41ClientSslTest {
 
   @Test
   @DisplayName("should fail SSL handshake")
-  public void testFailSslHandshake() throws Exception {
+  void testFailSslHandshake() throws Exception {
     Bootstrap bootstrap = createBootstrap(eventLoopGroup, singletonList("SSLv3"));
     URI uri = server.resolveHttpsAddress("/success");
     DefaultFullHttpRequest request =
@@ -168,25 +167,15 @@ class Netty41ClientSslTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TRANSPORT, "tcp"),
                             equalTo(NETWORK_TYPE, "ipv4"),
-                            satisfies(
-                                SERVER_ADDRESS,
-                                v ->
-                                    v.satisfiesAnyOf(
-                                        k -> assertThat(k).isNull(),
-                                        k -> assertThat(k).isEqualTo(uri.getHost()))),
-                            satisfies(
-                                SERVER_PORT,
-                                v ->
-                                    v.satisfiesAnyOf(
-                                        k -> assertThat(k).isNull(),
-                                        k -> assertThat(k).isEqualTo(uri.getPort()))),
+                            satisfies(SERVER_ADDRESS, val -> val.isIn(uri.getHost(), null)),
+                            satisfies(SERVER_PORT, val -> val.isIn(uri.getPort(), null)),
                             equalTo(NETWORK_PEER_PORT, uri.getPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"))));
   }
 
   @Test
   @DisplayName("should successfully establish SSL handshake")
-  public void testSuccessSslHandshake() throws Exception {
+  void testSuccessSslHandshake() throws Exception {
     Bootstrap bootstrap = createBootstrap(eventLoopGroup, null);
     URI uri = server.resolveHttpsAddress("/success");
     DefaultFullHttpRequest request =

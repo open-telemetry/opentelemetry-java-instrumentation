@@ -16,7 +16,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class MeterInstrumentation implements TypeInstrumentation {
+class MeterInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -26,13 +26,13 @@ public class MeterInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("mark").and(takesArguments(long.class)), this.getClass().getName() + "$MarkAdvice");
+        named("mark").and(takesArguments(long.class)), getClass().getName() + "$MarkAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class MarkAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This Meter meter, @Advice.Argument(0) long increment) {
       metrics().meterMark(meter, increment);
     }

@@ -10,15 +10,15 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import javax.annotation.Nullable;
 
-public final class ElasticJobHelper {
+public class ElasticJobHelper {
   private final Instrumenter<ElasticJobProcessRequest, Void> instrumenter;
-
-  private ElasticJobHelper(Instrumenter<ElasticJobProcessRequest, Void> instrumenter) {
-    this.instrumenter = instrumenter;
-  }
 
   public static ElasticJobHelper create(Instrumenter<ElasticJobProcessRequest, Void> instrumenter) {
     return new ElasticJobHelper(instrumenter);
+  }
+
+  private ElasticJobHelper(Instrumenter<ElasticJobProcessRequest, Void> instrumenter) {
+    this.instrumenter = instrumenter;
   }
 
   @Nullable

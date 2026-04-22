@@ -27,7 +27,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class BootstrapInstrumentation implements TypeInstrumentation {
+class BootstrapInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.netty.bootstrap.Bootstrap");
@@ -36,25 +36,24 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor().and(takesArguments(0)),
-        BootstrapInstrumentation.class.getName() + "$ConstructorAdvice");
+        isConstructor().and(takesArguments(0)), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
         named("resolver")
             .and(takesArguments(1))
             .and(takesArgument(0, named("io.netty.resolver.AddressResolverGroup"))),
-        BootstrapInstrumentation.class.getName() + "$SetResolverAdvice");
+        getClass().getName() + "$SetResolverAdvice");
     transformer.applyAdviceToMethod(
         named("doConnect")
             .and(takesArguments(3))
             .and(takesArgument(0, SocketAddress.class))
             .and(takesArgument(2, named("io.netty.channel.ChannelPromise"))),
-        BootstrapInstrumentation.class.getName() + "$ConnectAdvice");
+        getClass().getName() + "$ConnectAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Bootstrap bootstrap) {
       // this is already the default value, but we're calling the resolver() method to invoke its
       // instrumentation
@@ -65,7 +64,7 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SetResolverAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static AddressResolverGroup<?> onEnter(
         @Advice.Argument(value = 0) AddressResolverGroup<?> resolver) {
@@ -75,7 +74,7 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ConnectAdvice {
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static NettyScope startConnect(@Advice.Argument(0) SocketAddress remoteAddress) {
 
       Context parentContext = Java8BytecodeBridge.currentContext();
@@ -87,7 +86,7 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
       return NettyScope.startNew(connectionInstrumenter(), parentContext, request);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void endConnect(
         @Advice.Thrown Throwable throwable,
         @Advice.Argument(2) ChannelPromise channelPromise,

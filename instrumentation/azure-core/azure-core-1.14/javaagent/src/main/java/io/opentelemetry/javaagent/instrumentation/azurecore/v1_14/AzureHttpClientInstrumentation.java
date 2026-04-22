@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.azurecore.v1_14;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -20,7 +20,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import reactor.core.publisher.Mono;
 
-public class AzureHttpClientInstrumentation implements TypeInstrumentation {
+class AzureHttpClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -28,20 +28,22 @@ public class AzureHttpClientInstrumentation implements TypeInstrumentation {
   }
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("com.azure.core.http.HttpClient");
+  }
+
+  @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
-            .and(named("send"))
-            .and(returns(named("reactor.core.publisher.Mono"))),
-        this.getClass().getName() + "$SuppressNestedClientAdvice");
+        isPublic().and(named("send")).and(returns(named("reactor.core.publisher.Mono"))),
+        getClass().getName() + "$SuppressNestedClientAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class SuppressNestedClientAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Mono<HttpResponse> methodExit(@Advice.Return Mono<HttpResponse> mono) {
       return new SuppressNestedClientMono<>(mono);
     }

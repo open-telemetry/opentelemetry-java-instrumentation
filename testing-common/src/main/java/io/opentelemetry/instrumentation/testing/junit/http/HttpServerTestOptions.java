@@ -22,7 +22,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
-public final class HttpServerTestOptions {
+public class HttpServerTestOptions {
 
   public static final Set<AttributeKey<?>> DEFAULT_HTTP_ATTRIBUTES =
       Collections.unmodifiableSet(new HashSet<>(asList(HTTP_ROUTE, SERVER_PORT)));
@@ -62,6 +62,7 @@ public final class HttpServerTestOptions {
   boolean testCaptureHttpHeaders = true;
   boolean testCaptureRequestParameters = false;
   boolean testHttpPipelining = true;
+  boolean testHttpBodyPipelining = false;
   boolean testNonStandardHttpMethod = true;
   boolean verifyServerSpanEndTime = true;
   boolean useHttp2 = false;
@@ -204,6 +205,12 @@ public final class HttpServerTestOptions {
   @CanIgnoreReturnValue
   public HttpServerTestOptions setTestHttpPipelining(boolean testHttpPipelining) {
     this.testHttpPipelining = testHttpPipelining;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setTestHttpBodyPipelining(boolean testHttpBodyPipelining) {
+    this.testHttpBodyPipelining = testHttpBodyPipelining;
     return this;
   }
 

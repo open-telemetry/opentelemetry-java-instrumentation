@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.mongo.v4_0;
 
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.junit.jupiter.api.Assumptions.abort;
 
 import com.mongodb.MongoClientSettings;
 import com.mongodb.ServerAddress;
@@ -31,7 +32,6 @@ import org.bson.Document;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.opentest4j.TestAbortedException;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
@@ -82,7 +82,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
 
   @Override
   public void createCollectionWithAlreadyBuiltClientOptions(String dbName, String collectionName) {
-    throw new TestAbortedException("not tested on 4.0");
+    abort("not tested on 4.0");
   }
 
   @Override
@@ -232,12 +232,12 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
 
   @Override
   public MongoCollection<Document> setupGetMore(String dbName, String collectionName) {
-    throw new TestAbortedException("not tested on reactive");
+    return abort("not tested on reactive");
   }
 
   @Override
   public void getMore(MongoCollection<Document> collection) {
-    throw new TestAbortedException("not tested on reactive");
+    abort("not tested on reactive");
   }
 
   @Override

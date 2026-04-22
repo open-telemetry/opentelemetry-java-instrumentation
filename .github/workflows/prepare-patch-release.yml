@@ -46,12 +46,12 @@ jobs:
       - name: Update the change log with the approximate release date
         run: |
           date=$(date "+%Y-%m-%d")
-          sed -Ei "s/^## Unreleased$/## Version $VERSION ($date)/" CHANGELOG.md
+          .github/scripts/update-changelog-for-release.sh "$VERSION" "$date"
 
       - name: Use CLA approved bot
         run: .github/scripts/use-cla-approved-bot.sh
 
-      - uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
+      - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
         id: otelbot-token
         with:
           app-id: ${{ vars.OTELBOT_APP_ID }}

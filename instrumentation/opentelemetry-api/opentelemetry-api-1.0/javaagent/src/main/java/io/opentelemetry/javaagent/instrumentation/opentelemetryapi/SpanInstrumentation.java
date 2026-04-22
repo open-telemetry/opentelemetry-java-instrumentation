@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -18,7 +17,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class SpanInstrumentation implements TypeInstrumentation {
+class SpanInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("application.io.opentelemetry.api.trace.PropagatedSpan");
@@ -27,21 +26,20 @@ public class SpanInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isStatic()).and(named("create")),
-        SpanInstrumentation.class.getName() + "$CreateAdvice");
+        isStatic().and(named("create")), SpanInstrumentation.class.getName() + "$CreateAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class CreateAdvice {
 
     // We replace the return value completely so don't need to call the method.
-    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class)
+    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class, inline = false)
     public static boolean methodEnter() {
       return false;
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(inline = false)
     public static application.io.opentelemetry.api.trace.Span methodExit(
         @Advice.Argument(0)
             application.io.opentelemetry.api.trace.SpanContext applicationSpanContext) {

@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentCo
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.javahttpclient.JavaHttpClientSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -34,7 +33,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HttpClientInstrumentation implements TypeInstrumentation {
+class HttpClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -52,19 +51,17 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("send"))
+        named("send")
             .and(isPublic())
             .and(takesArguments(2))
             .and(takesArgument(0, named("java.net.http.HttpRequest"))),
-        HttpClientInstrumentation.class.getName() + "$SendAdvice");
+        getClass().getName() + "$SendAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("sendAsync"))
+        named("sendAsync")
             .and(isPublic())
             .and(takesArgument(0, named("java.net.http.HttpRequest"))),
-        HttpClientInstrumentation.class.getName() + "$SendAsyncAdvice");
+        getClass().getName() + "$SendAsyncAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -99,14 +96,13 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope methodEnter(@Advice.Argument(value = 0) HttpRequest httpRequest) {
       return AdviceScope.start(httpRequest);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
-        @Advice.Argument(0) HttpRequest httpRequest,
         @Advice.Return @Nullable HttpResponse<?> httpResponse,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope scope) {
@@ -121,16 +117,16 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   public static class SendAsyncAdvice {
 
     public static class AsyncAdviceScope {
-      private final Context parentContext;
-      private final Context context;
-      private final Scope scope;
+      @Nullable private final Context parentContext;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
       private final CallDepth callDepth;
       private final HttpRequest request;
 
-      public AsyncAdviceScope(
-          Context parentContext,
-          Context context,
-          Scope scope,
+      private AsyncAdviceScope(
+          @Nullable Context parentContext,
+          @Nullable Context context,
+          @Nullable Scope scope,
           CallDepth callDepth,
           HttpRequest request) {
         this.parentContext = parentContext;
@@ -173,14 +169,14 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AsyncAdviceScope methodEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest) {
       return AsyncAdviceScope.start(httpRequest);
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static CompletableFuture<HttpResponse<?>> methodExit(
         @Advice.Return CompletableFuture<HttpResponse<?>> future,
         @Advice.Thrown @Nullable Throwable throwable,

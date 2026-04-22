@@ -9,8 +9,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesG
 import javax.annotation.Nullable;
 import org.apache.dubbo.rpc.Result;
 
-enum DubboRpcAttributesGetter implements RpcAttributesGetter<DubboRequest, Result> {
-  INSTANCE;
+final class DubboRpcAttributesGetter implements RpcAttributesGetter<DubboRequest, Result> {
 
   @Override
   public String getRpcSystemName(DubboRequest request) {

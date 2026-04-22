@@ -22,23 +22,23 @@ import org.mockito.Mockito;
 
 class DefineClassInstrumentationTest {
 
-  public static class DefiningClassLoader extends ClassLoader {
+  static class DefiningClassLoader extends ClassLoader {
 
-    public DefiningClassLoader() {
+    DefiningClassLoader() {
       super(null);
     }
 
     // Suppressing warnings to force testing of deprecated method
     @SuppressWarnings("deprecation")
-    public Class<?> doDefineClass(byte[] b, int off, int len) {
+    Class<?> doDefineClass(byte[] b, int off, int len) {
       return defineClass(b, off, len);
     }
 
-    public Class<?> doDefineClass(String name, byte[] b, int off, int len) {
+    Class<?> doDefineClass(String name, byte[] b, int off, int len) {
       return defineClass(name, b, off, len);
     }
 
-    public Class<?> doDefineClass(
+    Class<?> doDefineClass(
         String name, byte[] b, int off, int len, ProtectionDomain protectionDomain) {
       return defineClass(name, b, off, len, protectionDomain);
     }

@@ -31,7 +31,7 @@ public abstract class AbstractSecretsManagerClientTest extends AbstractBaseAwsCl
   }
 
   @Test
-  public void sendCreateSecretRequestWithMockedResponse() throws Exception {
+  void sendCreateSecretRequestWithMockedResponse() throws Exception {
     AWSSecretsManagerClientBuilder clientBuilder = AWSSecretsManagerClientBuilder.standard();
     AWSSecretsManager client =
         configureClient(clientBuilder)
@@ -62,7 +62,7 @@ public abstract class AbstractSecretsManagerClientTest extends AbstractBaseAwsCl
   }
 
   @Test
-  public void sendDescribeSecretRequestWithMockedResponse() throws Exception {
+  void sendDescribeSecretRequestWithMockedResponse() throws Exception {
     AWSSecretsManagerClientBuilder clientBuilder = AWSSecretsManagerClientBuilder.standard();
     AWSSecretsManager client =
         configureClient(clientBuilder)

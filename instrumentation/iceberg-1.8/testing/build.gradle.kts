@@ -13,3 +13,9 @@ dependencies {
   }
   api(project(":testing-common"))
 }
+
+tasks {
+  javadoc {
+    enabled = false
+  }
+}

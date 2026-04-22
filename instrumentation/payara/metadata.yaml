@@ -1,0 +1,5 @@
+display_name: Payara
+description: >
+  This instrumentation prevents Payara's built-in OpenTracing integration from interfering with
+  OpenTelemetry server spans, it does not emit any telemetry on its own.
+library_link: https://www.payara.fish/

@@ -51,6 +51,37 @@ Verify `build.gradle.kts` applies the correct plugin for the module type:
 | `library/` | `otel.library-instrumentation` |
 | `testing/` | `otel.java-conventions` |
 
+## Shared Gradle Project Properties
+
+In `build.gradle.kts`, prefer the shared `otelProps` extension for repository-wide Gradle project
+properties that are already modeled there, including:
+
+- `testLatestDeps`
+- `denyUnsafe`
+- `collectMetadata`
+- `testJavaVersion`
+- `testJavaVM`
+- `maxTestRetries`
+- `enableStrictContext`
+
+Examples:
+
+```kotlin
+if (otelProps.testLatestDeps) {
+  // ...
+}
+
+tasks.withType<Test>().configureEach {
+  systemProperty("collectMetadata", otelProps.collectMetadata)
+}
+```
+
+For module-local one-off properties that are not part of `otelProps`, using `findProperty(...)`
+directly is still fine.
+
+`settings.gradle.kts` is the exception: it cannot use project extensions like `otelProps`, so
+direct `gradle.startParameter.projectProperties[...]` access is expected there.
+
 ## `testInstrumentation` Dependencies
 
 The `testInstrumentation` configuration declares which other javaagent instrumentation modules
@@ -79,13 +110,25 @@ When reviewing a `javaagent/` module:
    versioned subdirectories for the same library. For example, if the module is
    `instrumentation/netty/netty-4.0/javaagent`, the grouping directory is
    `instrumentation/netty`.
-2. List the subdirectories of the grouping directory to find sibling version modules that
-   also have a `javaagent/` subdirectory. For example, `instrumentation/netty/` contains
-   `netty-3.8/javaagent`, `netty-4.0/javaagent`, and `netty-4.1/javaagent`.
-3. Exclude the current module itself from the list.
-4. For each remaining sibling, check whether `build.gradle.kts` contains a
+2. List the subdirectories of the grouping directory to find candidate modules that
+   also have a `javaagent/` subdirectory.
+3. **Filter to true version siblings.** A sibling is a module whose directory name shares
+   the **same component prefix** and differs **only in the trailing version number**.
+   Strip the trailing `-<version>` from each directory name to obtain the component
+   prefix. Only modules with the **same** prefix are siblings.
+
+   Examples:
+   - `apache-httpclient-2.0`, `apache-httpclient-4.0`, `apache-httpclient-5.0` → prefix
+     `apache-httpclient` → **all siblings**.
+   - `netty-3.8`, `netty-4.0`, `netty-4.1` → prefix `netty` → **all siblings**.
+   - `akka-actor-2.3`, `akka-actor-fork-join-2.5`, `akka-http-10.0` → prefixes
+     `akka-actor`, `akka-actor-fork-join`, `akka-http` → **not siblings** of each
+     other (different components that happen to share a parent grouping directory).
+
+4. Exclude the current module itself from the filtered list.
+5. For each remaining sibling, check whether `build.gradle.kts` contains a
    `testInstrumentation(project(":instrumentation:...:javaagent"))` entry for it.
-5. If any sibling is missing, add the `testInstrumentation` dependency and verify by running
+6. If any sibling is missing, add the `testInstrumentation` dependency and verify by running
    the module's tests.
 
 ## Unnecessary Dependencies
@@ -130,31 +173,53 @@ Any test task whose tests use Testcontainers **must** declare:
 usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 ```
 
-Place the declaration in `withType<Test>().configureEach` when all test tasks in the module
-use Testcontainers. Otherwise place it on the specific task(s) that do.
+Place the declaration in `withType<Test>().configureEach` when **all** test tasks in the
+module use Testcontainers. Otherwise place it on **only** the specific task(s) that do.
 
-**How to detect a missing declaration:** if `build.gradle.kts` has a dependency on any
-`org.testcontainers:*` artifact (directly or via a `testing` module that pulls one in) but
-no test task calls `usesService(...)` for `testcontainersBuildService`, flag it.
+**Do not over-apply.** Adding `usesService` to a task that does not use Testcontainers
+unnecessarily throttles it against the 2-slot concurrency limit. A module may have some
+suites that use Testcontainers (e.g., `LocalStackContainer`) and others that use in-process
+test servers (e.g., ElasticMQ `SQSRestServerBuilder`, MockWebServer, WireMock). Only the
+Testcontainers-using suites need the declaration.
 
-## Prefer `withType<Test>().configureEach` (when multiple test tasks exist)
+**How to detect a missing declaration:** if a test task's source set (or the shared testing
+module it extends) imports or instantiates Testcontainers types (`GenericContainer`,
+`LocalStackContainer`, etc.), it needs `usesService`. Check the actual test sources — do not
+rely solely on the presence of an `org.testcontainers:*` dependency in `build.gradle.kts`,
+because the dependency may only be used by some suites in the module.
+
+## Prefer `withType<Test>().configureEach` (ONLY when multiple test tasks exist)
 
 When a module has custom test tasks (e.g., `testStableSemconv`), system properties and JVM
 args that apply to **all** test tasks should be set once in a `withType<Test>().configureEach`
 block, not repeated on each individual task.
 
-When there is only one test task, `tasks.test { ... }` is fine — do not convert it to
-`withType<Test>().configureEach` and do not flag it.
+If a property or JVM arg is moved into `withType<Test>().configureEach`, remove any now-redundant
+copies from individual tasks unless a task intentionally overrides the shared value.
 
-**How to spot violations:** If `build.gradle.kts` has both a `test { ... }` block and a
-custom test task (e.g., `val testStableSemconv by registering(Test::class)`), check whether
-any `systemProperty(...)` or `jvmArgs(...)` calls appear inside the `test { }` block that
-should apply to all tasks. If so, move them to `withType<Test>().configureEach`.
+When the module's `build.gradle.kts` does not explicitly register additional `Test` tasks,
+`tasks.test { ... }` is fine — **do not** convert it to `withType<Test>().configureEach` and
+do not flag it.
+
+**`latestDepTest` does not count as a second test task for this rule.** It is registered
+implicitly by the convention plugin when `testLatestDeps` is set, and it inherits the
+configuration of `tasks.test`. A module with only a `tasks.test { ... }` block and no
+`by registering(Test::class)` declarations is a single-test-task module — leave it alone
+even if `testLatestDeps = true`.
+
+Only consider converting to `withType<Test>().configureEach` when the **same
+`build.gradle.kts`** explicitly registers one or more additional `Test` tasks via
+`val foo by registering(Test::class)`.
+
+**How to spot violations:** If `build.gradle.kts` has both a `test { ... }` block and an
+explicit `by registering(Test::class)` custom test task (e.g., `testStableSemconv`), check
+whether any `systemProperty(...)` or `jvmArgs(...)` calls appear inside the `test { }` block
+that should apply to all tasks. If so, move them to `withType<Test>().configureEach`.
 
 ```kotlin
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
     // ... other properties common to all test tasks
   }
 
@@ -173,12 +238,13 @@ review**. Only verify correctness when they are already present.
 
 | Property | Type | Value |
 | --- | --- | --- |
-| `collectMetadata` | System property | Pass-through of the `collectMetadata` Gradle project property; defaults to `"false"` |
+| `collectMetadata` | System property | Pass-through of `otelProps.collectMetadata`; defaults to `false` |
 | `metadataConfig` | System property | A single `key=value` string describing the non-default configuration active during this test run |
 
 When already present, verify:
 
-- `collectMetadata` is in `withType<Test>().configureEach` (or `tasks.test` if only one test
-  task) — never on individual tasks.
+- `collectMetadata` is in `withType<Test>().configureEach` (or `tasks.test` if the module
+  does not explicitly register additional `Test` tasks — `latestDepTest` does not count) —
+  never on individual tasks.
 - `metadataConfig` is on each non-default task, not on the default `test` task.
 - The `metadataConfig` value matches at least one of the jvmArgs configured in the task

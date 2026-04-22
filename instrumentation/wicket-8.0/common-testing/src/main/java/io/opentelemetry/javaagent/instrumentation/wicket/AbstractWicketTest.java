@@ -15,6 +15,7 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -33,6 +34,11 @@ abstract class AbstractWicketTest<SERVER> extends AbstractHttpServerUsingTest<SE
   @BeforeAll
   void setup() {
     startServer();
+  }
+
+  @AfterAll
+  void cleanUp() {
+    cleanupServer();
   }
 
   @Test

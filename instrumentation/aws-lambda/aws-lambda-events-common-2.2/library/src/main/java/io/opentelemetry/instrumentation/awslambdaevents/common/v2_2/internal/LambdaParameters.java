@@ -9,6 +9,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.function.BiFunction;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -47,6 +48,7 @@ public final class LambdaParameters {
     return parameters;
   }
 
+  @Nullable
   public static Object toInput(
       Method targetMethod,
       InputStream inputStream,

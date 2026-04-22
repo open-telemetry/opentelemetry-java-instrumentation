@@ -10,6 +10,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 
 public abstract class HandlerData {
 
@@ -21,11 +22,11 @@ public abstract class HandlerData {
     this.method = method;
   }
 
-  public Class<?> codeClass() {
+  Class<?> codeClass() {
     return target;
   }
 
-  public String methodName() {
+  String methodName() {
     return method.getName();
   }
 
@@ -59,6 +60,7 @@ public abstract class HandlerData {
 
   protected abstract Class<? extends Annotation> getHttpMethodAnnotation();
 
+  @Nullable
   private String locateHttpMethod(Method method) {
     String httpMethod = null;
     for (Annotation ann : method.getDeclaredAnnotations()) {
@@ -69,13 +71,16 @@ public abstract class HandlerData {
     return httpMethod;
   }
 
+  @Nullable
   private String findMethodPath(Method method) {
     Supplier<String> pathSupplier = getPathAnnotation(method);
     return pathSupplier != null ? pathSupplier.get() : null;
   }
 
+  @Nullable
   protected abstract Supplier<String> getPathAnnotation(AnnotatedElement annotated);
 
+  @Nullable
   private String findClassPath(Class<?> target) {
     for (Class<?> currentClass : new ClassHierarchyIterable(target)) {
       Supplier<String> pathSupplier = getPathAnnotation(currentClass);
@@ -88,6 +93,7 @@ public abstract class HandlerData {
     return null;
   }
 
+  @Nullable
   private static Method findMatchingMethod(Method baseMethod, Method[] methods) {
     nextMethod:
     for (Method method : methods) {

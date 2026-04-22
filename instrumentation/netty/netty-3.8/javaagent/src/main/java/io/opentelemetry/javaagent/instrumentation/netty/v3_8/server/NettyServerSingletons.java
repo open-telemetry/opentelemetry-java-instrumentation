@@ -13,10 +13,10 @@ import org.jboss.netty.handler.codec.http.HttpResponse;
 
 final class NettyServerSingletons {
 
-  private static final Instrumenter<NettyRequest, HttpResponse> INSTRUMENTER;
+  private static final Instrumenter<NettyRequest, HttpResponse> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         JavaagentHttpServerInstrumenters.create(
             "io.opentelemetry.netty-3.8",
             new NettyHttpServerAttributesGetter(),
@@ -28,7 +28,7 @@ final class NettyServerSingletons {
   }
 
   public static Instrumenter<NettyRequest, HttpResponse> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private NettyServerSingletons() {}

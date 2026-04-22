@@ -44,7 +44,7 @@ final class ChatCompletionEventsHelper {
 
   private static final AttributeKey<String> EVENT_NAME = stringKey("event.name");
 
-  public static void emitPromptLogEvents(
+  static void emitPromptLogEvents(
       Context context,
       Logger eventLogger,
       ChatCompletionCreateParams request,
@@ -172,7 +172,7 @@ final class ChatCompletionEventsHelper {
     return contentParts.stream().map(ChatCompletionContentPartText::text).collect(joining());
   }
 
-  public static void emitCompletionLogEvents(
+  static void emitCompletionLogEvents(
       Context context,
       Logger eventLogger,
       ChatCompletion completion,
@@ -206,7 +206,7 @@ final class ChatCompletionEventsHelper {
     }
   }
 
-  public static void emitCompletionLogEvent(
+  static void emitCompletionLogEvent(
       Context context,
       Logger eventLogger,
       long index,
@@ -279,7 +279,7 @@ final class ChatCompletionEventsHelper {
 
     try {
       return (String) methodHandle.invoke(object);
-    } catch (Throwable ignore) {
+    } catch (Throwable ignored) {
       return "";
     }
   }
@@ -312,7 +312,7 @@ final class ChatCompletionEventsHelper {
         name = lookup.findVirtual(functionClass, "name", MethodType.methodType(String.class));
         arguments =
             lookup.findVirtual(functionClass, "arguments", MethodType.methodType(String.class));
-      } catch (Exception exception) {
+      } catch (Exception ignored) {
         id = null;
         function = null;
         name = null;
@@ -340,7 +340,7 @@ final class ChatCompletionEventsHelper {
 
       try {
         return new V1FunctionAccess(toolCall, functionHandle.invoke(toolCall));
-      } catch (Throwable ignore) {
+      } catch (Throwable ignored) {
         return null;
       }
     }
@@ -365,7 +365,7 @@ final class ChatCompletionEventsHelper {
     }
   }
 
-  static class V3FunctionAccess implements FunctionAccess {
+  private static class V3FunctionAccess implements FunctionAccess {
     @Nullable private static final MethodHandle functionToolCallHandle;
     @Nullable private static final MethodHandle idHandle;
     @Nullable private static final MethodHandle functionHandle;
@@ -399,7 +399,7 @@ final class ChatCompletionEventsHelper {
         name = lookup.findVirtual(functionClass, "name", MethodType.methodType(String.class));
         arguments =
             lookup.findVirtual(functionClass, "arguments", MethodType.methodType(String.class));
-      } catch (Exception exception) {
+      } catch (Exception ignored) {
         functionToolCall = null;
         id = null;
         function = null;
@@ -435,7 +435,7 @@ final class ChatCompletionEventsHelper {
         }
         Object functionToolCall = optional.get();
         return new V3FunctionAccess(functionToolCall, functionHandle.invoke(functionToolCall));
-      } catch (Throwable ignore) {
+      } catch (Throwable ignored) {
         return null;
       }
     }

@@ -134,11 +134,11 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  protected final ChatCompletion doCompletions(ChatCompletionCreateParams params) {
+  protected ChatCompletion doCompletions(ChatCompletionCreateParams params) {
     return doCompletions(params, getClient(), getClientAsync());
   }
 
-  protected final ChatCompletion doCompletions(
+  protected ChatCompletion doCompletions(
       ChatCompletionCreateParams params, OpenAIClient client, OpenAIClientAsync clientAsync) {
     switch (testType) {
       case SYNC:
@@ -168,12 +168,11 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
     throw new AssertionError();
   }
 
-  protected final List<ChatCompletionChunk> doCompletionsStreaming(
-      ChatCompletionCreateParams params) {
+  protected List<ChatCompletionChunk> doCompletionsStreaming(ChatCompletionCreateParams params) {
     return doCompletionsStreaming(params, getClient(), getClientAsync());
   }
 
-  protected final List<ChatCompletionChunk> doCompletionsStreaming(
+  protected List<ChatCompletionChunk> doCompletionsStreaming(
       ChatCompletionCreateParams params, OpenAIClient client, OpenAIClientAsync clientAsync) {
     switch (testType) {
       case SYNC:
@@ -226,10 +225,10 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 equalTo(genAiProviderKey(), OPENAI),
                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                satisfies(GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                 satisfies(
-                    GEN_AI_RESPONSE_FINISH_REASONS, reasons -> reasons.containsExactly("stop")),
+                    GEN_AI_RESPONSE_FINISH_REASONS, val -> val.containsExactly("stop")),
                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L)));
     if (emitGenAiLatestExperimentalSemconv()) {
@@ -428,11 +427,11 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, singletonList("foo")),
                 equalTo(GEN_AI_REQUEST_TEMPERATURE, 1.0),
                 equalTo(GEN_AI_REQUEST_TOP_P, 1.0),
-                satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                satisfies(GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                 equalTo(GEN_AI_OUTPUT_TYPE, TEXT),
                 satisfies(
-                    GEN_AI_RESPONSE_FINISH_REASONS, reasons -> reasons.containsExactly("stop")),
+                    GEN_AI_RESPONSE_FINISH_REASONS, val -> val.containsExactly("stop")),
                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 3L)));
     if (emitGenAiLatestExperimentalSemconv()) {
@@ -550,12 +549,12 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 equalTo(genAiProviderKey(), OPENAI),
                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                satisfies(GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                 equalTo(GEN_AI_REQUEST_CHOICE_COUNT, 2L),
                 satisfies(
                     GEN_AI_RESPONSE_FINISH_REASONS,
-                    reasons -> reasons.containsExactly("stop", "stop")),
+                    val -> val.containsExactly("stop", "stop")),
                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 7L)));
     if (emitGenAiLatestExperimentalSemconv()) {
@@ -711,11 +710,11 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 equalTo(genAiProviderKey(), OPENAI),
                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                satisfies(GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                 satisfies(
                     GEN_AI_RESPONSE_FINISH_REASONS,
-                    reasons -> reasons.containsExactly("tool_calls")),
+                    val -> val.containsExactly("tool_calls")),
                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 67L),
                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 46L)));
     if (emitGenAiLatestExperimentalSemconv()) {
@@ -914,10 +913,10 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 equalTo(genAiProviderKey(), OPENAI),
                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                satisfies(GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                 satisfies(
-                    GEN_AI_RESPONSE_FINISH_REASONS, reasons -> reasons.containsExactly("stop")),
+                    GEN_AI_RESPONSE_FINISH_REASONS, val -> val.containsExactly("stop")),
                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 99L),
                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 25L)));
     if (emitGenAiLatestExperimentalSemconv()) {
@@ -1327,10 +1326,10 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 equalTo(genAiProviderKey(), OPENAI),
                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                satisfies(GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                 satisfies(
-                    GEN_AI_RESPONSE_FINISH_REASONS, reasons -> reasons.containsExactly("stop")),
+                    GEN_AI_RESPONSE_FINISH_REASONS, val -> val.containsExactly("stop")),
                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 3L)));
     if (emitGenAiLatestExperimentalSemconv()) {
@@ -1468,12 +1467,12 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 equalTo(genAiProviderKey(), OPENAI),
                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                satisfies(GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                 equalTo(GEN_AI_REQUEST_CHOICE_COUNT, 2L),
                 satisfies(
                     GEN_AI_RESPONSE_FINISH_REASONS,
-                    reasons -> reasons.containsExactly("stop", "stop"))));
+                    val -> val.containsExactly("stop", "stop"))));
     if (emitGenAiLatestExperimentalSemconv()) {
       streamMultiChoiceSpanAttrs.add(
           equalTo(GEN_AI_INPUT_MESSAGES, messageList(chatMessage("user", TEST_CHAT_INPUT))));

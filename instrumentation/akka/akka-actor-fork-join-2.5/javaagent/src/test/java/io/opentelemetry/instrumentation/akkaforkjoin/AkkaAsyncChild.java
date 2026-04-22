@@ -12,7 +12,7 @@ import io.opentelemetry.javaagent.instrumentation.executors.TestTask;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-final class AkkaAsyncChild extends ForkJoinTask<Object> implements TestTask {
+class AkkaAsyncChild extends ForkJoinTask<Object> implements TestTask {
   private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test");
 
   private final AtomicBoolean blockThread;

@@ -17,7 +17,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,12 +36,12 @@ import org.springframework.messaging.SubscribableChannel;
 public abstract class AbstractComplexPropagationTest {
 
   private final Class<?> additionalContextClass;
-  protected InstrumentationExtension testing;
+  protected final InstrumentationExtension testing;
 
-  ConfigurableApplicationContext applicationContext;
+  private ConfigurableApplicationContext applicationContext;
 
   public AbstractComplexPropagationTest(
-      InstrumentationExtension testing, @Nullable Class<?> additionalContextClass) {
+      InstrumentationExtension testing, Class<?> additionalContextClass) {
     this.testing = testing;
     this.additionalContextClass = additionalContextClass;
   }
@@ -99,9 +98,14 @@ public abstract class AbstractComplexPropagationTest {
   @SpringBootConfiguration
   @EnableAutoConfiguration
   static class ExternalQueueConfig {
+    @Bean(destroyMethod = "shutdownNow")
+    ExecutorService sendChannelExecutor() {
+      return Executors.newSingleThreadExecutor();
+    }
+
     @Bean
     SubscribableChannel sendChannel() {
-      return new ExecutorChannel(Executors.newSingleThreadExecutor());
+      return new ExecutorChannel(sendChannelExecutor());
     }
 
     @Bean
@@ -139,8 +143,8 @@ public abstract class AbstractComplexPropagationTest {
   }
 
   static class Payload {
-    String body;
-    Map<String, String> headers;
+    private final String body;
+    private final Map<String, String> headers;
 
     Payload(String body, Map<String, String> headers) {
       this.body = body;

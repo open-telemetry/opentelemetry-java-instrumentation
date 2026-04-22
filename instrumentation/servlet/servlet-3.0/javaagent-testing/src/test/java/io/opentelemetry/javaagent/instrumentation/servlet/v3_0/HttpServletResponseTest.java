@@ -132,7 +132,7 @@ class HttpServletResponseTest {
   }
 
   /** Tests deprecated methods */
-  public static class TestResponse implements HttpServletResponse {
+  static class TestResponse implements HttpServletResponse {
     @Override
     public void addCookie(Cookie cookie) {}
 

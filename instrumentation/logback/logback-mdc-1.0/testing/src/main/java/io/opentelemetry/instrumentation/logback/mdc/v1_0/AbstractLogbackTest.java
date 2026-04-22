@@ -63,7 +63,7 @@ public abstract class AbstractLogbackTest {
 
     List<ILoggingEvent> events = listAppender.list;
 
-    assertThat(events.size()).isEqualTo(2);
+    assertThat(events).hasSize(2);
     assertThat(events.get(0).getMessage()).isEqualTo("log message 1");
     assertThat(events.get(0).getMDCPropertyMap())
         .doesNotContainKeys(
@@ -91,7 +91,7 @@ public abstract class AbstractLogbackTest {
 
     List<ILoggingEvent> events = listAppender.list;
 
-    assertThat(events.size()).isEqualTo(3);
+    assertThat(events).hasSize(3);
     assertThat(events.get(0).getMessage()).isEqualTo("log message 1");
     assertThat(events.get(0).getMDCPropertyMap().get(getLoggingKey("trace_id")))
         .isEqualTo(span1.getSpanContext().getTraceId());

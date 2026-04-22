@@ -12,9 +12,8 @@ import java.util.List;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 
-enum BedrockRuntimeAttributesGetter
+class BedrockRuntimeAttributesGetter
     implements GenAiAttributesGetter<ExecutionAttributes, Response> {
-  INSTANCE;
 
   static final class GenAiProviderNameIncubatingValues {
     static final String AWS_BEDROCK = "aws.bedrock";

@@ -10,11 +10,11 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 
-public final class HystrixSingletons {
+public class HystrixSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.hystrix-1.4";
 
-  private static final Instrumenter<HystrixRequest, Void> INSTRUMENTER;
+  private static final Instrumenter<HystrixRequest, Void> instrumenter;
 
   static {
     InstrumenterBuilder<HystrixRequest, Void> builder =
@@ -26,11 +26,11 @@ public final class HystrixSingletons {
       builder.addAttributesExtractor(new ExperimentalAttributesExtractor());
     }
 
-    INSTRUMENTER = builder.buildInstrumenter();
+    instrumenter = builder.buildInstrumenter();
   }
 
   public static Instrumenter<HystrixRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private HystrixSingletons() {}

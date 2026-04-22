@@ -22,7 +22,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ScriptJobHandlerInstrumentation implements TypeInstrumentation {
+class ScriptJobHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -33,21 +33,21 @@ public class ScriptJobHandlerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("execute").and(isPublic()).and(takesArguments(1).and(takesArgument(0, String.class))),
-        ScriptJobHandlerInstrumentation.class.getName() + "$ScheduleAdvice");
+        getClass().getName() + "$ScheduleAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ScheduleAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static XxlJobHelper.XxlJobScope onSchedule(
         @Advice.FieldValue("glueType") GlueTypeEnum glueType,
         @Advice.FieldValue("jobId") int jobId) {
       return helper().startSpan(XxlJobProcessRequest.createScriptJobRequest(glueType, jobId));
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) @Nullable Object result,
         @Advice.Thrown @Nullable Throwable throwable,

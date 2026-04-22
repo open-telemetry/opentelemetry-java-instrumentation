@@ -20,8 +20,6 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import java.time.Duration;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -112,8 +110,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
 
   @DisplayName("test pass through tombstone")
   @Test
-  void testPassThroughTombstone()
-      throws ExecutionException, InterruptedException, TimeoutException {
+  void testPassThroughTombstone() throws Exception {
     producer.send(new ProducerRecord<>(SHARED_TOPIC, null)).get(5, SECONDS);
     awaitUntilConsumerIsReady();
     ConsumerRecords<?, ?> records = poll(Duration.ofSeconds(5));
@@ -156,8 +153,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
   @ParameterizedTest
   @DisplayName("test records(TopicPartition) kafka consume")
   @ValueSource(booleans = {true, false})
-  void testRecordsWithTopicPartitionKafkaConsume(boolean testListIterator)
-      throws ExecutionException, InterruptedException, TimeoutException {
+  void testRecordsWithTopicPartitionKafkaConsume(boolean testListIterator) throws Exception {
     String greeting = "Hello from MockConsumer!";
     producer.send(new ProducerRecord<>(SHARED_TOPIC, partition, null, greeting)).get(5, SECONDS);
 
@@ -167,7 +163,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     ConsumerRecords<?, ?> consumerRecords = poll(Duration.ofSeconds(5));
     List<? extends ConsumerRecord<?, ?>> recordsInPartition =
         consumerRecords.records(KafkaClientBaseTest.topicPartition);
-    assertThat(recordsInPartition.size()).isEqualTo(1);
+    assertThat(recordsInPartition).hasSize(1);
 
     // iterate over records to generate spans
     if (testListIterator) {

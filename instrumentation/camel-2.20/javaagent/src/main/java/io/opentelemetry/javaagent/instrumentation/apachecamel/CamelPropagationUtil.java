@@ -13,6 +13,7 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
 
 final class CamelPropagationUtil {
@@ -58,7 +59,11 @@ final class CamelPropagationUtil {
     }
 
     @Override
-    public String get(Map<String, Object> map, String key) {
+    @Nullable
+    public String get(@Nullable Map<String, Object> map, String key) {
+      if (map == null) {
+        return null;
+      }
       Object value = map.get(key);
       return (value == null ? null : value.toString());
     }
@@ -68,7 +73,10 @@ final class CamelPropagationUtil {
     INSTANCE;
 
     @Override
-    public void set(Map<String, Object> carrier, String key, String value) {
+    public void set(@Nullable Map<String, Object> carrier, String key, String value) {
+      if (carrier == null) {
+        return;
+      }
       // Camel keys are internal ones
       if (!key.startsWith("Camel")) {
         carrier.put(key, value);

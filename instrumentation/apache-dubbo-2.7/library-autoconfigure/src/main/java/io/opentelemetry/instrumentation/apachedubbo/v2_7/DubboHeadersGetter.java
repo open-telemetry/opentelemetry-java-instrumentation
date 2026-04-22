@@ -10,10 +10,10 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.apache.dubbo.rpc.RpcInvocation;
 
-enum DubboHeadersGetter implements TextMapGetter<DubboRequest> {
-  INSTANCE;
+final class DubboHeadersGetter implements TextMapGetter<DubboRequest> {
 
   private static final MethodHandle GET_OBJECT_ATTACHMENTS;
 
@@ -24,7 +24,7 @@ enum DubboHeadersGetter implements TextMapGetter<DubboRequest> {
       getObjectAttachments =
           lookup.findVirtual(
               RpcInvocation.class, "getObjectAttachments", MethodType.methodType(Map.class));
-    } catch (Throwable t) {
+    } catch (Throwable ignored) {
       // ignore
     }
     GET_OBJECT_ATTACHMENTS = getObjectAttachments;
@@ -40,7 +40,7 @@ enum DubboHeadersGetter implements TextMapGetter<DubboRequest> {
       if (GET_OBJECT_ATTACHMENTS != null) {
         return ((Map<String, Object>) GET_OBJECT_ATTACHMENTS.invoke(invocation)).keySet();
       }
-    } catch (Throwable t) {
+    } catch (Throwable ignored) {
       // ignore
     }
     return invocation.getAttachments().keySet();
@@ -48,7 +48,11 @@ enum DubboHeadersGetter implements TextMapGetter<DubboRequest> {
 
   @Override
   @SuppressWarnings("deprecation") // deprecation for dubbo 3.2.15
-  public String get(DubboRequest request, String key) {
+  @Nullable
+  public String get(@Nullable DubboRequest request, String key) {
+    if (request == null) {
+      return null;
+    }
     return request.invocation().getAttachment(key);
   }
 }

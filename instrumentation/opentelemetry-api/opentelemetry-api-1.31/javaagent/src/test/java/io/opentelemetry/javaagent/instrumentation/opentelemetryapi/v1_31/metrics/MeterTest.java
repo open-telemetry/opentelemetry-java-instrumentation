@@ -100,7 +100,7 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(11)
-                                                .hasAttributesSatisfying(
+                                                .hasAttributesSatisfyingExactly(
                                                     equalTo(stringKey("test"), "test"))))));
   }
 
@@ -138,7 +138,7 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(12.1)
-                                                .hasAttributesSatisfying(
+                                                .hasAttributesSatisfyingExactly(
                                                     equalTo(stringKey("test"), "test"))))));
   }
 
@@ -176,7 +176,7 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(11)
-                                                .hasAttributesSatisfying(
+                                                .hasAttributesSatisfyingExactly(
                                                     equalTo(stringKey("test"), "test"))))));
   }
 
@@ -215,7 +215,7 @@ class MeterTest {
                                         point ->
                                             point
                                                 .hasValue(12.1)
-                                                .hasAttributesSatisfying(
+                                                .hasAttributesSatisfyingExactly(
                                                     equalTo(stringKey("test"), "test"))))));
   }
 
@@ -254,7 +254,7 @@ class MeterTest {
                                         point
                                             .hasSum(11.0)
                                             .hasBucketBoundaries(10.0)
-                                            .hasAttributesSatisfying(
+                                            .hasAttributesSatisfyingExactly(
                                                 equalTo(stringKey("test"), "test"))))));
   }
 
@@ -293,7 +293,7 @@ class MeterTest {
                                         point
                                             .hasSum(12.1)
                                             .hasBucketBoundaries(10.0)
-                                            .hasAttributesSatisfying(
+                                            .hasAttributesSatisfyingExactly(
                                                 equalTo(stringKey("test"), "test"))))));
   }
 
@@ -330,7 +330,7 @@ class MeterTest {
                                     point ->
                                         point
                                             .hasValue(123)
-                                            .hasAttributesSatisfying(
+                                            .hasAttributesSatisfyingExactly(
                                                 equalTo(stringKey("test"), "test"))))));
 
     observableGauge.close();
@@ -376,7 +376,7 @@ class MeterTest {
                                     point ->
                                         point
                                             .hasValue(123)
-                                            .hasAttributesSatisfying(
+                                            .hasAttributesSatisfyingExactly(
                                                 equalTo(stringKey("test"), "test"))))));
 
     // sleep exporter interval
@@ -419,7 +419,7 @@ class MeterTest {
                                     point ->
                                         point
                                             .hasValue(1.23)
-                                            .hasAttributesSatisfying(
+                                            .hasAttributesSatisfyingExactly(
                                                 equalTo(stringKey("test"), "test"))))));
 
     observableGauge.close();
@@ -464,7 +464,7 @@ class MeterTest {
                                     point ->
                                         point
                                             .hasValue(1.23)
-                                            .hasAttributesSatisfying(
+                                            .hasAttributesSatisfyingExactly(
                                                 equalTo(stringKey("test"), "test"))))));
 
     // sleep exporter interval

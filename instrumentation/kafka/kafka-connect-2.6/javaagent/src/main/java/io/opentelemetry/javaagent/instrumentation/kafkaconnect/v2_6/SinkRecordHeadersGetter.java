@@ -15,8 +15,7 @@ import javax.annotation.Nullable;
 import org.apache.kafka.connect.header.Header;
 import org.apache.kafka.connect.sink.SinkRecord;
 
-enum SinkRecordHeadersGetter implements TextMapGetter<SinkRecord> {
-  INSTANCE;
+class SinkRecordHeadersGetter implements TextMapGetter<SinkRecord> {
 
   @Override
   public Iterable<String> keys(SinkRecord record) {

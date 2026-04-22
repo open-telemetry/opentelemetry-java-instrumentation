@@ -85,7 +85,7 @@ class AwsSpanAssertions {
                 equalTo(HTTP_REQUEST_METHOD, "POST"),
                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                 satisfies(URL_FULL, val -> val.isInstanceOf(String.class)),
-                satisfies(SERVER_ADDRESS, stringAssert -> stringAssert.isInstanceOf(String.class)),
+                satisfies(SERVER_ADDRESS, val -> val.isInstanceOf(String.class)),
                 satisfies(
                     SERVER_PORT,
                     val ->
@@ -94,7 +94,7 @@ class AwsSpanAssertions {
                             v -> assertThat(v).isInstanceOf(Number.class))),
                 equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                 equalTo(RPC_SYSTEM, "aws-api"),
-                satisfies(RPC_METHOD, stringAssert -> stringAssert.isEqualTo(rpcMethod)),
+                satisfies(RPC_METHOD, val -> val.isEqualTo(rpcMethod)),
                 equalTo(RPC_SERVICE, "AmazonSQS")));
 
     if (spanName.endsWith("receive")
@@ -136,7 +136,8 @@ class AwsSpanAssertions {
                 SERVER_PORT,
                 val ->
                     val.satisfiesAnyOf(
-                        v -> val.isInstanceOf(Number.class), v -> assertThat(v).isNull())));
+                        v -> assertThat(v).isInstanceOf(Number.class),
+                        v -> assertThat(v).isNull())));
   }
 
   static SpanDataAssert sns(
@@ -160,6 +161,7 @@ class AwsSpanAssertions {
                 SERVER_PORT,
                 val ->
                     val.satisfiesAnyOf(
-                        v -> val.isInstanceOf(Number.class), v -> assertThat(v).isNull())));
+                        v -> assertThat(v).isInstanceOf(Number.class),
+                        v -> assertThat(v).isNull())));
   }
 }

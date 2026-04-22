@@ -10,13 +10,13 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.instrumentation.jsf.jakarta.JsfRequest;
 
-public class MyFacesSingletons {
+class MyFacesSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jsf-myfaces-3.0";
 
-  private static final Instrumenter<JsfRequest, Void> INSTRUMENTER;
+  private static final Instrumenter<JsfRequest, Void> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<JsfRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, JsfRequest::spanName)
             .setErrorCauseExtractor(new MyFacesErrorCauseExtractor())
@@ -24,8 +24,8 @@ public class MyFacesSingletons {
             .buildInstrumenter();
   }
 
-  public static Instrumenter<JsfRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+  static Instrumenter<JsfRequest, Void> instrumenter() {
+    return instrumenter;
   }
 
   private MyFacesSingletons() {}

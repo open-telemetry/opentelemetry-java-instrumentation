@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor.v3_1.operator;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -22,7 +21,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ContextPropagationOperatorInstrumentation implements TypeInstrumentation {
+class ContextPropagationOperatorInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named(
@@ -32,26 +31,23 @@ public class ContextPropagationOperatorInstrumentation implements TypeInstrument
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(isStatic())
             .and(named("storeOpenTelemetryContext"))
             .and(takesArgument(0, named("reactor.util.context.Context")))
             .and(takesArgument(1, named("application.io.opentelemetry.context.Context")))
             .and(returns(named("reactor.util.context.Context"))),
-        ContextPropagationOperatorInstrumentation.class.getName() + "$StoreAdvice");
+        getClass().getName() + "$StoreAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(isStatic())
             .and(named("getOpenTelemetryContext"))
             .and(takesArgument(0, named("reactor.util.context.Context")))
             .and(takesArgument(1, named("application.io.opentelemetry.context.Context")))
             .and(returns(named("application.io.opentelemetry.context.Context"))),
-        ContextPropagationOperatorInstrumentation.class.getName() + "$GetAdvice");
+        getClass().getName() + "$GetAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(isStatic())
             .and(named("runWithContext"))
             .and(
@@ -59,18 +55,21 @@ public class ContextPropagationOperatorInstrumentation implements TypeInstrument
                     0, namedOneOf("reactor.core.publisher.Mono", "reactor.core.publisher.Flux")))
             .and(takesArgument(1, named("application.io.opentelemetry.context.Context")))
             .and(returns(namedOneOf("reactor.core.publisher.Mono", "reactor.core.publisher.Flux"))),
-        ContextPropagationOperatorInstrumentation.class.getName() + "$RunWithAdvice");
+        getClass().getName() + "$RunWithAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class StoreAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Advice.OnDefaultValue.class)
+    @Advice.OnMethodEnter(
+        suppress = Throwable.class,
+        skipOn = Advice.OnDefaultValue.class,
+        inline = false)
     public static boolean methodEnter() {
       return false;
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static reactor.util.context.Context methodExit(
         @Advice.Argument(0) reactor.util.context.Context reactorContext,
         @Advice.Argument(1) application.io.opentelemetry.context.Context applicationContext) {
@@ -81,13 +80,13 @@ public class ContextPropagationOperatorInstrumentation implements TypeInstrument
 
   @SuppressWarnings("unused")
   public static class GetAdvice {
-    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class)
+    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class, inline = false)
     public static boolean methodEnter() {
       return false;
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static application.io.opentelemetry.context.Context methodExit(
         @Advice.Argument(0) reactor.util.context.Context reactorContext,
         @Advice.Argument(1) application.io.opentelemetry.context.Context defaultContext) {
@@ -104,7 +103,7 @@ public class ContextPropagationOperatorInstrumentation implements TypeInstrument
 
   @SuppressWarnings("unused")
   public static class RunWithAdvice {
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(inline = false)
     @Advice.AssignReturned.ToFields(@Advice.AssignReturned.ToFields.ToField("enabled"))
     public static boolean methodEnter() {
       return true;

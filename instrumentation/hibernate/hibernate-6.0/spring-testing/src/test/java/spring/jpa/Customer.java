@@ -11,7 +11,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import java.util.Locale;
 import java.util.Objects;
-import javax.annotation.Nullable;
 
 @Entity
 public class Customer {
@@ -61,7 +60,7 @@ public class Customer {
   }
 
   @Override
-  public boolean equals(@Nullable Object obj) {
+  public boolean equals(Object obj) {
     if (obj == this) {
       return true;
     }

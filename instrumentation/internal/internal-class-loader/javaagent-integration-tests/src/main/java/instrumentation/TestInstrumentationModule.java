@@ -41,7 +41,7 @@ public class TestInstrumentationModule extends InstrumentationModule {
     return false;
   }
 
-  public static class TestTypeInstrumentation implements TypeInstrumentation {
+  private static class TestTypeInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("org.apache.commons.lang3.SystemUtils");

@@ -22,7 +22,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class InvocationInstrumentation implements TypeInstrumentation {
+class InvocationInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -32,7 +32,7 @@ public class InvocationInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("invoke").and(takesNoArguments()), this.getClass().getName() + "$InvokeAdvice");
+        named("invoke").and(takesNoArguments()), getClass().getName() + "$InvokeAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -40,19 +40,22 @@ public class InvocationInstrumentation implements TypeInstrumentation {
 
     public static class AdviceScope {
       private final CallDepth callDepth;
-      private final ClassAndMethod request;
-      private final Context context;
-      private final Scope scope;
+      @Nullable private final ClassAndMethod request;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
 
       public AdviceScope(
-          CallDepth callDepth, ClassAndMethod request, Context context, Scope scope) {
+          CallDepth callDepth,
+          @Nullable ClassAndMethod request,
+          @Nullable Context context,
+          @Nullable Scope scope) {
         this.callDepth = callDepth;
         this.request = request;
         this.context = context;
         this.scope = scope;
       }
 
-      public static AdviceScope start(CallDepth callDepth, Action action) {
+      public static AdviceScope start(CallDepth callDepth, @Nullable Action action) {
         if (callDepth.getAndIncrement() > 0 || action == null) {
           return new AdviceScope(callDepth, null, null, null);
         }
@@ -69,6 +72,7 @@ public class InvocationInstrumentation implements TypeInstrumentation {
       }
 
       public void end(@Nullable Throwable throwable) {
+        // when no tracing scope is started, request and context are also null
         if (callDepth.decrementAndGet() > 0 || scope == null) {
           return;
         }
@@ -77,13 +81,13 @@ public class InvocationInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AdviceScope onEnter(@Advice.FieldValue("action") Action action) {
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static AdviceScope onEnter(@Advice.FieldValue("action") @Nullable Action action) {
       CallDepth callDepth = CallDepth.forClass(Invocation.class);
       return AdviceScope.start(callDepth, action);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopTraceOnResponse(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope actionScope) {
       actionScope.end(throwable);

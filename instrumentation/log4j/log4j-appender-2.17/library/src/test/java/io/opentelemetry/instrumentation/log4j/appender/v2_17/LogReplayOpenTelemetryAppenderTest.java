@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.log4j.appender.v2_17.AbstractLog4j2Test.mapMessageKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
@@ -35,7 +35,7 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
 
   @AfterEach
   void resetOpenTelemetry() {
-    OpenTelemetryAppender.install(null);
+    OpenTelemetryAppender.resetForTest();
   }
 
   @Override
@@ -102,8 +102,8 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
                         "twoLogsStringMapMessage",
                         equalTo(THREAD_NAME, Thread.currentThread().getName()),
                         equalTo(THREAD_ID, Thread.currentThread().getId()),
-                        equalTo(stringKey("log4j.map_message.key1"), "val1"),
-                        equalTo(stringKey("log4j.map_message.key2"), "val2"))));
+                        equalTo(mapMessageKey("key1"), "val1"),
+                        equalTo(mapMessageKey("key2"), "val2"))));
   }
 
   @Test
@@ -119,8 +119,8 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
 
     StructuredDataMessage message2 =
         new StructuredDataMessage("an id 2", "a message 2", "a type 2");
-    message.put("key1-2", "val1-2");
-    message.put("key2-2", "val2-2");
+    message2.put("key1-2", "val1-2");
+    message2.put("key2-2", "val2-2");
     logger.info(message2); // Won't be instrumented because cache size is 1 (see log4j2.xml file)
 
     OpenTelemetryAppender.install(testing.getOpenTelemetry());
@@ -136,8 +136,8 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
                         "twoLogsStructuredDataMessage",
                         equalTo(THREAD_NAME, Thread.currentThread().getName()),
                         equalTo(THREAD_ID, Thread.currentThread().getId()),
-                        equalTo(stringKey("log4j.map_message.key1"), "val1"),
-                        equalTo(stringKey("log4j.map_message.key2"), "val2"))));
+                        equalTo(mapMessageKey("key1"), "val1"),
+                        equalTo(mapMessageKey("key2"), "val2"))));
   }
 
   private static List<AttributeAssertion> addLocationAttributes(

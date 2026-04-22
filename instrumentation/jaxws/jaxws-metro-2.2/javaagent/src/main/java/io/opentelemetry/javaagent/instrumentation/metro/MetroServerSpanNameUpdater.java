@@ -17,6 +17,8 @@ import java.lang.invoke.MethodHandles;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
+import javax.xml.namespace.QName;
 
 final class MetroServerSpanNameUpdater {
 
@@ -72,9 +74,6 @@ final class MetroServerSpanNameUpdater {
 
   public void updateServerSpanName(Context context, MetroRequest metroRequest) {
     String spanName = metroRequest.spanName();
-    if (spanName == null) {
-      return;
-    }
 
     Span serverSpan = LocalRootSpan.fromContextOrNull(context);
     if (serverSpan == null) {
@@ -98,8 +97,12 @@ final class MetroServerSpanNameUpdater {
             } else {
               // when pathInfo is null then there is a servlet that is mapped to this exact service
               // servletPath already contains the service name
-              String operationName = packet.getWSDLOperation().getLocalPart();
-              spanName = servletPath + "/" + operationName;
+              QName wsdlOperation = packet.getWSDLOperation();
+              if (wsdlOperation == null) {
+                spanName = servletPath;
+              } else {
+                spanName = servletPath + "/" + wsdlOperation.getLocalPart();
+              }
             }
             break;
           }
@@ -136,14 +139,17 @@ final class MetroServerSpanNameUpdater {
       return httpServletRequestClass.isInstance(httpServletRequest);
     }
 
+    @Nullable
     String getServletPath(Object httpServletRequest) {
       return invokeSafely(getServletPathMethodHandle, httpServletRequest);
     }
 
+    @Nullable
     String getPathInfo(Object httpServletRequest) {
       return invokeSafely(getPathInfoMethodHandle, httpServletRequest);
     }
 
+    @Nullable
     private static String invokeSafely(MethodHandle methodHandle, Object httpServletRequest) {
       try {
         return (String) methodHandle.invoke(httpServletRequest);

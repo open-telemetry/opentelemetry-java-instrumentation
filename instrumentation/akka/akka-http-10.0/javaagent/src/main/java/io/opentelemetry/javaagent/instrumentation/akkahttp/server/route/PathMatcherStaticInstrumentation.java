@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.akkahttp.server.route;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.akkahttp.server.route.AkkaRouteUtil.PREFIX;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -21,23 +22,28 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class PathMatcherStaticInstrumentation implements TypeInstrumentation {
+class PathMatcherStaticInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return extendsClass(named("akka.http.scaladsl.server.PathMatcher"));
   }
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("akka.http.scaladsl.server.PathMatcher");
+  }
+
+  @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("apply").and(takesArgument(0, named("akka.http.scaladsl.model.Uri$Path"))),
-        this.getClass().getName() + "$ApplyAdvice");
+        getClass().getName() + "$ApplyAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ApplyAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This PathMatcher<?> pathMatcher,
         @Advice.Argument(0) Uri.Path path,

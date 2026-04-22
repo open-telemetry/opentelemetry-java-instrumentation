@@ -20,8 +20,12 @@ exclude = [
   '^http://code.google.com/p/concurrentlinkedhashmap$',
   '^https://softwareengineering.stackexchange.com/questions/29727.*',
   '^https://central.sonatype.com/service/rest/repository/browse/maven-snapshots/io/opentelemetry/$',
+  # url in zipkin pom files points to a non-existent location
+  '^https://github.com/openzipkin/zipkin-reporter-java/zipkin-reporter$',
+  '^https://github.com/openzipkin/zipkin-reporter-java/zipkin-sender-okhttp3$',
   # flaky links
   '^http://www.slf4j.org.*',
   '^https://logback.qos.ch/.*',
-  '^https://vaadin.com/$'
+  '^https://vaadin.com/$',
+  '^https://camel.apache.org/$'
 ]

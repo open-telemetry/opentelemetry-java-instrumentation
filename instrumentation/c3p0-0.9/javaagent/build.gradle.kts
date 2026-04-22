@@ -7,8 +7,6 @@ muzzle {
     group.set("com.mchange")
     module.set("c3p0")
     versions.set("(,)")
-    // these versions have missing dependencies in maven central
-    skip("0.9.2-pre2-RELEASE", "0.9.2-pre3")
   }
 }
 
@@ -21,20 +19,17 @@ dependencies {
   testImplementation(project(":instrumentation:c3p0-0.9:testing"))
 }
 
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
-
 tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
   val testStableSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("collectMetadata", collectMetadata)
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  test {
-    systemProperty("collectMetadata", collectMetadata)
   }
 
   check {

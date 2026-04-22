@@ -51,11 +51,7 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
   }
 
   private static void customizeResponse(Context context, HttpResponse response) {
-    try {
-      HttpServerResponseCustomizerHolder.getCustomizer()
-          .customize(context, response, NettyHttpResponseMutator.INSTANCE);
-    } catch (Throwable ignore) {
-      // Ignore.
-    }
+    HttpServerResponseCustomizerHolder.getCustomizer()
+        .customize(context, response, NettyHttpResponseMutator.INSTANCE);
   }
 }

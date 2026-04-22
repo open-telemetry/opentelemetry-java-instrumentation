@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0;
 
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.ResteasySingletons.instrumenter;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsConstants;
@@ -39,26 +41,33 @@ public class ResteasyRequestContextInstrumentation extends AbstractRequestContex
       private final Context context;
       private final Scope scope;
 
-      public AdviceScope(
-          Class<?> resourceClass, Method method, ContainerRequestContext requestContext) {
-        handlerData = new Jaxrs3HandlerData(resourceClass, method);
-        context =
-            Jaxrs3RequestContextHelper.createOrUpdateAbortSpan(
-                ResteasySingletons.instrumenter(), requestContext, handlerData);
-        scope = context != null ? context.makeCurrent() : null;
+      private AdviceScope(Jaxrs3HandlerData handlerData, Context context) {
+        this.handlerData = handlerData;
+        this.context = context;
+        scope = context.makeCurrent();
       }
 
-      public void exit(Throwable throwable) {
-        if (scope == null) {
-          return;
+      @Nullable
+      public static AdviceScope start(
+          Class<?> resourceClass, Method method, ContainerRequestContext requestContext) {
+        Jaxrs3HandlerData handlerData = new Jaxrs3HandlerData(resourceClass, method);
+        Context context =
+            Jaxrs3RequestContextHelper.createOrUpdateAbortSpan(
+                instrumenter(), requestContext, handlerData);
+        if (context == null) {
+          return null;
         }
+        return new AdviceScope(handlerData, context);
+      }
+
+      public void end(@Nullable Throwable throwable) {
         scope.close();
-        ResteasySingletons.instrumenter().end(context, handlerData, null, throwable);
+        instrumenter().end(context, handlerData, null, throwable);
       }
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope decorateAbortSpan(
         @Advice.This ContainerRequestContext requestContext) {
 
@@ -72,15 +81,15 @@ public class ResteasyRequestContextInstrumentation extends AbstractRequestContex
       Method method = resourceMethodInvoker.getMethod();
       Class<?> resourceClass = resourceMethodInvoker.getResourceClass();
 
-      return new AdviceScope(resourceClass, method, requestContext);
+      return AdviceScope.start(resourceClass, method, requestContext);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
-        adviceScope.exit(throwable);
+        adviceScope.end(throwable);
       }
     }
   }

@@ -61,7 +61,6 @@ class OpenSearchApacheHttpClient5TransportTest extends AbstractOpenSearchTest {
             .setHttpClientConfigCallback(
                 httpClientBuilder ->
                     httpClientBuilder
-                        .setDefaultCredentialsProvider(credentialsProvider)
                         .setConnectionManager(connectionManager)
                         .setDefaultCredentialsProvider(credentialsProvider))
             .build();
@@ -94,7 +93,6 @@ class OpenSearchApacheHttpClient5TransportTest extends AbstractOpenSearchTest {
             .setHttpClientConfigCallback(
                 httpClientBuilder ->
                     httpClientBuilder
-                        .setDefaultCredentialsProvider(credentialsProvider)
                         .setConnectionManager(connectionManager)
                         .setDefaultCredentialsProvider(credentialsProvider))
             .build();

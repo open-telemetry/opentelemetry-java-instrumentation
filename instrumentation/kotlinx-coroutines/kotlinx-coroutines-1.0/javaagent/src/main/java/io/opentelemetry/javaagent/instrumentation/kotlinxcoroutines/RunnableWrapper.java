@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 
-public final class RunnableWrapper {
+public class RunnableWrapper {
 
   public static Runnable stopPropagation(Runnable runnable) {
     return () -> {

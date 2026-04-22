@@ -91,7 +91,16 @@ For each file in scope:
    - PR mode: changed lines only
    - File/directory mode: all lines
 4. Apply checklist rules (below) and insert comments above offending lines.
-5. Prevent duplicates:
+5. Do not flag a non-capturing lambda or method reference as an allocation issue.
+   On HotSpot / OpenJDK 8+, these are cached at the call site.
+6. Flag a missing version-boundary comment on a single-class `hasClassesNamed(...)`
+   check in `classLoaderMatcher()` only after validating the stated boundary from
+   repository or upstream evidence. Use `// added in X.Y` for a pure lower bound.
+   If the same positive class also provides the upper bound because it disappears in a
+   newer sibling version, preserve or request `removed in Y.Z` too. For negated checks
+   such as `not(hasClassesNamed(...))`, use `// added in Y.Z` because the class's first
+   appearance is what starts the excluded version range.
+7. Prevent duplicates:
    - If equivalent `REVIEW:` already exists above the same line, do not add another.
 
 Comment formatting rules:

@@ -1,3 +1,4 @@
+display_name: Elasticsearch REST Client
 description: This instrumentation enables database client spans and database client metrics for Elasticsearch REST clients.
 semantic_conventions:
   - DATABASE_CLIENT_SPANS
@@ -5,12 +6,14 @@ semantic_conventions:
 library_link: https://www.elastic.co/guide/en/elasticsearch/client/java-rest
 configurations:
   - name: otel.instrumentation.elasticsearch.capture-search-query
+    declarative_name: java.elasticsearch.capture_search_query
     description: >
       Enable the capture of search query bodies. It is important to note that Elasticsearch queries
       may contain personal or sensitive information.
     type: boolean
     default: false
   - name: otel.instrumentation.http.known-methods
+    declarative_name: java.common.http.known_methods
     description: >
       Configures the instrumentation to recognize an alternative set of HTTP request methods. All
       other methods will be treated as `_OTHER`.

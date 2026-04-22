@@ -15,6 +15,7 @@ import javax.annotation.Nullable;
  */
 public final class ChannelUtil {
 
+  @Nullable
   public static String getNetworkTransport(@Nullable Channel channel) {
     if (channel == null) {
       return null;

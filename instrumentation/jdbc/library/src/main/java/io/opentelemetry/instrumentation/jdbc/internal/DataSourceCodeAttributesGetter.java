@@ -8,8 +8,7 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
 import javax.sql.DataSource;
 
-enum DataSourceCodeAttributesGetter implements CodeAttributesGetter<DataSource> {
-  INSTANCE;
+final class DataSourceCodeAttributesGetter implements CodeAttributesGetter<DataSource> {
 
   @Override
   public Class<?> getCodeClass(DataSource dataSource) {

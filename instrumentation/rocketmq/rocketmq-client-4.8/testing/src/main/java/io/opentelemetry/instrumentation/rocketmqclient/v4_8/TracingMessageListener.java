@@ -19,7 +19,7 @@ import org.apache.rocketmq.common.message.MessageExt;
 class TracingMessageListener implements MessageListenerOrderly {
 
   private final AtomicInteger lastBatchSize = new AtomicInteger();
-  private CountDownLatch messageReceived = new CountDownLatch(1);
+  private volatile CountDownLatch messageReceived = new CountDownLatch(1);
 
   @Override
   public ConsumeOrderlyStatus consumeMessage(

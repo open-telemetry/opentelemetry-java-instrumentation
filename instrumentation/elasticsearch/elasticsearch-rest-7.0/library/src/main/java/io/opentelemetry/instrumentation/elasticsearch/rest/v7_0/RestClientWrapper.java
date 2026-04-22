@@ -126,8 +126,8 @@ class RestClientWrapper {
   private static Field getProxyField(Class<?> clazz, String fieldName) {
     try {
       return clazz.getDeclaredField(fieldName);
-    } catch (NoSuchFieldException exception) {
-      throw new IllegalStateException("Could not find proxy field", exception);
+    } catch (NoSuchFieldException e) {
+      throw new IllegalStateException("Could not find proxy field", e);
     }
   }
 
@@ -161,8 +161,8 @@ class RestClientWrapper {
           }
           try {
             return (RestClient) constructor.newInstance(arguments);
-          } catch (Exception exception) {
-            throw new IllegalStateException("Failed to construct proxy instance", exception);
+          } catch (Exception e) {
+            throw new IllegalStateException("Failed to construct proxy instance", e);
           }
         };
       }
@@ -186,8 +186,8 @@ class RestClientWrapper {
       instrumenterSupplierField.set(
           wrapped, (Supplier<Instrumenter<ElasticsearchRestRequest, Response>>) () -> instrumenter);
       return wrapped;
-    } catch (Exception exception) {
-      throw new IllegalStateException("Failed to construct proxy instance", exception);
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to construct proxy instance", e);
     }
   }
 

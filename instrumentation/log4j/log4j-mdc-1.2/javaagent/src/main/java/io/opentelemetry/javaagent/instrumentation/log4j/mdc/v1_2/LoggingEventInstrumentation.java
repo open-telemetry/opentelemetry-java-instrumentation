@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.log4j.mdc.v1_2;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -25,7 +24,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.log4j.spi.LoggingEvent;
 
-public class LoggingEventInstrumentation implements TypeInstrumentation {
+class LoggingEventInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.log4j.spi.LoggingEvent");
@@ -34,19 +33,15 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
-            .and(named("getMDC"))
-            .and(takesArguments(1))
-            .and(takesArgument(0, String.class)),
-        LoggingEventInstrumentation.class.getName() + "$GetMdcAdvice");
+        isPublic().and(named("getMDC")).and(takesArguments(1)).and(takesArgument(0, String.class)),
+        getClass().getName() + "$GetMdcAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class GetMdcAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Object onExit(
         @Advice.This LoggingEvent event,
         @Advice.Argument(0) String key,

@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.grails;
 
 import static io.opentelemetry.javaagent.instrumentation.grails.GrailsSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -21,7 +20,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class DefaultGrailsControllerClassInstrumentation implements TypeInstrumentation {
+class DefaultGrailsControllerClassInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.grails.core.DefaultGrailsControllerClass");
@@ -30,13 +29,12 @@ public class DefaultGrailsControllerClassInstrumentation implements TypeInstrume
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("invoke"))
             .and(takesArgument(0, named(Object.class.getName())))
             .and(takesArgument(1, named(String.class.getName())))
             .and(takesArguments(2)),
-        DefaultGrailsControllerClassInstrumentation.class.getName() + "$ControllerAdvice");
+        getClass().getName() + "$ControllerAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -67,14 +65,14 @@ public class DefaultGrailsControllerClassInstrumentation implements TypeInstrume
         return new AdviceScope(handlerData, context, context.makeCurrent());
       }
 
-      public void end(Throwable throwable) {
+      public void end(@Nullable Throwable throwable) {
         scope.close();
         instrumenter().end(context, handlerData, null, throwable);
       }
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope startSpan(
         @Advice.Argument(0) Object controller,
         @Advice.Argument(1) @Nullable String action,
@@ -83,7 +81,7 @@ public class DefaultGrailsControllerClassInstrumentation implements TypeInstrume
       return AdviceScope.start(controller, action, defaultActionName);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

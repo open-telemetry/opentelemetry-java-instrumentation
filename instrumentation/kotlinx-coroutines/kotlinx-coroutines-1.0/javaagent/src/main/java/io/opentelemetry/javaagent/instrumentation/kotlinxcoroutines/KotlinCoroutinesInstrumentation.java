@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class KotlinCoroutinesInstrumentation implements TypeInstrumentation {
+class KotlinCoroutinesInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("kotlinx.coroutines.CoroutineContextKt");
@@ -29,14 +29,14 @@ public class KotlinCoroutinesInstrumentation implements TypeInstrumentation {
         named("newCoroutineContext")
             .and(takesArgument(0, named("kotlinx.coroutines.CoroutineScope")))
             .and(takesArgument(1, named("kotlin.coroutines.CoroutineContext"))),
-        this.getClass().getName() + "$ContextAdvice");
+        getClass().getName() + "$ContextAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ContextAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(1))
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CoroutineContext enter(@Advice.Argument(1) CoroutineContext coroutineContext) {
       return coroutineContext == null
           ? null

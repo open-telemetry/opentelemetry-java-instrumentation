@@ -17,7 +17,7 @@ public abstract class AbstractSystemMetricsTest {
   protected abstract InstrumentationExtension testing();
 
   @Test
-  public void test() {
+  void test() {
     // when
     registerMetrics();
 

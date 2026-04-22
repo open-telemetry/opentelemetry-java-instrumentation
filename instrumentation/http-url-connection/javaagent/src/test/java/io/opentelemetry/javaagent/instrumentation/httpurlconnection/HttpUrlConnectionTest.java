@@ -75,9 +75,9 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
       connection.setUseCaches(true);
       connection.setConnectTimeout((int) CONNECTION_TIMEOUT.toMillis());
       Span parentSpan = Span.current();
-      InputStream stream = connection.getInputStream();
-      assertThat(Span.current()).isEqualTo(parentSpan);
-      stream.close();
+      try (InputStream stream = connection.getInputStream()) {
+        assertThat(Span.current()).isEqualTo(parentSpan);
+      }
       return connection.getResponseCode();
     } finally {
       connection.disconnect();
@@ -96,7 +96,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
-  public void traceRequest(boolean useCache) throws IOException {
+  void traceRequest(boolean useCache) throws IOException {
     URL url = resolveAddress("/success").toURL();
 
     testing.runWithSpan(
@@ -105,9 +105,10 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
           HttpURLConnection connection = (HttpURLConnection) url.openConnection();
           connection.setUseCaches(useCache);
           assertThat(Span.current().getSpanContext().isValid()).isTrue();
-          InputStream stream = connection.getInputStream();
-          List<String> lines = readLines(stream);
-          stream.close();
+          List<String> lines;
+          try (InputStream stream = connection.getInputStream()) {
+            lines = readLines(stream);
+          }
           assertThat(connection.getResponseCode()).isEqualTo(STATUS);
           assertThat(lines).isEqualTo(RESPONSE);
 
@@ -118,9 +119,10 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
           // call before input stream to test alternate behavior
           assertThat(connection.getResponseCode()).isEqualTo(STATUS);
           connection.getInputStream();
-          stream = connection.getInputStream(); // one more to ensure state is working
-          lines = readLines(stream);
-          stream.close();
+          // one more to ensure state is working
+          try (InputStream stream = connection.getInputStream()) {
+            lines = readLines(stream);
+          }
           assertThat(lines).isEqualTo(RESPONSE);
         });
 
@@ -157,7 +159,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
   @ParameterizedTest
   @ValueSource(ints = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
-  public void testBrokenApiUsage() throws IOException {
+  void testBrokenApiUsage() throws IOException {
     URL url = resolveAddress("/success").toURL();
     HttpURLConnection connection =
         testing.runWithSpan(
@@ -197,7 +199,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
   }
 
   @Test
-  public void testPostRequest() throws IOException {
+  void testPostRequest() throws IOException {
     URL url = resolveAddress("/success").toURL();
     testing.runWithSpan(
         "someTrace",
@@ -209,16 +211,17 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
           // Send post request
           connection.setDoOutput(true);
-          DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
-          wr.writeBytes(urlParameters);
-          wr.flush();
-          wr.close();
+          try (DataOutputStream outputStream = new DataOutputStream(connection.getOutputStream())) {
+            outputStream.writeBytes(urlParameters);
+            outputStream.flush();
+          }
 
           assertThat(connection.getResponseCode()).isEqualTo(STATUS);
 
-          InputStream stream = connection.getInputStream();
-          List<String> lines = readLines(stream);
-          stream.close();
+          List<String> lines;
+          try (InputStream stream = connection.getInputStream()) {
+            lines = readLines(stream);
+          }
           assertThat(lines).isEqualTo(RESPONSE);
         });
 
@@ -247,7 +250,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
   }
 
   @Test
-  public void getOutputStreamShouldTransformGetIntoPost() throws IOException {
+  void getOutputStreamShouldTransformGetIntoPost() throws IOException {
     URL url = resolveAddress("/success").toURL();
     testing.runWithSpan(
         "someTrace",
@@ -263,16 +266,17 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
           // Send POST request
           connection.setDoOutput(true);
-          DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
-          wr.writeBytes(urlParameters);
-          wr.flush();
-          wr.close();
+          try (DataOutputStream outputStream = new DataOutputStream(connection.getOutputStream())) {
+            outputStream.writeBytes(urlParameters);
+            outputStream.flush();
+          }
 
           assertThat(connection.getResponseCode()).isEqualTo(STATUS);
 
-          InputStream stream = connection.getInputStream();
-          List<String> lines = readLines(stream);
-          stream.close();
+          List<String> lines;
+          try (InputStream stream = connection.getInputStream()) {
+            lines = readLines(stream);
+          }
           assertThat(lines).isEqualTo(RESPONSE);
         });
 
@@ -302,7 +306,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
   @ParameterizedTest
   @ValueSource(strings = {"http", "https"})
-  public void traceRequestWithConnectionFailure(String scheme) {
+  void traceRequestWithConnectionFailure(String scheme) {
     String uri = scheme + "://localhost:" + PortUtils.UNUSABLE_PORT;
 
     Throwable thrown =

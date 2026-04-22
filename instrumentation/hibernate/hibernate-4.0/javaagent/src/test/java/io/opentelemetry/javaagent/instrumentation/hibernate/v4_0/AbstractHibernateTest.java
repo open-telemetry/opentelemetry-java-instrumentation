@@ -31,14 +31,17 @@ abstract class AbstractHibernateTest {
 
     // Pre-populate the DB, so delete/update can be tested.
     Session writer = sessionFactory.openSession();
-    writer.beginTransaction();
-    prepopulated = new ArrayList<>();
-    for (int i = 0; i < 5; i++) {
-      prepopulated.add(new Value("Hello :) " + i));
-      writer.save(prepopulated.get(i));
+    try {
+      writer.beginTransaction();
+      prepopulated = new ArrayList<>();
+      for (int i = 0; i < 5; i++) {
+        prepopulated.add(new Value("Hello :) " + i));
+        writer.save(prepopulated.get(i));
+      }
+      writer.getTransaction().commit();
+    } finally {
+      writer.close();
     }
-    writer.getTransaction().commit();
-    writer.close();
   }
 
   @AfterAll

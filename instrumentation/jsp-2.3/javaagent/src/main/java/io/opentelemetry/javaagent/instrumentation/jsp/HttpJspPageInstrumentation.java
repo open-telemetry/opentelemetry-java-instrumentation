@@ -22,7 +22,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HttpJspPageInstrumentation implements TypeInstrumentation {
+class HttpJspPageInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -41,7 +41,7 @@ public class HttpJspPageInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
             .and(takesArgument(1, named("javax.servlet.http.HttpServletResponse")))
             .and(isPublic()),
-        HttpJspPageInstrumentation.class.getName() + "$HttpJspPageAdvice");
+        getClass().getName() + "$HttpJspPageAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -72,12 +72,12 @@ public class HttpJspPageInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(0) HttpServletRequest req) {
       return AdviceScope.start(req);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Argument(0) HttpServletRequest req,
         @Advice.Thrown @Nullable Throwable throwable,

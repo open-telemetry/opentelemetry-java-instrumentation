@@ -25,6 +25,7 @@ final class TracingProtocolExec implements ClientExecChain {
 
   private static final String REQUEST_PARENT_CONTEXT_ATTRIBUTE_ID =
       TracingProtocolExec.class.getName() + ".context";
+  private static final HttpHeaderSetter httpHeaderSetter = new HttpHeaderSetter();
 
   private final Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter;
   private final ContextPropagators propagators;
@@ -76,7 +77,7 @@ final class TracingProtocolExec implements ClientExecChain {
     }
 
     Context context = instrumenter.start(parentContext, instrumenterRequest);
-    propagators.getTextMapPropagator().inject(context, request, HttpHeaderSetter.INSTANCE);
+    propagators.getTextMapPropagator().inject(context, request, httpHeaderSetter);
 
     return execute(route, request, instrumenterRequest, httpContext, httpExecutionAware, context);
   }

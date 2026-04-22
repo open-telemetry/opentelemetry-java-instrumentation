@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import scala.Function1;
 import scala.concurrent.Future;
 
-public class RouteConcatenationInstrumentation implements TypeInstrumentation {
+class RouteConcatenationInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("akka.http.scaladsl.server.RouteConcatenation$RouteWithConcatenation");
@@ -28,15 +28,15 @@ public class RouteConcatenationInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(isConstructor(), this.getClass().getName() + "$ApplyAdvice");
-    transformer.applyAdviceToMethod(named("$tilde"), this.getClass().getName() + "$ApplyAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ApplyAdvice");
+    transformer.applyAdviceToMethod(named("$tilde"), getClass().getName() + "$ApplyAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ApplyAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object onEnter(
         @Advice.Argument(0) Function1<RequestContext, Future<RouteResult>> route) {
       return new AkkaRouteWrapper(route);

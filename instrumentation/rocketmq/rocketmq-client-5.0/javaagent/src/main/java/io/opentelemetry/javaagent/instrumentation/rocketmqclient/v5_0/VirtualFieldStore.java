@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.apache.rocketmq.client.apis.message.MessageView;
 import org.apache.rocketmq.client.java.message.PublishingMessageImpl;
 
@@ -23,10 +24,12 @@ public class VirtualFieldStore {
 
   private VirtualFieldStore() {}
 
+  @Nullable
   public static Context getContextByMessage(PublishingMessageImpl message) {
     return messageContextField.get(message);
   }
 
+  @Nullable
   public static Context getContextByMessage(MessageView messageView) {
     return messageViewContextField.get(messageView);
   }
@@ -39,6 +42,7 @@ public class VirtualFieldStore {
     messageViewContextField.set(message, context);
   }
 
+  @Nullable
   public static Map<String, String> getExtraPropertiesByMessage(PublishingMessageImpl message) {
     return messageExtraPropertiesField.get(message);
   }
@@ -48,6 +52,7 @@ public class VirtualFieldStore {
     messageExtraPropertiesField.set(message, extraProperties);
   }
 
+  @Nullable
   public static String getConsumerGroupByMessage(MessageView messageView) {
     return messageConsumerGroupField.get(messageView);
   }

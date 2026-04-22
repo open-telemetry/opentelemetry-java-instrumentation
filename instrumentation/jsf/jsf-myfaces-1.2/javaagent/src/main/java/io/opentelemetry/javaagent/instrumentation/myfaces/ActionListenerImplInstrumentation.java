@@ -12,14 +12,14 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jsf.javax.JsfRequest;
+import io.opentelemetry.javaagent.instrumentation.jsf.common.javax.JsfRequest;
 import javax.annotation.Nullable;
 import javax.faces.event.ActionEvent;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ActionListenerImplInstrumentation implements TypeInstrumentation {
+class ActionListenerImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -29,8 +29,7 @@ public class ActionListenerImplInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("processAction"),
-        ActionListenerImplInstrumentation.class.getName() + "$ProcessActionAdvice");
+        named("processAction"), getClass().getName() + "$ProcessActionAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -66,12 +65,12 @@ public class ActionListenerImplInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(0) ActionEvent event) {
       return AdviceScope.start(event);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

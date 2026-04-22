@@ -43,15 +43,12 @@ public class VertxSqlClientInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
+        new CommandSchedulerInstrumentation(),
+        new DriverInstrumentation(),
         new PoolInstrumentation(),
         new SqlClientBaseInstrumentation(),
         new QueryExecutorInstrumentation(),
         new QueryResultBuilderInstrumentation(),
         new TransactionImplInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

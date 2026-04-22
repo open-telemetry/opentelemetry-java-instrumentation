@@ -7,12 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.toList;
+import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
 import io.netty.buffer.ByteBuf;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.redisson.client.protocol.CommandData;
 import org.redisson.client.protocol.CommandsData;
@@ -28,8 +30,11 @@ import org.redisson.client.protocol.CommandsData;
 @AutoValue
 public abstract class RedissonRequest {
 
+  private static final Logger logger = Logger.getLogger(RedissonRequest.class.getName());
+
   private static final RedisCommandSanitizer sanitizer =
-      RedisCommandSanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
+      RedisCommandSanitizer.create(
+          DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "redisson"));
 
   public static RedissonRequest create(InetSocketAddress address, Object command) {
     return new AutoValue_RedissonRequest(address, command);
@@ -73,7 +78,11 @@ public abstract class RedissonRequest {
     // get command
     if (command instanceof CommandsData) {
       List<CommandData<?, ?>> commands = ((CommandsData) command).getCommands();
-      return commands.stream().map(RedissonRequest::normalizeSingleCommand).collect(toList());
+      List<String> normalizedCommands = new ArrayList<>(commands.size());
+      for (CommandData<?, ?> singleCommand : commands) {
+        normalizedCommands.add(normalizeSingleCommand(singleCommand));
+      }
+      return normalizedCommands;
     } else if (command instanceof CommandData) {
       return singletonList(normalizeSingleCommand((CommandData<?, ?>) command));
     }
@@ -119,13 +128,15 @@ public abstract class RedissonRequest {
     if (command instanceof CommandData && COMMAND_DATA_GET_PROMISE != null) {
       try {
         return (CompletionStage<?>) COMMAND_DATA_GET_PROMISE.invoke(command);
-      } catch (Throwable ignored) {
+      } catch (Throwable t) {
+        logger.log(FINE, "Failed to get Redisson command promise", t);
         return null;
       }
     } else if (command instanceof CommandsData && COMMANDS_DATA_GET_PROMISE != null) {
       try {
         return (CompletionStage<?>) COMMANDS_DATA_GET_PROMISE.invoke(command);
-      } catch (Throwable ignored) {
+      } catch (Throwable t) {
+        logger.log(FINE, "Failed to get Redisson commands promise", t);
         return null;
       }
     }
@@ -145,13 +156,13 @@ public abstract class RedissonRequest {
               "org.redisson.misc.RPromise", false, RedissonRequest.class.getClassLoader());
       // try versions older than 3.16.8
       return lookup.findVirtual(commandClass, "getPromise", MethodType.methodType(promiseClass));
-    } catch (NoSuchMethodException | ClassNotFoundException e) {
+    } catch (NoSuchMethodException | ClassNotFoundException ignored) {
       // in 3.16.8 CommandsData#getPromise() and CommandData#getPromise() return type was changed in
       // a backwards-incompatible way from RPromise to CompletableFuture
       try {
         return lookup.findVirtual(
             commandClass, "getPromise", MethodType.methodType(CompletableFuture.class));
-      } catch (NoSuchMethodException | IllegalAccessException ignored) {
+      } catch (NoSuchMethodException | IllegalAccessException ignore) {
         return null;
       }
     } catch (IllegalAccessException ignored) {

@@ -1,4 +1,4 @@
-display_name: JSF
+display_name: Eclipse Mojarra
 description: >
   This instrumentation enables controller spans for Mojarra JSF action listeners (controller spans
   are disabled by default).

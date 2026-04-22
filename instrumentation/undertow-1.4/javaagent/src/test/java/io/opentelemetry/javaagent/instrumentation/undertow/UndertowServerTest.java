@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD_FROM_REQUEST_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
@@ -126,6 +127,20 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
                                   exchange.getResponseSender().send(INDEXED_CHILD.getBody());
                                 }))
                     .addExactPath(
+                        INDEXED_CHILD_FROM_REQUEST_BODY.rawPath(),
+                        exchange ->
+                            exchange.dispatch(
+                                k -> {
+                                  k.startBlocking();
+                                  controller(
+                                      INDEXED_CHILD_FROM_REQUEST_BODY,
+                                      () -> {
+                                        String requestBody = readRequestBody(k.getInputStream());
+                                        bodyConsumer(INDEXED_CHILD_FROM_REQUEST_BODY, requestBody);
+                                        k.getResponseSender().send(requestBody);
+                                      });
+                                }))
+                    .addExactPath(
                         "sendResponse",
                         exchange -> {
                           Span.current().addEvent("before-event");
@@ -170,6 +185,7 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
     super.configure(options);
     options.setHttpAttributes(endpoint -> singleton(NETWORK_PEER_PORT));
     options.setHasResponseCustomizer(serverEndpoint -> true);
+    options.setTestHttpBodyPipelining(true);
     options.setUseHttp2(useHttp2());
   }
 
@@ -209,7 +225,7 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
                             equalTo(SERVER_ADDRESS, uri.getHost()),
                             equalTo(SERVER_PORT, uri.getPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class))),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class))),
                 span ->
                     span.hasName("sendResponse")
                         .hasKind(SpanKind.INTERNAL)
@@ -256,7 +272,7 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
                             equalTo(SERVER_ADDRESS, uri.getHost()),
                             equalTo(SERVER_PORT, uri.getPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class))),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class))),
                 span ->
                     span.hasName("sendResponseWithException")
                         .hasKind(SpanKind.INTERNAL)

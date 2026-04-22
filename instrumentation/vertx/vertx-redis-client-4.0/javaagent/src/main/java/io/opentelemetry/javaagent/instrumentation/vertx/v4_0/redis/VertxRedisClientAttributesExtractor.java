@@ -13,9 +13,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 
-enum VertxRedisClientAttributesExtractor
+final class VertxRedisClientAttributesExtractor
     implements AttributesExtractor<VertxRedisClientRequest, Void> {
-  INSTANCE;
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Override

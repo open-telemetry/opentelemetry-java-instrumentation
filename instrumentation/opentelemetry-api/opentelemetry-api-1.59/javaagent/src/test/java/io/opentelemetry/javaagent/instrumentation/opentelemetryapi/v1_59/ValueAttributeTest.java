@@ -16,16 +16,19 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.common.AttributeKey.valueKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributeType;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.KeyValue;
 import io.opentelemetry.api.common.Value;
+import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -242,12 +245,12 @@ class ValueAttributeTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test-span").hasAttributesSatisfyingExactly()));
+                span -> span.hasName("test-span").hasTotalAttributeCount(0)));
   }
 
   @Test
   void emptyArrayValue() {
-    Value<?> value = Value.of(Collections.<Value<?>>emptyList());
+    Value<?> value = Value.of(emptyList());
     testing.runWithSpan("test-span", () -> Span.current().setAttribute(valueKey("key"), value));
 
     testing.waitAndAssertTraces(
@@ -292,5 +295,44 @@ class ValueAttributeTest {
                             equalTo(stringKey("string"), "hello"),
                             equalTo(longKey("long"), 42L),
                             equalTo(valueKey("bytes"), bytesValue))));
+  }
+
+  @Test
+  void spanBuilderWithValueAttribute() {
+    testing
+        .getOpenTelemetry()
+        .getTracer("test")
+        .spanBuilder("test-span")
+        .setAttribute(valueKey("key"), Value.of("test"))
+        .startSpan()
+        .end();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("test-span")
+                        .hasAttributesSatisfyingExactly(equalTo(stringKey("key"), "test"))));
+  }
+
+  @Test
+  void logRecordBuilderWithValueAttribute() {
+    Logger logger = testing.getOpenTelemetry().getLogsBridge().loggerBuilder("test").build();
+    logger
+        .logRecordBuilder()
+        .setBody("body")
+        .setAttribute(valueKey("key"), Value.of("test"))
+        .emit();
+
+    await()
+        .untilAsserted(
+            () ->
+                assertThat(testing.logRecords())
+                    .satisfiesExactly(
+                        logRecordData -> {
+                          assertThat(logRecordData.getBodyValue().asString()).isEqualTo("body");
+                          assertThat(logRecordData.getAttributes())
+                              .isEqualTo(Attributes.builder().put("key", "test").build());
+                        }));
   }
 }

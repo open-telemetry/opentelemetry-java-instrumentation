@@ -17,7 +17,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.messaging.Message;
 
-public class AbstractMessageConvertingMessageSourceInstrumentation implements TypeInstrumentation {
+class AbstractMessageConvertingMessageSourceInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -30,22 +30,22 @@ public class AbstractMessageConvertingMessageSourceInstrumentation implements Ty
         named("convertMessages")
             .and(takesArgument(0, Collection.class))
             .and(returns(Collection.class)),
-        this.getClass().getName() + "$ConvertMessagesAdvice");
+        getClass().getName() + "$ConvertMessagesAdvice");
     transformer.applyAdviceToMethod(
         named("convertMessage")
             .and(takesArgument(0, Object.class))
             .and(returns(named("org.springframework.messaging.Message"))),
-        this.getClass().getName() + "$ConvertAdvice");
+        getClass().getName() + "$ConvertAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ConvertMessagesAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void methodEnter(@Advice.Argument(0) Collection<?> messages) {
       SpringAwsUtil.initialize(messages);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit() {
       SpringAwsUtil.clear();
     }
@@ -53,7 +53,7 @@ public class AbstractMessageConvertingMessageSourceInstrumentation implements Ty
 
   @SuppressWarnings("unused")
   public static class ConvertAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Argument(0) Object originalMessage, @Advice.Return Message<?> convertedMessage) {
       SpringAwsUtil.attachTracingState(originalMessage, convertedMessage);

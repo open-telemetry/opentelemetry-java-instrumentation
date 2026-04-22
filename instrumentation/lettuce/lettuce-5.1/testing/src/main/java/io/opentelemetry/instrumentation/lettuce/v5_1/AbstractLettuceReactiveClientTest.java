@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.lettuce.core.api.reactive.RedisReactiveCommands;
 import io.lettuce.core.api.sync.RedisCommands;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
@@ -276,13 +275,13 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
     // The digest() signature changed between 5 -> 6
     try {
       digestMethod = commandsClass.getMethod("digest", String.class);
-    } catch (NoSuchMethodException unused) {
+    } catch (NoSuchMethodException ignored) {
       digestMethod = commandsClass.getMethod("digest", Object.class);
     }
     String res = (String) digestMethod.invoke(reactiveCommands, "test");
 
     assertThat(res).isNotNull();
-    assertThat(testing().spans().size()).isEqualTo(0);
+    assertThat(testing().spans()).isEmpty();
   }
 
   @Test
@@ -296,7 +295,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("test-parent").hasAttributes(Attributes.empty()),
+                    span -> span.hasName("test-parent").hasTotalAttributeCount(0),
                     span ->
                         span.hasName(spanName("SET"))
                             .hasKind(SpanKind.CLIENT)
@@ -340,7 +339,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("test-parent").hasAttributes(Attributes.empty()),
+                    span -> span.hasName("test-parent").hasTotalAttributeCount(0),
                     span ->
                         span.hasName(spanName("SET"))
                             .hasKind(SpanKind.CLIENT)

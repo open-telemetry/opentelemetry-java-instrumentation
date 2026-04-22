@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.powerjob.v4_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.powerjob.v4_0.PowerJobSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -24,7 +25,12 @@ import tech.powerjob.worker.core.processor.ProcessResult;
 import tech.powerjob.worker.core.processor.TaskContext;
 import tech.powerjob.worker.core.processor.sdk.BasicProcessor;
 
-public class BasicProcessorInstrumentation implements TypeInstrumentation {
+class BasicProcessorInstrumentation implements TypeInstrumentation {
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("tech.powerjob.worker.core.processor.sdk.BasicProcessor");
+  }
+
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("tech.powerjob.worker.core.processor.sdk.BasicProcessor"));
@@ -40,9 +46,10 @@ public class BasicProcessorInstrumentation implements TypeInstrumentation {
                     .and(
                         takesArgument(
                             0, named("tech.powerjob.worker.core.processor.TaskContext")))),
-        BasicProcessorInstrumentation.class.getName() + "$ProcessAdvice");
+        getClass().getName() + "$ProcessAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ProcessAdvice {
 
     public static class AdviceScope {
@@ -81,15 +88,13 @@ public class BasicProcessorInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @SuppressWarnings("unused")
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onSchedule(
         @Advice.This BasicProcessor handler, @Advice.Argument(0) TaskContext taskContext) {
       return AdviceScope.start(handler, taskContext);
     }
 
-    @SuppressWarnings("unused")
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Return ProcessResult result,
         @Advice.Thrown @Nullable Throwable throwable,

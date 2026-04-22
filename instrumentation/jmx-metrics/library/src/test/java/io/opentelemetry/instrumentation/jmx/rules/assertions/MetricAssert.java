@@ -304,7 +304,7 @@ public class MetricAssert extends AbstractAssert<MetricAssert, Metric> {
    * @return this
    */
   @CanIgnoreReturnValue
-  public final MetricAssert hasDataPointsWithOneAttribute(AttributeMatcher expectedAttribute) {
+  public MetricAssert hasDataPointsWithOneAttribute(AttributeMatcher expectedAttribute) {
     return hasDataPointsWithAttributes(attributeGroup(expectedAttribute));
   }
 
@@ -319,7 +319,7 @@ public class MetricAssert extends AbstractAssert<MetricAssert, Metric> {
    * @return this
    */
   @CanIgnoreReturnValue
-  public final MetricAssert hasDataPointsWithAttributes(AttributeMatcherGroup... matcherGroups) {
+  public MetricAssert hasDataPointsWithAttributes(AttributeMatcherGroup... matcherGroups) {
     return markAttributesChecked()
         .checkDataPoints(
             dataPoints -> {

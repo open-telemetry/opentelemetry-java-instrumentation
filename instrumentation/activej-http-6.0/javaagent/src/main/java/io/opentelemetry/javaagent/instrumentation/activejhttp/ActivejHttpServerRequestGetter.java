@@ -16,17 +16,18 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 
-enum ActivejHttpServerRequestGetter implements TextMapGetter<HttpRequest> {
-  INSTANCE;
+final class ActivejHttpServerRequestGetter implements TextMapGetter<HttpRequest> {
 
   @Override
   public Iterable<String> keys(HttpRequest httpRequest) {
     return httpRequest.getHeaders().stream().map(h -> h.getKey().toString()).toList();
   }
 
+  @Nullable
   @Override
-  public String get(HttpRequest carrier, String key) {
+  public String get(@Nullable HttpRequest carrier, String key) {
     if (carrier == null) {
       return null;
     }
@@ -35,7 +36,7 @@ enum ActivejHttpServerRequestGetter implements TextMapGetter<HttpRequest> {
   }
 
   @Override
-  public Iterator<String> getAll(HttpRequest carrier, String key) {
+  public Iterator<String> getAll(@Nullable HttpRequest carrier, String key) {
     if (carrier == null) {
       return emptyIterator();
     }

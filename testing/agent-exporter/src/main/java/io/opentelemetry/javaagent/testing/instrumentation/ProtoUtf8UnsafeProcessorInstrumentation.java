@@ -13,7 +13,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ProtoUtf8UnsafeProcessorInstrumentation implements TypeInstrumentation {
+class ProtoUtf8UnsafeProcessorInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -23,18 +23,21 @@ public class ProtoUtf8UnsafeProcessorInstrumentation implements TypeInstrumentat
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("isAvailable"), this.getClass().getName() + "$IsAvailableAdvice");
+        named("isAvailable"), getClass().getName() + "$IsAvailableAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class IsAvailableAdvice {
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, suppress = Throwable.class)
+    @Advice.OnMethodEnter(
+        skipOn = Advice.OnNonDefaultValue.class,
+        suppress = Throwable.class,
+        inline = false)
     public static boolean onEnter() {
       return true;
     }
 
     @Advice.AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static boolean onExit() {
       // make isAvailable always return false
       return false;

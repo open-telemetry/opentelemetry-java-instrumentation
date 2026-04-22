@@ -10,12 +10,10 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class PowerJobInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class PowerJobInstrumentationModule extends InstrumentationModule {
   public PowerJobInstrumentationModule() {
     super("powerjob", "powerjob-4.0");
   }
@@ -23,10 +21,5 @@ public class PowerJobInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new BasicProcessorInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

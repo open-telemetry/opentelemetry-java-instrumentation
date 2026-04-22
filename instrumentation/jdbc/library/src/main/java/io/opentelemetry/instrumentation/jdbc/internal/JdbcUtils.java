@@ -26,6 +26,7 @@ public final class JdbcUtils {
 
   @Nullable private static Field c3poField = null;
 
+  @Nullable
   public static Connection connectionFromStatement(Statement statement) {
     try {
       return unwrapConnection(statement.getConnection());
@@ -37,6 +38,7 @@ public final class JdbcUtils {
   }
 
   /** Returns the unwrapped connection or null if exception was thrown. */
+  @Nullable
   public static Connection unwrapConnection(Connection connection) {
     try {
       if (c3poField != null) {
@@ -82,15 +84,15 @@ public final class JdbcUtils {
     // lock, and computeDbInfo() calls back to the application code via Connection.getMetaData()
     // which could then result in a deadlock
     // (e.g. https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/4188)
-    DbInfo dbInfo = JdbcData.connectionInfo.get(connection);
+    DbInfo dbInfo = JdbcData.CONNECTION_INFO.get(connection);
     if (dbInfo == null) {
       dbInfo = computeDbInfo(connection);
-      JdbcData.connectionInfo.set(connection, JdbcData.intern(dbInfo));
+      JdbcData.CONNECTION_INFO.set(connection, JdbcData.intern(dbInfo));
     }
     return dbInfo;
   }
 
-  public static DbInfo computeDbInfo(Connection connection) {
+  public static DbInfo computeDbInfo(@Nullable Connection connection) {
     /*
      * Logic to get the DBInfo from a JDBC Connection, if the connection was not created via
      * Driver.connect, or it has never seen before, the connectionInfo map will return null and will
@@ -107,7 +109,7 @@ public final class JdbcUtils {
       if (url != null) {
         try {
           return JdbcConnectionUrlParser.parse(url, connection.getClientInfo());
-        } catch (Throwable ex) {
+        } catch (Throwable ignored) {
           // getClientInfo is likely not allowed.
           return JdbcConnectionUrlParser.parse(url, null);
         }

@@ -11,13 +11,13 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import org.apache.tapestry5.runtime.ComponentEventException;
 
-public class TapestrySingletons {
+class TapestrySingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.tapestry-5.4";
 
-  private static final Instrumenter<TapestryRequest, Void> INSTRUMENTER;
+  private static final Instrumenter<TapestryRequest, Void> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<TapestryRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, TapestryRequest::spanName)
             .setErrorCauseExtractor(
@@ -31,8 +31,8 @@ public class TapestrySingletons {
             .buildInstrumenter();
   }
 
-  public static Instrumenter<TapestryRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+  static Instrumenter<TapestryRequest, Void> instrumenter() {
+    return instrumenter;
   }
 
   private TapestrySingletons() {}

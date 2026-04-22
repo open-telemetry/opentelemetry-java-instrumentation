@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -23,7 +22,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * dependency on a system property or possibility of a user overriding this since it's required for
  * instrumentation in the agent to work properly.
  */
-public class ContextInstrumentation implements TypeInstrumentation {
+class ContextInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -33,15 +32,14 @@ public class ContextInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isStatic()).and(named("root")),
-        ContextInstrumentation.class.getName() + "$WrapRootAdvice");
+        isStatic().and(named("root")), ContextInstrumentation.class.getName() + "$WrapRootAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class WrapRootAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static application.io.opentelemetry.context.Context methodExit(
         @Advice.Return application.io.opentelemetry.context.Context root) {
       return AgentContextStorage.wrapRootContext(root);

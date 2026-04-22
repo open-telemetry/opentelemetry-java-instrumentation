@@ -22,7 +22,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.util.ErrorHandler;
 
-public class DelegatingErrorHandlingRunnableInstrumentation implements TypeInstrumentation {
+class DelegatingErrorHandlingRunnableInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.springframework.scheduling.support.DelegatingErrorHandlingRunnable");
@@ -32,17 +32,17 @@ public class DelegatingErrorHandlingRunnableInstrumentation implements TypeInstr
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(1, named("org.springframework.util.ErrorHandler"))),
-        this.getClass().getName() + "$WrapErrorHandlerAdvice");
+        getClass().getName() + "$WrapErrorHandlerAdvice");
 
     transformer.applyAdviceToMethod(
-        isPublic().and(named("run")), this.getClass().getName() + "$RunAdvice");
+        isPublic().and(named("run")), getClass().getName() + "$RunAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class WrapErrorHandlerAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static ErrorHandler onEnter(@Advice.Argument(1) ErrorHandler originalErrorHandler) {
       ErrorHandler errorHandler = originalErrorHandler;
       if (errorHandler != null) {
@@ -55,13 +55,13 @@ public class DelegatingErrorHandlingRunnableInstrumentation implements TypeInstr
   @SuppressWarnings("unused")
   public static class RunAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter() {
       Context parentContext = Java8BytecodeBridge.currentContext();
       return TaskContextHolder.init(parentContext).makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();

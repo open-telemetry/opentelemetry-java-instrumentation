@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.wicket.core.request.handler.IPageClassRequestHandler;
 import org.apache.wicket.request.IRequestHandler;
 
-public class RequestHandlerExecutorInstrumentation implements TypeInstrumentation {
+class RequestHandlerExecutorInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -30,19 +30,19 @@ public class RequestHandlerExecutorInstrumentation implements TypeInstrumentatio
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("execute").and(takesArgument(0, named("org.apache.wicket.request.IRequestHandler"))),
-        RequestHandlerExecutorInstrumentation.class.getName() + "$ExecuteAdvice");
+        getClass().getName() + "$ExecuteAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ExecuteAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onExit(@Advice.Argument(0) IRequestHandler handler) {
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void onEnter(@Advice.Argument(0) IRequestHandler handler) {
       if (handler instanceof IPageClassRequestHandler) {
         HttpServerRoute.update(
             Java8BytecodeBridge.currentContext(),
             CONTROLLER,
-            WicketServerSpanNaming.SERVER_SPAN_NAME,
+            WicketServerSpanNaming.serverSpanName(),
             (IPageClassRequestHandler) handler);
       }
     }

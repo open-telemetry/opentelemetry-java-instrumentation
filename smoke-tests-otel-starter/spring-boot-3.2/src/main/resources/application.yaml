@@ -45,4 +45,4 @@ otel:
           client:
             emit_experimental_telemetry/development: true
       runtime_telemetry:
-        emit_experimental_telemetry/development: true
+        emit_experimental_metrics/development: true

@@ -11,20 +11,20 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
 import io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpUtil;
 
-public final class AkkaHttpServerSingletons {
+public class AkkaHttpServerSingletons {
 
-  private static final Instrumenter<HttpRequest, HttpResponse> INSTRUMENTER;
+  private static final Instrumenter<HttpRequest, HttpResponse> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         JavaagentHttpServerInstrumenters.create(
             AkkaHttpUtil.instrumentationName(),
             new AkkaHttpServerAttributesGetter(),
-            AkkaHttpServerHeaders.INSTANCE);
+            new AkkaHttpServerHeaders());
   }
 
   public static Instrumenter<HttpRequest, HttpResponse> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static HttpResponse errorResponse() {

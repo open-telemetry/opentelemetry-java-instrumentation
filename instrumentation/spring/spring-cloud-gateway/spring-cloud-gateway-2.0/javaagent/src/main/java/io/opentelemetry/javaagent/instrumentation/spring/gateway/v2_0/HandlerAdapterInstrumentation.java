@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.spring.gateway.v2_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.spring.gateway.v2_0.GatewaySingletons.httpRouteGetter;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -25,7 +25,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.web.server.ServerWebExchange;
 
-public class HandlerAdapterInstrumentation implements TypeInstrumentation {
+class HandlerAdapterInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -41,26 +41,22 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("handle"))
             .and(takesArgument(0, named("org.springframework.web.server.ServerWebExchange")))
             .and(takesArgument(1, Object.class))
             .and(takesArguments(2)),
-        this.getClass().getName() + "$HandleAdvice");
+        getClass().getName() + "$HandleAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class HandleAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void methodEnter(@Advice.Argument(0) ServerWebExchange exchange) {
       Context context = Context.current();
       // Update route info for server span.
       HttpServerRoute.update(
-          context,
-          HttpServerRouteSource.NESTED_CONTROLLER,
-          GatewaySingletons.httpRouteGetter(),
-          exchange);
+          context, HttpServerRouteSource.NESTED_CONTROLLER, httpRouteGetter(), exchange);
       // Record route info in server span.
       ServerWebExchangeHelper.extractAttributes(exchange, context);
     }

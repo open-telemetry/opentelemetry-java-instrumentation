@@ -24,7 +24,11 @@ public class JerseyInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("javax.ws.rs.Path", "org.glassfish.jersey.server.ContainerRequest");
+    return hasClassesNamed(
+        // added in JAX-RS 1.0, removed in JAX-RS 3.0 (renamed to jakarta.ws.rs.Path)
+        "javax.ws.rs.Path",
+        // added in jersey-server 2.0
+        "org.glassfish.jersey.server.ContainerRequest");
   }
 
   @Override
@@ -39,10 +43,5 @@ public class JerseyInstrumentationModule extends InstrumentationModule
         new JerseyRequestContextInstrumentation(),
         new JerseyServletContainerInstrumentation(),
         new JerseyResourceMethodDispatcherInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

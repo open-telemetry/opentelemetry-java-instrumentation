@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.rediscala;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.rediscala.RediscalaSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -31,7 +30,7 @@ import redis.RoundRobinPoolRequest;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
 
-public class RequestInstrumentation implements TypeInstrumentation {
+class RequestInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("redis.Request");
@@ -50,12 +49,11 @@ public class RequestInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("send"))
             .and(takesArgument(0, named("redis.RedisCommand")))
             .and(returns(named("scala.concurrent.Future"))),
-        this.getClass().getName() + "$SendAdvice");
+        getClass().getName() + "$SendAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -84,8 +82,8 @@ public class RequestInstrumentation implements TypeInstrumentation {
       public void end(
           Object action,
           RedisCommand<?, ?> cmd,
-          Future<Object> responseFuture,
-          Throwable throwable) {
+          @Nullable Future<Object> responseFuture,
+          @Nullable Throwable throwable) {
         scope.close();
 
         ExecutionContext ctx = null;
@@ -99,7 +97,7 @@ public class RequestInstrumentation implements TypeInstrumentation {
           ctx = ((RoundRobinPoolRequest) action).executionContext();
         }
 
-        if (throwable != null) {
+        if (throwable != null || responseFuture == null) {
           instrumenter().end(context, cmd, null, throwable);
         } else {
           responseFuture.onComplete(new OnCompleteHandler(context, cmd), ctx);
@@ -108,18 +106,18 @@ public class RequestInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(0) RedisCommand<?, ?> cmd) {
       return AdviceScope.start(cmd);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This Object action,
         @Advice.Argument(0) RedisCommand<?, ?> cmd,
         @Advice.Enter @Nullable AdviceScope adviceScope,
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Return Future<Object> responseFuture) {
+        @Advice.Return @Nullable Future<Object> responseFuture) {
       if (adviceScope != null) {
         adviceScope.end(action, cmd, responseFuture, throwable);
       }

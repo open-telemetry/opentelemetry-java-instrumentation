@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.reactor.v3_1;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public interface TracedWithSpan {
+interface TracedWithSpan {
   Mono<String> mono(Mono<String> mono);
 
   Mono<String> outer(Mono<String> inner);

@@ -45,7 +45,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTest<HttpRequest> {
+abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTest<HttpRequest> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
@@ -96,7 +96,6 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
   protected abstract HttpResponse sendRequest(HttpRequest request) throws Exception;
 
   @Test
-  @SuppressWarnings("deprecation") // using deprecated semconv
   void errorTracesWhenExceptionIsNotThrown() throws Exception {
     URI uri = resolveAddress("/error");
 

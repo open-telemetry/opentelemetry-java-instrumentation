@@ -11,7 +11,6 @@ muzzle {
     module.set("opentelemetry-extension-kotlin")
     versions.set("[0.17.0,)")
     assertInverse.set(true)
-    skip("0.13.0") // has a bad dependency on non-alpha api-metric 0.13.0
     extraDependency("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0")
   }
 }
@@ -28,7 +27,7 @@ dependencies {
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0")
 }
 
-if (!(findProperty("testLatestDeps") as Boolean)) {
+if (!otelProps.testLatestDeps) {
   // run tests against an early version of opentelemetry-extension-kotlin, latest dep tests will use
   // the current version
   configurations.configureEach {

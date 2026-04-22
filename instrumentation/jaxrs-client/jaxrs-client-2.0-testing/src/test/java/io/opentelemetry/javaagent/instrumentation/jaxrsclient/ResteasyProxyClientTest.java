@@ -20,13 +20,20 @@ import org.apache.http.client.utils.URLEncodedUtils;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.specimpl.ResteasyUriBuilder;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ResteasyProxyClientTest extends AbstractHttpClientTest<ResteasyProxyResource> {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  static ResteasyClient client = new ResteasyClientBuilder().connectionPoolSize(4).build();
+  private static final ResteasyClient client =
+      new ResteasyClientBuilder().connectionPoolSize(4).build();
+
+  @AfterAll
+  static void closeClient() {
+    client.close();
+  }
 
   @Override
   public ResteasyProxyResource buildRequest(String method, URI uri, Map<String, String> headers) {

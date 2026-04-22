@@ -29,10 +29,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import javax.annotation.Nullable;
 
 class JspSpanAssertions {
-  static final boolean isExperimentalEnabled =
+  static final boolean EXPERIMENTAL_ENABLED =
       Boolean.getBoolean("otel.instrumentation.jsp.experimental-span-attributes");
 
   private final String baseUrl;
@@ -43,9 +42,8 @@ class JspSpanAssertions {
     this.port = port;
   }
 
-  @Nullable
-  public static String experimental(String value) {
-    if (isExperimentalEnabled) {
+  static String experimental(String value) {
+    if (EXPERIMENTAL_ENABLED) {
       return value;
     }
     return null;
@@ -71,7 +69,7 @@ class JspSpanAssertions {
                               EXCEPTION_MESSAGE,
                               val ->
                                   val.satisfiesAnyOf(
-                                      v -> assertThat(spanData.getErrorMessageOptional()).isTrue(),
+                                      v -> assertThat(spanData.isErrorMessageOptional()).isTrue(),
                                       v -> val.isInstanceOf(String.class))),
                           satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
     }
@@ -148,14 +146,14 @@ class JspSpanAssertions {
                               EXCEPTION_MESSAGE,
                               val ->
                                   val.satisfiesAnyOf(
-                                      v -> assertThat(spanData.getErrorMessageOptional()).isTrue(),
+                                      v -> assertThat(spanData.isErrorMessageOptional()).isTrue(),
                                       v -> val.isInstanceOf(String.class))),
                           satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
     }
 
     span.hasName("Render " + spanData.getRoute()).hasParent(spanData.getParent());
 
-    if (isExperimentalEnabled) {
+    if (EXPERIMENTAL_ENABLED) {
       span.hasAttributesSatisfyingExactly(
           equalTo(stringKey("jsp.requestURL"), baseUrl + requestUrl),
           satisfies(

@@ -8,8 +8,6 @@ muzzle {
     module.set("undertow-core")
     versions.set("[1.4.0.Final,)")
     assertInverse.set(true)
-    // release missing in maven central
-    skip("2.2.25.Final")
   }
 }
 
@@ -22,12 +20,11 @@ dependencies {
 }
 
 tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  systemProperty("collectMetadata", otelProps.collectMetadata)
 }
 
 // since 2.3.x, undertow is compiled by JDK 11
-val latestDepTest = findProperty("testLatestDeps") as Boolean
-if (latestDepTest) {
+if (otelProps.testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }

@@ -17,7 +17,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /** Propagate context to connection established callback. */
-public class ResourceManagerInstrumentation implements TypeInstrumentation {
+class ResourceManagerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -28,13 +28,13 @@ public class ResourceManagerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("withResourceAsync").and(returns(named("io.vertx.core.Future"))),
-        this.getClass().getName() + "$WithResourceAsyncAdvice");
+        getClass().getName() + "$WithResourceAsyncAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class WithResourceAsyncAdvice {
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Future<?> wrapFuture(@Advice.Return Future<?> future) {
       return VertxClientSingletons.wrapFuture(future);
     }

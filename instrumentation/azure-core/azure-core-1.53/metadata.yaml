@@ -1,3 +1,4 @@
+display_name: Azure Core
 description: This instrumentation enables context propagation for the Azure Core library, it does not emit any telemetry on its own.
 features:
   - CONTEXT_PROPAGATION

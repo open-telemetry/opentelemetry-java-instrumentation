@@ -31,13 +31,12 @@ public class LambdaInstrumentationModule extends AbstractAwsSdkInstrumentationMo
 
   @Override
   public void doTransform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        none(), LambdaInstrumentationModule.class.getName() + "$RegisterAdvice");
+    transformer.applyAdviceToMethod(none(), getClass().getName() + "$RegisterAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class RegisterAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit() {
       // (indirectly) using LambdaImpl class here to make sure it is available from LambdaAccess
       // (injected into app classloader) and checked by Muzzle

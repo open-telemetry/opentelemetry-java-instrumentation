@@ -18,16 +18,16 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import tech.powerjob.worker.core.processor.ProcessResult;
 
-public final class PowerJobSingletons {
+public class PowerJobSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.powerjob-4.0";
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "powerjob")
           .getBoolean("experimental_span_attributes/development", false);
-  private static final Instrumenter<PowerJobProcessRequest, ProcessResult> INSTRUMENTER = create();
+  private static final Instrumenter<PowerJobProcessRequest, ProcessResult> instrumenter = create();
 
   public static Instrumenter<PowerJobProcessRequest, ProcessResult> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private static Instrumenter<PowerJobProcessRequest, ProcessResult> create() {

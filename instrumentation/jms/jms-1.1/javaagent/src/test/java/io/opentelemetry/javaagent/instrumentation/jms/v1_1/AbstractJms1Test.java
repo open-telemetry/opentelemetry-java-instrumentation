@@ -37,7 +37,6 @@ import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.assertj.core.api.AbstractAssert;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -69,26 +68,16 @@ abstract class AbstractJms1Test {
             .withExposedPorts(61616, 8161)
             .withLogConsumer(new Slf4jLogConsumer(logger));
     broker.start();
+    cleanup.deferAfterAll(broker);
 
     connectionFactory =
         new ActiveMQConnectionFactory(
             "tcp://" + broker.getHost() + ":" + broker.getMappedPort(61616));
-    Connection connection = connectionFactory.createConnection();
+    connection = connectionFactory.createConnection();
     connection.start();
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-  }
-
-  @AfterAll
-  static void tearDown() throws JMSException {
-    if (session != null) {
-      session.close();
-    }
-    if (connection != null) {
-      connection.close();
-    }
-    if (broker != null) {
-      broker.close();
-    }
+    cleanup.deferAfterAll(connection::close);
+    cleanup.deferAfterAll(session::close);
   }
 
   @ParameterizedTest

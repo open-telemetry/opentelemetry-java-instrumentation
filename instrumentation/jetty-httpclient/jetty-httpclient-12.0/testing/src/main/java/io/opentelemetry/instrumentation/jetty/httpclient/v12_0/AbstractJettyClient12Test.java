@@ -14,7 +14,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -31,15 +30,16 @@ import org.junit.jupiter.api.Test;
 
 public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<Request> {
 
+  private HttpClient client;
+  private HttpClient httpsClient;
+
   protected abstract HttpClient createStandardClient();
 
   protected abstract HttpClient createHttpsClient(SslContextFactory.Client sslContextFactory);
 
-  protected HttpClient client = createStandardClient();
-  protected HttpClient httpsClient;
-
   @BeforeEach
   void before() throws Exception {
+    client = createStandardClient();
     client.setConnectTimeout(CONNECTION_TIMEOUT.toMillis());
     client.start();
 
@@ -67,7 +67,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
 
   @Override
   public Request buildRequest(String method, URI uri, Map<String, String> headers) {
-    HttpClient theClient = Objects.equals(uri.getScheme(), "https") ? httpsClient : client;
+    HttpClient theClient = "https".equalsIgnoreCase(uri.getScheme()) ? httpsClient : client;
 
     Request request = theClient.newRequest(uri);
     request.agent("Jetty");
@@ -115,7 +115,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
   }
 
   @Test
-  void callbacksCalled() throws InterruptedException, ExecutionException {
+  void callbacksCalled() {
     URI uri = resolveAddress("/success");
     Request request = client.newRequest(uri).method("GET");
 
@@ -123,7 +123,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
     TracingResponseListener responseListener = new TracingResponseListener(responseFuture);
 
     testing.runWithSpan("parent", () -> request.send(responseListener));
-    Response response = responseFuture.get();
+    Response response = responseFuture.join();
 
     assertThat(response.getStatus()).isEqualTo(200);
     testing.waitAndAssertTraces(
@@ -184,7 +184,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
 
   private static class JettyClientListener
       implements Request.FailureListener, Response.FailureListener {
-    volatile Throwable failure;
+    private volatile Throwable failure;
 
     @Override
     public void onFailure(Request request, Throwable failure) {

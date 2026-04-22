@@ -45,15 +45,15 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
           // sets new value for PATH_ATTRIBUTE of request
           try {
             ServletRequestPathUtils.parseAndCache(request);
-          } catch (RuntimeException exception) {
-            logger.log(FINE, "Failed calling parseAndCache", exception);
+          } catch (RuntimeException e) {
+            logger.log(FINE, "Failed calling parseAndCache", e);
             return null;
           }
         }
         if (findMapping(request)) {
           // Name the parent span based on the matching pattern
           // Let the parent span resource name be set with the attribute set in findMapping.
-          return SpringWebMvcServerSpanNaming.SERVER_SPAN_NAME.get(context, request);
+          return SpringWebMvcServerSpanNaming.serverSpanName().get(context, request);
         }
 
         return null;
@@ -114,8 +114,7 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
 
   /**
    * When a HandlerMapping matches a request, it sets HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE
-   * as an attribute on the request. This attribute is read by SpringWebMvcDecorator.onRequest and
-   * set as the resource name.
+   * as an attribute on the request. This attribute is set as the HTTP route.
    */
   private boolean findMapping(HttpServletRequest request) {
     try {
