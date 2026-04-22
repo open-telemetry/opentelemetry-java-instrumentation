@@ -15,22 +15,5 @@ dependencies {
 tasks {
   test {
     jvmArgs("-Dotel.instrumentation.runtime-telemetry.experimental.package-emitter.enabled=true")
-    filter {
-      excludeTestsMatching("*.JfrRuntimeMetricsTest")
-      isFailOnNoMatchingTests = false
-    }
-  }
-
-  val testJfr by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics=true")
-    filter {
-      includeTestsMatching("*.JfrRuntimeMetricsTest")
-    }
-  }
-
-  check {
-    dependsOn(testJfr)
   }
 }
