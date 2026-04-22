@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.play.v2_6;
+package io.opentelemetry.javaagent.instrumentation.playmvc.v2_6;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.play.v2_6.Play26Singletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.play.v2_6.Play26Singletons.updateSpan;
+import static io.opentelemetry.javaagent.instrumentation.playmvc.v2_6.Play26Singletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.playmvc.v2_6.Play26Singletons.updateSpan;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;

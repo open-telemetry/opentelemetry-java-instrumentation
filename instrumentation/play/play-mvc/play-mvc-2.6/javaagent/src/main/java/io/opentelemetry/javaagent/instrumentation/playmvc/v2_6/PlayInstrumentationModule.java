@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.play.v2_6;
+package io.opentelemetry.javaagent.instrumentation.playmvc.v2_6;
 
 import static java.util.Collections.singletonList;
 
