@@ -25,8 +25,8 @@ class ThreadDetailsInstrumenterCustomizerProviderTest {
   @Test
   void configurePropertiesUsesLegacyProperty() {
     MockEnvironment environment =
-        new MockEnvironment().withProperty(
-            "otel.instrumentation.common.thread-details.enabled", "true");
+        new MockEnvironment()
+            .withProperty("otel.instrumentation.common.thread-details.enabled", "true");
     ThreadDetailsInstrumenterCustomizerProvider.configureProperties(environment);
 
     InstrumenterCustomizer customizer = mock(InstrumenterCustomizer.class);
@@ -38,8 +38,8 @@ class ThreadDetailsInstrumenterCustomizerProviderTest {
   @Test
   void configureDeclarativeConfigUsesDistributionProperty() {
     MockEnvironment environment =
-        new MockEnvironment().withProperty(
-            "otel.distribution.spring_starter.thread_details_enabled", "true");
+        new MockEnvironment()
+            .withProperty("otel.distribution.spring_starter.thread_details_enabled", "true");
     ThreadDetailsInstrumenterCustomizerProvider.configureDeclarativeConfig(environment);
 
     InstrumenterCustomizer customizer = mock(InstrumenterCustomizer.class);
