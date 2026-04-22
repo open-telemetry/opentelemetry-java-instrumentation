@@ -198,9 +198,11 @@ class ReferenceCollectorTest {
 
     ClassRef helperClass = references.get(DeclaredFieldTestClass.Helper.class.getName());
     FieldRef superField = findField(helperClass, "superField");
+    assertThat(superField).isNotNull();
     assertThat(superField.isDeclared()).isFalse();
 
     FieldRef field = findField(helperClass, "helperField");
+    assertThat(field).isNotNull();
     assertThat(field.isDeclared()).isTrue();
 
     ClassRef libraryBaseClass =
@@ -447,6 +449,7 @@ class ReferenceCollectorTest {
   private static void assertMethod(
       ClassRef reference, String methodName, String methodDesc, Flag... flags) {
     MethodRef method = findMethod(reference, methodName, methodDesc);
+    assertThat(method).isNotNull();
     assertThat(method.getFlags()).containsExactlyInAnyOrder(flags);
   }
 
@@ -461,6 +464,7 @@ class ReferenceCollectorTest {
 
   private static void assertField(ClassRef reference, String fieldName, Flag... flags) {
     FieldRef field = findField(reference, fieldName);
+    assertThat(field).isNotNull();
     assertThat(field.getFlags()).containsExactly(flags);
   }
 

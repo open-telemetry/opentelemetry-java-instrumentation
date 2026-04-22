@@ -27,6 +27,7 @@ class CouchbaseQuerySanitizerTest {
     String normalized = CouchbaseQuerySanitizer.analyze(parameter.query).getQueryText();
     // the analytics query ends up with trailing ';' in earlier couchbase version, but no trailing
     // ';' in later couchbase version
+    assertThat(normalized).isNotNull();
     assertThat(normalized.replaceFirst(";$", "")).isEqualTo(parameter.expected);
   }
 

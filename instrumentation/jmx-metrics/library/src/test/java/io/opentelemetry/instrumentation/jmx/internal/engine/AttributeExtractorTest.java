@@ -131,6 +131,7 @@ class AttributeExtractorTest {
   void testByteAttribute() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("ByteAttribute");
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
+    assertThat(info).isNotNull();
     assertThat(info.usesDoubleValues()).isFalse();
   }
 
@@ -138,6 +139,7 @@ class AttributeExtractorTest {
   void testByteAttributeValue() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("ByteAttribute");
     Number number = extractor.extractNumericalAttribute(theServer, objectName);
+    assertThat(number).isNotNull();
     assertThat(number.longValue()).isEqualTo(10);
   }
 
@@ -145,6 +147,7 @@ class AttributeExtractorTest {
   void testShortAttribute() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("ShortAttribute");
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
+    assertThat(info).isNotNull();
     assertThat(info.usesDoubleValues()).isFalse();
   }
 
@@ -152,6 +155,7 @@ class AttributeExtractorTest {
   void testShortAttributeValue() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("ShortAttribute");
     Number number = extractor.extractNumericalAttribute(theServer, objectName);
+    assertThat(number).isNotNull();
     assertThat(number.longValue()).isEqualTo(11);
   }
 
@@ -159,6 +163,7 @@ class AttributeExtractorTest {
   void testIntAttribute() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("IntAttribute");
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
+    assertThat(info).isNotNull();
     assertThat(info.usesDoubleValues()).isFalse();
   }
 
@@ -166,6 +171,7 @@ class AttributeExtractorTest {
   void testIntAttributeValue() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("IntAttribute");
     Number number = extractor.extractNumericalAttribute(theServer, objectName);
+    assertThat(number).isNotNull();
     assertThat(number.longValue()).isEqualTo(12);
   }
 
@@ -173,6 +179,7 @@ class AttributeExtractorTest {
   void testLongAttribute() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("LongAttribute");
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
+    assertThat(info).isNotNull();
     assertThat(info.usesDoubleValues()).isFalse();
   }
 
@@ -180,6 +187,7 @@ class AttributeExtractorTest {
   void testLongAttributeValue() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("LongAttribute");
     Number number = extractor.extractNumericalAttribute(theServer, objectName);
+    assertThat(number).isNotNull();
     assertThat(number.longValue()).isEqualTo(13);
   }
 
@@ -187,6 +195,7 @@ class AttributeExtractorTest {
   void testFloatAttribute() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("FloatAttribute");
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
+    assertThat(info).isNotNull();
     assertThat(info.usesDoubleValues()).isTrue();
   }
 
@@ -194,6 +203,7 @@ class AttributeExtractorTest {
   void testFloatAttributeValue() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("FloatAttribute");
     Number number = extractor.extractNumericalAttribute(theServer, objectName);
+    assertThat(number).isNotNull();
     assertThat(number.doubleValue()).isEqualTo(14.0); // accurate representation
   }
 
@@ -201,6 +211,7 @@ class AttributeExtractorTest {
   void testDoubleAttribute() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("DoubleAttribute");
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
+    assertThat(info).isNotNull();
     assertThat(info.usesDoubleValues()).isTrue();
   }
 
@@ -208,6 +219,7 @@ class AttributeExtractorTest {
   void testDoubleAttributeValue() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("DoubleAttribute");
     Number number = extractor.extractNumericalAttribute(theServer, objectName);
+    assertThat(number).isNotNull();
     assertThat(number.doubleValue()).isEqualTo(15.0); // accurate representation
   }
 
@@ -248,6 +260,7 @@ class AttributeExtractorTest {
 
     test1.negativeValues = true;
     Number rawValue = rawExtractor.extractNumericalAttribute(theServer, objectName);
+    assertThat(rawValue).isNotNull();
     assertThat(rawValue.doubleValue()).isNegative();
     assertThat(filteringExtractor.extractNumericalAttribute(theServer, objectName))
         .describedAs("negative value should be filtered")
