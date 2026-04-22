@@ -83,6 +83,9 @@ public final class KafkaUtil {
   }
 
   private static Map<String, String> getConsumerInfo(Consumer<?, ?> consumer) {
+    if (consumer == null) {
+      return emptyMap();
+    }
     Map<String, String> map = consumerInfoField.get(consumer);
     if (map == null) {
       map = new HashMap<>();
