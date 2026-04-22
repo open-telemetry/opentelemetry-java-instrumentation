@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.instrumentationannotations;
+package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instrumentationannotations;
 
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.KotlinCoroutineUtil.isKotlinSuspendMethod;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
@@ -22,7 +22,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import io.opentelemetry.javaagent.instrumentation.instrumentationannotations.AnnotationExcludedMethods;
-import io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.instrumentationannotations.SpanAttributeUtil.Parameter;
+import io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instrumentationannotations.SpanAttributeUtil.Parameter;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import java.util.Arrays;
 import java.util.List;
@@ -292,7 +292,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
               // First we'll search for a bytecode sequence that looks like
               // 64: aload         6
               // 66: getfield      #444                // Field
-              // io/opentelemetry/javaagent/instrumentation/kotlinxcoroutines/KotlinCoroutinesInstrumentationTest$b2$1.label:I
+              // io/opentelemetry/javaagent/instrumentation/kotlinxcoroutines/v1_0/KotlinCoroutinesInstrumentationTest$b2$1.label:I
               // 69: tableswitch   { // 0 to 1
               //                0: 92
               //                1: 181

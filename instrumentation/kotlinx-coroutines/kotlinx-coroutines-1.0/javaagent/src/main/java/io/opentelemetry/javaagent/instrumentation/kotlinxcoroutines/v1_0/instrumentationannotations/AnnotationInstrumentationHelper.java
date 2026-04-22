@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.instrumentationannotations;
+package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instrumentationannotations;
 
-import static io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.instrumentationannotations.AnnotationSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instrumentationannotations.AnnotationSingletons.instrumenter;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;

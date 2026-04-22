@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines;
+package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
