@@ -1,0 +1,125 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.kubernetesclient.v7_0;
+
+import java.util.regex.Pattern;
+import javax.annotation.Nullable;
+import okhttp3.Request;
+
+class KubernetesRequestDigest {
+
+  public static final Pattern RESOURCE_URL_PATH_PATTERN =
+      Pattern.compile("^/(api|apis)(/\\S+)?/v\\d\\w*/\\S+");
+
+  KubernetesRequestDigest(
+      String urlPath,
+      boolean isNonResourceRequest,
+      @Nullable KubernetesResource resourceMeta,
+      @Nullable KubernetesVerb verb) {
+    this.urlPath = urlPath;
+    this.isNonResourceRequest = isNonResourceRequest;
+    this.resourceMeta = resourceMeta;
+    this.verb = verb;
+  }
+
+  public static KubernetesRequestDigest parse(Request request) {
+    String urlPath = request.url().encodedPath();
+    if (!isResourceRequest(urlPath)) {
+      return nonResource(urlPath);
+    }
+    try {
+      KubernetesResource resourceMeta;
+      if (urlPath.startsWith("/api/v1")) {
+        resourceMeta = KubernetesResource.parseCoreResource(urlPath);
+      } else {
+        resourceMeta = KubernetesResource.parseRegularResource(urlPath);
+      }
+
+      return new KubernetesRequestDigest(
+          urlPath,
+          /* isNonResourceRequest= */ false,
+          resourceMeta,
+          KubernetesVerb.of(
+              request.method(), hasNamePathParameter(resourceMeta), hasWatchParameter(request)));
+    } catch (IllegalArgumentException | ParseKubernetesResourceException e) {
+      return nonResource(urlPath);
+    }
+  }
+
+  private static KubernetesRequestDigest nonResource(String urlPath) {
+    return new KubernetesRequestDigest(urlPath, /* isNonResourceRequest= */ true, null, null);
+  }
+
+  public static boolean isResourceRequest(String urlPath) {
+    return RESOURCE_URL_PATH_PATTERN.matcher(urlPath).matches();
+  }
+
+  private static boolean hasWatchParameter(Request request) {
+    return !isNullOrEmpty(request.url().queryParameter("watch"));
+  }
+
+  private static boolean hasNamePathParameter(KubernetesResource resource) {
+    return !isNullOrEmpty(resource.getName());
+  }
+
+  private final String urlPath;
+  private final boolean isNonResourceRequest;
+
+  @Nullable private final KubernetesResource resourceMeta;
+  @Nullable private final KubernetesVerb verb;
+
+  public String getUrlPath() {
+    return urlPath;
+  }
+
+  public boolean isNonResourceRequest() {
+    return isNonResourceRequest;
+  }
+
+  @Nullable
+  public KubernetesResource getResourceMeta() {
+    return resourceMeta;
+  }
+
+  @Nullable
+  public KubernetesVerb getVerb() {
+    return verb;
+  }
+
+  @Override
+  public String toString() {
+    if (isNonResourceRequest) {
+      return (verb != null ? verb.value() + ' ' : "") + urlPath;
+    }
+
+    String groupVersion;
+    if (isNullOrEmpty(resourceMeta.getApiGroup())) { // core resource
+      groupVersion = "";
+    } else { // regular resource
+      groupVersion = resourceMeta.getApiGroup() + "/" + resourceMeta.getApiVersion();
+    }
+
+    String targetResourceName;
+    if (isNullOrEmpty(resourceMeta.getSubResource())) {
+      targetResourceName = resourceMeta.getResource();
+    } else { // subresource
+      targetResourceName = resourceMeta.getResource() + "/" + resourceMeta.getSubResource();
+    }
+
+    StringBuilder result = new StringBuilder(verb.value());
+    if (!groupVersion.isEmpty()) {
+      result.append(" ").append(groupVersion);
+    }
+    if (!targetResourceName.isEmpty()) {
+      result.append(" ").append(targetResourceName);
+    }
+    return result.toString();
+  }
+
+  private static boolean isNullOrEmpty(String s) {
+    return s == null || s.isEmpty();
+  }
+}

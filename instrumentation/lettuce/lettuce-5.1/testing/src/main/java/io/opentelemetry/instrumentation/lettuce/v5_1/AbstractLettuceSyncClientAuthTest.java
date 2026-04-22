@@ -59,7 +59,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
   }
 
   @Test
-  void testAuthCommand() throws Exception {
+  void testAuthCommand() throws ReflectiveOperationException {
     Class<?> commandsClass = RedisCommands.class;
     Method authMethod;
     // the auth() argument type changed between 5.x -> 6.x
