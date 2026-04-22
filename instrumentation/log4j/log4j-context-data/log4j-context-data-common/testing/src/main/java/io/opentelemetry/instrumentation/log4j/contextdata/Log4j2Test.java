@@ -24,7 +24,6 @@ public abstract class Log4j2Test {
 
   @BeforeEach
   void setUp() {
-    ThreadContext.clearAll();
     ListAppender.get().clearEvents();
   }
 
