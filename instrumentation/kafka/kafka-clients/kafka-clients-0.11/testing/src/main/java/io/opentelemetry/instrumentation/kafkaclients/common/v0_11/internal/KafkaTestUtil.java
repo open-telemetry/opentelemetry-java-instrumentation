@@ -10,7 +10,7 @@ import java.time.Duration;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
-public class KafkaTestUtil {
+class KafkaTestUtil {
   private static final Method consumerPollDurationMethod = getConsumerPollDurationMethod();
 
   private static Method getConsumerPollDurationMethod() {
@@ -22,7 +22,7 @@ public class KafkaTestUtil {
   }
 
   @SuppressWarnings("unchecked")
-  public static <K, V> ConsumerRecords<K, V> poll(Consumer<K, V> consumer, Duration duration) {
+  static <K, V> ConsumerRecords<K, V> poll(Consumer<K, V> consumer, Duration duration) {
     // not present in early versions
     if (consumerPollDurationMethod != null) {
       try {
