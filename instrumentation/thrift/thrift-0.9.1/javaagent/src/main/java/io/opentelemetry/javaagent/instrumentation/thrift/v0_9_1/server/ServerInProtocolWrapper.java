@@ -13,7 +13,6 @@ import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.thrift.common.RequestScopeContext;
 import io.opentelemetry.instrumentation.thrift.common.SocketAccessor;
 import io.opentelemetry.instrumentation.thrift.common.ThriftRequest;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.thrift.v0_9_1.AbstractProtocolWrapper;
 import java.net.Socket;
 import java.util.HashMap;
@@ -72,7 +71,7 @@ public final class ServerInProtocolWrapper extends AbstractProtocolWrapper {
         }
         ThriftRequest request =
             ThriftRequest.create(this.serviceName, this.methodName, socket, header);
-        Context parentContext = Java8BytecodeBridge.currentContext();
+        Context parentContext = Context.current();
         if (!serverInstrumenter().shouldStart(parentContext, request)) {
           return field;
         }
@@ -102,7 +101,7 @@ public final class ServerInProtocolWrapper extends AbstractProtocolWrapper {
       }
       ThriftRequest request =
           ThriftRequest.create(this.serviceName, this.methodName, socket, new HashMap<>());
-      Context parentContext = Java8BytecodeBridge.currentContext();
+      Context parentContext = Context.current();
       if (!serverInstrumenter().shouldStart(parentContext, request)) {
         return;
       }

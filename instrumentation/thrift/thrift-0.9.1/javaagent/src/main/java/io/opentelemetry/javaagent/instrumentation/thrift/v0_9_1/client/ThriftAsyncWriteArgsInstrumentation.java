@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.thrift.v0_9_1.client;
 import static io.opentelemetry.instrumentation.thrift.common.client.VirtualFields.ASYNC_METHOD_CALLBACK;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.instrumentation.thrift.v0_9_1.ThriftSingletons.clientInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
@@ -26,7 +25,7 @@ import org.apache.thrift.async.TAsyncMethodCall;
 import org.apache.thrift.protocol.TMessageType;
 import org.apache.thrift.protocol.TProtocol;
 
-public final class ThriftAsyncWriteArgsInstrumentation implements TypeInstrumentation {
+class ThriftAsyncWriteArgsInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -35,15 +34,14 @@ public final class ThriftAsyncWriteArgsInstrumentation implements TypeInstrument
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isMethod().and(named("write_args")),
-        ThriftAsyncWriteArgsInstrumentation.class.getName() + "$WriteArgsAdvice");
+    transformer.applyAdviceToMethod(named("write_args"), getClass().getName() + "$WriteArgsAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class WriteArgsAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void methodEnter(
-        @Advice.Origin("#t") String serviceName, @Advice.Argument(value = 0) TProtocol protocol) {
+        @Advice.Origin("#t") String serviceName, @Advice.Argument(0) TProtocol protocol) {
       if (protocol instanceof ClientOutProtocolWrapper) {
         Set<String> methodNames = MethodAccessor.voidMethodNames(serviceName);
         // Compatible with asynchronous oneway method
@@ -54,10 +52,10 @@ public final class ThriftAsyncWriteArgsInstrumentation implements TypeInstrument
       }
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.This TAsyncMethodCall<?> methodCall,
-        @Advice.Argument(value = 0) TProtocol protocol,
+        @Advice.Argument(0) TProtocol protocol,
         @Advice.Thrown Throwable throwable) {
       if (protocol instanceof ClientOutProtocolWrapper) {
         ClientOutProtocolWrapper wrapper = (ClientOutProtocolWrapper) protocol;

@@ -15,7 +15,7 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public final class ThriftClientCommonInstrumentationModule extends InstrumentationModule {
+public class ThriftClientCommonInstrumentationModule extends InstrumentationModule {
 
   public ThriftClientCommonInstrumentationModule() {
     super("thrift", "thrift-0.9.1", "thrift-0.9.1-client");

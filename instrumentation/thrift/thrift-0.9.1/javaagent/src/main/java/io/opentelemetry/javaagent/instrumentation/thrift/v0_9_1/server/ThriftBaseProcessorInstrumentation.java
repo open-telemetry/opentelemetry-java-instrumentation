@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.thrift.v0_9_1.server;
 
 import static io.opentelemetry.javaagent.instrumentation.thrift.v0_9_1.ThriftSingletons.serverInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
@@ -21,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TProtocolDecorator;
 
-public final class ThriftBaseProcessorInstrumentation implements TypeInstrumentation {
+class ThriftBaseProcessorInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -30,16 +29,15 @@ public final class ThriftBaseProcessorInstrumentation implements TypeInstrumenta
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isMethod().and(named("process")),
-        ThriftBaseProcessorInstrumentation.class.getName() + "$ProcessAdvice");
+    transformer.applyAdviceToMethod(named("process"), getClass().getName() + "$ProcessAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ProcessAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void methodEnter(
-        @Advice.Argument(value = 0) TProtocol inProtocol,
-        @Advice.FieldValue(value = "iface") Object iface)
+        @Advice.Argument(0) TProtocol inProtocol, @Advice.FieldValue("iface") Object iface)
         throws IllegalAccessException {
       String serviceName = iface.getClass().getName();
       if (inProtocol instanceof ServerInProtocolWrapper) {
@@ -49,16 +47,16 @@ public final class ThriftBaseProcessorInstrumentation implements TypeInstrumenta
         // TMultiplexedProcessor compatible
         Field field = MethodAccessor.getConcreteProtocolField(TProtocolDecorator.class);
         Object obj = field.get(inProtocol);
-        if (obj != null && obj instanceof ServerInProtocolWrapper) {
+        if (obj instanceof ServerInProtocolWrapper) {
           ServerInProtocolWrapper wrapper = (ServerInProtocolWrapper) obj;
           wrapper.setServiceName(serviceName);
         }
       }
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
-        @Advice.Argument(value = 0) TProtocol inProtocol, @Advice.Thrown Throwable throwable) {
+        @Advice.Argument(0) TProtocol inProtocol, @Advice.Thrown Throwable throwable) {
       if (inProtocol instanceof ServerInProtocolWrapper) {
         ServerInProtocolWrapper wrapper = (ServerInProtocolWrapper) inProtocol;
         String methodName = wrapper.getMethodName();

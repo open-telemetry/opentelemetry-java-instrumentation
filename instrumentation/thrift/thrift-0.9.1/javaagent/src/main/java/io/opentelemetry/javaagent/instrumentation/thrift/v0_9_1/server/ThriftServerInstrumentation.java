@@ -12,11 +12,14 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToFields.ToField;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.thrift.protocol.TProtocolFactory;
 
-public final class ThriftServerInstrumentation implements TypeInstrumentation {
+class ThriftServerInstrumentation implements TypeInstrumentation {
+
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.thrift.server.TServer");
@@ -25,20 +28,20 @@ public final class ThriftServerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor().and(takesArguments(1)),
-        ThriftServerInstrumentation.class.getName() + "$ServerConstructorAdvice");
+        isConstructor().and(takesArguments(1)), getClass().getName() + "$ServerConstructorAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ServerConstructorAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.FieldValue(value = "inputProtocolFactory_", readOnly = false)
-            TProtocolFactory factory) {
+    @AssignReturned.ToFields(@ToField("inputProtocolFactory_"))
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static TProtocolFactory onExit(
+        @Advice.FieldValue("inputProtocolFactory_") TProtocolFactory factory) {
       if (factory instanceof ServerProtocolFactoryWrapper) {
-        return;
+        return factory;
       }
-      factory = new ServerProtocolFactoryWrapper(factory);
+      return new ServerProtocolFactoryWrapper(factory);
     }
   }
 }

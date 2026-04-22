@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.thrift.v0_9_1.server;
 
 import static io.opentelemetry.javaagent.instrumentation.thrift.v0_9_1.ThriftSingletons.serverInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -20,7 +19,8 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.server.AbstractNonblockingServer;
 
-public final class ThriftBaseAsyncProcessorInstrumentation implements TypeInstrumentation {
+class ThriftBaseAsyncProcessorInstrumentation implements TypeInstrumentation {
+
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.thrift.TBaseAsyncProcessor");
@@ -29,16 +29,16 @@ public final class ThriftBaseAsyncProcessorInstrumentation implements TypeInstru
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("process")).and(takesArguments(1)),
-        ThriftBaseAsyncProcessorInstrumentation.class.getName() + "$ProcessAdvice");
+        named("process").and(takesArguments(1)), getClass().getName() + "$ProcessAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ProcessAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void methodEnter(
         @Advice.Argument(0) AbstractNonblockingServer.AsyncFrameBuffer fb,
-        @Advice.FieldValue(value = "iface") Object iface) {
+        @Advice.FieldValue("iface") Object iface) {
       String serviceName = iface.getClass().getName();
       TProtocol inProtocol = fb.getInputProtocol();
       if (inProtocol instanceof ServerInProtocolWrapper) {
@@ -47,7 +47,7 @@ public final class ThriftBaseAsyncProcessorInstrumentation implements TypeInstru
       }
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Argument(0) AbstractNonblockingServer.AsyncFrameBuffer fb,
         @Advice.Thrown Throwable throwable) {
