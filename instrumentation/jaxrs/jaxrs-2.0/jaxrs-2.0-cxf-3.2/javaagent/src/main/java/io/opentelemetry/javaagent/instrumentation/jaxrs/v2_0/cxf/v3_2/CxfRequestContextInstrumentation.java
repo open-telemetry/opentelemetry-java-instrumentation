@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
+package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.cxf.v3_2;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.CxfSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.cxf.v3_2.CxfSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -15,6 +15,8 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsConstants;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.Jaxrs2HandlerData;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.Jaxrs2RequestContextHelper;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 import javax.ws.rs.container.ContainerRequestContext;

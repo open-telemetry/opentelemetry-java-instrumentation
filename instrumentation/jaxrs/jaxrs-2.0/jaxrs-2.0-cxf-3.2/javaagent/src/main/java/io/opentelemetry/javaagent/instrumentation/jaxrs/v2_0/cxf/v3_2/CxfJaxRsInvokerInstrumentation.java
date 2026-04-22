@@ -3,37 +3,35 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
+package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.cxf.v3_2;
 
-import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.bootstrap.jaxrs.JaxrsContextPath;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
-import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.cxf.message.Exchange;
 
-class CxfServletControllerInstrumentation implements TypeInstrumentation {
+class CxfJaxRsInvokerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.apache.cxf.transport.servlet.ServletController");
+    return named("org.apache.cxf.jaxrs.JAXRSInvoker");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("invokeDestination"))
-            .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest"))),
+        named("invoke")
+            .and(takesArgument(0, named("org.apache.cxf.message.Exchange")))
+            .and(takesArgument(1, Object.class))
+            .and(takesArgument(2, Object.class)),
         getClass().getName() + "$InvokeAdvice");
   }
 
@@ -42,12 +40,9 @@ class CxfServletControllerInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Scope onEnter(@Advice.Argument(0) HttpServletRequest httpServletRequest) {
+    public static Scope onEnter(@Advice.Argument(0) Exchange exchange) {
 
-      Context context =
-          JaxrsContextPath.init(
-              Java8BytecodeBridge.currentContext(), httpServletRequest.getServletPath());
-
+      Context context = CxfSpanName.INSTANCE.updateServerSpanName(exchange);
       return context != null ? context.makeCurrent() : null;
     }
 

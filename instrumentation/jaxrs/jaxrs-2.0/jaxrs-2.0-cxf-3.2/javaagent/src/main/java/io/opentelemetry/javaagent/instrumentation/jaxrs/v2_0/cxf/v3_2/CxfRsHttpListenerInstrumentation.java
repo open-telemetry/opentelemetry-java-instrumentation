@@ -3,36 +3,32 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
+package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.cxf.v3_2;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.bootstrap.jaxrs.JaxrsContextPath;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.cxf.message.Exchange;
 
-class CxfJaxRsInvokerInstrumentation implements TypeInstrumentation {
+// TomEE specific instrumentation
+class CxfRsHttpListenerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.apache.cxf.jaxrs.JAXRSInvoker");
+    return named("org.apache.openejb.server.cxf.rs.CxfRsHttpListener");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("invoke")
-            .and(takesArgument(0, named("org.apache.cxf.message.Exchange")))
-            .and(takesArgument(1, Object.class))
-            .and(takesArgument(2, Object.class)),
-        getClass().getName() + "$InvokeAdvice");
+    transformer.applyAdviceToMethod(named("doInvoke"), getClass().getName() + "$InvokeAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -40,9 +36,8 @@ class CxfJaxRsInvokerInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Scope onEnter(@Advice.Argument(0) Exchange exchange) {
-
-      Context context = CxfSpanName.INSTANCE.updateServerSpanName(exchange);
+    public static Scope onEnter(@Advice.FieldValue("pattern") String pattern) {
+      Context context = JaxrsContextPath.init(Java8BytecodeBridge.currentContext(), pattern);
       return context != null ? context.makeCurrent() : null;
     }
 
