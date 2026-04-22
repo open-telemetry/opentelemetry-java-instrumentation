@@ -3,12 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.extension.instrumentation.internal.injection;
+package io.opentelemetry.javaagent.tooling;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
 public enum InjectionMode {
   CLASS_ONLY(true, false),
   RESOURCE_ONLY(false, true),

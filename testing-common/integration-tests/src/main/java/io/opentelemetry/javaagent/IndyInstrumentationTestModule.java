@@ -12,9 +12,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
@@ -23,8 +20,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class IndyInstrumentationTestModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class IndyInstrumentationTestModule extends InstrumentationModule {
 
   public IndyInstrumentationTestModule() {
     super("indy-test");
@@ -38,18 +34,6 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
   @Override
   public boolean isHelperClass(String className) {
     return className.equals(LocalHelper.class.getName());
-  }
-
-  @Override
-  public List<String> getAdditionalHelperClassNames() {
-    // TODO: should not be needed as soon as we automatically add proxied classes to the muzzle root
-    // set
-    return singletonList("indy.ProxyMe");
-  }
-
-  @Override
-  public void injectClasses(ClassInjector injector) {
-    injector.proxyBuilder("indy.ProxyMe", "foo.bar.Proxy").inject(InjectionMode.CLASS_AND_RESOURCE);
   }
 
   @Override
