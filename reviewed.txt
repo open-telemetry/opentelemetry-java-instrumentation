@@ -252,3 +252,4 @@ jaxrs-3.0-common:javaagent
 jaxws-cxf-3.0:javaagent-unit-tests
 jaxws-metro-2.2:javaagent
 jdbc:testing
+jetty-httpclient-9.2:testing
