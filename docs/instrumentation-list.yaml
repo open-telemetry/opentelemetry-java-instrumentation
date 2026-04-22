@@ -7237,19 +7237,23 @@ libraries:
   - org.eclipse.jetty:jetty-server:[8.0.0.v20110901,11)
   configurations:
   - name: otel.instrumentation.http.known-methods
+    declarative_name: java.common.http.known_methods
     description: |
       Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
     type: list
     default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
   - name: otel.instrumentation.http.server.capture-request-headers
+    declarative_name: general.http.server.request_captured_headers
     description: List of HTTP request headers to capture in HTTP server telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.http.server.capture-response-headers
+    declarative_name: general.http.server.response_captured_headers
     description: List of HTTP response headers to capture in HTTP server telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.http.server.emit-experimental-telemetry
+    declarative_name: java.common.http.server.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.size` and `http.server.response.size` metrics.
     type: boolean
@@ -7736,6 +7740,7 @@ libraries:
   - com.jfinal:jfinal:[3.2,)
   configurations:
   - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+    declarative_name: java.common.controller_telemetry/development.enabled
     description: Enables the creation of experimental controller spans.
     type: boolean
     default: false
@@ -7979,6 +7984,7 @@ libraries:
   - org.glassfish:jakarta.faces:[3,)
   configurations:
   - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+    declarative_name: java.common.controller_telemetry/development.enabled
     description: Enables the creation of experimental controller spans.
     type: boolean
     default: false
@@ -8002,6 +8008,7 @@ libraries:
   - org.apache.myfaces.core:myfaces-impl:[1.2,3)
   configurations:
   - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+    declarative_name: java.common.controller_telemetry/development.enabled
     description: Enables the creation of experimental controller spans.
     type: boolean
     default: false
@@ -8026,6 +8033,7 @@ libraries:
   - org.apache.myfaces.core:myfaces-impl:[3,)
   configurations:
   - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+    declarative_name: java.common.controller_telemetry/development.enabled
     description: Enables the creation of experimental controller spans.
     type: boolean
     default: false
@@ -8049,10 +8057,12 @@ libraries:
   - org.apache.tomcat:tomcat-jasper:[7.0.19,10)
   configurations:
   - name: otel.instrumentation.common.experimental.view-telemetry.enabled
+    declarative_name: java.common.view_telemetry/development.enabled
     description: Enables the creation of experimental view spans.
     type: boolean
     default: false
   - name: otel.instrumentation.jsp.experimental-span-attributes
+    declarative_name: java.jsp.experimental_span_attributes/development
     description: |
       Enables experimental span attributes `jsp.forwardOrigin`, `jsp.requestURL`, `jsp.compiler`, and `jsp.classFQCN`.
     type: boolean
@@ -13221,7 +13231,7 @@ libraries:
 - name: runtime-telemetry
   display_name: JVM Runtime Telemetry
   description: |
-    This instrumentation enables JVM runtime metrics using JMX (Java 8+) and JFR (Java 17+) to monitor CPU, memory, garbage collection, threads, classes, buffer pools, and file descriptors.
+    This instrumentation enables JVM runtime metrics using JMX (Java 8+) and JFR (Java 17+) to monitor classes, CPU, garbage collection, memory, and threads.
   semantic_conventions:
   - JVM_RUNTIME_METRICS
   library_link: https://github.com/open-telemetry/opentelemetry-java-instrumentation/tree/main/instrumentation/runtime-telemetry
@@ -13232,19 +13242,29 @@ libraries:
   has_javaagent: true
   configurations:
   - name: otel.instrumentation.runtime-telemetry.emit-experimental-metrics
-    description: Enables the capture of experimental JVM runtime metrics.
+    declarative_name: java.runtime_telemetry.emit_experimental_metrics/development
+    description: Enables the capture of experimental JMX-based JVM runtime metrics.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics
+    declarative_name: java.runtime_telemetry.emit_experimental_jfr_metrics/development
+    description: |
+      Enables the capture of experimental JFR-based JVM runtime metrics on Java 17+.
     type: boolean
     default: false
   - name: otel.instrumentation.runtime-telemetry.experimental.prefer-jfr
+    declarative_name: java.runtime_telemetry.prefer_jfr/development
     description: |
-      Prefers JFR over JMX for metrics where both collection methods are available (Java 17+).
+      Prefer JFR over JMX for metrics available from both sources, on Java 17+. When enabled, overlapping metrics are collected via JFR and the corresponding JMX metrics are suppressed.
     type: boolean
     default: false
   - name: otel.instrumentation.runtime-telemetry.experimental.package-emitter.enabled
+    declarative_name: java.runtime_telemetry.package_emitter/development.enabled
     description: Enables creating events for JAR libraries used by the application.
     type: boolean
     default: false
   - name: otel.instrumentation.runtime-telemetry.experimental.package-emitter.jars-per-second
+    declarative_name: java.runtime_telemetry.package_emitter/development.jars_per_second
     description: The number of JAR files processed per second by the package emitter.
     type: int
     default: 10
