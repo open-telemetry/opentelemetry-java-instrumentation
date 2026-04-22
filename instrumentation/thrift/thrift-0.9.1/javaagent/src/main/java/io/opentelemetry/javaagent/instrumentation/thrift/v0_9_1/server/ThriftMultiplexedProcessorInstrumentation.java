@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.thrift.common.RequestScopeContext;
 import io.opentelemetry.instrumentation.thrift.common.SocketAccessor;
 import io.opentelemetry.instrumentation.thrift.common.ThriftRequest;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.net.Socket;
@@ -56,7 +57,7 @@ class ThriftMultiplexedProcessorInstrumentation implements TypeInstrumentation {
             ThriftRequest request =
                 ThriftRequest.create(
                     wrapper.getServiceName(), wrapper.getMethodName(), socket, new HashMap<>());
-            Context parentContext = Context.current();
+            Context parentContext = Java8BytecodeBridge.currentContext();
             if (serverInstrumenter().shouldStart(parentContext, request)) {
               InstrumenterUtil.startAndEnd(
                   serverInstrumenter(),
