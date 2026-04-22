@@ -100,7 +100,6 @@ class RuleParserTest {
         .containsKeys("ATTRIBUTE1", "ATTRIBUTE2", "ATTRIBUTE3", "ATTRIBUTE4");
 
     Metric m1 = attr.get("ATTRIBUTE1");
-    assertThat(m1).isNotNull();
     assertThat(m1.getMetric()).isEqualTo("METRIC_NAME1");
     assertThat(m1.getMetricType()).isEqualTo(MetricInfo.Type.GAUGE);
     assertThat(m1.getSourceUnit()).isNull();
@@ -111,7 +110,6 @@ class RuleParserTest {
         .isNull();
 
     Metric m2 = attr.get("ATTRIBUTE2");
-    assertThat(m2).isNotNull();
     assertThat(m2.getMetric()).isEqualTo("METRIC_NAME2");
     assertThat(m2.getDesc()).isEqualTo("DESCRIPTION2");
     assertThat(m2.getSourceUnit()).isEqualTo("SOURCE_UNIT2");
@@ -157,7 +155,6 @@ class RuleParserTest {
     assertThat(attr.get("ATTRIBUTE32")).isNull();
     assertThat(attr.get("ATTRIBUTE33")).isNull();
     Metric attribute34 = attr.get("ATTRIBUTE34");
-    assertThat(attribute34).isNotNull();
     assertThat(attribute34.getMetric()).isEqualTo("METRIC_NAME34");
     assertThat(attr.get("ATTRIBUTE35")).isNull();
   }
@@ -204,7 +201,6 @@ class RuleParserTest {
     assertThat(jmxDef.getMetricType()).isEqualTo(MetricInfo.Type.UPDOWNCOUNTER);
 
     MetricDef metricDef = jmxDef.buildMetricDef();
-    assertThat(metricDef).isNotNull();
 
     assertThat(metricDef.getMetricExtractors())
         .hasSize(3)
@@ -274,7 +270,6 @@ class RuleParserTest {
     assertThat(defs).hasSize(1);
 
     MetricDef metricDef = defs.get(0).buildMetricDef();
-    assertThat(metricDef).isNotNull();
     assertThat(metricDef.getMetricExtractors()).hasSize(1);
 
     MetricExtractor m1 = metricDef.getMetricExtractors().get(0);
@@ -309,7 +304,6 @@ class RuleParserTest {
     assertThat(rules).hasSize(1);
 
     MetricDef metricDef = rules.get(0).buildMetricDef();
-    assertThat(metricDef).isNotNull();
     assertThat(metricDef.getMetricExtractors()).hasSize(1);
 
     MetricExtractor m1 = metricDef.getMetricExtractors().get(0);
@@ -344,7 +338,6 @@ class RuleParserTest {
     assertThat(defs).hasSize(1);
 
     MetricDef metricDef = defs.get(0).buildMetricDef();
-    assertThat(metricDef).isNotNull();
     assertThat(metricDef.getMetricExtractors()).hasSize(1);
 
     // Test that the MBean attribute is correctly parsed
@@ -375,7 +368,6 @@ class RuleParserTest {
     assertThat(defs).hasSize(1);
 
     MetricDef metricDef = defs.get(0).buildMetricDef();
-    assertThat(metricDef).isNotNull();
     assertThat(metricDef.getMetricExtractors()).hasSize(1);
 
     MetricExtractor m1 = metricDef.getMetricExtractors().get(0);
@@ -463,7 +455,6 @@ class RuleParserTest {
                   stateAttribute.acquireAttributeValue(mockConnection, objectName);
 
               BeanAttributeExtractor attributeExtractor = me.getMetricValueExtractor();
-              assertThat(attributeExtractor).isNotNull();
               assertThat(attributeExtractor.getSampleValue(null, null))
                   .describedAs("sampled value must be an integer")
                   .isInstanceOf(Integer.class);
@@ -603,7 +594,6 @@ class RuleParserTest {
   private static JmxConfig parseConf(String s) {
     InputStream is = new ByteArrayInputStream(s.getBytes(UTF_8));
     JmxConfig jmxConfig = parser.loadConfig(is);
-    assertThat(jmxConfig).isNotNull();
 
     // building metric definitions allows triggering validation rules
     for (JmxRule rule : jmxConfig.getRules()) {

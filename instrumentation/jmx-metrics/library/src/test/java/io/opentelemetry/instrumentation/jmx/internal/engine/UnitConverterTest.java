@@ -47,7 +47,6 @@ class UnitConverterTest {
       Long originalValue, String originalUnit, Double expectedConvertedValue, String targetUnit) {
     UnitConverter converter = UnitConverter.getInstance(originalUnit, targetUnit);
 
-    assertThat(converter).isNotNull();
     Number actualValue = converter.convert(originalValue);
 
     assertThat(expectedConvertedValue).isEqualTo(actualValue);

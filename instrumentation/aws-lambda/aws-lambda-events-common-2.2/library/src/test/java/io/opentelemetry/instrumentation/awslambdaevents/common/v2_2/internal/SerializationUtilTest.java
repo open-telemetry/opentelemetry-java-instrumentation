@@ -194,7 +194,6 @@ class SerializationUtilTest {
   }
 
   private static void assertScheduledEvent(ScheduledEvent event) {
-    assertThat(event).isNotNull();
     assertThat(event.getSource()).isEqualTo("aws.events");
     assertThat(event.getDetailType()).isEqualTo("Scheduled Event");
     assertThat(event.getAccount()).isEqualTo("123456789012");
@@ -205,7 +204,6 @@ class SerializationUtilTest {
   }
 
   private static void assertKinesisEvent(KinesisEvent event) {
-    assertThat(event).isNotNull();
     assertThat(event.getRecords()).isNotNull();
     assertThat(event.getRecords()).hasSize(2);
     KinesisEvent.KinesisEventRecord record = event.getRecords().get(0);
@@ -223,7 +221,6 @@ class SerializationUtilTest {
   }
 
   private static void assertSqsEvent(SQSEvent event) {
-    assertThat(event).isNotNull();
     assertThat(event.getRecords()).isNotNull();
     assertThat(event.getRecords()).hasSize(2);
     SQSEvent.SQSMessage record = event.getRecords().get(0);
@@ -236,7 +233,6 @@ class SerializationUtilTest {
   }
 
   private static void assertS3Event(S3Event event) {
-    assertThat(event).isNotNull();
     assertThat(event.getRecords()).isNotNull();
     assertThat(event.getRecords()).hasSize(1);
     S3EventNotification.S3EventNotificationRecord record = event.getRecords().get(0);
@@ -249,7 +245,6 @@ class SerializationUtilTest {
   }
 
   private static void assertSnsEvent(SNSEvent event) {
-    assertThat(event).isNotNull();
     assertThat(event.getRecords()).isNotNull();
     assertThat(event.getRecords()).hasSize(1);
     SNSEvent.SNSRecord record = event.getRecords().get(0);

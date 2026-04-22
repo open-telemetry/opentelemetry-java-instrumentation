@@ -20,7 +20,6 @@ class ClassLoadingTest {
         Class.forName(
             "io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge", false, classLoader);
 
-    assertThat(clazz).isNotNull();
     assertThat(clazz.getClassLoader()).isNull();
   }
 
@@ -30,7 +29,6 @@ class ClassLoadingTest {
     NonDelegatingUrlClassLoader classLoader = new NonDelegatingUrlClassLoader();
     Class<?> clazz =
         classLoader.loadClass("io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge", false);
-    assertThat(clazz).isNotNull();
     assertThat(clazz.getClassLoader()).isNull();
   }
 

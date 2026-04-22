@@ -51,7 +51,6 @@ class InstrumentationAnalyzerTest {
             .findFirst()
             .orElse(null);
 
-    assertThat(log4jModule).isNotNull();
     assertThat(log4jModule.getNamespace()).isEqualTo("log4j");
     assertThat(log4jModule.getGroup()).isEqualTo("log4j");
     assertThat(log4jModule.getSrcPath()).isEqualTo("instrumentation/log4j/log4j-appender-2.17");
@@ -64,7 +63,6 @@ class InstrumentationAnalyzerTest {
             .findFirst()
             .orElse(null);
 
-    assertThat(springModule).isNotNull();
     assertThat(springModule.getNamespace()).isEqualTo("spring");
     assertThat(springModule.getGroup()).isEqualTo("spring");
     assertThat(springModule.getSrcPath()).isEqualTo("instrumentation/spring/spring-web");

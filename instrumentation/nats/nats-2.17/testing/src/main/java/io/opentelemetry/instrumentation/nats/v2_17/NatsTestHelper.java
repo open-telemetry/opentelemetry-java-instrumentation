@@ -51,7 +51,6 @@ class NatsTestHelper {
 
   static void assertTraceparentHeader(Subscription subscription) throws InterruptedException {
     Message published = subscription.nextMessage(Duration.ofSeconds(10));
-    assertThat(published).isNotNull();
     assertThat(published.getHeaders().get("traceparent")).isNotEmpty();
   }
 

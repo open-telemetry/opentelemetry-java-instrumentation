@@ -112,7 +112,6 @@ class AgentClassLoaderTest {
         loader.findResource(
             "io/opentelemetry/instrumentation/resources/internal/ProcessArguments.class");
 
-    assertThat(url).isNotNull();
     // versioned resource is found when not running on jdk 8
     assertThat(url.toString().contains("META-INF/versions/9/")).isNotEqualTo(jdk8);
 

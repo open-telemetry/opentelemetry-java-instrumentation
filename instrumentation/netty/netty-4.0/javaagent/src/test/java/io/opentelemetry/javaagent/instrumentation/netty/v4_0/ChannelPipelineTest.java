@@ -41,7 +41,6 @@ class ChannelPipelineTest {
 
   @NotNull
   private static Constructor<?> getConstructor() throws NoSuchMethodException {
-    assertThat(defaultChannelPipelineClass).isNotNull();
     Constructor<?> constructor = defaultChannelPipelineClass.getDeclaredConstructor(Channel.class);
     constructor.setAccessible(true);
     return constructor;

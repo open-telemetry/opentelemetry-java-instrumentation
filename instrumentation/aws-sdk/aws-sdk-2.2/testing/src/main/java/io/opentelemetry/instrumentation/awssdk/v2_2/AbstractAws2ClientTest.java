@@ -291,7 +291,6 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     assertThat(response).isNotNull();
 
     RecordedRequest request = server.takeRequest();
-    assertThat(request).isNotNull();
     assertThat(request.request().headers().get("X-Amzn-Trace-Id")).isNotNull();
     assertThat(request.request().headers().get("traceparent")).isNull();
 

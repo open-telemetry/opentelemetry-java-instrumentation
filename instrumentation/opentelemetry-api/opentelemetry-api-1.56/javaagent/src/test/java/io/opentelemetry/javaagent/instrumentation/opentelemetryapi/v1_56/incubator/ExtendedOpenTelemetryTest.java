@@ -32,7 +32,6 @@ class ExtendedOpenTelemetryTest {
     assertThat(openTelemetry).isInstanceOf(ExtendedOpenTelemetry.class);
     DeclarativeConfigProperties instrumentationConfig =
         ((ExtendedOpenTelemetry) openTelemetry).getConfigProvider().getInstrumentationConfig();
-    assertThat(instrumentationConfig).isNotNull();
 
     assertThat(instrumentationConfig.getStructured("java").getStructured("foo").getString("bar"))
         .isEqualTo("baz");

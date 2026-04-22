@@ -39,7 +39,6 @@ class JbossClassloadingTest {
         Class.forName(
             "io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge", false, classLoader);
 
-    assertThat(clazz).isNotNull();
     assertThat(clazz.getClassLoader()).isNull();
   }
 }

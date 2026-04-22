@@ -54,7 +54,6 @@ class ReflectionTest {
   void testInjectedClassProxyUnwrap() throws Exception {
     TestClass testClass = new TestClass();
     Class<?> helperType = testClass.testHelperClass();
-    assertThat(helperType).isNotNull();
 
     Object instance = helperType.getConstructor().newInstance();
     if (InstrumentationProxy.class.isAssignableFrom(helperType)) {

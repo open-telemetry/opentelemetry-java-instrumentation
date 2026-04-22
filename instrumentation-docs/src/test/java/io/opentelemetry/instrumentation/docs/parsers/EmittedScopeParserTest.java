@@ -160,7 +160,6 @@ class EmittedScopeParserTest {
 
     InstrumentationScopeInfo scopeInfo = EmittedScopeParser.getScope(fileManager, module);
 
-    assertThat(scopeInfo).isNotNull();
     assertThat(scopeInfo.getName()).isEqualTo("io.opentelemetry.test-lib-1.0");
     assertThat(scopeInfo.getSchemaUrl()).isNull();
   }
@@ -187,7 +186,6 @@ class EmittedScopeParserTest {
 
     InstrumentationScopeInfo scopeInfo = EmittedScopeParser.getScope(fileManager, module);
 
-    assertThat(scopeInfo).isNotNull();
     assertThat(scopeInfo.getName()).isEqualTo("io.opentelemetry.spring-web-6.0");
     assertThat(scopeInfo.getSchemaUrl()).isEqualTo("https://opentelemetry.io/schemas/1.21.0");
   }
@@ -259,7 +257,6 @@ class EmittedScopeParserTest {
 
     InstrumentationScopeInfo scopeInfo = EmittedScopeParser.getScope(fileManager, module);
 
-    assertThat(scopeInfo).isNotNull();
     assertThat(scopeInfo.getName()).isEqualTo("io.opentelemetry.hibernate-6.0");
     assertThat(scopeInfo.getSchemaUrl()).isEqualTo("https://opentelemetry.io/schemas/1.21.0");
   }
@@ -289,7 +286,6 @@ class EmittedScopeParserTest {
 
     InstrumentationScopeInfo scopeInfo = EmittedScopeParser.getScope(fileManager, module);
 
-    assertThat(scopeInfo).isNotNull();
     assertThat(scopeInfo.getName()).isEqualTo("io.opentelemetry.jdbc");
     assertThat(scopeInfo.getAttributes()).isNotNull();
     assertThat(scopeInfo.getAttributes().get(stringKey("test.key"))).isEqualTo("test-value");
@@ -324,7 +320,6 @@ class EmittedScopeParserTest {
 
     InstrumentationScopeInfo scopeInfo = EmittedScopeParser.getScope(fileManager, module);
 
-    assertThat(scopeInfo).isNotNull();
     assertThat(scopeInfo.getAttributes()).isNotNull();
     assertThat(scopeInfo.getAttributes().get(stringKey("string.key"))).isEqualTo("string-value");
     assertThat(scopeInfo.getAttributes().get(longKey("int.key"))).isEqualTo(123L);

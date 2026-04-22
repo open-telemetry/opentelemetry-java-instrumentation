@@ -476,7 +476,6 @@ class TwilioClientTest {
               }
             });
 
-    assertThat(message).isNotNull();
     assertThat(message.getBody()).isEqualTo("Hello, World!");
 
     testing.waitAndAssertTraces(

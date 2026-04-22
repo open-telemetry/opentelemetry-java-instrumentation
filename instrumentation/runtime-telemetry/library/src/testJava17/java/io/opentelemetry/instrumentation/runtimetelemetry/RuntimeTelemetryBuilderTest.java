@@ -91,7 +91,6 @@ class RuntimeTelemetryBuilderTest {
     cleanup.deferCleanup(runtimeTelemetry);
 
     var jfrRuntimeMetrics = (JfrConfig.JfrRuntimeMetrics) runtimeTelemetry.getJfrTelemetry();
-    assertThat(jfrRuntimeMetrics).isNotNull();
     assertThat(jfrRuntimeMetrics.getRecordedEventHandlers())
         .hasSizeGreaterThan(0)
         .allSatisfy(handler -> assertThat(handler.getFeature()).isEqualTo(JfrFeature.LOCK_METRICS));

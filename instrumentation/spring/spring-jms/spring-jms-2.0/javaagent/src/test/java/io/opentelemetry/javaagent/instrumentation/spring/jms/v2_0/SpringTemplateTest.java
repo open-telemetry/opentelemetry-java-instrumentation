@@ -115,7 +115,6 @@ class SpringTemplateTest extends AbstractJmsTest {
     template.convertAndSend(queue, messageText);
     TextMessage receivedMessage = (TextMessage) template.receive(queue);
 
-    assertThat(receivedMessage).isNotNull();
     assertThat(receivedMessage.getText()).isEqualTo(messageText);
 
     String receivedMsgId = receivedMessage.getJMSMessageID();
@@ -169,7 +168,6 @@ class SpringTemplateTest extends AbstractJmsTest {
                 session ->
                     requireNonNull(template.getMessageConverter()).toMessage(messageText, session));
 
-    assertThat(receivedMessage).isNotNull();
     assertThat(receivedMessage.getText()).isEqualTo("responded!");
 
     String receivedMsgId = receivedMessage.getJMSMessageID();
@@ -230,7 +228,6 @@ class SpringTemplateTest extends AbstractJmsTest {
         });
     TextMessage receivedMessage = (TextMessage) template.receive(queue);
 
-    assertThat(receivedMessage).isNotNull();
     assertThat(receivedMessage.getText()).isEqualTo(messageText);
 
     String receivedMsgId = receivedMessage.getJMSMessageID();

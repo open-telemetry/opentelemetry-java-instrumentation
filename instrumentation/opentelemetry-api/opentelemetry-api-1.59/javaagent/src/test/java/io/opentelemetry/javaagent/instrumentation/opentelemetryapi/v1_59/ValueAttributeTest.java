@@ -41,7 +41,6 @@ class ValueAttributeTest {
   @Test
   void valueKeyHasCorrectType() {
     AttributeKey<Value<?>> key = valueKey("test-key");
-    assertThat(key).isNotNull();
     assertThat(key.getKey()).isEqualTo("test-key");
     assertThat(key.getType()).isEqualTo(AttributeType.VALUE);
   }

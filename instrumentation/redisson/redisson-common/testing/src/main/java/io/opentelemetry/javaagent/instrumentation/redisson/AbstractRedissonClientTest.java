@@ -201,7 +201,6 @@ public abstract class AbstractRedissonClientTest {
   void batchCommand()
       throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
     RBatch batch = createBatch(redisson);
-    assertThat(batch).isNotNull();
     batch.getBucket("batch1").setAsync("v1");
     batch.getBucket("batch2").setAsync("v2");
     // Adapt different method signature:

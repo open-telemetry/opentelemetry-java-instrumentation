@@ -32,7 +32,6 @@ class OsgiClassloadingTest {
   void testOsgiDelegatesToBootstrapClassloaderForAgentClasses(ClassLoader loader)
       throws ClassNotFoundException {
     Class<?> clazz = loader.loadClass("io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge");
-    assertThat(clazz).isNotNull();
     assertThat(clazz.getClassLoader()).isNull();
   }
 

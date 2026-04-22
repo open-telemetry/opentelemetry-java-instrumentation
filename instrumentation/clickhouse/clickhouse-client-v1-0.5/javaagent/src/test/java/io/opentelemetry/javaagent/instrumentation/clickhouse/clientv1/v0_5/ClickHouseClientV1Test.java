@@ -299,7 +299,6 @@ class ClickHouseClientV1Test {
             .execute();
 
     ClickHouseResponse result = response.get();
-    assertThat(result).isNotNull();
     result.close();
 
     testing.waitAndAssertTraces(

@@ -84,7 +84,6 @@ abstract class AbstractIcebergTest {
     scan = configure(scan);
 
     try (CloseableIterable<FileScanTask> tasks = scan.planFiles()) {
-      assertThat(tasks).isNotNull();
       assertThat(tasks.iterator()).isNotNull();
     }
 

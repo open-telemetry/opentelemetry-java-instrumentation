@@ -87,7 +87,6 @@ class RuntimeTelemetryTest {
 
     JfrConfig.JfrRuntimeMetrics jfrRuntimeMetrics =
         (JfrConfig.JfrRuntimeMetrics) runtimeTelemetry.getJfrTelemetry();
-    assertThat(jfrRuntimeMetrics).isNotNull();
     assertThat(jfrRuntimeMetrics.getRecordedEventHandlers())
         .hasSizeGreaterThan(0)
         .allSatisfy(

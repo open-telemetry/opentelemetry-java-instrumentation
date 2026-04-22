@@ -125,11 +125,9 @@ public abstract class AbstractAws2ClientCoreTest {
   }
 
   private void validateOperationResponse(String operation, Object response) {
-    assertThat(response).isNotNull();
     assertThat(response.getClass().getSimpleName()).startsWith(operation);
 
     RecordedRequest request = server.takeRequest();
-    assertThat(request).isNotNull();
     assertThat(request.request().headers().get("X-Amzn-Trace-Id")).isNotNull();
     assertThat(request.request().headers().get("traceparent")).isNull();
 
