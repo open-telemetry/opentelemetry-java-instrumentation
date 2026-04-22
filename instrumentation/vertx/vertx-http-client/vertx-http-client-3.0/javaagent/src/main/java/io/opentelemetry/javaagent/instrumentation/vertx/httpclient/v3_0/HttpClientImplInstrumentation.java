@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.vertxhttpclient.v3_0;
+package io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v3_0;
 
-import static io.opentelemetry.javaagent.instrumentation.vertxhttpclient.v3_0.VertxClientSingletons.HTTP_CLIENT_OPTIONS;
+import static io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v3_0.VertxClientSingletons.HTTP_CLIENT_OPTIONS;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
