@@ -25,6 +25,12 @@ import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.pool.TypePool;
 
+/**
+ * Inspect advice classes used by the given instrumentation module and determine whether the
+ * instrumentation should inject helper classes into the instrumented classloader or load them into
+ * separate class loader. The decision is made based on the {@code inline} attribute of {@link
+ * Advice.OnMethodEnter} and {@link Advice.OnMethodExit} annotations.
+ */
 public class AdviceInspector {
 
   private final ClassFileLocator classFileLocator;
@@ -52,8 +58,8 @@ public class AdviceInspector {
     }
     Boolean result = useIsolatedAdvice(instrumentationModule, adviceClassNames);
 
-    // we aren't able to tell whether the instrumentation is using ready for indy instrumentation or
-    // not, so we assume that it is not
+    // we aren't able to tell whether the instrumentation is ready for indy instrumentation or not,
+    // so we assume that it is not
     return result != null ? result : false;
   }
 
@@ -97,8 +103,7 @@ public class AdviceInspector {
       }
     }
 
-    // we aren't able to tell whether the instrumentation is using ready for indy instrumentation or
-    // not
+    // we aren't able to tell whether the instrumentation is ready for indy instrumentation or not
     return null;
   }
 }
