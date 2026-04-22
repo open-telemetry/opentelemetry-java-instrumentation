@@ -142,7 +142,7 @@ readonly INSTRUMENTATIONS=(
   "jaxws:jaxws-2.0-axis2-1.6:javaagent:test"
   "jaxws:jaxws-2.0-cxf-3.0:javaagent:test"
   "jaxws:jaxws-2.0-jws-api-1.1:javaagent:test"
-  "jaxws:jaxws-metro-2.2:javaagent:test"
+  "jaxws:jaxws-2.0-metro-2.2:javaagent:test"
   "jdbc:javaagent:test"
   "jdbc:javaagent:testStableSemconv"
   "jedis:jedis-1.4:javaagent:test"

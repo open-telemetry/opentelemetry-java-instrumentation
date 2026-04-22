@@ -573,7 +573,7 @@ targets:
       target: ':instrumentation:jaxws:jaxws-2.0-jws-api-1.1:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jaxws:jaxws-metro-2.2:javaagent'
+      target: ':instrumentation:jaxws:jaxws-2.0-metro-2.2:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jboss-logmanager:jboss-logmanager-appender-1.1:javaagent'

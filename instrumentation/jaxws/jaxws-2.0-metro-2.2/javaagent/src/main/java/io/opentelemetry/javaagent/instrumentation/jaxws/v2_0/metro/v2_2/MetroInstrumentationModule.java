@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.metro;
+package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.metro.v2_2;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class MetroInstrumentationModule extends InstrumentationModule {
   public MetroInstrumentationModule() {
-    super("metro", "metro-2.2", "jaxws");
+    super("metro", "jaxws-2.0-metro-2.2", "jaxws");
   }
 
   @Override

@@ -8,7 +8,7 @@ dependencies {
   testImplementation("jakarta.servlet:jakarta.servlet-api:5.0.0")
   testImplementation(project(":instrumentation:jaxws:jaxws-3.0-common-testing"))
 
-  testInstrumentation(project(":instrumentation:jaxws:jaxws-metro-2.2:javaagent"))
+  testInstrumentation(project(":instrumentation:jaxws:jaxws-2.0-metro-2.2:javaagent"))
 
   testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
   testInstrumentation(project(":instrumentation:jetty:jetty-11.0:javaagent"))

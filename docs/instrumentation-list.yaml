@@ -6842,7 +6842,7 @@ libraries:
         type: STRING
       - name: code.namespace
         type: STRING
-- name: jaxws-metro-2.2
+- name: jaxws-2.0-metro-2.2
   display_name: Metro JAX-WS
   description: |
     This instrumentation enriches HTTP server spans with route information, and enables controller spans for Metro JAX-WS web services (controller spans are disabled by default).
@@ -6850,9 +6850,9 @@ libraries:
   features:
   - HTTP_ROUTE
   - CONTROLLER_SPANS
-  source_path: instrumentation/jaxws/jaxws-metro-2.2
+  source_path: instrumentation/jaxws/jaxws-2.0-metro-2.2
   scope:
-    name: io.opentelemetry.jaxws-metro-2.2
+    name: io.opentelemetry.jaxws-2.0-metro-2.2
   has_javaagent: true
   javaagent_target_versions:
   - com.sun.xml.ws:jaxws-rt:[2.2,)

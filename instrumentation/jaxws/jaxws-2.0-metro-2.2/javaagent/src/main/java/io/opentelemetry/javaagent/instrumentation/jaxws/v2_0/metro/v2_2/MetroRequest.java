@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.metro;
+package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.metro.v2_2;
 
 import com.sun.xml.ws.api.message.Packet;
 import com.sun.xml.ws.api.server.WSEndpoint;

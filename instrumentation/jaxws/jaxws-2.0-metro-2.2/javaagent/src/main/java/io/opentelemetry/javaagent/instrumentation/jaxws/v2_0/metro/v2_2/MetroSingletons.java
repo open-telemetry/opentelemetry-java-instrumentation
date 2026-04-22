@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.metro;
+package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.metro.v2_2;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
 class MetroSingletons {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jaxws-metro-2.2";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jaxws-2.0-metro-2.2";
 
   private static final Instrumenter<MetroRequest, Void> instrumenter;
 
