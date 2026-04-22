@@ -255,3 +255,4 @@ jdbc:testing
 jetty-httpclient-9.2:testing
 jetty-11.0:javaagent
 jedis-1.4:testing
+kafka-streams-0.11:javaagent
