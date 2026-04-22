@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.redis;
+package io.opentelemetry.javaagent.instrumentation.vertxredisclient.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.vertx.v4_0.redis.VertxRedisClientSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.vertxredisclient.v4_0.VertxRedisClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 

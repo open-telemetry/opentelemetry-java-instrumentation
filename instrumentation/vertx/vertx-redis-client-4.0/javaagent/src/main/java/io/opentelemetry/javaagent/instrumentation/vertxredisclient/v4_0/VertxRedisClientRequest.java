@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.redis;
+package io.opentelemetry.javaagent.instrumentation.vertxredisclient.v4_0;
 
 import io.vertx.core.net.NetSocket;
 import io.vertx.redis.client.impl.RedisURI;
