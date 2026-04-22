@@ -7,8 +7,8 @@ humans during the finalize step.
 ## Schema
 
 Respond with a single JSON object matching exactly this schema and
-nothing else (no prose). A surrounding ```json ... ``` code fence is
-tolerated by the parser but discouraged — prefer a bare JSON object:
+nothing else (no prose). A surrounding `json` code fence is tolerated
+by the parser but discouraged — prefer a bare JSON object:
 
 ```
 {
