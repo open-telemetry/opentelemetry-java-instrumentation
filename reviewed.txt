@@ -239,3 +239,4 @@ kafka-connect-2.6:testing
 kafka-connect-2.6:javaagent
 apache-httpclient-4.3:library
 apache-httpclient-5.2:library
+apache-shenyu-2.4:javaagent
