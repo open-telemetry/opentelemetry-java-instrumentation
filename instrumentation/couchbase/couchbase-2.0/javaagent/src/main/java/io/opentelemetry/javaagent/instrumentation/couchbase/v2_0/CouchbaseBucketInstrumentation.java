@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.rxjava.v1_0.TracedOnSubscribe;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
@@ -45,7 +46,7 @@ class CouchbaseBucketInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CouchbaseClientAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth trackCallDepth() {
       CallDepth callDepth = CallDepth.forClass(CouchbaseCluster.class);
       callDepth.getAndIncrement();
@@ -53,7 +54,7 @@ class CouchbaseBucketInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Observable<?> subscribeResult(
         @Advice.Origin("#t") Class<?> declaringClass,
         @Advice.Origin("#m") String methodName,
@@ -72,7 +73,7 @@ class CouchbaseBucketInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CouchbaseClientQueryAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth trackCallDepth() {
       CallDepth callDepth = CallDepth.forClass(CouchbaseCluster.class);
       callDepth.getAndIncrement();
@@ -80,7 +81,7 @@ class CouchbaseBucketInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Observable<?> subscribeResult(
         @Advice.Origin("#t") Class<?> declaringClass,
         @Advice.Origin("#m") String methodName,

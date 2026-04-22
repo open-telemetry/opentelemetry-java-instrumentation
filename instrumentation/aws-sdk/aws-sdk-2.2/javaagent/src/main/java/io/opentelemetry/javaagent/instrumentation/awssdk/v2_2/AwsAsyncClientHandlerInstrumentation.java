@@ -37,7 +37,7 @@ class AwsAsyncClientHandlerInstrumentation implements TypeInstrumentation {
   public static class WrapFutureAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static CompletableFuture<?> methodExit(@Advice.Return CompletableFuture<?> future) {
 
       // propagate context into CompletableFuture returned from aws async client methods

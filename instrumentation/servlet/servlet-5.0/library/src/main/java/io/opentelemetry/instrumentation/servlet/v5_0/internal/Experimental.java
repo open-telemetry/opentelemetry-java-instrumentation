@@ -60,18 +60,6 @@ public final class Experimental {
   }
 
   /**
-   * Sets whether to add {@code trace_id} and {@code span_id} as a request attribute.
-   *
-   * @deprecated Use {@link #setTraceIdRequestAttributeEnabled(ServletTelemetryBuilder, boolean)}
-   *     instead.
-   */
-  @Deprecated
-  public static void addTraceIdRequestAttribute(
-      ServletTelemetryBuilder builder, boolean addTraceIdRequestAttribute) {
-    setTraceIdRequestAttributeEnabled(builder, addTraceIdRequestAttribute);
-  }
-
-  /**
    * Sets whether to capture the {@code enduser.id} span attribute.
    *
    * @param builder the telemetry builder
@@ -99,18 +87,6 @@ public final class Experimental {
     if (setCapturedRequestParameters != null) {
       setCapturedRequestParameters.accept(builder, captureRequestParameters);
     }
-  }
-
-  /**
-   * Sets the request parameters to be captured as span attributes.
-   *
-   * @deprecated Use {@link #setCaptureRequestParameters(ServletTelemetryBuilder, Collection)}
-   *     instead.
-   */
-  @Deprecated
-  public static void setCapturedRequestParameters(
-      ServletTelemetryBuilder builder, Collection<String> capturedRequestParameters) {
-    setCaptureRequestParameters(builder, capturedRequestParameters);
   }
 
   public static void internalSetEmitExperimentalTelemetry(

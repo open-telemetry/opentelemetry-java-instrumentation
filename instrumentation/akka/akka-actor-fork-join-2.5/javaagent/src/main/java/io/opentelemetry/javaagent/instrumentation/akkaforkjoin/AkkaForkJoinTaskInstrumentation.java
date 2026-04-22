@@ -55,12 +55,12 @@ class AkkaForkJoinTaskInstrumentation implements TypeInstrumentation {
 
     /**
      * When {@link ForkJoinTask} object is submitted to {@link ForkJoinPool} as {@link Runnable} or
-     * {@link Callable} it will not get wrapped, instead it will be casted to {@code ForkJoinTask}
+     * {@link Callable} it will not get wrapped, instead it will be cast to {@code ForkJoinTask}
      * directly. This means state is still stored in {@code Runnable} or {@code Callable} and we
      * need to use that state.
      */
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope enter(@Advice.This ForkJoinTask<?> thiz) {
       Scope scope =
           TaskAdviceHelper.makePropagatedContextCurrent(
@@ -92,7 +92,7 @@ class AkkaForkJoinTaskInstrumentation implements TypeInstrumentation {
       return scope;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();

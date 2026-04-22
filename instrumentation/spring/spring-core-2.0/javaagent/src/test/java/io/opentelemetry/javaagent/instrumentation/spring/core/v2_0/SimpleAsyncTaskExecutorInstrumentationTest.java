@@ -25,7 +25,7 @@ class SimpleAsyncTaskExecutorInstrumentationTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private static final SimpleAsyncTaskExecutor EXECUTOR = new SimpleAsyncTaskExecutor();
+  private static final SimpleAsyncTaskExecutor executor = new SimpleAsyncTaskExecutor();
 
   private static final Method submitListenableRunnable;
   private static final Method submitListenableCallable;
@@ -46,29 +46,29 @@ class SimpleAsyncTaskExecutorInstrumentationTest {
 
   @Test
   void executeRunnable() {
-    executeTwoTasks(EXECUTOR::execute);
+    executeTwoTasks(executor::execute);
   }
 
   @Test
   void submitRunnable() {
-    executeTwoTasks(task -> EXECUTOR.submit((Runnable) task));
+    executeTwoTasks(task -> executor.submit((Runnable) task));
   }
 
   @Test
   void submitCallable() {
-    executeTwoTasks(task -> EXECUTOR.submit((Callable<?>) task));
+    executeTwoTasks(task -> executor.submit((Callable<?>) task));
   }
 
   @Test
   void submitListenableRunnable() {
     assumeTrue(submitListenableRunnable != null);
-    executeTwoTasks(task -> submitListenableRunnable.invoke(EXECUTOR, task));
+    executeTwoTasks(task -> submitListenableRunnable.invoke(executor, task));
   }
 
   @Test
   void submitListenableCallable() {
     assumeTrue(submitListenableCallable != null);
-    executeTwoTasks(task -> submitListenableCallable.invoke(EXECUTOR, task));
+    executeTwoTasks(task -> submitListenableCallable.invoke(executor, task));
   }
 
   private static void executeTwoTasks(ThrowingConsumer<AsyncTask> task) {
@@ -80,8 +80,8 @@ class SimpleAsyncTaskExecutorInstrumentationTest {
           try {
             task.accept(child1);
             task.accept(child2);
-          } catch (Throwable throwable) {
-            throw new AssertionError(throwable);
+          } catch (Throwable t) {
+            throw new AssertionError(t);
           }
           child1.waitForCompletion();
           child2.waitForCompletion();
@@ -98,7 +98,7 @@ class SimpleAsyncTaskExecutorInstrumentationTest {
 
   static class AsyncTask implements Runnable, Callable<Object> {
 
-    private static final Tracer TRACER = GlobalOpenTelemetry.getTracer("test");
+    private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test");
 
     private final boolean startSpan;
     private final CountDownLatch latch = new CountDownLatch(1);
@@ -110,7 +110,7 @@ class SimpleAsyncTaskExecutorInstrumentationTest {
     @Override
     public void run() {
       if (startSpan) {
-        TRACER.spanBuilder("asyncChild").startSpan().end();
+        tracer.spanBuilder("asyncChild").startSpan().end();
       }
       latch.countDown();
     }

@@ -41,12 +41,12 @@ class RestClientHttpClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class PerformRequestAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.Argument(0) String endpointId) {
       return EndpointId.storeInContext(Context.current(), endpointId).makeCurrent();
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();
@@ -57,7 +57,7 @@ class RestClientHttpClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CreateRestRequestAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Return Request request) {
       String endpointId = EndpointId.get(Context.current());
       if (endpointId == null) {

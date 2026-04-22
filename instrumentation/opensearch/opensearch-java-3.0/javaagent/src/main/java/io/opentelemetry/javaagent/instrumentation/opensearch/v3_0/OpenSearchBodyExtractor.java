@@ -34,8 +34,8 @@ public class OpenSearchBodyExtractor {
       }
 
       return serializeSanitized(mapper, request);
-    } catch (Exception exception) {
-      logger.log(FINE, "Failure extracting body", exception);
+    } catch (Exception e) {
+      logger.log(FINE, "Failure extracting body", e);
       return null;
     }
   }

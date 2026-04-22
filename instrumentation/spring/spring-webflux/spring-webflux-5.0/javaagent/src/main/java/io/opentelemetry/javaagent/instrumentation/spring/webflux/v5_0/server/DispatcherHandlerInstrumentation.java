@@ -44,7 +44,7 @@ class DispatcherHandlerInstrumentation implements TypeInstrumentation {
   public static class HandleAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Mono<Void> methodExit(
         @Advice.Thrown Throwable throwable,
         @Advice.Argument(0) ServerWebExchange exchange,
@@ -64,7 +64,7 @@ class DispatcherHandlerInstrumentation implements TypeInstrumentation {
   public static class HandleResultAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Mono<Void> methodExit(
         @Advice.Argument(0) ServerWebExchange exchange, @Advice.Return Mono<Void> mono) {
       return AdviceUtils.wrapMono(mono, exchange.getAttribute(AdviceUtils.CONTEXT));

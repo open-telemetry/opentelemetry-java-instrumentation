@@ -138,7 +138,7 @@ class TestWebfluxSpringBootApp {
     }
 
     @GetMapping("/cancel")
-    public Mono<String> cancel() {
+    Mono<String> cancel() {
       return controller(SUCCESS, () -> Mono.never());
     }
   }

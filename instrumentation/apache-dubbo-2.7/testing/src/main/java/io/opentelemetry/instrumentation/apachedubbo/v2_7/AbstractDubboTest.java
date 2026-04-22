@@ -51,13 +51,13 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractDubboTest {
 
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   private final ProtocolConfig protocolConfig = new ProtocolConfig();
 
   protected abstract InstrumentationExtension testing();
 
   protected abstract boolean hasServicePeerName();
-
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @BeforeAll
   static void setUp() throws Exception {

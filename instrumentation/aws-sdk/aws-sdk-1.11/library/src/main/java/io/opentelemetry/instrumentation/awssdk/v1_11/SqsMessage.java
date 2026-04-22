@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * A wrapper interface for {@link com.amazonaws.services.sqs.model.Message}. Using this wrapper
@@ -15,6 +16,7 @@ interface SqsMessage {
 
   Map<String, String> getAttributes();
 
+  @Nullable
   String getMessageAttribute(String name);
 
   String getMessageId();

@@ -27,7 +27,7 @@ import org.elasticsearch.client.Response;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public class ElasticsearchClientAttributeExtractor
+final class ElasticsearchClientAttributeExtractor
     implements AttributesExtractor<ElasticsearchRestRequest, Response> {
 
   private static final String PATH_PARTS_ATTRIBUTE_PREFIX = "db.elasticsearch.path_parts.";

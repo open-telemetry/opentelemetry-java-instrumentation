@@ -40,7 +40,7 @@ class UrlMappingsInfoHandlerAdapterInstrumentation implements TypeInstrumentatio
   @SuppressWarnings("unused")
   public static class ServerSpanNameAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void nameSpan(@Advice.Argument(2) Object handler) {
 
       if (handler instanceof GrailsControllerUrlMappingInfo) {
@@ -49,7 +49,7 @@ class UrlMappingsInfoHandlerAdapterInstrumentation implements TypeInstrumentatio
         HttpServerRoute.update(
             parentContext,
             HttpServerRouteSource.CONTROLLER,
-            GrailsServerSpanNaming.SERVER_SPAN_NAME,
+            GrailsServerSpanNaming.serverSpanName(),
             (GrailsControllerUrlMappingInfo) handler);
       }
     }

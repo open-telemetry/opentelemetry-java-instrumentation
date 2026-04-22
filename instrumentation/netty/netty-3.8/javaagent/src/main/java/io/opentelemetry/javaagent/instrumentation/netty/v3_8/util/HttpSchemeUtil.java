@@ -21,7 +21,7 @@ public class HttpSchemeUtil {
               false,
               HttpSchemeUtil.class.getClassLoader())
           .asSubclass(ChannelHandler.class);
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       return null;
     }
   }

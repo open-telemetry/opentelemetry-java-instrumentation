@@ -37,7 +37,7 @@ class JbossLoggerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CallAppendersAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) ExtLogRecord record) {
       JbossLogManagerHelper.setSpanContext(record, Java8BytecodeBridge.currentContext());
     }

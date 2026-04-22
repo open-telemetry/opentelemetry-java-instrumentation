@@ -41,13 +41,13 @@ class TomcatServlet3MappingTest extends AbstractServlet3MappingTest<Tomcat, Cont
   }
 
   @Override
-  public void stopServer(Tomcat server) throws LifecycleException {
+  protected void stopServer(Tomcat server) throws LifecycleException {
     server.stop();
     server.destroy();
   }
 
   @Override
-  public void addServlet(Context context, String path, Class<? extends Servlet> servlet)
+  protected void addServlet(Context context, String path, Class<? extends Servlet> servlet)
       throws Exception {
     String name = UUID.randomUUID().toString();
     Tomcat.addServlet(context, name, servlet.getConstructor().newInstance());
@@ -55,7 +55,7 @@ class TomcatServlet3MappingTest extends AbstractServlet3MappingTest<Tomcat, Cont
   }
 
   @Override
-  public String getContextPath() {
+  protected String getContextPath() {
     return "/tomcat-context";
   }
 }

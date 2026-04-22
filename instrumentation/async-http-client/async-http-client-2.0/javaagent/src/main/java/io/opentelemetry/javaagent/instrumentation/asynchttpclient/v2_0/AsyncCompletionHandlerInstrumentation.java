@@ -51,7 +51,7 @@ class AsyncCompletionHandlerInstrumentation implements TypeInstrumentation {
   public static class OnCompletedAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(
         @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Response response) {
 
@@ -64,7 +64,7 @@ class AsyncCompletionHandlerInstrumentation implements TypeInstrumentation {
       return requestContext.getParentContext().makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
@@ -76,7 +76,7 @@ class AsyncCompletionHandlerInstrumentation implements TypeInstrumentation {
   public static class OnThrowableAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(
         @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Throwable throwable) {
 
@@ -89,7 +89,7 @@ class AsyncCompletionHandlerInstrumentation implements TypeInstrumentation {
       return requestContext.getParentContext().makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();

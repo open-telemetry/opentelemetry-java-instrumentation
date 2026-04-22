@@ -39,7 +39,7 @@ public class UrlParser {
       host = authority.substring(0, portStart);
       try {
         port = Integer.parseInt(authority.substring(portStart + 1));
-      } catch (NumberFormatException exception) {
+      } catch (NumberFormatException ignored) {
         port = null;
       }
     }

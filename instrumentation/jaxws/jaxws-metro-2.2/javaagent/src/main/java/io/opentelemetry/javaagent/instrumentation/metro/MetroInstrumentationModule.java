@@ -11,13 +11,11 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class MetroInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class MetroInstrumentationModule extends InstrumentationModule {
   public MetroInstrumentationModule() {
     super("metro", "metro-2.2", "jaxws");
   }
@@ -31,10 +29,5 @@ public class MetroInstrumentationModule extends InstrumentationModule
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ServerTubeAssemblerContextInstrumentation(), new SoapFaultBuilderInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

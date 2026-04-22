@@ -56,7 +56,7 @@ class RequestActionSupportInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SendAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void injectChannelAttribute(
         @Advice.FieldValue("execution") Execution execution, @Advice.Argument(1) Channel channel) {
       RatpackSingletons.propagateContextToChannel(execution, channel);
@@ -66,7 +66,7 @@ class RequestActionSupportInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConnectDownstreamAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static Downstream<?> wrapDownstream(@Advice.Argument(0) Downstream<?> downstream) {
       // Propagate the current context to downstream
@@ -78,7 +78,7 @@ class RequestActionSupportInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ContextAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Scope injectChannelAttribute(
         @Advice.FieldValue("execution") Execution execution) {
@@ -91,7 +91,7 @@ class RequestActionSupportInstrumentation implements TypeInstrumentation {
           .orElse(null);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();

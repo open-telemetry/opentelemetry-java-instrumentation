@@ -36,7 +36,7 @@ class RouteConcatenationInstrumentation implements TypeInstrumentation {
   public static class ApplyAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object onEnter(
         @Advice.Argument(0) Function1<RequestContext, Future<RouteResult>> route) {
       return new AkkaRouteWrapper(route);

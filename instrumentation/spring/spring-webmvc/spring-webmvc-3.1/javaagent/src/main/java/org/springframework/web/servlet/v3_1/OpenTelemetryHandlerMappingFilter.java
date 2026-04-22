@@ -55,7 +55,7 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
         if (findMapping(request)) {
           // Name the parent span based on the matching pattern
           // Let the parent span resource name be set with the attribute set in findMapping.
-          return SpringWebMvcServerSpanNaming.SERVER_SPAN_NAME.get(context, request);
+          return SpringWebMvcServerSpanNaming.serverSpanName().get(context, request);
         }
 
         return null;
@@ -166,7 +166,7 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
       return MethodHandles.lookup()
           .findVirtual(
               HandlerMapping.class, "usesPathPatterns", MethodType.methodType(boolean.class));
-    } catch (NoSuchMethodException | IllegalAccessException exception) {
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
       return null;
     }
   }
@@ -177,8 +177,8 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
     }
     try {
       return (boolean) usesPathPatternsMh.invoke(handlerMapping);
-    } catch (Throwable throwable) {
-      throw new IllegalStateException(throwable);
+    } catch (Throwable t) {
+      throw new IllegalStateException(t);
     }
   }
 
@@ -193,7 +193,7 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
               pathUtilsClass,
               "parseAndCache",
               MethodType.methodType(requestPathClass, HttpServletRequest.class));
-    } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException exception) {
+    } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException ignored) {
       return null;
     }
   }
@@ -205,8 +205,8 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
     try {
       parseAndCacheMh.invoke(request);
       return true;
-    } catch (Throwable throwable) {
-      logger.log(FINE, "Failed calling parseAndCache", throwable);
+    } catch (Throwable t) {
+      logger.log(FINE, "Failed calling parseAndCache", t);
       return false;
     }
   }

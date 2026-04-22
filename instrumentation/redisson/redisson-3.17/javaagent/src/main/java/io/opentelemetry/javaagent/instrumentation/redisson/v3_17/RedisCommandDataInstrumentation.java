@@ -38,7 +38,7 @@ class RedisCommandDataInstrumentation implements TypeInstrumentation {
   public static class WrapCompletableFutureAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CompletableFuture<?> onEnter(
         @Advice.Argument(0) CompletableFuture<?> completableFuture) {
       return CompletableFutureWrapper.wrap(completableFuture);

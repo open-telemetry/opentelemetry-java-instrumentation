@@ -12,13 +12,6 @@ public class FinatraRequest {
   @Nullable private final Class<?> declaringClass;
   @Nullable private final String methodName;
 
-  private FinatraRequest(
-      Class<?> controllerClass, @Nullable Class<?> declaringClass, @Nullable String methodName) {
-    this.controllerClass = controllerClass;
-    this.declaringClass = declaringClass;
-    this.methodName = methodName;
-  }
-
   public static FinatraRequest create(Class<?> controllerClass) {
     return new FinatraRequest(controllerClass, null, null);
   }
@@ -26,6 +19,13 @@ public class FinatraRequest {
   public static FinatraRequest create(
       Class<?> controllerClass, @Nullable Class<?> declaringClass, @Nullable String methodName) {
     return new FinatraRequest(controllerClass, declaringClass, methodName);
+  }
+
+  private FinatraRequest(
+      Class<?> controllerClass, @Nullable Class<?> declaringClass, @Nullable String methodName) {
+    this.controllerClass = controllerClass;
+    this.declaringClass = declaringClass;
+    this.methodName = methodName;
   }
 
   public Class<?> controllerClass() {

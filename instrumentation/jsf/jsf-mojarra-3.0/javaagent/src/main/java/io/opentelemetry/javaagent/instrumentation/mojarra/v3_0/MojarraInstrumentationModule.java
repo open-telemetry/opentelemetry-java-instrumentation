@@ -11,13 +11,11 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class MojarraInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class MojarraInstrumentationModule extends InstrumentationModule {
   public MojarraInstrumentationModule() {
     super("jsf-mojarra", "jsf-mojarra-3.0");
   }
@@ -31,10 +29,5 @@ public class MojarraInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new ActionListenerImplInstrumentation(), new RestoreViewPhaseInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

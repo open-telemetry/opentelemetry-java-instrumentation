@@ -41,7 +41,7 @@ class GrpcClientBuilderBuildInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AddInterceptorAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void addInterceptor(
         @Advice.This ManagedChannelBuilder<?> builder,
         @Advice.FieldValue("interceptors") List<ClientInterceptor> interceptors) {

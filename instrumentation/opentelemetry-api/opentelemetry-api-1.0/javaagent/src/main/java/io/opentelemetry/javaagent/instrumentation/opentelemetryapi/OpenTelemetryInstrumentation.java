@@ -51,13 +51,13 @@ class OpenTelemetryInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetAdvice {
 
-    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class)
+    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class, inline = false)
     public static Object onEnter() {
       return null;
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static application.io.opentelemetry.api.OpenTelemetry methodExit() {
       return ApplicationOpenTelemetry.INSTANCE;
     }
@@ -66,7 +66,7 @@ class OpenTelemetryInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SetAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter() {
       Logger.getLogger(application.io.opentelemetry.api.GlobalOpenTelemetry.class.getName())
           .log(
@@ -81,7 +81,7 @@ class OpenTelemetryInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ResetForTestAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter() {
       Logger.getLogger(application.io.opentelemetry.api.GlobalOpenTelemetry.class.getName())
           .log(

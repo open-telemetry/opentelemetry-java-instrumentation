@@ -66,7 +66,7 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope decorateAbortSpan(
         @Advice.This ContainerRequestContext requestContext) {
 
@@ -87,7 +87,7 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
       return AdviceScope.start(resourceClass, method, requestContext);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

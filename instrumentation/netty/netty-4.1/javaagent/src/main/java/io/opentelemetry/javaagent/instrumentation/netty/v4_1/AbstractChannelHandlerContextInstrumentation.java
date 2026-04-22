@@ -41,7 +41,7 @@ class AbstractChannelHandlerContextInstrumentation implements TypeInstrumentatio
   @SuppressWarnings("unused")
   public static class InvokeExceptionCaughtAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.This ChannelHandlerContext ctx, @Advice.Argument(0) Throwable throwable) {
 

@@ -38,7 +38,7 @@ class ContextDataInjectorFactoryInstrumentation implements TypeInstrumentation {
   public static class CreateInjectorAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static ContextDataInjector onExit(@Advice.Return ContextDataInjector injector) {
       return new SpanDecoratingContextDataInjector(injector);
     }

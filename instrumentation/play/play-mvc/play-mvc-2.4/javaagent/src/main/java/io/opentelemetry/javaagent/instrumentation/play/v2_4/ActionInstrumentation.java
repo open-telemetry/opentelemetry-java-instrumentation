@@ -87,12 +87,12 @@ class ActionInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(0) Request<?> req) {
       return AdviceScope.start(currentContext());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopTraceOnResponse(
         @Advice.This Action<?> thisAction,
         @Advice.Thrown Throwable throwable,

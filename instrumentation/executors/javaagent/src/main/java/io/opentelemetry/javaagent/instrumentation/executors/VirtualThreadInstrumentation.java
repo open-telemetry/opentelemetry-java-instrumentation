@@ -40,7 +40,7 @@ class VirtualThreadInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SwitchToCarrierAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void exit() {
       ExecutorAdviceHelper.disablePropagation();
     }
@@ -49,7 +49,7 @@ class VirtualThreadInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SwitchToVirtualAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void enter() {
       ExecutorAdviceHelper.enablePropagation();
     }

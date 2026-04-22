@@ -36,13 +36,13 @@ class SessionInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         returns(implementsInterface(named("org.hibernate.procedure.ProcedureCall"))),
-        SessionInstrumentation.class.getName() + "$GetProcedureCallAdvice");
+        getClass().getName() + "$GetProcedureCallAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class GetProcedureCallAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void getProcedureCall(
         @Advice.This SharedSessionContract session, @Advice.Return ProcedureCall returned) {
 

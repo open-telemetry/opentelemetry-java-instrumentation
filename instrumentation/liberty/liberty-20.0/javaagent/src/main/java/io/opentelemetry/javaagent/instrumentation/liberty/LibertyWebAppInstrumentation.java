@@ -51,7 +51,7 @@ class LibertyWebAppInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class HandleRequestAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static boolean onEnter(
         @Advice.Argument(value = 0) ServletRequest request,
         @Advice.Argument(value = 1) ServletResponse response) {
@@ -73,7 +73,7 @@ class LibertyWebAppInstrumentation implements TypeInstrumentation {
       return true;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Argument(0) ServletRequest servletRequest,
         @Advice.Argument(1) ServletResponse servletResponse,
@@ -104,7 +104,7 @@ class LibertyWebAppInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class IsForbiddenAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter() {
       ThreadLocalContext requestInfo = ThreadLocalContext.get();
       if (requestInfo == null || !requestInfo.startSpan()) {
@@ -129,8 +129,7 @@ class LibertyWebAppInstrumentation implements TypeInstrumentation {
       helper().setAsyncListenerResponse(context, requestInfo.getResponse());
 
       HttpServerResponseCustomizerHolder.getCustomizer()
-          .customize(
-              context, requestInfo.getResponse(), Servlet3HttpServerResponseMutator.INSTANCE);
+          .customize(context, requestInfo.getResponse(), new Servlet3HttpServerResponseMutator());
     }
   }
 }

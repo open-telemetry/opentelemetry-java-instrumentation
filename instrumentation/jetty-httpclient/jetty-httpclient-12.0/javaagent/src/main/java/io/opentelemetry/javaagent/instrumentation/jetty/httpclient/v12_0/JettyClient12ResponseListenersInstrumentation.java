@@ -50,7 +50,7 @@ class JettyClient12ResponseListenersInstrumentation implements TypeInstrumentati
   public static class JettyHttpClient12RespListenersNotifyAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnterNotify(@Advice.Argument(0) Response response) {
 
       Context context =
@@ -58,7 +58,7 @@ class JettyClient12ResponseListenersInstrumentation implements TypeInstrumentati
       return context == null ? null : context.makeCurrent();
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExitNotify(
         @Advice.Argument(0) Response response,
         @Advice.Thrown Throwable throwable,
@@ -74,14 +74,14 @@ class JettyClient12ResponseListenersInstrumentation implements TypeInstrumentati
   public static class JettyHttpClient12CompleteListenersNotifyAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnterComplete(@Advice.Argument(0) Result result) {
 
       Context context = (Context) result.getRequest().getAttributes().get(JETTY_CLIENT_CONTEXT_KEY);
       return context == null ? null : context.makeCurrent();
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExitComplete(
         @Advice.Argument(0) Result result,
         @Advice.Thrown Throwable throwable,

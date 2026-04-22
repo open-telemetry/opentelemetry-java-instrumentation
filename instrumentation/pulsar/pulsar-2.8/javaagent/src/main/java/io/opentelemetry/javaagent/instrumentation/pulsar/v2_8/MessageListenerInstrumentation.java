@@ -45,7 +45,7 @@ class MessageListenerInstrumentation implements TypeInstrumentation {
   public static class ConsumerConfigurationDataMethodAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static MessageListener<?> after(
         @Advice.This ConsumerConfigurationData<?> data,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) MessageListener<?> listener) {

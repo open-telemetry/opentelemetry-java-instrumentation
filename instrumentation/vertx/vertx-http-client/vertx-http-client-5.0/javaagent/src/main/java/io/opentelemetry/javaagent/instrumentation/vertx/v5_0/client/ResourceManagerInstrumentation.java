@@ -34,7 +34,7 @@ class ResourceManagerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class WithResourceAsyncAdvice {
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Future<?> wrapFuture(@Advice.Return Future<?> future) {
       return VertxClientSingletons.wrapFuture(future);
     }

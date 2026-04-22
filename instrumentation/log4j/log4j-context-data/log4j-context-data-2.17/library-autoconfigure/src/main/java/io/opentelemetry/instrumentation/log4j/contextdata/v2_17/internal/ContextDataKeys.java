@@ -21,12 +21,6 @@ public final class ContextDataKeys {
   private final String spanIdKey;
   private final String traceFlags;
 
-  private ContextDataKeys(String traceIdKey, String spanIdKey, String traceFlags) {
-    this.traceIdKey = traceIdKey;
-    this.spanIdKey = spanIdKey;
-    this.traceFlags = traceFlags;
-  }
-
   @SuppressWarnings("deprecation") // using deprecated config property
   public static ContextDataKeys create(OpenTelemetry openTelemetry) {
     DeclarativeConfigProperties logging =
@@ -45,6 +39,12 @@ public final class ContextDataKeys {
             ConfigPropertiesUtil.getString(
                 "otel.instrumentation.common.logging.trace-flags",
                 LoggingContextConstants.TRACE_FLAGS)));
+  }
+
+  private ContextDataKeys(String traceIdKey, String spanIdKey, String traceFlags) {
+    this.traceIdKey = traceIdKey;
+    this.spanIdKey = spanIdKey;
+    this.traceFlags = traceFlags;
   }
 
   public String getTraceIdKey() {

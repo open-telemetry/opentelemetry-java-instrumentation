@@ -95,7 +95,7 @@ class FinatraRouteInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope nameSpan(
         @Advice.This Route route,
         @Advice.FieldValue("routeInfo") RouteInfo routeInfo,
@@ -103,7 +103,7 @@ class FinatraRouteInstrumentation implements TypeInstrumentation {
       return AdviceScope.start(route, routeInfo, controllerClass);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void setupCallback(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Return @Nullable Some<Future<Response>> responseOption,
@@ -117,7 +117,7 @@ class FinatraRouteInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CopyAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Route route, @Advice.Return Route result) {
       setCallbackClass(result, getCallbackClass(route));
     }

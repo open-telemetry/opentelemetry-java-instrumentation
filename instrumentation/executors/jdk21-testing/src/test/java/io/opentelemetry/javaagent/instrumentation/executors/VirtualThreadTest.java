@@ -40,9 +40,9 @@ class VirtualThreadTest {
     executeOnCarrierThreadMethod.invoke(Thread.currentThread(), callable);
   }
 
-  static class TestRunnable implements Runnable {
-    AtomicBoolean isPropagationDisabled = new AtomicBoolean();
-    Exception error;
+  private static class TestRunnable implements Runnable {
+    private final AtomicBoolean isPropagationDisabled = new AtomicBoolean();
+    private Exception error;
 
     @Override
     public void run() {
@@ -52,8 +52,8 @@ class VirtualThreadTest {
               isPropagationDisabled.set(ExecutorAdviceHelper.isPropagationDisabled());
               return null;
             });
-      } catch (Exception exception) {
-        error = exception;
+      } catch (Exception e) {
+        error = e;
       }
     }
   }

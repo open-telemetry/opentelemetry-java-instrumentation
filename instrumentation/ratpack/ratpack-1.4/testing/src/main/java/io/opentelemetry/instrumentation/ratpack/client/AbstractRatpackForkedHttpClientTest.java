@@ -14,7 +14,7 @@ import ratpack.http.client.ReceivedResponse;
 
 public abstract class AbstractRatpackForkedHttpClientTest extends AbstractRatpackHttpClientTest {
   @Override
-  protected final Promise<Integer> internalSendRequest(
+  protected Promise<Integer> internalSendRequest(
       HttpClient client, String method, URI uri, Map<String, String> headers) {
     Promise<ReceivedResponse> resp =
         client.request(

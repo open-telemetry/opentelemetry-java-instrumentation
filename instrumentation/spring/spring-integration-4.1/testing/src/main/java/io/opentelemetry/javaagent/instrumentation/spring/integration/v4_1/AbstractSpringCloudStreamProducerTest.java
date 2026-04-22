@@ -14,12 +14,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class AbstractSpringCloudStreamProducerTest {
 
-  @RegisterExtension RabbitExtension rabbit;
-
-  protected final InstrumentationExtension testing;
-
   private static final boolean HAS_PRODUCER_SPAN =
       Boolean.getBoolean("otel.instrumentation.spring-integration.producer.enabled");
+
+  @RegisterExtension final RabbitExtension rabbit;
+
+  protected final InstrumentationExtension testing;
 
   public AbstractSpringCloudStreamProducerTest(
       InstrumentationExtension testing, Class<?> additionalContextClass) {

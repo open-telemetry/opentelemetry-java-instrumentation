@@ -128,7 +128,7 @@ class MethodInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @MethodSpanKind SpanKind spanKind,
         @Advice.Origin("#t") Class<?> declaringClass,
@@ -137,7 +137,7 @@ class MethodInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Object stopSpan(
         @MethodReturnType Class<?> methodReturnType,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returnValue,

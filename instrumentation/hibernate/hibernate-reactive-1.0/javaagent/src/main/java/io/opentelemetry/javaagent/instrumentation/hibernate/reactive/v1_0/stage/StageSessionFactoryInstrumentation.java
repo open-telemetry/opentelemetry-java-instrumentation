@@ -42,7 +42,7 @@ class StageSessionFactoryInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class Function0Advice {
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Function<?, ?> onEnter(@Advice.Argument(0) Function<?, ?> function) {
       return FunctionWrapper.wrap(function);
     }
@@ -51,7 +51,7 @@ class StageSessionFactoryInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class Function1Advice {
     @AssignReturned.ToArguments(@ToArgument(1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Function<?, ?> onEnter(@Advice.Argument(1) Function<?, ?> function) {
       return FunctionWrapper.wrap(function);
     }
@@ -60,7 +60,7 @@ class StageSessionFactoryInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class OpenSessionAdvice {
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static CompletionStage<?> onExit(@Advice.Return CompletionStage<?> completionStage) {
       return CompletionStageWrapper.wrap(completionStage);
     }

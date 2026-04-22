@@ -48,7 +48,7 @@ class HttpRequestImplInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class Vertx30Advice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void attachRequestInfo(
         @Advice.This HttpClientRequest request,
         @Advice.Argument(0) HttpClientImpl client,
@@ -64,7 +64,7 @@ class HttpRequestImplInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class Vertx34Advice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void attachRequestInfo(
         @Advice.This HttpClientRequest request,
         @Advice.Argument(1) boolean ssl,
@@ -76,7 +76,7 @@ class HttpRequestImplInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class Vertx37Advice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void attachRequestInfo(
         @Advice.This HttpClientRequest request,
         @Advice.Argument(1) boolean ssl,

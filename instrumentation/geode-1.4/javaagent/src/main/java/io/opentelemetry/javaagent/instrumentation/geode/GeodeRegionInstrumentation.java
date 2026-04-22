@@ -54,7 +54,7 @@ class GeodeRegionInstrumentation implements TypeInstrumentation {
     private final Context context;
     private final Scope scope;
 
-    public AdviceScope(GeodeRequest request, Context context, Scope scope) {
+    private AdviceScope(GeodeRequest request, Context context, Scope scope) {
       this.request = request;
       this.context = context;
       this.scope = scope;
@@ -74,9 +74,7 @@ class GeodeRegionInstrumentation implements TypeInstrumentation {
     }
 
     public void end(@Nullable Throwable throwable) {
-      if (scope != null) {
-        scope.close();
-      }
+      scope.close();
       instrumenter().end(context, request, null, throwable);
     }
   }
@@ -85,13 +83,13 @@ class GeodeRegionInstrumentation implements TypeInstrumentation {
   public static class SimpleAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This Region<?, ?> region, @Advice.Origin("#m") String methodName) {
       return AdviceScope.start(region, methodName, null);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
@@ -105,7 +103,7 @@ class GeodeRegionInstrumentation implements TypeInstrumentation {
   public static class QueryAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This Region<?, ?> region,
         @Advice.Origin("#m") String methodName,
@@ -113,7 +111,7 @@ class GeodeRegionInstrumentation implements TypeInstrumentation {
       return AdviceScope.start(region, methodName, query);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

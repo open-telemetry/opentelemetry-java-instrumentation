@@ -44,7 +44,7 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ForcedLogAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth methodEnter(
         @Advice.This Category logger,
         @Advice.Argument(0) String fqcn,
@@ -60,7 +60,7 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
       return callDepth;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(@Advice.Enter CallDepth callDepth) {
       callDepth.decrementAndGet();
     }

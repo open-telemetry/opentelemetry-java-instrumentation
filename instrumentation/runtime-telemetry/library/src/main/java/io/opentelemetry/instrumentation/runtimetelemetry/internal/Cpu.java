@@ -10,7 +10,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import io.opentelemetry.api.metrics.Meter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
@@ -33,16 +32,12 @@ public class Cpu {
   /** Register observers for java runtime CPU metrics. */
   public static List<AutoCloseable> registerObservers(Meter meter) {
     return INSTANCE.registerObservers(
-        meter,
-        Runtime.getRuntime()::availableProcessors,
-        CpuMethods.processCpuTime(),
-        CpuMethods.processCpuUtilization());
+        meter, CpuMethods.processCpuTime(), CpuMethods.processCpuUtilization());
   }
 
   // Visible for testing
   List<AutoCloseable> registerObservers(
       Meter meter,
-      IntSupplier availableProcessors,
       @Nullable Supplier<Long> processCpuTime,
       @Nullable Supplier<Double> processCpuUtilization) {
     List<AutoCloseable> observables = new ArrayList<>();
@@ -62,14 +57,6 @@ public class Cpu {
                     }
                   }));
     }
-    observables.add(
-        meter
-            .upDownCounterBuilder("jvm.cpu.count")
-            .setDescription("Number of processors available to the Java virtual machine.")
-            .setUnit("{cpu}")
-            .buildWithCallback(
-                observableMeasurement ->
-                    observableMeasurement.record(availableProcessors.getAsInt())));
     if (processCpuUtilization != null) {
       observables.add(
           meter

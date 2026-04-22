@@ -7,13 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
 import io.netty.buffer.ByteBuf;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
-import io.opentelemetry.javaagent.bootstrap.ExceptionLogger;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -22,12 +22,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.redisson.client.protocol.CommandData;
 import org.redisson.client.protocol.CommandsData;
 
 @AutoValue
 public abstract class RedissonRequest {
+
+  private static final Logger logger = Logger.getLogger(RedissonRequest.class.getName());
 
   private static final RedisCommandSanitizer sanitizer =
       RedisCommandSanitizer.create(
@@ -126,14 +129,14 @@ public abstract class RedissonRequest {
       try {
         return (CompletionStage<?>) COMMAND_DATA_GET_PROMISE.invoke(command);
       } catch (Throwable t) {
-        ExceptionLogger.logSuppressedError("Failed to get Redisson command promise", t);
+        logger.log(FINE, "Failed to get Redisson command promise", t);
         return null;
       }
     } else if (command instanceof CommandsData && COMMANDS_DATA_GET_PROMISE != null) {
       try {
         return (CompletionStage<?>) COMMANDS_DATA_GET_PROMISE.invoke(command);
       } catch (Throwable t) {
-        ExceptionLogger.logSuppressedError("Failed to get Redisson commands promise", t);
+        logger.log(FINE, "Failed to get Redisson commands promise", t);
         return null;
       }
     }

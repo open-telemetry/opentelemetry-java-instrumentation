@@ -72,9 +72,9 @@ final class TracingCqlSession {
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(query);
-    } catch (Throwable exception) {
-      instrumenter().end(context, request, getExecutionInfo(exception), exception);
-      throw exception;
+    } catch (Throwable t) {
+      instrumenter().end(context, request, getExecutionInfo(t), t);
+      throw t;
     }
     instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
     return resultSet;
@@ -88,9 +88,9 @@ final class TracingCqlSession {
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(statement);
-    } catch (Throwable exception) {
-      instrumenter().end(context, request, getExecutionInfo(exception), exception);
-      throw exception;
+    } catch (Throwable t) {
+      instrumenter().end(context, request, getExecutionInfo(t), t);
+      throw t;
     }
     instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
     return resultSet;
@@ -155,6 +155,7 @@ final class TracingCqlSession {
     return query == null ? "" : query;
   }
 
+  @Nullable
   private static ExecutionInfo getExecutionInfo(
       @Nullable AsyncResultSet asyncResultSet, @Nullable Throwable throwable) {
     if (asyncResultSet != null) {
@@ -164,6 +165,7 @@ final class TracingCqlSession {
     }
   }
 
+  @Nullable
   private static ExecutionInfo getExecutionInfo(@Nullable Throwable throwable) {
     if (throwable instanceof DriverException) {
       return ((DriverException) throwable).getExecutionInfo();

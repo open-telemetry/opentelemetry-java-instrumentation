@@ -39,7 +39,7 @@ class ExecutionBoundPublisherInstrumentation implements TypeInstrumentation {
   public static class SubscribeAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static <T> Subscriber<T> wrap(@Advice.Argument(0) Subscriber<T> subscriber) {
       return new TracingSubscriber<>(subscriber, Java8BytecodeBridge.currentContext());
     }

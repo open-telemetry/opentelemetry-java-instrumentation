@@ -14,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -43,8 +44,8 @@ class HttpHandlerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ServiceAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Thrown Throwable throwable) {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Thrown @Nullable Throwable throwable) {
       if (throwable != null) {
         GrizzlyErrorHolder.set(Java8BytecodeBridge.currentContext(), throwable);
       }

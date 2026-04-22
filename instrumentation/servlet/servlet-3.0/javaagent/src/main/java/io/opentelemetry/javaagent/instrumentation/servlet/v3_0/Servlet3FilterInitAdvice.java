@@ -14,7 +14,7 @@ import net.bytebuddy.asm.Advice;
 @SuppressWarnings("unused")
 public class Servlet3FilterInitAdvice {
 
-  @Advice.OnMethodEnter(suppress = Throwable.class)
+  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
   public static void filterInit(
       @Advice.This Filter filter, @Advice.Argument(0) FilterConfig filterConfig) {
     if (filterConfig == null) {

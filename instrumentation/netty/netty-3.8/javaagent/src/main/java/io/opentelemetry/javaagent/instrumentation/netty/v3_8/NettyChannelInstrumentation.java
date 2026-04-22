@@ -54,7 +54,7 @@ class NettyChannelInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ChannelConnectAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static NettyScope onEnter(
         @Advice.This Channel channel, @Advice.Argument(0) SocketAddress remoteAddress) {
@@ -76,7 +76,7 @@ class NettyChannelInstrumentation implements TypeInstrumentation {
       return new NettyScope(parentContext, request, timer);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Return ChannelFuture channelFuture,
         @Advice.Thrown Throwable error,

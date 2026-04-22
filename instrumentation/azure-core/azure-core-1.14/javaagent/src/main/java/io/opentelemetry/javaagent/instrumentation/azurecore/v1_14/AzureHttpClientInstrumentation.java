@@ -43,7 +43,7 @@ class AzureHttpClientInstrumentation implements TypeInstrumentation {
   public static class SuppressNestedClientAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Mono<HttpResponse> methodExit(@Advice.Return Mono<HttpResponse> mono) {
       return new SuppressNestedClientMono<>(mono);
     }

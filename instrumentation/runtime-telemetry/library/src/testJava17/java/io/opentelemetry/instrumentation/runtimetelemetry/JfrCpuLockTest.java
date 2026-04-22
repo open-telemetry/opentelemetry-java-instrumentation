@@ -32,7 +32,7 @@ class JfrCpuLockTest {
               () -> {
                 try {
                   Thread.sleep(1000);
-                } catch (InterruptedException exception) {
+                } catch (InterruptedException ignored) {
                   Thread.currentThread().interrupt();
                 }
                 synchronized (done) {

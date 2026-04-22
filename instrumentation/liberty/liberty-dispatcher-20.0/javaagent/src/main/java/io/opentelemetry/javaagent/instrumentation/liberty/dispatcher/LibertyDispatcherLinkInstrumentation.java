@@ -91,12 +91,12 @@ class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.FieldValue("isc") HttpInboundServiceContextImpl isc) {
       return AdviceScope.start(isc);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.This HttpDispatcherLink httpDispatcherLink,
         @Advice.Thrown @Nullable Throwable throwable,

@@ -47,7 +47,7 @@ class ClickHouseClientV1Instrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ExecuteAndWaitAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static ClickHouseScope onEnter(
         @Advice.Argument(0) ClickHouseRequest<?> clickHouseRequest) {
 
@@ -69,7 +69,7 @@ class ClickHouseClientV1Instrumentation implements TypeInstrumentation {
       return ClickHouseScope.start(instrumenter(), currentContext(), request);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown Throwable throwable, @Advice.Enter ClickHouseScope scope) {
 

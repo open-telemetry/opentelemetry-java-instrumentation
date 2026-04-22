@@ -7,13 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -39,10 +38,8 @@ public class SpringWebMvcInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public void injectClasses(ClassInjector injector) {
-    injector
-        .proxyBuilder("org.springframework.web.servlet.v3_1.OpenTelemetryHandlerMappingFilter")
-        .inject(InjectionMode.CLASS_AND_RESOURCE);
+  public List<String> exposedClassNames() {
+    return singletonList("org.springframework.web.servlet.v3_1.OpenTelemetryHandlerMappingFilter");
   }
 
   @Override
@@ -53,10 +50,5 @@ public class SpringWebMvcInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new DispatcherServletInstrumentation(), new HandlerAdapterInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

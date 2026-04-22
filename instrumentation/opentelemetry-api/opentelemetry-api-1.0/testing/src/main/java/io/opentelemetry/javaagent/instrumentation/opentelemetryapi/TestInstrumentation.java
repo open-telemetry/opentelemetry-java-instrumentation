@@ -32,7 +32,7 @@ class TestInstrumentation implements TypeInstrumentation {
   public static class TestAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static boolean onExit(
         @Advice.Argument(0) application.io.opentelemetry.context.Context context) {
       return InstrumentationUtil.shouldSuppressInstrumentation(

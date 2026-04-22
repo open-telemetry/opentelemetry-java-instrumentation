@@ -1,2 +1,3 @@
+display_name: Apache HttpClient
 description: This instrumentation enables CLIENT spans and metrics for the Apache HttpClient.
 library_link: https://hc.apache.org/index.html

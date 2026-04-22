@@ -88,13 +88,13 @@ class BasicProcessorInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onSchedule(
         @Advice.This BasicProcessor handler, @Advice.Argument(0) TaskContext taskContext) {
       return AdviceScope.start(handler, taskContext);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Return ProcessResult result,
         @Advice.Thrown @Nullable Throwable throwable,

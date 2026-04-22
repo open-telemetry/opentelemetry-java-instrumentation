@@ -154,13 +154,13 @@ class ResponseReceiverInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ResponseMonoAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Runnable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Runnable.class, inline = false)
     public static AdviceScope onEnter(@Advice.This HttpClient.ResponseReceiver<?> receiver) {
       return AdviceScope.start(CallDepth.forClass(HttpClient.ResponseReceiver.class), receiver);
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Mono<HttpClientResponse> onExit(
         @Advice.Return Mono<HttpClientResponse> returnValue,
         @Advice.Enter AdviceScope adviceScope) {
@@ -171,13 +171,13 @@ class ResponseReceiverInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ResponseFluxAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Runnable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Runnable.class, inline = false)
     public static AdviceScope onEnter(@Advice.This HttpClient.ResponseReceiver<?> receiver) {
       return AdviceScope.start(CallDepth.forClass(HttpClient.ResponseReceiver.class), receiver);
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static <T extends HttpClient.ResponseReceiver<?>> Flux<?> onExit(
         @Advice.Argument(0)
             BiFunction<? super HttpClientResponse, ? super ByteBufFlux, ? extends Publisher<T>>
@@ -191,13 +191,13 @@ class ResponseReceiverInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ResponseConnectionAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Runnable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Runnable.class, inline = false)
     public static AdviceScope onEnter(@Advice.This HttpClient.ResponseReceiver<?> receiver) {
       return AdviceScope.start(CallDepth.forClass(HttpClient.ResponseReceiver.class), receiver);
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static <T extends HttpClient.ResponseReceiver<?>> Flux<?> onExit(
         @Advice.Argument(0)
             BiFunction<? super HttpClientResponse, ? super Connection, ? extends Publisher<T>>
@@ -211,13 +211,13 @@ class ResponseReceiverInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ResponseContentAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Runnable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Runnable.class, inline = false)
     public static AdviceScope onEnter(@Advice.This HttpClient.ResponseReceiver<?> receiver) {
       return AdviceScope.start(CallDepth.forClass(HttpClient.ResponseReceiver.class), receiver);
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static ByteBufFlux onExit(
         @Advice.Return ByteBufFlux returnValue, @Advice.Enter AdviceScope adviceScope) {
       return adviceScope.endResponseContent(returnValue);
@@ -227,13 +227,13 @@ class ResponseReceiverInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ResponseSingleAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Runnable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Runnable.class, inline = false)
     public static AdviceScope onEnter(@Advice.This HttpClient.ResponseReceiver<?> receiver) {
       return AdviceScope.start(CallDepth.forClass(HttpClient.ResponseReceiver.class), receiver);
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static <T extends HttpClient.ResponseReceiver<?>> Mono<?> onExit(
         @Advice.Argument(0)
             BiFunction<? super HttpClientResponse, ? super ByteBufMono, ? extends Mono<T>>

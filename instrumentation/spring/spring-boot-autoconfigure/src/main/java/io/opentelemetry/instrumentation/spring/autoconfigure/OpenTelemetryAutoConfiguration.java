@@ -42,6 +42,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -171,7 +172,7 @@ public class OpenTelemetryAutoConfiguration {
             applicationContext.getEnvironment());
         OpenTelemetrySdkComponentLoader componentLoader =
             new OpenTelemetrySdkComponentLoader(applicationContext);
-        OpenTelemetrySdk sdk = DeclarativeConfiguration.create(model, componentLoader);
+        OpenTelemetrySdk sdk = DeclarativeConfiguration.create(model, componentLoader).getSdk();
         Runtime.getRuntime().addShutdownHook(new Thread(sdk::close));
         logStart();
         return new SpringOpenTelemetrySdk(sdk, SpringConfigProvider.create(model, componentLoader));
@@ -275,7 +276,7 @@ public class OpenTelemetryAutoConfiguration {
 
     @Override
     public <T> Iterable<T> load(Class<T> spiClass) {
-      List<T> spi = spiHelper.load(spiClass);
+      List<T> spi = new ArrayList<>(spiHelper.load(spiClass));
       List<T> beans =
           applicationContext.getBeanProvider(spiClass).orderedStream().collect(toList());
       spi.addAll(beans);

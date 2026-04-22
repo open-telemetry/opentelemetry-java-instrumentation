@@ -14,7 +14,7 @@ import com.couchbase.client.core.message.CouchbaseRequest;
 import com.couchbase.client.deps.io.netty.channel.ChannelHandlerContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseRequestInfo;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
 import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -43,7 +43,7 @@ class CouchbaseNetworkInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CouchbaseNetworkAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void addNetworkTagsToSpan(
         @Advice.FieldValue("localSocket") String localSocket,
         @Advice.Argument(0) ChannelHandlerContext channelHandlerContext,

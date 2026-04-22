@@ -47,7 +47,7 @@ class NettyChannelPipelineInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ChannelPipelineAdd2ArgsAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth checkDepth(
         @Advice.This ChannelPipeline pipeline, @Advice.Argument(1) ChannelHandler handler) {
       // Pipelines are created once as a factory and then copied multiple times using the same add
@@ -61,7 +61,7 @@ class NettyChannelPipelineInstrumentation implements TypeInstrumentation {
       return callDepth;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void addHandler(
         @Advice.This ChannelPipeline pipeline,
         @Advice.Argument(1) ChannelHandler handler,
@@ -78,7 +78,7 @@ class NettyChannelPipelineInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ChannelPipelineAdd3ArgsAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth checkDepth(
         @Advice.This ChannelPipeline pipeline, @Advice.Argument(2) ChannelHandler handler) {
       // Pipelines are created once as a factory and then copied multiple times using the same add
@@ -92,7 +92,7 @@ class NettyChannelPipelineInstrumentation implements TypeInstrumentation {
       return callDepth;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void addHandler(
         @Advice.This ChannelPipeline pipeline,
         @Advice.Argument(2) ChannelHandler handler,

@@ -38,7 +38,7 @@ class QuartzInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth trackCallDepth() {
       CallDepth callDepth = CallDepth.forClass(Scheduler.class);
       callDepth.getAndIncrement();
@@ -46,7 +46,7 @@ class QuartzInstrumentation implements TypeInstrumentation {
       return callDepth;
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void addTracingInterceptor(
         @Advice.This Scheduler scheduler, @Advice.Enter CallDepth callDepth) {
       // No-args constructor is automatically called by constructors with args, but we only want to

@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.semconv.util.SpanNames;
 
-public class TwilioSingletons {
+class TwilioSingletons {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "twilio")
@@ -32,12 +32,12 @@ public class TwilioSingletons {
     instrumenter = instrumenterBuilder.buildInstrumenter(alwaysClient());
   }
 
-  public static Instrumenter<String, Object> instrumenter() {
+  static Instrumenter<String, Object> instrumenter() {
     return instrumenter;
   }
 
   /** Derive span name from service execution metadata. */
-  public static String spanName(Object serviceExecutor, String methodName) {
+  static String spanName(Object serviceExecutor, String methodName) {
     return SpanNames.fromMethod(serviceExecutor.getClass(), methodName);
   }
 

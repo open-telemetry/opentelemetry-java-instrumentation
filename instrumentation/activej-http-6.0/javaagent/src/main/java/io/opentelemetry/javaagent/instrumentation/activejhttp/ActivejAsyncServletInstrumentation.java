@@ -85,13 +85,13 @@ class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope methodEnter(@Advice.Argument(0) HttpRequest request) {
       return AdviceScope.start(request);
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Promise<HttpResponse> methodExit(
         @Advice.Return Promise<HttpResponse> responsePromise,
         @Advice.Thrown Throwable throwable,

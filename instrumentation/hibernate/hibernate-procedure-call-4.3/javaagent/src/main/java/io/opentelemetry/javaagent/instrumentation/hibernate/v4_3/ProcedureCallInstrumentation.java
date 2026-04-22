@@ -37,14 +37,13 @@ class ProcedureCallInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("getOutputs"),
-        ProcedureCallInstrumentation.class.getName() + "$ProcedureCallMethodAdvice");
+        named("getOutputs"), getClass().getName() + "$ProcedureCallMethodAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ProcedureCallMethodAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static HibernateOperationScope startMethod(
         @Advice.This ProcedureCall call, @Advice.Origin("#m") String name) {
 
@@ -62,7 +61,7 @@ class ProcedureCallInstrumentation implements TypeInstrumentation {
       return HibernateOperationScope.start(hibernateOperation, parentContext, instrumenter());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void endMethod(
         @Advice.Thrown Throwable throwable, @Advice.Enter HibernateOperationScope scope) {
 

@@ -38,7 +38,7 @@ class WebClientBuilderInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class BuildAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onBuild(@Advice.This WebClient.Builder builder) {
       builder.filters(WebClientHelper::addFilter);
     }

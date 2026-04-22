@@ -12,23 +12,23 @@ import org.springframework.web.servlet.ModelAndView;
 public class SpringWebMvcSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webmvc-6.0";
 
-  private static final Instrumenter<Object, Void> HANDLER_INSTRUMENTER;
+  private static final Instrumenter<Object, Void> handlerInstrumenter;
 
-  private static final Instrumenter<ModelAndView, Void> MODEL_AND_VIEW_INSTRUMENTER;
+  private static final Instrumenter<ModelAndView, Void> modelAndViewInstrumenter;
 
   static {
     SpringWebMvcInstrumenterFactory factory =
         new SpringWebMvcInstrumenterFactory(INSTRUMENTATION_NAME);
-    HANDLER_INSTRUMENTER = factory.createHandlerInstrumenter();
-    MODEL_AND_VIEW_INSTRUMENTER = factory.createModelAndViewInstrumenter();
+    handlerInstrumenter = factory.createHandlerInstrumenter();
+    modelAndViewInstrumenter = factory.createModelAndViewInstrumenter();
   }
 
   public static Instrumenter<Object, Void> handlerInstrumenter() {
-    return HANDLER_INSTRUMENTER;
+    return handlerInstrumenter;
   }
 
   public static Instrumenter<ModelAndView, Void> modelAndViewInstrumenter() {
-    return MODEL_AND_VIEW_INSTRUMENTER;
+    return modelAndViewInstrumenter;
   }
 
   private SpringWebMvcSingletons() {}

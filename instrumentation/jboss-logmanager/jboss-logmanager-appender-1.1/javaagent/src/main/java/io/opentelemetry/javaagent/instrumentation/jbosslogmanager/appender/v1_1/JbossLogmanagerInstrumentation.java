@@ -33,12 +33,12 @@ class JbossLogmanagerInstrumentation implements TypeInstrumentation {
             .and(named("logRaw"))
             .and(takesArguments(1))
             .and(takesArgument(0, named("org.jboss.logmanager.ExtLogRecord"))),
-        JbossLogmanagerInstrumentation.class.getName() + "$CallLogRawAdvice");
+        getClass().getName() + "$CallLogRawAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class CallLogRawAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth methodEnter(
         @Advice.This Logger logger, @Advice.Argument(0) ExtLogRecord record) {
       // need to track call depth across all loggers in order to avoid double capture when one
@@ -50,7 +50,7 @@ class JbossLogmanagerInstrumentation implements TypeInstrumentation {
       return callDepth;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(@Advice.Enter CallDepth callDepth) {
       callDepth.decrementAndGet();
     }

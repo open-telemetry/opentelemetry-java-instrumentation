@@ -73,8 +73,8 @@ final class JmsMessageAttributesGetter
   public String getMessageId(MessageWithDestination messageWithDestination, Void unused) {
     try {
       return messageWithDestination.message().getJmsMessageId();
-    } catch (Exception exception) {
-      logger.log(FINE, "Failure getting JMS message id", exception);
+    } catch (Exception e) {
+      logger.log(FINE, "Failure getting JMS message id", e);
       return null;
     }
   }
@@ -99,8 +99,8 @@ final class JmsMessageAttributesGetter
       if (value != null) {
         return singletonList(value);
       }
-    } catch (Exception exception) {
-      logger.log(FINE, "Failure getting JMS message header", exception);
+    } catch (Exception e) {
+      logger.log(FINE, "Failure getting JMS message header", e);
     }
     return emptyList();
   }

@@ -85,11 +85,11 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   static final String BASIC_AUTH_VAL = "plain text auth token";
 
   /** Returns the connection timeout that should be used when setting up tested clients. */
-  protected final Duration connectTimeout() {
+  protected Duration connectTimeout() {
     return CONNECTION_TIMEOUT;
   }
 
-  protected final Duration readTimeout() {
+  protected Duration readTimeout() {
     return READ_TIMEOUT;
   }
 
@@ -111,7 +111,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {}
 
   // called by the HttpClientInstrumentationExtension
-  final void setTesting(InstrumentationTestRunner testing, HttpClientTestServer server) {
+  void setTesting(InstrumentationTestRunner testing, HttpClientTestServer server) {
     this.testing = testing;
     this.server = server;
   }
@@ -805,11 +805,11 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                             method, uri, singletonMap("test-request-id", String.valueOf(index)));
                       });
               assertThat(result).isEqualTo(200);
-            } catch (Throwable throwable) {
-              if (throwable instanceof AssertionError) {
-                throw (AssertionError) throwable;
+            } catch (Throwable t) {
+              if (t instanceof AssertionError) {
+                throw (AssertionError) t;
               }
-              throw new AssertionError(throwable);
+              throw new AssertionError(t);
             }
           };
       pool.submit(job);
@@ -880,11 +880,11 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                                     () -> testing.runWithSpan("child", () -> {}));
                               });
                       assertThat(result.get()).isEqualTo(200);
-                    } catch (Throwable throwable) {
-                      if (throwable instanceof AssertionError) {
-                        throw (AssertionError) throwable;
+                    } catch (Throwable t) {
+                      if (t instanceof AssertionError) {
+                        throw (AssertionError) t;
                       }
-                      throw new AssertionError(throwable);
+                      throw new AssertionError(t);
                     }
                   };
               pool.submit(job);
@@ -957,11 +957,11 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                             path, singletonMap("test-request-id", String.valueOf(index)));
                       });
               assertThat(result).isEqualTo(200);
-            } catch (Throwable throwable) {
-              if (throwable instanceof AssertionError) {
-                throw (AssertionError) throwable;
+            } catch (Throwable t) {
+              if (t instanceof AssertionError) {
+                throw (AssertionError) t;
               }
-              throw new AssertionError(throwable);
+              throw new AssertionError(t);
             }
           };
       pool.submit(job);
@@ -1206,7 +1206,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     return httpClientResult;
   }
 
-  protected final URI resolveAddress(String path) {
+  protected URI resolveAddress(String path) {
     return URI.create("http://localhost:" + server.httpPort() + path);
   }
 

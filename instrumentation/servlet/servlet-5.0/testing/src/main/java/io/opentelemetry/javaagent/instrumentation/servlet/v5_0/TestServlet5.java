@@ -179,18 +179,18 @@ public class TestServlet5 {
                     }
                     return null;
                   });
-            } catch (Exception exception) {
-              if (exception instanceof RuntimeException) {
-                throw (RuntimeException) exception;
+            } catch (Exception e) {
+              if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
               }
-              throw new IllegalStateException(exception);
+              throw new IllegalStateException(e);
             } finally {
               latch.countDown();
             }
           });
       try {
         latch.await();
-      } catch (InterruptedException exception) {
+      } catch (InterruptedException ignored) {
         Thread.currentThread().interrupt();
       }
     }
@@ -294,6 +294,7 @@ public class TestServlet5 {
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
       if (req.getServletPath().equals("/recursive")) {
         resp.getWriter().print("Hello Recursive");
+        return;
       }
 
       int depth = Integer.parseInt(req.getParameter("depth"));

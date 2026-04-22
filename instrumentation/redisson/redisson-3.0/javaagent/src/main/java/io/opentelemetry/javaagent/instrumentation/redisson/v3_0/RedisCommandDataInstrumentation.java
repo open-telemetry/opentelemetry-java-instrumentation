@@ -45,7 +45,7 @@ class RedisCommandDataInstrumentation implements TypeInstrumentation {
   public static class WrapPromiseAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static RPromise<?> onEnter(@Advice.Argument(0) RPromise<?> promise) {
       return RedissonPromiseWrapper.wrap(promise);
     }
@@ -55,7 +55,7 @@ class RedisCommandDataInstrumentation implements TypeInstrumentation {
   public static class WrapCompletableFutureAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CompletableFuture<?> onEnter(
         @Advice.Argument(0) CompletableFuture<?> completableFuture) {
       return CompletableFutureWrapper.wrap(completableFuture);

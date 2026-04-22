@@ -38,7 +38,7 @@ class OkHttp3DispatcherInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AttachStateAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static PropagatedContext onEnter(@Advice.Argument(0) Runnable call) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, call)) {
@@ -47,7 +47,7 @@ class OkHttp3DispatcherInstrumentation implements TypeInstrumentation {
       return null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(0) Runnable call,
         @Advice.Enter PropagatedContext propagatedContext,

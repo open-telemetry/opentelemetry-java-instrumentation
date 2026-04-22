@@ -53,6 +53,7 @@ class SafeErasureMatcher<T extends TypeDefinition> extends ElementMatcher.Juncti
     }
   }
 
+  @Nullable
   static TypeDescription safeAsErasure(TypeDefinition typeDefinition) {
     try {
       return typeDefinition.asErasure();

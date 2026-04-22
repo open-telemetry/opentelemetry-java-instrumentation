@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.jfinal.core.Action;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -29,8 +30,8 @@ class ActionMappingInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetActionAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void exitGetAction(@Advice.Return Action action) {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void exitGetAction(@Advice.Return @Nullable Action action) {
       JFinalSingletons.updateRoute(action);
     }
   }

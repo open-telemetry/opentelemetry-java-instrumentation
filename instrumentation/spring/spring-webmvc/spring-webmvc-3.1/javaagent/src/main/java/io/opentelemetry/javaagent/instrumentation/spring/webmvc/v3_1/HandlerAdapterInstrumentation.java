@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteS
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1.SpringWebMvcSingletons.handlerInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -44,8 +43,7 @@ class HandlerAdapterInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(nameStartsWith("handle"))
             .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
             .and(takesArguments(3)),
@@ -59,7 +57,7 @@ class HandlerAdapterInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
 
-      public AdviceScope(Context context, Scope scope) {
+      private AdviceScope(Context context, Scope scope) {
         this.context = context;
         this.scope = scope;
       }
@@ -81,7 +79,7 @@ class HandlerAdapterInstrumentation implements TypeInstrumentation {
 
         // Name the parent span based on the matching pattern
         HttpServerRoute.update(
-            parentContext, CONTROLLER, SpringWebMvcServerSpanNaming.SERVER_SPAN_NAME, request);
+            parentContext, CONTROLLER, SpringWebMvcServerSpanNaming.serverSpanName(), request);
 
         if (!handlerInstrumenter().shouldStart(parentContext, handler)) {
           return null;
@@ -99,13 +97,13 @@ class HandlerAdapterInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope nameResourceAndStartSpan(
         @Advice.Argument(0) HttpServletRequest request, @Advice.Argument(2) Object handler) {
       return AdviceScope.enter(request, handler);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Argument(2) Object handler,
         @Advice.Thrown @Nullable Throwable throwable,

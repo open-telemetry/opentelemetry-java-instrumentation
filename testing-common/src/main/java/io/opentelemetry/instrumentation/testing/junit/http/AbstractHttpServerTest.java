@@ -140,7 +140,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @Override
-  protected final String getContextPath() {
+  protected String getContextPath() {
     return options.contextPath;
   }
 
@@ -1232,11 +1232,11 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
         endpoint, method, route);
   }
 
-  public final boolean hasHttpRouteAttribute(ServerEndpoint endpoint) {
+  public boolean hasHttpRouteAttribute(ServerEndpoint endpoint) {
     return options.httpAttributes.apply(endpoint).contains(HTTP_ROUTE);
   }
 
-  public final boolean hasHandlerSpan(ServerEndpoint endpoint) {
+  public boolean hasHandlerSpan(ServerEndpoint endpoint) {
     return options.hasHandlerSpan.test(endpoint);
   }
 
