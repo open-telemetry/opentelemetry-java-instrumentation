@@ -25,12 +25,22 @@ val generateThriftSources by tasks.registering(Exec::class) {
   val outputDirPath = generatedThriftDir.get().asFile.also { it.mkdirs() }.absolutePath
   inputs.file(thriftFilePath)
   outputs.dir(outputDirPath)
-  commandLine(
-    "bash",
-    "-c",
-    """docker image inspect thrift:0.12.0 > /dev/null 2>&1 || docker pull --platform linux/amd64 thrift:0.12.0 && """ +
-      """docker run --rm --platform linux/amd64 -v "$thriftFilePath:/thrift/input/ThriftService.thrift:ro" -v "$outputDirPath:/thrift/output" thrift:0.12.0 thrift --gen java -out /thrift/output /thrift/input/ThriftService.thrift"""
-  )
+
+  standardOutput = System.out
+  executable = "docker"
+  args = listOf(
+    "run",
+    "--rm",
+    "--platform=linux/amd64",
+    "-v", "$thriftFilePath:/thrift/input/ThriftService.thrift:ro",
+    "-v", "$outputDirPath:/thrift/output",
+    "thrift:0.12.0",
+    "thrift",
+    "--gen",
+    "java",
+    "-out",
+    "/thrift/output",
+    "/thrift/input/ThriftService.thrift")
 }
 
 sourceSets {
