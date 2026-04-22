@@ -17,7 +17,9 @@ Do not stop a given execution until you have worked through all phases below.
 3. Get the current branch name using `git branch --show-current`
 4. Find the PR for this branch using `gh pr list --head <branch-name> --json number,title` and extract the PR number
 5. Use `gh pr view <pr-number> --json statusCheckRollup --jq '.statusCheckRollup[] | select(.conclusion == "FAILURE") | {name: .name, detailsUrl: .detailsUrl, databaseId: .databaseId}'` to get the list of all failed CI jobs
-6. Check if there are actually CI failures to fix - if all jobs passed, exit early
+6. **Ignore aggregate/rollup checks** like `required-status-check` — they fail if and only if some real underlying check fails, so fixing the real checks resolves them automatically. Do not spend effort downloading their logs.
+7. Check if there are actually CI failures to fix - if all jobs passed (after filtering rollups), exit early
+8. **Trivial-failure fast path**: if there is exactly one failing job with an obvious single root cause (e.g., one markdownlint rule, one spotless violation, one known-flaky infra error), skip Phases 1-2 entirely — fix directly, validate, commit. The CI-PLAN.md / `.git/info/exclude` machinery is overhead for a 2-line fix.
 
 ## Phase 1: Gather Information
 
@@ -48,7 +50,9 @@ rm -f CI-PLAN.md
    - **Flaky / infra failures**: if a failure looks like a network timeout, cache miss, runner OOM, or anything clearly unrelated to PR code, note it in `CI-PLAN.md` under "Notes" and do not invent a code fix for it.
 3. Download logs for the selected representatives. Two equally-valid options:
 
-   **Option A: `gh run view`** (avoids putting the token in process argv):
+   **On Windows/Git Bash, default to Option B.** `gh run view --log-failed` is unreliable on that platform — it sometimes fails with `stream error: stream ID 1; CANCEL; received from peer`, and sometimes silently exits 0 while producing a 0-byte file. If you do try Option A, always verify the output is non-empty (`wc -l`) and fall back to Option B if it is empty.
+
+   **Option A: `gh run view`** (avoids putting the token in process argv; preferred on Linux/macOS):
 
    ```
    # For a single job's failing log only:
@@ -58,7 +62,7 @@ rm -f CI-PLAN.md
    gh run view <run-id> --log-failed > /tmp/run-<run-id>-failed.log
    ```
 
-   **Option B: REST API** — use this on Windows/Git Bash, where `gh run view --log-failed` often fails with `stream error: stream ID 1; CANCEL; received from peer`:
+   **Option B: REST API** — required on Windows/Git Bash:
 
    ```
    (cd /tmp && curl -sSfL \
@@ -139,6 +143,7 @@ Work through `CI-PLAN.md`, checking items off as you complete them. For each fai
 - Analyze the failure using the logs (now you may open source files).
 - Implement the fix.
   - Spotless failures: `./gradlew :<failed-module-path>:spotlessApply`
+  - Markdown lint failures: most `markdownlint` rules have no auto-fix \u2014 edit manually. `mise run lint:markdown` only validates; there is no `lint:markdown:fix` task.
 - **Test locally before committing**:
   - Markdown lint: `mise run lint:markdown`
   - Compilation errors: `./gradlew <failed-task-path>`
@@ -146,7 +151,7 @@ Work through `CI-PLAN.md`, checking items off as you complete them. For each fai
   - Verify the fix resolves the issue.
 - Update the checkbox in `CI-PLAN.md`.
 - Commit each logical fix as a **separate commit**:
-  - Use explicit pathspecs: `git commit -- path/one path/two -m "..."`.
+  - Use explicit pathspecs. **Put `-m` before `--`**, because everything after `--` is treated as a pathspec by git: `git commit -m "..." -- path/one path/two`.
   - Note that `git mv` auto-stages the rename — don't re-run `git add` on the moved paths.
   - If `git mv` or earlier edits have already staged unrelated changes, `git reset` first and stage only the files for the current logical fix.
   - Do not commit `CI-PLAN.md`.
