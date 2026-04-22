@@ -12,12 +12,16 @@ import java.lang.reflect.Proxy;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 
-public class ProxyStatementFactory {
+class ProxyStatementFactory {
 
-  public static Statement proxyStatementWithCustomClassLoader(Statement statement)
-      throws Exception {
+  static Statement proxyStatementWithCustomClassLoader(Statement statement) {
     TestClassLoader classLoader = new TestClassLoader(ProxyStatementFactory.class.getClassLoader());
-    Class<?> testInterface = classLoader.loadClass(TestInterface.class.getName());
+    Class<?> testInterface;
+    try {
+      testInterface = classLoader.loadClass(TestInterface.class.getName());
+    } catch (ClassNotFoundException e) {
+      throw new IllegalStateException("failed to load test interface", e);
+    }
     if (testInterface.getClassLoader() != classLoader) {
       throw new IllegalStateException("wrong class loader");
     }
@@ -30,17 +34,17 @@ public class ProxyStatementFactory {
         invocationHandler);
   }
 
-  public static Statement proxyStatement(InvocationHandler invocationHandler) {
+  static Statement proxyStatement(InvocationHandler invocationHandler) {
     return proxy(Statement.class, invocationHandler);
   }
 
-  public static PreparedStatement proxyPreparedStatement(PreparedStatement statement) {
+  static PreparedStatement proxyPreparedStatement(PreparedStatement statement) {
     InvocationHandler invocationHandler =
         (proxy, method, args) -> invokeWithUnwrappedTarget(statement, method, args);
     return proxyPreparedStatement(invocationHandler);
   }
 
-  public static PreparedStatement proxyPreparedStatement(InvocationHandler invocationHandler) {
+  static PreparedStatement proxyPreparedStatement(InvocationHandler invocationHandler) {
     return proxy(PreparedStatement.class, invocationHandler);
   }
 
@@ -58,7 +62,7 @@ public class ProxyStatementFactory {
     }
   }
 
-  public static <T> T proxy(Class<T> clazz, InvocationHandler invocationHandler) {
+  static <T> T proxy(Class<T> clazz, InvocationHandler invocationHandler) {
     return proxy(
         clazz,
         ProxyStatementFactory.class.getClassLoader(),
@@ -66,7 +70,7 @@ public class ProxyStatementFactory {
         invocationHandler);
   }
 
-  public static <T> T proxy(
+  static <T> T proxy(
       Class<T> clazz,
       ClassLoader classLoader,
       Class<?>[] interfaces,
