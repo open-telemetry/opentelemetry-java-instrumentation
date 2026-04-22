@@ -16,6 +16,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule.HelperClassStrategy;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import io.opentelemetry.javaagent.tooling.HelperClassDefinition;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
@@ -29,6 +30,7 @@ import io.opentelemetry.javaagent.tooling.instrumentation.indy.ClassInjectorImpl
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.ForwardIndyAdviceTransformer;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyTypeTransformerImpl;
+import io.opentelemetry.javaagent.tooling.muzzle.AdviceInspector;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
 import io.opentelemetry.javaagent.tooling.util.IgnoreFailedTypeMatcher;
@@ -56,11 +58,6 @@ public final class InstrumentationModuleInstaller {
   // expensive. https://github.com/DataDog/dd-trace-java/pull/1045
   public static final ElementMatcher.Junction<AnnotationSource> NOT_DECORATOR_MATCHER =
       not(isAnnotatedWith(named("javax.decorator.Decorator")));
-
-  private static final InstrumentationMode INSTRUMENTATION_MODE =
-      AgentDistributionConfig.get().isIndyEnabled()
-          ? InstrumentationMode.INDY
-          : InstrumentationMode.INJECTING;
 
   private final Instrumentation instrumentation;
   private final VirtualFieldImplementationInstallerFactory virtualFieldInstallerFactory =
@@ -90,13 +87,50 @@ public final class InstrumentationModuleInstaller {
       return parentAgentBuilder;
     }
 
-    if (INSTRUMENTATION_MODE == InstrumentationMode.INDY
-        || (INSTRUMENTATION_MODE == InstrumentationMode.GUESS
-            && adviceInspector.useIndy(instrumentationModule))) {
+    boolean useIndy = useIndy(instrumentationModule);
+    logger.log(
+        FINE,
+        "Instrumentation {0} [class {1}] {2} helper classes",
+        new Object[] {
+          instrumentationModule.instrumentationName(),
+          instrumentationModule.getClass().getName(),
+          useIndy ? "isolates" : "injects"
+        });
+    if (useIndy) {
       return installIndyModule(instrumentationModule, parentAgentBuilder);
     } else {
       return installInjectingModule(instrumentationModule, parentAgentBuilder);
     }
+  }
+
+  private boolean useIndy(InstrumentationModule instrumentationModule) {
+    // currently needs to be enabled with a flag
+    if (!AgentDistributionConfig.get().isIndyEnabled()) {
+      return false;
+    }
+    // first check whether user has specified how the helper classes should be handled
+    if (instrumentationModule instanceof ExperimentalInstrumentationModule) {
+      HelperClassStrategy helperClassStrategy =
+          ((ExperimentalInstrumentationModule) instrumentationModule).helperClassStrategy();
+      switch (helperClassStrategy) {
+        case INJECTED:
+          return false;
+        case ISOLATED:
+          return true;
+        case DEFAULT:
+          // fallthrough to the next check
+      }
+    }
+    // check whether muzzle has collected information about the advice classes
+    if (instrumentationModule instanceof InstrumentationModuleMuzzle) {
+      Boolean useIsolated =
+          ((InstrumentationModuleMuzzle) instrumentationModule).getMuzzleUseIsolatedHelperClasses();
+      if (useIsolated != null) {
+        return useIsolated;
+      }
+    }
+    // inspect the advice classes used and decide based on that
+    return adviceInspector.useIsolatedAdvice(instrumentationModule);
   }
 
   private AgentBuilder installIndyModule(
@@ -294,11 +328,5 @@ public final class InstrumentationModuleInstaller {
         .and(
             (typeDescription, classLoader, module, classBeingRedefined, protectionDomain) ->
                 classLoader == null || NOT_DECORATOR_MATCHER.matches(typeDescription));
-  }
-
-  private enum InstrumentationMode {
-    INJECTING,
-    INDY,
-    GUESS
   }
 }

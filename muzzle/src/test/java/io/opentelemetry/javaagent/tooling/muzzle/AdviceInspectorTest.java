@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.instrumentation;
+package io.opentelemetry.javaagent.tooling.muzzle;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -28,7 +28,7 @@ class AdviceInspectorTest {
   @Test
   void defaultValue() {
     assertThat(
-            adviceInspector.useIndy(
+            adviceInspector.useIsolatedAdvice(
                 new InstrumentationModule("test") {
                   @Override
                   public List<TypeInstrumentation> typeInstrumentations() {
@@ -41,7 +41,7 @@ class AdviceInspectorTest {
   @Test
   void hasNonInlineAdvice() {
     assertThat(
-            adviceInspector.useIndy(
+            adviceInspector.useIsolatedAdvice(
                 new InstrumentationModule("test") {
                   @Override
                   public List<TypeInstrumentation> typeInstrumentations() {
@@ -54,7 +54,7 @@ class AdviceInspectorTest {
   @Test
   void mixedInlineAdviceFirst() {
     assertThat(
-            adviceInspector.useIndy(
+            adviceInspector.useIsolatedAdvice(
                 new InstrumentationModule("test") {
                   @Override
                   public List<TypeInstrumentation> typeInstrumentations() {
