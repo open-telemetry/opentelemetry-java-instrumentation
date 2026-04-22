@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0;
+package io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.resteasy.v6_0;
 
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.jaxrs.v3_0.JaxRsHttpServerTest;
