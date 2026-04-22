@@ -59,13 +59,13 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
   }
 
   @Test
-  void testAuthCommand() throws Exception {
+  void testAuthCommand() throws ReflectiveOperationException {
     Class<?> commandsClass = RedisCommands.class;
     Method authMethod;
     // the auth() argument type changed between 5.x -> 6.x
     try {
       authMethod = commandsClass.getMethod("auth", String.class);
-    } catch (NoSuchMethodException unused) {
+    } catch (NoSuchMethodException ignored) {
       authMethod = commandsClass.getMethod("auth", CharSequence.class);
     }
 
@@ -113,8 +113,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(maybeStable(DB_SYSTEM), REDIS),
                                       satisfies(
                                           maybeStable(DB_STATEMENT),
-                                          stringAssert ->
-                                              stringAssert.startsWith("CLIENT SETINFO lib-ver")),
+                                          val -> val.startsWith("CLIENT SETINFO lib-ver")),
                                       equalTo(maybeStable(DB_OPERATION), "CLIENT"),
                                       equalTo(
                                           ERROR_TYPE,
@@ -136,9 +135,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(maybeStable(DB_SYSTEM), REDIS),
                                       satisfies(
                                           maybeStable(DB_STATEMENT),
-                                          stringAssert ->
-                                              stringAssert.startsWith(
-                                                  "CLIENT MAINT_NOTIFICATIONS")),
+                                          val -> val.startsWith("CLIENT MAINT_NOTIFICATIONS")),
                                       equalTo(maybeStable(DB_OPERATION), "CLIENT"),
                                       equalTo(
                                           ERROR_TYPE,

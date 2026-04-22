@@ -279,9 +279,9 @@
       "defaultValue": true
     },
     {
-      "name": "otel.instrumentation.common.db-statement-sanitizer.enabled",
+      "name": "otel.instrumentation.common.db.query-sanitization.enabled",
       "type": "java.lang.Boolean",
-      "description": "Enables the DB statement sanitization.",
+      "description": "Enables the DB query sanitization.",
       "defaultValue": true
     },
     {
@@ -363,15 +363,15 @@
       "defaultValue": true
     },
     {
-      "name": "otel.instrumentation.jdbc.statement-sanitizer.enabled",
+      "name": "otel.instrumentation.jdbc.query-sanitization.enabled",
       "type": "java.lang.Boolean",
-      "description": "Enables the DB statement sanitization.",
+      "description": "Enables the DB query sanitization.",
       "defaultValue": true
     },
     {
       "name": "otel.instrumentation.jdbc.experimental.capture-query-parameters",
       "type": "java.lang.Boolean",
-      "description": "Sets whether the query parameters should be captured as span attributes named <code>db.query.parameter.&lt;key&gt;</code>. Enabling this option disables the statement sanitization.<p>WARNING: captured query parameters may contain sensitive information such as passwords, personally identifiable information or protected health info.",
+      "description": "Sets whether the query parameters should be captured as span attributes named <code>db.query.parameter.&lt;key&gt;</code>. Enabling this option disables query sanitization.<p>WARNING: captured query parameters may contain sensitive information such as passwords, personally identifiable information or protected health info.",
       "defaultValue": false
     },
     {
@@ -417,9 +417,9 @@
       "defaultValue": true
     },
     {
-      "name": "otel.instrumentation.mongo.statement-sanitizer.enabled",
+      "name": "otel.instrumentation.mongo.query-sanitization.enabled",
       "type": "java.lang.Boolean",
-      "description": "Enables the DB statement sanitization.",
+      "description": "Enables the DB query sanitization.",
       "defaultValue": true
     },
     {
@@ -534,9 +534,9 @@
       "defaultValue": true
     },
     {
-      "name": "otel.instrumentation.r2dbc.statement-sanitizer.enabled",
+      "name": "otel.instrumentation.r2dbc.query-sanitization.enabled",
       "type": "java.lang.Boolean",
-      "description": "Enables the DB statement sanitization.",
+      "description": "Enables the DB query sanitization.",
       "defaultValue": true
     },
     {
@@ -552,21 +552,21 @@
       "defaultValue": true
     },
     {
-      "name": "otel.instrumentation.runtime-telemetry.emit-experimental-telemetry",
+      "name": "otel.instrumentation.runtime-telemetry.emit-experimental-metrics",
       "type": "java.lang.Boolean",
-      "description": "Enable the capture of experimental metrics.",
+      "description": "Enable the capture of experimental JMX-based metrics.",
       "defaultValue": false
     },
     {
-      "name": "otel.instrumentation.runtime-telemetry-java17.enable-all",
+      "name": "otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics",
       "type": "java.lang.Boolean",
-      "description": "Enable the capture of all JFR based metrics.",
+      "description": "Enable the capture of experimental JFR-based metrics on Java 17+.",
       "defaultValue": false
     },
     {
-      "name": "otel.instrumentation.runtime-telemetry-java17.enabled",
+      "name": "otel.instrumentation.runtime-telemetry.experimental.prefer-jfr",
       "type": "java.lang.Boolean",
-      "description": "Enable the capture of JFR based metrics.",
+      "description": "Prefer JFR over JMX for metrics available from both sources, on Java 17+.",
       "defaultValue": false
     },
     {

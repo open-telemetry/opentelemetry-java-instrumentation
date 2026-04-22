@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenT
 import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import java.io.IOException;
 import java.util.Map;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -118,7 +117,7 @@ class OpenTelemetryMetricsReporterTest extends AbstractOpenTelemetryMetricsRepor
   }
 
   @Test
-  void serializableConfig() throws IOException, ClassNotFoundException {
+  void serializableConfig() throws Exception {
     SerializationTestUtil.testSerialize(
         producerConfig(), OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_SUPPLIER);
     SerializationTestUtil.testSerialize(

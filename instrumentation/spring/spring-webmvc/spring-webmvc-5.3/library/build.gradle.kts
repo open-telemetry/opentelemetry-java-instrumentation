@@ -27,7 +27,7 @@ configurations.testRuntimeClasspath {
 }
 
 tasks {
-  test {
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 }

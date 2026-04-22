@@ -26,11 +26,9 @@ public class HttpHeaderSetter implements TextMapSetter<HttpHeaderSetter.AkkaHttp
       return;
     }
     HttpRequest request = carrier.getRequest();
-    if (request != null) {
-      // It looks like this cast is only needed in Java, Scala would have figured it out
-      carrier.setRequest(
-          (HttpRequest) request.removeHeader(key).addHeader(RawHeader.create(key, value)));
-    }
+    // It looks like this cast is only needed in Java, Scala would have figured it out
+    carrier.setRequest(
+        (HttpRequest) request.removeHeader(key).addHeader(RawHeader.create(key, value)));
   }
 
   public HttpRequest inject(HttpRequest original) {

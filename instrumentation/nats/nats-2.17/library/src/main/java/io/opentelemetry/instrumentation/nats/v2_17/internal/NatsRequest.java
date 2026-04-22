@@ -19,7 +19,11 @@ import javax.annotation.Nullable;
 public abstract class NatsRequest {
 
   public static NatsRequest create(
-      Connection connection, String subject, String replyTo, Headers headers, byte[] body) {
+      Connection connection,
+      String subject,
+      @Nullable String replyTo,
+      @Nullable Headers headers,
+      @Nullable byte[] body) {
     return new AutoValue_NatsRequest(
         replyTo,
         connection.getServerInfo().getClientId(),
@@ -51,7 +55,7 @@ public abstract class NatsRequest {
 
   public abstract long getDataSize();
 
-  private static long getDataSize(byte[] data) {
+  private static long getDataSize(@Nullable byte[] data) {
     return data == null ? 0 : data.length;
   }
 

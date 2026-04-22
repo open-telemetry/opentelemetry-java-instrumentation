@@ -8,9 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.mybatis.v3_2;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.reflect.Method;
+import javax.annotation.Nullable;
 import org.apache.ibatis.binding.MapperMethod.SqlCommand;
 
-public final class SqlCommandUtil {
+public class SqlCommandUtil {
   private static final VirtualField<SqlCommand, ClassAndMethod> field =
       VirtualField.find(SqlCommand.class, ClassAndMethod.class);
 
@@ -21,6 +22,7 @@ public final class SqlCommandUtil {
     field.set(command, ClassAndMethod.create(clazz, method.getName()));
   }
 
+  @Nullable
   public static ClassAndMethod getClassAndMethod(SqlCommand command) {
     return field.get(command);
   }

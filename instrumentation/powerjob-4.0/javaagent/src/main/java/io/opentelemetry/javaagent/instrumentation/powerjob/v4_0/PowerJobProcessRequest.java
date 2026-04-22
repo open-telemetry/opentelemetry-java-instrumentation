@@ -20,7 +20,7 @@ import tech.powerjob.worker.core.processor.sdk.BroadcastProcessor;
 import tech.powerjob.worker.core.processor.sdk.MapProcessor;
 import tech.powerjob.worker.core.processor.sdk.MapReduceProcessor;
 
-public final class PowerJobProcessRequest {
+public class PowerJobProcessRequest {
   private static final List<Class<?>> KNOWN_PROCESSORS =
       asList(
           FileCleanupProcessor.class,
@@ -40,21 +40,6 @@ public final class PowerJobProcessRequest {
   @Nullable private final String jobParams;
   @Nullable private final String instanceParams;
 
-  private PowerJobProcessRequest(
-      @Nullable Long jobId,
-      String methodName,
-      Class<?> declaringClass,
-      @Nullable String jobParams,
-      @Nullable String instanceParams,
-      String jobType) {
-    this.jobId = jobId;
-    this.methodName = methodName;
-    this.jobType = jobType;
-    this.declaringClass = declaringClass;
-    this.jobParams = jobParams;
-    this.instanceParams = instanceParams;
-  }
-
   public static PowerJobProcessRequest createRequest(
       @Nullable Long jobId,
       BasicProcessor handler,
@@ -70,6 +55,21 @@ public final class PowerJobProcessRequest {
     }
     return new PowerJobProcessRequest(
         jobId, methodName, handler.getClass(), jobParams, instanceParams, jobType);
+  }
+
+  private PowerJobProcessRequest(
+      @Nullable Long jobId,
+      String methodName,
+      Class<?> declaringClass,
+      @Nullable String jobParams,
+      @Nullable String instanceParams,
+      String jobType) {
+    this.jobId = jobId;
+    this.methodName = methodName;
+    this.jobType = jobType;
+    this.declaringClass = declaringClass;
+    this.jobParams = jobParams;
+    this.instanceParams = instanceParams;
   }
 
   public String getMethodName() {

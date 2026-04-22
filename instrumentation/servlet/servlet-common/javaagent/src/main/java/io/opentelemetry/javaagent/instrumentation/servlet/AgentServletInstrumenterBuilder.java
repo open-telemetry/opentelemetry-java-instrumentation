@@ -24,7 +24,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
+public class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
 
   private static final List<String> CAPTURE_REQUEST_PARAMETERS =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
@@ -38,11 +38,11 @@ public final class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
 
   private boolean propagateOperationListenersToOnEnd;
 
-  private AgentServletInstrumenterBuilder() {}
-
   public static <REQUEST, RESPONSE> AgentServletInstrumenterBuilder<REQUEST, RESPONSE> create() {
     return new AgentServletInstrumenterBuilder<>();
   }
+
+  private AgentServletInstrumenterBuilder() {}
 
   @CanIgnoreReturnValue
   public AgentServletInstrumenterBuilder<REQUEST, RESPONSE> addContextCustomizer(

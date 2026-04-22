@@ -11,20 +11,18 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class MyFacesInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class MyFacesInstrumentationModule extends InstrumentationModule {
   public MyFacesInstrumentationModule() {
     super("jsf-myfaces", "jsf-myfaces-1.2");
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // javax.faces was renamed to jakarta.faces in JSF 3.0
+    // removed in 3.0 (renamed to jakarta.faces)
     return hasClassesNamed("javax.faces.context.FacesContext");
   }
 
@@ -32,10 +30,5 @@ public class MyFacesInstrumentationModule extends InstrumentationModule
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ActionListenerImplInstrumentation(), new RestoreViewExecutorInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

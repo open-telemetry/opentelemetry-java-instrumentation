@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.mongoasync.v3_3;
 
+import static io.opentelemetry.javaagent.instrumentation.mongoasync.v3_3.MongoInstrumentationSingletons.tracingListener;
 import static net.bytebuddy.matcher.ElementMatchers.declaresField;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -39,13 +40,13 @@ final class MongoClientSettingsBuildersInstrumentation implements TypeInstrument
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isPublic().and(named("build")).and(takesArguments(0)),
-        this.getClass().getName() + "$BuildAdvice");
+        getClass().getName() + "$BuildAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class BuildAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void injectTraceListener(
         @Advice.This MongoClientSettings.Builder builder,
         @Advice.FieldValue("commandListeners") List<CommandListener> commandListeners) {
@@ -54,7 +55,7 @@ final class MongoClientSettingsBuildersInstrumentation implements TypeInstrument
           return;
         }
       }
-      builder.addCommandListener(MongoInstrumentationSingletons.LISTENER);
+      builder.addCommandListener(tracingListener());
     }
   }
 }

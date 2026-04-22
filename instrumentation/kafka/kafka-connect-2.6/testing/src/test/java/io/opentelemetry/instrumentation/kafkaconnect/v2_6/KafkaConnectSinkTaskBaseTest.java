@@ -54,7 +54,7 @@ import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
 // Suppressing warnings for test dependencies and deprecated Testcontainers API
-@SuppressWarnings({"deprecation"})
+@SuppressWarnings("deprecation")
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvider {
@@ -275,6 +275,9 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
             .withEnv("OTEL_BSP_MAX_EXPORT_BATCH_SIZE", "1")
             .withEnv("OTEL_BSP_SCHEDULE_DELAY", "10ms")
             .withEnv("OTEL_METRIC_EXPORT_INTERVAL", "1000")
+            .withEnv(
+                "OTEL_SEMCONV_STABILITY_OPT_IN",
+                System.getProperty("otel.semconv-stability.opt-in"))
             .withEnv("CONNECT_BOOTSTRAP_SERVERS", getInternalKafkaBoostrapServers())
             .withEnv("CONNECT_REST_ADVERTISED_HOST_NAME", KAFKA_CONNECT_NETWORK_ALIAS)
             .withEnv("CONNECT_PLUGIN_PATH", PLUGIN_PATH_CONTAINER)

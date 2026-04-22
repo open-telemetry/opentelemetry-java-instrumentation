@@ -22,7 +22,7 @@ import org.eclipse.jetty.client.api.Response;
  */
 public final class JettyClientWrapUtil {
 
-  private static final Class<?>[] listenerInterfaces = buildListenerInterfaces();
+  private static final Class<?>[] LISTENER_INTERFACES = buildListenerInterfaces();
 
   private static Class<?>[] buildListenerInterfaces() {
     List<Class<?>> interfaces =
@@ -74,7 +74,7 @@ public final class JettyClientWrapUtil {
 
     Class<?> listenerClass = listener.getClass();
     List<Class<?>> interfaces = new ArrayList<>();
-    for (Class<?> type : listenerInterfaces) {
+    for (Class<?> type : LISTENER_INTERFACES) {
       if (type.isInstance(listener)) {
         interfaces.add(type);
       }
@@ -90,8 +90,8 @@ public final class JettyClientWrapUtil {
             (proxy, method, args) -> {
               try (Scope ignored = context.makeCurrent()) {
                 return method.invoke(listener, args);
-              } catch (InvocationTargetException exception) {
-                throw exception.getCause();
+              } catch (InvocationTargetException e) {
+                throw e.getCause();
               }
             });
   }

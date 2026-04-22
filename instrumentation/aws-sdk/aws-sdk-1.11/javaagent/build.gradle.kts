@@ -101,7 +101,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
 
-        if (findProperty("testLatestDeps") == "true") {
+        if (otelProps.testLatestDeps) {
           // last version that does not use json protocol
           implementation("com.amazonaws:aws-java-sdk-sqs:1.12.583")
         } else {
@@ -122,7 +122,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
 
-        if (findProperty("testLatestDeps") == "true") {
+        if (otelProps.testLatestDeps) {
           // last version that does not use json protocol
           implementation("com.amazonaws:aws-java-sdk-sqs:1.12.583")
         } else {
@@ -133,10 +133,8 @@ testing {
   }
 }
 
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
-
 tasks {
-  if (!(findProperty("testLatestDeps") == "true")) {
+  if (!otelProps.testLatestDeps) {
     check {
       dependsOn(testing.suites)
     }
@@ -146,15 +144,12 @@ tasks {
     }
   }
 
-  test {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-
   withType<Test>().configureEach {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     // TODO run tests both with and without experimental span attributes
     jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
-    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
-    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {
@@ -169,7 +164,7 @@ tasks {
     dependsOn(testStableSemconv)
   }
 
-  if (findProperty("denyUnsafe") == "true") {
+  if (otelProps.denyUnsafe) {
     // org.elasticmq:elasticmq-rest-sqs_2.13 uses unsafe. Future versions are likely to fix this.
     withType<Test>().configureEach {
       enabled = false
@@ -177,7 +172,7 @@ tasks {
   }
 }
 
-if (!(findProperty("testLatestDeps") == "true")) {
+if (!otelProps.testLatestDeps) {
   configurations.testRuntimeClasspath {
     resolutionStrategy {
       eachDependency {

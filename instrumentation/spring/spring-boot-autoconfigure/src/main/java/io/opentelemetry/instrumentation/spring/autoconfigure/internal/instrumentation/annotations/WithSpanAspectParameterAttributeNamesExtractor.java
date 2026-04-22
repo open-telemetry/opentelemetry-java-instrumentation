@@ -17,7 +17,7 @@ class WithSpanAspectParameterAttributeNamesExtractor implements ParameterAttribu
   private final ParameterNameDiscoverer parameterNameDiscoverer;
   private final SpanAttributeNameSupplier spanAttributeNameSupplier;
 
-  public WithSpanAspectParameterAttributeNamesExtractor(
+  WithSpanAspectParameterAttributeNamesExtractor(
       ParameterNameDiscoverer parameterNameDiscoverer,
       SpanAttributeNameSupplier spanAttributeNameSupplier) {
     this.parameterNameDiscoverer = parameterNameDiscoverer;

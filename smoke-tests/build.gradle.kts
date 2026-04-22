@@ -54,6 +54,7 @@ tasks {
     )
 
     val smokeTestSuite: String? by project
+    val skipOpenJ9SmokeTests = (findProperty("skipOpenJ9SmokeTests") as String?) == "true"
     if (smokeTestSuite != null) {
       val suite = suites[smokeTestSuite]
       if (suite != null) {
@@ -69,6 +70,10 @@ tasks {
       } else {
         throw GradleException("Unknown smoke test suite: $smokeTestSuite")
       }
+    }
+
+    if (skipOpenJ9SmokeTests) {
+      exclude("**/*Openj9*.*")
     }
 
     val shadowTask = project(":javaagent").tasks.named<Jar>("shadowJar")

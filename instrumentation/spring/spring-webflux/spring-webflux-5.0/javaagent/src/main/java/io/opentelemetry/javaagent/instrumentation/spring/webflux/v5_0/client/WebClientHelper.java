@@ -15,7 +15,7 @@ import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 
-public final class WebClientHelper {
+public class WebClientHelper {
 
   private static final Instrumenter<ClientRequest, ClientResponse> instrumenter =
       JavaagentHttpClientInstrumenters.create(

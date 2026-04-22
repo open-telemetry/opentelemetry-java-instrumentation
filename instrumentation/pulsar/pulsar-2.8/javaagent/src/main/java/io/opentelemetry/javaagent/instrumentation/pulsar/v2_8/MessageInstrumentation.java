@@ -16,7 +16,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pulsar.client.api.Message;
 
-public class MessageInstrumentation implements TypeInstrumentation {
+class MessageInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.pulsar.client.impl.MessageImpl");
@@ -32,7 +32,7 @@ public class MessageInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class MessageRecycleAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void after(@Advice.This Message<?> message) {
       // Clean context to prevent memory leak.
       VirtualFieldStore.inject(message, null);

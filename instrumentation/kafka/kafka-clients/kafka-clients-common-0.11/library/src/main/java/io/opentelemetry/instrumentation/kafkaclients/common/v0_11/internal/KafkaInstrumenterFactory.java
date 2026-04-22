@@ -75,19 +75,23 @@ public final class KafkaInstrumenterFactory {
   public Instrumenter<KafkaProducerRequest, RecordMetadata> createProducerInstrumenter(
       Iterable<AttributesExtractor<KafkaProducerRequest, RecordMetadata>> extractors) {
 
-    KafkaProducerAttributesGetter getter = KafkaProducerAttributesGetter.INSTANCE;
+    KafkaProducerAttributesGetter getter = new KafkaProducerAttributesGetter();
     MessageOperation operation = MessageOperation.PUBLISH;
 
-    return Instrumenter.<KafkaProducerRequest, RecordMetadata>builder(
-            openTelemetry,
-            instrumentationName,
-            MessagingSpanNameExtractor.create(getter, operation))
-        .addAttributesExtractor(
-            buildMessagingAttributesExtractor(getter, operation, capturedHeaders))
-        .addAttributesExtractors(extractors)
-        .addAttributesExtractor(new KafkaProducerAttributesExtractor())
-        .setErrorCauseExtractor(errorCauseExtractor)
-        .buildInstrumenter(SpanKindExtractor.alwaysProducer());
+    InstrumenterBuilder<KafkaProducerRequest, RecordMetadata> builder =
+        Instrumenter.<KafkaProducerRequest, RecordMetadata>builder(
+                openTelemetry,
+                instrumentationName,
+                MessagingSpanNameExtractor.create(getter, operation))
+            .addAttributesExtractor(
+                buildMessagingAttributesExtractor(getter, operation, capturedHeaders))
+            .addAttributesExtractors(extractors)
+            .addAttributesExtractor(new KafkaProducerAttributesExtractor())
+            .setErrorCauseExtractor(errorCauseExtractor);
+    if (captureExperimentalSpanAttributes) {
+      builder.addAttributesExtractor(new KafkaProducerExperimentalAttributesExtractor());
+    }
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysProducer());
   }
 
   public Instrumenter<KafkaReceiveRequest, Void> createConsumerReceiveInstrumenter() {
@@ -96,7 +100,7 @@ public final class KafkaInstrumenterFactory {
 
   public Instrumenter<KafkaReceiveRequest, Void> createConsumerReceiveInstrumenter(
       Iterable<AttributesExtractor<KafkaReceiveRequest, Void>> extractors) {
-    KafkaReceiveAttributesGetter getter = KafkaReceiveAttributesGetter.INSTANCE;
+    KafkaReceiveAttributesGetter getter = new KafkaReceiveAttributesGetter();
     MessageOperation operation = MessageOperation.RECEIVE;
 
     return Instrumenter.<KafkaReceiveRequest, Void>builder(
@@ -105,7 +109,7 @@ public final class KafkaInstrumenterFactory {
             MessagingSpanNameExtractor.create(getter, operation))
         .addAttributesExtractor(
             buildMessagingAttributesExtractor(getter, operation, capturedHeaders))
-        .addAttributesExtractor(KafkaReceiveAttributesExtractor.INSTANCE)
+        .addAttributesExtractor(new KafkaReceiveAttributesExtractor())
         .addAttributesExtractors(extractors)
         .setErrorCauseExtractor(errorCauseExtractor)
         .setEnabled(messagingReceiveInstrumentationEnabled)
@@ -118,7 +122,7 @@ public final class KafkaInstrumenterFactory {
 
   public Instrumenter<KafkaProcessRequest, Void> createConsumerProcessInstrumenter(
       Iterable<AttributesExtractor<KafkaProcessRequest, Void>> extractors) {
-    KafkaConsumerAttributesGetter getter = KafkaConsumerAttributesGetter.INSTANCE;
+    KafkaConsumerAttributesGetter getter = new KafkaConsumerAttributesGetter();
     MessageOperation operation = MessageOperation.PROCESS;
 
     InstrumenterBuilder<KafkaProcessRequest, Void> builder =
@@ -147,7 +151,7 @@ public final class KafkaInstrumenterFactory {
   }
 
   public Instrumenter<KafkaReceiveRequest, Void> createBatchProcessInstrumenter() {
-    KafkaReceiveAttributesGetter getter = KafkaReceiveAttributesGetter.INSTANCE;
+    KafkaReceiveAttributesGetter getter = new KafkaReceiveAttributesGetter();
     MessageOperation operation = MessageOperation.PROCESS;
 
     return Instrumenter.<KafkaReceiveRequest, Void>builder(
@@ -156,7 +160,7 @@ public final class KafkaInstrumenterFactory {
             MessagingSpanNameExtractor.create(getter, operation))
         .addAttributesExtractor(
             buildMessagingAttributesExtractor(getter, operation, capturedHeaders))
-        .addAttributesExtractor(KafkaReceiveAttributesExtractor.INSTANCE)
+        .addAttributesExtractor(new KafkaReceiveAttributesExtractor())
         .addSpanLinksExtractor(
             new KafkaBatchProcessSpanLinksExtractor(
                 openTelemetry.getPropagators().getTextMapPropagator()))

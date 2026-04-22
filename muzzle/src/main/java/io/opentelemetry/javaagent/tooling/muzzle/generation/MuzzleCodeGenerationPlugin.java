@@ -6,6 +6,10 @@
 package io.opentelemetry.javaagent.tooling.muzzle.generation;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.URLClassLoader;
 import net.bytebuddy.build.Plugin;
 import net.bytebuddy.description.type.TypeDefinition;
@@ -27,8 +31,12 @@ public final class MuzzleCodeGenerationPlugin implements Plugin {
 
   private final URLClassLoader classLoader;
 
-  public MuzzleCodeGenerationPlugin(URLClassLoader classLoader) {
-    this.classLoader = classLoader;
+  public MuzzleCodeGenerationPlugin(File[] classpath) throws MalformedURLException {
+    URL[] urls = new URL[classpath.length];
+    for (int i = 0; i < classpath.length; i++) {
+      urls[i] = classpath[i].toURI().toURL();
+    }
+    this.classLoader = new URLClassLoader(urls, getClass().getClassLoader());
   }
 
   @Override
@@ -57,5 +65,7 @@ public final class MuzzleCodeGenerationPlugin implements Plugin {
   }
 
   @Override
-  public void close() {}
+  public void close() throws IOException {
+    classLoader.close();
+  }
 }

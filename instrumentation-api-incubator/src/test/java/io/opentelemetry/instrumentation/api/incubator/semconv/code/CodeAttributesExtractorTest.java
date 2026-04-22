@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 
 class CodeAttributesExtractorTest {
 
-  static final class TestAttributesGetter implements CodeAttributesGetter<Map<String, String>> {
+  static class TestAttributesGetter implements CodeAttributesGetter<Map<String, String>> {
     @Override
     public Class<?> getCodeClass(Map<String, String> request) {
       try {

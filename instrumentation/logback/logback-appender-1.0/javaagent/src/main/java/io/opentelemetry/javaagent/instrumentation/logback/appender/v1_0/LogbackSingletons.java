@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEv
 import java.util.List;
 import java.util.logging.Logger;
 
-public final class LogbackSingletons {
+public class LogbackSingletons {
 
   private static final Logger logger = Logger.getLogger(LogbackSingletons.class.getName());
 

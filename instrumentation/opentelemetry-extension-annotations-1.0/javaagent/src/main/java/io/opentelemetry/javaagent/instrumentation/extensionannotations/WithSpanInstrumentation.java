@@ -39,7 +39,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class WithSpanInstrumentation implements TypeInstrumentation {
+class WithSpanInstrumentation implements TypeInstrumentation {
 
   private final ElementMatcher.Junction<AnnotationSource> annotatedMethodMatcher;
   private final ElementMatcher.Junction<MethodDescription> annotatedParametersMatcher;
@@ -148,7 +148,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static WithSpanAdviceScope onEnter(@Advice.Origin Method originMethod) {
       // Every usage of @Advice.Origin Method is replaced with a call to Class.getMethod, copy it
       // to advice scope so that there would be only one call to Class.getMethod.
@@ -156,7 +156,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Object stopSpan(
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returnValue,
         @Advice.Thrown @Nullable Throwable throwable,
@@ -210,7 +210,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static WithSpanAttributesAdviceScope onEnter(
         @Advice.Origin Method originMethod,
         @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] args) {
@@ -220,7 +220,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Object stopSpan(
         @Advice.Return @Nullable Object returnValue,
         @Advice.Thrown @Nullable Throwable throwable,

@@ -137,7 +137,7 @@ class ZioRuntimeInstrumentationTest {
     )
   }
 
-  def withSpan(name: String, fun: Unit => Unit): Unit = {
+  private def withSpan(name: String, fun: Unit => Unit): Unit = {
     testing.runWithSpan(
       name,
       new ThrowingRunnable[Exception] {

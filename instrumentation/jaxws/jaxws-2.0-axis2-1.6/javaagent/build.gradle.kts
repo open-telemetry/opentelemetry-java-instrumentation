@@ -8,11 +8,6 @@ muzzle {
     module.set("axis2-jaxws")
     versions.set("[1.6.0,)")
     assertInverse.set(true)
-    // version 1.2 depends on org.apache.axis2:axis2-kernel:1.2
-    // which depends on org.apache.neethi:neethi:2.0.1 which does not exist
-    // version 1.3 depends on org.apache.axis2:axis2-kernel:1.3
-    // which depends on org.apache.woden:woden:1.0-incubating-M7b which does not exist
-    skip("1.2", "1.3")
   }
 }
 
@@ -64,6 +59,6 @@ tasks.withType<Test>().configureEach {
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-  systemProperty("collectMetadata", findProperty("collectMetadata"))
+  systemProperty("collectMetadata", otelProps.collectMetadata)
   systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

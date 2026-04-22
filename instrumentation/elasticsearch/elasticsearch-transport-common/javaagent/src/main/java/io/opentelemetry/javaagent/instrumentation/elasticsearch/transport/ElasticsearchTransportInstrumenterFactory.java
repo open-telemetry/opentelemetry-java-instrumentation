@@ -16,7 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import org.elasticsearch.action.ActionResponse;
 
-public final class ElasticsearchTransportInstrumenterFactory {
+public class ElasticsearchTransportInstrumenterFactory {
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "elasticsearch")
           .getBoolean("experimental_span_attributes/development", false);

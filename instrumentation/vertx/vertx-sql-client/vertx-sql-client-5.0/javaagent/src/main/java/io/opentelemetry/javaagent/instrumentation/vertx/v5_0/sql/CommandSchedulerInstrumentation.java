@@ -35,7 +35,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * (from the pool to the connection, where the context may be stale). This ensures that downstream
  * instrumentation (e.g. JDBC) on worker threads sees the correct parent context.
  */
-public class CommandSchedulerInstrumentation implements TypeInstrumentation {
+class CommandSchedulerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -59,7 +59,7 @@ public class CommandSchedulerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ScheduleAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Scope onEnter(@Advice.Argument(0) CommandBase<?> command) {
       Context stored = getCommandContext(command);
@@ -75,7 +75,7 @@ public class CommandSchedulerInstrumentation implements TypeInstrumentation {
       return stored.makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();

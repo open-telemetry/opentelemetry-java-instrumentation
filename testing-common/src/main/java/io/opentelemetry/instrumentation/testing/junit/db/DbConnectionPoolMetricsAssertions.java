@@ -18,7 +18,7 @@ import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.LongSumAssert;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 
-public final class DbConnectionPoolMetricsAssertions {
+public class DbConnectionPoolMetricsAssertions {
 
   private static final AttributeKey<String> POOL_NAME_KEY =
       stringKey(emitStableDatabaseSemconv() ? "db.client.connection.pool.name" : "pool.name");

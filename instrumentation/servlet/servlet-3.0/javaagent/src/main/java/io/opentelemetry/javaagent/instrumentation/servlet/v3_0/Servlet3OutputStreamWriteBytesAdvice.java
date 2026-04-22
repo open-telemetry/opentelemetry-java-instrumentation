@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
-import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.getSnippetInjectionHelper;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.snippetInjectionHelper;
 
 import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.ServletOutputStreamInjectionState;
@@ -16,7 +16,10 @@ import net.bytebuddy.asm.Advice;
 @SuppressWarnings("unused")
 public class Servlet3OutputStreamWriteBytesAdvice {
 
-  @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class, suppress = Throwable.class)
+  @Advice.OnMethodEnter(
+      skipOn = Advice.OnDefaultValue.class,
+      suppress = Throwable.class,
+      inline = false)
   public static boolean methodEnter(
       @Advice.This ServletOutputStream servletOutputStream, @Advice.Argument(0) byte[] write)
       throws IOException {
@@ -29,7 +32,7 @@ public class Servlet3OutputStreamWriteBytesAdvice {
     // call (see skipOn above)
     // if it returns false, then it means nothing was written to the servletOutputStream and the
     // original method call should be executed
-    return !getSnippetInjectionHelper()
+    return !snippetInjectionHelper()
         .handleWrite(state, servletOutputStream, write, 0, write.length);
   }
 }

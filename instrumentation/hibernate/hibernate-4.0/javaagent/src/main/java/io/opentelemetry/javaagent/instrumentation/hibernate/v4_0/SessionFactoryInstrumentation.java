@@ -20,7 +20,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.SharedSessionContract;
 
-public class SessionFactoryInstrumentation implements TypeInstrumentation {
+class SessionFactoryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -45,7 +45,7 @@ public class SessionFactoryInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SessionFactoryAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void openSession(@Advice.Return SharedSessionContract session) {
 
       SHARED_SESSION_CONTRACT_SESSION_INFO.set(session, new SessionInfo());

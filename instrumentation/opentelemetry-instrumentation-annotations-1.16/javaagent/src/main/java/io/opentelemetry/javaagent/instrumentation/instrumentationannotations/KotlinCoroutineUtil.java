@@ -11,7 +11,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.method.ParameterList;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public final class KotlinCoroutineUtil {
+public class KotlinCoroutineUtil {
 
   private KotlinCoroutineUtil() {}
 

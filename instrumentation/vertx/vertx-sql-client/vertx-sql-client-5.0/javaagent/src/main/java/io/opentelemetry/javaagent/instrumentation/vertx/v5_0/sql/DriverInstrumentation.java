@@ -22,7 +22,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class DriverInstrumentation implements TypeInstrumentation {
+class DriverInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -41,13 +41,13 @@ public class DriverInstrumentation implements TypeInstrumentation {
             .and(not(isStatic()))
             .and(takesArguments(6))
             .and(returns(named("io.vertx.sqlclient.Pool"))),
-        DriverInstrumentation.class.getName() + "$NewPoolAdvice");
+        getClass().getName() + "$NewPoolAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class NewPoolAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Object driver, @Advice.Return Pool pool) {
       if (pool != null) {
         storePoolDbSystem(pool, getDbSystemNameFromClassName(driver));

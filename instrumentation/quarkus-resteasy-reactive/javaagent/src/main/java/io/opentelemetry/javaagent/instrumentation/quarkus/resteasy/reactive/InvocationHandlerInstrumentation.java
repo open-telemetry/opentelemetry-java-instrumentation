@@ -14,7 +14,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext;
 
-public class InvocationHandlerInstrumentation implements TypeInstrumentation {
+class InvocationHandlerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.jboss.resteasy.reactive.server.handlers.InvocationHandler");
@@ -29,7 +29,7 @@ public class InvocationHandlerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class HandleAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) ResteasyReactiveRequestContext requestContext) {
       OtelRequestContext.onInvoke(requestContext);
     }

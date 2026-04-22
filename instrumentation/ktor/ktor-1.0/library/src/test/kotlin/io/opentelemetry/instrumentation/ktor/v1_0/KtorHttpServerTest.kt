@@ -32,7 +32,7 @@ class KtorHttpServerTest : AbstractHttpServerTest<ApplicationEngine>() {
   companion object {
     @JvmStatic
     @RegisterExtension
-    val testing = HttpServerInstrumentationExtension.forLibrary()
+    private val testing = HttpServerInstrumentationExtension.forLibrary()
   }
 
   override fun setupServer(): ApplicationEngine = embeddedServer(Netty, port = port) {
@@ -104,6 +104,7 @@ class KtorHttpServerTest : AbstractHttpServerTest<ApplicationEngine>() {
     assert(Span.current().spanContext.isValid, { "Controller should have a parent span. " })
     if (endpoint == ServerEndpoint.NOT_FOUND) {
       wrapped()
+      return
     }
     val span = testing.openTelemetry.getTracer("test").spanBuilder("controller").setSpanKind(SpanKind.INTERNAL).startSpan()
     try {

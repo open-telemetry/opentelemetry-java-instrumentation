@@ -15,7 +15,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.axis2.jaxws.registry.InvocationListenerRegistry;
 
-public class InvocationListenerRegistryTypeInstrumentation implements TypeInstrumentation {
+class InvocationListenerRegistryTypeInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.axis2.jaxws.registry.InvocationListenerRegistry");
@@ -30,7 +30,7 @@ public class InvocationListenerRegistryTypeInstrumentation implements TypeInstru
   @SuppressWarnings("unused")
   public static class ClassInitializerAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit() {
       InvocationListenerRegistry.addFactory(new TracingInvocationListenerFactory());
     }

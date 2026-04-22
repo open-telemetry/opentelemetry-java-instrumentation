@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import javax.annotation.Nullable;
 
-public final class UrlParser {
+public class UrlParser {
 
   private UrlParser() {}
 
@@ -39,7 +39,7 @@ public final class UrlParser {
       host = authority.substring(0, portStart);
       try {
         port = Integer.parseInt(authority.substring(portStart + 1));
-      } catch (NumberFormatException exception) {
+      } catch (NumberFormatException ignored) {
         port = null;
       }
     }

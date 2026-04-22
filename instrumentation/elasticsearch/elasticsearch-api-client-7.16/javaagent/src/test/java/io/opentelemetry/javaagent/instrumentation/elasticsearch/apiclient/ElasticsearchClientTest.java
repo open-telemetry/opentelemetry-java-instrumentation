@@ -195,8 +195,7 @@ class ElasticsearchClientTest {
                               request.setResponse(infoResponse);
                               countDownLatch.countDown();
                             })));
-    //noinspection ResultOfMethodCallIgnored
-    countDownLatch.await(10, SECONDS);
+    assertThat(countDownLatch.await(10, SECONDS)).isTrue();
 
     assertThat(request.getResponse().version().number()).isEqualTo("7.17.28");
 

@@ -126,7 +126,7 @@ class RatpackServerTest {
                 span ->
                     span.hasName("a-span")
                         .hasParent(trace.getSpan(0))
-                        .hasAttributes(Attributes.empty())
+                        .hasTotalAttributeCount(0)
                         .hasEventsSatisfyingExactly(
                             event -> event.hasName("an-event").hasAttributes(Attributes.empty()))));
   }
@@ -194,7 +194,7 @@ class RatpackServerTest {
                 span ->
                     span.hasName("a-span")
                         .hasParent(trace.getSpan(0))
-                        .hasAttributes(Attributes.empty())
+                        .hasTotalAttributeCount(0)
                         .hasEventsSatisfyingExactly(
                             event -> event.hasName("an-event").hasAttributes(Attributes.empty()))),
         trace ->
@@ -216,7 +216,7 @@ class RatpackServerTest {
                 span ->
                     span.hasName("another-span")
                         .hasParent(trace.getSpan(0))
-                        .hasAttributes(Attributes.empty())
+                        .hasTotalAttributeCount(0)
                         .hasEventsSatisfyingExactly(
                             event -> event.hasName("an-event").hasAttributes(Attributes.empty()))));
   }

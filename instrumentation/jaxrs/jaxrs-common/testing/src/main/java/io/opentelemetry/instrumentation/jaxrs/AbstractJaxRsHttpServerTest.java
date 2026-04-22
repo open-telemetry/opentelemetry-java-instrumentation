@@ -145,7 +145,7 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
                             .hasParent(trace.getSpan(3))));
   }
 
-  enum AsyncResponseTestKind {
+  private enum AsyncResponseTestKind {
     SUCCESSFUL("succeed", 200) {
       @Override
       void assertBody(String body) {
@@ -239,7 +239,7 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
             });
   }
 
-  enum CompletionStageTestKind {
+  private enum CompletionStageTestKind {
     SUCCESSFUL("succeed", 200) {
       @Override
       void assertBody(String body) {

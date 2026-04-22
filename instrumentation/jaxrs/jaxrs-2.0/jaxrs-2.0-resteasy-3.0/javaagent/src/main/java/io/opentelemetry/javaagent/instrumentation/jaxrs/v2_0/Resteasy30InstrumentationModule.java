@@ -11,6 +11,10 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.resteasy.common.v3_0.ResteasyResourceLocatorInvokerInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.resteasy.common.v3_0.ResteasyResourceMethodInvokerInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.resteasy.common.v3_0.ResteasyRootNodeTypeInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.resteasy.common.v3_0.ResteasyServletContainerDispatcherInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -25,7 +29,8 @@ public class Resteasy30InstrumentationModule extends InstrumentationModule {
     return hasClassesNamed(
         // added in JAX-RS 2.0
         "javax.ws.rs.Path",
-        // moved to jaxrs subpackage in 3.1.0, moved back in 3.5.0, moved again in 4.0.0
+        // removed in 3.1.0.Final (moved to core.interception.jaxrs; back in 3.5.0; moved again in
+        // 4.0.0)
         "org.jboss.resteasy.core.interception.PostMatchContainerRequestContext");
   }
 

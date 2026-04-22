@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.executors;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.concurrent.CompletableFuture;
@@ -22,10 +23,14 @@ class CompletableFutureTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   @Test
   void multipleCallbacks() {
     ExecutorService executor = Executors.newSingleThreadExecutor();
     ExecutorService executor2 = Executors.newSingleThreadExecutor();
+    cleanup.deferCleanup(executor::shutdown);
+    cleanup.deferCleanup(executor2::shutdown);
 
     String result;
     try {
@@ -73,9 +78,6 @@ class CompletableFutureTest {
                     span.hasName("function")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
-
-    executor.shutdown();
-    executor2.shutdown();
   }
 
   @Test
@@ -197,7 +199,7 @@ class CompletableFutureTest {
                     span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
-  static final class AppendingSupplier implements Supplier<String> {
+  static class AppendingSupplier implements Supplier<String> {
 
     private final String letter;
 

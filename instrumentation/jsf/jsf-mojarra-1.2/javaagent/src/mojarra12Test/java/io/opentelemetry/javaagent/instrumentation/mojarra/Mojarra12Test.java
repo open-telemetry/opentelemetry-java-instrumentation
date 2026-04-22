@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.mojarra;
 
-import io.opentelemetry.javaagent.instrumentation.jsf.javax.BaseJsfTest;
+import io.opentelemetry.javaagent.instrumentation.jsf.common.javax.BaseJsfTest;
 
 class Mojarra12Test extends BaseJsfTest {
   @Override
-  public String getJsfVersion() {
+  protected String getJsfVersion() {
     return "1.2";
   }
 }

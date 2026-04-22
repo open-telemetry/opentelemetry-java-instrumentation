@@ -19,7 +19,7 @@ import org.apache.cxf.jaxrs.model.OperationResourceInfo;
 import org.apache.cxf.jaxrs.model.URITemplate;
 import org.apache.cxf.message.Exchange;
 
-public final class CxfSpanName implements HttpServerRouteGetter<String> {
+public class CxfSpanName implements HttpServerRouteGetter<String> {
 
   public static final CxfSpanName INSTANCE = new CxfSpanName();
 
@@ -59,7 +59,8 @@ public final class CxfSpanName implements HttpServerRouteGetter<String> {
   }
 
   @Override
-  public String get(Context context, String jaxrsName) {
+  @Nullable
+  public String get(Context context, @Nullable String jaxrsName) {
     return ServletContextPath.prepend(context, jaxrsName);
   }
 

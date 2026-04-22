@@ -9,8 +9,9 @@ import io.vertx.core.net.NetSocket;
 import io.vertx.redis.client.impl.RedisURI;
 import java.util.List;
 import java.util.Locale;
+import javax.annotation.Nullable;
 
-public final class VertxRedisClientRequest {
+class VertxRedisClientRequest {
   private final String command;
   private final List<byte[]> args;
   private final RedisURI redisUri;
@@ -32,15 +33,18 @@ public final class VertxRedisClientRequest {
     return args;
   }
 
+  @Nullable
   public String getUser() {
     return redisUri.user();
   }
 
+  @Nullable
   public Long getDatabaseIndex() {
     Integer select = redisUri.select();
     return select != null ? select.longValue() : null;
   }
 
+  @Nullable
   public String getConnectionString() {
     return null;
   }
@@ -49,6 +53,7 @@ public final class VertxRedisClientRequest {
     return redisUri.socketAddress().host();
   }
 
+  @Nullable
   public Integer getPort() {
     int port = redisUri.socketAddress().port();
     return port != -1 ? port : null;
@@ -58,6 +63,7 @@ public final class VertxRedisClientRequest {
     return netSocket.remoteAddress().hostAddress();
   }
 
+  @Nullable
   public Integer getPeerPort() {
     int port = netSocket.remoteAddress().port();
     return port != -1 ? port : null;

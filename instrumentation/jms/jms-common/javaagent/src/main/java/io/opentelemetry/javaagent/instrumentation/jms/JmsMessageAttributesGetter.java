@@ -14,9 +14,8 @@ import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
-enum JmsMessageAttributesGetter implements MessagingAttributesGetter<MessageWithDestination, Void> {
-  INSTANCE;
-
+final class JmsMessageAttributesGetter
+    implements MessagingAttributesGetter<MessageWithDestination, Void> {
   private static final Logger logger = Logger.getLogger(JmsMessageAttributesGetter.class.getName());
 
   @Override
@@ -74,8 +73,8 @@ enum JmsMessageAttributesGetter implements MessagingAttributesGetter<MessageWith
   public String getMessageId(MessageWithDestination messageWithDestination, Void unused) {
     try {
       return messageWithDestination.message().getJmsMessageId();
-    } catch (Exception exception) {
-      logger.log(FINE, "Failure getting JMS message id", exception);
+    } catch (Exception e) {
+      logger.log(FINE, "Failure getting JMS message id", e);
       return null;
     }
   }
@@ -100,8 +99,8 @@ enum JmsMessageAttributesGetter implements MessagingAttributesGetter<MessageWith
       if (value != null) {
         return singletonList(value);
       }
-    } catch (Exception exception) {
-      logger.log(FINE, "Failure getting JMS message header", exception);
+    } catch (Exception e) {
+      logger.log(FINE, "Failure getting JMS message header", e);
     }
     return emptyList();
   }

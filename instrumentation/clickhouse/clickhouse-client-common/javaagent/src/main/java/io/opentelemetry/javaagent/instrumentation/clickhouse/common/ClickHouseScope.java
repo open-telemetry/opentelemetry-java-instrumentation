@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import javax.annotation.Nullable;
 
 /** Container used to carry state between enter and exit advices */
-public final class ClickHouseScope {
+public class ClickHouseScope {
   private final ClickHouseDbRequest clickHouseDbRequest;
   private final Context context;
   private final Scope scope;
@@ -41,7 +41,7 @@ public final class ClickHouseScope {
     return new ClickHouseScope(clickHouseDbRequest, context, context.makeCurrent(), instrumenter);
   }
 
-  public void end(Throwable throwable) {
+  public void end(@Nullable Throwable throwable) {
     scope.close();
     instrumenter.end(context, clickHouseDbRequest, null, throwable);
   }

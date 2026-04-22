@@ -5,17 +5,41 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientBaseTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.trace.data.LinkData;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.assertj.core.api.AbstractLongAssert;
+import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -27,6 +51,8 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
   static final String greeting = "Hello Kafka!";
 
   protected abstract KafkaTelemetry kafkaTelemetry();
+
+  protected abstract boolean captureExperimentalSpanAttributes();
 
   @Override
   public Map<String, Object> producerProps() {
@@ -82,5 +108,101 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
     assertTraces();
   }
 
-  abstract void assertTraces();
+  void assertTraces() {
+    AtomicReference<SpanContext> producerSpanContext = new AtomicReference<>();
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanName("parent", SHARED_TOPIC + " receive", "producer callback"),
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+              span ->
+                  span.hasName(SHARED_TOPIC + " publish")
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          publishAttributes(captureExperimentalSpanAttributes())));
+          SpanContext spanContext = trace.getSpan(1).getSpanContext();
+          producerSpanContext.set(
+              SpanContext.createFromRemoteParent(
+                  spanContext.getTraceId(),
+                  spanContext.getSpanId(),
+                  spanContext.getTraceFlags(),
+                  spanContext.getTraceState()));
+        },
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(SHARED_TOPIC + " receive")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasNoParent()
+                        .hasLinksSatisfying(links -> assertThat(links).isEmpty())
+                        .hasAttributesSatisfyingExactly(receiveAttributes()),
+                span ->
+                    span.hasName(SHARED_TOPIC + " process")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(0))
+                        .hasLinks(LinkData.create(producerSpanContext.get()))
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(captureExperimentalSpanAttributes())),
+                span ->
+                    span.hasName("process child")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(1))),
+        // ideally we'd want producer callback to be part of the main trace, we just aren't able to
+        // instrument that
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("producer callback").hasKind(SpanKind.INTERNAL).hasNoParent()));
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  private static List<AttributeAssertion> publishAttributes(boolean experimental) {
+    return asList(
+        equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")),
+        equalTo(MESSAGING_SYSTEM, "kafka"),
+        equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+        equalTo(MESSAGING_OPERATION, "publish"),
+        satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
+        satisfies(
+            stringKey("messaging.kafka.bootstrap.servers"),
+            val -> {
+              if (experimental) {
+                val.matches("^localhost:\\d+(,localhost:\\d+)*$");
+              }
+            }));
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  private static List<AttributeAssertion> receiveAttributes() {
+    return asList(
+        equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")),
+        equalTo(MESSAGING_SYSTEM, "kafka"),
+        equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+        equalTo(MESSAGING_OPERATION, "receive"),
+        equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
+        satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
+        equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  private static List<AttributeAssertion> processAttributes(boolean experimental) {
+    return asList(
+        equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")),
+        equalTo(MESSAGING_SYSTEM, "kafka"),
+        equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+        equalTo(MESSAGING_OPERATION, "process"),
+        equalTo(MESSAGING_MESSAGE_BODY_SIZE, greeting.getBytes(UTF_8).length),
+        satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
+        satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
+        equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
+        satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
+        satisfies(
+            longKey("kafka.record.queue_time_ms"),
+            val -> {
+              if (experimental) {
+                val.isNotNegative();
+              }
+            }));
+  }
 }

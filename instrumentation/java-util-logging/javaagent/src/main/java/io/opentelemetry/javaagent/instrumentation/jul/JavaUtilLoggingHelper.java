@@ -27,7 +27,7 @@ import java.util.logging.Formatter;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
-public final class JavaUtilLoggingHelper {
+public class JavaUtilLoggingHelper {
 
   private static final Formatter FORMATTER = new AccessibleFormatter();
 

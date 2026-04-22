@@ -19,7 +19,7 @@ import net.bytebuddy.description.ByteCodeElement;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public final class AnnotationExcludedMethods {
+public class AnnotationExcludedMethods {
 
   /*
   Returns a matcher for all methods that should be excluded from auto-instrumentation by

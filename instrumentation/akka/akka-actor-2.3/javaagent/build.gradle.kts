@@ -33,7 +33,7 @@ dependencies {
   latestDepTestLibrary("com.typesafe.akka:akka-actor_2.13:latest.release")
 }
 
-if (findProperty("testLatestDeps") == "true") {
+if (otelProps.testLatestDeps) {
   configurations {
     // akka artifact name is different for regular and latest tests
     testImplementation {
@@ -42,7 +42,7 @@ if (findProperty("testLatestDeps") == "true") {
   }
 }
 
-if (findProperty("denyUnsafe") == "true") {
+if (otelProps.denyUnsafe) {
   tasks.withType<Test>().configureEach {
     enabled = false
   }

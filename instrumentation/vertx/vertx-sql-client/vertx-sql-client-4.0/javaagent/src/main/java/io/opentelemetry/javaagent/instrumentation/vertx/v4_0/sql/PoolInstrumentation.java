@@ -34,7 +34,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class PoolInstrumentation implements TypeInstrumentation {
+class PoolInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -58,16 +58,16 @@ public class PoolInstrumentation implements TypeInstrumentation {
             .and(takesArguments(3))
             .and(takesArgument(1, hasSuperType(named("io.vertx.sqlclient.SqlConnectOptions"))))
             .and(returns(hasSuperType(named("io.vertx.sqlclient.Pool")))),
-        PoolInstrumentation.class.getName() + "$PoolAdvice");
+        getClass().getName() + "$PoolAdvice");
 
     transformer.applyAdviceToMethod(
         named("getConnection").and(takesNoArguments()).and(returns(named("io.vertx.core.Future"))),
-        PoolInstrumentation.class.getName() + "$GetConnectionAdvice");
+        getClass().getName() + "$GetConnectionAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class PoolAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth onEnter(@Advice.Argument(1) SqlConnectOptions sqlConnectOptions) {
       CallDepth callDepth = CallDepth.forClass(Pool.class);
       if (callDepth.getAndIncrement() > 0) {
@@ -79,7 +79,7 @@ public class PoolInstrumentation implements TypeInstrumentation {
       return callDepth;
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Return Pool pool,
         @Advice.Argument(1) SqlConnectOptions sqlConnectOptions,
@@ -88,11 +88,13 @@ public class PoolInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      setPoolConnectOptions(pool, sqlConnectOptions);
-      // Detect db system from pool implementation class (e.g. PgPool -> postgresql).
-      // This handles cases where connect options is a generic SqlConnectOptions
-      // but the pool is database-specific (e.g. Hibernate Reactive).
-      storeConnectOptionsDbSystem(sqlConnectOptions, getDbSystemNameFromClassName(pool));
+      if (pool != null) {
+        setPoolConnectOptions(pool, sqlConnectOptions);
+        // Detect db system from pool implementation class (e.g. PgPool -> postgresql).
+        // This handles cases where connect options is a generic SqlConnectOptions
+        // but the pool is database-specific (e.g. Hibernate Reactive).
+        storeConnectOptionsDbSystem(sqlConnectOptions, getDbSystemNameFromClassName(pool));
+      }
       setSqlConnectOptions(null);
     }
   }
@@ -100,7 +102,7 @@ public class PoolInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetConnectionAdvice {
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Future<SqlConnection> onExit(
         @Advice.This Pool pool, @Advice.Return Future<SqlConnection> future) {
       // copy connect options stored on pool to new connection

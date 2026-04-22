@@ -25,7 +25,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.eclipse.jetty.client.HttpRequest;
 import org.eclipse.jetty.client.api.Response;
 
-public class JettyHttpClient9Instrumentation implements TypeInstrumentation {
+class JettyHttpClient9Instrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.eclipse.jetty.client.HttpClient");
@@ -54,7 +54,7 @@ public class JettyHttpClient9Instrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToArguments(@ToArgument(value = 1, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] addTracingEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Argument(1) List<Response.ResponseListener> listeners) {
@@ -70,7 +70,7 @@ public class JettyHttpClient9Instrumentation implements TypeInstrumentation {
       return new Object[] {new AdviceLocals(context, context.makeCurrent()), wrappedListeners};
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void exitTracingInterceptor(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Thrown Throwable throwable,

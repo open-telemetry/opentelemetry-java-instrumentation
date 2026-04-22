@@ -11,7 +11,7 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class Slf4jApplicationLoggerBridge implements InternalLogger.Factory {
+public class Slf4jApplicationLoggerBridge implements InternalLogger.Factory {
 
   public static void install() {
     ApplicationLoggerBridge.installApplicationLogger(new Slf4jApplicationLoggerBridge());

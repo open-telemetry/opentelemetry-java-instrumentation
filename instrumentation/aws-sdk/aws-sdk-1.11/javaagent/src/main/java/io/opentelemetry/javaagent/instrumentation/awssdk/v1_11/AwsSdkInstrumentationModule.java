@@ -31,11 +31,6 @@ public class AwsSdkInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public boolean isIndyReady() {
-    return true;
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new AwsClientInstrumentation(),

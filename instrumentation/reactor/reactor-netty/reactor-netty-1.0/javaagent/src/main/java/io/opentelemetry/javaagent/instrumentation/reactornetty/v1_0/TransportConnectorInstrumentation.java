@@ -31,7 +31,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import reactor.core.publisher.Mono;
 
-public class TransportConnectorInstrumentation implements TypeInstrumentation {
+class TransportConnectorInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -44,14 +44,14 @@ public class TransportConnectorInstrumentation implements TypeInstrumentation {
         named("doResolveAndConnect")
             .and(takesArgument(3, named("io.netty.resolver.AddressResolverGroup")))
             .and(returns(named("reactor.core.publisher.Mono"))),
-        this.getClass().getName() + "$ResolveAndConnectAdvice");
+        getClass().getName() + "$ResolveAndConnectAdvice");
 
     // handles [1.0.0, 1.0.6)
     transformer.applyAdviceToMethod(
         named("doConnect")
             .and(takesArgument(0, SocketAddress.class))
             .and(takesArgument(2, named("io.netty.channel.ChannelPromise"))),
-        this.getClass().getName() + "$ConnectAdvice");
+        getClass().getName() + "$ConnectAdvice");
     // handles [1.0.6, )
     transformer.applyAdviceToMethod(
         named("doConnect")
@@ -64,21 +64,21 @@ public class TransportConnectorInstrumentation implements TypeInstrumentation {
                         // since 1.0.34
                         "reactor.netty.transport.TransportConnector$MonoChannelPromise")))
             .and(takesArgument(3, int.class)),
-        this.getClass().getName() + "$ConnectNewAdvice");
+        getClass().getName() + "$ConnectNewAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ResolveAndConnectAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(3))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AddressResolverGroup<?> onEnter(
         @Advice.Argument(3) AddressResolverGroup<?> resolver) {
       return InstrumentedAddressResolverGroup.wrap(connectionInstrumenter(), resolver);
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Mono<Channel> onExit(@Advice.Return Mono<Channel> mono) {
 
       // end the CONNECT span that was started in doConnect() instrumentation
@@ -125,14 +125,14 @@ public class TransportConnectorInstrumentation implements TypeInstrumentation {
   public static class ConnectAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.Argument(0) SocketAddress remoteAddress,
         @Advice.Argument(2) ChannelPromise channelPromise) {
       return AdviceScope.start(remoteAddress, channelPromise);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void endConnect(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
@@ -146,7 +146,7 @@ public class TransportConnectorInstrumentation implements TypeInstrumentation {
   public static class ConnectNewAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.Argument(0) List<SocketAddress> remoteAddresses,
         @Advice.Argument(2) ChannelPromise channelPromise,
@@ -155,7 +155,7 @@ public class TransportConnectorInstrumentation implements TypeInstrumentation {
       return AdviceScope.start(remoteAddress, channelPromise);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void endConnect(
         @Advice.Thrown Throwable throwable, @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {

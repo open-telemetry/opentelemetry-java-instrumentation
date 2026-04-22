@@ -192,7 +192,7 @@ class ApacheHttpClientTest {
   abstract static class AbstractTest<T extends HttpRequest>
       extends AbstractApacheHttpClientTest<T> {
     @Override
-    final HttpResponse executeRequest(T request, URI uri) throws Exception {
+    HttpResponse executeRequest(T request, URI uri) throws Exception {
       HttpResponse httpResponse = doExecuteRequest(request, uri);
       httpResponse.getEntity().getContent().close();
       return httpResponse;

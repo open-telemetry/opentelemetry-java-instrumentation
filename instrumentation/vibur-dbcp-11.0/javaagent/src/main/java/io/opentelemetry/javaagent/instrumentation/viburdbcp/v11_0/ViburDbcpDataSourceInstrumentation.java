@@ -26,15 +26,15 @@ final class ViburDbcpDataSourceInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("start").and(takesArguments(0)), this.getClass().getName() + "$StartAdvice");
+        named("start").and(takesArguments(0)), getClass().getName() + "$StartAdvice");
     transformer.applyAdviceToMethod(
-        named("close").and(takesArguments(0)), this.getClass().getName() + "$CloseAdvice");
+        named("close").and(takesArguments(0)), getClass().getName() + "$CloseAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class StartAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This ViburDBCPDataSource dataSource) {
       telemetry().registerMetrics(dataSource);
     }
@@ -43,7 +43,7 @@ final class ViburDbcpDataSourceInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CloseAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(@Advice.This ViburDBCPDataSource dataSource) {
       telemetry().unregisterMetrics(dataSource);
     }

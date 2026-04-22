@@ -644,7 +644,7 @@ public abstract class AbstractPreparedStatementParametersTest {
                                     expectedParameterValue))));
   }
 
-  public interface ThrowingConsumer<T, E extends Throwable> {
+  private interface ThrowingConsumer<T, E extends Throwable> {
     void accept(T t) throws E;
   }
 }

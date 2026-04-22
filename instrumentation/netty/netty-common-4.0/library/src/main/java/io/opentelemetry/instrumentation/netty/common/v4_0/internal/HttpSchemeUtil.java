@@ -23,7 +23,7 @@ public final class HttpSchemeUtil {
       return Class.forName(
               "io.netty.handler.ssl.SslHandler", false, HttpSchemeUtil.class.getClassLoader())
           .asSubclass(ChannelHandler.class);
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       return null;
     }
   }

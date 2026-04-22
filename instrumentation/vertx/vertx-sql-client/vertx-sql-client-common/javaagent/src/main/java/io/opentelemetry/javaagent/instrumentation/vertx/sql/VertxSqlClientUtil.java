@@ -25,28 +25,33 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 
-public final class VertxSqlClientUtil {
+public class VertxSqlClientUtil {
 
   private static final ThreadLocal<SqlConnectOptions> connectOptions = new ThreadLocal<>();
+  private static final VirtualField<Pool, SqlConnectOptions> poolConnectOptions =
+      VirtualField.find(Pool.class, SqlConnectOptions.class);
+  private static final Map<String, String> dbSystemNameByPackage = buildPackageDbSystemNameMap();
+  private static final VirtualField<Promise<?>, RequestData> requestDataField =
+      VirtualField.find(Promise.class, RequestData.class);
 
-  public static void setSqlConnectOptions(SqlConnectOptions sqlConnectOptions) {
-    connectOptions.set(sqlConnectOptions);
+  public static void setSqlConnectOptions(@Nullable SqlConnectOptions sqlConnectOptions) {
+    if (sqlConnectOptions == null) {
+      connectOptions.remove();
+    } else {
+      connectOptions.set(sqlConnectOptions);
+    }
   }
 
+  @Nullable
   public static SqlConnectOptions getSqlConnectOptions() {
     return connectOptions.get();
   }
-
-  private static final VirtualField<Pool, SqlConnectOptions> poolConnectOptions =
-      VirtualField.find(Pool.class, SqlConnectOptions.class);
-
-  private static final Map<String, String> DB_SYSTEM_NAME_BY_PACKAGE =
-      buildPackageDbSystemNameMap();
 
   public static void setPoolConnectOptions(Pool pool, SqlConnectOptions sqlConnectOptions) {
     poolConnectOptions.set(pool, sqlConnectOptions);
   }
 
+  @Nullable
   public static SqlConnectOptions getPoolSqlConnectOptions(Pool pool) {
     return poolConnectOptions.get(pool);
   }
@@ -54,7 +59,7 @@ public final class VertxSqlClientUtil {
   public static String getDbSystemNameFromClassName(@Nullable Object instance) {
     if (instance != null) {
       String className = instance.getClass().getName();
-      for (Map.Entry<String, String> entry : DB_SYSTEM_NAME_BY_PACKAGE.entrySet()) {
+      for (Map.Entry<String, String> entry : dbSystemNameByPackage.entrySet()) {
         if (className.startsWith(entry.getKey())) {
           return entry.getValue();
         }
@@ -75,18 +80,16 @@ public final class VertxSqlClientUtil {
     return map;
   }
 
-  private static final VirtualField<Promise<?>, RequestData> requestDataField =
-      VirtualField.find(Promise.class, RequestData.class);
-
   public static void attachRequest(
       Promise<?> promise, VertxSqlClientRequest request, Context context, Context parentContext) {
     requestDataField.set(promise, new RequestData(request, context, parentContext));
   }
 
+  @Nullable
   public static Scope endQuerySpan(
       Instrumenter<VertxSqlClientRequest, Void> instrumenter,
       Promise<?> promise,
-      Throwable throwable) {
+      @Nullable Throwable throwable) {
     RequestData requestData = requestDataField.get(promise);
     if (requestData == null) {
       return null;
@@ -95,7 +98,7 @@ public final class VertxSqlClientUtil {
     return requestData.parentContext.makeCurrent();
   }
 
-  static class RequestData {
+  private static class RequestData {
     final VertxSqlClientRequest request;
     final Context context;
     final Context parentContext;

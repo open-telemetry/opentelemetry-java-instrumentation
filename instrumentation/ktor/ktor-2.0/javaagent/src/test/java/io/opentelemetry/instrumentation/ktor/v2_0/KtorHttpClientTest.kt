@@ -14,7 +14,7 @@ class KtorHttpClientTest : AbstractKtorHttpClientTest() {
   companion object {
     @JvmStatic
     @RegisterExtension
-    private val TESTING = HttpClientInstrumentationExtension.forAgent()
+    private val testing = HttpClientInstrumentationExtension.forAgent()
   }
 
   override fun HttpClientConfig<*>.installTracing() {

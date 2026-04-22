@@ -126,7 +126,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InitAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter() {
       // this advice is here only to get AnnotationInstrumentationHelper injected
       AnnotationInstrumentationHelper.init();

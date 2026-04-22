@@ -7,10 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.testing;
 
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 
-public final class AgentSpanTesting {
+public class AgentSpanTesting {
 
   /**
-   * Runs the provided {@code runnable} inside the scope of an SERVER span with name {@code
+   * Runs the provided {@code runnable} inside the scope of a SERVER span with name {@code
    * spanName}.
    */
   public static void runWithHttpServerSpan(String spanName, Runnable runnable) {
@@ -19,7 +19,7 @@ public final class AgentSpanTesting {
 
   /**
    * Runs the provided {@code runnable} inside the scope of an INTERNAL span with name {@code
-   * spanName}. Span is added into context under all possible keys from {@link SpanKey}
+   * spanName}. The span is added to the context under all possible keys from {@link SpanKey}.
    */
   public static void runWithAllSpanKeys(String spanName, Runnable runnable) {
     runnable.run();

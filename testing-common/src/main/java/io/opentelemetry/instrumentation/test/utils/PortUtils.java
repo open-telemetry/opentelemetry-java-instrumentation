@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.test.utils;
 
-public final class PortUtils {
+public class PortUtils {
 
   public static final int UNUSABLE_PORT = 61;
 

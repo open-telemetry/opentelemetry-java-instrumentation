@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class KafkaConsumerRecordsImplInstrumentation implements TypeInstrumentation {
+class KafkaConsumerRecordsImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -31,18 +31,18 @@ public class KafkaConsumerRecordsImplInstrumentation implements TypeInstrumentat
             .and(isPublic())
             .and(takesArguments(int.class))
             .and(returns(named("io.vertx.kafka.client.consumer.KafkaConsumerRecord"))),
-        this.getClass().getName() + "$RecordAtAdvice");
+        getClass().getName() + "$RecordAtAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class RecordAtAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static boolean onEnter() {
       return KafkaClientsConsumerProcessTracing.setEnabled(false);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter boolean previousValue) {
       KafkaClientsConsumerProcessTracing.setEnabled(previousValue);
     }

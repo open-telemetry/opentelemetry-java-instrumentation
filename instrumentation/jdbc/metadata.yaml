@@ -10,20 +10,24 @@ semantic_conventions:
   - DATABASE_CLIENT_METRICS
 library_link: https://docs.oracle.com/javase/8/docs/api/java/sql/package-summary.html
 configurations:
-  - name: otel.instrumentation.jdbc.statement-sanitizer.enabled
-    description: Enables statement sanitization for database queries. Takes precedent to 
-      otel.instrumentation.common.db-statement-sanitizer.enabled.
+  - name: otel.instrumentation.jdbc.query-sanitization.enabled
+    declarative_name: java.jdbc.query_sanitization.enabled
+    description: Enables query sanitization for database queries. Takes precedence over
+      otel.instrumentation.common.db.query-sanitization.enabled.
     type: boolean
     default: true
-  - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-    description: Enables statement sanitization for database queries.
+  - name: otel.instrumentation.common.db.query-sanitization.enabled
+    declarative_name: java.common.db.query_sanitization.enabled
+    description: Enables query sanitization for database queries.
     type: boolean
     default: true
   - name: otel.instrumentation.jdbc.experimental.transaction.enabled
+    declarative_name: java.jdbc.transaction/development.enabled
     description: Enables experimental instrumentation to create spans for COMMIT and ROLLBACK operations.
     type: boolean
     default: false
   - name: otel.instrumentation.jdbc.experimental.sqlcommenter.enabled
+    declarative_name: java.jdbc.sqlcommenter/development.enabled
     description: >
       Enables augmenting queries with a comment containing the tracing information. See
       [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING: augmenting
@@ -36,6 +40,7 @@ configurations:
     type: map
     default: ""
   - name: otel.instrumentation.jdbc.experimental.capture-query-parameters
+    declarative_name: java.jdbc.capture_query_parameters/development
     description: >
       Sets whether the query parameters should be captured as span attributes named
       <code>db.query.parameter.&lt;key&gt;</code>. Enabling this option disables the statement
@@ -44,6 +49,7 @@ configurations:
     type: boolean
     default: false
   - name: otel.instrumentation.jdbc-datasource.enabled
+    declarative_name: java.jdbc_datasource.enabled
     description: Enables instrumentation of JDBC datasource connections.
     type: boolean
     default: false

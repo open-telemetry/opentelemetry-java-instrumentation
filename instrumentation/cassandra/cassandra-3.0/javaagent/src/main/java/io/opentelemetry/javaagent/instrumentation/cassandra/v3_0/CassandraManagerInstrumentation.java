@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class CassandraManagerInstrumentation implements TypeInstrumentation {
+class CassandraManagerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     // Note: Cassandra has a large driver and we instrument single class in it.
@@ -29,7 +29,7 @@ public class CassandraManagerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isPrivate().and(named("newSession")).and(takesArguments(0)),
-        this.getClass().getName() + "$NewSessionAdvice");
+        getClass().getName() + "$NewSessionAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -43,7 +43,7 @@ public class CassandraManagerInstrumentation implements TypeInstrumentation {
      * @param session The fresh session to patch. This session is replaced with new session
      */
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Session injectTracingSession(@Advice.Return Session session) {
       // This should cover ours and OT's TracingSession
       if (session.getClass().getName().endsWith("cassandra.TracingSession")) {

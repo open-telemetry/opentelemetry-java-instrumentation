@@ -46,9 +46,4 @@ public class OpenTelemetryApiIncubatorInstrumentationModule extends Instrumentat
   public String getModuleGroup() {
     return "opentelemetry-api-bridge";
   }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
-  }
 }

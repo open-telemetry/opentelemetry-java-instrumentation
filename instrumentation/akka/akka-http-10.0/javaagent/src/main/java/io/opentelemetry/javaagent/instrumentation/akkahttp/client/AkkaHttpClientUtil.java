@@ -13,7 +13,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import javax.annotation.Nullable;
 
-public final class AkkaHttpClientUtil {
+public class AkkaHttpClientUtil {
   @Nullable private static final MethodHandle actorSystemAccessor = findActorSystemAccessor();
 
   @Nullable

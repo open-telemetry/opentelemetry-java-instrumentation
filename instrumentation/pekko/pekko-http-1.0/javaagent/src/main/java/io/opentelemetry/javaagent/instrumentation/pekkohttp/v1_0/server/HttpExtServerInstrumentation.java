@@ -18,7 +18,7 @@ import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
 import org.apache.pekko.stream.scaladsl.Flow;
 
-public class HttpExtServerInstrumentation implements TypeInstrumentation {
+class HttpExtServerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.pekko.http.scaladsl.HttpExt");
@@ -29,14 +29,14 @@ public class HttpExtServerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("bindAndHandle")
             .and(takesArgument(0, named("org.apache.pekko.stream.scaladsl.Flow"))),
-        this.getClass().getName() + "$PekkoBindAndHandleAdvice");
+        getClass().getName() + "$PekkoBindAndHandleAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class PekkoBindAndHandleAdvice {
 
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Flow<HttpRequest, HttpResponse, ?> wrapHandler(
         @Advice.Argument(value = 0) Flow<HttpRequest, HttpResponse, ?> handler) {
       return PekkoFlowWrapper.wrap(handler);

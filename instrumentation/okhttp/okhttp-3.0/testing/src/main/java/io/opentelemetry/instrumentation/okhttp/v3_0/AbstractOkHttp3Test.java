@@ -35,10 +35,10 @@ import org.junit.jupiter.api.Test;
 
 public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request> {
 
-  protected abstract Call.Factory createCallFactory(OkHttpClient.Builder clientBuilder);
-
   protected final Call.Factory client = createCallFactory(getClientBuilder(false));
   private final Call.Factory clientWithReadTimeout = createCallFactory(getClientBuilder(true));
+
+  protected abstract Call.Factory createCallFactory(OkHttpClient.Builder clientBuilder);
 
   private static OkHttpClient.Builder getClientBuilder(boolean withReadTimeout) {
     OkHttpClient.Builder builder =
@@ -130,17 +130,6 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
         });
   }
 
-  private static class TestInterceptor implements Interceptor {
-
-    @Override
-    public Response intercept(Chain chain) throws IOException {
-      // make copy of the request
-      Request request = chain.request().newBuilder().build();
-
-      return chain.proceed(request);
-    }
-  }
-
   @Test
   void requestWithCustomInterceptor() throws Throwable {
     String method = "GET";
@@ -186,5 +175,16 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
                       .hasParent(trace.getSpan(1)),
               span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)));
         });
+  }
+
+  private static class TestInterceptor implements Interceptor {
+
+    @Override
+    public Response intercept(Chain chain) throws IOException {
+      // make copy of the request
+      Request request = chain.request().newBuilder().build();
+
+      return chain.proceed(request);
+    }
   }
 }

@@ -27,7 +27,7 @@ import org.influxdb.dto.Query;
 import org.influxdb.impl.InfluxDBImpl;
 import retrofit2.Retrofit;
 
-public class InfluxDbImplInstrumentation implements TypeInstrumentation {
+class InfluxDbImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -38,7 +38,7 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("query").and(takesArgument(0, named("org.influxdb.dto.Query"))),
-        this.getClass().getName() + "$InfluxDbQueryAdvice");
+        getClass().getName() + "$InfluxDbQueryAdvice");
 
     transformer.applyAdviceToMethod(
         named("write")
@@ -57,16 +57,16 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
                             .and(takesArgument(1, String.class))
                             .and(takesArgument(2, isEnum()))
                             .and(takesArgument(3, named("java.util.concurrent.TimeUnit"))))),
-        this.getClass().getName() + "$InfluxDbModifyAdvice");
+        getClass().getName() + "$InfluxDbModifyAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("createDatabase", "deleteDatabase"),
-        this.getClass().getName() + "$InfluxDbModifyAdvice");
+        getClass().getName() + "$InfluxDbModifyAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class InfluxDbQueryAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToAllArguments(index = 0, typing = Assigner.Typing.DYNAMIC)
     public static Object[] onEnter(
         @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] arguments,
@@ -100,7 +100,7 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
       return new Object[] {newArguments, InfluxDbScope.start(parentContext, influxDbRequest)};
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown Throwable throwable, @Advice.Enter Object[] enterArgs) {
       CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
@@ -115,7 +115,7 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InfluxDbModifyAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static InfluxDbScope onEnter(
         @Advice.Origin("#m") String methodName,
         @Advice.Argument(0) Object arg0,
@@ -157,7 +157,7 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
       return InfluxDbScope.start(parentContext, influxDbRequest);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown Throwable throwable, @Advice.Enter InfluxDbScope scope) {
       CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);

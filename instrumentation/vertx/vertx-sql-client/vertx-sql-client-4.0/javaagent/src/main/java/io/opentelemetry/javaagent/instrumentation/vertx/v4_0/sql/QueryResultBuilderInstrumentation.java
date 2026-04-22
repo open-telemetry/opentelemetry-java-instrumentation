@@ -18,7 +18,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class QueryResultBuilderInstrumentation implements TypeInstrumentation {
+class QueryResultBuilderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -27,22 +27,20 @@ public class QueryResultBuilderInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("tryComplete"),
-        QueryResultBuilderInstrumentation.class.getName() + "$CompleteAdvice");
+    transformer.applyAdviceToMethod(named("tryComplete"), getClass().getName() + "$CompleteAdvice");
     transformer.applyAdviceToMethod(
         named("tryFail").and(takesArguments(Throwable.class)),
-        QueryResultBuilderInstrumentation.class.getName() + "$FailAdvice");
+        getClass().getName() + "$FailAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class CompleteAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.FieldValue("handler") Promise<?> promise) {
       return endQuerySpan(instrumenter(), promise, null);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();
@@ -52,13 +50,13 @@ public class QueryResultBuilderInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class FailAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(
         @Advice.Argument(0) Throwable throwable, @Advice.FieldValue("handler") Promise<?> promise) {
       return endQuerySpan(instrumenter(), promise, throwable);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();

@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.client.hook.SendMessageHook;
+import org.apache.rocketmq.client.impl.CommunicationMode;
 
 final class TracingSendMessageHookImpl implements SendMessageHook {
 
@@ -46,7 +47,9 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
     }
     Context otelContext = contextField.get(context);
     if (otelContext != null
-        && (context.getSendResult() != null || context.getException() != null)) {
+        && (context.getSendResult() != null
+            || context.getException() != null
+            || CommunicationMode.ONEWAY == context.getCommunicationMode())) {
       instrumenter.end(otelContext, context, null, context.getException());
     }
   }

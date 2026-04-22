@@ -18,14 +18,15 @@ import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.internal.SqlClientBase;
 import io.vertx.sqlclient.internal.command.CommandBase;
+import javax.annotation.Nullable;
 
-public final class VertxSqlClientSingletons {
+public class VertxSqlClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-sql-client-5.0";
-  private static final Instrumenter<VertxSqlClientRequest, Void> INSTRUMENTER =
+  private static final Instrumenter<VertxSqlClientRequest, Void> instrumenter =
       VertxSqlInstrumenterFactory.createInstrumenter(INSTRUMENTATION_NAME);
 
   public static Instrumenter<VertxSqlClientRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private static final VirtualField<Pool, String> poolDbSystem =
@@ -44,6 +45,7 @@ public final class VertxSqlClientSingletons {
 
   // CommandBase is a generic type used as VirtualField key
   @SuppressWarnings("rawtypes")
+  @Nullable
   public static Context getCommandContext(CommandBase<?> command) {
     return commandContextField.get(command);
   }
@@ -59,11 +61,9 @@ public final class VertxSqlClientSingletons {
   }
 
   public static String getConnectOptionsDbSystem(SqlConnectOptions sqlConnectOptions) {
-    if (sqlConnectOptions != null) {
-      String dbSystem = connectOptionsDbSystem.get(sqlConnectOptions);
-      if (dbSystem != null) {
-        return dbSystem;
-      }
+    String dbSystem = connectOptionsDbSystem.get(sqlConnectOptions);
+    if (dbSystem != null) {
+      return dbSystem;
     }
     return OTHER_SQL;
   }
@@ -75,17 +75,18 @@ public final class VertxSqlClientSingletons {
     }
   }
 
+  @Nullable
   public static SqlConnectOptions getSqlConnectOptions(SqlClientBase sqlClientBase) {
     return connectOptionsField.get(sqlClientBase);
   }
 
   public static void attachConnectOptions(
-      SqlClientBase sqlClientBase, SqlConnectOptions connectOptions) {
+      SqlClientBase sqlClientBase, @Nullable SqlConnectOptions connectOptions) {
     connectOptionsField.set(sqlClientBase, connectOptions);
   }
 
   public static Future<SqlConnection> attachConnectOptions(
-      Future<SqlConnection> future, SqlConnectOptions connectOptions) {
+      Future<SqlConnection> future, @Nullable SqlConnectOptions connectOptions) {
     return future.map(
         sqlConnection -> {
           if (sqlConnection instanceof SqlClientBase) {
