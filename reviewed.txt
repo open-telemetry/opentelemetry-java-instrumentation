@@ -290,3 +290,4 @@ log4j-mdc-1.2:javaagent
 logback-appender-1.0:javaagent
 log4j-context-data-common:testing
 logback-appender-1.0:testing
+logback-appender-1.0:library
