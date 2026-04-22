@@ -18,7 +18,7 @@ public class TracingHolder {
           .get("command_encoding_events/development")
           .getBoolean("enabled", false);
 
-  public static final Tracing TRACING =
+  public static final Tracing tracing =
       LettuceTelemetry.builder(GlobalOpenTelemetry.get())
           .setQuerySanitizationEnabled(
               DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "lettuce"))
