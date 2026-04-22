@@ -257,3 +257,4 @@ jetty-11.0:javaagent
 jedis-1.4:testing
 kafka-streams-0.11:javaagent
 jms-1.1:javaagent
+kotlinx-coroutines-flow-1.3:javaagent-kotlin
