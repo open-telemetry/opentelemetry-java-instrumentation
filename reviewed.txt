@@ -250,3 +250,4 @@ hibernate-4.0:javaagent
 javalin-5.0:javaagent
 jaxrs-3.0-common:javaagent
 jaxws-cxf-3.0:javaagent-unit-tests
+jaxws-metro-2.2:javaagent
