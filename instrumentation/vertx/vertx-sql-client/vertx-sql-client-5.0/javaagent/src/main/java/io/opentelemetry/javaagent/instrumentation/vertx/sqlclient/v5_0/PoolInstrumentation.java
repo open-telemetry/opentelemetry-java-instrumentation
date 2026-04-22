@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.vertxsqlclient.v5_0;
+package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
@@ -11,8 +11,8 @@ import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClien
 import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.setPoolConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.setSqlConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.wrapContext;
-import static io.opentelemetry.javaagent.instrumentation.vertxsqlclient.v5_0.VertxSqlClientSingletons.attachConnectOptions;
-import static io.opentelemetry.javaagent.instrumentation.vertxsqlclient.v5_0.VertxSqlClientSingletons.resolveAndStoreDbSystem;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.attachConnectOptions;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.resolveAndStoreDbSystem;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;

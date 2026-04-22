@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.vertxsqlclient.v5_0;
+package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
 import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.endQuerySpan;
-import static io.opentelemetry.javaagent.instrumentation.vertxsqlclient.v5_0.VertxSqlClientSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Scope;
