@@ -24,6 +24,7 @@ public abstract class Log4j2Test {
 
   @BeforeEach
   void setUp() {
+    ThreadContext.clearAll();
     ListAppender.get().clearEvents();
   }
 
@@ -152,14 +153,18 @@ public abstract class Log4j2Test {
     ThreadContext.put(getLoggingKey("trace_id"), "test_traceId");
     ThreadContext.put(getLoggingKey("span_id"), "test_spanId");
     ThreadContext.put(getLoggingKey("trace_flags"), "test_traceFlag");
-    getInstrumentationExtension()
-        .runWithSpan(
-            "test",
-            () -> {
-              logger.info("log span parent");
-            });
-    List<ListAppender.LoggedEvent> events = ListAppender.get().getEvents();
-    ThreadContext.clearAll();
+    List<ListAppender.LoggedEvent> events;
+    try {
+      getInstrumentationExtension()
+          .runWithSpan(
+              "test",
+              () -> {
+                logger.info("log span parent");
+              });
+      events = ListAppender.get().getEvents();
+    } finally {
+      ThreadContext.clearAll();
+    }
     assertThat(events)
         .satisfiesExactly(
             event -> {
