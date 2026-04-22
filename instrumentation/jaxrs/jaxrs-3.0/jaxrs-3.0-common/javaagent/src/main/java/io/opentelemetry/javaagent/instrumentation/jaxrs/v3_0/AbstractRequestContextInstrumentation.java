@@ -16,7 +16,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-abstract class AbstractRequestContextInstrumentation implements TypeInstrumentation {
+public abstract class AbstractRequestContextInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("jakarta.ws.rs.container.ContainerRequestContext");
