@@ -6788,7 +6788,7 @@ libraries:
     spans:
     - span_kind: INTERNAL
       attributes: []
-- name: jaxws-cxf-3.0
+- name: jaxws-2.0-cxf-3.0
   display_name: Apache CXF 3.x JAX-WS
   description: |
     This instrumentation enriches HTTP server spans with route information, and enables controller spans for Apache CXF JAX-WS web services (controller spans are disabled by default).
@@ -6796,9 +6796,9 @@ libraries:
   features:
   - HTTP_ROUTE
   - CONTROLLER_SPANS
-  source_path: instrumentation/jaxws/jaxws-cxf-3.0
+  source_path: instrumentation/jaxws/jaxws-2.0-cxf-3.0
   scope:
-    name: io.opentelemetry.jaxws-cxf-3.0
+    name: io.opentelemetry.jaxws-2.0-cxf-3.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.cxf:cxf-rt-frontend-jaxws:[3.0.0,)

@@ -567,7 +567,7 @@ targets:
       target: ':instrumentation:jaxws:jaxws-common:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jaxws:jaxws-cxf-3.0:javaagent'
+      target: ':instrumentation:jaxws:jaxws-2.0-cxf-3.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jaxws:jaxws-jws-api-1.1:javaagent'

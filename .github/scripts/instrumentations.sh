@@ -140,7 +140,7 @@ readonly INSTRUMENTATIONS=(
   "jaxrs:jaxrs-3.0:jaxrs-3.0-resteasy-6.0:javaagent:testExperimental"
   "jaxws:jaxws-2.0:javaagent:test"
   "jaxws:jaxws-2.0-axis2-1.6:javaagent:test"
-  "jaxws:jaxws-cxf-3.0:javaagent:test"
+  "jaxws:jaxws-2.0-cxf-3.0:javaagent:test"
   "jaxws:jaxws-jws-api-1.1:javaagent:test"
   "jaxws:jaxws-metro-2.2:javaagent:test"
   "jdbc:javaagent:test"
