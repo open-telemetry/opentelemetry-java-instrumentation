@@ -62,7 +62,7 @@ class AdviceInspectorTest {
                         new TestInstrumentation(InlineAdvice.class, NonInlineAdvice.class));
                   }
                 }))
-        .isTrue();
+        .isFalse();
   }
 
   private static class TestInstrumentation implements TypeInstrumentation {

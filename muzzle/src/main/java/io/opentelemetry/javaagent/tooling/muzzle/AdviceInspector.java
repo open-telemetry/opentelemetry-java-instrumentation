@@ -10,7 +10,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -34,7 +34,7 @@ public class AdviceInspector {
   }
 
   public boolean useIsolatedAdvice(InstrumentationModule instrumentationModule) {
-    Set<String> adviceClassNames = new HashSet<>();
+    Set<String> adviceClassNames = new LinkedHashSet<>();
     for (TypeInstrumentation typeInstrumentation : instrumentationModule.typeInstrumentations()) {
       typeInstrumentation.transform(
           new TypeTransformer() {
