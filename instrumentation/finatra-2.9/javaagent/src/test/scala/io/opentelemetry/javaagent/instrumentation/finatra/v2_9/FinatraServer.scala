@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.finatra
+package io.opentelemetry.javaagent.instrumentation.finatra.v2_9
 
 import com.twitter.finagle.http.Request
 import com.twitter.finatra.http.HttpServer
