@@ -10,7 +10,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
-public class DropwizardSingletons {
+class DropwizardSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.dropwizard-views-0.7";
 
@@ -24,7 +24,7 @@ public class DropwizardSingletons {
     return "Render " + view.getTemplateName();
   }
 
-  public static Instrumenter<View, Void> instrumenter() {
+  static Instrumenter<View, Void> instrumenter() {
     return instrumenter;
   }
 

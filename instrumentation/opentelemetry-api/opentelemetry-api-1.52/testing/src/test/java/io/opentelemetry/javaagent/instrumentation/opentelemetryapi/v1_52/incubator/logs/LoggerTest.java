@@ -29,8 +29,9 @@ class LoggerTest {
   }
 
   private static void testEnabled(Logger logger, boolean expected) {
-    assertThat(((ExtendedLogger) logger).isEnabled(Severity.INFO)).isEqualTo(expected);
-    assertThat(((ExtendedLogger) logger).isEnabled(Severity.INFO, Context.current()))
-        .isEqualTo(expected);
+    assertThat(logger).isInstanceOf(ExtendedLogger.class);
+    ExtendedLogger extendedLogger = (ExtendedLogger) logger;
+    assertThat(extendedLogger.isEnabled(Severity.INFO)).isEqualTo(expected);
+    assertThat(extendedLogger.isEnabled(Severity.INFO, Context.current())).isEqualTo(expected);
   }
 }

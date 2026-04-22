@@ -188,7 +188,7 @@ module it extends) imports or instantiates Testcontainers types (`GenericContain
 rely solely on the presence of an `org.testcontainers:*` dependency in `build.gradle.kts`,
 because the dependency may only be used by some suites in the module.
 
-## Prefer `withType<Test>().configureEach` (when multiple test tasks exist)
+## Prefer `withType<Test>().configureEach` (ONLY when multiple test tasks exist)
 
 When a module has custom test tasks (e.g., `testStableSemconv`), system properties and JVM
 args that apply to **all** test tasks should be set once in a `withType<Test>().configureEach`
@@ -197,13 +197,24 @@ block, not repeated on each individual task.
 If a property or JVM arg is moved into `withType<Test>().configureEach`, remove any now-redundant
 copies from individual tasks unless a task intentionally overrides the shared value.
 
-When there is only one test task, `tasks.test { ... }` is fine — do not convert it to
-`withType<Test>().configureEach` and do not flag it.
+When the module's `build.gradle.kts` does not explicitly register additional `Test` tasks,
+`tasks.test { ... }` is fine — **do not** convert it to `withType<Test>().configureEach` and
+do not flag it.
 
-**How to spot violations:** If `build.gradle.kts` has both a `test { ... }` block and a
-custom test task (e.g., `val testStableSemconv by registering(Test::class)`), check whether
-any `systemProperty(...)` or `jvmArgs(...)` calls appear inside the `test { }` block that
-should apply to all tasks. If so, move them to `withType<Test>().configureEach`.
+**`latestDepTest` does not count as a second test task for this rule.** It is registered
+implicitly by the convention plugin when `testLatestDeps` is set, and it inherits the
+configuration of `tasks.test`. A module with only a `tasks.test { ... }` block and no
+`by registering(Test::class)` declarations is a single-test-task module — leave it alone
+even if `testLatestDeps = true`.
+
+Only consider converting to `withType<Test>().configureEach` when the **same
+`build.gradle.kts`** explicitly registers one or more additional `Test` tasks via
+`val foo by registering(Test::class)`.
+
+**How to spot violations:** If `build.gradle.kts` has both a `test { ... }` block and an
+explicit `by registering(Test::class)` custom test task (e.g., `testStableSemconv`), check
+whether any `systemProperty(...)` or `jvmArgs(...)` calls appear inside the `test { }` block
+that should apply to all tasks. If so, move them to `withType<Test>().configureEach`.
 
 ```kotlin
 tasks {
@@ -232,7 +243,8 @@ review**. Only verify correctness when they are already present.
 
 When already present, verify:
 
-- `collectMetadata` is in `withType<Test>().configureEach` (or `tasks.test` if only one test
-  task) — never on individual tasks.
+- `collectMetadata` is in `withType<Test>().configureEach` (or `tasks.test` if the module
+  does not explicitly register additional `Test` tasks — `latestDepTest` does not count) —
+  never on individual tasks.
 - `metadataConfig` is on each non-default task, not on the default `test` task.
 - The `metadataConfig` value matches at least one of the jvmArgs configured in the task

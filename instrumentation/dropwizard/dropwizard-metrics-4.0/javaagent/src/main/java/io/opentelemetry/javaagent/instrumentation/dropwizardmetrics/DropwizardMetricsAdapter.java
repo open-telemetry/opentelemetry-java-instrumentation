@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 
 public class DropwizardMetricsAdapter implements MetricRegistryListener {
 
@@ -69,9 +70,10 @@ public class DropwizardMetricsAdapter implements MetricRegistryListener {
    * @return the sanitized instrument name, or null if invalid (causing instrument creation to be
    *     skipped)
    */
+  @Nullable
   private static String sanitizeInstrumentName(String name) {
-    if (name == null || name.isEmpty()) {
-      logger.log(WARNING, "Dropwizard metric name is null or empty, skipping instrument creation");
+    if (name.isEmpty()) {
+      logger.log(WARNING, "Dropwizard metric name is empty, skipping instrument creation");
       return null;
     }
 

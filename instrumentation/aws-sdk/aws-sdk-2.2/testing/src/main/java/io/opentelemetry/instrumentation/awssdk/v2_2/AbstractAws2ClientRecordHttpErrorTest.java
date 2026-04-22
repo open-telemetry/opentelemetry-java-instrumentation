@@ -215,8 +215,9 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
 
     // make sure the response body input stream is still available and check its content to be
     // expected
-    assertThat(httpErrorMessages.size()).isEqualTo(2);
-    assertThat(httpErrorMessages.get(0)).isEqualTo("DynamoDB could not process your request");
-    assertThat(httpErrorMessages.get(1)).isEqualTo("DynamoDB is currently unavailable");
+    assertThat(httpErrorMessages)
+        .hasSize(2)
+        .containsExactly(
+            "DynamoDB could not process your request", "DynamoDB is currently unavailable");
   }
 }

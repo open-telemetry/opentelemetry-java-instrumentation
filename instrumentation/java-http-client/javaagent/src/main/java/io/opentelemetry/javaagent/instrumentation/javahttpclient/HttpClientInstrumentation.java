@@ -117,16 +117,16 @@ class HttpClientInstrumentation implements TypeInstrumentation {
   public static class SendAsyncAdvice {
 
     public static class AsyncAdviceScope {
-      private final Context parentContext;
-      private final Context context;
-      private final Scope scope;
+      @Nullable private final Context parentContext;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
       private final CallDepth callDepth;
       private final HttpRequest request;
 
       private AsyncAdviceScope(
-          Context parentContext,
-          Context context,
-          Scope scope,
+          @Nullable Context parentContext,
+          @Nullable Context context,
+          @Nullable Scope scope,
           CallDepth callDepth,
           HttpRequest request) {
         this.parentContext = parentContext;

@@ -11,7 +11,6 @@ import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxrsAnnotat
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxrsAnnotationsSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -51,8 +50,7 @@ class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(not(isStatic()))
+        not(isStatic())
             .and(
                 hasSuperMethod(
                     isAnnotatedWith(
@@ -176,9 +174,11 @@ class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Object stopSpan(
         @Advice.Return(typing = Typing.DYNAMIC) Object returnValue,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Enter AdviceScope adviceScope) {
-
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope == null) {
+        return returnValue;
+      }
       return adviceScope.exit(throwable, returnValue);
     }
   }

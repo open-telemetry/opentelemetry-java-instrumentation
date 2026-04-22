@@ -16,8 +16,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import java.util.List;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -40,25 +38,27 @@ public class AzureSdkInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public void injectClasses(ClassInjector injector) {
-    injector
-        .proxyBuilder(
-            "io.opentelemetry.javaagent.instrumentation.azurecore.v1_19.shaded.com.azure.core.tracing.opentelemetry.OpenTelemetryHttpPolicy")
-        .inject(InjectionMode.CLASS_ONLY);
-    injector
-        .proxyBuilder(
-            "io.opentelemetry.javaagent.instrumentation.azurecore.v1_19.shaded.com.azure.core.tracing.opentelemetry.OpenTelemetryTracer")
-        .inject(InjectionMode.CLASS_ONLY);
+  public List<String> exposedClassNames() {
+    return asList(
+        "io.opentelemetry.javaagent.instrumentation.azurecore.v1_19.shaded.com.azure.core.tracing.opentelemetry.OpenTelemetryHttpPolicy",
+        "io.opentelemetry.javaagent.instrumentation.azurecore.v1_19.shaded.com.azure.core.tracing.opentelemetry.OpenTelemetryTracer");
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // added in azure-core 1.19
-    return hasClassesNamed("com.azure.core.util.tracing.StartSpanOptions")
-        // added in azure-core-tracing-opentelemetry 1.0.0-beta.47 (native OTel support)
-        .and(not(hasClassesNamed("com.azure.core.tracing.opentelemetry.OpenTelemetryTracer")))
-        // added in azure-core 1.36
-        .and(not(hasClassesNamed("com.azure.core.util.tracing.TracerProvider")));
+    return hasClassesNamed(
+            // added in azure-core 1.19
+            "com.azure.core.util.tracing.StartSpanOptions")
+        .and(
+            not(
+                hasClassesNamed(
+                    // added in azure-core-tracing-opentelemetry 1.0.0-beta.47 (native OTel support)
+                    "com.azure.core.tracing.opentelemetry.OpenTelemetryTracer")))
+        .and(
+            not(
+                hasClassesNamed(
+                    // added in azure-core 1.36
+                    "com.azure.core.util.tracing.TracerProvider")));
   }
 
   @Override

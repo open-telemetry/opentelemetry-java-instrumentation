@@ -30,7 +30,7 @@ public class ClickHouseClientV1InstrumentationModule extends InstrumentationModu
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // Unrelated class which was added in 0.5.0, the minimum version where tests pass
+    // added in 0.5.0
     return hasClassesNamed("com.clickhouse.client.config.ClickHouseProxyType");
   }
 

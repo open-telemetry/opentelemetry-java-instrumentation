@@ -17,12 +17,12 @@ public abstract class JaxRsHttpServerTest<SERVER> extends AbstractJaxRsHttpServe
   @BeforeEach
   void setup() {
     // reset the barrier to avoid a failing test breaking subsequent tests
-    JaxRsTestResource.barrier.reset();
+    JaxRsTestResource.resetBarrier();
   }
 
   @Override
   protected void awaitBarrier(int amount, TimeUnit timeUnit)
       throws BrokenBarrierException, InterruptedException, TimeoutException {
-    JaxRsTestResource.barrier.await(amount, timeUnit);
+    JaxRsTestResource.awaitBarrier(amount, timeUnit);
   }
 }

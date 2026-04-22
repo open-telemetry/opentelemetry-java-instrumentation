@@ -11,11 +11,11 @@ import io.opentelemetry.javaagent.instrumentation.jaxws.common.JaxWsRequest;
 
 public class JwsSingletons {
 
-  private static final Instrumenter<JaxWsRequest, Void> INSTANCE =
+  private static final Instrumenter<JaxWsRequest, Void> instrumenter =
       JaxWsInstrumenterFactory.createInstrumenter("io.opentelemetry.jaxws-jws-api-1.1");
 
   public static Instrumenter<JaxWsRequest, Void> instrumenter() {
-    return INSTANCE;
+    return instrumenter;
   }
 
   private JwsSingletons() {}

@@ -22,8 +22,6 @@ muzzle {
     group.set("org.jboss.resteasy")
     module.set("resteasy-jaxrs")
     versions.set("(2.1.0.GA,3.1.0.Final)")
-    // missing dependencies
-    skip("2.3.10.Final")
   }
 
   fail {
@@ -40,7 +38,7 @@ dependencies {
   library("org.jboss.resteasy:resteasy-jaxrs:3.1.0.Final")
 
   implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent"))
-  implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-common:javaagent"))
+  implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-common-3.0:javaagent"))
 
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent"))
 

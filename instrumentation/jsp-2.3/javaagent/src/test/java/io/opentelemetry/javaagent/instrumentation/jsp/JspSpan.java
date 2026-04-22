@@ -18,75 +18,75 @@ class JspSpan {
   private Class<?> exceptionClass;
   private boolean errorMessageOptional;
 
-  public SpanData getParent() {
+  SpanData getParent() {
     return parent;
   }
 
-  public void setParent(SpanData parent) {
+  void setParent(SpanData parent) {
     this.parent = parent;
   }
 
-  public String getMethod() {
+  String getMethod() {
     return method;
   }
 
-  public void setMethod(String method) {
+  void setMethod(String method) {
     this.method = method;
   }
 
-  public String getClassName() {
+  String getClassName() {
     return className;
   }
 
-  public void setClassName(String className) {
+  void setClassName(String className) {
     this.className = className;
   }
 
-  public String getRequestUrlOverride() {
+  String getRequestUrlOverride() {
     return requestUrlOverride;
   }
 
-  public void setRequestUrlOverride(String requestUrlOverride) {
+  void setRequestUrlOverride(String requestUrlOverride) {
     this.requestUrlOverride = requestUrlOverride;
   }
 
-  public String getForwardOrigin() {
+  String getForwardOrigin() {
     return forwardOrigin;
   }
 
-  public void setForwardOrigin(String forwardOrigin) {
+  void setForwardOrigin(String forwardOrigin) {
     this.forwardOrigin = forwardOrigin;
   }
 
-  public String getRoute() {
+  String getRoute() {
     return route;
   }
 
-  public void setRoute(String route) {
+  void setRoute(String route) {
     this.route = route;
   }
 
-  public int getResponseStatus() {
+  int getResponseStatus() {
     return responseStatus;
   }
 
-  public void setResponseStatus(int responseStatus) {
+  void setResponseStatus(int responseStatus) {
     this.responseStatus = responseStatus;
   }
 
-  public Class<?> getExceptionClass() {
+  Class<?> getExceptionClass() {
     return exceptionClass;
   }
 
-  public void setExceptionClass(Class<?> exceptionClass) {
+  void setExceptionClass(Class<?> exceptionClass) {
     this.exceptionClass = exceptionClass;
   }
 
-  public boolean isErrorMessageOptional() {
+  boolean isErrorMessageOptional() {
     return errorMessageOptional;
   }
 
-  public void setErrorMessageOptional(boolean errorMessageOptional) {
+  void setErrorMessageOptional(boolean errorMessageOptional) {
     this.errorMessageOptional = errorMessageOptional;
   }
 }

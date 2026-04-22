@@ -12,9 +12,9 @@ import javax.annotation.Nullable;
 public class JedisRequestContext<T> {
   private static final ThreadLocal<JedisRequestContext<?>> contextThreadLocal = new ThreadLocal<>();
 
-  private Instrumenter<T, Void> instrumenter;
-  private T request;
-  private Context context;
+  @Nullable private Instrumenter<T, Void> instrumenter;
+  @Nullable private T request;
+  @Nullable private Context context;
   @Nullable private Throwable throwable;
 
   private JedisRequestContext() {}

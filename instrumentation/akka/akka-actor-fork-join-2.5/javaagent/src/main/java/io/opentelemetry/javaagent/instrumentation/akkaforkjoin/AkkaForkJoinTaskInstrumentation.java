@@ -55,7 +55,7 @@ class AkkaForkJoinTaskInstrumentation implements TypeInstrumentation {
 
     /**
      * When {@link ForkJoinTask} object is submitted to {@link ForkJoinPool} as {@link Runnable} or
-     * {@link Callable} it will not get wrapped, instead it will be casted to {@code ForkJoinTask}
+     * {@link Callable} it will not get wrapped, instead it will be cast to {@code ForkJoinTask}
      * directly. This means state is still stored in {@code Runnable} or {@code Callable} and we
      * need to use that state.
      */

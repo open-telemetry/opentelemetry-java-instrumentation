@@ -31,7 +31,7 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 
 class JspSpanAssertions {
-  static final boolean isExperimentalEnabled =
+  static final boolean EXPERIMENTAL_ENABLED =
       Boolean.getBoolean("otel.instrumentation.jsp.experimental-span-attributes");
 
   private final String baseUrl;
@@ -42,8 +42,8 @@ class JspSpanAssertions {
     this.port = port;
   }
 
-  public static String experimental(String value) {
-    if (isExperimentalEnabled) {
+  static String experimental(String value) {
+    if (EXPERIMENTAL_ENABLED) {
       return value;
     }
     return null;
@@ -153,7 +153,7 @@ class JspSpanAssertions {
 
     span.hasName("Render " + spanData.getRoute()).hasParent(spanData.getParent());
 
-    if (isExperimentalEnabled) {
+    if (EXPERIMENTAL_ENABLED) {
       span.hasAttributesSatisfyingExactly(
           equalTo(stringKey("jsp.requestURL"), baseUrl + requestUrl),
           satisfies(
