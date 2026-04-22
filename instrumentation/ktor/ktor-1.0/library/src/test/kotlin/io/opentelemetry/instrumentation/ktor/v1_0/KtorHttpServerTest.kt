@@ -32,7 +32,7 @@ class KtorHttpServerTest : AbstractHttpServerTest<ApplicationEngine>() {
   companion object {
     @JvmStatic
     @RegisterExtension
-    val testing = HttpServerInstrumentationExtension.forLibrary()
+    private val testing = HttpServerInstrumentationExtension.forLibrary()
   }
 
   override fun setupServer(): ApplicationEngine = embeddedServer(Netty, port = port) {
