@@ -6,33 +6,45 @@ features:
   - LOGGING_BRIDGE
 configurations:
   - name: otel.instrumentation.log4j-appender.experimental-log-attributes
+    declarative_name: java.log4j_appender.experimental_log_attributes/development
     description: >
       Enables the capture of experimental log attributes, including thread name and thread ID.
     type: boolean
     default: false
   - name: otel.instrumentation.log4j-appender.experimental.capture-code-attributes
+    declarative_name: java.log4j_appender.capture_code_attributes/development
     description: >
       Enables the capture of code location attributes, including file path, class name, method
       name, and line number.
     type: boolean
     default: false
   - name: otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes
+    declarative_name: java.log4j_appender.capture_map_message_attributes/development
     description: >
       Enables the capture of attributes from Log4j MapMessage instances.
     type: boolean
     default: false
   - name: otel.instrumentation.log4j-appender.experimental.capture-marker-attribute
+    declarative_name: java.log4j_appender.capture_marker_attribute/development
     description: >
       Enables the capture of the Log4j marker attribute.
     type: boolean
     default: false
   - name: otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes
+    declarative_name: java.log4j_appender.capture_mdc_attributes/development
     description: >
       Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a
       comma-separated list of specific keys.
     type: list
+    examples:
+      - "*"
+      - "key1,key2"
     default: ''
+    examples:
+      - "custom-mdc-key"
+      - "key1,key2,key3"
   - name: otel.instrumentation.log4j-appender.experimental.capture-event-name
+    declarative_name: java.log4j_appender.capture_event_name/development
     description: >
       Enables the capture of the event name from the MDC attribute "event.name" and sets it as the
       log record's event name.
