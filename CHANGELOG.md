@@ -19,6 +19,9 @@
   use `setTraceIdRequestAttributeEnabled()` and `setCaptureRequestParameters()` respectively.
 - Removed the `opentelemetry-runtime-telemetry-java8` and `opentelemetry-runtime-telemetry-java17`
   library artifacts (deprecated aliases); use `opentelemetry-runtime-telemetry` instead.
+- Removed previously deprecated experimental config property
+  `otel.instrumentation.servlet.experimental.add-trace-id-request-attribute`; use
+  `otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled` instead.
 
 ## Version 2.27.0 (2026-04-21)
 
