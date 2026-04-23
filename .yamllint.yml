@@ -1,6 +1,0 @@
-extends: relaxed
-
-rules:
-  document-start: disable
-  line-length: disable
-  indentation: warning
