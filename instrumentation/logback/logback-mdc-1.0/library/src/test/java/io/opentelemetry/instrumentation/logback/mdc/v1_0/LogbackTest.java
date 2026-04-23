@@ -19,7 +19,7 @@ class LogbackTest extends AbstractLogbackTest {
   static InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Override
-  public InstrumentationExtension getInstrumentationExtension() {
+  protected InstrumentationExtension getInstrumentationExtension() {
     return testing;
   }
 
