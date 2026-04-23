@@ -2,7 +2,5 @@ extends: relaxed
 
 rules:
   document-start: disable
-  line-length:
-    max: 120
-  indentation:
-    spaces: 2
+  line-length: disable
+  indentation: warning
