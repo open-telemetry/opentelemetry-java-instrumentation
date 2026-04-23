@@ -9,7 +9,7 @@ dependencies {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 }
