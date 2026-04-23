@@ -164,6 +164,10 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
   - name: otel.instrumentation.http.server.capture-request-headers
     description: List of HTTP request headers to capture in HTTP server telemetry.
     type: list
@@ -177,10 +181,6 @@ libraries:
       Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.size` and `http.server.response.size` metrics.
     type: boolean
     default: false
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
   telemetry:
   - when: default
     metrics:
@@ -763,6 +763,11 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
+  telemetry:
   - when: default
     metrics:
     - name: http.client.request.duration
@@ -841,10 +846,6 @@ libraries:
         type: STRING
       - name: url.full
         type: STRING
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
 - name: apache-httpclient-2.0
   display_name: Apache HttpClient
   description: This instrumentation enables HTTP client spans and HTTP client metrics
@@ -884,6 +885,11 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
+  telemetry:
   - when: default
     metrics:
     - name: http.client.request.duration
@@ -958,10 +964,6 @@ libraries:
         type: STRING
       - name: url.full
         type: STRING
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
 - name: apache-httpclient-4.0
   display_name: Apache HttpClient
   description: This instrumentation enables HTTP client spans and HTTP client metrics
@@ -1002,6 +1004,11 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
+  telemetry:
   - when: default
     metrics:
     - name: http.client.request.duration
@@ -1080,10 +1087,6 @@ libraries:
         type: STRING
       - name: url.full
         type: STRING
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
 - name: apache-httpclient-4.3
   display_name: Apache HttpClient
   description: This instrumentation provides a library integration that enables HTTP
@@ -1176,6 +1179,11 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
+  telemetry:
   - when: default
     metrics:
     - name: http.client.request.duration
@@ -1254,10 +1262,6 @@ libraries:
         type: STRING
       - name: url.full
         type: STRING
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
 - name: apache-httpclient-5.2
   display_name: Apache HttpClient
   description: This instrumentation provides a library integration that enables HTTP
@@ -1378,6 +1382,11 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    declarative_name: java.common.http.client.redact_query_parameters/development
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
   - name: otel.instrumentation.http.server.capture-request-headers
     declarative_name: general.http.server.request_captured_headers
     description: List of HTTP request headers to capture in HTTP server telemetry.
@@ -1394,11 +1403,6 @@ libraries:
       Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.size` and `http.server.response.size` metrics.
     type: boolean
     default: false
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    declarative_name: general.sanitization.url.sensitive_query_parameters/development
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
   telemetry:
   - when: default
     metrics:
@@ -1685,6 +1689,12 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    declarative_name: java.common.http.client.redact_query_parameters/development
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
+  telemetry:
   - when: default
     metrics:
     - name: http.client.request.duration
@@ -1755,11 +1765,6 @@ libraries:
         type: STRING
       - name: url.full
         type: STRING
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    declarative_name: general.sanitization.url.sensitive_query_parameters/development
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
 - name: async-http-client-1.9
   display_name: AsyncHttpClient
   description: |
@@ -1799,6 +1804,11 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
+  telemetry:
   - when: default
     metrics:
     - name: http.client.request.duration
@@ -1869,10 +1879,6 @@ libraries:
         type: STRING
       - name: url.full
         type: STRING
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
 - name: async-http-client-2.0
   display_name: AsyncHttpClient
   description: |
@@ -1912,6 +1918,11 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
+  telemetry:
   - when: default
     metrics:
     - name: http.client.request.duration
@@ -1998,10 +2009,6 @@ libraries:
         type: STRING
       - name: url.full
         type: STRING
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
 - name: avaje-jex-3.0
   display_name: Avaje Jex
   description: |
@@ -4699,6 +4706,11 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
+  telemetry:
   - when: default
     metrics:
     - name: http.client.request.duration
@@ -4732,10 +4744,6 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
 - name: grails-3.0
   display_name: Grails
   description: |
@@ -5843,6 +5851,12 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    declarative_name: java.common.http.client.redact_query_parameters/development
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
+  telemetry:
   - when: default
     metrics:
     - name: http.client.request.duration
@@ -5880,11 +5894,6 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    declarative_name: general.sanitization.url.sensitive_query_parameters/development
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
 - name: hystrix-1.4
   display_name: Netflix Hystrix
   description: This instrumentation enables spans for Hystrix command executions and
@@ -6125,6 +6134,12 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    declarative_name: java.common.http.client.redact_query_parameters/development
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
+  telemetry:
   - when: default
     metrics:
     - name: http.client.request.duration
@@ -6164,11 +6179,6 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    declarative_name: general.sanitization.url.sensitive_query_parameters/development
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
 - name: java-http-server
   display_name: Java HTTP Server
   description: This instrumentation enables HTTP server spans and HTTP server metrics
@@ -7502,6 +7512,11 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
+  telemetry:
   - when: default
     metrics:
     - name: http.client.request.duration
@@ -7580,10 +7595,6 @@ libraries:
         type: STRING
       - name: url.full
         type: STRING
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
 - name: jetty-httpclient-12.0
   display_name: Eclipse Jetty HTTP Client
   description: This instrumentation enables HTTP client spans and HTTP client metrics
@@ -7629,6 +7640,12 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    declarative_name: java.common.http.client.redact_query_parameters/development
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
+  telemetry:
   - when: default
     metrics:
     - name: http.client.request.duration
@@ -7707,11 +7724,6 @@ libraries:
         type: STRING
       - name: url.full
         type: STRING
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    declarative_name: general.sanitization.url.sensitive_query_parameters/development
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
 - name: jfinal-3.2
   display_name: JFinal
   description: |
@@ -7885,6 +7897,11 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
+  telemetry:
   - when: default
     metrics:
     - name: http.client.request.duration
@@ -7924,10 +7941,6 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
 - name: jsf-mojarra-1.2
   display_name: Eclipse Mojarra
   description: |
@@ -8527,6 +8540,11 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
+  telemetry:
   - when: default
     metrics:
     - name: http.client.request.duration
@@ -8632,10 +8650,6 @@ libraries:
         type: STRING
       - name: user_agent.original
         type: STRING
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
 - name: ktor-3.0
   display_name: Ktor
   description: |
@@ -8694,6 +8708,11 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
+  telemetry:
   - when: default
     metrics:
     - name: http.client.request.duration
@@ -8890,10 +8909,6 @@ libraries:
         type: STRING
       - name: user_agent.original
         type: STRING
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
 - name: kubernetes-client-7.0
   display_name: Kubernetes Client
   description: This instrumentation enables HTTP client spans and HTTP client metrics
@@ -8938,6 +8953,11 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
+  telemetry:
   - when: default
     metrics:
     - name: http.client.request.duration
@@ -9008,10 +9028,6 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
 - name: lettuce-4.0
   display_name: Lettuce
   description: |
@@ -10143,6 +10159,10 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
   - name: otel.instrumentation.http.server.capture-request-headers
     description: List of HTTP request headers to capture in HTTP server telemetry.
     type: list
@@ -10156,10 +10176,6 @@ libraries:
       Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.size` and `http.server.response.size` metrics.
     type: boolean
     default: false
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
   telemetry:
   - when: default
     metrics:
@@ -10290,6 +10306,10 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
   - name: otel.instrumentation.http.server.capture-request-headers
     description: List of HTTP request headers to capture in HTTP server telemetry.
     type: list
@@ -10311,10 +10331,6 @@ libraries:
     description: Enable SSL telemetry.
     type: boolean
     default: false
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
   telemetry:
   - when: default
     metrics:
@@ -10446,6 +10462,10 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
   - name: otel.instrumentation.http.server.capture-request-headers
     description: List of HTTP request headers to capture in HTTP server telemetry.
     type: list
@@ -10467,10 +10487,6 @@ libraries:
     description: Enable SSL telemetry.
     type: boolean
     default: false
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
   telemetry:
   - when: default
     metrics:
@@ -10597,6 +10613,11 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
+  telemetry:
   - when: default
     metrics:
     - name: http.client.request.duration
@@ -10675,10 +10696,6 @@ libraries:
         type: STRING
       - name: url.full
         type: STRING
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
 - name: okhttp-3.0
   display_name: OkHttp
   description: This instrumentation enables HTTP client spans and HTTP client metrics
@@ -10719,6 +10736,11 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
+  telemetry:
   - when: default
     metrics:
     - name: http.client.request.duration
@@ -10809,10 +10831,6 @@ libraries:
         type: STRING
       - name: url.full
         type: STRING
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
 - name: openai-java-1.1
   display_name: OpenAI Java SDK
   description: This instrumentation enables Gen AI client spans and metrics for the
@@ -11374,6 +11392,10 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
   - name: otel.instrumentation.http.server.capture-request-headers
     description: List of HTTP request headers to capture in HTTP server telemetry.
     type: list
@@ -11387,10 +11409,6 @@ libraries:
       Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.size` and `http.server.response.size` metrics.
     type: boolean
     default: false
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
   telemetry:
   - when: default
     metrics:
@@ -11561,6 +11579,11 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
+  telemetry:
   - when: default
     metrics:
     - name: http.client.request.duration
@@ -11600,10 +11623,6 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
 - name: play-ws-2.0
   display_name: Play WS
   description: This instrumentation enables HTTP client spans and HTTP client metrics
@@ -11645,6 +11664,11 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
+  telemetry:
   - when: default
     metrics:
     - name: http.client.request.duration
@@ -11684,10 +11708,6 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
 - name: play-ws-2.1
   display_name: Play WS
   description: This instrumentation enables HTTP client spans and HTTP client metrics
@@ -11728,6 +11748,11 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
+  telemetry:
   - when: default
     metrics:
     - name: http.client.request.duration
@@ -11767,10 +11792,6 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
 - name: powerjob-4.0
   display_name: PowerJob
   description: This instrumentation enables spans for PowerJob job processor executions.
@@ -12389,6 +12410,11 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
+  telemetry:
   - when: default
     metrics:
     - name: http.client.request.duration
@@ -12470,10 +12496,6 @@ libraries:
         type: STRING
       - name: user_agent.original
         type: STRING
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
 - name: reactor-3.1
   display_name: Reactor
   description: |
@@ -12631,14 +12653,14 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
   - name: otel.instrumentation.reactor-netty.connection-telemetry.enabled
     description: Enables the creation of Connect and DNS spans.
     type: boolean
     default: false
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
   telemetry:
   - when: default
     metrics:
@@ -15651,6 +15673,11 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
+  telemetry:
   - when: default
     metrics:
     - name: http.client.request.duration
@@ -15717,10 +15744,6 @@ libraries:
         type: STRING
       - name: url.full
         type: STRING
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
 - name: vertx-http-client-4.0
   display_name: Vert.x HTTP Client
   description: This instrumentation enables HTTP client spans and HTTP client metrics
@@ -15760,6 +15783,11 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
+  telemetry:
   - when: default
     metrics:
     - name: http.client.request.duration
@@ -15846,10 +15874,6 @@ libraries:
         type: STRING
       - name: url.full
         type: STRING
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
 - name: vertx-http-client-5.0
   display_name: Vert.x HTTP Client
   description: |
@@ -15890,6 +15914,11 @@ libraries:
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true
+  telemetry:
   - when: default
     metrics:
     - name: http.client.request.duration
@@ -15976,10 +16005,6 @@ libraries:
         type: STRING
       - name: url.full
         type: STRING
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
 - name: vertx-kafka-client-3.6
   display_name: Vert.x Kafka Client
   description: |
