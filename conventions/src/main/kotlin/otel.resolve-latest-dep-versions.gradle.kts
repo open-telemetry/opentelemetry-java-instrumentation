@@ -4,7 +4,7 @@ import org.gradle.util.internal.VersionNumber
 
 tasks {
   val resolveLatestDepVersions by registering {
-    group = "Help"
+    group = "help"
     description = "Resolve latest dependency versions and write to .github/config/latest-dep-versions.json"
 
     doLast {

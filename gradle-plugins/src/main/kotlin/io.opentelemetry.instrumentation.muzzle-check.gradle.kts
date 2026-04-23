@@ -25,7 +25,6 @@ import org.eclipse.aether.version.Version
 import org.eclipse.aether.util.version.GenericVersionScheme
 import java.net.URL
 import java.net.URLClassLoader
-import java.util.Locale
 import java.util.stream.StreamSupport
 
 plugins {
@@ -441,13 +440,8 @@ fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, sessio
 }
 
 fun filterVersions(range: VersionRangeResult, skipVersions: Set<String>, upperBound: Version) = sequence {
-  fun accept(version: Version?): Boolean {
-    if (version == null) return false
-    if (!AcceptableVersions.isStable(version.toString())) return false
-    if (skipVersions.contains(version.toString().lowercase(Locale.ROOT))) return false
-    if (version > upperBound) return false
-    return true
-  }
+  val predicate = AcceptableVersions(skipVersions)
+  fun accept(version: Version?): Boolean = predicate.test(version) && version!! <= upperBound
   if (accept(range.lowestVersion)) {
     yield(range.lowestVersion.toString())
   }

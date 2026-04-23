@@ -68,7 +68,20 @@ jobs:
           git checkout -b $branch
           git add .github/config/latest-dep-versions.json
           git commit -m "$message"
-          git push --force --set-upstream origin $branch
+
+          # If the remote branch already exists, only force-push when its tip
+          # was authored by otelbot. This preserves any manual commits that
+          # may have pushed on top of an open auto-PR.
+          remote_tip_author=$(git ls-remote --heads origin "$branch" | awk '{print $1}')
+          if [ -n "$remote_tip_author" ]; then
+            git fetch origin "$branch"
+            author_email=$(git log -1 --format='%ae' "origin/$branch")
+            if [ "$author_email" != "197425009+otelbot@users.noreply.github.com" ]; then
+              echo "Remote tip of $branch was authored by $author_email (not otelbot); skipping push." >&2
+              exit 0
+            fi
+          fi
+          git push --force-with-lease --set-upstream origin $branch
 
           # only create a new PR if one doesn't already exist
           existing_pr=$(gh pr list --head "$branch" --state open --json number --jq '.[0].number')
