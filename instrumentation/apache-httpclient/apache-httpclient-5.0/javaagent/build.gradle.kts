@@ -15,7 +15,6 @@ dependencies {
   library("org.apache.httpcomponents.client5:httpclient5:5.0")
   // https://issues.apache.org/jira/browse/HTTPCORE-653
   testImplementation("org.apache.httpcomponents.core5:httpcore5:5.0.3")
-  latestDepTestLibrary("org.apache.httpcomponents.client5:httpclient5:5.5.1") // documented limitation
 
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
