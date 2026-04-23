@@ -18,13 +18,13 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import io.opentelemetry.instrumentation.mongo.testing.AbstractMongoClientTest;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.ArrayList;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.bson.Document;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -33,18 +33,14 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   private MongoClient client;
 
   @BeforeAll
   void setup() {
     client = MongoClients.create("mongodb://" + host + ":" + port);
-  }
-
-  @AfterAll
-  void cleanup() {
-    if (client != null) {
-      client.close();
-    }
+    cleanup.deferAfterAll(client);
   }
 
   @Override
@@ -53,41 +49,46 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   }
 
   @Override
-  public void createCollection(String dbName, String collectionName) {
+  protected void createCollection(String dbName, String collectionName) {
     MongoDatabase db = client.getDatabase(dbName);
     db.createCollection(collectionName);
   }
 
   @Override
-  public void createCollectionNoDescription(String dbName, String collectionName) {
-    MongoDatabase db = MongoClients.create("mongodb://" + host + ":" + port).getDatabase(dbName);
+  protected void createCollectionNoDescription(String dbName, String collectionName) {
+    MongoClient tmpClient = MongoClients.create("mongodb://" + host + ":" + port);
+    cleanup.deferCleanup(tmpClient);
+    MongoDatabase db = tmpClient.getDatabase(dbName);
     db.createCollection(collectionName);
   }
 
   @Override
-  public void createCollectionWithAlreadyBuiltClientOptions(String dbName, String collectionName) {
+  protected void createCollectionWithAlreadyBuiltClientOptions(
+      String dbName, String collectionName) {
     abort("not tested on 4.0");
   }
 
   @Override
-  public void createCollectionCallingBuildTwice(String dbName, String collectionName) {
+  protected void createCollectionCallingBuildTwice(String dbName, String collectionName) {
     MongoClientSettings.Builder settings =
         MongoClientSettings.builder()
             .applyToClusterSettings(
                 builder -> builder.hosts(singletonList(new ServerAddress(host, port))));
     settings.build();
-    MongoDatabase db = MongoClients.create(settings.build()).getDatabase(dbName);
+    MongoClient tmpClient = MongoClients.create(settings.build());
+    cleanup.deferCleanup(tmpClient);
+    MongoDatabase db = tmpClient.getDatabase(dbName);
     db.createCollection(collectionName);
   }
 
   @Override
-  public long getCollection(String dbName, String collectionName) {
+  protected long getCollection(String dbName, String collectionName) {
     MongoDatabase db = client.getDatabase(dbName);
     return db.getCollection(collectionName).estimatedDocumentCount();
   }
 
   @Override
-  public MongoCollection<Document> setupInsert(String dbName, String collectionName) {
+  protected MongoCollection<Document> setupInsert(String dbName, String collectionName) {
     MongoCollection<Document> collection =
         testing()
             .runWithSpan(
@@ -102,13 +103,13 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   }
 
   @Override
-  public long insert(MongoCollection<Document> collection) {
+  protected long insert(MongoCollection<Document> collection) {
     collection.insertOne(new Document("password", "SECRET"));
     return collection.estimatedDocumentCount();
   }
 
   @Override
-  public MongoCollection<Document> setupUpdate(String dbName, String collectionName) {
+  protected MongoCollection<Document> setupUpdate(String dbName, String collectionName) {
     MongoCollection<Document> collection =
         testing()
             .runWithSpan(
@@ -125,7 +126,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   }
 
   @Override
-  public long update(MongoCollection<Document> collection) {
+  protected long update(MongoCollection<Document> collection) {
     UpdateResult result =
         collection.updateOne(
             new BsonDocument("password", new BsonString("OLDPW")),
@@ -135,7 +136,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   }
 
   @Override
-  public MongoCollection<Document> setupDelete(String dbName, String collectionName) {
+  protected MongoCollection<Document> setupDelete(String dbName, String collectionName) {
     MongoCollection<Document> collection =
         testing()
             .runWithSpan(
@@ -152,7 +153,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   }
 
   @Override
-  public long delete(MongoCollection<Document> collection) {
+  protected long delete(MongoCollection<Document> collection) {
     DeleteResult result =
         collection.deleteOne(new BsonDocument("password", new BsonString("SECRET")));
     collection.estimatedDocumentCount();
@@ -160,7 +161,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   }
 
   @Override
-  public MongoCollection<Document> setupGetMore(String dbName, String collectionName) {
+  protected MongoCollection<Document> setupGetMore(String dbName, String collectionName) {
     MongoCollection<Document> collection =
         testing()
             .runWithSpan(
@@ -178,7 +179,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   }
 
   @Override
-  public void getMore(MongoCollection<Document> collection) {
+  protected void getMore(MongoCollection<Document> collection) {
     collection
         .find()
         .filter(new Document("_id", new Document("$gte", 0)))
@@ -187,7 +188,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   }
 
   @Override
-  public void error(String dbName, String collectionName) {
+  protected void error(String dbName, String collectionName) {
     MongoCollection<Document> collection =
         testing()
             .runWithSpan(
