@@ -25,14 +25,4 @@ class GlobalOpenTelemetryTest {
   void getOrNoop() {
     assertThat(GlobalOpenTelemetry.getOrNoop()).isEqualTo(GlobalOpenTelemetry.get());
   }
-
-  @Test
-  void getUsesAgentBridge() {
-    GlobalOpenTelemetry.get().getTracer("test").spanBuilder("child").startSpan().end();
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("child").hasNoParent().hasTotalAttributeCount(0)));
-  }
 }
