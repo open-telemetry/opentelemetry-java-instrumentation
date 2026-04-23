@@ -9,7 +9,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
 import java.util.List;
 import java.util.Map;
 import net.bytebuddy.utility.JavaModule;
@@ -19,18 +18,6 @@ import net.bytebuddy.utility.JavaModule;
  * any time.
  */
 public interface ExperimentalInstrumentationModule {
-
-  /**
-   * Only functional for Modules where {@link InstrumentationModule#isIndyModule()} returns {@code
-   * true}.
-   *
-   * <p>Normally, helper and advice classes are loaded in a child classloader of the instrumented
-   * classloader. This method allows to inject classes directly into the instrumented classloader
-   * instead.
-   *
-   * @param injector the builder for injecting classes
-   */
-  default void injectClasses(ClassInjector injector) {}
 
   /**
    * Returns a list of helper classes that will be defined in the class loader of the instrumented

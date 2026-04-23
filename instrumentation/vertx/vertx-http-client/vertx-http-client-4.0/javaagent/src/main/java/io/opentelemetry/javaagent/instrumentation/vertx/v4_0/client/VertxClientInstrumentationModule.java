@@ -24,14 +24,10 @@ public class VertxClientInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return not(hasClassesNamed(
-            // class removed in 4.0
-            "io.vertx.core.Starter"))
-        .and(
-            not(
-                hasClassesNamed(
-                    // class added in 5.0
-                    "io.vertx.core.http.impl.HttpClientConnectionInternal")));
+    // removed in 4.0
+    return not(hasClassesNamed("io.vertx.core.Starter"))
+        // added in 5.0
+        .and(not(hasClassesNamed("io.vertx.core.http.impl.HttpClientConnectionInternal")));
   }
 
   @Override

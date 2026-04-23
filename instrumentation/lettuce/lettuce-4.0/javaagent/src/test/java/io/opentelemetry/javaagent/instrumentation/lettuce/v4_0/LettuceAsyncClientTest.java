@@ -48,12 +48,10 @@ import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -106,6 +104,7 @@ class LettuceAsyncClientTest {
   @BeforeAll
   static void setUp() {
     redisServer.start();
+    cleanup.deferAfterAll(redisServer::stop);
     host = redisServer.getHost();
     port = redisServer.getMappedPort(6379);
     embeddedDbUri = "redis://" + host + ":" + port + "/" + DB_INDEX;
@@ -115,8 +114,10 @@ class LettuceAsyncClientTest {
 
     redisClient = RedisClient.create(embeddedDbUri);
     redisClient.setOptions(CLIENT_OPTIONS);
+    cleanup.deferAfterAll(redisClient::shutdown);
 
     connection = redisClient.connect();
+    cleanup.deferAfterAll(connection);
     asyncCommands = connection.async();
     RedisCommands<String, String> syncCommands = connection.sync();
 
@@ -125,13 +126,6 @@ class LettuceAsyncClientTest {
     // 1 set + 1 connect trace
     testing.waitForTraces(2);
     testing.clearData();
-  }
-
-  @AfterAll
-  static void cleanUp() {
-    connection.close();
-    redisClient.shutdown();
-    redisServer.stop();
   }
 
   @Test
@@ -189,8 +183,7 @@ class LettuceAsyncClientTest {
   }
 
   @Test
-  void testSetCommandUsingFutureGetWithTimeout()
-      throws ExecutionException, InterruptedException, TimeoutException {
+  void testSetCommandUsingFutureGetWithTimeout() throws Exception {
     RedisFuture<String> redisFuture = asyncCommands.set("TESTSETKEY", "TESTSETVAL");
     String res = redisFuture.get(3, SECONDS);
 

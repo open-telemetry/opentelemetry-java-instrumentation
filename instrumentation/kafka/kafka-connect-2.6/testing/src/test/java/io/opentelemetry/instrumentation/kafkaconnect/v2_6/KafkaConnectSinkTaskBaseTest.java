@@ -54,7 +54,7 @@ import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
 // Suppressing warnings for test dependencies and deprecated Testcontainers API
-@SuppressWarnings({"deprecation"})
+@SuppressWarnings("deprecation")
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvider {

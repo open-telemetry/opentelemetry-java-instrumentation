@@ -545,13 +545,13 @@ public abstract class AbstractMongoClientTest<T> {
       String operation,
       String collection,
       String dbName,
-      Object parentSpan,
+      SpanData parentSpan,
       List<String> statements) {
     span.hasName(operation + " " + dbName + "." + collection).hasKind(CLIENT);
     if (parentSpan == null) {
       span.hasNoParent();
     } else {
-      span.hasParent((SpanData) parentSpan);
+      span.hasParent(parentSpan);
     }
 
     span.hasAttributesSatisfyingExactly(

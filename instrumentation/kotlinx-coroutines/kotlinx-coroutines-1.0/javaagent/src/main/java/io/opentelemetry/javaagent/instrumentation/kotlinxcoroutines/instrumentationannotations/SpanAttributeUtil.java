@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.instrumenta
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -72,6 +73,7 @@ class SpanAttributeUtil {
     return annotatedParameters;
   }
 
+  @Nullable
   private static String getParameterName(MethodNode methodNode, int parameter) {
     ParameterNode parameterNode =
         methodNode.parameters != null && methodNode.parameters.size() > parameter
@@ -80,6 +82,7 @@ class SpanAttributeUtil {
     return parameterNode != null ? parameterNode.name : null;
   }
 
+  @Nullable
   private static Object getAnnotationValue(AnnotationNode annotationNode) {
     if (annotationNode.values != null && !annotationNode.values.isEmpty()) {
       List<Object> values = annotationNode.values;

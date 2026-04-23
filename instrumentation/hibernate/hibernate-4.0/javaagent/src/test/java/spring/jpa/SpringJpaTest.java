@@ -29,6 +29,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.regex.Pattern;
 import org.hibernate.Version;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -41,6 +42,11 @@ class SpringJpaTest {
   AnnotationConfigApplicationContext context =
       new AnnotationConfigApplicationContext(PersistenceConfig.class);
   CustomerRepository repo = context.getBean(CustomerRepository.class);
+
+  @AfterEach
+  void closeContext() {
+    context.close();
+  }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @Test

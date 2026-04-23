@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.bson.Document;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -44,13 +43,7 @@ public abstract class AbstractMongo31ClientTest
         MongoClientOptions.builder().description("some-description");
     configureMongoClientOptions(options);
     client = new MongoClient(new ServerAddress(host, port), options.build());
-  }
-
-  @AfterAll
-  void cleanup() {
-    if (client != null) {
-      client.close();
-    }
+    cleanup.deferAfterAll(client);
   }
 
   @Override
