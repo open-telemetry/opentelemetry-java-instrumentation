@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.mojarra.v3_0;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
-import io.opentelemetry.javaagent.instrumentation.jsf.jakarta.JsfErrorCauseExtractor;
-import io.opentelemetry.javaagent.instrumentation.jsf.jakarta.JsfRequest;
+import io.opentelemetry.javaagent.instrumentation.jsf.common.jakarta.JsfErrorCauseExtractor;
+import io.opentelemetry.javaagent.instrumentation.jsf.common.jakarta.JsfRequest;
 
 public class MojarraSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jsf-mojarra-3.0";

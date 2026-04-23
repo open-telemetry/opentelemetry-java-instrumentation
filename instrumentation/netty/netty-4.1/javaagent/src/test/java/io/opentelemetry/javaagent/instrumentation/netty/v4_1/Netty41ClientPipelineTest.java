@@ -35,7 +35,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
 import java.util.NoSuchElementException;
 import java.util.concurrent.CompletableFuture;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -56,11 +55,7 @@ class Netty41ClientPipelineTest {
   static void setUp() {
     server = new HttpClientTestServer(testing.getOpenTelemetry());
     server.start();
-  }
-
-  @AfterAll
-  static void tearDown() {
-    server.stop();
+    cleanup.deferAfterAll(server::stop);
   }
 
   @Test
