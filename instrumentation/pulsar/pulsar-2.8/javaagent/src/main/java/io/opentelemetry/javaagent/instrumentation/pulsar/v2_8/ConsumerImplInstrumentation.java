@@ -133,7 +133,7 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static CompletableFuture<Message<?>> after(
         @Advice.This Consumer<?> consumer,
         @Advice.Return CompletableFuture<Message<?>> future,
@@ -151,7 +151,7 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static CompletableFuture<Messages<?>> after(
         @Advice.This Consumer<?> consumer,
         @Advice.Return CompletableFuture<Messages<?>> future,
