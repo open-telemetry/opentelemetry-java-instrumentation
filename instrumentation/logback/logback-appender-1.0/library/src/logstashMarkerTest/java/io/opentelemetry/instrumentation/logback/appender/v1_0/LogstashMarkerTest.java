@@ -48,7 +48,7 @@ class LogstashMarkerTest {
         .atInfo()
         .setMessage("log message 1")
         .addMarker(Markers.append("field1", "value1"))
-        .addMarker(Markers.append("event.name", "MyEventName"))
+        .addMarker(Markers.append("otel.event.name", "MyEventName"))
         .addMarker(Markers.appendEntries(entries))
         .log();
 
@@ -127,23 +127,6 @@ class LogstashMarkerTest {
 
     testing.waitAndAssertLogRecords(
         logRecord -> logRecord.hasBody("log message 1").hasTotalAttributeCount(0));
-  }
-
-  @Test
-  void otelEventNameInSingleFieldMarker() {
-    logger
-        .atInfo()
-        .setMessage("log message 1")
-        .addMarker(Markers.append("otel.event.name", "MyEventName"))
-        .addMarker(Markers.append("key1", "val1"))
-        .log();
-
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord
-                .hasBody("log message 1")
-                .hasEventName("MyEventName")
-                .hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "val1")));
   }
 
   @Test

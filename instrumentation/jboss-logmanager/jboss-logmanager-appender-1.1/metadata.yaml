@@ -21,10 +21,3 @@ configurations:
     examples:
       - "custom-mdc-key"
       - "key1,key2,key3"
-  - name: otel.instrumentation.jboss-logmanager.experimental.capture-event-name
-    declarative_name: java.jboss_logmanager.capture_event_name/development
-    description: >
-      Enables the capture of the event name from the MDC attribute "event.name" and sets it as the
-      log record's event name.
-    type: boolean
-    default: false

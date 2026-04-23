@@ -12,7 +12,6 @@
   <appender name="OpenTelemetry"
     class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
     <captureLogstashStructuredArguments>true</captureLogstashStructuredArguments>
-    <captureEventName>true</captureEventName>
   </appender>
 
   <root level="INFO">
