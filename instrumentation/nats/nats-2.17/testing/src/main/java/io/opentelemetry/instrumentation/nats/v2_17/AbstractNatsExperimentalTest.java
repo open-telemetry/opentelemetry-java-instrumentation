@@ -20,7 +20,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractNatsExperimentalTest extends AbstractNatsTest {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();

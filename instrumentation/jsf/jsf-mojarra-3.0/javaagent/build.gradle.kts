@@ -25,8 +25,8 @@ dependencies {
   library("jakarta.faces:jakarta.faces-api:3.0.0")
   testLibrary("org.glassfish:jakarta.faces:3.0.4")
 
-  implementation(project(":instrumentation:jsf:jsf-jakarta-common:javaagent"))
-  testImplementation(project(":instrumentation:jsf:jsf-jakarta-common:testing"))
+  implementation(project(":instrumentation:jsf:jsf-common-jakarta:javaagent"))
+  testImplementation(project(":instrumentation:jsf:jsf-common-jakarta:testing"))
 
   testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
   testInstrumentation(project(":instrumentation:jsf:jsf-mojarra-1.2:javaagent"))
