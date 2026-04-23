@@ -40,9 +40,6 @@ configurations:
       - "*"
       - "key1,key2"
     default: ''
-    examples:
-      - "custom-mdc-key"
-      - "key1,key2,key3"
   - name: otel.instrumentation.log4j-appender.experimental.capture-event-name
     declarative_name: java.log4j_appender.capture_event_name/development
     description: >
