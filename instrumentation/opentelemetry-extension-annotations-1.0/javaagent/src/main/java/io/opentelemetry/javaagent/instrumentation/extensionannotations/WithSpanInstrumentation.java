@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.extensionannotations;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.instrumentation.extensionannotations.WithSpanSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.extensionannotations.WithSpanSingletons.instrumenterWithAttributes;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.hasParameters;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -129,7 +131,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static WithSpanAdviceScope start(Method method) {
-        Instrumenter<Method, Object> instrumenter = WithSpanSingletons.instrumenter();
+        Instrumenter<Method, Object> instrumenter = instrumenter();
         Context current = Context.current();
         if (!instrumenter.shouldStart(current, method)) {
           return null;
@@ -138,11 +140,10 @@ class WithSpanInstrumentation implements TypeInstrumentation {
         return new WithSpanAdviceScope(method, context, context.makeCurrent());
       }
 
-      public Object end(Object returnValue, @Nullable Throwable throwable) {
+      public Object end(@Nullable Object returnValue, @Nullable Throwable throwable) {
         scope.close();
         AsyncOperationEndSupport<Method, Object> operationEndSupport =
-            AsyncOperationEndSupport.create(
-                WithSpanSingletons.instrumenter(), Object.class, method.getReturnType());
+            AsyncOperationEndSupport.create(instrumenter(), Object.class, method.getReturnType());
         return operationEndSupport.asyncEnd(context, method, returnValue, throwable);
       }
     }
@@ -188,8 +189,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
       @Nullable
       public static WithSpanAttributesAdviceScope start(Method method, Object[] args) {
         MethodRequest request = new MethodRequest(method, args);
-        Instrumenter<MethodRequest, Object> instrumenter =
-            WithSpanSingletons.instrumenterWithAttributes();
+        Instrumenter<MethodRequest, Object> instrumenter = instrumenterWithAttributes();
         Context current = Context.current();
         if (!instrumenter.shouldStart(current, request)) {
           return null;
@@ -202,9 +202,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
         scope.close();
         AsyncOperationEndSupport<MethodRequest, Object> operationEndSupport =
             AsyncOperationEndSupport.create(
-                WithSpanSingletons.instrumenterWithAttributes(),
-                Object.class,
-                method.getReturnType());
+                instrumenterWithAttributes(), Object.class, method.getReturnType());
         return operationEndSupport.asyncEnd(context, request, returnValue, throwable);
       }
     }
