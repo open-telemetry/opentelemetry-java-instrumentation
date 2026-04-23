@@ -22,7 +22,7 @@ public class Axis2InstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // class added in 1.6.0
+    // added in 1.6.0
     return hasClassesNamed("org.apache.axis2.jaxws.api.MessageAccessor");
   }
 

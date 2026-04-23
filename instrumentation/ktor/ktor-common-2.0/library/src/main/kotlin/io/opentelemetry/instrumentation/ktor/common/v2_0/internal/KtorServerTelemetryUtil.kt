@@ -76,10 +76,10 @@ object KtorServerTelemetryUtil {
     application.intercept(errorPhase) {
       try {
         proceed()
-      } catch (err: Throwable) {
+      } catch (t: Throwable) {
         // Stash error for reporting later since need ktor to finish setting up the response
-        call.attributes.put(errorKey, err)
-        throw err
+        call.attributes.put(errorKey, t)
+        throw t
       }
     }
 

@@ -24,8 +24,11 @@ public class LambdaInstrumentationModule extends AbstractAwsSdkInstrumentationMo
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // this instrumentation module targets software.amazon.awssdk:lambda
     return hasClassesNamed(
+        // added in 2.2.0
         "software.amazon.awssdk.services.lambda.model.InvokeRequest",
+        // added in 2.17.0 (via software.amazon.awssdk:json-utils 2.17.0)
         "software.amazon.awssdk.protocols.jsoncore.JsonNode");
   }
 

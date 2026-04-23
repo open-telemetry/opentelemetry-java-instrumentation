@@ -253,7 +253,7 @@ public final class LoggingEventMapper {
   private static boolean supportsInstant() {
     try {
       ILoggingEvent.class.getMethod("getInstant");
-    } catch (NoSuchMethodException e) {
+    } catch (NoSuchMethodException ignored) {
       return false;
     }
 
@@ -459,12 +459,12 @@ public final class LoggingEventMapper {
   private static boolean supportsKeyValuePairs() {
     try {
       Class.forName("org.slf4j.event.KeyValuePair");
-    } catch (ClassNotFoundException e) {
+    } catch (ClassNotFoundException ignored) {
       return false;
     }
     try {
       ILoggingEvent.class.getMethod("getKeyValuePairs");
-    } catch (NoSuchMethodException e) {
+    } catch (NoSuchMethodException ignored) {
       return false;
     }
 
@@ -512,7 +512,7 @@ public final class LoggingEventMapper {
   private static boolean supportsMultipleMarkers() {
     try {
       ILoggingEvent.class.getMethod("getMarkerList");
-    } catch (NoSuchMethodException e) {
+    } catch (NoSuchMethodException ignored) {
       return false;
     }
 
@@ -646,7 +646,7 @@ public final class LoggingEventMapper {
   private static Object extractFieldValue(Field field, Object logstashMarker) {
     try {
       return field.get(logstashMarker);
-    } catch (IllegalAccessException e) {
+    } catch (IllegalAccessException ignored) {
       // ignore
     }
     return null;
@@ -659,7 +659,7 @@ public final class LoggingEventMapper {
         Field field = clazz.getDeclaredField(fieldName);
         field.setAccessible(true);
         return field;
-      } catch (NoSuchFieldException e) {
+      } catch (NoSuchFieldException ignored) {
         // ignore
       }
     }
@@ -673,7 +673,7 @@ public final class LoggingEventMapper {
       Class.forName("net.logstash.logback.marker.MapEntriesAppendingMarker");
       // missing in some android versions, used for capturing logstash attributes
       Class.forName("java.lang.ClassValue");
-    } catch (ClassNotFoundException e) {
+    } catch (ClassNotFoundException ignored) {
       return false;
     }
 
@@ -683,7 +683,7 @@ public final class LoggingEventMapper {
   private static boolean supportsLogstashStructuredArguments() {
     try {
       Class.forName("net.logstash.logback.argument.StructuredArgument");
-    } catch (ClassNotFoundException e) {
+    } catch (ClassNotFoundException ignored) {
       return false;
     }
 

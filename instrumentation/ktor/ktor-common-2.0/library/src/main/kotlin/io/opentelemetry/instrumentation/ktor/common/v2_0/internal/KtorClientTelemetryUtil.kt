@@ -53,9 +53,9 @@ object KtorClientTelemetryUtil {
           plugin.populateRequestHeaders(requestBuilder, openTelemetryContext)
 
           withContext(openTelemetryContext.asContextElement()) { proceed() }
-        } catch (e: Throwable) {
-          plugin.endSpan(openTelemetryContext, requestBuilder, null, e)
-          throw e
+        } catch (t: Throwable) {
+          plugin.endSpan(openTelemetryContext, requestBuilder, null, t)
+          throw t
         }
       } else {
         proceed()

@@ -46,7 +46,7 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
       configuratorClass
           .getMethod("configure", LoggerContext.class)
           .invoke(configurator, loggerContext);
-    } catch (Exception e) {
+    } catch (Exception ignored) {
       // logback versions prior to 1.3.0
       ContextInitializer ci = new ContextInitializer(loggerContext);
       URL url = LogReplayOpenTelemetryAppenderTest.class.getResource("/logback-test.xml");
