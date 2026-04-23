@@ -14,7 +14,7 @@ tasks {
   test {
     jvmArgs("-Dotel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics=true")
     filter {
-      includeTestsMatching("*JfrRuntimeMetricsTest")
+      excludeTestsMatching("*JfrRuntimeMetricsBackcompatTest")
     }
   }
 
