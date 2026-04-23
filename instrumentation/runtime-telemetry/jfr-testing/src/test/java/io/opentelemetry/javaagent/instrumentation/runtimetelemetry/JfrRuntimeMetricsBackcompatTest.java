@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.runtimetelemetry;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import jdk.jfr.FlightRecorder;
@@ -15,7 +13,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class JfrRuntimeMetricsTest {
+class JfrRuntimeMetricsBackcompatTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -36,7 +34,8 @@ class JfrRuntimeMetricsTest {
     System.gc();
 
     testing.waitAndAssertMetrics(
-        "io.opentelemetry.runtime-telemetry", metric -> metric.hasName("jvm.cpu.context_switch"));
-    assertThat(testing.metrics()).noneMatch(m -> m.getName().equals("jvm.cpu.limit"));
+        "io.opentelemetry.runtime-telemetry-java17",
+        metric -> metric.hasName("jvm.cpu.limit"),
+        metric -> metric.hasName("jvm.cpu.context_switch"));
   }
 }
