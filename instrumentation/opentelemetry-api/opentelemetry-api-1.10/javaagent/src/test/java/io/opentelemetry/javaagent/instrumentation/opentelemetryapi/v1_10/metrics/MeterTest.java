@@ -512,7 +512,7 @@ class MeterTest {
     try {
       Method close = observableInstrument.getClass().getDeclaredMethod("close");
       close.invoke(observableInstrument);
-    } catch (Exception e) {
+    } catch (ReflectiveOperationException e) {
       throw new IllegalStateException("Failed to call close", e);
     }
   }
