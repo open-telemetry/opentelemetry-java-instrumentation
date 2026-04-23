@@ -19,17 +19,15 @@ import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.connection.ClusterSettings;
 import io.opentelemetry.instrumentation.mongo.testing.AbstractMongoClientTest;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.bson.Document;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -38,7 +36,8 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private final List<MongoClient> additionalClients = new ArrayList<>();
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   private MongoClient client;
 
   @BeforeAll
@@ -53,16 +52,7 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
                             new ConnectionString("mongodb://" + host + ":" + port))
                         .build())
                 .build());
-  }
-
-  @AfterAll
-  void cleanup() {
-    if (client != null) {
-      client.close();
-    }
-    for (MongoClient additionalClient : additionalClients) {
-      additionalClient.close();
-    }
+    cleanup.deferAfterAll(client);
   }
 
   @Override
@@ -79,9 +69,8 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
   @Override
   protected void createCollectionNoDescription(String dbName, String collectionName) {
     MongoClient mongoClient = MongoClients.create("mongodb://" + host + ":" + port);
-    additionalClients.add(mongoClient);
-    MongoDatabase db = mongoClient.getDatabase(dbName);
-    db.createCollection(collectionName, toCallback(result -> {}));
+    cleanup.deferAfterAll(mongoClient);
+    mongoClient.getDatabase(dbName).createCollection(collectionName, toCallback(result -> {}));
   }
 
   @Override
@@ -90,9 +79,8 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
     MongoClientSettings clientSettings = client.getSettings();
     MongoClientSettings newClientSettings = MongoClientSettings.builder(clientSettings).build();
     MongoClient mongoClient = MongoClients.create(newClientSettings);
-    additionalClients.add(mongoClient);
-    MongoDatabase db = mongoClient.getDatabase(dbName);
-    db.createCollection(collectionName, toCallback(result -> {}));
+    cleanup.deferAfterAll(mongoClient);
+    mongoClient.getDatabase(dbName).createCollection(collectionName, toCallback(result -> {}));
   }
 
   @Override
@@ -106,9 +94,8 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
                     .build());
     settings.build();
     MongoClient mongoClient = MongoClients.create(settings.build());
-    additionalClients.add(mongoClient);
-    MongoDatabase db = mongoClient.getDatabase(dbName);
-    db.createCollection(collectionName, toCallback(result -> {}));
+    cleanup.deferAfterAll(mongoClient);
+    mongoClient.getDatabase(dbName).createCollection(collectionName, toCallback(result -> {}));
   }
 
   @Override
