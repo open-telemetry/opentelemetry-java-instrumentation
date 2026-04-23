@@ -16,9 +16,6 @@ public class SqlCommandUtil {
       VirtualField.find(SqlCommand.class, ClassAndMethod.class);
 
   public static void setClassAndMethod(SqlCommand command, Class<?> clazz, Method method) {
-    if (clazz == null || method == null) {
-      return;
-    }
     field.set(command, ClassAndMethod.create(clazz, method.getName()));
   }
 
