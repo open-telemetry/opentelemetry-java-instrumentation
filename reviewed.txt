@@ -329,3 +329,12 @@ openai-java-1.1:openai3-testing
 openai-java-1.1:testing
 opencensus-shim:testing
 opensearch-java-3.0:javaagent
+opensearch-rest-1.0:javaagent
+opensearch-rest-3.0:javaagent
+opensearch-rest-common:javaagent
+opensearch-rest-common:testing
+opentelemetry-api-1.0:javaagent
+opentelemetry-api-1.0:testing
+opentelemetry-api-1.10:javaagent
+opentelemetry-api-1.15:javaagent
+opentelemetry-api-1.27:javaagent
