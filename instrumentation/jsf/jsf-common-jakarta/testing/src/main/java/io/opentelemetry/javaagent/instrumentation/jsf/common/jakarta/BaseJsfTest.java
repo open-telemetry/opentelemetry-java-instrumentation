@@ -50,7 +50,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing =
+  private static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
 
   @BeforeAll
