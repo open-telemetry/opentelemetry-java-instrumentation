@@ -52,7 +52,8 @@ final class WithSpanParameterAttributeNamesExtractor implements ParameterAttribu
 
   @Nullable
   private static String attributeName(Parameter parameter) {
-    if (spanAttributeAnnotation == null || spanAttributeValueFunction == null) {
+    // when spanAttributeAnnotation is non-null, so is spanAttributeValueFunction
+    if (spanAttributeAnnotation == null) {
       return null;
     }
     Annotation annotation = parameter.getDeclaredAnnotation(spanAttributeAnnotation);

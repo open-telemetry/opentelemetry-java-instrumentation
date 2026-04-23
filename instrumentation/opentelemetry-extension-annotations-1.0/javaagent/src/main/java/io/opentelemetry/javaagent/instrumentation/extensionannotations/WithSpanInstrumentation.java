@@ -24,7 +24,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
@@ -131,12 +130,11 @@ class WithSpanInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static WithSpanAdviceScope start(Method method) {
-        Instrumenter<Method, Object> instrumenter = instrumenter();
         Context current = Context.current();
-        if (!instrumenter.shouldStart(current, method)) {
+        if (!instrumenter().shouldStart(current, method)) {
           return null;
         }
-        Context context = instrumenter.start(current, method);
+        Context context = instrumenter().start(current, method);
         return new WithSpanAdviceScope(method, context, context.makeCurrent());
       }
 
@@ -189,12 +187,11 @@ class WithSpanInstrumentation implements TypeInstrumentation {
       @Nullable
       public static WithSpanAttributesAdviceScope start(Method method, Object[] args) {
         MethodRequest request = new MethodRequest(method, args);
-        Instrumenter<MethodRequest, Object> instrumenter = instrumenterWithAttributes();
         Context current = Context.current();
-        if (!instrumenter.shouldStart(current, request)) {
+        if (!instrumenterWithAttributes().shouldStart(current, request)) {
           return null;
         }
-        Context context = instrumenter.start(current, request);
+        Context context = instrumenterWithAttributes().start(current, request);
         return new WithSpanAttributesAdviceScope(method, request, context, context.makeCurrent());
       }
 
