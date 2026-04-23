@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.runtimetelemetry;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import jdk.jfr.FlightRecorder;
@@ -45,6 +47,7 @@ class JfrRuntimeMetricsTest {
     } else {
       testing.waitAndAssertMetrics(
           "io.opentelemetry.runtime-telemetry", metric -> metric.hasName("jvm.cpu.context_switch"));
+      assertThat(testing.metrics()).noneMatch(m -> m.getName().equals("jvm.cpu.limit"));
     }
   }
 }

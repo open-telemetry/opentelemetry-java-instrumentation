@@ -12,9 +12,7 @@ otelJava {
 
 tasks {
   test {
-    // Verify backward compatibility of the deprecated runtime-telemetry-java17.enabled flag:
-    // JFR metrics routed to the legacy "io.opentelemetry.runtime-telemetry-java17" scope and
-    // jvm.cpu.limit emitted via useLegacyJfrCpuCountMetric.
+    // Verify backward compatibility of the deprecated runtime-telemetry-java17.enabled flag
     jvmArgs("-Dotel.instrumentation.runtime-telemetry-java17.enabled=true")
   }
 
