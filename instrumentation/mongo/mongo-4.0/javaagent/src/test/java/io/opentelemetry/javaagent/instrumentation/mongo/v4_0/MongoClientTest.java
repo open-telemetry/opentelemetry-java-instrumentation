@@ -56,9 +56,9 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
 
   @Override
   protected void createCollectionNoDescription(String dbName, String collectionName) {
-    try (MongoClient mongoClient = MongoClients.create("mongodb://" + host + ":" + port)) {
-      mongoClient.getDatabase(dbName).createCollection(collectionName);
-    }
+    MongoClient mongoClient = MongoClients.create("mongodb://" + host + ":" + port);
+    cleanup.deferCleanup(mongoClient);
+    mongoClient.getDatabase(dbName).createCollection(collectionName);
   }
 
   @Override
@@ -74,9 +74,9 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
             .applyToClusterSettings(
                 builder -> builder.hosts(singletonList(new ServerAddress(host, port))));
     settings.build();
-    try (MongoClient mongoClient = MongoClients.create(settings.build())) {
-      mongoClient.getDatabase(dbName).createCollection(collectionName);
-    }
+    MongoClient mongoClient = MongoClients.create(settings.build());
+    cleanup.deferCleanup(mongoClient);
+    mongoClient.getDatabase(dbName).createCollection(collectionName);
   }
 
   @Override
