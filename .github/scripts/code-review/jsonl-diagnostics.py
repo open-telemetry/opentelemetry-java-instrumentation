@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from collections import Counter
+from collections import Counter, deque
 from pathlib import Path
 
 
@@ -83,17 +83,13 @@ def main() -> None:
 
     event_types: Counter[str] = Counter()
     assistant_messages: list[str] = []
-    tail_events: list[tuple[int, str]] = []
+    tail_events: deque[tuple[int, str]] = deque(maxlen=args.tail)
 
     for line_number, raw_line in enumerate(raw_lines, start=1):
         line = raw_line.strip()
         if not line:
             continue
-        try:
-            event = json.loads(line)
-        except json.JSONDecodeError as exc:
-            print(f"Invalid JSON on line {line_number}: {exc}")
-            continue
+        event = json.loads(line)
 
         event_type = str(event.get("type", "<missing>"))
         event_types[event_type] += 1
@@ -105,8 +101,6 @@ def main() -> None:
                 assistant_messages.append(collapse(content, limit=500))
 
         tail_events.append((line_number, summarize_event(event)))
-        if len(tail_events) > args.tail:
-            tail_events.pop(0)
 
     print("Event types:")
     for event_type, count in event_types.most_common():
