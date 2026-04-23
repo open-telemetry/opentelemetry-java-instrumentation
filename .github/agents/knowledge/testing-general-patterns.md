@@ -30,6 +30,8 @@
   non-checked wait path exists (for example, when a timeout is required via
   `get(timeout, unit)`), leave the test's `throws` clause as-is — including `throws Exception`
   — rather than inventing a new helper just to narrow it.
+- Do **not** choose `CompletableFuture.runAsync(...)` over the simpler
+  `executor.submit(runnable).get()` just to avoid the checked exceptions thrown by `Future.get()`.
 
 ## Test Resource Cleanup
 
