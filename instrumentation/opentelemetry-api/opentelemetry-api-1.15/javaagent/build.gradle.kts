@@ -7,21 +7,6 @@ dependencies {
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent"))
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.10:javaagent"))
-
-  testInstrumentation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
-  testInstrumentation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent"))
-  testInstrumentation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.10:javaagent"))
-  testInstrumentation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.27:javaagent"))
-  testInstrumentation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.31:javaagent"))
-  testInstrumentation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.32:javaagent"))
-  testInstrumentation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.37:javaagent"))
-  testInstrumentation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.38:javaagent"))
-  testInstrumentation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.40:javaagent"))
-  testInstrumentation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.42:javaagent"))
-  testInstrumentation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.50:javaagent"))
-  testInstrumentation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.56:javaagent"))
-  testInstrumentation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.57:javaagent"))
-  testInstrumentation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.59:javaagent"))
 }
 
 configurations.configureEach {
