@@ -30,6 +30,11 @@
   non-checked wait path exists (for example, when a timeout is required via
   `get(timeout, unit)`), leave the test's `throws` clause as-is — including `throws Exception`
   — rather than inventing a new helper just to narrow it.
+- Do **not** wrap a checked exception inside a lambda body (for example, catching
+  `IOException` and rethrowing `UncheckedIOException`) solely to narrow a test method's
+  `throws` clause. That noisy try/catch inside the lambda is worse than leaving
+  `throws Exception` (or `throws IOException`) on the `@Test` method. Only introduce such
+  wrapping when the lambda already needs its own error handling for behavioral reasons.
 
 ## Test Resource Cleanup
 

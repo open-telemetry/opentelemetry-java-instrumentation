@@ -29,8 +29,6 @@ import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.MockWebServerExtension;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import org.junit.jupiter.api.AfterAll;
@@ -154,28 +152,23 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
 
   @Test
   @Override
-  void shouldGetStatusAsyncWithTraces() throws InterruptedException {
+  void shouldGetStatusAsyncWithTraces() throws Exception {
     CountDownLatch countDownLatch = new CountDownLatch(1);
 
     CompletableFuture<HealthResponse> responseCompletableFuture =
         getTesting()
             .runWithSpan(
                 "client",
-                () -> {
-                  try {
-                    return openSearchAsyncClient
+                () ->
+                    openSearchAsyncClient
                         .cluster()
                         .health()
                         .whenComplete(
                             (response, throwable) ->
-                                getTesting().runWithSpan("callback", countDownLatch::countDown));
-                  } catch (IOException e) {
-                    throw new UncheckedIOException(e);
-                  }
-                });
+                                getTesting().runWithSpan("callback", countDownLatch::countDown)));
 
     countDownLatch.await();
-    HealthResponse healthResponse = responseCompletableFuture.join();
+    HealthResponse healthResponse = responseCompletableFuture.get();
     assertThat(healthResponse).isNotNull();
 
     getTesting()
