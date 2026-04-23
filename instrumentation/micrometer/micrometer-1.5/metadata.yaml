@@ -20,6 +20,9 @@ configurations:
       min, h, d.
     type: string
     default: s
+    examples:
+      - ns
+      - milliseconds
   - name: otel.instrumentation.micrometer.histogram-gauges.enabled
     declarative_name: java.micrometer.histogram_gauges.enabled
     description: >
