@@ -1194,7 +1194,7 @@ targets:
       target: ':instrumentation:vertx:vertx-http-client:vertx-http-client-5.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:vertx:vertx-http-client:vertx-http-client-common:javaagent'
+      target: ':instrumentation:vertx:vertx-http-client:vertx-http-client-common-3.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent'
@@ -1203,7 +1203,7 @@ targets:
       target: ':instrumentation:vertx:vertx-sql-client:vertx-sql-client-5.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:vertx:vertx-sql-client:vertx-sql-client-common:javaagent'
+      target: ':instrumentation:vertx:vertx-sql-client:vertx-sql-client-common-4.0:javaagent'
 
 experimental:
   gradle:
