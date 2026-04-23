@@ -1,6 +1,12 @@
 [tools]
+"github:grafana/flint" = "0.20.3"
 lychee = "0.23.0"
 markdownlint-cli2 = "0.22.0"
+"github:google/google-java-format" = "1.35.0"
+"github:pinterest/ktlint" = "1.8.0"
+
+[env]
+FLINT_CONFIG_DIR = ".github/config"
 
 [settings]
 # Only install tools explicitly defined in the [tools] section above
@@ -12,7 +18,11 @@ windows_executable_extensions = ["sh"]
 windows_default_file_shell_args = "bash"
 use_file_shell_for_executable_tasks = true
 
-# Pick the tasks you need from flint (https://github.com/grafana/flint)
-[tasks."lint:links"]
-description = "Check for broken links in changed files + all local links"
-file = "https://raw.githubusercontent.com/grafana/flint/eded4cd370c729289a6de327a1a26831e10a39b9/tasks/lint/links.sh" # v0.20.2
+[tasks.lint]
+run = "flint run"
+
+[tasks."lint:fix"]
+run = "flint run --fix"
+
+[tasks."lint:pre-commit"]
+run = "flint run --fix --fast-only"

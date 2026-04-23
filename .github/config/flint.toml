@@ -1,0 +1,15 @@
+[settings]
+exclude = [
+  "gradlew",
+  "buildscripts/spotless.license.java",
+  "CHANGELOG.md",
+  "licenses/licenses.md",
+]
+
+[checks.license-header]
+text = """
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */"""
+patterns = ["**/*.java", "**/*.kt"]
