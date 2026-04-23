@@ -21,7 +21,8 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.DisplayName;
@@ -38,14 +39,18 @@ class ContextBridgeTest {
 
   @Test
   @DisplayName("agent propagates application's context")
-  void agentPropagatesApplicationsContext() throws Exception {
+  void agentPropagatesApplicationsContext() {
     // When
     Context context = Context.current().with(ANIMAL, "cat");
     AtomicReference<String> captured = new AtomicReference<>();
     try (Scope ignored = context.makeCurrent()) {
-      Executors.newSingleThreadExecutor()
-          .submit(() -> captured.set(Context.current().get(ANIMAL)))
-          .get();
+      ExecutorService executor = Executors.newSingleThreadExecutor();
+      try {
+        CompletableFuture.runAsync(() -> captured.set(Context.current().get(ANIMAL)), executor)
+            .join();
+      } finally {
+        executor.shutdownNow();
+      }
     }
 
     // Then
@@ -91,18 +96,19 @@ class ContextBridgeTest {
 
   @Test
   @DisplayName("agent propagates application's span")
-  void agentPropagatesApplicationsSpan() throws Exception {
+  void agentPropagatesApplicationsSpan() {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
 
     Span testSpan = tracer.spanBuilder("test").startSpan();
     try (Scope ignored = testSpan.makeCurrent()) {
-      Executors.newSingleThreadExecutor()
-          .submit(
-              () -> {
-                Span.current().setAttribute("cat", "yes");
-              })
-          .get();
+      ExecutorService executor = Executors.newSingleThreadExecutor();
+      try {
+        CompletableFuture.runAsync(() -> Span.current().setAttribute("cat", "yes"), executor)
+            .join();
+      } finally {
+        executor.shutdownNow();
+      }
     }
     testSpan.end();
 
@@ -154,23 +160,20 @@ class ContextBridgeTest {
 
   @Test
   @DisplayName("agent propagates application's baggage")
-  void agentPropagatesApplicationsBaggage() throws Exception {
+  void agentPropagatesApplicationsBaggage() {
     // When
     Baggage testBaggage = Baggage.builder().put("cat", "yes").build();
     AtomicReference<Baggage> ref = new AtomicReference<>();
-    CountDownLatch latch = new CountDownLatch(1);
     try (Scope ignored = testBaggage.makeCurrent()) {
-      Executors.newSingleThreadExecutor()
-          .submit(
-              () -> {
-                ref.set(Baggage.current());
-                latch.countDown();
-              })
-          .get();
+      ExecutorService executor = Executors.newSingleThreadExecutor();
+      try {
+        CompletableFuture.runAsync(() -> ref.set(Baggage.current()), executor).join();
+      } finally {
+        executor.shutdownNow();
+      }
     }
 
     // Then
-    latch.await();
     assertThat(ref.get().size()).isEqualTo(1);
     assertThat(ref.get().getEntryValue("cat")).isEqualTo("yes");
   }
