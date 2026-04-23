@@ -18,6 +18,14 @@ dependencies {
 }
 
 tasks {
+  test {
+    // DeclarativeConfigValidationTest walks ../instrumentation for metadata.yaml files,
+    // so changes to those files must invalidate this task's build cache entry.
+    inputs.files(fileTree(rootDir.resolve("instrumentation")) { include("**/metadata.yaml") })
+      .withPropertyName("instrumentationMetadataYamlFiles")
+      .withPathSensitivity(PathSensitivity.RELATIVE)
+  }
+
   val runAnalysis by registering(JavaExec::class) {
     dependsOn(classes)
 
