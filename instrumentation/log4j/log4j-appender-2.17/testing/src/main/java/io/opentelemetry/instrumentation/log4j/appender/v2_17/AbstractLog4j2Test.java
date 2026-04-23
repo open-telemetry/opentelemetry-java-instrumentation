@@ -144,16 +144,11 @@ public abstract class AbstractLog4j2Test {
     }
   }
 
-  private static Stream<Arguments> eventNameProperties() {
-    return Stream.of(Arguments.of("event.name"), Arguments.of("otel.event.name"));
-  }
-
-  @ParameterizedTest
-  @MethodSource("eventNameProperties")
-  void testContextData(String eventNameProperty) {
+  @Test
+  void testContextData() {
     ThreadContext.put("key1", "val1");
     ThreadContext.put("key2", "val2");
-    ThreadContext.put(eventNameProperty, "MyEventName");
+    ThreadContext.put("otel.event.name", "MyEventName");
     try {
       logger.info("xyz: {}", 123);
     } finally {
