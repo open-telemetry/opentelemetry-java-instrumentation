@@ -27,6 +27,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
@@ -112,23 +113,28 @@ abstract class AbstractOpenSearchTest {
   }
 
   @Test
-  void shouldGetStatusAsyncWithTraces() throws Exception {
+  void shouldGetStatusAsyncWithTraces() throws InterruptedException {
     CountDownLatch countDownLatch = new CountDownLatch(1);
 
     CompletableFuture<HealthResponse> responseCompletableFuture =
         getTesting()
             .runWithSpan(
                 "client",
-                () ->
-                    openSearchAsyncClient
+                () -> {
+                  try {
+                    return openSearchAsyncClient
                         .cluster()
                         .health()
                         .whenComplete(
                             (response, throwable) ->
-                                getTesting().runWithSpan("callback", countDownLatch::countDown)));
+                                getTesting().runWithSpan("callback", countDownLatch::countDown));
+                  } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                  }
+                });
 
     countDownLatch.await();
-    HealthResponse healthResponse = responseCompletableFuture.get();
+    HealthResponse healthResponse = responseCompletableFuture.join();
     assertThat(healthResponse).isNotNull();
 
     getTesting()
