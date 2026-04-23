@@ -36,12 +36,13 @@ class Log4j1MdcTest {
     logger.info("log message 2");
 
     List<LoggingEvent> events = ListAppender.getEvents();
-    LoggingEvent firstEvent = events.get(0);
-    LoggingEvent secondEvent = events.get(1);
-
     assertThat(events)
         .extracting(LoggingEvent::getMessage)
         .containsExactly("log message 1", "log message 2");
+
+    LoggingEvent firstEvent = events.get(0);
+    LoggingEvent secondEvent = events.get(1);
+
     assertThat(firstEvent.getMDC("trace_id")).isNull();
     assertThat(firstEvent.getMDC("span_id")).isNull();
     assertThat(firstEvent.getMDC("trace_flags")).isNull();
@@ -72,13 +73,14 @@ class Log4j1MdcTest {
             });
 
     List<LoggingEvent> events = ListAppender.getEvents();
+    assertThat(events)
+        .extracting(LoggingEvent::getMessage)
+        .containsExactly("log message 1", "log message 2", "log message 3");
+
     LoggingEvent firstEvent = events.get(0);
     LoggingEvent secondEvent = events.get(1);
     LoggingEvent thirdEvent = events.get(2);
 
-    assertThat(events)
-        .extracting(LoggingEvent::getMessage)
-        .containsExactly("log message 1", "log message 2", "log message 3");
     assertThat(firstEvent.getMDC("trace_id")).isEqualTo(span1.getSpanContext().getTraceId());
     assertThat(firstEvent.getMDC("span_id")).isEqualTo(span1.getSpanContext().getSpanId());
     assertThat(firstEvent.getMDC("trace_flags"))
@@ -101,9 +103,9 @@ class Log4j1MdcTest {
     logger.info("log message 1");
 
     List<LoggingEvent> events = ListAppender.getEvents();
-    LoggingEvent event = events.get(0);
-
     assertThat(events).extracting(LoggingEvent::getMessage).containsExactly("log message 1");
+
+    LoggingEvent event = events.get(0);
     assertThat(event.getMDC("trace_id")).isNull();
     assertThat(event.getMDC("span_id")).isNull();
     assertThat(event.getMDC("trace_flags")).isNull();
