@@ -1,9 +1,22 @@
 [tools]
-"github:grafana/flint" = "0.20.3"
+
+# Linters
+actionlint = "1.7.12"
+biome = "2.4.12"
+"cargo:xmloxide" = "0.4.2"
+"cargo:yaml-lint" = "0.1.0"
+editorconfig-checker = "3.6.1"
+"github:google/google-java-format" = "1.35.0"
+"github:grafana/flint" = "0.20.4"
+"github:pinterest/ktlint" = "1.8.0"
+hadolint = "2.14.0"
 lychee = "0.23.0"
 markdownlint-cli2 = "0.22.0"
-"github:google/google-java-format" = "1.35.0"
-"github:pinterest/ktlint" = "1.8.0"
+"pipx:codespell" = "2.4.2"
+"pipx:ruff" = "0.15.11"
+rumdl = "0.1.80"
+shellcheck = "0.11.0"
+shfmt = "3.13.1"
 
 [env]
 FLINT_CONFIG_DIR = ".github/config"
