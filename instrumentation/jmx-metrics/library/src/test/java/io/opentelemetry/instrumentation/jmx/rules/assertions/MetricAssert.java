@@ -209,7 +209,8 @@ public class MetricAssert extends AbstractAssert<MetricAssert, Metric> {
             }
 
             info.description(
-                "for metric '%s' exactly one value assertion must be satisfied by the data point:\n%s",
+                "for metric '%s' exactly one value assertion must be satisfied by the data point:\n"
+                    + "%s",
                 actual.getName(), dataPoint);
             integers.assertEqual(info, matchCount, 1);
           }
@@ -342,7 +343,9 @@ public class MetricAssert extends AbstractAssert<MetricAssert, Metric> {
                 }
 
                 info.description(
-                    "data point attributes '%s' for metric '%s' must match exactly one of the attribute sets '%s'.\nActual data points: %s",
+                    "data point attributes '%s' for metric '%s' must match exactly one of the"
+                        + " attribute sets '%s'.\n"
+                        + "Actual data points: %s",
                     dataPointAttributes,
                     actual.getName(),
                     Arrays.asList(matcherGroups),

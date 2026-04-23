@@ -75,7 +75,8 @@ abstract class CustomSpanEventTest {
                                   }),
                       span ->
                           span.hasName(
-                                  "BatchJob customSpanEventsItemsJob.customSpanEventsItemStep.Chunk")
+                                  "BatchJob"
+                                      + " customSpanEventsItemsJob.customSpanEventsItemStep.Chunk")
                               .hasKind(SpanKind.INTERNAL)
                               .hasParent(trace.getSpan(1))
                               .satisfies(

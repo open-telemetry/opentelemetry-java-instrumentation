@@ -22,46 +22,6 @@
 
 package io.quarkus.gradle.tooling;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystem;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.Set;
-
-import org.gradle.api.Project;
-import org.gradle.api.Task;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ResolvedArtifact;
-import org.gradle.api.artifacts.ResolvedConfiguration;
-import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
-import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.FileTree;
-import org.gradle.api.initialization.IncludedBuild;
-import org.gradle.api.tasks.SourceSet;
-import org.gradle.api.tasks.SourceSetContainer;
-import org.gradle.api.tasks.TaskCollection;
-import org.gradle.api.tasks.compile.AbstractCompile;
-import org.gradle.api.tasks.testing.Test;
-import org.gradle.internal.composite.IncludedBuildInternal;
-import org.gradle.language.jvm.tasks.ProcessResources;
-import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder;
-
 import io.quarkus.bootstrap.BootstrapConstants;
 import io.quarkus.bootstrap.model.ApplicationModel;
 import io.quarkus.bootstrap.model.ApplicationModelBuilder;
@@ -89,8 +49,47 @@ import io.quarkus.maven.dependency.ResolvedDependencyBuilder;
 import io.quarkus.paths.PathCollection;
 import io.quarkus.paths.PathList;
 import io.quarkus.runtime.LaunchMode;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
+import org.gradle.api.Project;
+import org.gradle.api.Task;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ResolvedArtifact;
+import org.gradle.api.artifacts.ResolvedConfiguration;
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
+import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.FileTree;
+import org.gradle.api.initialization.IncludedBuild;
+import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.SourceSetContainer;
+import org.gradle.api.tasks.TaskCollection;
+import org.gradle.api.tasks.compile.AbstractCompile;
+import org.gradle.api.tasks.testing.Test;
+import org.gradle.internal.composite.IncludedBuildInternal;
+import org.gradle.language.jvm.tasks.ProcessResources;
+import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder;
 
-// Based on https://github.com/quarkusio/quarkus/blob/3.9.5/devtools/gradle/gradle-model/src/main/java/io/quarkus/gradle/tooling/GradleApplicationModelBuilder.java
+// Based on
+// https://github.com/quarkusio/quarkus/blob/3.9.5/devtools/gradle/gradle-model/src/main/java/io/quarkus/gradle/tooling/GradleApplicationModelBuilder.java
 public class GradleApplicationModelBuilder
     implements ParameterizedToolingModelBuilder<ModelParameter> {
 
@@ -99,8 +98,9 @@ public class GradleApplicationModelBuilder
 
   /* @formatter:off */
   private static final byte COLLECT_TOP_EXTENSION_RUNTIME_NODES = 0b001;
-  private static final byte COLLECT_DIRECT_DEPS =                 0b010;
-  private static final byte COLLECT_RELOADABLE_MODULES =          0b100;
+  private static final byte COLLECT_DIRECT_DEPS = 0b010;
+  private static final byte COLLECT_RELOADABLE_MODULES = 0b100;
+
   /* @formatter:on */
 
   @Override
@@ -137,9 +137,7 @@ public class GradleApplicationModelBuilder
                 System.getProperty(BootstrapConstants.QUARKUS_BOOTSTRAP_WORKSPACE_DISCOVERY));
     if (!workspaceDiscovery) {
       Object o =
-          project
-              .getProperties()
-              .get(BootstrapConstants.QUARKUS_BOOTSTRAP_WORKSPACE_DISCOVERY);
+          project.getProperties().get(BootstrapConstants.QUARKUS_BOOTSTRAP_WORKSPACE_DISCOVERY);
       if (o != null) {
         workspaceDiscovery = Boolean.parseBoolean(o.toString());
       }
@@ -181,8 +179,7 @@ public class GradleApplicationModelBuilder
         }
         var moduleId = a.getModuleVersion().getId();
         var key =
-            ArtifactKey.of(
-                moduleId.getGroup(), moduleId.getName(), a.getClassifier(), a.getType());
+            ArtifactKey.of(moduleId.getGroup(), moduleId.getName(), a.getClassifier(), a.getType());
         var appDep = modelBuilder.getDependency(key);
         if (appDep == null) {
           addArtifactDependency(project, modelBuilder, a);
@@ -200,8 +197,7 @@ public class GradleApplicationModelBuilder
     }
   }
 
-  public static ResolvedDependency getProjectArtifact(
-      Project project, boolean workspaceDiscovery) {
+  public static ResolvedDependency getProjectArtifact(Project project, boolean workspaceDiscovery) {
     final ResolvedDependencyBuilder appArtifact =
         ResolvedDependencyBuilder.newInstance()
             .setGroupId(project.getGroup().toString())
@@ -300,19 +296,15 @@ public class GradleApplicationModelBuilder
           (ProjectComponentIdentifier) a.getId().getComponentIdentifier();
       // Upstream uses getBuild().getName(); getBuildPath() is needed for our composite build
       var includedBuild =
-          ToolingUtils.includedBuild(
-              project, projectComponentIdentifier.getBuild().getBuildPath());
+          ToolingUtils.includedBuild(project, projectComponentIdentifier.getBuild().getBuildPath());
       final Project projectDep;
       if (includedBuild != null) {
         projectDep =
             ToolingUtils.includedBuildProject(
-                (IncludedBuildInternal) includedBuild,
-                projectComponentIdentifier.getProjectPath());
+                (IncludedBuildInternal) includedBuild, projectComponentIdentifier.getProjectPath());
       } else {
         projectDep =
-            project
-                .getRootProject()
-                .findProject(projectComponentIdentifier.getProjectPath());
+            project.getRootProject().findProject(projectComponentIdentifier.getProjectPath());
       }
       Objects.requireNonNull(
           projectDep,
@@ -535,13 +527,7 @@ public class GradleApplicationModelBuilder
             final PathList.Builder pathBuilder = PathList.builder();
             projectModule =
                 initProjectModuleAndBuildPaths(
-                    projectDep,
-                    a,
-                    modelBuilder,
-                    depBuilder,
-                    pathBuilder,
-                    "testFixtures",
-                    true);
+                    projectDep, a, modelBuilder, depBuilder, pathBuilder, "testFixtures", true);
             paths = pathBuilder.build();
           }
         }
@@ -567,11 +553,9 @@ public class GradleApplicationModelBuilder
       }
     }
 
-    processedModules.add(
-        ArtifactKey.ga(resolvedDep.getModuleGroup(), resolvedDep.getModuleName()));
+    processedModules.add(ArtifactKey.ga(resolvedDep.getModuleGroup(), resolvedDep.getModuleName()));
     for (org.gradle.api.artifacts.ResolvedDependency child : resolvedDep.getChildren()) {
-      if (!processedModules.contains(
-          new GACT(child.getModuleGroup(), child.getModuleName()))) {
+      if (!processedModules.contains(new GACT(child.getModuleGroup(), child.getModuleName()))) {
         collectDependencies(
             child,
             workspaceDiscovery,
@@ -612,14 +596,11 @@ public class GradleApplicationModelBuilder
             .setBuildFile(project.getBuildFile().toPath());
 
     final String classifier = toNonNullClassifier(resolvedArtifact.getClassifier());
-    SourceSetContainer sourceSets =
-        project.getExtensions().getByType(SourceSetContainer.class);
+    SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
     initProjectModule(project, projectModule, sourceSets.findByName(sourceName), classifier);
 
-    collectDestinationDirs(
-        projectModule.getSources(classifier).getSourceDirs(), buildPaths);
-    collectDestinationDirs(
-        projectModule.getSources(classifier).getResourceDirs(), buildPaths);
+    collectDestinationDirs(projectModule.getSources(classifier).getSourceDirs(), buildPaths);
+    collectDestinationDirs(projectModule.getSources(classifier).getResourceDirs(), buildPaths);
 
     appModel.addReloadableWorkspaceModule(
         ArtifactKey.of(
@@ -639,15 +620,11 @@ public class GradleApplicationModelBuilder
       }
       if (Files.isDirectory(artifactPath)) {
         return processQuarkusDir(
-            artifactBuilder,
-            artifactPath.resolve(BootstrapConstants.META_INF),
-            modelBuilder);
+            artifactBuilder, artifactPath.resolve(BootstrapConstants.META_INF), modelBuilder);
       } else {
         try (FileSystem artifactFs = ZipUtils.newFileSystem(artifactPath)) {
           return processQuarkusDir(
-              artifactBuilder,
-              artifactFs.getPath(BootstrapConstants.META_INF),
-              modelBuilder);
+              artifactBuilder, artifactFs.getPath(BootstrapConstants.META_INF), modelBuilder);
         } catch (IOException e) {
           throw new RuntimeException("Failed to process " + artifactPath, e);
         }
@@ -700,10 +677,7 @@ public class GradleApplicationModelBuilder
   }
 
   private static void initProjectModule(
-      Project project,
-      WorkspaceModule.Mutable module,
-      SourceSet sourceSet,
-      String classifier) {
+      Project project, WorkspaceModule.Mutable module, SourceSet sourceSet, String classifier) {
 
     if (sourceSet == null) {
       return;
@@ -721,11 +695,7 @@ public class GradleApplicationModelBuilder
             AbstractCompile.class,
             t ->
                 configureCompileTask(
-                    t.getSource(),
-                    t.getDestinationDirectory(),
-                    allClassesDirs,
-                    sourceDirs,
-                    t));
+                    t.getSource(), t.getDestinationDirectory(), allClassesDirs, sourceDirs, t));
 
     // Upstream calls maybeConfigureKotlinJvmCompile() here; removed to avoid adding a
     // compile-time dependency on kotlin-gradle-plugin-api
@@ -796,10 +766,7 @@ public class GradleApplicationModelBuilder
             final File srcDir = a.getFile().getParentFile();
             sourceDirs.add(
                 new DefaultSourceDir(
-                    srcDir.toPath(),
-                    destDir.toPath(),
-                    null,
-                    Map.of("compiler", task.getName())));
+                    srcDir.toPath(), destDir.toPath(), null, Map.of("compiler", task.getName())));
           }
         });
   }
@@ -842,9 +809,7 @@ public class GradleApplicationModelBuilder
         || a.getFile().isDirectory();
   }
 
-  /**
-   * Creates an instance of Dependency and associates it with the ResolvedArtifact's path
-   */
+  /** Creates an instance of Dependency and associates it with the ResolvedArtifact's path */
   static ResolvedDependencyBuilder toDependency(ResolvedArtifact a, int... flags) {
     return toDependency(a, PathList.of(a.getFile().toPath()), null, flags);
   }
@@ -868,10 +833,7 @@ public class GradleApplicationModelBuilder
   }
 
   static ResolvedDependencyBuilder toDependency(
-      ResolvedArtifact a,
-      PathCollection paths,
-      DefaultWorkspaceModule module,
-      int... flags) {
+      ResolvedArtifact a, PathCollection paths, DefaultWorkspaceModule module, int... flags) {
     int allFlags = 0;
     for (int f : flags) {
       allFlags |= f;
@@ -886,11 +848,7 @@ public class GradleApplicationModelBuilder
   private static ArtifactCoords toArtifactCoords(ResolvedArtifact a) {
     final String[] split = a.getModuleVersion().toString().split(":");
     return new GACTV(
-        split[0],
-        split[1],
-        a.getClassifier(),
-        a.getType(),
-        split.length > 2 ? split[2] : null);
+        split[0], split[1], a.getClassifier(), a.getType(), split.length > 2 ? split[2] : null);
   }
 
   private static ArtifactKey toAppDependenciesKey(
@@ -903,8 +861,7 @@ public class GradleApplicationModelBuilder
   private static String sha1(String value) {
     try {
       byte[] digest =
-          MessageDigest.getInstance("SHA-1")
-              .digest(value.getBytes(StandardCharsets.UTF_8));
+          MessageDigest.getInstance("SHA-1").digest(value.getBytes(StandardCharsets.UTF_8));
       StringBuilder sb = new StringBuilder(40);
       for (byte b : digest) {
         sb.append(Integer.toHexString((b & 0xFF) | 0x100).substring(1, 3));

@@ -16,7 +16,6 @@ abstract class AbstractKtorClientTelemetry(
   private val instrumenter: Instrumenter<HttpRequestData, HttpResponse>,
   private val propagators: ContextPropagators,
 ) {
-
   internal fun createSpan(requestBuilder: HttpRequestBuilder): Context? {
     val parentContext = Context.current()
     val requestData = requestBuilder.build()
@@ -28,15 +27,27 @@ abstract class AbstractKtorClientTelemetry(
     }
   }
 
-  internal fun populateRequestHeaders(requestBuilder: HttpRequestBuilder, context: Context) {
+  internal fun populateRequestHeaders(
+    requestBuilder: HttpRequestBuilder,
+    context: Context
+  ) {
     propagators.textMapPropagator.inject(context, requestBuilder, KtorHttpHeadersSetter)
   }
 
-  internal fun endSpan(context: Context, call: HttpClientCall, error: Throwable?) {
+  internal fun endSpan(
+    context: Context,
+    call: HttpClientCall,
+    error: Throwable?
+  ) {
     endSpan(context, HttpRequestBuilder().takeFrom(call.request), call.response, error)
   }
 
-  internal fun endSpan(context: Context, requestBuilder: HttpRequestBuilder, response: HttpResponse?, error: Throwable?) {
+  internal fun endSpan(
+    context: Context,
+    requestBuilder: HttpRequestBuilder,
+    response: HttpResponse?,
+    error: Throwable?
+  ) {
     instrumenter.end(context, requestBuilder.build(), response, error)
   }
 }

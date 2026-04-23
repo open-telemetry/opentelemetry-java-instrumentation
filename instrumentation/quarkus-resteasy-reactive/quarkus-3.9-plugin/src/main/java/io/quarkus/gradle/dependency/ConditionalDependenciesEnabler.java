@@ -22,6 +22,12 @@
 
 package io.quarkus.gradle.dependency;
 
+import io.quarkus.gradle.tooling.dependency.DependencyUtils;
+import io.quarkus.gradle.tooling.dependency.ExtensionDependency;
+import io.quarkus.maven.dependency.ArtifactCoords;
+import io.quarkus.maven.dependency.ArtifactKey;
+import io.quarkus.maven.dependency.GACT;
+import io.quarkus.runtime.LaunchMode;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -29,37 +35,32 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 
-import io.quarkus.gradle.tooling.dependency.DependencyUtils;
-import io.quarkus.gradle.tooling.dependency.ExtensionDependency;
-import io.quarkus.maven.dependency.ArtifactCoords;
-import io.quarkus.maven.dependency.ArtifactKey;
-import io.quarkus.maven.dependency.GACT;
-import io.quarkus.runtime.LaunchMode;
-
-// Based on https://github.com/quarkusio/quarkus/blob/3.9.5/devtools/gradle/gradle-model/src/main/java/io/quarkus/gradle/dependency/ConditionalDependenciesEnabler.java
+// Based on
+// https://github.com/quarkusio/quarkus/blob/3.9.5/devtools/gradle/gradle-model/src/main/java/io/quarkus/gradle/dependency/ConditionalDependenciesEnabler.java
 public class ConditionalDependenciesEnabler {
 
   /** Links dependencies to extensions */
   private final Map<GACT, Set<ExtensionDependency<?>>> featureVariants = new HashMap<>();
+
   /**
    * Despite its name, only contains extensions which have no conditional dependencies, or have
    * resolved their conditional dependencies.
    */
-  private final Map<ModuleVersionIdentifier, ExtensionDependency<?>> allExtensions = new HashMap<>();
+  private final Map<ModuleVersionIdentifier, ExtensionDependency<?>> allExtensions =
+      new HashMap<>();
+
   private final Project project;
   private final Configuration enforcedPlatforms;
   private final Set<ArtifactKey> existingArtifacts = new HashSet<>();
   private final List<Dependency> unsatisfiedConditionalDeps = new ArrayList<>();
 
-  public ConditionalDependenciesEnabler(
-      Project project, LaunchMode mode, Configuration platforms) {
+  public ConditionalDependenciesEnabler(Project project, LaunchMode mode, Configuration platforms) {
     this.project = project;
     this.enforcedPlatforms = platforms;
 
@@ -116,8 +117,7 @@ public class ConditionalDependenciesEnabler {
     for (ResolvedArtifact artifact : runtimeArtifacts) {
       // Add to master list of artifacts:
       existingArtifacts.add(getKey(artifact));
-      ExtensionDependency<?> extension =
-          DependencyUtils.getExtensionInfoOrNull(project, artifact);
+      ExtensionDependency<?> extension = DependencyUtils.getExtensionInfoOrNull(project, artifact);
       // If this artifact represents an extension:
       if (extension != null) {
         // Add to master list of accepted extensions:
@@ -145,14 +145,8 @@ public class ConditionalDependenciesEnabler {
     // dependency
     for (ResolvedArtifact artifact : resolvedArtifacts) {
       if (conditionalDep.getName().equals(artifact.getName())
-          && conditionalDep
-              .getVersion()
-              .equals(artifact.getModuleVersion().getId().getVersion())
-          && artifact
-              .getModuleVersion()
-              .getId()
-              .getGroup()
-              .equals(conditionalDep.getGroup())) {
+          && conditionalDep.getVersion().equals(artifact.getModuleVersion().getId().getVersion())
+          && artifact.getModuleVersion().getId().getGroup().equals(conditionalDep.getGroup())) {
         // Once the dependency is found, reload the extension info from within
         final ExtensionDependency<?> extensionDependency =
             DependencyUtils.getExtensionInfoOrNull(project, artifact);
@@ -214,8 +208,7 @@ public class ConditionalDependenciesEnabler {
   // build, so we manually copy exclude rules and dependencies instead
   private Configuration createConditionalDependenciesConfiguration(
       Project project, Dependency conditionalDep) {
-    Configuration conditionalDepConfiguration =
-        project.getConfigurations().detachedConfiguration();
+    Configuration conditionalDepConfiguration = project.getConfigurations().detachedConfiguration();
     enforcedPlatforms
         .getExcludeRules()
         .forEach(
@@ -236,8 +229,7 @@ public class ConditionalDependenciesEnabler {
     if (extensions == null) {
       return;
     }
-    extensions.forEach(
-        e -> e.importConditionalDependency(project.getDependencies(), dependency));
+    extensions.forEach(e -> e.importConditionalDependency(project.getDependencies(), dependency));
   }
 
   private boolean exist(List<ArtifactKey> dependencies) {

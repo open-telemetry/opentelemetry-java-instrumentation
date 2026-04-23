@@ -67,7 +67,10 @@ tasks {
   }
 
   val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
@@ -90,7 +93,9 @@ if (!otelProps.testLatestDeps) {
     resolutionStrategy {
       eachDependency {
         // specifying a fixed version for all libraries with io.netty' group
-        if (requested.group == "io.netty" && requested.name != "netty-bom" && requested.name != "netty") {
+        if (requested.group == "io.netty" && requested.name != "netty-bom" &&
+          requested.name != "netty"
+        ) {
           useVersion("4.0.34.Final")
         }
       }

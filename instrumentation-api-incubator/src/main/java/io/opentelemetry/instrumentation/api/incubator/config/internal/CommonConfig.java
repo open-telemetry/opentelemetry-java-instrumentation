@@ -81,8 +81,9 @@ public final class CommonConfig {
         commonConfig.get("http").get("client").getBoolean("redact_query_parameters/development");
     if (oldRedact != null) {
       logger.warning(
-          "otel.instrumentation.http.client.experimental.redact-query-parameters is deprecated. "
-              + "Use otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters instead.");
+          "otel.instrumentation.http.client.experimental.redact-query-parameters is deprecated. Use"
+              + " otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters"
+              + " instead.");
     }
     List<String> newConfigValue =
         generalConfig

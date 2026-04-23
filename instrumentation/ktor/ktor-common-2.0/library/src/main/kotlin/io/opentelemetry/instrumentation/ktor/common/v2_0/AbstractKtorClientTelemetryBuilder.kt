@@ -34,11 +34,12 @@ abstract class AbstractKtorClientTelemetryBuilder(
 
   fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
     this.openTelemetry = openTelemetry
-    this.builder = DefaultHttpClientInstrumenterBuilder.create(
-      instrumentationName,
-      openTelemetry,
-      KtorHttpClientAttributesGetter
-    )
+    this.builder =
+      DefaultHttpClientInstrumenterBuilder.create(
+        instrumentationName,
+        openTelemetry,
+        KtorHttpClientAttributesGetter
+      )
   }
 
   protected fun getOpenTelemetry(): OpenTelemetry = openTelemetry
@@ -68,15 +69,27 @@ abstract class AbstractKtorClientTelemetryBuilder(
 
   fun attributesExtractor(extractorBuilder: ExtractorBuilder.() -> Unit = {}) {
     val builder = ExtractorBuilder().apply(extractorBuilder).build()
-    this.builder.addAttributesExtractor(object : AttributesExtractor<HttpRequestData, HttpResponse> {
-      override fun onStart(attributes: AttributesBuilder, parentContext: Context, request: HttpRequestData) {
-        builder.onStart(OnStartData(attributes, parentContext, request))
-      }
+    this.builder.addAttributesExtractor(
+      object : AttributesExtractor<HttpRequestData, HttpResponse> {
+        override fun onStart(
+          attributes: AttributesBuilder,
+          parentContext: Context,
+          request: HttpRequestData
+        ) {
+          builder.onStart(OnStartData(attributes, parentContext, request))
+        }
 
-      override fun onEnd(attributes: AttributesBuilder, context: Context, request: HttpRequestData, response: HttpResponse?, error: Throwable?) {
-        builder.onEnd(OnEndData(attributes, context, request, response, error))
+        override fun onEnd(
+          attributes: AttributesBuilder,
+          context: Context,
+          request: HttpRequestData,
+          response: HttpResponse?,
+          error: Throwable?
+        ) {
+          builder.onEnd(OnEndData(attributes, context, request, response, error))
+        }
       }
-    })
+    )
   }
 
   fun spanNameExtractor(spanNameExtractor: UnaryOperator<SpanNameExtractor<HttpRequestData>>) {
@@ -98,7 +111,10 @@ abstract class AbstractKtorClientTelemetryBuilder(
     internal fun build(): Extractor = Extractor(onStart, onEnd)
   }
 
-  internal class Extractor(val onStart: OnStartData.() -> Unit, val onEnd: OnEndData.() -> Unit)
+  internal class Extractor(
+    val onStart: OnStartData.() -> Unit,
+    val onEnd: OnEndData.() -> Unit
+  )
 
   data class OnStartData(
     val attributes: AttributesBuilder,

@@ -72,7 +72,8 @@ class ProcedureCallTest {
     try (Connection conn = DriverManager.getConnection("jdbc:hsqldb:mem:test", "sa", "1");
         Statement stmt = conn.createStatement()) {
       stmt.execute(
-          "CREATE PROCEDURE TEST_PROC() MODIFIES SQL DATA BEGIN ATOMIC INSERT INTO Value VALUES (420, 'fred'); END");
+          "CREATE PROCEDURE TEST_PROC() MODIFIES SQL DATA BEGIN ATOMIC INSERT INTO Value VALUES"
+              + " (420, 'fred'); END");
     }
   }
 

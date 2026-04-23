@@ -32,7 +32,11 @@ dependencyResolutionManagement {
   }
 
   versionCatalogs {
-    fun addSpringBootCatalog(name: String, minVersion: String, maxVersion: String) {
+    fun addSpringBootCatalog(
+      name: String,
+      minVersion: String,
+      maxVersion: String,
+    ) {
       val latestDepTest = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
       create(name) {
         val version =

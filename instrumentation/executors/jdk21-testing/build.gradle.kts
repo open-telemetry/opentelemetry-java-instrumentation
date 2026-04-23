@@ -16,10 +16,14 @@ otelJava {
   // same vm version that is going to execute the test. Choose whichever is greater 21 or the
   // version of the vm that is going to run test
   val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
-  minJavaVersionSupported.set(JavaVersion.toVersion(max(
-    testJavaVersion.majorVersion.toInt(),
-    JavaVersion.VERSION_21.majorVersion.toInt()
-  )))
+  minJavaVersionSupported.set(
+    JavaVersion.toVersion(
+      max(
+        testJavaVersion.majorVersion.toInt(),
+        JavaVersion.VERSION_21.majorVersion.toInt(),
+      ),
+    ),
+  )
 }
 
 tasks.withType<JavaCompile>().configureEach {

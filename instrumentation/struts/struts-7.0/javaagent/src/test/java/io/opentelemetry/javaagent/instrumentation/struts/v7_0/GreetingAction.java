@@ -52,7 +52,8 @@ public class GreetingAction extends ActionSupport {
     controller(
         ServerEndpoint.PATH_PARAM,
         () ->
-            "this does nothing, as responseBody is set in setId, but we need this controller span nevertheless");
+            "this does nothing, as responseBody is set in setId, but we need this controller span"
+                + " nevertheless");
     return "greeting";
   }
 

@@ -6,7 +6,12 @@ description = "smoke-tests-otel-starter-spring-boot-reactive-2"
 
 dependencies {
   implementation(project(":instrumentation:spring:starters:spring-boot-starter"))
-  implementation(platform("org.springframework.boot:spring-boot-dependencies:" + if (otelProps.testLatestDeps) "2.+" else "2.6.15"))
+  implementation(
+    platform(
+      "org.springframework.boot:spring-boot-dependencies:" +
+        if (otelProps.testLatestDeps) "2.+" else "2.6.15",
+    ),
+  )
 
   implementation(project(":smoke-tests-otel-starter:spring-boot-reactive-common"))
   implementation("org.springframework.boot:spring-boot-starter-webflux")

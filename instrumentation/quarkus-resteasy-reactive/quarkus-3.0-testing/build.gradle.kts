@@ -54,17 +54,24 @@ val quarkusTestCompileOnlyConfiguration by configurations.creating {
 
 val testModelPath = layout.buildDirectory.file("quarkus-app-test-model.dat")
 
-val buildModel = if (findProperty("skipTests") as String? != "true") {
-  tasks.register<BuildModelTask>("buildModel") {
-    projectRef = project
-    runtimeClasspath.from(configurations.named("testRuntimeClasspath"))
-    outputFile.set(testModelPath)
+val buildModel =
+  if (findProperty("skipTests") as String? != "true") {
+    tasks.register<BuildModelTask>("buildModel") {
+      projectRef = project
+      runtimeClasspath.from(configurations.named("testRuntimeClasspath"))
+      outputFile.set(testModelPath)
 
-    onlyIf { outputFile.get().asFile.toPath().notExists() }
+      onlyIf {
+        outputFile
+          .get()
+          .asFile
+          .toPath()
+          .notExists()
+      }
+    }
+  } else {
+    null
   }
-} else {
-  null
-}
 
 tasks {
   test {
@@ -72,7 +79,10 @@ tasks {
       dependsOn(buildModel)
     }
 
-    systemProperty("quarkus-internal-test.serialized-app-model.path", testModelPath.get().asFile.toString())
+    systemProperty(
+      "quarkus-internal-test.serialized-app-model.path",
+      testModelPath.get().asFile.toString(),
+    )
   }
 
   if (otelProps.denyUnsafe) {
@@ -83,7 +93,6 @@ tasks {
 }
 
 abstract class BuildModelTask : DefaultTask() {
-
   @get:Internal
   @Transient
   var projectRef: Project? = null
@@ -96,7 +105,7 @@ abstract class BuildModelTask : DefaultTask() {
 
   init {
     notCompatibleWithConfigurationCache(
-      "Quarkus GradleApplicationModelBuilder.buildAll() requires Project reference"
+      "Quarkus GradleApplicationModelBuilder.buildAll() requires Project reference",
     )
   }
 
@@ -105,11 +114,12 @@ abstract class BuildModelTask : DefaultTask() {
     val modelPath = outputFile.get().asFile.toPath()
     val modelParameter = ModelParameterImpl()
     modelParameter.mode = LaunchMode.TEST.toString()
-    val model = GradleApplicationModelBuilder().buildAll(
-      ApplicationModel::class.java.getName(),
-      modelParameter,
-      checkNotNull(projectRef)
-    )
+    val model =
+      GradleApplicationModelBuilder().buildAll(
+        ApplicationModel::class.java.getName(),
+        modelParameter,
+        checkNotNull(projectRef),
+      )
     BootstrapUtils.serializeAppModel(model as ApplicationModel?, modelPath)
   }
 }

@@ -23,7 +23,12 @@ dependencies {
   // the @WithSpan annotation references the OpenTelemetry API's SpanKind class
   //
   // see the comment in opentelemetry-api-1.0.gradle for more details
-  compileOnly(project(":opentelemetry-instrumentation-annotations-shaded-for-instrumenting", configuration = "shadow"))
+  compileOnly(
+    project(
+      ":opentelemetry-instrumentation-annotations-shaded-for-instrumenting",
+      configuration = "shadow",
+    ),
+  )
 
   // Used by byte-buddy but not brought in as a transitive dependency.
   compileOnly("com.google.code.findbugs:annotations")
@@ -39,14 +44,19 @@ tasks {
     options.compilerArgs.add("-parameters")
   }
   test {
-    jvmArgs("-Dotel.instrumentation.opentelemetry-instrumentation-annotations.exclude-methods=io.opentelemetry.test.annotation.TracedWithSpan[ignored]")
+    jvmArgs(
+      "-Dotel.instrumentation.opentelemetry-instrumentation-annotations.exclude-methods=io.opentelemetry.test.annotation.TracedWithSpan[ignored]",
+    )
   }
 
   val testDeclarativeConfig by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs(
-      "-Dotel.config.file=$projectDir/src/test/resources/declarative-config.yaml"
+      "-Dotel.config.file=$projectDir/src/test/resources/declarative-config.yaml",
     )
   }
 

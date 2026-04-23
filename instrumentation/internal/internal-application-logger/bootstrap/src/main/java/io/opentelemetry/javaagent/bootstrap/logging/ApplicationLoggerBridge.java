@@ -16,8 +16,9 @@ public abstract class ApplicationLoggerBridge {
   public static void set(ApplicationLoggerBridge bridge) {
     if (!applicationLoggerBridge.compareAndSet(null, bridge)) {
       throw new IllegalStateException(
-          "ApplicationLoggerBridge was already set earlier."
-              + " This should never happen in a properly built javaagent, and it's most likely a result of an error in the javaagent build.");
+          "ApplicationLoggerBridge was already set earlier. This should never happen in a properly"
+              + " built javaagent, and it's most likely a result of an error in the javaagent"
+              + " build.");
     }
   }
 
@@ -25,8 +26,9 @@ public abstract class ApplicationLoggerBridge {
     ApplicationLoggerBridge bridge = applicationLoggerBridge.get();
     if (bridge == null) {
       throw new IllegalStateException(
-          "ApplicationLoggerBridge#set() was not called before an attempt to install a bridge was made."
-              + " This should never happen in a properly built javaagent, and it's most likely a result of an error in the javaagent build.");
+          "ApplicationLoggerBridge#set() was not called before an attempt to install a bridge was"
+              + " made. This should never happen in a properly built javaagent, and it's most"
+              + " likely a result of an error in the javaagent build.");
     }
     bridge.install(applicationLoggerFactory);
   }

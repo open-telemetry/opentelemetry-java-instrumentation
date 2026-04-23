@@ -20,10 +20,11 @@ muzzle {
 val finagleVersion = "23.11.0"
 val scalaVersion = "2.13.10"
 
-val scalaMinor = Regex("""^([0-9]+\.[0-9]+)\.?.*$""").find(scalaVersion)!!.run {
-  val (minorVersion) = this.destructured
-  minorVersion
-}
+val scalaMinor =
+  Regex("""^([0-9]+\.[0-9]+)\.?.*$""").find(scalaVersion)!!.run {
+    val (minorVersion) = this.destructured
+    minorVersion
+  }
 
 val scalified = fun(pack: String): String = "${pack}_$scalaMinor"
 
@@ -52,12 +53,15 @@ tasks {
     systemProperty(
       "metadataConfig",
       "otel.instrumentation.http.client.emit-experimental-telemetry=true," +
-        "otel.instrumentation.http.server.emit-experimental-telemetry=true"
+        "otel.instrumentation.http.server.emit-experimental-telemetry=true",
     )
   }
 
   val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.instrumentation.http.client.emit-experimental-telemetry=true")
     jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
@@ -66,7 +70,7 @@ tasks {
       "metadataConfig",
       "otel.instrumentation.http.client.emit-experimental-telemetry=true," +
         "otel.instrumentation.http.server.emit-experimental-telemetry=true," +
-        "otel.semconv-stability.opt-in=service.peer"
+        "otel.semconv-stability.opt-in=service.peer",
     )
   }
 

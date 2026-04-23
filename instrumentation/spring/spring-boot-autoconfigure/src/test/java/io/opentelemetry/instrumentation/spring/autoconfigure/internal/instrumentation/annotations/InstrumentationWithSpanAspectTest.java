@@ -115,7 +115,8 @@ class InstrumentationWithSpanAspectTest {
 
   @Test
   @DisplayName(
-      "when method is annotated with @WithSpan AND an exception is thrown span should record the exception")
+      "when method is annotated with @WithSpan AND an exception is thrown span should record the"
+          + " exception")
   void withSpanError() {
     assertThatThrownBy(() -> withSpanTester.testWithSpanWithException())
         .isInstanceOf(Exception.class);
@@ -134,7 +135,8 @@ class InstrumentationWithSpanAspectTest {
 
   @Test
   @DisplayName(
-      "when method is annotated with @WithSpan(kind=CLIENT) should build span with the declared SpanKind")
+      "when method is annotated with @WithSpan(kind=CLIENT) should build span with the declared"
+          + " SpanKind")
   void withSpanKind() {
     // when
     testing.runWithSpan("parent", () -> withSpanTester.testWithClientSpan());
@@ -179,7 +181,8 @@ class InstrumentationWithSpanAspectTest {
 
   @Test
   @DisplayName(
-      "when method is annotated with @WithSpan(inheritContext=false) should build span without parent")
+      "when method is annotated with @WithSpan(inheritContext=false) should build span without"
+          + " parent")
   void withSpanWithoutParent() {
     // when
     testing.runWithSpan("parent", withSpanTester::testWithoutParentSpan);

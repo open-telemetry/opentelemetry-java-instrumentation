@@ -3,7 +3,9 @@ plugins {
 }
 
 dependencies {
-  testInstrumentation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.27:javaagent"))
+  testInstrumentation(
+    project(":instrumentation:opentelemetry-api:opentelemetry-api-1.27:javaagent"),
+  )
 }
 
 configurations.configureEach {

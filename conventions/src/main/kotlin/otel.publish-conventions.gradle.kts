@@ -30,13 +30,16 @@ publishing {
 
         if (groupId != "io.opentelemetry.instrumentation" &&
           groupId != "io.opentelemetry.javaagent" &&
-          groupId != "io.opentelemetry.javaagent.instrumentation") {
-          throw GradleException("Unexpected groupId for this project or its parent ${project.parent}: $groupId")
+          groupId != "io.opentelemetry.javaagent.instrumentation"
+        ) {
+          throw GradleException(
+            "Unexpected groupId for this project or its parent ${project.parent}: $groupId",
+          )
         }
 
         pom.description.set(
           project.description
-            ?: "Instrumentation of Java libraries using OpenTelemetry."
+            ?: "Instrumentation of Java libraries using OpenTelemetry.",
         )
       }
 
@@ -55,13 +58,19 @@ publishing {
           developer {
             id.set("opentelemetry")
             name.set("OpenTelemetry")
-            url.set("https://github.com/open-telemetry/opentelemetry-java-instrumentation/discussions")
+            url.set(
+              "https://github.com/open-telemetry/opentelemetry-java-instrumentation/discussions",
+            )
           }
         }
 
         scm {
-          connection.set("scm:git:git@github.com:open-telemetry/opentelemetry-java-instrumentation.git")
-          developerConnection.set("scm:git:git@github.com:open-telemetry/opentelemetry-java-instrumentation.git")
+          connection.set(
+            "scm:git:git@github.com:open-telemetry/opentelemetry-java-instrumentation.git",
+          )
+          developerConnection.set(
+            "scm:git:git@github.com:open-telemetry/opentelemetry-java-instrumentation.git",
+          )
           url.set("git@github.com:open-telemetry/opentelemetry-java-instrumentation.git")
         }
       }
@@ -76,7 +85,10 @@ publishing {
   }
 }
 
-fun artifactPrefix(p: Project, archivesBaseName: String): String {
+fun artifactPrefix(
+  p: Project,
+  archivesBaseName: String,
+): String {
   if (archivesBaseName.startsWith("opentelemetry")) {
     return ""
   }

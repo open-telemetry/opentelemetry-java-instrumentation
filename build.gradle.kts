@@ -133,11 +133,12 @@ tasks {
     description = "Generate .fossa.yml configuration file"
 
     // Capture the project paths at configuration time to avoid serializing Gradle script objects
-    val projectPaths = rootProject.subprojects
-      .sortedBy { it.findProperty("archivesName") as String? }
-      .filter { !it.name.startsWith("bom") }
-      .filter { it.plugins.hasPlugin("maven-publish") }
-      .map { it.path }
+    val projectPaths =
+      rootProject.subprojects
+        .sortedBy { it.findProperty("archivesName") as String? }
+        .filter { !it.name.startsWith("bom") }
+        .filter { it.plugins.hasPlugin("maven-publish") }
+        .map { it.path }
 
     val outputFile = layout.projectDirectory.file(".fossa.yml")
     outputs.file(outputFile)
@@ -179,7 +180,8 @@ tasks {
     dependsOn(generateReleaseBundle)
     val bundleFile = generateReleaseBundle.flatMap { it.archiveFile }
     doFirst {
-      val username = System.getenv("SONATYPE_USER") ?: throw GradleException("Sonatype user not set")
+      val username =
+        System.getenv("SONATYPE_USER") ?: throw GradleException("Sonatype user not set")
       val password = System.getenv("SONATYPE_KEY") ?: throw GradleException("Sonatype key not set")
       val token = Base64.getEncoder().encodeToString("$username:$password".toByteArray())
 
@@ -189,20 +191,29 @@ tasks {
       val bundle = bundleFile.get().asFile
       val httpClient = OkHttpClient()
 
-      val request = okhttp3.Request.Builder()
-        .url("https://central.sonatype.com/api/v1/publisher/upload$query")
-        .post(
-          okhttp3.MultipartBody.Builder().addFormDataPart(
-            "bundle",
-            bundle.name,
-            bundle.asRequestBody("application/zip".toMediaType())
-          ).build()
-        )
-        .header("authorization", "Bearer $token")
-        .build()
+      val request =
+        okhttp3.Request
+          .Builder()
+          .url("https://central.sonatype.com/api/v1/publisher/upload$query")
+          .post(
+            okhttp3.MultipartBody
+              .Builder()
+              .addFormDataPart(
+                "bundle",
+                bundle.name,
+                bundle.asRequestBody("application/zip".toMediaType()),
+              ).build(),
+          ).header("authorization", "Bearer $token")
+          .build()
 
       httpClient.newCall(request).execute().use { response ->
-        if (response.code != 201) throw GradleException("Unexpected response status ${response.code} while uploading the release bundle")
+        if (response.code !=
+          201
+        ) {
+          throw GradleException(
+            "Unexpected response status ${response.code} while uploading the release bundle",
+          )
+        }
         println("Uploaded deployment ${response.body.string()}")
       }
     }

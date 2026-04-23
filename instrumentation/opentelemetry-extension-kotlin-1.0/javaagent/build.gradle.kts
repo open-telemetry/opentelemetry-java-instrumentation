@@ -34,7 +34,9 @@ if (!otelProps.testLatestDeps) {
     if (!name.contains("muzzle")) {
       resolutionStrategy {
         eachDependency {
-          if (requested.group == "io.opentelemetry" && requested.name == "opentelemetry-extension-kotlin") {
+          if (requested.group == "io.opentelemetry" &&
+            requested.name == "opentelemetry-extension-kotlin"
+          ) {
             useVersion("1.0.0")
           }
         }

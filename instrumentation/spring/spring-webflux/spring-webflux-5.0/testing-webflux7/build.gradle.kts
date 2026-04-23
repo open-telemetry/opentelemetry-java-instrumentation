@@ -4,7 +4,9 @@ plugins {
 
 dependencies {
   testInstrumentation(project(":instrumentation:spring:spring-core-2.0:javaagent"))
-  testInstrumentation(project(":instrumentation:spring:spring-webflux:spring-webflux-5.0:javaagent"))
+  testInstrumentation(
+    project(":instrumentation:spring:spring-webflux:spring-webflux-5.0:javaagent"),
+  )
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:reactor:reactor-netty:reactor-netty-1.0:javaagent"))

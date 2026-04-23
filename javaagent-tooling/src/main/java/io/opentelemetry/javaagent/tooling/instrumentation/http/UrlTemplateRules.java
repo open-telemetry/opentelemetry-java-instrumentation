@@ -23,7 +23,8 @@ final class UrlTemplateRules {
   static void addRule(Pattern pattern, String replacement, boolean override) {
     logger.log(
         FINE,
-        "Adding http client url template customization rule: pattern=\"{0}\", replacement=\"{1}\", override={2}.",
+        "Adding http client url template customization rule: pattern=\"{0}\", replacement=\"{1}\","
+            + " override={2}.",
         new Object[] {pattern, replacement, override});
 
     rules.add(new Rule(pattern, replacement, override));

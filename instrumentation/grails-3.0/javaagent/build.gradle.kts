@@ -57,7 +57,7 @@ spotless {
     target("src/**/*.groovy")
     licenseHeaderFile(
       rootProject.file("buildscripts/spotless.license.java"),
-      "(package|import|(?:abstract )?class)"
+      "(package|import|(?:abstract )?class)",
     )
     endWithNewline()
   }
@@ -73,7 +73,10 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
     systemProperty("collectMetadata", otelProps.collectMetadata)
-    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.experimental.controller-telemetry.enabled=true",
+    )
   }
 
   if (otelProps.denyUnsafe) {

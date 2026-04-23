@@ -51,8 +51,9 @@ public class PersistenceConfig {
     initializer.setDatabasePopulator(
         new ResourceDatabasePopulator(
             new ByteArrayResource(
-                ("CREATE TABLE customer (id INT PRIMARY KEY, firstname VARCHAR(100) NOT NULL, lastname VARCHAR(100) NOT NULL);"
-                        + "INSERT INTO customer (id, firstname, lastname) VALUES ('1', 'First', 'Last');")
+                ("CREATE TABLE customer (id INT PRIMARY KEY, firstname VARCHAR(100) NOT NULL,"
+                        + " lastname VARCHAR(100) NOT NULL);INSERT INTO customer (id, firstname,"
+                        + " lastname) VALUES ('1', 'First', 'Last');")
                     .getBytes(UTF_8))));
 
     return initializer;

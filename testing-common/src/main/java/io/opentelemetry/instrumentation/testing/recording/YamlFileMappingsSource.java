@@ -140,7 +140,8 @@ class YamlFileMappingsSource implements MappingsSource {
   public void removeAll() {
     if (anyFilesAreMultiMapping()) {
       throw new NotWritableException(
-          "Some stubs were loaded from multi-mapping files which are read-only, so remove all cannot be performed");
+          "Some stubs were loaded from multi-mapping files which are read-only, so remove all"
+              + " cannot be performed");
     }
 
     for (StubMappingFileMetadata fileMetadata : fileNameMap.values()) {

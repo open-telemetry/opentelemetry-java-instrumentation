@@ -58,9 +58,11 @@ tasks {
     jvmArgs("-Djboss.socket.binding.port-offset=200")
 
     // remove logback-classic from classpath and add modified copy
-    classpath = classpath.filter {
-      !it.absolutePath.contains("logback-classic")
-    }.plus(files(layout.buildDirectory.file("tmp/logback-classic-modified.jar")))
+    classpath =
+      classpath
+        .filter {
+          !it.absolutePath.contains("logback-classic")
+        }.plus(files(layout.buildDirectory.file("tmp/logback-classic-modified.jar")))
   }
 }
 

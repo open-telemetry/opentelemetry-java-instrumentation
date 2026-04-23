@@ -25,19 +25,20 @@ import org.junit.jupiter.api.AfterAll
 import java.net.URI
 
 abstract class AbstractKtorHttpClientTest : AbstractHttpClientTest<HttpRequestBuilder>() {
+  private val client =
+    HttpClient(CIO) {
+      install(HttpRedirect)
 
-  private val client = HttpClient(CIO) {
-    install(HttpRedirect)
-
-    installTracing()
-  }
-  private val singleConnectionClient = HttpClient(CIO) {
-    engine {
-      maxConnectionsCount = 1
+      installTracing()
     }
+  private val singleConnectionClient =
+    HttpClient(CIO) {
+      engine {
+        maxConnectionsCount = 1
+      }
 
-    installTracing()
-  }
+      installTracing()
+    }
 
   @AfterAll
   fun tearDown() {
@@ -47,13 +48,22 @@ abstract class AbstractKtorHttpClientTest : AbstractHttpClientTest<HttpRequestBu
 
   abstract fun HttpClientConfig<*>.installTracing()
 
-  override fun buildRequest(requestMethod: String, uri: URI, requestHeaders: MutableMap<String, String>) = HttpRequestBuilder(uri.toURL()).apply {
+  override fun buildRequest(
+    requestMethod: String,
+    uri: URI,
+    requestHeaders: MutableMap<String, String>
+  ) = HttpRequestBuilder(uri.toURL()).apply {
     method = HttpMethod.parse(requestMethod)
 
     requestHeaders.forEach { (header, value) -> headers.append(header, value) }
   }
 
-  override fun sendRequest(request: HttpRequestBuilder, method: String, uri: URI, headers: MutableMap<String, String>) = runBlocking {
+  override fun sendRequest(
+    request: HttpRequestBuilder,
+    method: String,
+    uri: URI,
+    headers: MutableMap<String, String>
+  ) = runBlocking {
     client.request(request).status.value
   }
 

@@ -23,7 +23,11 @@ class KtorServerTracer(
     return instrumenter.start(parentContext, call.request)
   }
 
-  fun end(context: Context, call: ApplicationCall, error: Throwable?) {
+  fun end(
+    context: Context,
+    call: ApplicationCall,
+    error: Throwable?
+  ) {
     instrumenter.end(context, call.request, call.response, error)
   }
 }

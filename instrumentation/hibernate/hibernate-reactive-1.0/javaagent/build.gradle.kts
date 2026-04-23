@@ -15,8 +15,12 @@ dependencies {
   compileOnly("org.hibernate.reactive:hibernate-reactive-core:1.0.0.Final")
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
-  testInstrumentation(project(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent"))
-  testInstrumentation(project(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-5.0:javaagent"))
+  testInstrumentation(
+    project(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent"),
+  )
+  testInstrumentation(
+    project(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-5.0:javaagent"),
+  )
 
   library("io.vertx:vertx-sql-client:4.4.2")
   compileOnly("io.vertx:vertx-codegen:4.4.2")
@@ -44,7 +48,11 @@ testing {
     val hibernateReactive2Test by registering(JvmTestSuite::class) {
       dependencies {
         implementation("org.testcontainers:testcontainers")
-        implementation(project(":instrumentation:hibernate:hibernate-reactive-1.0:hibernate-reactive-2.0-testing"))
+        implementation(
+          project(
+            ":instrumentation:hibernate:hibernate-reactive-1.0:hibernate-reactive-2.0-testing",
+          ),
+        )
         if (otelProps.testLatestDeps) {
           implementation("org.hibernate.reactive:hibernate-reactive-core:3.+")
           implementation("io.vertx:vertx-pg-client:4.+")
@@ -59,7 +67,11 @@ testing {
     val hibernateReactive4Test by registering(JvmTestSuite::class) {
       dependencies {
         implementation("org.testcontainers:testcontainers")
-        implementation(project(":instrumentation:hibernate:hibernate-reactive-1.0:hibernate-reactive-2.0-testing"))
+        implementation(
+          project(
+            ":instrumentation:hibernate:hibernate-reactive-1.0:hibernate-reactive-2.0-testing",
+          ),
+        )
         if (otelProps.testLatestDeps) {
           implementation("org.hibernate.reactive:hibernate-reactive-core:latest.release")
           implementation("io.vertx:vertx-pg-client:latest.release")
@@ -100,15 +112,17 @@ tasks {
     }
   }
 
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}StableSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
+  val stableSemconvSuites =
+    testing.suites
+      .withType(JvmTestSuite::class)
+      .map { suite ->
+        register<Test>("${suite.name}StableSemconv") {
+          testClassesDirs = suite.sources.output.classesDirs
+          classpath = suite.sources.runtimeClasspath
 
-        jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
+          jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
+        }
       }
-    }
 
   if (testJavaVersion.isJava8) {
     named("hibernateReactive2TestStableSemconv", Test::class).configure {

@@ -17,7 +17,7 @@ tasks {
     }
     relocate(
       "com.couchbase.client.tracing.opentelemetry",
-      "io.opentelemetry.javaagent.instrumentation.couchbase.v3_1_6.shaded.com.couchbase.client.tracing.opentelemetry"
+      "io.opentelemetry.javaagent.instrumentation.couchbase.v3_1_6.shaded.com.couchbase.client.tracing.opentelemetry",
     )
   }
 

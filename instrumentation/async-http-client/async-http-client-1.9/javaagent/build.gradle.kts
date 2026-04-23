@@ -12,7 +12,9 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:async-http-client:async-http-client-common-1.8:javaagent"))
+  implementation(
+    project(":instrumentation:async-http-client:async-http-client-common-1.8:javaagent"),
+  )
 
   library("com.ning:async-http-client:1.9.0")
 
@@ -36,7 +38,10 @@ tasks {
   }
 
   val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")

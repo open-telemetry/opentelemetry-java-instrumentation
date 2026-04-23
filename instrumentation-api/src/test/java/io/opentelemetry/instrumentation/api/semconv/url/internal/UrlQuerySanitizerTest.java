@@ -93,7 +93,8 @@ class UrlQuerySanitizerTest {
     // Basic URL structure - scheme and host preservation
     "https://example.com?secret=val, https://example.com?secret=REDACTED",
     // With path - path preservation
-    "https://example.com/path/to/resource?secret=val, https://example.com/path/to/resource?secret=REDACTED",
+    "https://example.com/path/to/resource?secret=val,"
+        + " https://example.com/path/to/resource?secret=REDACTED",
     // With port - port preservation
     "https://example.com:8080?apiKey=val, https://example.com:8080?apiKey=REDACTED",
     // Integration - verify redactInternal delegation works (fragment, multiple params)

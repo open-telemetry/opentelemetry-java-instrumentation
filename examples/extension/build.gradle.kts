@@ -22,18 +22,19 @@ plugins {
 group = "io.opentelemetry.example"
 version = "1.0"
 
-val versions = mapOf(
-  // this line is managed by .github/scripts/update-sdk-version.sh
-  "opentelemetrySdk" to "1.61.0",
+val versions =
+  mapOf(
+    // this line is managed by .github/scripts/update-sdk-version.sh
+    "opentelemetrySdk" to "1.61.0",
+    // these lines are managed by .github/scripts/update-version.sh
+    "opentelemetryJavaagent" to "2.27.0-SNAPSHOT",
+    "opentelemetryJavaagentAlpha" to "2.27.0-alpha-SNAPSHOT",
+  )
 
-  // these lines are managed by .github/scripts/update-version.sh
-  "opentelemetryJavaagent" to "2.27.0-SNAPSHOT",
-  "opentelemetryJavaagentAlpha" to "2.27.0-alpha-SNAPSHOT"
-)
-
-val deps = mapOf(
-  "autoservice" to "com.google.auto.service:auto-service:1.1.1"
-)
+val deps =
+  mapOf(
+    "autoservice" to "com.google.auto.service:auto-service:1.1.1",
+  )
 
 repositories {
   mavenCentral()
@@ -48,14 +49,17 @@ configurations {
   We create a separate gradle configuration to grab a published Otel instrumentation agent.
   We don't need the agent during development of this extension module.
   This agent is used only during integration test.
-  */
+   */
   create("otel")
 }
 
 spotless {
   java {
     googleJavaFormat()
-    licenseHeaderFile(rootProject.file("../../buildscripts/spotless.license.java"), "(package|import|public)")
+    licenseHeaderFile(
+      rootProject.file("../../buildscripts/spotless.license.java"),
+      "(package|import|public)",
+    )
     target("src/**/*.java")
   }
 }
@@ -64,8 +68,16 @@ dependencies {
   implementation(platform("io.opentelemetry:opentelemetry-bom:${versions["opentelemetrySdk"]}"))
 
   // these serve as a test of the instrumentation boms
-  implementation(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:${versions["opentelemetryJavaagent"]}"))
-  implementation(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:${versions["opentelemetryJavaagentAlpha"]}"))
+  implementation(
+    platform(
+      "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:${versions["opentelemetryJavaagent"]}",
+    ),
+  )
+  implementation(
+    platform(
+      "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:${versions["opentelemetryJavaagentAlpha"]}",
+    ),
+  )
 
   /*
   Interfaces and SPIs that we implement. We use `compileOnly` dependency because during
@@ -76,7 +88,7 @@ dependencies {
   compileOnly("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator")
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")
 
-  //Provides @AutoService annotation that makes registration of our SPI implementations much easier
+  // Provides @AutoService annotation that makes registration of our SPI implementations much easier
   deps.getValue("autoservice").let {
     compileOnly(it)
     annotationProcessor(it)
@@ -99,7 +111,7 @@ dependencies {
    */
   implementation("org.apache.commons:commons-lang3:3.20.0")
 
-  //All dependencies below are only for tests
+  // All dependencies below are only for tests
   testImplementation("org.testcontainers:testcontainers:2.0.5")
   testImplementation("com.fasterxml.jackson.core:jackson-databind:2.21.2")
   testImplementation("com.google.protobuf:protobuf-java-util:4.34.1")
@@ -115,18 +127,33 @@ dependencies {
 
   testRuntimeOnly("ch.qos.logback:logback-classic:1.5.32")
 
-  //Otel Java instrumentation that we use and extend during integration tests
-  add("otel", "io.opentelemetry.javaagent:opentelemetry-javaagent:${versions["opentelemetryJavaagent"]}")
+  // Otel Java instrumentation that we use and extend during integration tests
+  add(
+    "otel",
+    "io.opentelemetry.javaagent:opentelemetry-javaagent:${versions["opentelemetryJavaagent"]}",
+  )
 
-  //TODO remove when start using io.opentelemetry.instrumentation.javaagent-instrumentation plugin
-  add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions["opentelemetryJavaagentAlpha"]}")
-  add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-support:${versions["opentelemetryJavaagentAlpha"]}")
-  add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:${versions["opentelemetryJavaagentAlpha"]}")
-  add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions["opentelemetryJavaagentAlpha"]}")
+  // TODO remove when start using io.opentelemetry.instrumentation.javaagent-instrumentation plugin
+  add(
+    "codegen",
+    "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions["opentelemetryJavaagentAlpha"]}",
+  )
+  add(
+    "muzzleBootstrap",
+    "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-support:${versions["opentelemetryJavaagentAlpha"]}",
+  )
+  add(
+    "muzzleTooling",
+    "io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:${versions["opentelemetryJavaagentAlpha"]}",
+  )
+  add(
+    "muzzleTooling",
+    "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions["opentelemetryJavaagentAlpha"]}",
+  )
 }
 
-//Produces a copy of upstream javaagent with this extension jar included inside it
-//The location of extension directory inside agent jar is hard-coded in the agent source code
+// Produces a copy of upstream javaagent with this extension jar included inside it
+// The location of extension directory inside agent jar is hard-coded in the agent source code
 val extendedAgent by tasks.registering(Jar::class) {
   dependsOn(configurations.named("otel"))
   archiveFileName.set("opentelemetry-javaagent.jar")
@@ -135,12 +162,13 @@ val extendedAgent by tasks.registering(Jar::class) {
     into("extensions")
   }
 
-  //Preserve MANIFEST.MF file from the upstream javaagent
+  // Preserve MANIFEST.MF file from the upstream javaagent
   doFirst {
     manifest.from(
-      zipTree(configurations.named("otel").get().singleFile).matching {
-        include("META-INF/MANIFEST.MF")
-      }.singleFile
+      zipTree(configurations.named("otel").get().singleFile)
+        .matching {
+          include("META-INF/MANIFEST.MF")
+        }.singleFile,
     )
   }
 }
@@ -152,9 +180,29 @@ tasks {
     inputs.files(layout.files(named<ShadowJar>("shadowJar")))
     inputs.files(layout.files(extendedAgent))
 
-    systemProperty("io.opentelemetry.smoketest.agentPath", configurations.named("otel").get().singleFile.absolutePath)
-    systemProperty("io.opentelemetry.smoketest.extendedAgentPath", extendedAgent.get().archiveFile.get().asFile.absolutePath)
-    systemProperty("io.opentelemetry.smoketest.extensionPath", named<ShadowJar>("shadowJar").get().archiveFile.get().asFile.absolutePath)
+    systemProperty(
+      "io.opentelemetry.smoketest.agentPath",
+      configurations
+        .named("otel")
+        .get()
+        .singleFile.absolutePath,
+    )
+    systemProperty(
+      "io.opentelemetry.smoketest.extendedAgentPath",
+      extendedAgent
+        .get()
+        .archiveFile
+        .get()
+        .asFile.absolutePath,
+    )
+    systemProperty(
+      "io.opentelemetry.smoketest.extensionPath",
+      named<ShadowJar>("shadowJar")
+        .get()
+        .archiveFile
+        .get()
+        .asFile.absolutePath,
+    )
   }
 
   compileJava {

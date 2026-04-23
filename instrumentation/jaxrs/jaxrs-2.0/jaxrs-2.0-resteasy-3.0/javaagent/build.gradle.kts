@@ -61,7 +61,8 @@ dependencies {
 
   latestDepTestLibrary("org.jboss.resteasy:resteasy-servlet-initializer:3.0.+") // see jaxrs-3.0-resteasy-3.1 module
   latestDepTestLibrary("org.jboss.resteasy:resteasy-jaxrs:3.0.+") // see jaxrs-3.0-resteasy-3.1 module
-  latestDepTestLibrary("org.jboss.resteasy:resteasy-undertow:3.0.+") { // see jaxrs-3.0-resteasy-3.1 module
+  latestDepTestLibrary("org.jboss.resteasy:resteasy-undertow:3.0.+") {
+    // see jaxrs-3.0-resteasy-3.1 module
     exclude("org.jboss.resteasy", "resteasy-client")
   }
   latestDepTestLibrary("io.undertow:undertow-servlet:2.2.24.Final") // see jaxrs-3.0-resteasy-3.1 module
@@ -76,7 +77,10 @@ tasks {
   }
 
   val testExperimental by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.jaxrs.experimental-span-attributes=true")

@@ -12,7 +12,13 @@ import java.util.Collections
 internal object ApplicationRequestGetter : TextMapGetter<ApplicationRequest> {
   override fun keys(carrier: ApplicationRequest): Iterable<String> = carrier.headers.names()
 
-  override fun get(carrier: ApplicationRequest?, name: String): String? = carrier?.headers?.get(name)
+  override fun get(
+    carrier: ApplicationRequest?,
+    name: String
+  ): String? = carrier?.headers?.get(name)
 
-  override fun getAll(carrier: ApplicationRequest?, name: String): Iterator<String> = carrier?.headers?.getAll(name)?.iterator() ?: Collections.emptyIterator()
+  override fun getAll(
+    carrier: ApplicationRequest?,
+    name: String
+  ): Iterator<String> = carrier?.headers?.getAll(name)?.iterator() ?: Collections.emptyIterator()
 }

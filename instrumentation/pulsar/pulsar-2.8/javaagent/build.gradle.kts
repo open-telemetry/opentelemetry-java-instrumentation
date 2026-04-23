@@ -26,7 +26,10 @@ tasks {
   }
 
   val testReceiveSpanDisabled by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("PulsarClientSuppressReceiveSpansTest")
@@ -35,7 +38,10 @@ tasks {
   }
 
   val testExperimental by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     filter {
@@ -44,7 +50,10 @@ tasks {
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
 
     jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.pulsar.experimental-span-attributes=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.pulsar.experimental-span-attributes=true",
+    )
   }
 
   test {

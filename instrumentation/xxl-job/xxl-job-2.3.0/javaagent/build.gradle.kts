@@ -52,11 +52,17 @@ tasks {
   }
 
   val testExperimental by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.xxl-job.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.xxl-job.experimental-span-attributes=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.xxl-job.experimental-span-attributes=true",
+    )
   }
 
   named("compileXxlJob33TestJava", JavaCompile::class).configure {

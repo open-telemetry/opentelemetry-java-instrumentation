@@ -24,7 +24,6 @@ import java.util.concurrent.TimeUnit
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExperimentalCoroutinesApi
 class FlowWithSpanTest {
-
   @RegisterExtension
   val testing = AgentInstrumentationExtension.create()
 
@@ -42,12 +41,12 @@ class FlowWithSpanTest {
       { trace ->
         trace.hasSpansSatisfyingExactly(
           {
-            it.hasName("FlowWithSpanTest.simple")
+            it
+              .hasName("FlowWithSpanTest.simple")
               .hasNoParent()
               .hasAttributesSatisfyingExactly(
                 SemconvCodeStabilityUtil.codeFunctionAssertions(this.javaClass, "simple")
-              )
-              .has(Condition({ spanData -> spanData.endEpochNanos > flowStartTime }, "end time after $flowStartTime"))
+              ).has(Condition({ spanData -> spanData.endEpochNanos > flowStartTime }, "end time after $flowStartTime"))
           }
         )
       }
@@ -55,10 +54,11 @@ class FlowWithSpanTest {
   }
 
   @WithSpan
-  fun simple(): Flow<Int> = flow {
-    for (i in 1..3) {
-      delay(100)
-      emit(i)
+  fun simple(): Flow<Int> =
+    flow {
+      for (i in 1..3) {
+        delay(100)
+        emit(i)
+      }
     }
-  }
 }

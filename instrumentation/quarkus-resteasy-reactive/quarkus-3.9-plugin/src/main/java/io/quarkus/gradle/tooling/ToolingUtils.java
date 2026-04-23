@@ -22,12 +22,16 @@
 
 package io.quarkus.gradle.tooling;
 
+import io.quarkus.bootstrap.model.ApplicationModel;
+import io.quarkus.bootstrap.model.gradle.ModelParameter;
+import io.quarkus.bootstrap.model.gradle.impl.ModelParameterImpl;
+import io.quarkus.maven.dependency.ArtifactCoords;
+import io.quarkus.runtime.LaunchMode;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
-
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ExternalModuleDependency;
@@ -39,13 +43,8 @@ import org.gradle.composite.internal.DefaultIncludedBuild;
 import org.gradle.internal.composite.IncludedBuildInternal;
 import org.gradle.internal.composite.IncludedRootBuild;
 
-import io.quarkus.bootstrap.model.ApplicationModel;
-import io.quarkus.bootstrap.model.gradle.ModelParameter;
-import io.quarkus.bootstrap.model.gradle.impl.ModelParameterImpl;
-import io.quarkus.maven.dependency.ArtifactCoords;
-import io.quarkus.runtime.LaunchMode;
-
-// Based on https://github.com/quarkusio/quarkus/blob/3.9.5/devtools/gradle/gradle-model/src/main/java/io/quarkus/gradle/tooling/ToolingUtils.java
+// Based on
+// https://github.com/quarkusio/quarkus/blob/3.9.5/devtools/gradle/gradle-model/src/main/java/io/quarkus/gradle/tooling/ToolingUtils.java
 public class ToolingUtils {
 
   private static final String DEPLOYMENT_CONFIGURATION_SUFFIX = "Deployment";
@@ -62,8 +61,9 @@ public class ToolingUtils {
 
   public static boolean isEnforcedPlatform(ModuleDependency module) {
     final Category category = module.getAttributes().getAttribute(Category.CATEGORY_ATTRIBUTE);
-    return category != null && (Category.ENFORCED_PLATFORM.equals(category.getName())
-        || Category.REGULAR_PLATFORM.equals(category.getName()));
+    return category != null
+        && (Category.ENFORCED_PLATFORM.equals(category.getName())
+            || Category.REGULAR_PLATFORM.equals(category.getName()));
   }
 
   public static IncludedBuild includedBuild(final Project project, final String buildName) {
@@ -86,7 +86,8 @@ public class ToolingUtils {
     return null;
   }
 
-  public static Project includedBuildProject(IncludedBuildInternal includedBuild, final String projectPath) {
+  public static Project includedBuildProject(
+      IncludedBuildInternal includedBuild, final String projectPath) {
     return includedBuild.getTarget().getMutableModel().getRootProject().findProject(projectPath);
   }
 
@@ -108,11 +109,13 @@ public class ToolingUtils {
     }
   }
 
-  public static Project findLocalProject(final Project project, final ArtifactCoords artifactCoords) {
+  public static Project findLocalProject(
+      final Project project, final ArtifactCoords artifactCoords) {
     for (Project subproject : project.getRootProject().getSubprojects()) {
       if (subproject.getGroup().equals(artifactCoords.getGroupId())
           && subproject.getName().equals(artifactCoords.getArtifactId())
-          && (artifactCoords.getVersion() == null || subproject.getVersion().equals(artifactCoords.getVersion()))) {
+          && (artifactCoords.getVersion() == null
+              || subproject.getVersion().equals(artifactCoords.getVersion()))) {
         return subproject;
       }
     }
@@ -140,7 +143,8 @@ public class ToolingUtils {
         return null;
       }
     } catch (IllegalStateException ise) {
-      // This can happen if the project itself is in an included build, which means that the root-project
+      // This can happen if the project itself is in an included build, which means that the
+      // root-project
       // is not yet known, so `DefaultGradle.getRootProject()` throws an ISE.
       return null;
     }
@@ -150,7 +154,8 @@ public class ToolingUtils {
     for (Project p : project.getRootProject().getSubprojects()) {
       if (Objects.equals(p.getGroup(), dependency.getGroup())
           && Objects.equals(p.getName(), dependency.getName())
-          && (dependency.getVersion() == null || Objects.equals(p.getVersion(), dependency.getVersion()))) {
+          && (dependency.getVersion() == null
+              || Objects.equals(p.getVersion(), dependency.getVersion()))) {
         return p;
       }
     }
@@ -158,7 +163,8 @@ public class ToolingUtils {
     return null;
   }
 
-  private static Project findIncludedBuildProject(IncludedBuild ib, ExternalModuleDependency dependency) {
+  private static Project findIncludedBuildProject(
+      IncludedBuild ib, ExternalModuleDependency dependency) {
     if (!(ib instanceof DefaultIncludedBuild.IncludedBuildImpl)) {
       return null;
     }
@@ -169,15 +175,20 @@ public class ToolingUtils {
 
       return findLocalProject(rootProject, dependency);
     } catch (IllegalStateException ise) {
-      // This can happen if the project itself is in an included build, which means that the root-project
+      // This can happen if the project itself is in an included build, which means that the
+      // root-project
       // is not yet known, so `DefaultGradle.getRootProject()` throws an ISE.
       return null;
     }
   }
 
-  public static Path serializeAppModel(ApplicationModel appModel, Task context, boolean test) throws IOException {
-    final Path serializedModel = context.getTemporaryDir().toPath()
-        .resolve("quarkus-app" + (test ? "-test" : "") + "-model.dat");
+  public static Path serializeAppModel(ApplicationModel appModel, Task context, boolean test)
+      throws IOException {
+    final Path serializedModel =
+        context
+            .getTemporaryDir()
+            .toPath()
+            .resolve("quarkus-app" + (test ? "-test" : "") + "-model.dat");
     try (ObjectOutputStream out = new ObjectOutputStream(Files.newOutputStream(serializedModel))) {
       out.writeObject(appModel);
     }
@@ -191,8 +202,8 @@ public class ToolingUtils {
   }
 
   public static ApplicationModel create(Project project, ModelParameter params) {
-    return (ApplicationModel) new GradleApplicationModelBuilder().buildAll(ApplicationModel.class.getName(), params,
-        project);
+    return (ApplicationModel)
+        new GradleApplicationModelBuilder()
+            .buildAll(ApplicationModel.class.getName(), params, project);
   }
-
 }

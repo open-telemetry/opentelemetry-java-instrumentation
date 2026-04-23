@@ -51,8 +51,8 @@ final class PluginImplUtil { // TODO: Copy & pasted to v1
                   + implFullClassName
                   + " ("
                   + e.getClass().getName()
-                  + "). "
-                  + "Most likely, corresponding SDK component is either not on classpath or incompatible.");
+                  + "). Most likely, corresponding SDK component is either not on classpath or"
+                  + " incompatible.");
       return false;
     }
   }

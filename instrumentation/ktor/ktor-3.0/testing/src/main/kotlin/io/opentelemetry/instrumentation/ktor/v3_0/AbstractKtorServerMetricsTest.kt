@@ -41,11 +41,11 @@ import java.util.stream.Stream
  * experimental flag is enabled.
  */
 abstract class AbstractKtorServerMetricsTest : AbstractHttpServerUsingTest<EmbeddedServer<*, *>>() {
-
   private val errorDuringSendEndpoint = ServerEndpoint("errorDuringSend", "error-during-send", 500, "")
   private val errorAfterSendEndpoint = ServerEndpoint("errorAfterSend", "error-after-send", 200, "")
 
   abstract fun serverInstall(application: Application)
+
   abstract fun instrumentationName(): String
 
   @BeforeAll
@@ -60,24 +60,25 @@ abstract class AbstractKtorServerMetricsTest : AbstractHttpServerUsingTest<Embed
 
   override fun getContextPath() = ""
 
-  override fun setupServer(): EmbeddedServer<*, *> = embeddedServer(Netty, port = port) {
-    serverInstall(this)
+  override fun setupServer(): EmbeddedServer<*, *> =
+    embeddedServer(Netty, port = port) {
+      serverInstall(this)
 
-    routing {
-      get(errorDuringSendEndpoint.path) {
-        call.respondBytesWriter {
+      routing {
+        get(errorDuringSendEndpoint.path) {
+          call.respondBytesWriter {
+            throw IllegalArgumentException("exception")
+          }
+        }
+        get(errorAfterSendEndpoint.path) {
+          call.respondText(
+            errorAfterSendEndpoint.body,
+            status = HttpStatusCode.fromValue(errorAfterSendEndpoint.status)
+          )
           throw IllegalArgumentException("exception")
         }
       }
-      get(errorAfterSendEndpoint.path) {
-        call.respondText(
-          errorAfterSendEndpoint.body,
-          status = HttpStatusCode.fromValue(errorAfterSendEndpoint.status)
-        )
-        throw IllegalArgumentException("exception")
-      }
-    }
-  }.start()
+    }.start()
 
   override fun stopServer(server: EmbeddedServer<*, *>) {
     server.stop(0, 10, TimeUnit.SECONDS)
@@ -100,25 +101,29 @@ abstract class AbstractKtorServerMetricsTest : AbstractHttpServerUsingTest<Embed
       instrumentationName(),
       "http.server.active_requests"
     ) { metrics ->
-      metrics!!.anySatisfy(ThrowingConsumer { metric: MetricData? ->
-        assertThat(metric)
-          .hasDescription("Number of active HTTP server requests.")
-          .hasUnit("{requests}")
-          .hasLongSumSatisfying { sum ->
-            sum.hasPointsSatisfying({ point ->
-              point.hasValue(0)
-                .hasAttributesSatisfyingExactly(
-                  equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                  equalTo(UrlAttributes.URL_SCHEME, "http"),
-                )
-            })
-          }
-      })
+      metrics!!.anySatisfy(
+        ThrowingConsumer { metric: MetricData? ->
+          assertThat(metric)
+            .hasDescription("Number of active HTTP server requests.")
+            .hasUnit("{requests}")
+            .hasLongSumSatisfying { sum ->
+              sum.hasPointsSatisfying({ point ->
+                point
+                  .hasValue(0)
+                  .hasAttributesSatisfyingExactly(
+                    equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+                    equalTo(UrlAttributes.URL_SCHEME, "http"),
+                  )
+              })
+            }
+        }
+      )
     }
   }
 
-  private fun provideArguments(): Stream<Arguments> = Stream.of(
-    arguments(errorDuringSendEndpoint),
-    arguments(errorAfterSendEndpoint),
-  )
+  private fun provideArguments(): Stream<Arguments> =
+    Stream.of(
+      arguments(errorDuringSendEndpoint),
+      arguments(errorAfterSendEndpoint),
+    )
 }

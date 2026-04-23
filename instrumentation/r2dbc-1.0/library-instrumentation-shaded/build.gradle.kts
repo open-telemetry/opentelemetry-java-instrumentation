@@ -12,7 +12,8 @@ dependencies {
 tasks {
   shadowJar {
     exclude {
-      it.path.startsWith("META-INF") && !it.path.startsWith("META-INF/io/opentelemetry/instrumentation/")
+      it.path.startsWith("META-INF") &&
+        !it.path.startsWith("META-INF/io/opentelemetry/instrumentation/")
     }
 
     dependencies {
@@ -22,11 +23,11 @@ tasks {
     }
     relocate(
       "io.r2dbc.proxy",
-      "io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.io.r2dbc.proxy"
+      "io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.io.r2dbc.proxy",
     )
     relocate(
       "io.opentelemetry.instrumentation.r2dbc.v1_0",
-      "io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded"
+      "io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded",
     )
   }
 

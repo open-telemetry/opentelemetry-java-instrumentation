@@ -48,9 +48,10 @@ tasks {
       into("extensions")
     }
 
-    val manifestFileProvider = extractAgent.flatMap { task ->
-      layout.buildDirectory.file("extracted-agent/META-INF/MANIFEST.MF")
-    }
+    val manifestFileProvider =
+      extractAgent.flatMap { task ->
+        layout.buildDirectory.file("extracted-agent/META-INF/MANIFEST.MF")
+      }
 
     doFirst {
       manifest.from(manifestFileProvider.get().asFile)
@@ -71,7 +72,8 @@ class JavaagentProvider(
   @PathSensitive(PathSensitivity.RELATIVE)
   val agentJar: Provider<RegularFile>,
 ) : CommandLineArgumentProvider {
-  override fun asArguments(): Iterable<String> = listOf(
-    "-javaagent:${agentJar.get().asFile.absolutePath}",
-  )
+  override fun asArguments(): Iterable<String> =
+    listOf(
+      "-javaagent:${agentJar.get().asFile.absolutePath}",
+    )
 }

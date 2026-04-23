@@ -29,7 +29,8 @@ dependencies {
   // It needs the javax.annotation-api in xxl-job-core 1.9.2.
   testImplementation("javax.annotation:javax.annotation-api:1.3.2")
   testImplementation(project(":instrumentation:xxl-job:xxl-job-common:testing"))
-  latestDepTestLibrary("com.xuxueli:xxl-job-core:2.1.1") { // see xxl-job-2.1.2 module
+  latestDepTestLibrary("com.xuxueli:xxl-job-core:2.1.1") {
+    // see xxl-job-2.1.2 module
     exclude("org.codehaus.groovy", "groovy")
   }
 }
@@ -43,11 +44,17 @@ tasks {
   }
 
   val testExperimental by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.xxl-job.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.xxl-job.experimental-span-attributes=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.xxl-job.experimental-span-attributes=true",
+    )
   }
 
   check {

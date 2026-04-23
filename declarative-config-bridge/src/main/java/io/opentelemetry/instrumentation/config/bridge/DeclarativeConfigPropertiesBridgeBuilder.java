@@ -79,7 +79,9 @@ public class DeclarativeConfigPropertiesBridgeBuilder {
 
     // Should never happen
     throw new IllegalStateException(
-        "AutoConfiguredOpenTelemetrySdk does not have ConfigProperties or DeclarativeConfigProperties. This is likely a programming error in opentelemetry-java");
+        "AutoConfiguredOpenTelemetrySdk does not have ConfigProperties or"
+            + " DeclarativeConfigProperties. This is likely a programming error in"
+            + " opentelemetry-java");
   }
 
   /**

@@ -9,7 +9,6 @@ import io.opentelemetry.instrumentation.ktor.common.v2_0.AbstractKtorClientTelem
 import io.opentelemetry.instrumentation.ktor.common.v2_0.AbstractKtorServerTelemetryBuilder
 
 class Experimental private constructor() {
-
   companion object {
     fun emitExperimentalTelemetry(builder: AbstractKtorClientTelemetryBuilder) {
       builder.builder().setEmitExperimentalHttpClientTelemetry(true)

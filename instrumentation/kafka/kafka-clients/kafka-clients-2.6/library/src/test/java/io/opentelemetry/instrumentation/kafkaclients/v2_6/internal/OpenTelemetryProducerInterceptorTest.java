@@ -48,7 +48,8 @@ class OpenTelemetryProducerInterceptorTest {
             })
         .hasRootCauseInstanceOf(IllegalStateException.class)
         .hasRootCauseMessage(
-            "Configuration property opentelemetry.kafka-producer-telemetry.supplier is not instance of KafkaProducerTelemetrySupplier");
+            "Configuration property opentelemetry.kafka-producer-telemetry.supplier is not instance"
+                + " of KafkaProducerTelemetrySupplier");
 
     // Bad config - supplier returns wrong type
     assertThatThrownBy(
@@ -61,7 +62,8 @@ class OpenTelemetryProducerInterceptorTest {
             })
         .hasRootCauseInstanceOf(IllegalStateException.class)
         .hasRootCauseMessage(
-            "Configuration property opentelemetry.kafka-producer-telemetry.supplier is not instance of KafkaProducerTelemetrySupplier");
+            "Configuration property opentelemetry.kafka-producer-telemetry.supplier is not instance"
+                + " of KafkaProducerTelemetrySupplier");
   }
 
   @Test

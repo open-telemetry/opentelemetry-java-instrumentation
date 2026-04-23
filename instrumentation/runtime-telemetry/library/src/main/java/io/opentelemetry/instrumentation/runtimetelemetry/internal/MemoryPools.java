@@ -83,7 +83,8 @@ public class MemoryPools {
         meter
             .upDownCounterBuilder("jvm.memory.used_after_last_gc")
             .setDescription(
-                "Measure of memory used, as measured after the most recent garbage collection event on this pool.")
+                "Measure of memory used, as measured after the most recent garbage collection event"
+                    + " on this pool.")
             .setUnit("By")
             .buildWithCallback(
                 callback(

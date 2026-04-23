@@ -7,5 +7,7 @@ dependencies {
 
   testImplementation(project(":instrumentation:spring:spring-boot-resources:javaagent"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
-  testImplementation(project(path = ":smoke-tests:images:spring-boot", configuration = "springBootJar"))
+  testImplementation(
+    project(path = ":smoke-tests:images:spring-boot", configuration = "springBootJar"),
+  )
 }

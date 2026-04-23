@@ -558,10 +558,12 @@ class HttpServerAttributesExtractorTest {
     "Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0%3A377, Signature=REDACTED",
     "sig=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0, sig=REDACTED",
     "X-Goog-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0, X-Goog-Signature=REDACTED",
-    "paramA=valA&AWSAccessKeyId=AKIAIOSFODNN7&paramB=valB, paramA=valA&AWSAccessKeyId=REDACTED&paramB=valB",
+    "paramA=valA&AWSAccessKeyId=AKIAIOSFODNN7&paramB=valB,"
+        + " paramA=valA&AWSAccessKeyId=REDACTED&paramB=valB",
     "AWSAccessKeyId=AKIAIOSFODNN7&paramA=valA, AWSAccessKeyId=REDACTED&paramA=valA",
     "paramA=valA&AWSAccessKeyId=AKIAIOSFODNN7, paramA=valA&AWSAccessKeyId=REDACTED",
-    "AWSAccessKeyId=AKIAIOSFODNN7&AWSAccessKeyId=ZGIAIOSFODNN7, AWSAccessKeyId=REDACTED&AWSAccessKeyId=REDACTED",
+    "AWSAccessKeyId=AKIAIOSFODNN7&AWSAccessKeyId=ZGIAIOSFODNN7,"
+        + " AWSAccessKeyId=REDACTED&AWSAccessKeyId=REDACTED",
     "AWSAccessKeyId=AKIAIOSFODNN7#ref, AWSAccessKeyId=REDACTED#ref",
     "AWSAccessKeyId=AKIAIOSFODNN7&aa&bb, AWSAccessKeyId=REDACTED&aa&bb",
     "aa&bb&AWSAccessKeyId=AKIAIOSFODNN7, aa&bb&AWSAccessKeyId=REDACTED",

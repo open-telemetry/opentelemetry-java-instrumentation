@@ -31,13 +31,13 @@ val aetherVersion = "1.1.0"
 dependencies {
   implementation("com.google.guava:guava:33.6.0-jre")
   // we need to use byte buddy variant that does not shade asm
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:${byteBuddyVersion}") {
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:$byteBuddyVersion") {
     exclude(group = "net.bytebuddy", module = "byte-buddy")
   }
-  implementation("net.bytebuddy:byte-buddy-dep:${byteBuddyVersion}")
+  implementation("net.bytebuddy:byte-buddy-dep:$byteBuddyVersion")
 
-  implementation("org.eclipse.aether:aether-connector-basic:${aetherVersion}")
-  implementation("org.eclipse.aether:aether-transport-http:${aetherVersion}")
+  implementation("org.eclipse.aether:aether-connector-basic:$aetherVersion")
+  implementation("org.eclipse.aether:aether-transport-http:$aetherVersion")
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
   implementation("com.gradleup.shadow:shadow-gradle-plugin:9.4.1") {
@@ -79,12 +79,14 @@ gradlePlugin {
   plugins {
     get("io.opentelemetry.instrumentation.muzzle-generation").apply {
       displayName = "Muzzle safety net generation"
-      description = "https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/contributing/muzzle.md"
+      description =
+        "https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/contributing/muzzle.md"
       tags.set(listOf("opentelemetry", "instrumentation", "java"))
     }
     get("io.opentelemetry.instrumentation.muzzle-check").apply {
       displayName = "Checks instrumented libraries against muzzle safety net"
-      description = "https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/contributing/muzzle.md"
+      description =
+        "https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/contributing/muzzle.md"
       tags.set(listOf("opentelemetry", "instrumentation", "java"))
     }
   }
@@ -141,13 +143,19 @@ afterEvaluate {
             developer {
               id.set("opentelemetry")
               name.set("OpenTelemetry")
-              url.set("https://github.com/open-telemetry/opentelemetry-java-instrumentation/discussions")
+              url.set(
+                "https://github.com/open-telemetry/opentelemetry-java-instrumentation/discussions",
+              )
             }
           }
 
           scm {
-            connection.set("scm:git:git@github.com:open-telemetry/opentelemetry-java-instrumentation.git")
-            developerConnection.set("scm:git:git@github.com:open-telemetry/opentelemetry-java-instrumentation.git")
+            connection.set(
+              "scm:git:git@github.com:open-telemetry/opentelemetry-java-instrumentation.git",
+            )
+            developerConnection.set(
+              "scm:git:git@github.com:open-telemetry/opentelemetry-java-instrumentation.git",
+            )
             url.set("git@github.com:open-telemetry/opentelemetry-java-instrumentation.git")
           }
         }

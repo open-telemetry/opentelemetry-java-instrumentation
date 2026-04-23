@@ -38,7 +38,6 @@ import java.util.stream.Stream
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExperimentalCoroutinesApi
 class KotlinCoroutines13InstrumentationTest {
-
   companion object {
     val threadPool = Executors.newFixedThreadPool(2)
     val singleThread = Executors.newSingleThreadExecutor()
@@ -59,47 +58,57 @@ class KotlinCoroutines13InstrumentationTest {
   @MethodSource("dispatchersSourceArguments")
   fun `traced across channels`(dispatcher: DispatcherWrapper) {
     runTest(dispatcher) {
-      val producer = produce {
-        repeat(3) {
-          tracedChild("produce_$it")
-          send(it)
+      val producer =
+        produce {
+          repeat(3) {
+            tracedChild("produce_$it")
+            send(it)
+          }
         }
-      }
 
-      producer.consumeAsFlow().onEach {
-        tracedChild("consume_$it")
-      }.collect()
+      producer
+        .consumeAsFlow()
+        .onEach {
+          tracedChild("consume_$it")
+        }.collect()
     }
 
     testing.waitAndAssertTraces(
       { trace ->
         trace.hasSpansSatisfyingExactlyInAnyOrder(
           {
-            it.hasName("parent")
+            it
+              .hasName("parent")
               .hasNoParent()
           },
           {
-            it.hasName("produce_0")
+            it
+              .hasName("produce_0")
               .hasParent(trace.getSpan(0))
           },
           {
-            it.hasName("consume_0")
+            it
+              .hasName("consume_0")
               .hasParent(trace.getSpan(0))
           },
           {
-            it.hasName("produce_1")
+            it
+              .hasName("produce_1")
               .hasParent(trace.getSpan(0))
           },
           {
-            it.hasName("consume_1")
+            it
+              .hasName("consume_1")
               .hasParent(trace.getSpan(0))
           },
           {
-            it.hasName("produce_2")
+            it
+              .hasName("produce_2")
               .hasParent(trace.getSpan(0))
           },
           {
-            it.hasName("consume_2")
+            it
+              .hasName("consume_2")
               .hasParent(trace.getSpan(0))
           },
         )
@@ -114,14 +123,15 @@ class KotlinCoroutines13InstrumentationTest {
       val currentContext = Context.current()
       // clear current context to ensure that ContextPropagationOperator is used for context propagation
       withContext(Context.root().asContextElement()) {
-        val mono = mono(dispatcherWrapper.dispatcher) {
-          // extract context from reactor and propagate it into coroutine
-          val reactorContext = coroutineContext[ReactorContext.Key]?.context
-          val otelContext = ContextPropagationOperator.getOpenTelemetryContext(reactorContext, Context.current())
-          withContext(otelContext.asContextElement()) {
-            tracedChild("child")
+        val mono =
+          mono(dispatcherWrapper.dispatcher) {
+            // extract context from reactor and propagate it into coroutine
+            val reactorContext = coroutineContext[ReactorContext.Key]?.context
+            val otelContext = ContextPropagationOperator.getOpenTelemetryContext(reactorContext, Context.current())
+            withContext(otelContext.asContextElement()) {
+              tracedChild("child")
+            }
           }
-        }
         ContextPropagationOperator.runWithContext(mono, currentContext).awaitSingle()
       }
     }
@@ -130,11 +140,13 @@ class KotlinCoroutines13InstrumentationTest {
       { trace ->
         trace.hasSpansSatisfyingExactly(
           {
-            it.hasName("parent")
+            it
+              .hasName("parent")
               .hasNoParent()
           },
           {
-            it.hasName("child")
+            it
+              .hasName("child")
               .hasParent(trace.getSpan(0))
           },
         )
@@ -159,19 +171,23 @@ class KotlinCoroutines13InstrumentationTest {
       { trace ->
         trace.hasSpansSatisfyingExactly(
           {
-            it.hasName("parent")
+            it
+              .hasName("parent")
               .hasNoParent()
           },
           {
-            it.hasName("child_0")
+            it
+              .hasName("child_0")
               .hasParent(trace.getSpan(0))
           },
           {
-            it.hasName("child_1")
+            it
+              .hasName("child_1")
               .hasParent(trace.getSpan(0))
           },
           {
-            it.hasName("child_2")
+            it
+              .hasName("child_2")
               .hasParent(trace.getSpan(0))
           },
         )
@@ -183,9 +199,15 @@ class KotlinCoroutines13InstrumentationTest {
     tracer.spanBuilder(opName).startSpan().end()
   }
 
-  private fun <T> runTest(dispatcherWrapper: DispatcherWrapper, block: suspend CoroutineScope.() -> T): T = runTest(dispatcherWrapper.dispatcher, block)
+  private fun <T> runTest(
+    dispatcherWrapper: DispatcherWrapper,
+    block: suspend CoroutineScope.() -> T
+  ): T = runTest(dispatcherWrapper.dispatcher, block)
 
-  private fun <T> runTest(dispatcher: CoroutineDispatcher, block: suspend CoroutineScope.() -> T): T {
+  private fun <T> runTest(
+    dispatcher: CoroutineDispatcher,
+    block: suspend CoroutineScope.() -> T
+  ): T {
     val parentSpan = tracer.spanBuilder("parent").startSpan()
     val parentScope = parentSpan.makeCurrent()
     try {
@@ -196,17 +218,20 @@ class KotlinCoroutines13InstrumentationTest {
     }
   }
 
-  private fun dispatchersSourceArguments(): Stream<Arguments> = Stream.of(
-    // Wrap dispatchers since it seems that ParameterizedTest tries to automatically close
-    // Closeable arguments with no way to avoid it.
-    arguments(DispatcherWrapper(Dispatchers.Default)),
-    arguments(DispatcherWrapper(Dispatchers.IO)),
-    arguments(DispatcherWrapper(Dispatchers.Unconfined)),
-    arguments(DispatcherWrapper(threadPool.asCoroutineDispatcher())),
-    arguments(DispatcherWrapper(singleThread.asCoroutineDispatcher())),
-  )
+  private fun dispatchersSourceArguments(): Stream<Arguments> =
+    Stream.of(
+      // Wrap dispatchers since it seems that ParameterizedTest tries to automatically close
+      // Closeable arguments with no way to avoid it.
+      arguments(DispatcherWrapper(Dispatchers.Default)),
+      arguments(DispatcherWrapper(Dispatchers.IO)),
+      arguments(DispatcherWrapper(Dispatchers.Unconfined)),
+      arguments(DispatcherWrapper(threadPool.asCoroutineDispatcher())),
+      arguments(DispatcherWrapper(singleThread.asCoroutineDispatcher())),
+    )
 
-  class DispatcherWrapper(val dispatcher: CoroutineDispatcher) {
+  class DispatcherWrapper(
+    val dispatcher: CoroutineDispatcher
+  ) {
     override fun toString(): String = dispatcher.toString()
   }
 }

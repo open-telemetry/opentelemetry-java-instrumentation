@@ -33,7 +33,10 @@ dependencies {
 
 // Requires old Guava. Can't use enforcedPlatform since predates BOM
 if (!otelProps.testLatestDeps) {
-  configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.google.guava:guava:19.0")
+  configurations.testRuntimeClasspath
+    .get()
+    .resolutionStrategy
+    .force("com.google.guava:guava:19.0")
 }
 
 // to allow all tests to pass we need to choose a specific netty version
@@ -59,7 +62,10 @@ tasks {
   }
 
   val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")

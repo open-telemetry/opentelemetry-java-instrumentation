@@ -22,11 +22,21 @@ dependencies {
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:rxjava:rxjava-2.0:javaagent"))
-  testInstrumentation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-3.0:javaagent"))
-  testInstrumentation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-4.0:javaagent"))
-  testInstrumentation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-5.0:javaagent"))
-  testInstrumentation(project(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent"))
-  testInstrumentation(project(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-5.0:javaagent"))
+  testInstrumentation(
+    project(":instrumentation:vertx:vertx-http-client:vertx-http-client-3.0:javaagent"),
+  )
+  testInstrumentation(
+    project(":instrumentation:vertx:vertx-http-client:vertx-http-client-4.0:javaagent"),
+  )
+  testInstrumentation(
+    project(":instrumentation:vertx:vertx-http-client:vertx-http-client-5.0:javaagent"),
+  )
+  testInstrumentation(
+    project(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent"),
+  )
+  testInstrumentation(
+    project(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-5.0:javaagent"),
+  )
   testInstrumentation(project(":instrumentation:vertx:vertx-web-3.0:javaagent"))
 }
 
@@ -78,14 +88,15 @@ tasks {
     options.release.set(11)
   }
 
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
-    register<Test>("${suite.name}StableSemconv") {
-      testClassesDirs = suite.sources.output.classesDirs
-      classpath = suite.sources.runtimeClasspath
+  val stableSemconvSuites =
+    testing.suites.withType(JvmTestSuite::class).map { suite ->
+      register<Test>("${suite.name}StableSemconv") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
 
-      jvmArgs("-Dotel.semconv-stability.opt-in=database")
+        jvmArgs("-Dotel.semconv-stability.opt-in=database")
+      }
     }
-  }
 
   val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
   if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_11)) {

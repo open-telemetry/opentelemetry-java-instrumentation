@@ -7,8 +7,9 @@ plugins {
   id("com.bmuschko.docker-remote-api")
 }
 
-val extraTag = findProperty("extraTag")
-  ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
+val extraTag =
+  findProperty("extraTag")
+    ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
 
 tasks {
   val dockerWorkingDir = layout.buildDirectory.dir("docker")
@@ -18,7 +19,8 @@ tasks {
     from("Dockerfile")
   }
 
-  val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
+  val repo =
+    System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
 
   val imageBuild by registering(DockerBuildImage::class) {
     dependsOn(imagePrepare)

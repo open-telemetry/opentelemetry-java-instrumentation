@@ -10,7 +10,7 @@ spotless {
     googleJavaFormat()
     licenseHeaderFile(
       rootProject.file("buildscripts/spotless.license.java"),
-      "(package|import|public|// Includes work from:)"
+      "(package|import|public|// Includes work from:)",
     )
     toggleOffOn()
     target("src/**/*.java")
@@ -20,7 +20,7 @@ spotless {
       scalafmt()
       licenseHeaderFile(
         rootProject.file("buildscripts/spotless.license.java"),
-        "(package|import|public)"
+        "(package|import|public)",
       )
       target("src/**/*.scala")
     }
@@ -42,12 +42,12 @@ spotless {
           // depends on ktlint_standard_wrapping
           "ktlint_standard_trailing-comma-on-declaration-site" to "disabled",
           // also very hard to find out where this happens
-          "ktlint_standard_wrapping" to "disabled"
-        )
+          "ktlint_standard_wrapping" to "disabled",
+        ),
       )
       licenseHeaderFile(
         rootProject.file("buildscripts/spotless.license.java"),
-        "(package|import|class|// Includes work from:)"
+        "(package|import|class|// Includes work from:)",
       )
     }
   }
@@ -70,8 +70,8 @@ spotless {
         // we use variable names like v1_10Deps
         "ktlint_standard_property-naming" to "disabled",
         // prevent moving comment to next line in latestDepTestLibrary("xxx") { // see xxx module
-        "ktlint_standard_function-literal" to "disabled"
-      )
+        "ktlint_standard_function-literal" to "disabled",
+      ),
     )
   }
 }
@@ -86,7 +86,7 @@ if (project == rootProject) {
         ".editorconfig",
         "gradle.properties",
         ".github/**/*.sh",
-        "examples/**/gradle.properties"
+        "examples/**/gradle.properties",
       )
       leadingTabsToSpaces()
       trimTrailingWhitespace()

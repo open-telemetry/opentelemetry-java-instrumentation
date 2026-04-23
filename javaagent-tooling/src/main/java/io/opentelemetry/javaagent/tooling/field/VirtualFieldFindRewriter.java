@@ -127,13 +127,17 @@ final class VirtualFieldFindRewriter implements AsmVisitorWrapper {
                 if (virtualFieldImplementationClass == null) {
                   throw new IllegalStateException(
                       String.format(
-                          "Incorrect VirtualField usage detected. Cannot find implementation for VirtualField<%s, %s>. Was that field registered in %s#registerMuzzleVirtualFields()?",
+                          "Incorrect VirtualField usage detected. Cannot find implementation for"
+                              + " VirtualField<%s, %s>. Was that field registered in"
+                              + " %s#registerMuzzleVirtualFields()?",
                           typeName, fieldTypeName, instrumentationModuleClass.getName()));
                 }
                 if (!virtualFieldMappings.hasMapping(typeName, fieldTypeName)) {
                   throw new IllegalStateException(
                       String.format(
-                          "Incorrect VirtualField usage detected. Cannot find mapping for VirtualField<%s, %s>. Was that field registered in %s#registerMuzzleVirtualFields()?",
+                          "Incorrect VirtualField usage detected. Cannot find mapping for"
+                              + " VirtualField<%s, %s>. Was that field registered in"
+                              + " %s#registerMuzzleVirtualFields()?",
                           typeName, fieldTypeName, instrumentationModuleClass.getName()));
                 }
                 // stack: fieldType | type
@@ -146,7 +150,9 @@ final class VirtualFieldFindRewriter implements AsmVisitorWrapper {
                 return;
               }
               throw new IllegalStateException(
-                  "Incorrect VirtualField usage detected. Type and field type must be class-literals. Example of correct usage: VirtualField.find(Runnable.class, RunnableContext.class)");
+                  "Incorrect VirtualField usage detected. Type and field type must be"
+                      + " class-literals. Example of correct usage:"
+                      + " VirtualField.find(Runnable.class, RunnableContext.class)");
             } else {
               super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
             }

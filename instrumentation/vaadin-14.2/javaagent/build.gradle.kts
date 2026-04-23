@@ -91,7 +91,10 @@ tasks {
 
   check {
     if (otelProps.testLatestDeps) {
-      dependsOn(testing.suites.named("vaadin14LatestTest"), testing.suites.named("vaadinLatestTest"))
+      dependsOn(
+        testing.suites.named("vaadin14LatestTest"),
+        testing.suites.named("vaadinLatestTest"),
+      )
     } else {
       dependsOn(testing.suites.named("vaadin142Test"), testing.suites.named("vaadin16Test"))
     }

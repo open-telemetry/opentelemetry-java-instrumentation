@@ -482,7 +482,11 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             KeyValue.of(
                                 "content",
                                 Value.of(
-                                    "<thinking> The User has asked for the current weather in two locations: Seattle and San Francisco. To provide the requested information, I will use the \"get_current_weather\" tool for each location separately. </thinking>\n")))));
+                                    "<thinking> The User has asked for the current weather in two"
+                                        + " locations: Seattle and San Francisco. To provide the"
+                                        + " requested information, I will use the"
+                                        + " \"get_current_weather\" tool for each location"
+                                        + " separately. </thinking>\n")))));
 
     // Clear to allow asserting telemetry of user request and tool result processing separately.
     getTesting().clearData();
@@ -630,7 +634,11 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             KeyValue.of(
                                 "content",
                                 Value.of(
-                                    "<thinking> The User has asked for the current weather in two locations: Seattle and San Francisco. To provide the requested information, I will use the \"get_current_weather\" tool for each location separately. </thinking>\n")))),
+                                    "<thinking> The User has asked for the current weather in two"
+                                        + " locations: Seattle and San Francisco. To provide the"
+                                        + " requested information, I will use the"
+                                        + " \"get_current_weather\" tool for each location"
+                                        + " separately. </thinking>\n")))),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -663,9 +671,13 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             KeyValue.of(
                                 "content",
                                 Value.of(
-                                    "<thinking> The tool has provided the current weather for both locations. Now I will compile this information and present it to the User. </thinking>\n"
+                                    "<thinking> The tool has provided the current weather for both"
+                                        + " locations. Now I will compile this information and"
+                                        + " present it to the User. </thinking>\n"
                                         + "\n"
-                                        + "The current weather in Seattle is 50 degrees and raining. In San Francisco, the weather is 70 degrees and sunny.")))));
+                                        + "The current weather in Seattle is 50 degrees and"
+                                        + " raining. In San Francisco, the weather is 70 degrees"
+                                        + " and sunny.")))));
   }
 
   @Test
@@ -863,7 +875,11 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             KeyValue.of(
                                 "content",
                                 Value.of(
-                                    "<thinking> The User has asked for the current weather in two locations: Seattle and San Francisco. To provide the requested information, I will use the \"get_current_weather\" tool for each location separately. </thinking>\n")))));
+                                    "<thinking> The User has asked for the current weather in two"
+                                        + " locations: Seattle and San Francisco. To provide the"
+                                        + " requested information, I will use the"
+                                        + " \"get_current_weather\" tool for each location"
+                                        + " separately. </thinking>\n")))));
 
     // Clear to allow asserting telemetry of user request and tool result processing separately.
     getTesting().clearData();
@@ -1030,7 +1046,11 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             KeyValue.of(
                                 "content",
                                 Value.of(
-                                    "<thinking> The User has asked for the current weather in two locations: Seattle and San Francisco. To provide the requested information, I will use the \"get_current_weather\" tool for each location separately. </thinking>\n")))),
+                                    "<thinking> The User has asked for the current weather in two"
+                                        + " locations: Seattle and San Francisco. To provide the"
+                                        + " requested information, I will use the"
+                                        + " \"get_current_weather\" tool for each location"
+                                        + " separately. </thinking>\n")))),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -1063,9 +1083,13 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             KeyValue.of(
                                 "content",
                                 Value.of(
-                                    "<thinking> The tool has provided the current weather for both locations. Now I will compile the information and present it to the User. </thinking>\n"
+                                    "<thinking> The tool has provided the current weather for both"
+                                        + " locations. Now I will compile the information and"
+                                        + " present it to the User. </thinking>\n"
                                         + "\n"
-                                        + "The current weather in Seattle is 50 degrees and it is raining. In San Francisco, the weather is 70 degrees and sunny.")))));
+                                        + "The current weather in Seattle is 50 degrees and it is"
+                                        + " raining. In San Francisco, the weather is 70 degrees"
+                                        + " and sunny.")))));
   }
 
   private static ToolConfiguration currentWeatherToolConfig() {
@@ -2644,7 +2668,11 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             KeyValue.of(
                                 "content",
                                 Value.of(
-                                    "<thinking> To provide the current weather in both Seattle and San Francisco, I will use the \"get_current_weather\" tool twice, once for each city. I will need to specify the \"location\" argument for each call.</thinking>\n")))));
+                                    "<thinking> To provide the current weather in both Seattle and"
+                                        + " San Francisco, I will use the \"get_current_weather\""
+                                        + " tool twice, once for each city. I will need to specify"
+                                        + " the \"location\" argument for each"
+                                        + " call.</thinking>\n")))));
 
     // Clear to allow asserting telemetry of user request and tool result processing separately.
     getTesting().clearData();
@@ -2821,7 +2849,11 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             KeyValue.of(
                                 "content",
                                 Value.of(
-                                    "<thinking> To provide the current weather in both Seattle and San Francisco, I will use the \"get_current_weather\" tool twice, once for each city. I will need to specify the \"location\" argument for each call.</thinking>\n")))),
+                                    "<thinking> To provide the current weather in both Seattle and"
+                                        + " San Francisco, I will use the \"get_current_weather\""
+                                        + " tool twice, once for each city. I will need to specify"
+                                        + " the \"location\" argument for each"
+                                        + " call.</thinking>\n")))),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -2854,9 +2886,13 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             KeyValue.of(
                                 "content",
                                 Value.of(
-                                    "<thinking> I have received the weather information for both cities. Now I will compile this information and present it to the user.</thinking>\n"
+                                    "<thinking> I have received the weather information for both"
+                                        + " cities. Now I will compile this information and present"
+                                        + " it to the user.</thinking>\n"
                                         + "\n"
-                                        + "The current weather in Seattle is 50 degrees and it is raining. The current weather in San Francisco is 70 degrees and it is sunny.")))));
+                                        + "The current weather in Seattle is 50 degrees and it is"
+                                        + " raining. The current weather in San Francisco is 70"
+                                        + " degrees and it is sunny.")))));
   }
 
   @Test
@@ -3121,7 +3157,11 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             KeyValue.of(
                                 "content",
                                 Value.of(
-                                    "<thinking> To provide the current weather in Seattle and San Francisco today, I will need to use the \"get_current_weather\" tool twice, once for each city. I will need to specify the location for each call.</thinking>\n")))));
+                                    "<thinking> To provide the current weather in Seattle and San"
+                                        + " Francisco today, I will need to use the"
+                                        + " \"get_current_weather\" tool twice, once for each city."
+                                        + " I will need to specify the location for each"
+                                        + " call.</thinking>\n")))));
 
     // Clear to allow asserting telemetry of user request and tool result processing separately.
     getTesting().clearData();
@@ -3341,7 +3381,11 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             KeyValue.of(
                                 "content",
                                 Value.of(
-                                    "<thinking> To provide the current weather in Seattle and San Francisco today, I will need to use the \"get_current_weather\" tool twice, once for each city. I will need to specify the location for each call.</thinking>\n")))),
+                                    "<thinking> To provide the current weather in Seattle and San"
+                                        + " Francisco today, I will need to use the"
+                                        + " \"get_current_weather\" tool twice, once for each city."
+                                        + " I will need to specify the location for each"
+                                        + " call.</thinking>\n")))),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -3374,9 +3418,13 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             KeyValue.of(
                                 "content",
                                 Value.of(
-                                    "<thinking> I have received the weather information for both cities. Now I will compile this information into a clear response for the User.</thinking>\n"
+                                    "<thinking> I have received the weather information for both"
+                                        + " cities. Now I will compile this information into a"
+                                        + " clear response for the User.</thinking>\n"
                                         + "\n"
-                                        + "The current weather in Seattle is 50 degrees and it is raining. In San Francisco, the weather is 70 degrees and sunny.")))));
+                                        + "The current weather in Seattle is 50 degrees and it is"
+                                        + " raining. In San Francisco, the weather is 70 degrees"
+                                        + " and sunny.")))));
   }
 
   @Test
@@ -3573,7 +3621,10 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             KeyValue.of(
                                 "content",
                                 Value.of(
-                                    "To answer your question about the weather in Seattle and San Francisco today, I'll need to use the get_current_weather function for both cities. Let me do that for you now.")))));
+                                    "To answer your question about the weather in Seattle and San"
+                                        + " Francisco today, I'll need to use the"
+                                        + " get_current_weather function for both cities. Let me do"
+                                        + " that for you now.")))));
 
     // Clear to allow asserting telemetry of user request and tool result processing separately.
     getTesting().clearData();
@@ -3728,7 +3779,10 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             KeyValue.of(
                                 "content",
                                 Value.of(
-                                    "To answer your question about the weather in Seattle and San Francisco today, I'll need to use the get_current_weather function for both cities. Let me do that for you now.")))),
+                                    "To answer your question about the weather in Seattle and San"
+                                        + " Francisco today, I'll need to use the"
+                                        + " get_current_weather function for both cities. Let me do"
+                                        + " that for you now.")))),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -3759,14 +3813,22 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             KeyValue.of(
                                 "content",
                                 Value.of(
-                                    "Thank you for your patience. I've retrieved the current weather information for both cities. Here's the weather report for Seattle and San Francisco today:\n"
+                                    "Thank you for your patience. I've retrieved the current"
+                                        + " weather information for both cities. Here's the weather"
+                                        + " report for Seattle and San Francisco today:\n"
                                         + "\n"
                                         + "Seattle: 50 degrees and raining\n"
                                         + "San Francisco: 70 degrees and sunny\n"
                                         + "\n"
-                                        + "As you can see, the weather conditions are quite different in these two cities today. Seattle is experiencing cooler temperatures with rain, which is fairly typical for the Pacific Northwest. On the other hand, San Francisco is enjoying a warmer, sunny day, which is pleasant for outdoor activities.\n"
+                                        + "As you can see, the weather conditions are quite"
+                                        + " different in these two cities today. Seattle is"
+                                        + " experiencing cooler temperatures with rain, which is"
+                                        + " fairly typical for the Pacific Northwest. On the other"
+                                        + " hand, San Francisco is enjoying a warmer, sunny day,"
+                                        + " which is pleasant for outdoor activities.\n"
                                         + "\n"
-                                        + "Is there anything else you'd like to know about the weather in these or any other cities?")))));
+                                        + "Is there anything else you'd like to know about the"
+                                        + " weather in these or any other cities?")))));
   }
 
   @Test
@@ -4034,7 +4096,11 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             KeyValue.of(
                                 "content",
                                 Value.of(
-                                    "To get the current weather for both Seattle and San Francisco, I'll need to use the get_current_weather function for each city. I'll make two separate calls within the same function calls block since these requests are independent of each other.")))));
+                                    "To get the current weather for both Seattle and San Francisco,"
+                                        + " I'll need to use the get_current_weather function for"
+                                        + " each city. I'll make two separate calls within the same"
+                                        + " function calls block since these requests are"
+                                        + " independent of each other.")))));
 
     // Clear to allow asserting telemetry of user request and tool result processing separately.
     getTesting().clearData();
@@ -4229,7 +4295,11 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             KeyValue.of(
                                 "content",
                                 Value.of(
-                                    "To get the current weather for both Seattle and San Francisco, I'll need to use the get_current_weather function for each city. I'll make two separate calls within the same function calls block since these requests are independent of each other.")))),
+                                    "To get the current weather for both Seattle and San Francisco,"
+                                        + " I'll need to use the get_current_weather function for"
+                                        + " each city. I'll make two separate calls within the same"
+                                        + " function calls block since these requests are"
+                                        + " independent of each other.")))),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -4262,12 +4332,24 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 Value.of(
                                     "\n"
                                         + "\n"
-                                        + "Based on the results from the weather function, I can provide you with the current weather information for both cities:\n"
+                                        + "Based on the results from the weather function, I can"
+                                        + " provide you with the current weather information for"
+                                        + " both cities:\n"
                                         + "\n"
-                                        + "Seattle: The current weather in Seattle is 50 degrees and raining.\n"
+                                        + "Seattle: The current weather in Seattle is 50 degrees"
+                                        + " and raining.\n"
                                         + "\n"
-                                        + "San Francisco: The current weather in San Francisco is 70 degrees and sunny.\n"
+                                        + "San Francisco: The current weather in San Francisco is"
+                                        + " 70 degrees and sunny.\n"
                                         + "\n"
-                                        + "As you can see, there's quite a difference in the weather between these two West Coast cities today. Seattle is experiencing cooler temperatures with rain, which is fairly typical for the city. On the other hand, San Francisco is enjoying warmer weather with sunshine. If you're planning any activities in either of these cities, you might want to dress accordingly and perhaps bring an umbrella if you're in Seattle!")))));
+                                        + "As you can see, there's quite a difference in the"
+                                        + " weather between these two West Coast cities today."
+                                        + " Seattle is experiencing cooler temperatures with rain,"
+                                        + " which is fairly typical for the city. On the other"
+                                        + " hand, San Francisco is enjoying warmer weather with"
+                                        + " sunshine. If you're planning any activities in either"
+                                        + " of these cities, you might want to dress accordingly"
+                                        + " and perhaps bring an umbrella if you're in"
+                                        + " Seattle!")))));
   }
 }

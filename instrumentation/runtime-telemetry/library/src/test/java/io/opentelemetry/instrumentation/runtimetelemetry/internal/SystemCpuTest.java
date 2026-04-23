@@ -42,7 +42,8 @@ class SystemCpuTest {
                 metricData ->
                     assertThat(metricData)
                         .hasDescription(
-                            "Average CPU load of the whole system for the last minute as reported by the JVM.")
+                            "Average CPU load of the whole system for the last minute as reported"
+                                + " by the JVM.")
                         .hasUnit("{run_queue_item}")
                         .hasDoubleGaugeSatisfying(
                             gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(2.2)))));

@@ -14,9 +14,13 @@ muzzle {
 dependencies {
   library("org.apache.logging.log4j:log4j-core:2.7")
 
-  testInstrumentation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.17:javaagent"))
+  testInstrumentation(
+    project(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.17:javaagent"),
+  )
 
-  testImplementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
+  testImplementation(
+    project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"),
+  )
 
   latestDepTestLibrary("org.apache.logging.log4j:log4j-core:2.16.+") // see log4j-context-data-2.17 module
 }
@@ -27,11 +31,16 @@ tasks {
       excludeTestsMatching("Log4j27BaggageTest")
       excludeTestsMatching("Log4j27LoggingKeysTest")
     }
-    jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
+    jvmArgs(
+      "-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language",
+    )
   }
 
   val testAddBaggage by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("Log4j27BaggageTest")
@@ -40,7 +49,10 @@ tasks {
   }
 
   val testLoggingKeys by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("Log4j27LoggingKeysTest")

@@ -15,7 +15,7 @@ dependencies {
 
 tasks.test {
   jvmArgs(
-    "-Dotel.instrumentation.methods.include=io.opentelemetry.javaagent.instrumentation.methods.MethodTest\$ConfigTracedCallable[call];io.opentelemetry.javaagent.instrumentation.methods.MethodTest\$ConfigTracedCompletableFuture[getResult];javax.naming.directory.InitialDirContext[search]"
+    "-Dotel.instrumentation.methods.include=io.opentelemetry.javaagent.instrumentation.methods.MethodTest\$ConfigTracedCallable[call];io.opentelemetry.javaagent.instrumentation.methods.MethodTest\$ConfigTracedCompletableFuture[getResult];javax.naming.directory.InitialDirContext[search]",
   )
 }
 
@@ -26,7 +26,7 @@ testing {
         all {
           testTask.configure {
             jvmArgs(
-              "-Dotel.config.file=$projectDir/src/declarativeConfigTest/resources/declarative-config.yaml"
+              "-Dotel.config.file=$projectDir/src/declarativeConfigTest/resources/declarative-config.yaml",
             )
           }
         }

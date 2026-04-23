@@ -17,7 +17,13 @@ dependencies {
 // (see more explanation in opentelemetry-api-1.0.gradle)
 tasks {
   shadowJar {
-    relocate("io.opentelemetry.instrumentation.annotations", "application.io.opentelemetry.instrumentation.annotations")
-    relocate("io.opentelemetry.api.trace.SpanKind", "application.io.opentelemetry.api.trace.SpanKind")
+    relocate(
+      "io.opentelemetry.instrumentation.annotations",
+      "application.io.opentelemetry.instrumentation.annotations",
+    )
+    relocate(
+      "io.opentelemetry.api.trace.SpanKind",
+      "application.io.opentelemetry.api.trace.SpanKind",
+    )
   }
 }

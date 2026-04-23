@@ -21,13 +21,19 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  implementation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-common:javaagent"))
+  implementation(
+    project(":instrumentation:vertx:vertx-http-client:vertx-http-client-common:javaagent"),
+  )
 
   // We need both version as different versions of Vert.x use different versions of Netty
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
-  testInstrumentation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-4.0:javaagent"))
-  testInstrumentation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-5.0:javaagent"))
+  testInstrumentation(
+    project(":instrumentation:vertx:vertx-http-client:vertx-http-client-4.0:javaagent"),
+  )
+  testInstrumentation(
+    project(":instrumentation:vertx:vertx-http-client:vertx-http-client-5.0:javaagent"),
+  )
 
   // 3.9.7 Requires Netty 4.1.60, no other version works with it.
   latestDepTestLibrary(enforcedPlatform("io.netty:netty-bom:4.1.60.Final")) // see vertx-http-client-4.0 module
@@ -43,7 +49,10 @@ tasks {
   }
 
   val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")

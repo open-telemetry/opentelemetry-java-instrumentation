@@ -10,7 +10,9 @@ otelJava {
 }
 
 dependencies {
-  testInstrumentation(project(":instrumentation:runtime-telemetry:runtime-telemetry-java8:javaagent"))
+  testInstrumentation(
+    project(":instrumentation:runtime-telemetry:runtime-telemetry-java8:javaagent"),
+  )
   testInstrumentation(project(":instrumentation:runtime-telemetry:javaagent"))
 }
 

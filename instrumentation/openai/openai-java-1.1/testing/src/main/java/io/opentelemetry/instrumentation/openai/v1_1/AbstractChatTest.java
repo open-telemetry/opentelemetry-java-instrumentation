@@ -289,7 +289,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                             KeyValue.of(
                                 "content",
                                 Value.of(
-                                    "You are an assistant which just answers every query with tomato")))),
+                                    "You are an assistant which just answers every query with"
+                                        + " tomato")))),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
@@ -679,7 +680,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                                         KeyValue.of(
                                                             "arguments",
                                                             Value.of(
-                                                                "{\"location\": \"New York City\"}")))),
+                                                                "{\"location\": \"New York"
+                                                                    + " City\"}")))),
                                                 KeyValue.of("id", Value.of(newYorkCallId)),
                                                 KeyValue.of("type", Value.of("function"))),
                                             Value.of(
@@ -1404,7 +1406,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                                         KeyValue.of(
                                                             "arguments",
                                                             Value.of(
-                                                                "{\"location\": \"New York City\"}")))),
+                                                                "{\"location\": \"New York"
+                                                                    + " City\"}")))),
                                                 KeyValue.of("id", Value.of(newYorkCallId)),
                                                 KeyValue.of("type", Value.of("function"))),
                                             Value.of(

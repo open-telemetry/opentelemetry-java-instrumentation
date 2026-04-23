@@ -65,7 +65,8 @@ public class ServicePeerResolver {
               if (serviceName == null && serviceNamespace == null) {
                 logger.log(
                     WARNING,
-                    "Invalid service_peer_mapping entry - at least one of service_name or service_namespace is required: {0}",
+                    "Invalid service_peer_mapping entry - at least one of service_name or"
+                        + " service_namespace is required: {0}",
                     entry);
                 return;
               }

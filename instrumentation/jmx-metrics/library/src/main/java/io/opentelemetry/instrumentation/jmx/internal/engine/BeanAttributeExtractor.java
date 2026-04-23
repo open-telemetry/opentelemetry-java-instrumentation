@@ -231,7 +231,8 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
           if (logger != null) {
             logger.log(
                 FINE,
-                "Encountered a value of {0} while extracting attribute {1} for ObjectName {2}; unable to extract metric value",
+                "Encountered a value of {0} while extracting attribute {1} for ObjectName {2};"
+                    + " unable to extract metric value",
                 new Object[] {
                   (value == null ? "NULL" : value.getClass().getName()),
                   getAttributeName(),
@@ -248,7 +249,8 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
       if (logger != null) {
         logger.log(
             FINE,
-            "Encountered {0} while extracting attribute {1} for ObjectName {2}; unable to extract metric value",
+            "Encountered {0} while extracting attribute {1} for ObjectName {2}; unable to extract"
+                + " metric value",
             new Object[] {e, getAttributeName(), objectName});
       }
     }

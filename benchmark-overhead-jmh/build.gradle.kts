@@ -40,7 +40,10 @@ tasks {
   //  -Pjmh.startFlightRecording=settings=profile.jfc,delay=50s,duration=50s,filename=output.jfr
   // since each iteration is 10 seconds, the flight recording produced will approximately cover the
   // (post-warmup) benchmarking iterations
-  val jmhStartFlightRecording = gradle.startParameter.projectProperties.get("jmh.startFlightRecording")
+  val jmhStartFlightRecording =
+    gradle.startParameter.projectProperties.get(
+      "jmh.startFlightRecording",
+    )
 
   named<JMHTask>("jmh") {
     val shadowTask = project(":javaagent").tasks.named<Jar>("shadowJar").get()
@@ -48,15 +51,16 @@ tasks {
 
     // note: without an exporter, toSpanData() won't even be called
     // (which is good for benchmarking the instrumentation itself)
-    val args = mutableListOf(
-      "-javaagent:${shadowTask.archiveFile.get()}",
-      "-Dotel.traces.exporter=none",
-      "-Dotel.metrics.exporter=none",
-      "-Dotel.logs.exporter=none",
-      // avoid instrumenting HttpURLConnection for now since it is used to make the requests
-      // and this benchmark is focused on servlet overhead for now
-      "-Dotel.instrumentation.http-url-connection.enabled=false",
-    )
+    val args =
+      mutableListOf(
+        "-javaagent:${shadowTask.archiveFile.get()}",
+        "-Dotel.traces.exporter=none",
+        "-Dotel.metrics.exporter=none",
+        "-Dotel.logs.exporter=none",
+        // avoid instrumenting HttpURLConnection for now since it is used to make the requests
+        // and this benchmark is focused on servlet overhead for now
+        "-Dotel.instrumentation.http-url-connection.enabled=false",
+      )
     if (jmhStartFlightRecording != null) {
       args.addAll(
         listOf(

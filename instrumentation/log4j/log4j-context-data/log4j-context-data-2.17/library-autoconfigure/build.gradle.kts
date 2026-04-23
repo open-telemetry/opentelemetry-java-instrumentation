@@ -8,7 +8,9 @@ dependencies {
   compileOnly(project(":javaagent-extension-api"))
   library("org.apache.logging.log4j:log4j-core:2.17.0")
 
-  testImplementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
+  testImplementation(
+    project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"),
+  )
 }
 
 tasks {
@@ -20,7 +22,10 @@ tasks {
   }
 
   val testAddBaggage by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("LibraryLog4j2BaggageTest")
@@ -29,7 +34,10 @@ tasks {
   }
 
   val testLoggingKeys by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("LibraryLog4j2LoggingKeysTest")

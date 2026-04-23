@@ -43,7 +43,9 @@ dependencies {
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:spring:spring-data:spring-data-1.8:javaagent"))
 
-  testImplementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"))
+  testImplementation(
+    project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"),
+  )
   testImplementation("org.apache.logging.log4j:log4j-core:2.11.0")
   testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
   testImplementation("com.google.guava:guava")
@@ -71,7 +73,10 @@ tasks {
   }
 
   val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
@@ -79,11 +84,17 @@ tasks {
   }
 
   val testExperimental by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.elasticsearch.experimental-span-attributes=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.elasticsearch.experimental-span-attributes=true",
+    )
   }
 
   check {

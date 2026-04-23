@@ -49,7 +49,10 @@ tasks {
   }
 
   val testConnectionSpan by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("Netty41ConnectionSpanTest")
@@ -68,7 +71,10 @@ tasks {
   }
 
   val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
@@ -92,7 +98,8 @@ if (!otelProps.testLatestDeps) {
         if (requested.group == "io.netty" &&
           requested.name != "netty-bom" &&
           !requested.name.startsWith("netty-transport-native") &&
-          !requested.name.startsWith("netty-transport-classes")) {
+          !requested.name.startsWith("netty-transport-classes")
+        ) {
           useVersion("4.1.0.Final")
         }
       }

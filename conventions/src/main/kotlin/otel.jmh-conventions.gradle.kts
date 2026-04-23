@@ -25,8 +25,16 @@ jmh {
 }
 
 jmhReport {
-  jmhResultPath = layout.buildDirectory.file("results/jmh/results.json").get().asFile.absolutePath
-  jmhReportOutput = layout.buildDirectory.file("results/jmh").get().asFile.absolutePath
+  jmhResultPath =
+    layout.buildDirectory
+      .file("results/jmh/results.json")
+      .get()
+      .asFile.absolutePath
+  jmhReportOutput =
+    layout.buildDirectory
+      .file("results/jmh")
+      .get()
+      .asFile.absolutePath
 }
 
 tasks {

@@ -9,9 +9,9 @@ import io.opentelemetry.instrumentation.ktor.common.v2_0.AbstractKtorClientTelem
 import io.opentelemetry.instrumentation.ktor.v3_0.InstrumentationProperties.INSTRUMENTATION_NAME
 
 class KtorClientTelemetryBuilder : AbstractKtorClientTelemetryBuilder(INSTRUMENTATION_NAME) {
-
-  internal fun build(): KtorClientTelemetry = KtorClientTelemetry(
-    instrumenter = builder.build(),
-    propagators = getOpenTelemetry().propagators,
-  )
+  internal fun build(): KtorClientTelemetry =
+    KtorClientTelemetry(
+      instrumenter = builder.build(),
+      propagators = getOpenTelemetry().propagators,
+    )
 }

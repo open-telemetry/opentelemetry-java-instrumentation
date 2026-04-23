@@ -164,7 +164,8 @@ final class ArmeriaHttpClientAttributesGetter
     HttpRequest request = ctx.request();
     if (request == null) {
       throw new IllegalStateException(
-          "Context always has a request in decorators, this exception indicates a programming bug.");
+          "Context always has a request in decorators, this exception indicates a programming"
+              + " bug.");
     }
     return request;
   }

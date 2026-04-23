@@ -82,7 +82,8 @@ public abstract class AbstractHttpServerUsingTest<SERVER> {
   void verifyExtension() {
     if (testing == null) {
       throw new AssertionError(
-          "Subclasses of AbstractHttpServerUsingTest must register HttpServerInstrumentationExtension");
+          "Subclasses of AbstractHttpServerUsingTest must register"
+              + " HttpServerInstrumentationExtension");
     }
   }
 

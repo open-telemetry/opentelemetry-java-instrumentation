@@ -160,7 +160,8 @@ public class VertxReactiveWebServer extends AbstractVerticle {
           SQLConnection conn = res.result();
 
           conn.execute(
-              "CREATE TABLE IF NOT EXISTS products(id INT IDENTITY, name VARCHAR(255), price FLOAT, weight INT)",
+              "CREATE TABLE IF NOT EXISTS products(id INT IDENTITY, name VARCHAR(255), price FLOAT,"
+                  + " weight INT)",
               ddl -> {
                 if (ddl.failed()) {
                   onError.handle(ddl.cause());
@@ -168,7 +169,8 @@ public class VertxReactiveWebServer extends AbstractVerticle {
                 }
 
                 conn.execute(
-                    "INSERT INTO products (name, price, weight) VALUES ('Egg Whisk', 3.99, 150), ('Tea Cosy', 5.99, 100), ('Spatula', 1.00, 80)",
+                    "INSERT INTO products (name, price, weight) VALUES ('Egg Whisk', 3.99, 150),"
+                        + " ('Tea Cosy', 5.99, 100), ('Spatula', 1.00, 80)",
                     fixtures -> {
                       if (fixtures.failed()) {
                         onError.handle(fixtures.cause());

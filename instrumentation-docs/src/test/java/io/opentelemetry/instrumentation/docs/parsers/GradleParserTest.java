@@ -17,13 +17,14 @@ class GradleParserTest {
   void testExtractMuzzleVersions_SinglePassBlock() {
     String gradleBuildFileContent =
         """
-            muzzle {
-              pass {
-                group.set("org.elasticsearch.client")
-                module.set("rest")
-                versions.set("[5.0,6.4)")
-              }
-            }""";
+        muzzle {
+          pass {
+            group.set("org.elasticsearch.client")
+            module.set("rest")
+            versions.set("[5.0,6.4)")
+          }
+        }\
+        """;
     DependencyInfo info =
         GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
     assertThat(info.versions().size()).isEqualTo(1);
@@ -35,12 +36,12 @@ class GradleParserTest {
   void testExtractCoreJdk() {
     String gradleBuildFileContent =
         """
-            muzzle {
-              pass {
-                coreJdk()
-              }
-            }
-            """;
+        muzzle {
+          pass {
+            coreJdk()
+          }
+        }
+        """;
 
     DependencyInfo info =
         GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
@@ -52,16 +53,16 @@ class GradleParserTest {
   void testExtractMinimumJavaVersion() {
     String gradleBuildFileContent =
         """
-          muzzle {
-            pass {
-              coreJdk()
-            }
+        muzzle {
+          pass {
+            coreJdk()
           }
+        }
 
-          otelJava {
-            minJavaVersionSupported.set(JavaVersion.VERSION_11)
-          }
-          """;
+        otelJava {
+          minJavaVersionSupported.set(JavaVersion.VERSION_11)
+        }
+        """;
 
     DependencyInfo info =
         GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
@@ -74,18 +75,18 @@ class GradleParserTest {
   void testExtractMinimumJavaVersionIgnoredWithinIfCondition() {
     String gradleBuildFileContent =
         """
-          muzzle {
-            pass {
-              coreJdk()
-            }
+        muzzle {
+          pass {
+            coreJdk()
           }
+        }
 
-          if (latestDepTest) {
-            otelJava {
-              minJavaVersionSupported.set(JavaVersion.VERSION_11)
-            }
+        if (latestDepTest) {
+          otelJava {
+            minJavaVersionSupported.set(JavaVersion.VERSION_11)
           }
-          """;
+        }
+        """;
 
     DependencyInfo info =
         GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
@@ -97,36 +98,36 @@ class GradleParserTest {
   void testExtractMuzzleVersions_MultiplePassBlocks() {
     String gradleBuildFileContent =
         """
-          plugins {
-            id("otel.javaagent-instrumentation")
-            id("otel.nullaway-conventions")
-            id("otel.scala-conventions")
-          }
+        plugins {
+          id("otel.javaagent-instrumentation")
+          id("otel.nullaway-conventions")
+          id("otel.scala-conventions")
+        }
 
-          val zioVersion = "2.0.0"
-          val scalaVersion = "2.12"
+        val zioVersion = "2.0.0"
+        val scalaVersion = "2.12"
 
-          muzzle {
-            pass {
-              group.set("dev.zio")
-              module.set("zio_2.12")
-              versions.set("[$zioVersion,)")
-              assertInverse.set(true)
-            }
-            pass {
-              group.set("dev.zio")
-              module.set("zio_2.13")
-              versions.set("[$zioVersion,)")
-              assertInverse.set(true)
-            }
-            pass {
-              group.set("dev.zio")
-              module.set("zio_3")
-              versions.set("[$zioVersion,)")
-              assertInverse.set(true)
-            }
+        muzzle {
+          pass {
+            group.set("dev.zio")
+            module.set("zio_2.12")
+            versions.set("[$zioVersion,)")
+            assertInverse.set(true)
           }
-          """;
+          pass {
+            group.set("dev.zio")
+            module.set("zio_2.13")
+            versions.set("[$zioVersion,)")
+            assertInverse.set(true)
+          }
+          pass {
+            group.set("dev.zio")
+            module.set("zio_3")
+            versions.set("[$zioVersion,)")
+            assertInverse.set(true)
+          }
+        }
+        """;
 
     DependencyInfo info =
         GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);

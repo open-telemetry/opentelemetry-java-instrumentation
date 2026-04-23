@@ -48,7 +48,14 @@ for (version in mrJarVersions) {
 
   dependencies {
     // Common to reference classes in main sourceset from Java 17 one
-    add("java${version}Implementation", files(sourceSets.main.get().output.classesDirs))
+    add(
+      "java${version}Implementation",
+      files(
+        sourceSets.main
+          .get()
+          .output.classesDirs,
+      ),
+    )
   }
 }
 
@@ -82,13 +89,14 @@ tasks {
   }
 
   withType(Jar::class) {
-    val sourcePathProvider = if (name == "jar") {
-      { ss: SourceSet? -> ss?.output }
-    } else if (name == "sourcesJar") {
-      { ss: SourceSet? -> ss?.java }
-    } else {
-      { project.objects.fileCollection() }
-    }
+    val sourcePathProvider =
+      if (name == "jar") {
+        { ss: SourceSet? -> ss?.output }
+      } else if (name == "sourcesJar") {
+        { ss: SourceSet? -> ss?.java }
+      } else {
+        { project.objects.fileCollection() }
+      }
 
     for (version in mrJarVersions) {
       into("META-INF/versions/$version") {

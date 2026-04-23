@@ -26,7 +26,8 @@ import javax.inject.Inject;
 @AutoService(BugChecker.class)
 @BugPattern(
     summary =
-        "Methods with ignorable return values (including methods that always 'return this') should be annotated with @com.google.errorprone.annotations.CanIgnoreReturnValue",
+        "Methods with ignorable return values (including methods that always 'return this') should"
+            + " be annotated with @com.google.errorprone.annotations.CanIgnoreReturnValue",
     severity = BugPattern.SeverityLevel.WARNING)
 public class OtelCanIgnoreReturnValueSuggester extends BugChecker
     implements BugChecker.MethodTreeMatcher {

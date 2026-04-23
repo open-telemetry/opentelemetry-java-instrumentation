@@ -232,7 +232,8 @@ public abstract class AbstractCassandraTest {
                 "Create keyspace with replication",
                 new Parameter(
                     null,
-                    "CREATE KEYSPACE sync_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}",
+                    "CREATE KEYSPACE sync_test WITH REPLICATION = {'class':'SimpleStrategy',"
+                        + " 'replication_factor':3}",
                     "CREATE KEYSPACE sync_test WITH REPLICATION = {?:?, ?:?}",
                     emitStableDatabaseSemconv() ? "CREATE KEYSPACE" : "CREATE",
                     "CREATE",
@@ -286,7 +287,8 @@ public abstract class AbstractCassandraTest {
                 "Create keyspace with replication",
                 new Parameter(
                     null,
-                    "CREATE KEYSPACE async_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}",
+                    "CREATE KEYSPACE async_test WITH REPLICATION = {'class':'SimpleStrategy',"
+                        + " 'replication_factor':3}",
                     "CREATE KEYSPACE async_test WITH REPLICATION = {?:?, ?:?}",
                     emitStableDatabaseSemconv() ? "CREATE KEYSPACE" : "CREATE",
                     "CREATE",

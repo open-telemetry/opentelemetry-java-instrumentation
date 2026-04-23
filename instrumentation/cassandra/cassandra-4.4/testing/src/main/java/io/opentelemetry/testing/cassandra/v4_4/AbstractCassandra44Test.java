@@ -119,7 +119,8 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                 "Create keyspace with replication",
                 new Parameter(
                     null,
-                    "CREATE KEYSPACE reactive_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}",
+                    "CREATE KEYSPACE reactive_test WITH REPLICATION = {'class':'SimpleStrategy',"
+                        + " 'replication_factor':3}",
                     "CREATE KEYSPACE reactive_test WITH REPLICATION = {?:?, ?:?}",
                     emitStableDatabaseSemconv() ? "CREATE KEYSPACE" : "CREATE",
                     "CREATE",

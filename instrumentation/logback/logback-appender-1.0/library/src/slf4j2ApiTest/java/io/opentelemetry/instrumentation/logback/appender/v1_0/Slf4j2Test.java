@@ -153,7 +153,8 @@ class Slf4j2Test {
                 .hasResource(resource)
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody(
-                    "log message 'world' and 3.141592653589793, bool true, long 9223372036854775807")
+                    "log message 'world' and 3.141592653589793, bool true, long"
+                        + " 9223372036854775807")
                 .hasTotalAttributeCount(codeAttributesLogCount() + 2)
                 .hasAttributesSatisfying(
                     equalTo(

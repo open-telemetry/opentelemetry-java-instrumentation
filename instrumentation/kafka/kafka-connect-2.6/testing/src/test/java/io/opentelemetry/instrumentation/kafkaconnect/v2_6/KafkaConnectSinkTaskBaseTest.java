@@ -303,9 +303,9 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
                 "-c",
                 "mkdir -p /var/log/kafka-connect && "
                     + getConnectorInstallCommand()
-                    + " && "
-                    + "echo 'Starting Kafka Connect with logging to /var/log/kafka-connect/' && "
-                    + "/etc/confluent/docker/run 2>&1 | tee /var/log/kafka-connect/kafka-connect.log");
+                    + " && echo 'Starting Kafka Connect with logging to /var/log/kafka-connect/' &&"
+                    + " /etc/confluent/docker/run 2>&1 | tee"
+                    + " /var/log/kafka-connect/kafka-connect.log");
   }
 
   @BeforeEach

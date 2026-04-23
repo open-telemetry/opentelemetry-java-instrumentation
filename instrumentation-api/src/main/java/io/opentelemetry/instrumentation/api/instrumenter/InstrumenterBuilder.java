@@ -364,7 +364,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       default:
         logger.log(
             WARNING,
-            "Multiple schemaUrls were detected: {0}. The built Instrumenter will have no schemaUrl assigned.",
+            "Multiple schemaUrls were detected: {0}. The built Instrumenter will have no schemaUrl"
+                + " assigned.",
             computedSchemaUrls);
         return null;
     }

@@ -467,10 +467,14 @@ class ReferenceMatcherTest {
   @CsvSource(
       delimiter = '|',
       value = {
-        "internal helper, different field name | io.opentelemetry.instrumentation.Helper | differentField | Ljava/lang/Integer;",
-        "internal helper, different field type | io.opentelemetry.instrumentation.Helper | field | Lcom/external/DifferentType;",
-        "external helper, different field name | com.external.otel.instrumentation.Helper | differentField | Ljava/lang/Integer;",
-        "external helper, different field type | com.external.otel.instrumentation.Helper | field | Lcom/external/DifferentType;"
+        "internal helper, different field name | io.opentelemetry.instrumentation.Helper |"
+            + " differentField | Ljava/lang/Integer;",
+        "internal helper, different field type | io.opentelemetry.instrumentation.Helper | field |"
+            + " Lcom/external/DifferentType;",
+        "external helper, different field name | com.external.otel.instrumentation.Helper |"
+            + " differentField | Ljava/lang/Integer;",
+        "external helper, different field type | com.external.otel.instrumentation.Helper | field |"
+            + " Lcom/external/DifferentType;"
       })
   void shouldFailHelperClassWhenItUsesFieldsUndeclaredInTheSuperClass(
       String testName, String className, String fieldName, String fieldType) {

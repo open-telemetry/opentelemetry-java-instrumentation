@@ -2,7 +2,11 @@ plugins {
   `java-platform`
 }
 
-data class DependencySet(val group: String, val version: String, val modules: List<String>)
+data class DependencySet(
+  val group: String,
+  val version: String,
+  val modules: List<String>,
+)
 
 // this line is managed by .github/scripts/update-sdk-version.sh
 val otelSdkVersion = "1.61.0"
@@ -23,17 +27,17 @@ val groovyVersion = "4.0.31"
 // that can be applied in the specific instrumentation gradle file, e.g.
 // configurations.testRuntimeClasspath.resolutionStrategy.force "com.google.guava:guava:19.0"
 
-val DEPENDENCY_BOMS = listOf(
-  // for some reason boms show up as runtime dependencies in license and vulnerability scans
-  // even if they are only used by test dependencies, so not using junit bom since it is LGPL
-
-  "com.fasterxml.jackson:jackson-bom:2.21.2",
-  "com.google.guava:guava-bom:33.6.0-jre",
-  "org.apache.groovy:groovy-bom:${groovyVersion}",
-  "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
-  "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
-  "org.testcontainers:testcontainers-bom:2.0.5"
-)
+val DEPENDENCY_BOMS =
+  listOf(
+    // for some reason boms show up as runtime dependencies in license and vulnerability scans
+    // even if they are only used by test dependencies, so not using junit bom since it is LGPL
+    "com.fasterxml.jackson:jackson-bom:2.21.2",
+    "com.google.guava:guava-bom:33.6.0-jre",
+    "org.apache.groovy:groovy-bom:$groovyVersion",
+    "io.opentelemetry:opentelemetry-bom:$otelSdkVersion",
+    "io.opentelemetry:opentelemetry-bom-alpha:$otelSdkAlphaVersion",
+    "org.testcontainers:testcontainers-bom:2.0.5",
+  )
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.1"
@@ -44,81 +48,82 @@ val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.17"
 val semConvVersion = "1.40.0"
-val semConvAlphaVersion =  semConvVersion.replaceFirst("(-rc.*)?$".toRegex(), "-alpha$1")
+val semConvAlphaVersion = semConvVersion.replaceFirst("(-rc.*)?$".toRegex(), "-alpha$1")
 
-val CORE_DEPENDENCIES = listOf(
-  "io.opentelemetry.semconv:opentelemetry-semconv:${semConvVersion}",
-  "io.opentelemetry.semconv:opentelemetry-semconv-incubating:${semConvAlphaVersion}",
-  "com.google.auto.service:auto-service:${autoServiceVersion}",
-  "com.google.auto.service:auto-service-annotations:${autoServiceVersion}",
-  "com.google.auto.value:auto-value:${autoValueVersion}",
-  "com.google.auto.value:auto-value-annotations:${autoValueVersion}",
-  "com.google.errorprone:error_prone_annotations:${errorProneVersion}",
-  "com.google.errorprone:error_prone_core:${errorProneVersion}",
-  "com.google.errorprone:error_prone_test_helpers:${errorProneVersion}",
-  // When updating, also update conventions/build.gradle.kts
-  "net.bytebuddy:byte-buddy:${byteBuddyVersion}",
-  "net.bytebuddy:byte-buddy-dep:${byteBuddyVersion}",
-  "net.bytebuddy:byte-buddy-agent:${byteBuddyVersion}",
-  "net.bytebuddy:byte-buddy-gradle-plugin:${byteBuddyVersion}",
-  "org.ow2.asm:asm:${asmVersion}",
-  "org.ow2.asm:asm-tree:${asmVersion}",
-  "org.ow2.asm:asm-util:${asmVersion}",
-  "org.openjdk.jmh:jmh-core:${jmhVersion}",
-  "org.openjdk.jmh:jmh-generator-bytecode:${jmhVersion}",
-  "org.mockito:mockito-core:${mockitoVersion}",
-  "org.mockito:mockito-junit-jupiter:${mockitoVersion}",
-  "org.mockito:mockito-inline:${mockitoVersion}",
-  "org.slf4j:slf4j-api:${slf4jVersion}",
-  "org.slf4j:slf4j-simple:${slf4jVersion}",
-  "org.slf4j:log4j-over-slf4j:${slf4jVersion}",
-  "org.slf4j:jcl-over-slf4j:${slf4jVersion}",
-  "org.slf4j:jul-to-slf4j:${slf4jVersion}"
-)
+val CORE_DEPENDENCIES =
+  listOf(
+    "io.opentelemetry.semconv:opentelemetry-semconv:$semConvVersion",
+    "io.opentelemetry.semconv:opentelemetry-semconv-incubating:$semConvAlphaVersion",
+    "com.google.auto.service:auto-service:$autoServiceVersion",
+    "com.google.auto.service:auto-service-annotations:$autoServiceVersion",
+    "com.google.auto.value:auto-value:$autoValueVersion",
+    "com.google.auto.value:auto-value-annotations:$autoValueVersion",
+    "com.google.errorprone:error_prone_annotations:$errorProneVersion",
+    "com.google.errorprone:error_prone_core:$errorProneVersion",
+    "com.google.errorprone:error_prone_test_helpers:$errorProneVersion",
+    // When updating, also update conventions/build.gradle.kts
+    "net.bytebuddy:byte-buddy:$byteBuddyVersion",
+    "net.bytebuddy:byte-buddy-dep:$byteBuddyVersion",
+    "net.bytebuddy:byte-buddy-agent:$byteBuddyVersion",
+    "net.bytebuddy:byte-buddy-gradle-plugin:$byteBuddyVersion",
+    "org.ow2.asm:asm:$asmVersion",
+    "org.ow2.asm:asm-tree:$asmVersion",
+    "org.ow2.asm:asm-util:$asmVersion",
+    "org.openjdk.jmh:jmh-core:$jmhVersion",
+    "org.openjdk.jmh:jmh-generator-bytecode:$jmhVersion",
+    "org.mockito:mockito-core:$mockitoVersion",
+    "org.mockito:mockito-junit-jupiter:$mockitoVersion",
+    "org.mockito:mockito-inline:$mockitoVersion",
+    "org.slf4j:slf4j-api:$slf4jVersion",
+    "org.slf4j:slf4j-simple:$slf4jVersion",
+    "org.slf4j:log4j-over-slf4j:$slf4jVersion",
+    "org.slf4j:jcl-over-slf4j:$slf4jVersion",
+    "org.slf4j:jul-to-slf4j:$slf4jVersion",
+  )
 
 // See the comment above about why we keep this rather large list.
 // There are dependencies included here that appear to have no usages, but are maintained at
 // this top level to help consistently satisfy large numbers of transitive dependencies.
-val DEPENDENCIES = listOf(
-  "org.junit.jupiter:junit-jupiter-api:5.14.3",
-
-  "io.r2dbc:r2dbc-proxy:1.1.6.RELEASE",
-  "ch.qos.logback:logback-classic:1.3.16", // 1.4+ requires Java 11+
-  "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.13.3",
-  "commons-beanutils:commons-beanutils:1.11.0",
-  "commons-cli:commons-cli:1.11.0",
-  "commons-codec:commons-codec:1.21.0",
-  "commons-collections:commons-collections:3.2.2",
-  "commons-digester:commons-digester:2.1",
-  "commons-fileupload:commons-fileupload:1.6.0",
-  "commons-io:commons-io:2.21.0",
-  "commons-lang:commons-lang:2.6",
-  "commons-logging:commons-logging:1.3.6",
-  "commons-validator:commons-validator:1.10.1",
-  "io.netty:netty:3.10.6.Final",
-  "io.opentelemetry.contrib:opentelemetry-azure-resources:${otelContribVersion}",
-  "io.opentelemetry.contrib:opentelemetry-aws-resources:${otelContribVersion}",
-  "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:${otelContribVersion}",
-  "io.opentelemetry.contrib:opentelemetry-gcp-resources:${otelContribVersion}",
-  "io.opentelemetry.contrib:opentelemetry-cloudfoundry-resources:${otelContribVersion}",
-  "io.opentelemetry.contrib:opentelemetry-baggage-processor:${otelContribVersion}",
-  "io.opentelemetry.contrib:opentelemetry-samplers:${otelContribVersion}",
-  "io.opentelemetry.proto:opentelemetry-proto:1.10.0-alpha",
-  "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
-  "org.assertj:assertj-core:3.27.7",
-  "org.awaitility:awaitility:4.3.0",
-  "com.google.code.findbugs:annotations:3.0.1u2",
-  "com.google.code.findbugs:jsr305:3.0.2",
-  "org.apache.groovy:groovy:${groovyVersion}",
-  "org.apache.groovy:groovy-json:${groovyVersion}",
-  "org.codehaus.mojo:animal-sniffer-annotations:1.27",
-  "org.junit-pioneer:junit-pioneer:1.9.1",
-  "org.objenesis:objenesis:3.5",
-  "javax.validation:validation-api:2.0.1.Final",
-  "org.snakeyaml:snakeyaml-engine:2.10",
-  "org.elasticmq:elasticmq-rest-sqs_2.13:1.7.1"
-)
+val DEPENDENCIES =
+  listOf(
+    "org.junit.jupiter:junit-jupiter-api:5.14.3",
+    "io.r2dbc:r2dbc-proxy:1.1.6.RELEASE",
+    "ch.qos.logback:logback-classic:1.3.16", // 1.4+ requires Java 11+
+    "uk.org.webcompere:system-stubs-jupiter:2.0.3",
+    "com.uber.nullaway:nullaway:0.13.3",
+    "commons-beanutils:commons-beanutils:1.11.0",
+    "commons-cli:commons-cli:1.11.0",
+    "commons-codec:commons-codec:1.21.0",
+    "commons-collections:commons-collections:3.2.2",
+    "commons-digester:commons-digester:2.1",
+    "commons-fileupload:commons-fileupload:1.6.0",
+    "commons-io:commons-io:2.21.0",
+    "commons-lang:commons-lang:2.6",
+    "commons-logging:commons-logging:1.3.6",
+    "commons-validator:commons-validator:1.10.1",
+    "io.netty:netty:3.10.6.Final",
+    "io.opentelemetry.contrib:opentelemetry-azure-resources:$otelContribVersion",
+    "io.opentelemetry.contrib:opentelemetry-aws-resources:$otelContribVersion",
+    "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:$otelContribVersion",
+    "io.opentelemetry.contrib:opentelemetry-gcp-resources:$otelContribVersion",
+    "io.opentelemetry.contrib:opentelemetry-cloudfoundry-resources:$otelContribVersion",
+    "io.opentelemetry.contrib:opentelemetry-baggage-processor:$otelContribVersion",
+    "io.opentelemetry.contrib:opentelemetry-samplers:$otelContribVersion",
+    "io.opentelemetry.proto:opentelemetry-proto:1.10.0-alpha",
+    "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
+    "org.assertj:assertj-core:3.27.7",
+    "org.awaitility:awaitility:4.3.0",
+    "com.google.code.findbugs:annotations:3.0.1u2",
+    "com.google.code.findbugs:jsr305:3.0.2",
+    "org.apache.groovy:groovy:$groovyVersion",
+    "org.apache.groovy:groovy-json:$groovyVersion",
+    "org.codehaus.mojo:animal-sniffer-annotations:1.27",
+    "org.junit-pioneer:junit-pioneer:1.9.1",
+    "org.objenesis:objenesis:3.5",
+    "javax.validation:validation-api:2.0.1.Final",
+    "org.snakeyaml:snakeyaml-engine:2.10",
+    "org.elasticmq:elasticmq-rest-sqs_2.13:1.7.1",
+  )
 
 javaPlatform {
   allowDependencies()

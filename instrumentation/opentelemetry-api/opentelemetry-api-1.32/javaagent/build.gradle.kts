@@ -15,12 +15,15 @@ dependencies {
 configurations.configureEach {
   if (name.endsWith("testRuntimeClasspath", true) ||
     name.endsWith("testCompileClasspath", true) ||
-    name.startsWith("noopTest")) {
+    name.startsWith("noopTest")
+  ) {
     resolutionStrategy {
       force("io.opentelemetry:opentelemetry-api:1.32.0")
     }
   }
-  if (name == "testRuntimeClasspath" || name == "incubatorTestRuntimeClasspath" || name == "noopTestRuntimeClasspath") {
+  if (name == "testRuntimeClasspath" || name == "incubatorTestRuntimeClasspath" ||
+    name == "noopTestRuntimeClasspath"
+  ) {
     exclude(group = "io.opentelemetry", module = "opentelemetry-api-incubator")
   }
 }

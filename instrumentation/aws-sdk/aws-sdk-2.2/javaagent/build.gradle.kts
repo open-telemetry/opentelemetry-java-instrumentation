@@ -128,8 +128,14 @@ testing {
 
     val s3CrtTest by registering(JvmTestSuite::class) {
       dependencies {
-        implementation("software.amazon.awssdk:s3:" + if (otelProps.testLatestDeps) "latest.release" else "2.27.21")
-        implementation("software.amazon.awssdk.crt:aws-crt:" + if (otelProps.testLatestDeps) "latest.release" else "0.30.11")
+        implementation(
+          "software.amazon.awssdk:s3:" +
+            if (otelProps.testLatestDeps) "latest.release" else "2.27.21",
+        )
+        implementation(
+          "software.amazon.awssdk.crt:aws-crt:" +
+            if (otelProps.testLatestDeps) "latest.release" else "0.30.11",
+        )
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
         implementation("org.testcontainers:testcontainers-localstack")
       }
@@ -165,7 +171,10 @@ testing {
 
 tasks {
   val testExperimentalSqs by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     filter {
@@ -176,7 +185,10 @@ tasks {
   }
 
   val testReceiveSpansDisabled by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     filter {
@@ -186,7 +198,10 @@ tasks {
   }
 
   val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     filter {

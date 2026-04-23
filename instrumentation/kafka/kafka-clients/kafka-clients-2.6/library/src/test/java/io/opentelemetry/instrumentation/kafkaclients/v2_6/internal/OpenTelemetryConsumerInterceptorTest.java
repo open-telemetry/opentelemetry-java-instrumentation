@@ -49,7 +49,8 @@ class OpenTelemetryConsumerInterceptorTest {
             })
         .hasRootCauseInstanceOf(IllegalStateException.class)
         .hasRootCauseMessage(
-            "Configuration property opentelemetry.kafka-consumer-telemetry.supplier is not instance of KafkaConsumerTelemetrySupplier");
+            "Configuration property opentelemetry.kafka-consumer-telemetry.supplier is not instance"
+                + " of KafkaConsumerTelemetrySupplier");
 
     // Bad config - supplier returns wrong type
     assertThatThrownBy(
@@ -62,7 +63,8 @@ class OpenTelemetryConsumerInterceptorTest {
             })
         .hasRootCauseInstanceOf(IllegalStateException.class)
         .hasRootCauseMessage(
-            "Configuration property opentelemetry.kafka-consumer-telemetry.supplier is not instance of KafkaConsumerTelemetrySupplier");
+            "Configuration property opentelemetry.kafka-consumer-telemetry.supplier is not instance"
+                + " of KafkaConsumerTelemetrySupplier");
   }
 
   @Test

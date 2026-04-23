@@ -8,8 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.delay
 
-class ClazzWithDefaultConstructorArguments(val name: String = "Ktor") {
-
+class ClazzWithDefaultConstructorArguments(
+  val name: String = "Ktor"
+) {
   @WithSpan
   suspend fun sayHello(): String {
     delay(10)

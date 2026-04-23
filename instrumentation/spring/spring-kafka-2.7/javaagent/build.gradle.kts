@@ -72,7 +72,10 @@ tasks {
   }
 
   val testExperimental by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
@@ -102,15 +105,14 @@ if (!otelProps.testLatestDeps) {
     listOf(
       testRuntimeClasspath,
       named("testNoReceiveTelemetryRuntimeClasspath"),
-    )
-      .forEach {
-        it.configure {
-          resolutionStrategy {
-            // requires old logback (and therefore also old slf4j)
-            force("ch.qos.logback:logback-classic:1.2.11")
-            force("org.slf4j:slf4j-api:1.7.36")
-          }
+    ).forEach {
+      it.configure {
+        resolutionStrategy {
+          // requires old logback (and therefore also old slf4j)
+          force("ch.qos.logback:logback-classic:1.2.11")
+          force("org.slf4j:slf4j-api:1.7.36")
         }
       }
+    }
   }
 }

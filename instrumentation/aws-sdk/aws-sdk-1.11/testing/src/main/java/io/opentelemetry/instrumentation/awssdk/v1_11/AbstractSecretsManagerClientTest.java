@@ -40,11 +40,9 @@ public abstract class AbstractSecretsManagerClientTest extends AbstractBaseAwsCl
             .build();
 
     String body =
-        "{"
-            + "\"ARN\": \"arn:aws:secretsmanager:us-west-2:123456789012:secret:MyTestDatabaseSecret-a1b2c3\","
-            + "\"Name\": \"MyTestDatabaseSecret\","
-            + "\"VersionId\": \"EXAMPLE1-90ab-cdef-fedc-ba987SECRET1\""
-            + "}";
+        "{\"ARN\":"
+            + " \"arn:aws:secretsmanager:us-west-2:123456789012:secret:MyTestDatabaseSecret-a1b2c3\",\"Name\":"
+            + " \"MyTestDatabaseSecret\",\"VersionId\": \"EXAMPLE1-90ab-cdef-fedc-ba987SECRET1\"}";
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, body));
 
     Object response =
@@ -71,11 +69,9 @@ public abstract class AbstractSecretsManagerClientTest extends AbstractBaseAwsCl
             .build();
 
     String body =
-        "{"
-            + "\"ARN\": \"arn:aws:secretsmanager:us-east-1:123456789012:secret:My-Secret-Id-WzAXar\","
-            + "\"Name\": \"My-Secret-Id\","
-            + "\"VersionId\": \"EXAMPLE1-90ab-cdef-fedc-ba987SECRET1\""
-            + "}";
+        "{\"ARN\":"
+            + " \"arn:aws:secretsmanager:us-east-1:123456789012:secret:My-Secret-Id-WzAXar\",\"Name\":"
+            + " \"My-Secret-Id\",\"VersionId\": \"EXAMPLE1-90ab-cdef-fedc-ba987SECRET1\"}";
 
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, body));
     Object response =

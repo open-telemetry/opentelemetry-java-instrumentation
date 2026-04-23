@@ -31,8 +31,9 @@ dependencies {
 val targetJDK = (project.findProperty("targetJDK") as String?) ?: "17"
 val javaLanguageVersion = targetJDK.toIntOrNull() ?: 17
 
-val tag = findProperty("tag")
-  ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
+val tag =
+  findProperty("tag")
+    ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
 
 java {
   toolchain.languageVersion.set(JavaLanguageVersion.of(javaLanguageVersion))

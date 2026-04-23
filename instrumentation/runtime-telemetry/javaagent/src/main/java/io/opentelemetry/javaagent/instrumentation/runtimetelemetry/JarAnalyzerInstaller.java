@@ -62,8 +62,8 @@ public class JarAnalyzerInstaller implements BeforeAgentListener {
 
     if (oldJarsPerSecond >= 0) {
       logger.warning(
-          "otel.instrumentation.runtime-telemetry.package-emitter.jars-per-second is deprecated"
-              + " and will be removed in 3.0. Use"
+          "otel.instrumentation.runtime-telemetry.package-emitter.jars-per-second is deprecated and"
+              + " will be removed in 3.0. Use"
               + " otel.instrumentation.runtime-telemetry.experimental.package-emitter.jars-per-second"
               + " instead.");
     }

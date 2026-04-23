@@ -24,11 +24,14 @@ tasks {
     archiveClassifier.set("")
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     manifest {
-      attributes("Main-Class" to "io.opentelemetry.instrumentation.jmx.cameltest.CamelTestApplication")
+      attributes(
+        "Main-Class" to "io.opentelemetry.instrumentation.jmx.cameltest.CamelTestApplication",
+      )
     }
     from(sourceSets.main.get().output)
     from({
-      configurations.runtimeClasspath.get()
+      configurations.runtimeClasspath
+        .get()
         .filter { it.name.endsWith(".jar") }
         .map { zipTree(it) }
     })

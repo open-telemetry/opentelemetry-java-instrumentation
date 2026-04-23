@@ -40,7 +40,8 @@ public final class EmbeddedInstrumentationProperties {
   public static void setPropertiesLoader(ClassLoader propertiesLoader) {
     if (loader != DEFAULT_LOADER) {
       logger.warning(
-          "Embedded properties loader has already been set up, further setPropertiesLoader() calls are ignored");
+          "Embedded properties loader has already been set up, further setPropertiesLoader() calls"
+              + " are ignored");
       return;
     }
     loader = propertiesLoader;

@@ -19,14 +19,15 @@ class KtorClientTelemetry internal constructor(
   instrumenter: Instrumenter<HttpRequestData, HttpResponse>,
   propagators: ContextPropagators
 ) : AbstractKtorClientTelemetry(instrumenter, propagators) {
-
   companion object : HttpClientPlugin<KtorClientTelemetryBuilder, KtorClientTelemetry> {
-
     override val key = AttributeKey<KtorClientTelemetry>("OpenTelemetry")
 
     override fun prepare(block: KtorClientTelemetryBuilder.() -> Unit) = KtorClientTelemetryBuilder().apply(block).build()
 
-    override fun install(plugin: KtorClientTelemetry, scope: HttpClient) {
+    override fun install(
+      plugin: KtorClientTelemetry,
+      scope: HttpClient
+    ) {
       KtorClientTelemetryUtil.install(plugin, scope)
     }
   }

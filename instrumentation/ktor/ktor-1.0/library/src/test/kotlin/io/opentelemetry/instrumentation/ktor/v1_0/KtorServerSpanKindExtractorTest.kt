@@ -34,7 +34,6 @@ import java.util.function.Consumer
 import java.util.stream.Stream
 
 class KtorServerSpanKindExtractorTest : AbstractHttpServerUsingTest<ApplicationEngine>() {
-
   private val consumerKindEndpoint = ServerEndpoint("consumerKindEndpoint", "from-pubsub/run", 200, "")
   private val serverKindEndpoint = ServerEndpoint("serverKindEndpoint", "from-client/run", 200, "")
 
@@ -56,30 +55,31 @@ class KtorServerSpanKindExtractorTest : AbstractHttpServerUsingTest<ApplicationE
 
   override fun getContextPath() = ""
 
-  override fun setupServer(): ApplicationEngine = embeddedServer(Netty, port = port) {
-    install(KtorServerTelemetry) {
-      setOpenTelemetry(testing.openTelemetry)
-      setSpanKindExtractor {
-        SpanKindExtractor { req ->
-          if (req.uri.startsWith("/from-pubsub/")) {
-            SpanKind.CONSUMER
-          } else {
-            SpanKind.SERVER
+  override fun setupServer(): ApplicationEngine =
+    embeddedServer(Netty, port = port) {
+      install(KtorServerTelemetry) {
+        setOpenTelemetry(testing.openTelemetry)
+        setSpanKindExtractor {
+          SpanKindExtractor { req ->
+            if (req.uri.startsWith("/from-pubsub/")) {
+              SpanKind.CONSUMER
+            } else {
+              SpanKind.SERVER
+            }
           }
         }
       }
-    }
 
-    routing {
-      post(consumerKindEndpoint.path) {
-        call.respondText(consumerKindEndpoint.body, status = HttpStatusCode.fromValue(consumerKindEndpoint.status))
-      }
+      routing {
+        post(consumerKindEndpoint.path) {
+          call.respondText(consumerKindEndpoint.body, status = HttpStatusCode.fromValue(consumerKindEndpoint.status))
+        }
 
-      post(serverKindEndpoint.path) {
-        call.respondText(serverKindEndpoint.body, status = HttpStatusCode.fromValue(serverKindEndpoint.status))
+        post(serverKindEndpoint.path) {
+          call.respondText(serverKindEndpoint.body, status = HttpStatusCode.fromValue(serverKindEndpoint.status))
+        }
       }
-    }
-  }.start()
+    }.start()
 
   override fun stopServer(server: ApplicationEngine) {
     server.stop(0, 10, TimeUnit.SECONDS)
@@ -87,7 +87,10 @@ class KtorServerSpanKindExtractorTest : AbstractHttpServerUsingTest<ApplicationE
 
   @ParameterizedTest
   @MethodSource("provideArguments")
-  fun testSpanKindExtractor(endpoint: ServerEndpoint, expectedKind: SpanKind) {
+  fun testSpanKindExtractor(
+    endpoint: ServerEndpoint,
+    expectedKind: SpanKind
+  ) {
     val request = AggregatedHttpRequest.of(HttpMethod.valueOf("POST"), resolveAddress(endpoint))
     val response: AggregatedHttpResponse = client.execute(request).aggregate().join()
     assertThat(response.status().code()).isEqualTo(endpoint.status)
@@ -103,8 +106,9 @@ class KtorServerSpanKindExtractorTest : AbstractHttpServerUsingTest<ApplicationE
     )
   }
 
-  private fun provideArguments(): Stream<Arguments> = Stream.of(
-    arguments(consumerKindEndpoint, SpanKind.CONSUMER),
-    arguments(serverKindEndpoint, SpanKind.SERVER),
-  )
+  private fun provideArguments(): Stream<Arguments> =
+    Stream.of(
+      arguments(consumerKindEndpoint, SpanKind.CONSUMER),
+      arguments(serverKindEndpoint, SpanKind.SERVER),
+    )
 }

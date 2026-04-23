@@ -162,7 +162,8 @@ class MemoryPoolsTest {
                 metricData ->
                     assertThat(metricData)
                         .hasDescription(
-                            "Measure of memory used, as measured after the most recent garbage collection event on this pool.")
+                            "Measure of memory used, as measured after the most recent garbage"
+                                + " collection event on this pool.")
                         .hasUnit("By")
                         .hasLongSumSatisfying(
                             sum ->

@@ -14,8 +14,9 @@ import java.io.Serializable
  * into unqualified references and adds the corresponding static import. Runs before
  * googleJavaFormat so that imports are sorted and any newly-unused regular imports are removed.
  */
-class StaticImportFormatter : FormatterFunc.NeedsFile, Serializable {
-
+class StaticImportFormatter :
+  FormatterFunc.NeedsFile,
+  Serializable {
   private data class Rule(
     val className: String,
     val pkg: String,
@@ -25,72 +26,76 @@ class StaticImportFormatter : FormatterFunc.NeedsFile, Serializable {
     val contentExcludePattern: String? = null,
   ) : Serializable
 
-  override fun applyWithFile(input: String, source: File): String {
-    val rules = listOf(
-      Rule("Objects", "java.util.Objects", "requireNonNull"),
-      Rule(
-        "ElementMatchers",
-        "net.bytebuddy.matcher.ElementMatchers",
-        "[a-z][a-zA-Z0-9]*",
-      ),
-      Rule(
-        "AgentElementMatchers",
-        "io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers",
-        "[a-z][a-zA-Z0-9]*",
-      ),
-      Rule("TimeUnit", "java.util.concurrent.TimeUnit", "[A-Z][A-Z_0-9]*"),
-      Rule(
-        "StandardCharsets",
-        "java.nio.charset.StandardCharsets",
-        "[A-Z][A-Z_0-9]*",
-      ),
-      Rule(
-        "Arrays",
-        "java.util.Arrays",
-        "asList",
-        // AbstractAssert defines asList(), so the static import would be ambiguous in subclasses.
-        contentExcludePattern = "extends AbstractAssert",
-      ),
-      Rule(
-        "Collections",
-        "java.util.Collections",
-        "singleton[a-zA-Z0-9]*|empty[a-zA-Z0-9]*",
-      ),
-      Rule(
-        "ArgumentMatchers",
-        "org.mockito.ArgumentMatchers",
-        "[a-z][a-zA-Z0-9]*",
-      ),
-      Rule(
-        "Mockito",
-        "org.mockito.Mockito",
-        "mock|mockStatic|spy|when|verify|verifyNoInteractions|verifyNoMoreInteractions|doAnswer|doReturn|doThrow|lenient|never|times|atLeastOnce|withSettings",
-      ),
-      Rule("Assertions", "org.assertj.core.api.Assertions", "assertThat"),
-      Rule(
-        "OpenTelemetryAssertions",
-        "io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions",
-        "[a-z][a-zA-Z0-9]*",
-      ),
-      Rule(
-        "SemconvStability",
-        "io.opentelemetry.instrumentation.api.internal.SemconvStability",
-        "emit[a-zA-Z0-9]*",
-      ),
-      Rule(
-        "SqlDialect",
-        "io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect",
-        "DOUBLE_QUOTES_ARE_[A-Z_]+"
-      ),
-      Rule("Collectors", "java.util.stream.Collectors", "[a-z][a-zA-Z0-9]*"),
-      Rule(
-        "AttributeKey",
-        "io.opentelemetry.api.common.AttributeKey",
-        "stringKey|longKey|booleanKey|doubleKey|stringArrayKey|longArrayKey|booleanArrayKey|doubleArrayKey",
-        lineExcludePattern = "= AttributeKey.",
-        filePattern = "Test\\.java$"
-      ),
-    )
+  override fun applyWithFile(
+    input: String,
+    source: File
+  ): String {
+    val rules =
+      listOf(
+        Rule("Objects", "java.util.Objects", "requireNonNull"),
+        Rule(
+          "ElementMatchers",
+          "net.bytebuddy.matcher.ElementMatchers",
+          "[a-z][a-zA-Z0-9]*",
+        ),
+        Rule(
+          "AgentElementMatchers",
+          "io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers",
+          "[a-z][a-zA-Z0-9]*",
+        ),
+        Rule("TimeUnit", "java.util.concurrent.TimeUnit", "[A-Z][A-Z_0-9]*"),
+        Rule(
+          "StandardCharsets",
+          "java.nio.charset.StandardCharsets",
+          "[A-Z][A-Z_0-9]*",
+        ),
+        Rule(
+          "Arrays",
+          "java.util.Arrays",
+          "asList",
+          // AbstractAssert defines asList(), so the static import would be ambiguous in subclasses.
+          contentExcludePattern = "extends AbstractAssert",
+        ),
+        Rule(
+          "Collections",
+          "java.util.Collections",
+          "singleton[a-zA-Z0-9]*|empty[a-zA-Z0-9]*",
+        ),
+        Rule(
+          "ArgumentMatchers",
+          "org.mockito.ArgumentMatchers",
+          "[a-z][a-zA-Z0-9]*",
+        ),
+        Rule(
+          "Mockito",
+          "org.mockito.Mockito",
+          "mock|mockStatic|spy|when|verify|verifyNoInteractions|verifyNoMoreInteractions|doAnswer|doReturn|doThrow|lenient|never|times|atLeastOnce|withSettings",
+        ),
+        Rule("Assertions", "org.assertj.core.api.Assertions", "assertThat"),
+        Rule(
+          "OpenTelemetryAssertions",
+          "io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions",
+          "[a-z][a-zA-Z0-9]*",
+        ),
+        Rule(
+          "SemconvStability",
+          "io.opentelemetry.instrumentation.api.internal.SemconvStability",
+          "emit[a-zA-Z0-9]*",
+        ),
+        Rule(
+          "SqlDialect",
+          "io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect",
+          "DOUBLE_QUOTES_ARE_[A-Z_]+"
+        ),
+        Rule("Collectors", "java.util.stream.Collectors", "[a-z][a-zA-Z0-9]*"),
+        Rule(
+          "AttributeKey",
+          "io.opentelemetry.api.common.AttributeKey",
+          "stringKey|longKey|booleanKey|doubleKey|stringArrayKey|longArrayKey|booleanArrayKey|doubleArrayKey",
+          lineExcludePattern = "= AttributeKey.",
+          filePattern = "Test\\.java$"
+        ),
+      )
 
     var content = input
     val importsToAdd = mutableSetOf<String>()
@@ -104,10 +109,11 @@ class StaticImportFormatter : FormatterFunc.NeedsFile, Serializable {
         if (lines[i].trimStart().startsWith("import ")) continue
         if (rule.lineExcludePattern != null &&
           (maxOf(0, i - 3)..i).joinToString(" ") { j -> lines[j].trim() }.contains(rule.lineExcludePattern)
-        ) continue
+        ) {
+          continue
+        }
         for (match in regex.findAll(lines[i])) {
           importsToAdd.add("import static ${rule.pkg}.${match.groupValues[1]};")
-
         }
         lines[i] = regex.replace(lines[i], "$1")
       }
@@ -130,7 +136,7 @@ class StaticImportFormatter : FormatterFunc.NeedsFile, Serializable {
           Triple(m.groupValues[2], m.groupValues[1], "[A-Z][A-Z_0-9]*")
         }
     for ((className, pkg, memberPattern) in semconvRules) {
-      val regex = Regex("\\b${className}\\.(${memberPattern})\\b")
+      val regex = Regex("\\b${className}\\.($memberPattern)\\b")
       val lines = content.lines().toMutableList()
       var inBlockComment = false
       for (i in lines.indices) {
@@ -142,7 +148,7 @@ class StaticImportFormatter : FormatterFunc.NeedsFile, Serializable {
         }
         if (trimmed.startsWith("import ")) continue
         for (match in regex.findAll(lines[i])) {
-          importsToAdd.add("import static ${pkg}.${match.groupValues[1]};")
+          importsToAdd.add("import static $pkg.${match.groupValues[1]};")
         }
         lines[i] = regex.replace(lines[i], "$1")
       }
@@ -189,7 +195,7 @@ class StaticImportFormatter : FormatterFunc.NeedsFile, Serializable {
         }
         if (trimmed.startsWith("import ")) continue
         for (match in regex.findAll(lines[i])) {
-          importsToAdd.add("import ${outerPkg}.${match.groupValues[1]};")
+          importsToAdd.add("import $outerPkg.${match.groupValues[1]};")
         }
         lines[i] = regex.replace(lines[i], "$1.$2")
       }

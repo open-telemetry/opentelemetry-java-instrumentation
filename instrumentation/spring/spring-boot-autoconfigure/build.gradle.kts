@@ -16,7 +16,8 @@ sourceSets {
     val shadedDep = project(":instrumentation:r2dbc-1.0:library-instrumentation-shaded")
     output.dir(
       shadedDep.file("build/extracted/shadow-spring"),
-      "builtBy" to ":instrumentation:r2dbc-1.0:library-instrumentation-shaded:extractShadowJarSpring",
+      "builtBy" to
+        ":instrumentation:r2dbc-1.0:library-instrumentation-shaded:extractShadowJarSpring",
     )
   }
   create("javaSpring3") {
@@ -42,8 +43,12 @@ configurations {
 
 dependencies {
   compileOnly("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
-  annotationProcessor("org.springframework.boot:spring-boot-autoconfigure-processor:$springBootVersion")
-  annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:$springBootVersion")
+  annotationProcessor(
+    "org.springframework.boot:spring-boot-autoconfigure-processor:$springBootVersion",
+  )
+  annotationProcessor(
+    "org.springframework.boot:spring-boot-configuration-processor:$springBootVersion",
+  )
   implementation("javax.validation:validation-api")
   compileOnly("org.springframework.kafka:spring-kafka:2.9.0")
 
@@ -53,8 +58,8 @@ dependencies {
   compileOnly(
     project(
       path = ":instrumentation:r2dbc-1.0:library-instrumentation-shaded",
-      configuration = "shadow"
-    )
+      configuration = "shadow",
+    ),
   )
   implementation(project(":instrumentation:spring:spring-kafka-2.7:library"))
   implementation(project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
@@ -115,26 +120,42 @@ dependencies {
   testImplementation(project(":instrumentation-annotations"))
   testImplementation(project(":instrumentation:spring:spring-boot-autoconfigure:testing"))
 
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-micrometer-metrics:latest.release")
+  latestDepTestLibrary(
+    "org.springframework.boot:spring-boot-starter-micrometer-metrics:latest.release",
+  )
 
   // needed for the Spring Boot 3 support
   implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
 
   // give access to common classes, e.g. InstrumentationConfigUtil
-  add("javaSpring3CompileOnly", files(sourceSets.main.get().output.classesDirs))
+  add(
+    "javaSpring3CompileOnly",
+    files(
+      sourceSets.main
+        .get()
+        .output.classesDirs,
+    ),
+  )
   add("javaSpring3CompileOnly", "org.springframework.boot:spring-boot-starter-web:3.2.4")
   add("javaSpring3CompileOnly", "io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   add(
     "javaSpring3CompileOnly",
-    project(":instrumentation:spring:spring-web:spring-web-3.1:library")
+    project(":instrumentation:spring:spring-web:spring-web-3.1:library"),
   )
   add(
     "javaSpring3CompileOnly",
-    project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library")
+    project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"),
   )
 
   // Spring Boot 4
-  add("javaSpring4CompileOnly", files(sourceSets.main.get().output.classesDirs))
+  add(
+    "javaSpring4CompileOnly",
+    files(
+      sourceSets.main
+        .get()
+        .output.classesDirs,
+    ),
+  )
   add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-starter-kafka:4.0.0")
   add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-autoconfigure:4.0.0")
   add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-jdbc:4.0.0")
@@ -144,20 +165,23 @@ dependencies {
   add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-starter-data-mongodb:4.0.0")
   add(
     "javaSpring4CompileOnly",
-    "org.springframework.boot:spring-boot-starter-micrometer-metrics:4.0.0"
+    "org.springframework.boot:spring-boot-starter-micrometer-metrics:4.0.0",
   )
   add(
     "javaSpring4CompileOnly",
-    project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library")
+    project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library"),
   )
   add("javaSpring4CompileOnly", project(":instrumentation:spring:spring-kafka-2.7:library"))
   add("javaSpring4CompileOnly", project(":instrumentation:mongo:mongo-3.1:library"))
   add("javaSpring4CompileOnly", project(":instrumentation:micrometer:micrometer-1.5:library"))
   add(
     "javaSpring4CompileOnly",
-    project(":instrumentation:spring:spring-web:spring-web-3.1:library")
+    project(":instrumentation:spring:spring-web:spring-web-3.1:library"),
   )
-  add("javaSpring4CompileOnly", project(":instrumentation:spring:spring-webflux:spring-webflux-5.3:library"))
+  add(
+    "javaSpring4CompileOnly",
+    project(":instrumentation:spring:spring-webflux:spring-webflux-5.3:library"),
+  )
 }
 
 // spring 6 (spring boot 3) requires java 17
@@ -360,7 +384,10 @@ tasks {
   }
 
   val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }

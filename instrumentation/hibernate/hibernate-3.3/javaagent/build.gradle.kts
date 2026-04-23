@@ -60,22 +60,30 @@ tasks {
   }
 
   val testExperimental by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.hibernate.experimental-span-attributes=true",
+    )
   }
 
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}StableSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
+  val stableSemconvSuites =
+    testing.suites
+      .withType(JvmTestSuite::class)
+      .map { suite ->
+        register<Test>("${suite.name}StableSemconv") {
+          testClassesDirs = suite.sources.output.classesDirs
+          classpath = suite.sources.runtimeClasspath
 
-        jvmArgs("-Dotel.semconv-stability.opt-in=database")
+          jvmArgs("-Dotel.semconv-stability.opt-in=database")
+        }
       }
-    }
 
   check {
     dependsOn(testing.suites, testExperimental, stableSemconvSuites)

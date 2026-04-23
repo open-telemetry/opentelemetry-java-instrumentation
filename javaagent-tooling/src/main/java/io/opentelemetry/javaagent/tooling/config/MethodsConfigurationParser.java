@@ -83,7 +83,8 @@ public final class MethodsConfigurationParser {
     } else if (!validateConfigString(configString)) {
       logger.log(
           WARNING,
-          "Invalid trace method config \"{0}\". Must match 'package.Class$Name[method1,method2];*'.",
+          "Invalid trace method config \"{0}\". Must match"
+              + " 'package.Class$Name[method1,method2];*'.",
           configString);
       return emptyMap();
     } else {

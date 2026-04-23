@@ -54,7 +54,8 @@ class DeclarativeConfigTest {
 
   @Test
   @DisplayName(
-      "when Application Context DOES NOT contain OpenTelemetry bean should initialize openTelemetry")
+      "when Application Context DOES NOT contain OpenTelemetry bean should initialize"
+          + " openTelemetry")
   void initializeProvidersAndOpenTelemetry() {
     this.contextRunner.run(
         context ->

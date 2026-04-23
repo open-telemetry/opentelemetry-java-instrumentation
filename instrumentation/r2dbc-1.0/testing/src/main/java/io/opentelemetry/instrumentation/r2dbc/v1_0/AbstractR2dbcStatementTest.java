@@ -227,8 +227,10 @@ public abstract class AbstractR2dbcStatementTest {
                             system.system + " Create Table",
                             new Parameter(
                                 system.system,
-                                "CREATE TABLE person (id SERIAL PRIMARY KEY, first_name VARCHAR(255), last_name VARCHAR(255))",
-                                "CREATE TABLE person (id SERIAL PRIMARY KEY, first_name VARCHAR(?), last_name VARCHAR(?))",
+                                "CREATE TABLE person (id SERIAL PRIMARY KEY, first_name"
+                                    + " VARCHAR(255), last_name VARCHAR(255))",
+                                "CREATE TABLE person (id SERIAL PRIMARY KEY, first_name VARCHAR(?),"
+                                    + " last_name VARCHAR(?))",
                                 emitStableDatabaseSemconv()
                                     ? "CREATE TABLE person"
                                     : "CREATE TABLE " + DB + ".person",
@@ -239,7 +241,8 @@ public abstract class AbstractR2dbcStatementTest {
                             system.system + " Insert",
                             new Parameter(
                                 system.system,
-                                "INSERT INTO person (id, first_name, last_name) values (1, 'tom', 'johnson')",
+                                "INSERT INTO person (id, first_name, last_name) values (1, 'tom',"
+                                    + " 'johnson')",
                                 "INSERT INTO person (id, first_name, last_name) values (?, ?, ?)",
                                 emitStableDatabaseSemconv()
                                     ? "INSERT person"

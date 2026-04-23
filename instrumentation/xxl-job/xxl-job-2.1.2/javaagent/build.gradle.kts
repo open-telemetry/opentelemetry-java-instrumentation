@@ -27,7 +27,8 @@ dependencies {
 
   testImplementation("org.apache.groovy:groovy")
   testImplementation(project(":instrumentation:xxl-job:xxl-job-common:testing"))
-  latestDepTestLibrary("com.xuxueli:xxl-job-core:2.2.+") { // see xxl-job-2.3.0 module
+  latestDepTestLibrary("com.xuxueli:xxl-job-core:2.2.+") {
+    // see xxl-job-2.3.0 module
     exclude("org.codehaus.groovy", "groovy")
   }
 }
@@ -41,11 +42,17 @@ tasks {
   }
 
   val testExperimental by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.xxl-job.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.xxl-job.experimental-span-attributes=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.xxl-job.experimental-span-attributes=true",
+    )
   }
 
   check {

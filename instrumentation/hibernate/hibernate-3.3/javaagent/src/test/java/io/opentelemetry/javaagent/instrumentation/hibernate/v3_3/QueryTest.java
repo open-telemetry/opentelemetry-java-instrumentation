@@ -80,7 +80,8 @@ class QueryTest extends AbstractHibernateTest {
                     sess -> {
                       Query q =
                           sess.createQuery(
-                              "from io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value where id = ?");
+                              "from io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
+                                  + " where id = ?");
                       q.setParameter(0, 1L);
                       q.list();
                     }))),
@@ -93,7 +94,9 @@ class QueryTest extends AbstractHibernateTest {
                     sess -> {
                       Query q =
                           sess.createQuery(
-                              "update io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value set name = ?");
+                              "update"
+                                  + " io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
+                                  + " set name = ?");
                       q.setParameter(0, "alyx");
                       q.executeUpdate();
                     }))),
@@ -106,7 +109,8 @@ class QueryTest extends AbstractHibernateTest {
                     sess -> {
                       Query q =
                           sess.createQuery(
-                              "from io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value where id = ?");
+                              "from io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
+                                  + " where id = ?");
                       q.setParameter(0, 1L);
                       q.uniqueResult();
                     }))),

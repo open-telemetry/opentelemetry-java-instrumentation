@@ -34,19 +34,24 @@ object KtorServerTelemetryUtil {
   // requests. This issue can be worked around by adding -Dio.ktor.internal.disable.sfg=true to jvm
   // arguments. Adding this no-op interceptor seems to also work around the issue.
   // See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/16430
-  private val emptyInterceptor = object : ContinuationInterceptor {
-    override val key = ContinuationInterceptor
+  private val emptyInterceptor =
+    object : ContinuationInterceptor {
+      override val key = ContinuationInterceptor
 
-    override fun <T> interceptContinuation(continuation: Continuation<T>): Continuation<T> = object : Continuation<T> {
-      override val context = continuation.context
+      override fun <T> interceptContinuation(continuation: Continuation<T>): Continuation<T> =
+        object : Continuation<T> {
+          override val context = continuation.context
 
-      override fun resumeWith(result: Result<T>) {
-        continuation.resumeWith(result)
-      }
+          override fun resumeWith(result: Result<T>) {
+            continuation.resumeWith(result)
+          }
+        }
     }
-  }
 
-  fun configureTelemetry(builder: AbstractKtorServerTelemetryBuilder, application: Application) {
+  fun configureTelemetry(
+    builder: AbstractKtorServerTelemetryBuilder,
+    application: Application
+  ) {
     val contextKey = AttributeKey<Context>("OpenTelemetry")
     val errorKey = AttributeKey<Throwable>("OpenTelemetryException")
     val processedKey = AttributeKey<Unit>("OpenTelemetryProcessed")
@@ -104,9 +109,10 @@ object KtorServerTelemetryUtil {
     }
   }
 
-  private fun instrumenter(builder: AbstractKtorServerTelemetryBuilder): Instrumenter<ApplicationRequest, ApplicationResponse> = InstrumenterUtil.buildUpstreamInstrumenter(
-    builder.builder.instrumenterBuilder(),
-    ApplicationRequestGetter,
-    builder.spanKindExtractor(SpanKindExtractor.alwaysServer())
-  )
+  private fun instrumenter(builder: AbstractKtorServerTelemetryBuilder): Instrumenter<ApplicationRequest, ApplicationResponse> =
+    InstrumenterUtil.buildUpstreamInstrumenter(
+      builder.builder.instrumenterBuilder(),
+      ApplicationRequestGetter,
+      builder.spanKindExtractor(SpanKindExtractor.alwaysServer())
+    )
 }

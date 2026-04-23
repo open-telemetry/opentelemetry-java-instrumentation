@@ -11,5 +11,7 @@ dependencies {
 
 if (osdetector.os == "osx" && osdetector.arch == "aarch_64" && !otelProps.testLatestDeps) {
   // 5.5.0 is the first version that works on arm mac
-  configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.github.oshi:oshi-core:5.5.0")
+  configurations.testRuntimeClasspath.get().resolutionStrategy.force(
+    "com.github.oshi:oshi-core:5.5.0",
+  )
 }

@@ -100,7 +100,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isUpDownCounter()
                     .hasDescription(
-                        "Indicates the number of routes started successfully since context start-up or the last reset operation.")
+                        "Indicates the number of routes started successfully since context start-up"
+                            + " or the last reset operation.")
                     .hasUnit("{route}")
                     .hasDataPointsWithIntValues(value -> value.isEqualTo(numberOfTestRoutes))
                     .hasDataPointsWithAttributes(contextAttributes))
@@ -110,7 +111,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "Indicates the total number of routes added successfully since context start-up or the last reset operation.")
+                        "Indicates the total number of routes added successfully since context"
+                            + " start-up or the last reset operation.")
                     .hasUnit("{route}")
                     .hasDataPointsWithIntValues(value -> value.isEqualTo(numberOfTestRoutes))
                     .hasDataPointsWithAttributes(contextAttributes))
@@ -120,7 +122,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "Indicates the total number of exchanges, passed or failed, processed since context start-up or the last reset operation.")
+                        "Indicates the total number of exchanges, passed or failed, processed since"
+                            + " context start-up or the last reset operation.")
                     .hasUnit("{exchange}")
                     .hasDataPointsWithIntValues(value -> value.isGreaterThanOrEqualTo(1))
                     .hasDataPointsWithAttributes(contextAttributes))
@@ -130,7 +133,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "Indicates the total number of exchanges processed successfully since context start-up or the last reset operation.")
+                        "Indicates the total number of exchanges processed successfully since"
+                            + " context start-up or the last reset operation.")
                     .hasUnit("{exchange}")
                     .hasDataPointsWithIntValues(value -> value.isGreaterThanOrEqualTo(1))
                     .hasDataPointsWithAttributes(contextAttributes))
@@ -140,7 +144,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "Indicates the total number of exchanges that failed to process since context start-up or the last reset operation.")
+                        "Indicates the total number of exchanges that failed to process since"
+                            + " context start-up or the last reset operation.")
                     .hasUnit("{exchange}")
                     .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(contextAttributes))
@@ -150,7 +155,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "Indicates the number of exchanges failed and handled by an ExceptionHandler in the context.")
+                        "Indicates the number of exchanges failed and handled by an"
+                            + " ExceptionHandler in the context.")
                     .hasUnit("{exchange}")
                     .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(contextAttributes))
@@ -170,7 +176,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "Number of exchanges redelivered (internal only)  since context start-up or the last reset operation.")
+                        "Number of exchanges redelivered (internal only)  since context start-up or"
+                            + " the last reset operation.")
                     .hasUnit("{exchange}")
                     .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(contextAttributes))
@@ -180,7 +187,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "The total number of all external initiated redeliveries (such as from JMS broker) since context start-up or the last reset operation.")
+                        "The total number of all external initiated redeliveries (such as from JMS"
+                            + " broker) since context start-up or the last reset operation.")
                     .hasUnit("{exchange}")
                     .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(contextAttributes))
@@ -190,7 +198,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the longest time to process an exchange since context start-up or the last reset operation.")
+                        "Indicates the longest time to process an exchange since context start-up"
+                            + " or the last reset operation.")
                     .hasUnit("s")
                     .hasDataPointsWithDoubleValues(value -> value.isGreaterThan(0.0))
                     .hasDataPointsWithAttributes(contextAttributes))
@@ -200,7 +209,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the mean processing time for all exchanges processed since context start-up or the last reset operation.")
+                        "Indicates the mean processing time for all exchanges processed since"
+                            + " context start-up or the last reset operation.")
                     .hasUnit("s")
                     .hasDataPointsWithDoubleValues(value -> value.isGreaterThan(0.0))
                     .hasDataPointsWithAttributes(contextAttributes))
@@ -210,7 +220,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the shortest time to process an exchange since context start-up or the last reset operation.")
+                        "Indicates the shortest time to process an exchange since context start-up"
+                            + " or the last reset operation.")
                     .hasUnit("s")
                     .hasDataPointsWithDoubleValues(value -> value.isBetween(0.0, 1.0))
                     .hasDataPointsWithAttributes(contextAttributes))
@@ -229,7 +240,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the difference of the Processing Time of the last two exchanges transited the context.")
+                        "Indicates the difference of the Processing Time of the last two exchanges"
+                            + " transited the context.")
                     .hasUnit("s")
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
@@ -238,7 +250,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "Indicates the total processing time to process all exchanges since context start-up or the last reset operation.")
+                        "Indicates the total processing time to process all exchanges since context"
+                            + " start-up or the last reset operation.")
                     .hasUnit("s")
                     .hasDataPointsWithDoubleValues(value -> value.isGreaterThan(0.0))
                     .hasDataPointsWithAttributes(contextAttributes))
@@ -249,7 +262,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "Indicates the total number of exchanges, passed or failed, that the route has processed since route start-up or the last reset operation.")
+                        "Indicates the total number of exchanges, passed or failed, that the route"
+                            + " has processed since route start-up or the last reset operation.")
                     .hasUnit("{exchange}")
                     .hasDataPointsWithIntValues(value -> value.isGreaterThanOrEqualTo(1))
                     .hasDataPointsWithAttributes(routeAttributes))
@@ -259,7 +273,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "Indicates the total number of exchanges the route has processed successfully since route start-up or the last reset operation.")
+                        "Indicates the total number of exchanges the route has processed"
+                            + " successfully since route start-up or the last reset operation.")
                     .hasUnit("{exchange}")
                     .hasDataPointsWithIntValues(value -> value.isGreaterThanOrEqualTo(1))
                     .hasDataPointsWithAttributes(routeAttributes))
@@ -269,7 +284,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "Indicates the total number of exchanges that the route has failed to process since route start-up or the last reset operation.")
+                        "Indicates the total number of exchanges that the route has failed to"
+                            + " process since route start-up or the last reset operation.")
                     .hasUnit("{exchange}")
                     .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(routeAttributes))
@@ -279,7 +295,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "Indicates the number of exchanges failed and handled by an ExceptionHandler in the route.")
+                        "Indicates the number of exchanges failed and handled by an"
+                            + " ExceptionHandler in the route.")
                     .hasUnit("{exchange}")
                     .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(routeAttributes))
@@ -299,7 +316,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "Number of exchanges redelivered (internal only)  since route start-up or the last reset operation.")
+                        "Number of exchanges redelivered (internal only)  since route start-up or"
+                            + " the last reset operation.")
                     .hasUnit("{exchange}")
                     .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(routeAttributes))
@@ -309,7 +327,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "The total number of all external initiated redeliveries (such as from JMS broker) since the route start-up or the last reset operation.")
+                        "The total number of all external initiated redeliveries (such as from JMS"
+                            + " broker) since the route start-up or the last reset operation.")
                     .hasUnit("{exchange}")
                     .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(routeAttributes))
@@ -323,7 +342,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the longest time to process an exchange since the route start-up or the last reset operation.")
+                        "Indicates the longest time to process an exchange since the route start-up"
+                            + " or the last reset operation.")
                     .hasUnit("s")
                     .hasDataPointsWithDoubleValues(value -> value.isBetween(0.0, 1.0))
                     .hasDataPointsWithAttributes(routeAttributes))
@@ -333,7 +353,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the mean processing time for all exchanges processed since the route start-up or the last reset operation.")
+                        "Indicates the mean processing time for all exchanges processed since the"
+                            + " route start-up or the last reset operation.")
                     .hasUnit("s")
                     .hasDataPointsWithDoubleValues(
                         value -> value.isGreaterThanOrEqualTo(defaultTestRouteProcessingTime))
@@ -344,7 +365,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the shortest time to process an exchange since the route start-up or the last reset operation.")
+                        "Indicates the shortest time to process an exchange since the route"
+                            + " start-up or the last reset operation.")
                     .hasUnit("s")
                     .hasDataPointsWithDoubleValues(
                         value -> value.isGreaterThanOrEqualTo(defaultTestRouteProcessingTime))
@@ -366,7 +388,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the difference of the Processing Time of the last two exchanges transited the route.")
+                        "Indicates the difference of the Processing Time of the last two exchanges"
+                            + " transited the route.")
                     .hasUnit("s")
                     .hasDataPointsWithDoubleValues(value -> value.isBetween(-1.0, 1.0))
                     .hasDataPointsWithAttributes(routeAttributes))
@@ -376,7 +399,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "Indicates the total processing time of all exchanges the selected processed since route start-up or the last reset operation.")
+                        "Indicates the total processing time of all exchanges the selected"
+                            + " processed since route start-up or the last reset operation.")
                     .hasUnit("s")
                     .hasDataPointsWithDoubleValues(value -> value.isGreaterThan(0.0))
                     .hasDataPointsWithAttributes(routeAttributes))
@@ -387,7 +411,9 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "Indicates the total number of exchanges, passed or failed, that the selected processor has processed since processor start-up or the last reset operation.")
+                        "Indicates the total number of exchanges, passed or failed, that the"
+                            + " selected processor has processed since processor start-up or the"
+                            + " last reset operation.")
                     .hasUnit("{exchange}")
                     .hasDataPointsWithIntValues(value -> value.isGreaterThanOrEqualTo(1))
                     .hasDataPointsWithAttributes(
@@ -398,7 +424,9 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "Indicates the total number of exchanges the selected processor has processed successfully since processor start-up or the last reset operation.")
+                        "Indicates the total number of exchanges the selected processor has"
+                            + " processed successfully since processor start-up or the last reset"
+                            + " operation.")
                     .hasUnit("{exchange}")
                     .hasDataPointsWithIntValues(value -> value.isGreaterThanOrEqualTo(1))
                     .hasDataPointsWithAttributes(
@@ -409,7 +437,9 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "Indicates the total number of exchanges that the selected processor has failed to process since processor start-up or the last reset operation.")
+                        "Indicates the total number of exchanges that the selected processor has"
+                            + " failed to process since processor start-up or the last reset"
+                            + " operation.")
                     .hasUnit("{exchange}")
                     .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(
@@ -420,7 +450,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "Indicates the number of exchanges failed and handled by an ExceptionHandler in the context.")
+                        "Indicates the number of exchanges failed and handled by an"
+                            + " ExceptionHandler in the context.")
                     .hasUnit("{exchange}")
                     .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(
@@ -442,7 +473,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "Number of exchanges redelivered (internal only)  since selected processor start-up or the last reset operation.")
+                        "Number of exchanges redelivered (internal only)  since selected processor"
+                            + " start-up or the last reset operation.")
                     .hasUnit("{exchange}")
                     .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(
@@ -453,7 +485,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "The total number of all external initiated redeliveries (such as from JMS broker) since processor start-up or the last reset operation.")
+                        "The total number of all external initiated redeliveries (such as from JMS"
+                            + " broker) since processor start-up or the last reset operation.")
                     .hasUnit("{exchange}")
                     .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(
@@ -464,7 +497,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the longest time to process an exchange since processor start-up or the last reset operation.")
+                        "Indicates the longest time to process an exchange since processor start-up"
+                            + " or the last reset operation.")
                     .hasUnit("s")
                     .hasDataPointsWithDoubleValues(value -> value.isGreaterThanOrEqualTo(0.0))
                     .hasDataPointsWithAttributes(
@@ -475,7 +509,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the mean processing time for all exchanges processed since processor start-up or the last reset operation.")
+                        "Indicates the mean processing time for all exchanges processed since"
+                            + " processor start-up or the last reset operation.")
                     .hasUnit("s")
                     .hasDataPointsWithDoubleValues(value -> value.isGreaterThanOrEqualTo(0.0))
                     .hasDataPointsWithAttributes(
@@ -486,7 +521,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the shortest time to process an exchange since processor start-up or the last reset operation.")
+                        "Indicates the shortest time to process an exchange since processor"
+                            + " start-up or the last reset operation.")
                     .hasUnit("s")
                     .hasDataPointsWithDoubleValues(value -> value.isGreaterThanOrEqualTo(0.0))
                     .hasDataPointsWithAttributes(
@@ -497,7 +533,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the time it took the selected processor to process the last exchange.")
+                        "Indicates the time it took the selected processor to process the last"
+                            + " exchange.")
                     .hasUnit("s")
                     .hasDataPointsWithDoubleValues(value -> value.isGreaterThanOrEqualTo(0.0))
                     .hasDataPointsWithAttributes(
@@ -508,7 +545,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the difference of the Processing Time of the last two exchanges transited the selected processor.")
+                        "Indicates the difference of the Processing Time of the last two exchanges"
+                            + " transited the selected processor.")
                     .hasUnit("s")
                     .hasDataPointsWithAttributes(
                         processorAttributes, destinationAwareProcessorAttributes))
@@ -518,7 +556,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "Indicates the total processing time to process all exchanges since start-up or the last reset operation.")
+                        "Indicates the total processing time to process all exchanges since"
+                            + " start-up or the last reset operation.")
                     .hasUnit("s")
                     .hasDataPointsWithDoubleValues(value -> value.isGreaterThanOrEqualTo(0.0))
                     .hasDataPointsWithAttributes(
@@ -530,7 +569,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "The approximate total number of tasks that have ever been scheduled for execution.")
+                        "The approximate total number of tasks that have ever been scheduled for"
+                            + " execution.")
                     .hasUnit("{task}")
                     .hasDataPointsWithAttributes(
                         threadPoolAttributes, routeRelatedThreadPoolAttributes))
@@ -550,7 +590,10 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "The approximate total number of tasks that have completed execution. Because the states of tasks and threads may change dynamically during computation, the returned value is only an approximation, but one that does not ever decrease across successive calls.")
+                        "The approximate total number of tasks that have completed execution."
+                            + " Because the states of tasks and threads may change dynamically"
+                            + " during computation, the returned value is only an approximation,"
+                            + " but one that does not ever decrease across successive calls.")
                     .hasUnit("{task}")
                     .hasDataPointsWithAttributes(
                         threadPoolAttributes, routeRelatedThreadPoolAttributes))
@@ -569,7 +612,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "The largest number of threads that have ever simultaneously been in the pool.")
+                        "The largest number of threads that have ever simultaneously been in the"
+                            + " pool.")
                     .hasUnit("{thread}")
                     .hasDataPointsWithAttributes(
                         threadPoolAttributes, routeRelatedThreadPoolAttributes))
@@ -588,7 +632,8 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isUpDownCounter()
                     .hasDescription(
-                        "The number of threads that are always kept in the pool, even if they are idle.")
+                        "The number of threads that are always kept in the pool, even if they are"
+                            + " idle.")
                     .hasUnit("{thread}")
                     .hasDataPointsWithAttributes(
                         threadPoolAttributes, routeRelatedThreadPoolAttributes))

@@ -42,10 +42,11 @@ val generateJflex by tasks.registering(JavaExec::class) {
   doFirst {
     val outputDir = outputDirProvider.get().asFile
     outputDir.mkdirs()
-    val specFiles = listOf(
-      sourceDir.asFile.resolve("SqlSanitizer.jflex"),
-      sourceDir.asFile.resolve("SqlSanitizerWithSummary.jflex"),
-    )
+    val specFiles =
+      listOf(
+        sourceDir.asFile.resolve("SqlSanitizer.jflex"),
+        sourceDir.asFile.resolve("SqlSanitizerWithSummary.jflex"),
+      )
     args(
       listOf("-d", outputDir.absolutePath, "--nobak") + specFiles.map { it.absolutePath },
     )
@@ -89,14 +90,20 @@ tasks {
   }
 
   val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database,code,service.peer,rpc")
     inputs.dir(jflexOutputDir)
   }
 
   val testBothSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database/dup,code/dup,service.peer/dup,rpc/dup")
     inputs.dir(jflexOutputDir)

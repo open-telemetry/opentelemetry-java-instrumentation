@@ -48,7 +48,9 @@ dependencies {
 
 if (!otelProps.testLatestDeps) {
   // early jersey versions require old guava
-  configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.google.guava:guava:14.0.1")
+  configurations.testRuntimeClasspath.get().resolutionStrategy.force(
+    "com.google.guava:guava:14.0.1",
+  )
 
   configurations {
     // early jersey versions bundle asm without shading
@@ -72,7 +74,10 @@ tasks {
   }
 
   val testExperimental by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.jaxrs.experimental-span-attributes=true")

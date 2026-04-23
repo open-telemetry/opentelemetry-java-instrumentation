@@ -25,7 +25,12 @@ sourceSets {
 
 dependencies {
   library("io.r2dbc:r2dbc-spi:0.9.0.RELEASE")
-  compileOnly(project(path = ":instrumentation:r2dbc-1.0:library-instrumentation-shaded", configuration = "shadow"))
+  compileOnly(
+    project(
+      path = ":instrumentation:r2dbc-1.0:library-instrumentation-shaded",
+      configuration = "shadow",
+    ),
+  )
 
   testImplementation(project(":instrumentation:r2dbc-1.0:testing"))
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
@@ -38,7 +43,10 @@ tasks {
   }
 
   val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")

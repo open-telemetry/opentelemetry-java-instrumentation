@@ -1,6 +1,6 @@
 #!/usr/bin/env kotlin
 
-//install kotlin compiler: https://kotlinlang.org/docs/tutorials/command-line.html
+// install kotlin compiler: https://kotlinlang.org/docs/tutorials/command-line.html
 import java.io.File
 
 val includeRegex = Regex("include\\(\"(.*?)\"\\)")
@@ -12,20 +12,24 @@ main(args)
 
 fun main(args: Array<String>) {
   if (args.isEmpty()) {
-    println("Usage: ./docs/contributing/selectModules.kts instrumentation/spring/spring-boot-autoconfigure/ <module to include2> ...")
+    println(
+      "Usage: ./docs/contributing/selectModules.kts instrumentation/spring/spring-boot-autoconfigure/ <module to include2> ...",
+    )
     return
   }
 
-  (args.map {
-    moduleOfArg(
-      File(File(it).absolutePath),
-      "/" + it.trimStart('.', '/').trimEnd('/')
-    )
-  } + listOf(":javaagent"))
-    .map { Module(it) }
+  (
+    args.map {
+      moduleOfArg(
+        File(File(it).absolutePath),
+        "/" + it.trimStart('.', '/').trimEnd('/'),
+      )
+    } + listOf(":javaagent")
+  ).map { Module(it) }
     .forEach(Module::addSelfAndChildren)
 
-  File("$root/conventions/src/main/kotlin").listFiles()!!
+  File("$root/conventions/src/main/kotlin")
+    .listFiles()!!
     .filter { it.name.endsWith(".kts") }
     .forEach {
       children(it).forEach(Module::addSelfAndChildren)
@@ -34,21 +38,25 @@ fun main(args: Array<String>) {
   println("removing modules except:\n${keepModules.map { it.name }.sorted().joinToString("\n")}")
 
   val target = File("$root/settings.gradle.kts")
-  val text = target.readText().lines().flatMap { line ->
-    includeRegex.matchEntire(line)?.let { it.groupValues[1] }?.let { module ->
-      if (Module(module) in keepModules) {
-        listOf(line)
-      } else {
-        emptyList()
-      }
-    } ?: listOf(line)
-
-
-  }.joinToString("\n")
+  val text =
+    target
+      .readText()
+      .lines()
+      .flatMap { line ->
+        includeRegex.matchEntire(line)?.let { it.groupValues[1] }?.let { module ->
+          if (Module(module) in keepModules) {
+            listOf(line)
+          } else {
+            emptyList()
+          }
+        } ?: listOf(line)
+      }.joinToString("\n")
   target.writeText(text)
 }
 
-data class Module(val name: String) {
+data class Module(
+  val name: String,
+) {
   fun children(): List<Module> {
     val file = moduleFile()
     return children(file)
@@ -65,7 +73,10 @@ data class Module(val name: String) {
   }
 }
 
-fun moduleOfArg(file: File, name: String): String {
+fun moduleOfArg(
+  file: File,
+  name: String,
+): String {
   val settings = File(file, "settings.gradle.kts")
   return if (settings.exists()) {
     root = file.absolutePath
@@ -75,9 +86,9 @@ fun moduleOfArg(file: File, name: String): String {
   }
 }
 
-fun children(file: File) = file.readText().lines().flatMap { line ->
-  projectRegex.find(line)?.let { it.groupValues[1] }?.let { module ->
-    listOf(Module(module))
-  } ?: emptyList()
-}
-
+fun children(file: File) =
+  file.readText().lines().flatMap { line ->
+    projectRegex.find(line)?.let { it.groupValues[1] }?.let { module ->
+      listOf(Module(module))
+    } ?: emptyList()
+  }

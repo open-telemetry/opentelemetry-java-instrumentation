@@ -62,11 +62,9 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                 singletonList(
                     DefaultView.create(
                         "all",
-                        "function (doc, meta) {"
-                            + "  if (doc._class == \"io.opentelemetry.instrumentation.couchbase.springdata.TestDocument\") {"
-                            + "    emit(meta.id, null);"
-                            + " }"
-                            + "}"))));
+                        "function (doc, meta) {  if (doc._class =="
+                            + " \"io.opentelemetry.instrumentation.couchbase.springdata.TestDocument\")"
+                            + " {    emit(meta.id, null); }}"))));
     CouchbaseConfig.environment = environment;
     CouchbaseConfig.bucketSettings = bucketCouchbase;
 

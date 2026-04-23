@@ -10,7 +10,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumenta
 import org.junit.jupiter.api.extension.RegisterExtension
 
 class KtorHttpClientTest : AbstractKtorHttpClientTest() {
-
   companion object {
     @JvmStatic
     @RegisterExtension

@@ -22,11 +22,14 @@
 
 package io.quarkus.gradle.tooling;
 
+import io.quarkus.bootstrap.model.ApplicationModel;
+import io.quarkus.bootstrap.model.gradle.ModelParameter;
+import io.quarkus.bootstrap.model.gradle.impl.ModelParameterImpl;
+import io.quarkus.runtime.LaunchMode;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ModuleDependency;
@@ -35,12 +38,8 @@ import org.gradle.api.attributes.Category;
 import org.gradle.api.initialization.IncludedBuild;
 import org.gradle.internal.composite.IncludedBuildInternal;
 
-import io.quarkus.bootstrap.model.ApplicationModel;
-import io.quarkus.bootstrap.model.gradle.ModelParameter;
-import io.quarkus.bootstrap.model.gradle.impl.ModelParameterImpl;
-import io.quarkus.runtime.LaunchMode;
-
-// Based on https://github.com/quarkusio/quarkus/blob/2.16.7.Final/devtools/gradle/gradle-model/src/main/java/io/quarkus/gradle/tooling/ToolingUtils.java
+// Based on
+// https://github.com/quarkusio/quarkus/blob/2.16.7.Final/devtools/gradle/gradle-model/src/main/java/io/quarkus/gradle/tooling/ToolingUtils.java
 public class ToolingUtils {
 
   private static final String DEPLOYMENT_CONFIGURATION_SUFFIX = "Deployment";
@@ -57,31 +56,43 @@ public class ToolingUtils {
 
   public static boolean isEnforcedPlatform(ModuleDependency module) {
     final Category category = module.getAttributes().getAttribute(Category.CATEGORY_ATTRIBUTE);
-    return category != null && (Category.ENFORCED_PLATFORM.equals(category.getName())
-        || Category.REGULAR_PLATFORM.equals(category.getName()));
+    return category != null
+        && (Category.ENFORCED_PLATFORM.equals(category.getName())
+            || Category.REGULAR_PLATFORM.equals(category.getName()));
   }
 
-  public static IncludedBuild includedBuild(final Project project,
-      final ProjectComponentIdentifier projectComponentIdentifier) {
+  public static IncludedBuild includedBuild(
+      final Project project, final ProjectComponentIdentifier projectComponentIdentifier) {
     // Upstream uses getBuild().getName(); getBuildPath() is needed for our composite build
     final String buildPath = projectComponentIdentifier.getBuild().getBuildPath();
     for (IncludedBuild ib : project.getRootProject().getGradle().getIncludedBuilds()) {
-      if (((IncludedBuildInternal) ib).getTarget().getBuildIdentifier().getBuildPath().equals(buildPath)) {
+      if (((IncludedBuildInternal) ib)
+          .getTarget()
+          .getBuildIdentifier()
+          .getBuildPath()
+          .equals(buildPath)) {
         return ib;
       }
     }
     return null;
   }
 
-  public static Project includedBuildProject(IncludedBuildInternal includedBuild,
-      final ProjectComponentIdentifier componentIdentifier) {
-    return includedBuild.getTarget().getMutableModel().getRootProject().findProject(
-        componentIdentifier.getProjectPath());
+  public static Project includedBuildProject(
+      IncludedBuildInternal includedBuild, final ProjectComponentIdentifier componentIdentifier) {
+    return includedBuild
+        .getTarget()
+        .getMutableModel()
+        .getRootProject()
+        .findProject(componentIdentifier.getProjectPath());
   }
 
-  public static Path serializeAppModel(ApplicationModel appModel, Task context, boolean test) throws IOException {
-    final Path serializedModel = context.getTemporaryDir().toPath()
-        .resolve("quarkus-app" + (test ? "-test" : "") + "-model.dat");
+  public static Path serializeAppModel(ApplicationModel appModel, Task context, boolean test)
+      throws IOException {
+    final Path serializedModel =
+        context
+            .getTemporaryDir()
+            .toPath()
+            .resolve("quarkus-app" + (test ? "-test" : "") + "-model.dat");
     try (ObjectOutputStream out = new ObjectOutputStream(Files.newOutputStream(serializedModel))) {
       out.writeObject(appModel);
     }
@@ -95,8 +106,8 @@ public class ToolingUtils {
   }
 
   public static ApplicationModel create(Project project, ModelParameter params) {
-    return (ApplicationModel) new GradleApplicationModelBuilder().buildAll(ApplicationModel.class.getName(), params,
-        project);
+    return (ApplicationModel)
+        new GradleApplicationModelBuilder()
+            .buildAll(ApplicationModel.class.getName(), params, project);
   }
-
 }

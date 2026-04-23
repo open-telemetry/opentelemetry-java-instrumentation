@@ -9,7 +9,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class IpAddressUtilTest {
-
   @Test
   fun `test ip address`() {
     assertThat(isIpAddress("2001:0660:7401:0200:0000:0000:0edf:bdd7")).isTrue()

@@ -144,7 +144,8 @@ class KafkaConnectTest extends TargetSystemTest {
     Set<String> registeredMetrics = ConcurrentHashMap.newKeySet();
 
     String kafkaCommand =
-        "/opt/kafka/bin/kafka-storage.sh format -t $(/opt/kafka/bin/kafka-storage.sh random-uuid) -c "
+        "/opt/kafka/bin/kafka-storage.sh format -t $(/opt/kafka/bin/kafka-storage.sh random-uuid)"
+            + " -c "
             + KAFKA_SERVER_PROPERTIES_PATH
             + " && /opt/kafka/bin/kafka-server-start.sh "
             + KAFKA_SERVER_PROPERTIES_PATH;
@@ -406,7 +407,8 @@ class KafkaConnectTest extends TargetSystemTest {
             metric ->
                 metric
                     .hasDescription(
-                        "Connector lifecycle state indicator (1 when the state matches the attribute value). Supports Apache and Confluent status values.")
+                        "Connector lifecycle state indicator (1 when the state matches the"
+                            + " attribute value). Supports Apache and Confluent status values.")
                     .hasUnit("1")
                     .isUpDownCounter()
                     .hasDataPointsWithAttributes(
@@ -419,7 +421,8 @@ class KafkaConnectTest extends TargetSystemTest {
             metric ->
                 metric
                     .hasDescription(
-                        "The average number of records in the batches the task has processed so far.")
+                        "The average number of records in the batches the task has processed so"
+                            + " far.")
                     .hasUnit("{record}")
                     .isGauge()
                     .hasDataPointsWithAttributes(
@@ -467,7 +470,9 @@ class KafkaConnectTest extends TargetSystemTest {
             metric ->
                 metric
                     .hasDescription(
-                        "The status of the connector task. Supports Apache (unassigned, running, paused, failed, restarting) and Confluent (unassigned, running, paused, failed, destroyed) values.")
+                        "The status of the connector task. Supports Apache (unassigned, running,"
+                            + " paused, failed, restarting) and Confluent (unassigned, running,"
+                            + " paused, failed, destroyed) values.")
                     .hasUnit("1")
                     .isUpDownCounter()
                     .hasDataPointsWithAttributes(
@@ -504,7 +509,8 @@ class KafkaConnectTest extends TargetSystemTest {
             metric ->
                 metric
                     .hasDescription(
-                        "The number of offset commit completions that were received too late and skipped/ignored.")
+                        "The number of offset commit completions that were received too late and"
+                            + " skipped/ignored.")
                     .hasUnit("{commit}")
                     .isCounter()
                     .hasDataPointsWithAttributes(
@@ -516,7 +522,8 @@ class KafkaConnectTest extends TargetSystemTest {
             metric ->
                 metric
                     .hasDescription(
-                        "The number of topic partitions assigned to this task belonging to the named sink connector in this worker.")
+                        "The number of topic partitions assigned to this task belonging to the"
+                            + " named sink connector in this worker.")
                     .hasUnit("{partition}")
                     .isUpDownCounter()
                     .hasDataPointsWithAttributes(
@@ -552,7 +559,8 @@ class KafkaConnectTest extends TargetSystemTest {
             metric ->
                 metric
                     .hasDescription(
-                        "The number of records that have been read from Kafka but not yet completely committed/flushed/acknowledged by the sink task.")
+                        "The number of records that have been read from Kafka but not yet"
+                            + " completely committed/flushed/acknowledged by the sink task.")
                     .hasUnit("{record}")
                     .isUpDownCounter()
                     .hasDataPointsWithAttributes(
@@ -564,7 +572,9 @@ class KafkaConnectTest extends TargetSystemTest {
             metric ->
                 metric
                     .hasDescription(
-                        "The count number of records read from Kafka by this task belonging to the named sink connector in this worker, since the task was last restarted.")
+                        "The count number of records read from Kafka by this task belonging to the"
+                            + " named sink connector in this worker, since the task was last"
+                            + " restarted.")
                     .hasUnit("{record}")
                     .isCounter()
                     .hasDataPointsWithAttributes(
@@ -576,7 +586,9 @@ class KafkaConnectTest extends TargetSystemTest {
             metric ->
                 metric
                     .hasDescription(
-                        "The number of records output from the transformations and sent/put to this task belonging to the named sink connector in this worker, since the task was last restarted.")
+                        "The number of records output from the transformations and sent/put to this"
+                            + " task belonging to the named sink connector in this worker, since"
+                            + " the task was last restarted.")
                     .hasUnit("{record}")
                     .isCounter()
                     .hasDataPointsWithAttributes(
@@ -589,7 +601,8 @@ class KafkaConnectTest extends TargetSystemTest {
             metric ->
                 metric
                     .hasDescription(
-                        "The average time in seconds taken by this task to poll for a batch of source records.")
+                        "The average time in seconds taken by this task to poll for a batch of"
+                            + " source records.")
                     .hasUnit("s")
                     .isGauge()
                     .hasDataPointsWithAttributes(
@@ -601,7 +614,8 @@ class KafkaConnectTest extends TargetSystemTest {
             metric ->
                 metric
                     .hasDescription(
-                        "The maximum time in seconds taken by this task to poll for a batch of source records.")
+                        "The maximum time in seconds taken by this task to poll for a batch of"
+                            + " source records.")
                     .hasUnit("s")
                     .isGauge()
                     .hasDataPointsWithAttributes(
@@ -613,7 +627,8 @@ class KafkaConnectTest extends TargetSystemTest {
             metric ->
                 metric
                     .hasDescription(
-                        "The number of records that have been produced by this task but not yet completely written to Kafka.")
+                        "The number of records that have been produced by this task but not yet"
+                            + " completely written to Kafka.")
                     .hasUnit("{record}")
                     .isUpDownCounter()
                     .hasDataPointsWithAttributes(
@@ -625,7 +640,8 @@ class KafkaConnectTest extends TargetSystemTest {
             metric ->
                 metric
                     .hasDescription(
-                        "The number of records produced/polled (before transformation) by this task belonging to the named source connector in this worker.")
+                        "The number of records produced/polled (before transformation) by this task"
+                            + " belonging to the named source connector in this worker.")
                     .hasUnit("{record}")
                     .isCounter()
                     .hasDataPointsWithAttributes(
@@ -637,7 +653,10 @@ class KafkaConnectTest extends TargetSystemTest {
             metric ->
                 metric
                     .hasDescription(
-                        "The number of records output written to Kafka for this task belonging to the named source connector in this worker, since the task was last restarted. This is after transformations are applied, and excludes any records filtered out by the transformations.")
+                        "The number of records output written to Kafka for this task belonging to"
+                            + " the named source connector in this worker, since the task was last"
+                            + " restarted. This is after transformations are applied, and excludes"
+                            + " any records filtered out by the transformations.")
                     .hasUnit("{record}")
                     .isCounter()
                     .hasDataPointsWithAttributes(

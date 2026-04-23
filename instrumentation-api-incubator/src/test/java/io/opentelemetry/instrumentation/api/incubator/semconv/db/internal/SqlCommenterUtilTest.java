@@ -59,7 +59,8 @@ class SqlCommenterUtilTest {
     try (Scope ignore = parent.makeCurrent()) {
       String fragment =
           hasTraceState
-              ? "/*traceparent='00-ff01020304050600ff0a0b0c0d0e0f00-090a0b0c0d0e0f00-01', tracestate='test%3Dtest%27'*/"
+              ? "/*traceparent='00-ff01020304050600ff0a0b0c0d0e0f00-090a0b0c0d0e0f00-01',"
+                  + " tracestate='test%3Dtest%27'*/"
               : "/*traceparent='00-ff01020304050600ff0a0b0c0d0e0f00-090a0b0c0d0e0f00-01'*/";
       assertThat(SqlCommenterUtil.processQuery("SELECT 1", propagator, prepend))
           .isEqualTo(prepend ? fragment + " SELECT 1" : "SELECT 1 " + fragment);

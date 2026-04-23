@@ -28,7 +28,10 @@ dependencies {
 }
 
 // Requires old Guava. Can't use enforcedPlatform since predates BOM
-configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.google.guava:guava:19.0")
+configurations.testRuntimeClasspath
+  .get()
+  .resolutionStrategy
+  .force("com.google.guava:guava:19.0")
 
 tasks.withType<Test>().configureEach {
   // required on jdk17

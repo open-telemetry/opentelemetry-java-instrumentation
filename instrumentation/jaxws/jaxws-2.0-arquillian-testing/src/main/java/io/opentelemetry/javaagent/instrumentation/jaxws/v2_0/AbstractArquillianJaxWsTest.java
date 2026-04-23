@@ -79,14 +79,10 @@ abstract class AbstractArquillianJaxWsTest {
   // thrown from the test method are ignored
   private void testHelloRequest(String service) {
     String soapMessage =
-        "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hel=\"http://opentelemetry.io/test/hello-web-service\">"
-            + "   <soapenv:Header/>"
-            + "   <soapenv:Body>"
-            + "      <hel:helloRequest>"
-            + "         <name>Test</name>"
-            + "      </hel:helloRequest>"
-            + "   </soapenv:Body>"
-            + "</soapenv:Envelope>";
+        "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\""
+            + " xmlns:hel=\"http://opentelemetry.io/test/hello-web-service\">   <soapenv:Header/>  "
+            + " <soapenv:Body>      <hel:helloRequest>         <name>Test</name>     "
+            + " </hel:helloRequest>   </soapenv:Body></soapenv:Envelope>";
 
     AggregatedHttpResponse response =
         client.post(getAddress(service), soapMessage).aggregate().join();

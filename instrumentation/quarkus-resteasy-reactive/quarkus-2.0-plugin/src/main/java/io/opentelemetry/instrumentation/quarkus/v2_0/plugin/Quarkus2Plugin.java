@@ -17,4 +17,3 @@ public class Quarkus2Plugin implements Plugin<Project> {
     throw new IllegalStateException("this plugin is not meant to be applied");
   }
 }
-

@@ -62,7 +62,8 @@ class OpenTelemetryAutoConfigurationTest {
 
   @Test
   @DisplayName(
-      "when Application Context DOES NOT contain OpenTelemetry bean should initialize openTelemetry")
+      "when Application Context DOES NOT contain OpenTelemetry bean should initialize"
+          + " openTelemetry")
   void initializeProvidersAndOpenTelemetry() {
     this.contextRunner
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
@@ -125,7 +126,8 @@ class OpenTelemetryAutoConfigurationTest {
 
   @Test
   @DisplayName(
-      "when Application Context DOES NOT contain OpenTelemetry bean but SpanExporter should initialize openTelemetry")
+      "when Application Context DOES NOT contain OpenTelemetry bean but SpanExporter should"
+          + " initialize openTelemetry")
   void initializeOpenTelemetryWithCustomProviders() {
     OtlpSpanExporterProvider spanExporterProvider =
         mock(

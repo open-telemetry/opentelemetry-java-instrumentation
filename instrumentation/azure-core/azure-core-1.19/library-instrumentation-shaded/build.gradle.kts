@@ -24,7 +24,10 @@ tasks {
       // including only azure-core-tracing-opentelemetry excludes its transitive dependencies
       include(dependency("com.azure:azure-core-tracing-opentelemetry"))
     }
-    relocate("com.azure.core.tracing.opentelemetry", "io.opentelemetry.javaagent.instrumentation.azurecore.v1_19.shaded.com.azure.core.tracing.opentelemetry")
+    relocate(
+      "com.azure.core.tracing.opentelemetry",
+      "io.opentelemetry.javaagent.instrumentation.azurecore.v1_19.shaded.com.azure.core.tracing.opentelemetry",
+    )
   }
 
   val extractShadowJar by registering(Copy::class) {

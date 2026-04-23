@@ -34,7 +34,9 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:ktor:ktor-2.0:javaagent"))
-  testInstrumentation(project(":instrumentation:kotlinx-coroutines:kotlinx-coroutines-1.0:javaagent"))
+  testInstrumentation(
+    project(":instrumentation:kotlinx-coroutines:kotlinx-coroutines-1.0:javaagent"),
+  )
   testInstrumentation(project(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent"))
 
   testImplementation(project(":instrumentation:ktor:ktor-3.0:testing"))
@@ -55,14 +57,20 @@ kotlin {
 
 tasks {
   val testExperimental by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
   }
 
   val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")

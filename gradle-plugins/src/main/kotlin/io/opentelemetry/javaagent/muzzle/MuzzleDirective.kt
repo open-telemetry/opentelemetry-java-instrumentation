@@ -11,7 +11,6 @@ import org.gradle.api.provider.SetProperty
 import java.util.stream.Collectors
 
 abstract class MuzzleDirective {
-
   abstract val name: Property<String>
   abstract val group: Property<String>
   abstract val module: Property<String>
@@ -77,9 +76,12 @@ abstract class MuzzleDirective {
     get() = NORMALIZE_NAME_SLUG.replace(name.get().trim(), "-")
 
   internal val normalizedSkipVersions: Set<String>
-    get() = skipVersions.getOrElse(setOf()).stream()
-      .map(String::lowercase)
-      .collect(Collectors.toSet())
+    get() =
+      skipVersions
+        .getOrElse(setOf())
+        .stream()
+        .map(String::lowercase)
+        .collect(Collectors.toSet())
 
   override fun toString(): String {
     val sb = StringBuilder()
@@ -96,7 +98,8 @@ abstract class MuzzleDirective {
       } else {
         sb.append("fail")
       }
-      sb.append(group.get())
+      sb
+        .append(group.get())
         .append(':')
         .append(module.get())
         .append(':')

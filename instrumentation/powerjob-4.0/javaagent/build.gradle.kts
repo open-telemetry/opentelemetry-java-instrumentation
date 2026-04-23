@@ -26,11 +26,17 @@ tasks {
   }
 
   val testExperimental by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.powerjob.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.powerjob.experimental-span-attributes=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.powerjob.experimental-span-attributes=true",
+    )
   }
 
   check {

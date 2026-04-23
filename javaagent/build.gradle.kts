@@ -93,17 +93,23 @@ dependencies {
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.57:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.59:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-instrumentation-api:javaagent"))
-  baseJavaagentLibs(project(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent"))
+  baseJavaagentLibs(
+    project(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent"),
+  )
   baseJavaagentLibs(project(":instrumentation:executors:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-application-logger:javaagent"))
-  baseJavaagentLibs(project(":instrumentation:internal:internal-class-loader:javaagent", configuration = "shaded"))
+  baseJavaagentLibs(
+    project(":instrumentation:internal:internal-class-loader:javaagent", configuration = "shaded"),
+  )
   baseJavaagentLibs(project(":instrumentation:internal:internal-eclipse-osgi-3.6:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-lambda:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-reflection:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-url-class-loader:javaagent"))
 
   // concurrentlinkedhashmap-lru and weak-lock-free are copied in to the instrumentation-api module
-  licenseReportDependencies("com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.4.2")
+  licenseReportDependencies(
+    "com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.4.2",
+  )
   licenseReportDependencies("com.blogspot.mydailyjava:weak-lock-free:0.18")
   licenseReportDependencies(project(":javaagent-internal-logging-simple")) // need the non-shadow versions
 
@@ -265,7 +271,14 @@ tasks {
     jvmArgs("-Dotel.metrics.exporter=none")
     jvmArgs("-Dotel.logs.exporter=none")
 
-    jvmArgumentProviders.add(JavaagentProvider(shadowJar.flatMap { it.archiveFile }.map { it.asFile.absolutePath }))
+    jvmArgumentProviders.add(
+      JavaagentProvider(
+        shadowJar
+          .flatMap {
+            it.archiveFile
+          }.map { it.asFile.absolutePath },
+      ),
+    )
 
     testLogging {
       events("started")
@@ -282,11 +295,13 @@ tasks {
     doLast {
       if (Files.exists(licenseFile)) {
         val content = String(Files.readAllBytes(licenseFile), Charsets.UTF_8)
-        val normalized = content.lineSequence()
-          .map { it.trimEnd() }
-          .toList()
-          .dropLastWhile { it.isEmpty() }
-          .joinToString(newline) + newline
+        val normalized =
+          content
+            .lineSequence()
+            .map { it.trimEnd() }
+            .toList()
+            .dropLastWhile { it.isEmpty() }
+            .joinToString(newline) + newline
         Files.write(licenseFile, normalized.toByteArray(Charsets.UTF_8))
       }
     }
@@ -311,9 +326,10 @@ tasks {
     }
   }
 
-  val generateLicenseReportEnabled = providers.provider {
-    gradle.startParameter.taskNames.any { it.equals("generateLicenseReport") }
-  }
+  val generateLicenseReportEnabled =
+    providers.provider {
+      gradle.startParameter.taskNames.any { it.equals("generateLicenseReport") }
+    }
   val generateLicenseReportTask = named("generateLicenseReport")
   generateLicenseReportTask.configure {
     dependsOn(cleanLicenses)
@@ -380,7 +396,9 @@ project.afterEvaluate {
     mustRunAfter(tasks.withType<SpdxSbomTask>())
   }
   tasks.withType<PublishToMavenLocal>().configureEach {
-    this.publication.artifact("${layout.buildDirectory.get()}/spdx/opentelemetry-javaagent.spdx.json") {
+    this.publication.artifact(
+      "${layout.buildDirectory.get()}/spdx/opentelemetry-javaagent.spdx.json",
+    ) {
       classifier = "spdx"
       extension = "json"
     }
@@ -388,7 +406,10 @@ project.afterEvaluate {
 }
 
 licenseReport {
-  outputDir = rootProject.layout.projectDirectory.dir("licenses").asFile.absolutePath
+  outputDir =
+    rootProject.layout.projectDirectory
+      .dir("licenses")
+      .asFile.absolutePath
 
   renderers = arrayOf(InventoryMarkdownReportRenderer())
 
@@ -396,16 +417,18 @@ licenseReport {
 
   excludeBoms = true
 
-  excludeGroups = arrayOf(
-    "io\\.opentelemetry\\.instrumentation",
-    "io\\.opentelemetry\\.javaagent",
-    "io\\.opentelemetry\\.dummy\\..*",
-  )
+  excludeGroups =
+    arrayOf(
+      "io\\.opentelemetry\\.instrumentation",
+      "io\\.opentelemetry\\.javaagent",
+      "io\\.opentelemetry\\.dummy\\..*",
+    )
 
-  excludes = arrayOf(
-    "io.opentelemetry:opentelemetry-bom-alpha",
-    "opentelemetry-java-instrumentation:dependencyManagement",
-  )
+  excludes =
+    arrayOf(
+      "io.opentelemetry:opentelemetry-bom-alpha",
+      "opentelemetry-java-instrumentation:dependencyManagement",
+    )
 
   filters = arrayOf(LicenseBundleNormalizer("$projectDir/license-normalizer-bundle.json", true))
 }
@@ -442,8 +465,9 @@ class JavaagentProvider(
   @Input
   val agentJarPath: Provider<String>,
 ) : CommandLineArgumentProvider {
-  override fun asArguments(): Iterable<String> = listOf(
-    "-javaagent:${agentJarPath.get()}",
-    "-Dotel.javaagent.testing.transform-safe-logging.enabled=true"
-  )
+  override fun asArguments(): Iterable<String> =
+    listOf(
+      "-javaagent:${agentJarPath.get()}",
+      "-Dotel.javaagent.testing.transform-safe-logging.enabled=true",
+    )
 }

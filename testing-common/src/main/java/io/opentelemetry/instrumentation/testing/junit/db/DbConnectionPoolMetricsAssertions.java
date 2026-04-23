@@ -137,7 +137,8 @@ public class DbConnectionPoolMetricsAssertions {
     assertThat(metric)
         .hasUnit(emitStableDatabaseSemconv() ? "{connection}" : "{connections}")
         .hasDescription(
-            "The number of connections that are currently in state described by the state attribute.")
+            "The number of connections that are currently in state described by the state"
+                + " attribute.")
         .hasLongSumSatisfying(
             sum ->
                 sum.isNotMonotonic()
@@ -216,7 +217,8 @@ public class DbConnectionPoolMetricsAssertions {
         .hasDescription(
             emitStableDatabaseSemconv()
                 ? "The number of current pending requests for an open connection."
-                : "The number of pending requests for an open connection, cumulative for the entire pool.")
+                : "The number of pending requests for an open connection, cumulative for the entire"
+                    + " pool.")
         .hasLongSumSatisfying(this::verifyPoolName);
   }
 
@@ -233,7 +235,8 @@ public class DbConnectionPoolMetricsAssertions {
     assertThat(metric)
         .hasUnit(emitStableDatabaseSemconv() ? "{timeout}" : "{timeouts}")
         .hasDescription(
-            "The number of connection timeouts that have occurred trying to obtain a connection from the pool.")
+            "The number of connection timeouts that have occurred trying to obtain a connection"
+                + " from the pool.")
         .hasLongSumSatisfying(
             sum ->
                 sum.isMonotonic()

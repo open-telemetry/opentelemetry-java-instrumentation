@@ -185,7 +185,8 @@ class Netty41ClientPipelineTest {
 
   @Test
   @DisplayName(
-      "when a traced handler is added from an initializer we still detect it and add our channel handlers")
+      "when a traced handler is added from an initializer we still detect it and add our channel"
+          + " handlers")
   void testAddInitializer() {
     // This test method replicates a scenario similar to how reactor 0.8.x register the
     // `HttpClientCodec` handler into the pipeline.

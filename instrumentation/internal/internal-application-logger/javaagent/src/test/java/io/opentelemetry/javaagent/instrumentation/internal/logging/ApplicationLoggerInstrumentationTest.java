@@ -34,7 +34,8 @@ class ApplicationLoggerInstrumentationTest {
         .anyMatch(
             log ->
                 log.startsWith(
-                    "INFO io.opentelemetry.javaagent.tooling.VersionLogger :: opentelemetry-javaagent - version: "));
+                    "INFO io.opentelemetry.javaagent.tooling.VersionLogger ::"
+                        + " opentelemetry-javaagent - version: "));
   }
 
   private static List<String> forkAndRun(String mainClassName) throws Exception {

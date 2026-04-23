@@ -43,7 +43,10 @@ dependencies {
 
 tasks {
   val testWithRabbitInstrumentation by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("SpringIntegrationAndRabbitTest")
@@ -55,7 +58,10 @@ tasks {
   }
 
   val testWithProducerInstrumentation by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("SpringCloudStreamProducerTest")
@@ -64,7 +70,10 @@ tasks {
     jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
     jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
     jvmArgs("-Dotel.instrumentation.spring-integration.producer.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.spring-integration.producer.enabled=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.spring-integration.producer.enabled=true",
+    )
   }
 
   test {

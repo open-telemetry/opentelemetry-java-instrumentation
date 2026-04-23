@@ -35,8 +35,8 @@ tasks {
     environment(
       mapOf(
         // Expose dummy app war location to test
-        "DUMMY_APP_WAR" to "${layout.buildDirectory.asFile.get()}/libs/app.war"
-      )
+        "DUMMY_APP_WAR" to "${layout.buildDirectory.asFile.get()}/libs/app.war",
+      ),
     )
   }
 }

@@ -38,7 +38,10 @@ dependencies {
 }
 
 // Requires old Guava. Can't use enforcedPlatform since predates BOM
-configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.google.guava:guava:19.0")
+configurations.testRuntimeClasspath
+  .get()
+  .resolutionStrategy
+  .force("com.google.guava:guava:19.0")
 
 tasks {
   withType<Test>().configureEach {
@@ -47,7 +50,10 @@ tasks {
   }
 
   val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.semconv-stability.opt-in=database")

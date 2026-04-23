@@ -18,11 +18,12 @@ val otelBom = extensions.create<OtelBomExtension>("otelBom")
 
 afterEvaluate {
   otelBom.projectFilter.finalizeValue()
-  val bomProjects = rootProject.subprojects
-    .sortedBy { it.findProperty("archivesName") as String? }
-    .filter { !it.name.startsWith("bom") }
-    .filter(otelBom.projectFilter.get()::test)
-    .filter { it.plugins.hasPlugin("maven-publish") }
+  val bomProjects =
+    rootProject.subprojects
+      .sortedBy { it.findProperty("archivesName") as String? }
+      .filter { !it.name.startsWith("bom") }
+      .filter(otelBom.projectFilter.get()::test)
+      .filter { it.plugins.hasPlugin("maven-publish") }
 
   bomProjects.forEach { project ->
     dependencies {
@@ -42,10 +43,11 @@ afterEvaluate {
 
 // this applies version numbers to the SDK bom and SDK alpha bom which are dependencies of the instrumentation boms
 evaluationDependsOn(":dependencyManagement")
-val dependencyManagementConf = configurations.create("dependencyManagement") {
-  isCanBeConsumed = false
-  isCanBeResolved = false
-}
+val dependencyManagementConf =
+  configurations.create("dependencyManagement") {
+    isCanBeConsumed = false
+    isCanBeResolved = false
+  }
 afterEvaluate {
   configurations.configureEach {
     if (isCanBeResolved && !isCanBeConsumed) {

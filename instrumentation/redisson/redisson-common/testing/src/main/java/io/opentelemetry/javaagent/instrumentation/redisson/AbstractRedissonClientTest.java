@@ -314,7 +314,8 @@ public abstract class AbstractRedissonClientTest {
     map.get("key1");
 
     String script =
-        "local v = redis.call('hget', KEYS[1], ARGV[1]); redis.call('hset', KEYS[1], ARGV[1], ARGV[2]); return v";
+        "local v = redis.call('hget', KEYS[1], ARGV[1]); redis.call('hset', KEYS[1], ARGV[1],"
+            + " ARGV[2]); return v";
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT),
         trace ->

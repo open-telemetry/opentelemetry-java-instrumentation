@@ -16,22 +16,33 @@ import java.lang.invoke.MethodHandles
 import java.lang.invoke.MethodType
 
 internal object KtorHttpServerAttributesGetter : HttpServerAttributesGetter<ApplicationRequest, ApplicationResponse> {
-
   private val getRemoteAddressMethodHandle: MethodHandle? = getRemoteAddressMethodHandle()
 
-  private fun getRemoteAddressMethodHandle(): MethodHandle? = try {
-    MethodHandles.lookup().findVirtual(RequestConnectionPoint::class.java, "getRemoteAddress", MethodType.methodType(String::class.java))
-  } catch (_: Exception) {
-    null
-  }
+  private fun getRemoteAddressMethodHandle(): MethodHandle? =
+    try {
+      MethodHandles.lookup().findVirtual(RequestConnectionPoint::class.java, "getRemoteAddress", MethodType.methodType(String::class.java))
+    } catch (_: Exception) {
+      null
+    }
 
   override fun getHttpRequestMethod(request: ApplicationRequest): String = request.httpMethod.value
 
-  override fun getHttpRequestHeader(request: ApplicationRequest, name: String): List<String> = request.headers.getAll(name) ?: emptyList()
+  override fun getHttpRequestHeader(
+    request: ApplicationRequest,
+    name: String
+  ): List<String> = request.headers.getAll(name) ?: emptyList()
 
-  override fun getHttpResponseStatusCode(request: ApplicationRequest, response: ApplicationResponse, error: Throwable?): Int? = response.status()?.value
+  override fun getHttpResponseStatusCode(
+    request: ApplicationRequest,
+    response: ApplicationResponse,
+    error: Throwable?
+  ): Int? = response.status()?.value
 
-  override fun getHttpResponseHeader(request: ApplicationRequest, response: ApplicationResponse, name: String): List<String> = response.headers.allValues().getAll(name) ?: emptyList()
+  override fun getHttpResponseHeader(
+    request: ApplicationRequest,
+    response: ApplicationResponse,
+    name: String
+  ): List<String> = response.headers.allValues().getAll(name) ?: emptyList()
 
   override fun getUrlScheme(request: ApplicationRequest): String = request.origin.scheme
 
@@ -39,20 +50,30 @@ internal object KtorHttpServerAttributesGetter : HttpServerAttributesGetter<Appl
 
   override fun getUrlQuery(request: ApplicationRequest): String = request.queryString()
 
-  override fun getNetworkProtocolName(request: ApplicationRequest, response: ApplicationResponse?): String? = if (request.httpVersion.startsWith("HTTP/")) "http" else null
+  override fun getNetworkProtocolName(
+    request: ApplicationRequest,
+    response: ApplicationResponse?
+  ): String? = if (request.httpVersion.startsWith("HTTP/")) "http" else null
 
-  override fun getNetworkProtocolVersion(request: ApplicationRequest, response: ApplicationResponse?): String? = if (request.httpVersion.startsWith("HTTP/")) request.httpVersion.substring("HTTP/".length) else null
+  override fun getNetworkProtocolVersion(
+    request: ApplicationRequest,
+    response: ApplicationResponse?
+  ): String? = if (request.httpVersion.startsWith("HTTP/")) request.httpVersion.substring("HTTP/".length) else null
 
-  override fun getNetworkPeerAddress(request: ApplicationRequest, response: ApplicationResponse?): String? {
+  override fun getNetworkPeerAddress(
+    request: ApplicationRequest,
+    response: ApplicationResponse?
+  ): String? {
     if (getRemoteAddressMethodHandle == null) {
       return null
     }
 
-    val remote = try {
-      getRemoteAddressMethodHandle.invoke(request.local) as String
-    } catch (_: Throwable) {
-      "unknown"
-    }
+    val remote =
+      try {
+        getRemoteAddressMethodHandle.invoke(request.local) as String
+      } catch (_: Throwable) {
+        "unknown"
+      }
     if ("unknown" != remote && isIpAddress(remote)) {
       return remote
     }

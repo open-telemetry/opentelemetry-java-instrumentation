@@ -13,16 +13,23 @@ muzzle {
 
 sourceSets {
   main {
-    val shadedDep = project(":instrumentation:azure-core:azure-core-1.19:library-instrumentation-shaded")
+    val shadedDep =
+      project(":instrumentation:azure-core:azure-core-1.19:library-instrumentation-shaded")
     output.dir(
       shadedDep.file("build/extracted/shadow"),
-      "builtBy" to ":instrumentation:azure-core:azure-core-1.19:library-instrumentation-shaded:extractShadowJar"
+      "builtBy" to
+        ":instrumentation:azure-core:azure-core-1.19:library-instrumentation-shaded:extractShadowJar",
     )
   }
 }
 
 dependencies {
-  compileOnly(project(":instrumentation:azure-core:azure-core-1.19:library-instrumentation-shaded", configuration = "shadow"))
+  compileOnly(
+    project(
+      ":instrumentation:azure-core:azure-core-1.19:library-instrumentation-shaded",
+      configuration = "shadow",
+    ),
+  )
 
   library("com.azure:azure-core:1.19.0")
 

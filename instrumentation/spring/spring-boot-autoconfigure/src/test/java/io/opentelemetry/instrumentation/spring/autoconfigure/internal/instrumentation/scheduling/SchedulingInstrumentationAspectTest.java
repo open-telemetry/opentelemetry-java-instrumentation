@@ -128,7 +128,8 @@ class SchedulingInstrumentationAspectTest {
 
   @Test
   @DisplayName(
-      "when method is annotated with @Scheduled AND an exception is thrown span should record the exception")
+      "when method is annotated with @Scheduled AND an exception is thrown span should record the"
+          + " exception")
   void scheduledError() {
     assertThatThrownBy(() -> schedulingTester.testScheduledWithException())
         .isInstanceOf(Exception.class);

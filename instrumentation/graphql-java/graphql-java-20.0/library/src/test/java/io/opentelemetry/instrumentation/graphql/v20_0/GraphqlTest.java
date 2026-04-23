@@ -295,7 +295,8 @@ class GraphqlTest extends AbstractGraphqlTest {
                                         equalTo(EXCEPTION_TYPE, "DataFetchingException"),
                                         equalTo(
                                             EXCEPTION_MESSAGE,
-                                            "Exception while fetching data (/bookById) : fetching book failed"))),
+                                            "Exception while fetching data (/bookById) : fetching"
+                                                + " book failed"))),
                 span ->
                     span.hasName("bookById")
                         .hasKind(SpanKind.INTERNAL)

@@ -21,7 +21,10 @@ dependencies {
 
 tasks {
   val testPrometheusMode by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("*PrometheusModeTest")
@@ -31,7 +34,10 @@ tasks {
   }
 
   val testBaseTimeUnit by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("*TimerMillisecondsTest")
@@ -41,7 +47,10 @@ tasks {
   }
 
   val testHistogramGauges by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("*HistogramGaugesTest")

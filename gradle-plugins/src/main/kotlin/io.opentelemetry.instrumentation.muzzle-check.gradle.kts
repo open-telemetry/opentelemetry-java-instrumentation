@@ -95,7 +95,10 @@ listOf(shadowModule, shadowMuzzleTooling, shadowMuzzleBootstrap).forEach { task 
 
     if (project.findProperty("disableShadowRelocate") != "true") {
       // prevents conflict with library instrumentation, since these classes live in the bootstrap class loader
-      relocate("io.opentelemetry.instrumentation", "io.opentelemetry.javaagent.shaded.instrumentation") {
+      relocate(
+        "io.opentelemetry.instrumentation",
+        "io.opentelemetry.javaagent.shaded.instrumentation",
+      ) {
         // Exclude resource providers since they live in the agent class loader
         exclude("io.opentelemetry.instrumentation.resources.*")
         exclude("io.opentelemetry.instrumentation.spring.resources.*")
@@ -103,20 +106,38 @@ listOf(shadowModule, shadowMuzzleTooling, shadowMuzzleBootstrap).forEach { task 
 
       // relocate(OpenTelemetry API) since these classes live in the bootstrap class loader
       relocate("io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api")
-      relocate("io.opentelemetry.semconv", "io.opentelemetry.javaagent.shaded.io.opentelemetry.semconv")
-      relocate("io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context")
-      relocate("io.opentelemetry.common", "io.opentelemetry.javaagent.shaded.io.opentelemetry.common")
+      relocate(
+        "io.opentelemetry.semconv",
+        "io.opentelemetry.javaagent.shaded.io.opentelemetry.semconv",
+      )
+      relocate(
+        "io.opentelemetry.context",
+        "io.opentelemetry.javaagent.shaded.io.opentelemetry.context",
+      )
+      relocate(
+        "io.opentelemetry.common",
+        "io.opentelemetry.javaagent.shaded.io.opentelemetry.common",
+      )
     }
 
     // relocate(the OpenTelemetry extensions that are used by instrumentation modules)
     // these extensions live in the AgentClassLoader, and are injected into the user's class loader
     // by the instrumentation modules that use them
-    relocate("io.opentelemetry.contrib.awsxray", "io.opentelemetry.javaagent.shaded.io.opentelemetry.contrib.awsxray")
-    relocate("io.opentelemetry.extension.kotlin", "io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.kotlin")
+    relocate(
+      "io.opentelemetry.contrib.awsxray",
+      "io.opentelemetry.javaagent.shaded.io.opentelemetry.contrib.awsxray",
+    )
+    relocate(
+      "io.opentelemetry.extension.kotlin",
+      "io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.kotlin",
+    )
 
     // this is for instrumentation of opentelemetry-api and opentelemetry-instrumentation-api
     relocate("application.io.opentelemetry", "io.opentelemetry")
-    relocate("application.io.opentelemetry.instrumentation.api", "io.opentelemetry.instrumentation.api")
+    relocate(
+      "application.io.opentelemetry.instrumentation.api",
+      "io.opentelemetry.instrumentation.api",
+    )
 
     // this is for instrumentation on java.util.logging (since java.util.logging itself is shaded above)
     relocate("application.java.util.logging", "java.util.logging")
@@ -140,31 +161,42 @@ tasks.register("printMuzzleReferences") {
   description = "Print references created by instrumentation muzzle"
   val muzzleShadowJarFile = shadowModule.flatMap { it.archiveFile }
   val muzzleToolingShadowJarFile = shadowMuzzleTooling.flatMap { it.archiveFile }
-  
+
   dependsOn(compileMuzzle)
   dependsOn(shadowModule)
   dependsOn(shadowMuzzleTooling)
-  
+
   doLast {
     // Create instrumentation classloader
-    val instrumentationUrls = arrayOf(
-      muzzleShadowJarFile.get().asFile.toURI().toURL(),
-      muzzleToolingShadowJarFile.get().asFile.toURI().toURL()
-    )
-    val instrumentationCL = URLClassLoader(instrumentationUrls, ClassLoader.getPlatformClassLoader())
-    
+    val instrumentationUrls =
+      arrayOf(
+        muzzleShadowJarFile
+          .get()
+          .asFile
+          .toURI()
+          .toURL(),
+        muzzleToolingShadowJarFile
+          .get()
+          .asFile
+          .toURI()
+          .toURL(),
+      )
+    val instrumentationCL =
+      URLClassLoader(instrumentationUrls, ClassLoader.getPlatformClassLoader())
+
     MuzzleGradlePluginUtil.printMuzzleReferences(instrumentationCL)
   }
 }
 
-val hasRelevantTask = gradle.startParameter.taskNames.any {
-  // removing leading ':' if present
-  val taskName = it.removePrefix(":")
-  val projectPath = project.path.substring(1)
-  // Either the specific muzzle task in this project or a top level muzzle task.
-  taskName == "${projectPath}:muzzle" || taskName.startsWith("instrumentation:muzzle") ||
-    taskName.contains(":muzzle-Assert")
-}
+val hasRelevantTask =
+  gradle.startParameter.taskNames.any {
+    // removing leading ':' if present
+    val taskName = it.removePrefix(":")
+    val projectPath = project.path.substring(1)
+    // Either the specific muzzle task in this project or a top level muzzle task.
+    taskName == "$projectPath:muzzle" || taskName.startsWith("instrumentation:muzzle") ||
+      taskName.contains(":muzzle-Assert")
+  }
 
 if (hasRelevantTask) {
   val system = newRepositorySystem()
@@ -182,12 +214,27 @@ if (hasRelevantTask) {
       if (muzzleDirective.coreJdk.get()) {
         runAfter = addMuzzleTask(muzzleDirective, null, runAfter)
       } else {
-        for (singleVersion in muzzleDirectiveToArtifacts(muzzleDirective, system, session, projectRepositories)) {
+        for (singleVersion in muzzleDirectiveToArtifacts(
+          muzzleDirective,
+          system,
+          session,
+          projectRepositories,
+        )) {
           runAfter = addMuzzleTask(muzzleDirective, singleVersion, runAfter)
         }
         if (muzzleDirective.assertInverse.get()) {
-          for (inverseDirective in inverseOf(muzzleDirective, system, session, projectRepositories)) {
-            for (singleVersion in muzzleDirectiveToArtifacts(inverseDirective, system, session, projectRepositories)) {
+          for (inverseDirective in inverseOf(
+            muzzleDirective,
+            system,
+            session,
+            projectRepositories,
+          )) {
+            for (singleVersion in muzzleDirectiveToArtifacts(
+              inverseDirective,
+              system,
+              session,
+              projectRepositories,
+            )) {
               runAfter = addMuzzleTask(inverseDirective, singleVersion, runAfter)
             }
           }
@@ -198,57 +245,75 @@ if (hasRelevantTask) {
 }
 
 fun getProjectRepositories(project: Project): List<RemoteRepository> {
-  val projectRepositories = project.repositories
-    .filterIsInstance<MavenArtifactRepository>()
-    .map {
-      RemoteRepository.Builder(
-        it.name,
-        "default",
-        it.url.toString())
-        .build()
-    }
+  val projectRepositories =
+    project.repositories
+      .filterIsInstance<MavenArtifactRepository>()
+      .map {
+        RemoteRepository
+          .Builder(
+            it.name,
+            "default",
+            it.url.toString(),
+          ).build()
+      }
   // dependencyResolutionManagement.repositories are not being added to project.repositories,
   // they need to be queries separately
   if (projectRepositories.isEmpty()) {
     // Manually add mavenCentral until https://github.com/gradle/gradle/issues/17295
     // Adding mavenLocal is much more complicated but hopefully isn't required for normal usage of
     // Muzzle.
-    return listOf(RemoteRepository.Builder(
-      "MavenCentral", "default", "https://repo.maven.apache.org/maven2/")
-      .build())
+    return listOf(
+      RemoteRepository
+        .Builder("MavenCentral", "default", "https://repo.maven.apache.org/maven2/")
+        .build(),
+    )
   }
   return projectRepositories
 }
 
-fun createInstrumentationClassloader(muzzleShadowJar: File, muzzleToolingShadowJar: File): ClassLoader {
+fun createInstrumentationClassloader(
+  muzzleShadowJar: File,
+  muzzleToolingShadowJar: File,
+): ClassLoader {
   logger.info("Creating instrumentation class loader for: $path")
-  return classpathLoader(files(muzzleShadowJar, muzzleToolingShadowJar), ClassLoader.getPlatformClassLoader())
+  return classpathLoader(
+    files(muzzleShadowJar, muzzleToolingShadowJar),
+    ClassLoader.getPlatformClassLoader(),
+  )
 }
 
-fun classpathLoader(classpath: FileCollection, parent: ClassLoader): ClassLoader {
+fun classpathLoader(
+  classpath: FileCollection,
+  parent: ClassLoader,
+): ClassLoader {
   logger.info("Adding to class loader:")
-  val urls: Array<URL> = StreamSupport.stream(classpath.spliterator(), false)
-    .map {
-      logger.info("--${it}")
-      it.toURI().toURL()
-    }
-    .toArray(::arrayOfNulls)
+  val urls: Array<URL> =
+    StreamSupport
+      .stream(classpath.spliterator(), false)
+      .map {
+        logger.info("--$it")
+        it.toURI().toURL()
+      }.toArray(::arrayOfNulls)
   if (parent is URLClassLoader) {
     parent.urLs.forEach {
-      logger.info("--${it}")
+      logger.info("--$it")
     }
   }
   return URLClassLoader(urls, parent)
 }
 
-fun newRepositorySystem(): RepositorySystem {
-  return MavenRepositorySystemUtils.newServiceLocator().apply {
-    addService(RepositoryConnectorFactory::class.java, BasicRepositoryConnectorFactory::class.java)
-    addService(TransporterFactory::class.java, HttpTransporterFactory::class.java)
-  }.run {
-    getService(RepositorySystem::class.java)
-  }
-}
+fun newRepositorySystem(): RepositorySystem =
+  MavenRepositorySystemUtils
+    .newServiceLocator()
+    .apply {
+      addService(
+        RepositoryConnectorFactory::class.java,
+        BasicRepositoryConnectorFactory::class.java,
+      )
+      addService(TransporterFactory::class.java, HttpTransporterFactory::class.java)
+    }.run {
+      getService(RepositorySystem::class.java)
+    }
 
 fun newRepositorySystemSession(system: RepositorySystem): RepositorySystemSession {
   val muzzleRepo = layout.buildDirectory.dir("muzzleRepo")
@@ -258,150 +323,206 @@ fun newRepositorySystemSession(system: RepositorySystem): RepositorySystemSessio
   }
 }
 
-fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, runAfter: TaskProvider<Task>)
-  : TaskProvider<Task> {
-  val taskName = if (versionArtifact == null) {
-    "muzzle-Assert${muzzleDirective}"
-  } else {
-    StringBuilder("muzzle-Assert").apply {
-      if (muzzleDirective.assertPass.get()) {
-        append("Pass")
-      } else {
-        append("Fail")
-      }
-      append('-')
-        .append(versionArtifact.groupId)
-        .append('-')
-        .append(versionArtifact.artifactId)
-        .append('-')
-        .append(versionArtifact.version)
-      if (!muzzleDirective.name.get().isEmpty()) {
-        append(muzzleDirective.nameSlug)
-      }
-    }.run { toString() }
-  }
+fun addMuzzleTask(
+  muzzleDirective: MuzzleDirective,
+  versionArtifact: Artifact?,
+  runAfter: TaskProvider<Task>,
+): TaskProvider<Task> {
+  val taskName =
+    if (versionArtifact == null) {
+      "muzzle-Assert$muzzleDirective"
+    } else {
+      StringBuilder("muzzle-Assert")
+        .apply {
+          if (muzzleDirective.assertPass.get()) {
+            append("Pass")
+          } else {
+            append("Fail")
+          }
+          append('-')
+            .append(versionArtifact.groupId)
+            .append('-')
+            .append(versionArtifact.artifactId)
+            .append('-')
+            .append(versionArtifact.version)
+          if (!muzzleDirective.name.get().isEmpty()) {
+            append(muzzleDirective.nameSlug)
+          }
+        }.run { toString() }
+    }
   val config = configurations.create(taskName)
   if (versionArtifact != null) {
-    val dep = (dependencies.create(versionArtifact.run { "${groupId}:${artifactId}:${version}" }) as ModuleDependency).apply {
-      isTransitive = true
-      exclude("com.sun.jdmk", "jmxtools")
-      exclude("com.sun.jmx", "jmxri")
-      for (excluded in muzzleDirective.excludedDependencies.get()) {
-        val (group, module) = excluded.split(':')
-        exclude(group, module)
+    val dep =
+      (
+        dependencies.create(
+          versionArtifact.run {
+            "$groupId:$artifactId:$version"
+          },
+        ) as ModuleDependency
+      ).apply {
+        isTransitive = true
+        exclude("com.sun.jdmk", "jmxtools")
+        exclude("com.sun.jmx", "jmxri")
+        for (excluded in muzzleDirective.excludedDependencies.get()) {
+          val (group, module) = excluded.split(':')
+          exclude(group, module)
+        }
       }
-    }
     config.dependencies.add(dep)
 
     for (additionalDependency in muzzleDirective.additionalDependencies.get()) {
-      val additional = if (additionalDependency is String && additionalDependency.count { it == ':' } < 2) {
-        // Dependency definition without version, use the artifact's version.
-        "${additionalDependency}:${versionArtifact.version}"
-      } else {
-        additionalDependency
-      }
-      val additionalDep = (dependencies.create(additional) as ModuleDependency).apply {
-        isTransitive = true
-      }
+      val additional =
+        if (additionalDependency is String &&
+          additionalDependency.count { it == ':' } < 2
+        ) {
+          // Dependency definition without version, use the artifact's version.
+          "$additionalDependency:${versionArtifact.version}"
+        } else {
+          additionalDependency
+        }
+      val additionalDep =
+        (dependencies.create(additional) as ModuleDependency).apply {
+          isTransitive = true
+        }
       config.dependencies.add(additionalDep)
     }
   }
 
-  val muzzleTask = tasks.register(taskName) {
-    // Some old library versions have broken or missing transitive dependencies
-    // on Maven Central (e.g. SNAPSHOTs, Maven 1 POMs, deleted artifacts).
-    // Use lenient resolution so these don't break configuration cache
-    // serialization. For assertFail this is always safe: fewer classes can only
-    // add more mismatches. For assertPass a missing transitive can cause a
-    // false muzzle failure but never a false pass; such versions should be
-    // skipped in the module's build.gradle.kts when found.
-    val configFiles = config.incoming.artifactView { lenient(true) }.files
-    val muzzleShadowJarFile = shadowModule.flatMap { it.archiveFile }
-    val muzzleToolingShadowJarFile = shadowMuzzleTooling.flatMap { it.archiveFile }
-    val muzzleBootstrapShadowJarFile = shadowMuzzleBootstrap.flatMap { it.archiveFile }
-    val excludedNames = muzzleDirective.excludedInstrumentationNames.get()
-    val shouldAssertPass = muzzleDirective.assertPass.get()
-    
-    dependsOn(configurations.named("runtimeClasspath"))
-    dependsOn(shadowModule)
-    dependsOn(shadowMuzzleTooling)
-    dependsOn(shadowMuzzleBootstrap)
-    
-    doLast {
-      // Create instrumentation classloader
-      val instrumentationUrls = arrayOf(
-        muzzleShadowJarFile.get().asFile.toURI().toURL(),
-        muzzleToolingShadowJarFile.get().asFile.toURI().toURL()
-      )
-      val instrumentationCL = URLClassLoader(instrumentationUrls, ClassLoader.getPlatformClassLoader())
-      
-      // Create user classloader
-      val userUrls = (configFiles + muzzleBootstrapShadowJarFile.get().asFile).map { it.toURI().toURL() }.toTypedArray()
-      val userCL = URLClassLoader(userUrls, ClassLoader.getPlatformClassLoader())
-      
-      MuzzleGradlePluginUtil.assertInstrumentationMuzzled(instrumentationCL, userCL,
-        excludedNames, shouldAssertPass)
+  val muzzleTask =
+    tasks.register(taskName) {
+      // Some old library versions have broken or missing transitive dependencies
+      // on Maven Central (e.g. SNAPSHOTs, Maven 1 POMs, deleted artifacts).
+      // Use lenient resolution so these don't break configuration cache
+      // serialization. For assertFail this is always safe: fewer classes can only
+      // add more mismatches. For assertPass a missing transitive can cause a
+      // false muzzle failure but never a false pass; such versions should be
+      // skipped in the module's build.gradle.kts when found.
+      val configFiles = config.incoming.artifactView { lenient(true) }.files
+      val muzzleShadowJarFile = shadowModule.flatMap { it.archiveFile }
+      val muzzleToolingShadowJarFile = shadowMuzzleTooling.flatMap { it.archiveFile }
+      val muzzleBootstrapShadowJarFile = shadowMuzzleBootstrap.flatMap { it.archiveFile }
+      val excludedNames = muzzleDirective.excludedInstrumentationNames.get()
+      val shouldAssertPass = muzzleDirective.assertPass.get()
+
+      dependsOn(configurations.named("runtimeClasspath"))
+      dependsOn(shadowModule)
+      dependsOn(shadowMuzzleTooling)
+      dependsOn(shadowMuzzleBootstrap)
+
+      doLast {
+        // Create instrumentation classloader
+        val instrumentationUrls =
+          arrayOf(
+            muzzleShadowJarFile
+              .get()
+              .asFile
+              .toURI()
+              .toURL(),
+            muzzleToolingShadowJarFile
+              .get()
+              .asFile
+              .toURI()
+              .toURL(),
+          )
+        val instrumentationCL =
+          URLClassLoader(instrumentationUrls, ClassLoader.getPlatformClassLoader())
+
+        // Create user classloader
+        val userUrls =
+          (configFiles + muzzleBootstrapShadowJarFile.get().asFile)
+            .map {
+              it.toURI().toURL()
+            }.toTypedArray()
+        val userCL = URLClassLoader(userUrls, ClassLoader.getPlatformClassLoader())
+
+        MuzzleGradlePluginUtil.assertInstrumentationMuzzled(
+          instrumentationCL,
+          userCL,
+          excludedNames,
+          shouldAssertPass,
+        )
+      }
     }
-  }
 
   runAfter.configure { finalizedBy(muzzleTask) }
   return muzzleTask
 }
 
-fun createClassLoaderForTask(muzzleTaskFiles: FileCollection, muzzleBootstrapShadowJar: File): ClassLoader {
+fun createClassLoaderForTask(
+  muzzleTaskFiles: FileCollection,
+  muzzleBootstrapShadowJar: File,
+): ClassLoader {
   logger.info("Creating user class loader for muzzle check")
-  return classpathLoader(muzzleTaskFiles + files(muzzleBootstrapShadowJar), ClassLoader.getPlatformClassLoader())
+  return classpathLoader(
+    muzzleTaskFiles + files(muzzleBootstrapShadowJar),
+    ClassLoader.getPlatformClassLoader(),
+  )
 }
 
-fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, session: RepositorySystemSession, repos: List<RemoteRepository>): Set<MuzzleDirective> {
+fun inverseOf(
+  muzzleDirective: MuzzleDirective,
+  system: RepositorySystem,
+  session: RepositorySystemSession,
+  repos: List<RemoteRepository>,
+): Set<MuzzleDirective> {
   val inverseDirectives = mutableSetOf<MuzzleDirective>()
 
-  val allVersionsArtifact = DefaultArtifact(
-    muzzleDirective.group.get(),
-    muzzleDirective.module.get(),
-    muzzleDirective.classifier.get(),
-    "jar",
-    "[,)")
-  val directiveArtifact = DefaultArtifact(
-    muzzleDirective.group.get(),
-    muzzleDirective.module.get(),
-    muzzleDirective.classifier.get(),
-    "jar",
-    muzzleDirective.versions.get())
+  val allVersionsArtifact =
+    DefaultArtifact(
+      muzzleDirective.group.get(),
+      muzzleDirective.module.get(),
+      muzzleDirective.classifier.get(),
+      "jar",
+      "[,)",
+    )
+  val directiveArtifact =
+    DefaultArtifact(
+      muzzleDirective.group.get(),
+      muzzleDirective.module.get(),
+      muzzleDirective.classifier.get(),
+      "jar",
+      muzzleDirective.versions.get(),
+    )
 
-  val allRangeRequest = VersionRangeRequest().apply {
-    repositories = repos
-    artifact = allVersionsArtifact
-  }
+  val allRangeRequest =
+    VersionRangeRequest().apply {
+      repositories = repos
+      artifact = allVersionsArtifact
+    }
   val allRangeResult = system.resolveVersionRange(session, allRangeRequest)
 
-  val rangeRequest = VersionRangeRequest().apply {
-    repositories = repos
-    artifact = directiveArtifact
-  }
+  val rangeRequest =
+    VersionRangeRequest().apply {
+      repositories = repos
+      artifact = directiveArtifact
+    }
   val rangeResult = system.resolveVersionRange(session, rangeRequest)
 
   allRangeResult.versions.removeAll(rangeResult.versions)
 
   for (version in filterVersions(allRangeResult, muzzleDirective.normalizedSkipVersions)) {
-    val inverseDirective = objects.newInstance(MuzzleDirective::class).apply {
-      name.set(muzzleDirective.name)
-      group.set(muzzleDirective.group)
-      module.set(muzzleDirective.module)
-      classifier.set(muzzleDirective.classifier)
-      versions.set(version)
-      assertPass.set(!muzzleDirective.assertPass.get())
-      additionalDependencies.set(muzzleDirective.additionalDependencies)
-      excludedDependencies.set(muzzleDirective.excludedDependencies)
-      excludedInstrumentationNames.set(muzzleDirective.excludedInstrumentationNames)
-    }
+    val inverseDirective =
+      objects.newInstance(MuzzleDirective::class).apply {
+        name.set(muzzleDirective.name)
+        group.set(muzzleDirective.group)
+        module.set(muzzleDirective.module)
+        classifier.set(muzzleDirective.classifier)
+        versions.set(version)
+        assertPass.set(!muzzleDirective.assertPass.get())
+        additionalDependencies.set(muzzleDirective.additionalDependencies)
+        excludedDependencies.set(muzzleDirective.excludedDependencies)
+        excludedInstrumentationNames.set(muzzleDirective.excludedInstrumentationNames)
+      }
     inverseDirectives.add(inverseDirective)
   }
 
   return inverseDirectives
 }
 
-fun filterVersions(range: VersionRangeResult, skipVersions: Set<String>) = sequence {
+fun filterVersions(
+  range: VersionRangeResult,
+  skipVersions: Set<String>,
+) = sequence {
   val predicate = AcceptableVersions(skipVersions)
   if (predicate.test(range.lowestVersion)) {
     yield(range.lowestVersion.toString())
@@ -418,29 +539,39 @@ fun filterVersions(range: VersionRangeResult, skipVersions: Set<String>) = seque
   }
 }.distinct().take(RANGE_COUNT_LIMIT)
 
-fun muzzleDirectiveToArtifacts(muzzleDirective: MuzzleDirective, system: RepositorySystem, session: RepositorySystemSession, repos: List<RemoteRepository>) = sequence<Artifact> {
-  val directiveArtifact: Artifact = DefaultArtifact(
-    muzzleDirective.group.get(),
-    muzzleDirective.module.get(),
-    muzzleDirective.classifier.get(),
-    "jar",
-    muzzleDirective.versions.get())
+fun muzzleDirectiveToArtifacts(
+  muzzleDirective: MuzzleDirective,
+  system: RepositorySystem,
+  session: RepositorySystemSession,
+  repos: List<RemoteRepository>,
+) = sequence<Artifact> {
+  val directiveArtifact: Artifact =
+    DefaultArtifact(
+      muzzleDirective.group.get(),
+      muzzleDirective.module.get(),
+      muzzleDirective.classifier.get(),
+      "jar",
+      muzzleDirective.versions.get(),
+    )
 
-  val rangeRequest = VersionRangeRequest().apply {
-    repositories = repos
-    artifact = directiveArtifact
-  }
+  val rangeRequest =
+    VersionRangeRequest().apply {
+      repositories = repos
+      artifact = directiveArtifact
+    }
   val rangeResult = system.resolveVersionRange(session, rangeRequest)
 
-  val allVersionArtifacts = filterVersions(rangeResult, muzzleDirective.normalizedSkipVersions)
-    .map {
-      DefaultArtifact(
-        muzzleDirective.group.get(),
-        muzzleDirective.module.get(),
-        muzzleDirective.classifier.get(),
-        "jar",
-        it)
-    }
+  val allVersionArtifacts =
+    filterVersions(rangeResult, muzzleDirective.normalizedSkipVersions)
+      .map {
+        DefaultArtifact(
+          muzzleDirective.group.get(),
+          muzzleDirective.module.get(),
+          muzzleDirective.classifier.get(),
+          "jar",
+          it,
+        )
+      }
 
   allVersionArtifacts.ifEmpty {
     throw GradleException("No muzzle artifacts found for $muzzleDirective")

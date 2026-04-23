@@ -663,7 +663,7 @@ ij_groovy_while_brace_force = never
 ij_groovy_while_on_new_line = false
 ij_groovy_wrap_long_lines = false
 
-[{*.kt, *.kts}]
+[*.{kt,kts}]
 ij_continuation_indent_size = 2
 ij_kotlin_align_in_columns_case_branch = false
 ij_kotlin_align_multiline_binary_operation = false
@@ -763,7 +763,7 @@ ij_yaml_keep_indents_on_empty_lines = false
 ij_yaml_keep_line_breaks = true
 
 # ktlint overrides (mirrors otel.spotless-conventions.gradle.kts)
-[{*.kt, *.kts}]
+[*.{kt,kts}]
 max_line_length = 160
 continuation_indent_size = 2
 ktlint_standard_no-wildcard-imports = disabled

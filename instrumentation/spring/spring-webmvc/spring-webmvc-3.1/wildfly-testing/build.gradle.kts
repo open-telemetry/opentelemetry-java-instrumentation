@@ -75,8 +75,10 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
     // remove logback-classic from classpath and add modified copy
-    classpath = classpath.filter {
-      !it.absolutePath.contains("logback-classic")
-    }.plus(files(layout.buildDirectory.file("tmp/logback-classic-modified.jar")))
+    classpath =
+      classpath
+        .filter {
+          !it.absolutePath.contains("logback-classic")
+        }.plus(files(layout.buildDirectory.file("tmp/logback-classic-modified.jar")))
   }
 }

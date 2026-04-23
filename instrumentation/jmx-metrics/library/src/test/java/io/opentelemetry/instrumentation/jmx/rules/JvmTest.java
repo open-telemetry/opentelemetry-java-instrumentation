@@ -100,7 +100,8 @@ class JvmTest extends TargetSystemTest {
                 metric ->
                     metric
                         .hasDescription(
-                            "Measure of memory used, as measured after the most recent garbage collection event on this pool.")
+                            "Measure of memory used, as measured after the most recent garbage"
+                                + " collection event on this pool.")
                         .hasUnit("By")
                         .isUpDownCounter()
                         // note: there is no GC for non-heap memory
@@ -185,7 +186,8 @@ class JvmTest extends TargetSystemTest {
                 metric ->
                     metric
                         .hasDescription(
-                            "Average CPU load of the whole system for the last minute as reported by the JVM.")
+                            "Average CPU load of the whole system for the last minute as reported"
+                                + " by the JVM.")
                         .hasUnit("{run_queue_item}")
                         .isGauge()
                         .hasDataPointsWithoutAttributes())

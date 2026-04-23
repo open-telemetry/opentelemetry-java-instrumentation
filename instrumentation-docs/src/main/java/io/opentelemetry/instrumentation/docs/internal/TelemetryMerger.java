@@ -130,7 +130,8 @@ public class TelemetryMerger {
       if (existingNames.contains(metric.getName())) {
         logger.warning(
             String.format(
-                "Manual metric '%s' in 'when: %s' conflicts with emitted metric in %s. Using manual definition.",
+                "Manual metric '%s' in 'when: %s' conflicts with emitted metric in %s. Using manual"
+                    + " definition.",
                 metric.getName(), when, instrumentationName));
         // Remove the existing metric and add the manual one
         existing.removeIf(m -> m.getName().equals(metric.getName()));
@@ -156,7 +157,8 @@ public class TelemetryMerger {
       if (existingKinds.contains(span.getSpanKind())) {
         logger.warning(
             String.format(
-                "Manual span kind '%s' in 'when: %s' conflicts with emitted span in %s. Using manual definition.",
+                "Manual span kind '%s' in 'when: %s' conflicts with emitted span in %s. Using"
+                    + " manual definition.",
                 span.getSpanKind(), when, instrumentationName));
         // Remove the existing span and add the manual one
         existing.removeIf(s -> s.getSpanKind().equals(span.getSpanKind()));

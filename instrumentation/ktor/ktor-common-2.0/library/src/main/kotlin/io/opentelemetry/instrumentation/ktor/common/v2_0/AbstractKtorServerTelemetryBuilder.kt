@@ -21,7 +21,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor
 import io.opentelemetry.instrumentation.ktor.common.v2_0.internal.KtorBuilderUtil
 import java.util.function.UnaryOperator
 
-abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationName: String) {
+abstract class AbstractKtorServerTelemetryBuilder(
+  private val instrumentationName: String
+) {
   companion object {
     init {
       KtorBuilderUtil.serverBuilderExtractor = { it.builder }
@@ -45,10 +47,10 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
   fun spanStatusExtractor(extract: SpanStatusData.(SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> Unit) {
     builder.setSpanStatusExtractorCustomizer { prevExtractor ->
       SpanStatusExtractor {
-          spanStatusBuilder: SpanStatusBuilder,
-          request: ApplicationRequest,
-          response: ApplicationResponse?,
-          throwable: Throwable?
+        spanStatusBuilder: SpanStatusBuilder,
+        request: ApplicationRequest,
+        response: ApplicationResponse?,
+        throwable: Throwable?
         ->
         extract(
           SpanStatusData(spanStatusBuilder, request, response, throwable),
@@ -77,11 +79,21 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
     val builder = ExtractorBuilder().apply(extractorBuilder).build()
     this.builder.addAttributesExtractor(
       object : AttributesExtractor<ApplicationRequest, ApplicationResponse> {
-        override fun onStart(attributes: AttributesBuilder, parentContext: Context, request: ApplicationRequest) {
+        override fun onStart(
+          attributes: AttributesBuilder,
+          parentContext: Context,
+          request: ApplicationRequest
+        ) {
           builder.onStart(OnStartData(attributes, parentContext, request))
         }
 
-        override fun onEnd(attributes: AttributesBuilder, context: Context, request: ApplicationRequest, response: ApplicationResponse?, error: Throwable?) {
+        override fun onEnd(
+          attributes: AttributesBuilder,
+          context: Context,
+          request: ApplicationRequest,
+          response: ApplicationResponse?,
+          error: Throwable?
+        ) {
           builder.onEnd(OnEndData(attributes, context, request, response, error))
         }
       }
@@ -107,7 +119,10 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
     internal fun build(): Extractor = Extractor(onStart, onEnd)
   }
 
-  internal class Extractor(val onStart: OnStartData.() -> Unit, val onEnd: OnEndData.() -> Unit)
+  internal class Extractor(
+    val onStart: OnStartData.() -> Unit,
+    val onEnd: OnEndData.() -> Unit
+  )
 
   data class OnStartData(
     val attributes: AttributesBuilder,

@@ -68,23 +68,23 @@ class EmittedMetricsParserTest {
 
     String file1Content =
         """
-    when: default
-    metrics_by_scope:
-      - scope: io.opentelemetry.MetricParserTest
-        metrics:
-          - name: metric1
-            type: counter
-    """;
+        when: default
+        metrics_by_scope:
+          - scope: io.opentelemetry.MetricParserTest
+            metrics:
+              - name: metric1
+                type: counter
+        """;
 
     String file2Content =
         """
-    when: default
-    metrics_by_scope:
-      - scope: io.opentelemetry.MetricParserTest
-        metrics:
-          - name: metric2
-            type: gauge
-    """;
+        when: default
+        metrics_by_scope:
+          - scope: io.opentelemetry.MetricParserTest
+            metrics:
+              - name: metric2
+                type: gauge
+        """;
 
     Files.writeString(telemetryDir.resolve("metrics-1.yaml"), file1Content);
     Files.writeString(telemetryDir.resolve("metrics-2.yaml"), file2Content);

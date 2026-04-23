@@ -28,8 +28,9 @@ dependencies {
 // Quarkus 3.7+ requires Java 17+
 val targetJDK = project.findProperty("targetJDK") ?: "17"
 
-val tag = findProperty("tag")
-  ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
+val tag =
+  findProperty("tag")
+    ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
 
 java {
   // this is needed to avoid jib failing with

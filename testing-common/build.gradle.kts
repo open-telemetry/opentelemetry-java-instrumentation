@@ -11,7 +11,7 @@ sourceSets {
     val shadedDeps = project(":testing:dependencies-shaded-for-testing")
     output.dir(
       shadedDeps.file("build/extracted/shadow"),
-      "builtBy" to ":testing:dependencies-shaded-for-testing:extractShadowJar"
+      "builtBy" to ":testing:dependencies-shaded-for-testing:extractShadowJar",
     )
   }
 }

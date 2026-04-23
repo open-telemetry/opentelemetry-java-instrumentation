@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.muzzle.matcher
 
+// TODO the next line is not true anymore. Switch from System.err to Gradle logger.
+// Runs in special class loader so tedious to provide access to the Gradle logger.
+
 /**
  * Entry point for the muzzle gradle plugin.
  *
@@ -24,11 +27,7 @@ package io.opentelemetry.javaagent.muzzle.matcher
  * library that we want to muzzle-check: "does this version provide all the expected hooks and
  * classes and methods that our instrumentations expect".
  */
-
-// TODO the next line is not true anymore. Switch from System.err to Gradle logger.
-// Runs in special class loader so tedious to provide access to the Gradle logger.
 class MuzzleGradlePluginUtil {
-
   companion object {
     /**
      * Verifies that all instrumentations present in the {@code agentClassLoader} can be safely
@@ -52,17 +51,21 @@ class MuzzleGradlePluginUtil {
      * version passes different {@code userClassLoader}.
      */
     @Suppress("UNCHECKED_CAST")
-    fun assertInstrumentationMuzzled(agentClassLoader: ClassLoader, userClassLoader: ClassLoader,
-                                     excludedInstrumentationNames: Set<String>, assertPass: Boolean) {
-
+    fun assertInstrumentationMuzzled(
+      agentClassLoader: ClassLoader,
+      userClassLoader: ClassLoader,
+      excludedInstrumentationNames: Set<String>,
+      assertPass: Boolean
+    ) {
       val matcherClass = agentClassLoader.loadClass("io.opentelemetry.javaagent.tooling.muzzle.ClassLoaderMatcher")
 
       // We cannot reference Mismatch class directly here, because we are loaded from a different
       // class loader.
-      val allMismatches = matcherClass
-        .getMethod("matchesAll", ClassLoader::class.java, Boolean::class.javaPrimitiveType, Set::class.java)
-        .invoke(null, userClassLoader, assertPass, excludedInstrumentationNames)
-        as Map<String, List<Any>>
+      val allMismatches =
+        matcherClass
+          .getMethod("matchesAll", ClassLoader::class.java, Boolean::class.javaPrimitiveType, Set::class.java)
+          .invoke(null, userClassLoader, assertPass, excludedInstrumentationNames)
+          as Map<String, List<Any>>
 
       allMismatches.forEach { moduleName, mismatches ->
         val passed = mismatches.isEmpty()
@@ -93,8 +96,8 @@ class MuzzleGradlePluginUtil {
      * <p>Called by the {@code printMuzzleReferences} gradle task.
      */
     fun printMuzzleReferences(instrumentationClassLoader: ClassLoader) {
-      val matcherClass = instrumentationClassLoader.loadClass(
-        "io.opentelemetry.javaagent.tooling.muzzle.ReferencesPrinter")
+      val matcherClass =
+        instrumentationClassLoader.loadClass("io.opentelemetry.javaagent.tooling.muzzle.ReferencesPrinter")
       matcherClass.getMethod("printMuzzleReferences").invoke(null)
     }
   }

@@ -22,8 +22,14 @@ tasks {
 
   test {
     val shadowTask = project(":javaagent").tasks.named<Jar>("shadowJar")
-    val testAppTask = project(":instrumentation:jmx-metrics:testing-apps:testing-webapp").tasks.named<War>("war")
-    val camelTestAppTask = project(":instrumentation:jmx-metrics:testing-apps:camel-testing-app").tasks.named<Jar>("camelTestAppJar")
+    val testAppTask =
+      project(
+        ":instrumentation:jmx-metrics:testing-apps:testing-webapp",
+      ).tasks.named<War>("war")
+    val camelTestAppTask =
+      project(
+        ":instrumentation:jmx-metrics:testing-apps:camel-testing-app",
+      ).tasks.named<Jar>("camelTestAppJar")
 
     dependsOn(shadowTask)
     dependsOn(testAppTask)
@@ -33,22 +39,26 @@ tasks {
     val testAppWar = testAppTask.flatMap { it.archiveFile }
     val camelTestAppJar = camelTestAppTask.flatMap { it.archiveFile }
 
-    inputs.file(agentJar)
+    inputs
+      .file(agentJar)
       .withPropertyName("javaagent")
       .withNormalizer(ClasspathNormalizer::class)
-    inputs.file(testAppWar)
+    inputs
+      .file(testAppWar)
       .withPropertyName("testWebApp")
       .withNormalizer(ClasspathNormalizer::class)
-    inputs.file(camelTestAppJar)
+    inputs
+      .file(camelTestAppJar)
       .withPropertyName("camelTestApp")
       .withNormalizer(ClasspathNormalizer::class)
 
-    jvmArgumentProviders += CommandLineArgumentProvider {
-      listOf(
-        "-Dio.opentelemetry.javaagent.path=${agentJar.get().asFile.absolutePath}",
-        "-Dio.opentelemetry.testapp.path=${testAppWar.get().asFile.absolutePath}",
-        "-Dio.opentelemetry.cameltestapp.path=${camelTestAppJar.get().asFile.absolutePath}",
-      )
-    }
+    jvmArgumentProviders +=
+      CommandLineArgumentProvider {
+        listOf(
+          "-Dio.opentelemetry.javaagent.path=${agentJar.get().asFile.absolutePath}",
+          "-Dio.opentelemetry.testapp.path=${testAppWar.get().asFile.absolutePath}",
+          "-Dio.opentelemetry.cameltestapp.path=${camelTestAppJar.get().asFile.absolutePath}",
+        )
+      }
   }
 }

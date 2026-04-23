@@ -263,22 +263,26 @@ class SessionTest extends AbstractHibernateTest {
                     assertSessionSpan(
                         span,
                         trace.getSpan(0),
-                        "Session.save io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"),
+                        "Session.save"
+                            + " io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"),
                 span ->
                     assertSessionSpan(
                         span,
                         trace.getSpan(0),
-                        "Session.insert io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"),
+                        "Session.insert"
+                            + " io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"),
                 span ->
                     assertSessionSpan(
                         span,
                         trace.getSpan(0),
-                        "Session.save io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"),
+                        "Session.save"
+                            + " io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"),
                 span ->
                     assertSpanWithSessionId(
                         span,
                         trace.getSpan(0),
-                        "Session.delete io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value",
+                        "Session.delete"
+                            + " io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value",
                         trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)),
                 span ->
                     assertSpanWithSessionId(

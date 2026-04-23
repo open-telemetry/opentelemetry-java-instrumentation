@@ -15,9 +15,11 @@ class HelperClassPredicateTest {
 
   @ParameterizedTest(name = "should collect references for {0}")
   @CsvSource({
-    "javaagent instrumentation class, io.opentelemetry.javaagent.instrumentation.some_instrumentation.Advice",
+    "javaagent instrumentation class,"
+        + " io.opentelemetry.javaagent.instrumentation.some_instrumentation.Advice",
     "library instrumentation class, io.opentelemetry.instrumentation.LibraryClass",
-    "additional library instrumentation class, com.example.instrumentation.library.ThirdPartyExternalInstrumentation"
+    "additional library instrumentation class,"
+        + " com.example.instrumentation.library.ThirdPartyExternalInstrumentation"
   })
   void shouldCollectReferencesFor(String desc, String className) {
     Predicate<String> additionalLibraryPredicate =

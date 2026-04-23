@@ -205,7 +205,8 @@ class InfluxDbClientTest {
   void testQueryWithThreeArguments() throws InterruptedException {
     Query query =
         new Query(
-            "SELECT * FROM cpu_load where time >= '2022-01-01T08:00:00Z' AND time <= '2022-01-01T20:00:00Z'",
+            "SELECT * FROM cpu_load where time >= '2022-01-01T08:00:00Z' AND time <="
+                + " '2022-01-01T20:00:00Z'",
             databaseName);
     BlockingQueue<QueryResult> queue = new LinkedBlockingQueue<>();
 
@@ -273,7 +274,8 @@ class InfluxDbClientTest {
     CountDownLatch countDownLatch = new CountDownLatch(1);
     Query query =
         new Query(
-            "SELECT MEAN(water_level) FROM h2o_feet where time = '2022-01-01T08:00:00Z'; SELECT water_level FROM h2o_feet LIMIT 2",
+            "SELECT MEAN(water_level) FROM h2o_feet where time = '2022-01-01T08:00:00Z'; SELECT"
+                + " water_level FROM h2o_feet LIMIT 2",
             databaseName);
     testing.runWithSpan(
         "parent",
@@ -308,7 +310,8 @@ class InfluxDbClientTest {
                                 emitStableDatabaseSemconv() ? null : "SELECT"),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
-                                "SELECT MEAN(water_level) FROM h2o_feet where time = ?; SELECT water_level FROM h2o_feet LIMIT ?"),
+                                "SELECT MEAN(water_level) FROM h2o_feet where time = ?; SELECT"
+                                    + " water_level FROM h2o_feet LIMIT ?"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv()

@@ -28,7 +28,8 @@ public class CapturedMessagingHeadersTestConfigSupplier
         // most tests use "Test-Message-Header". "Test_Message_Header" is used for JMS2+ because
         // '-' is not allowed in a JMS property name. JMS property name should be a valid java
         // identifier.
-        "Test-Message-Header, Test-Message-Int-Header, Test_Message_Header, Test_Message_Int_Header");
+        "Test-Message-Header, Test-Message-Int-Header, Test_Message_Header,"
+            + " Test_Message_Int_Header");
     return testConfig;
   }
 }

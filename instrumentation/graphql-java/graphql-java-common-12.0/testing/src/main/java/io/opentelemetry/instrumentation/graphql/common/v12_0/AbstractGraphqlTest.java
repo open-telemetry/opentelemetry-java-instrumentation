@@ -282,12 +282,7 @@ public abstract class AbstractGraphqlTest {
     // spotless:off
     ExecutionResult result =
         graphql.execute(
-            ""
-                + "  query {\n"
-                + "    book(id: \"a\") {\n"
-                + "      name\n"
-                + "    }\n"
-                + "  }");
+            "" + "  query {\n" + "    book(id: \"a\") {\n" + "      name\n" + "    }\n" + "  }");
     // spotless:on
 
     assertThat(result.getErrors()).hasSize(1);
@@ -340,7 +335,8 @@ public abstract class AbstractGraphqlTest {
                                 equalTo(GRAPHQL_OPERATION_TYPE, "mutation"),
                                 normalizedQueryEqualsTo(
                                     GRAPHQL_DOCUMENT,
-                                    "mutation addNewBook { addBook(id: ?, name: ?, author: ?) { id } }"))));
+                                    "mutation addNewBook { addBook(id: ?, name: ?, author: ?) { id"
+                                        + " } }"))));
   }
 
   protected static AttributeAssertion normalizedQueryEqualsTo(

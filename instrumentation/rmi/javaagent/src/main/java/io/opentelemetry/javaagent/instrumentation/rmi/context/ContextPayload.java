@@ -53,7 +53,8 @@ public class ContextPayload {
     if (size > MAX_CONTEXT_ENTRIES) {
       logger.log(
           FINE,
-          "RMI context propagation entries count {0} exceeds maximum allowed of {1}, skipping context propagation.",
+          "RMI context propagation entries count {0} exceeds maximum allowed of {1}, skipping"
+              + " context propagation.",
           new Object[] {size, MAX_CONTEXT_ENTRIES});
       return null;
     }
@@ -66,7 +67,8 @@ public class ContextPayload {
       if (contextSize > MAX_CONTEXT_SIZE) {
         logger.log(
             FINE,
-            "RMI context propagation payload size exceeds maximum allowed of {0}, skipping context propagation.",
+            "RMI context propagation payload size exceeds maximum allowed of {0}, skipping context"
+                + " propagation.",
             new Object[] {MAX_CONTEXT_SIZE});
         return null;
       }
@@ -80,7 +82,8 @@ public class ContextPayload {
     if (size > MAX_CONTEXT_ENTRIES) {
       logger.log(
           FINE,
-          "RMI context propagation entries count {0} exceeds maximum allowed of {1}, skipping context propagation.",
+          "RMI context propagation entries count {0} exceeds maximum allowed of {1}, skipping"
+              + " context propagation.",
           new Object[] {size, MAX_CONTEXT_ENTRIES});
       out.writeInt(0);
       return;

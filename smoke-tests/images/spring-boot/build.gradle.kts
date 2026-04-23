@@ -30,8 +30,9 @@ configurations.runtimeClasspath {
 
 val targetJDK = project.findProperty("targetJDK") ?: "17"
 
-val tag = findProperty("tag")
-  ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
+val tag =
+  findProperty("tag")
+    ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
 
 java {
   // Jib detects the Java version from sourceCompatibility to determine the entrypoint format.
@@ -76,7 +77,13 @@ jib {
   extraDirectories {
     paths {
       path {
-        setFrom(layout.buildDirectory.dir("jib-extra").get().asFile.toPath())
+        setFrom(
+          layout.buildDirectory
+            .dir("jib-extra")
+            .get()
+            .asFile
+            .toPath(),
+        )
         into = "/"
       }
     }

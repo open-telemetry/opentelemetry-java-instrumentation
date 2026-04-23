@@ -94,7 +94,9 @@ class SpringJpaTest {
                                 maybeStable(DB_STATEMENT),
                                 val ->
                                     val.matches(
-                                        "select ([^.]+)\\.id([^,]*),([^.]+)\\.firstName([^,]*),([^.]+)\\.lastName(.*)from Customer(.*)")),
+                                        "select"
+                                            + " ([^.]+)\\.id([^,]*),([^.]+)\\.firstName([^,]*),([^.]+)\\.lastName(.*)from"
+                                            + " Customer(.*)")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "SELECT Customer" : null),
@@ -234,7 +236,10 @@ class SpringJpaTest {
                                 maybeStable(DB_STATEMENT),
                                 val ->
                                     val.matches(
-                                        "select ([^.]+)\\.id([^,]*),([^.]+)\\.firstName([^,]*),([^.]+)\\.lastName (.*)from Customer (.*)where ([^.]+)\\.id( ?)=( ?)\\?")),
+                                        "select"
+                                            + " ([^.]+)\\.id([^,]*),([^.]+)\\.firstName([^,]*),([^.]+)\\.lastName"
+                                            + " (.*)from Customer (.*)where ([^.]+)\\.id( ?)=("
+                                            + " ?)\\?")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "SELECT Customer" : null),
@@ -272,7 +277,8 @@ class SpringJpaTest {
                                 maybeStable(DB_STATEMENT),
                                 val ->
                                     val.matches(
-                                        "update Customer set firstName=\\?,(.*)lastName=\\? where id=\\?")),
+                                        "update Customer set firstName=\\?,(.*)lastName=\\? where"
+                                            + " id=\\?")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "UPDATE Customer" : null),
@@ -329,7 +335,10 @@ class SpringJpaTest {
                                 maybeStable(DB_STATEMENT),
                                 val ->
                                     val.matches(
-                                        "select ([^.]+)\\.id([^,]*),([^.]+)\\.firstName([^,]*),([^.]+)\\.lastName (.*)from Customer (.*)(where ([^.]+)\\.lastName( ?)=( ?)\\?|)")),
+                                        "select"
+                                            + " ([^.]+)\\.id([^,]*),([^.]+)\\.firstName([^,]*),([^.]+)\\.lastName"
+                                            + " (.*)from Customer (.*)(where ([^.]+)\\.lastName("
+                                            + " ?)=( ?)\\?|)")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "SELECT Customer" : null),
@@ -380,7 +389,10 @@ class SpringJpaTest {
                                 maybeStable(DB_STATEMENT),
                                 val ->
                                     val.matches(
-                                        "select ([^.]+)\\.id([^,]*),([^.]+)\\.firstName([^,]*),([^.]+)\\.lastName (.*)from Customer (.*)(where ([^.]+)\\.lastName( ?)=( ?)\\?|)")),
+                                        "select"
+                                            + " ([^.]+)\\.id([^,]*),([^.]+)\\.firstName([^,]*),([^.]+)\\.lastName"
+                                            + " (.*)from Customer (.*)(where ([^.]+)\\.lastName("
+                                            + " ?)=( ?)\\?|)")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "SELECT Customer" : null),

@@ -34,9 +34,14 @@ java {
   toolchain {
     languageVersion.set(
       otelJava.minJavaVersionSupported.map {
-        val defaultJavaVersion = otelJava.maxJavaVersionSupported.getOrElse(DEFAULT_JAVA_VERSION).majorVersion.toInt()
+        val defaultJavaVersion =
+          otelJava.maxJavaVersionSupported
+            .getOrElse(
+              DEFAULT_JAVA_VERSION,
+            ).majorVersion
+            .toInt()
         JavaLanguageVersion.of(Math.max(it.majorVersion.toInt(), defaultJavaVersion))
-      }
+      },
     )
   }
 
@@ -80,8 +85,8 @@ tasks.withType<JavaCompile>().configureEach {
           // We suppress the "deprecation" warning because --release 8 causes javac to warn on
           // importing deprecated classes (fixed in JDK 9+, see https://bugs.openjdk.org/browse/JDK-8032211).
           // We use a custom Error Prone check instead (OtelDeprecatedApiUsage).
-          "-Xlint:-deprecation"
-        )
+          "-Xlint:-deprecation",
+        ),
       )
       if (System.getProperty("dev") != "true") {
         // Fail build on any warning
@@ -123,7 +128,12 @@ afterEvaluate {
     }
   }
   tasks.withType<JavaCompile>().configureEach {
-    if (javaCompiler.isPresent && javaCompiler.get().metadata.languageVersion.canCompileOrRun(21)) {
+    if (javaCompiler.isPresent &&
+      javaCompiler
+        .get()
+        .metadata.languageVersion
+        .canCompileOrRun(21)
+    ) {
       // new warning in jdk21
       options.compilerArgs.add("-Xlint:-this-escape")
     }
@@ -131,10 +141,11 @@ afterEvaluate {
 }
 
 evaluationDependsOn(":dependencyManagement")
-val dependencyManagementConf = configurations.create("dependencyManagement") {
-  isCanBeConsumed = false
-  isCanBeResolved = false
-}
+val dependencyManagementConf =
+  configurations.create("dependencyManagement") {
+    isCanBeConsumed = false
+    isCanBeResolved = false
+  }
 afterEvaluate {
   configurations.configureEach {
     if (isCanBeResolved && !isCanBeConsumed) {
@@ -249,8 +260,9 @@ tasks {
         "Implementation-Title" to project.name,
         "Implementation-Version" to project.version,
         "Implementation-Vendor" to "OpenTelemetry",
-        "Implementation-URL" to "https://github.com/open-telemetry/opentelemetry-java-instrumentation",
-        "Automatic-Module-Name" to javaModuleName
+        "Implementation-URL" to
+          "https://github.com/open-telemetry/opentelemetry-java-instrumentation",
+        "Automatic-Module-Name" to javaModuleName,
       )
     }
   }
@@ -298,7 +310,9 @@ fun isJavaVersionAllowed(version: JavaVersion): Boolean {
   if (otelJava.minJavaVersionSupported.get().compareTo(version) > 0) {
     return false
   }
-  if (otelJava.maxJavaVersionForTests.isPresent && otelJava.maxJavaVersionForTests.get().compareTo(version) < 0) {
+  if (otelJava.maxJavaVersionForTests.isPresent &&
+    otelJava.maxJavaVersionForTests.get().compareTo(version) < 0
+  ) {
     return false
   }
   return true
@@ -312,12 +326,18 @@ abstract class TestcontainersBuildService : BuildService<BuildServiceParameters.
 //     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 //   }
 // }
-gradle.sharedServices.registerIfAbsent("testcontainersBuildService", TestcontainersBuildService::class.java) {
+gradle.sharedServices.registerIfAbsent(
+  "testcontainersBuildService",
+  TestcontainersBuildService::class.java,
+) {
   maxParallelUsages.convention(2)
 }
 
 val resourceNames = listOf("Host", "Os", "Process", "ProcessRuntime")
-val resourceClassesCsv = resourceNames.joinToString(",") { "io.opentelemetry.sdk.extension.resources.${it}ResourceProvider" }
+val resourceClassesCsv =
+  resourceNames.joinToString(",") {
+    "io.opentelemetry.sdk.extension.resources.${it}ResourceProvider"
+  }
 
 tasks.withType<Test>().configureEach {
   useJUnitPlatform()
@@ -326,10 +346,12 @@ tasks.withType<Test>().configureEach {
   val testJavaVersion = otelProps.testJavaVersion
   val useJ9 = otelProps.testJavaVM == "openj9"
   if (useJ9 && testJavaVersion != null && testJavaVersion.isJava8) {
-    jvmArgs("-Xjit:exclude={io/opentelemetry/testing/internal/io/netty/buffer/HeapByteBufUtil.*}," +
+    jvmArgs(
+      "-Xjit:exclude={io/opentelemetry/testing/internal/io/netty/buffer/HeapByteBufUtil.*}," +
         "exclude={io/opentelemetry/testing/internal/io/netty/buffer/UnpooledHeapByteBuf.*}," +
         "exclude={io/opentelemetry/testing/internal/io/netty/buffer/AbstractByteBuf.*}," +
-        "exclude={io/opentelemetry/testing/internal/io/netty/handler/codec/base64/Base64.*}")
+        "exclude={io/opentelemetry/testing/internal/io/netty/handler/codec/base64/Base64.*}",
+    )
   }
 
   // There's no real harm in setting this for all tests even if any happen to not be using context
@@ -337,7 +359,9 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dio.opentelemetry.context.enableStrictContext=${otelProps.enableStrictContext}")
   // TODO: Have agent map unshaded to shaded.
   if (project.findProperty("disableShadowRelocate") != "true") {
-    jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=${otelProps.enableStrictContext}")
+    jvmArgs(
+      "-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=${otelProps.enableStrictContext}",
+    )
   } else {
     jvmArgs("-Dotel.instrumentation.opentelemetry-api.enabled=false")
     jvmArgs("-Dotel.instrumentation.opentelemetry-instrumentation-api.enabled=false")
@@ -352,7 +376,10 @@ tasks.withType<Test>().configureEach {
   // - aws-sdk as we have tests that interact with AWS and need normal trustStore
   // - camel as we have tests that interact with AWS and need normal trustStore
   // - vaadin as tests need to be able to download nodejs when not cached in ~/.vaadin/
-  if (project.name != "jaxrs-2.0-payara-testing" && !project.path.contains("vaadin") && project.description != "camel-2-20" && !project.path.contains("aws-sdk")) {
+  if (project.name != "jaxrs-2.0-payara-testing" && !project.path.contains("vaadin") &&
+    project.description != "camel-2-20" &&
+    !project.path.contains("aws-sdk")
+  ) {
     jvmArgumentProviders.add(KeystoreArgumentsProvider(trustStore))
   }
 
@@ -365,7 +392,7 @@ tasks.withType<Test>().configureEach {
 
   develocity.testRetry {
     // You can see tests that were retried by this mechanism in the collected test reports and build scans.
-    maxRetries.set(maxTestRetries);
+    maxRetries.set(maxTestRetries)
   }
 
   reports {
@@ -381,12 +408,13 @@ tasks.withType<Test>().configureEach {
 class KeystoreArgumentsProvider(
   @InputFile
   @PathSensitive(PathSensitivity.RELATIVE)
-  val trustStore: File
+  val trustStore: File,
 ) : CommandLineArgumentProvider {
-  override fun asArguments(): Iterable<String> = listOf(
-    "-Djavax.net.ssl.trustStore=${trustStore.absolutePath}",
-    "-Djavax.net.ssl.trustStorePassword=testing"
-  )
+  override fun asArguments(): Iterable<String> =
+    listOf(
+      "-Djavax.net.ssl.trustStore=${trustStore.absolutePath}",
+      "-Djavax.net.ssl.trustStorePassword=testing",
+    )
 }
 
 afterEvaluate {
@@ -398,18 +426,22 @@ afterEvaluate {
         javaToolchains.launcherFor {
           languageVersion.set(JavaLanguageVersion.of(testJavaVersion.majorVersion))
           implementation.set(if (useJ9) JvmImplementation.J9 else JvmImplementation.VENDOR_SPECIFIC)
-        }
+        },
       )
       isEnabled = isEnabled && isJavaVersionAllowed(testJavaVersion)
     } else {
       // We default to testing with Java 11 for most tests, but some tests don't support it, where we change
       // the default test task's version so commands like `./gradlew check` can test all projects regardless
       // of Java version.
-      if (!isJavaVersionAllowed(DEFAULT_JAVA_VERSION) && otelJava.maxJavaVersionForTests.isPresent) {
+      if (!isJavaVersionAllowed(DEFAULT_JAVA_VERSION) &&
+        otelJava.maxJavaVersionForTests.isPresent
+      ) {
         javaLauncher.set(
           javaToolchains.launcherFor {
-            languageVersion.set(JavaLanguageVersion.of(otelJava.maxJavaVersionForTests.get().majorVersion))
-          }
+            languageVersion.set(
+              JavaLanguageVersion.of(otelJava.maxJavaVersionForTests.get().majorVersion),
+            )
+          },
         )
       }
     }
@@ -457,19 +489,43 @@ configurations.configureEach {
     // manage, we could consider having the io.opentelemetry.instrumentation add information about
     // what modules they add to reference generically.
     dependencySubstitution {
-      substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")).using(project(":instrumentation-api"))
-      substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator")).using(project(":instrumentation-api-incubator"))
-      substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations")).using(project(":instrumentation-annotations"))
-      substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-support")).using(
-        project(":instrumentation-annotations-support")
+      substitute(
+        module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api"),
+      ).using(project(":instrumentation-api"))
+      substitute(
+        module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator"),
+      ).using(project(":instrumentation-api-incubator"))
+      substitute(
+        module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations"),
+      ).using(project(":instrumentation-annotations"))
+      substitute(
+        module(
+          "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-support",
+        ),
+      ).using(
+        project(":instrumentation-annotations-support"),
       )
-      substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-bootstrap")).using(project(":javaagent-bootstrap"))
-      substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")).using(project(":javaagent-extension-api"))
-      substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")).using(project(":javaagent-tooling"))
-      substitute(module("io.opentelemetry.javaagent:opentelemetry-agent-for-testing")).using(project(":testing:agent-for-testing"))
-      substitute(module("io.opentelemetry.javaagent:opentelemetry-testing-common")).using(project(":testing-common:with-shaded-dependencies"))
-      substitute(module("io.opentelemetry.javaagent:opentelemetry-muzzle")).using(project(":muzzle"))
-      substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent")).using(project(":javaagent"))
+      substitute(
+        module("io.opentelemetry.javaagent:opentelemetry-javaagent-bootstrap"),
+      ).using(project(":javaagent-bootstrap"))
+      substitute(
+        module("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api"),
+      ).using(project(":javaagent-extension-api"))
+      substitute(
+        module("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling"),
+      ).using(project(":javaagent-tooling"))
+      substitute(
+        module("io.opentelemetry.javaagent:opentelemetry-agent-for-testing"),
+      ).using(project(":testing:agent-for-testing"))
+      substitute(
+        module("io.opentelemetry.javaagent:opentelemetry-testing-common"),
+      ).using(project(":testing-common:with-shaded-dependencies"))
+      substitute(
+        module("io.opentelemetry.javaagent:opentelemetry-muzzle"),
+      ).using(project(":muzzle"))
+      substitute(
+        module("io.opentelemetry.javaagent:opentelemetry-javaagent"),
+      ).using(project(":javaagent"))
     }
 
     // The above substitutions ensure dependencies managed by this BOM for external projects refer to this repo's projects here.

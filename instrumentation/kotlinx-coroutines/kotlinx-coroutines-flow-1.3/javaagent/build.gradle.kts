@@ -22,9 +22,13 @@ muzzle {
 dependencies {
   library("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0")
   compileOnly(project(":instrumentation-annotations-support"))
-  implementation(project(":instrumentation:kotlinx-coroutines:kotlinx-coroutines-flow-1.3:javaagent-kotlin"))
+  implementation(
+    project(":instrumentation:kotlinx-coroutines:kotlinx-coroutines-flow-1.3:javaagent-kotlin"),
+  )
 
-  testInstrumentation(project(":instrumentation:kotlinx-coroutines:kotlinx-coroutines-1.0:javaagent"))
+  testInstrumentation(
+    project(":instrumentation:kotlinx-coroutines:kotlinx-coroutines-1.0:javaagent"),
+  )
   testInstrumentation(project(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent"))
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
 

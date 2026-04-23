@@ -19,7 +19,7 @@ tasks {
     }
     relocate(
       "com.azure.core.tracing.opentelemetry",
-      "io.opentelemetry.javaagent.instrumentation.azurecore.v1_53.shaded.com.azure.core.tracing.opentelemetry"
+      "io.opentelemetry.javaagent.instrumentation.azurecore.v1_53.shaded.com.azure.core.tracing.opentelemetry",
     )
   }
 

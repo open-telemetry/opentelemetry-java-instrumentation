@@ -60,7 +60,6 @@ import kotlin.coroutines.CoroutineContext
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExperimentalCoroutinesApi
 class KotlinCoroutinesInstrumentationTest {
-
   companion object {
     val threadPool = Executors.newFixedThreadPool(2)
     val singleThread = Executors.newSingleThreadExecutor()
@@ -101,11 +100,13 @@ class KotlinCoroutinesInstrumentationTest {
       { trace ->
         trace.hasSpansSatisfyingExactly(
           {
-            it.hasName("parent")
+            it
+              .hasName("parent")
               .hasNoParent()
           },
           {
-            it.hasName("preLaunch")
+            it
+              .hasName("preLaunch")
               .hasParent(trace.getSpan(0))
           },
         )
@@ -129,11 +130,13 @@ class KotlinCoroutinesInstrumentationTest {
       { trace ->
         trace.hasSpansSatisfyingExactly(
           {
-            it.hasName("parent")
+            it
+              .hasName("parent")
               .hasNoParent()
           },
           {
-            it.hasName("nested")
+            it
+              .hasName("nested")
               .hasParent(trace.getSpan(0))
           },
         )
@@ -146,19 +149,22 @@ class KotlinCoroutinesInstrumentationTest {
     runTest(Dispatchers.Default) {
       val keptPromise = CompletableDeferred<Boolean>()
       val brokenPromise = CompletableDeferred<Boolean>()
-      val afterPromise = async {
-        keptPromise.await()
-        tracedChild("keptPromise")
-      }
-      val afterPromise2 = async {
-        listOf(afterPromise, keptPromise).awaitAll()
-        tracedChild("keptPromise2")
-      }
-      val failedAfterPromise = async {
-        brokenPromise
-          .runCatching { await() }
-          .onFailure { tracedChild("brokenPromise") }
-      }
+      val afterPromise =
+        async {
+          keptPromise.await()
+          tracedChild("keptPromise")
+        }
+      val afterPromise2 =
+        async {
+          listOf(afterPromise, keptPromise).awaitAll()
+          tracedChild("keptPromise2")
+        }
+      val failedAfterPromise =
+        async {
+          brokenPromise
+            .runCatching { await() }
+            .onFailure { tracedChild("brokenPromise") }
+        }
 
       launch {
         tracedChild("future1")
@@ -173,23 +179,28 @@ class KotlinCoroutinesInstrumentationTest {
       { trace ->
         trace.hasSpansSatisfyingExactlyInAnyOrder(
           {
-            it.hasName("parent")
+            it
+              .hasName("parent")
               .hasNoParent()
           },
           {
-            it.hasName("future1")
+            it
+              .hasName("future1")
               .hasParent(trace.getSpan(0))
           },
           {
-            it.hasName("keptPromise")
+            it
+              .hasName("keptPromise")
               .hasParent(trace.getSpan(0))
           },
           {
-            it.hasName("keptPromise2")
+            it
+              .hasName("keptPromise2")
               .hasParent(trace.getSpan(0))
           },
           {
-            it.hasName("brokenPromise")
+            it
+              .hasName("brokenPromise")
               .hasParent(trace.getSpan(0))
           },
         )
@@ -200,20 +211,21 @@ class KotlinCoroutinesInstrumentationTest {
   @Test
   fun `first completed deferred`() {
     runTest(Dispatchers.Default) {
-      val children = listOf(
-        async {
-          tracedChild("timeout1")
-          false
-        },
-        async {
-          tracedChild("timeout2")
-          false
-        },
-        async {
-          tracedChild("timeout3")
-          true
-        },
-      )
+      val children =
+        listOf(
+          async {
+            tracedChild("timeout1")
+            false
+          },
+          async {
+            tracedChild("timeout2")
+            false
+          },
+          async {
+            tracedChild("timeout3")
+            true
+          },
+        )
 
       withTimeout(TimeUnit.SECONDS.toMillis(30)) {
         select<Boolean> {
@@ -276,11 +288,13 @@ class KotlinCoroutinesInstrumentationTest {
       assertions.add { trace ->
         trace.hasSpansSatisfyingExactly(
           {
-            it.hasName("a")
+            it
+              .hasName("a")
               .hasNoParent()
           },
           {
-            it.hasName("a2")
+            it
+              .hasName("a2")
               .hasParent(trace.getSpan(0))
           },
         )
@@ -290,11 +304,13 @@ class KotlinCoroutinesInstrumentationTest {
       assertions.add { trace ->
         trace.hasSpansSatisfyingExactly(
           {
-            it.hasName("b")
+            it
+              .hasName("b")
               .hasNoParent()
           },
           {
-            it.hasName("b2")
+            it
+              .hasName("b2")
               .hasParent(trace.getSpan(0))
           },
         )
@@ -320,11 +336,13 @@ class KotlinCoroutinesInstrumentationTest {
       { trace ->
         trace.hasSpansSatisfyingExactly(
           {
-            it.hasName("parent")
+            it
+              .hasName("parent")
               .hasNoParent()
           },
           {
-            it.hasName("child")
+            it
+              .hasName("child")
               .hasParent(trace.getSpan(0))
           },
         )
@@ -355,15 +373,18 @@ class KotlinCoroutinesInstrumentationTest {
       { trace ->
         trace.hasSpansSatisfyingExactly(
           {
-            it.hasName("parent")
+            it
+              .hasName("parent")
               .hasNoParent()
           },
           {
-            it.hasName("nested1")
+            it
+              .hasName("nested1")
               .hasParent(trace.getSpan(0))
           },
           {
-            it.hasName("nested2")
+            it
+              .hasName("nested2")
               .hasParent(trace.getSpan(0))
           },
         )
@@ -393,14 +414,16 @@ class KotlinCoroutinesInstrumentationTest {
       { trace ->
         trace.hasSpansSatisfyingExactly(
           {
-            it.hasName("a1")
+            it
+              .hasName("a1")
               .hasNoParent()
               .hasAttributesSatisfyingExactly(
                 codeFunctionAssertions(this.javaClass, "annotated1")
               )
           },
           {
-            it.hasName("KotlinCoroutinesInstrumentationTest.annotated2")
+            it
+              .hasName("KotlinCoroutinesInstrumentationTest.annotated2")
               .hasParent(trace.getSpan(0))
               .hasAttributesSatisfyingExactly(assertions)
           }
@@ -443,7 +466,8 @@ class KotlinCoroutinesInstrumentationTest {
       { trace ->
         trace.hasSpansSatisfyingExactly(
           {
-            it.hasName("ClazzWithDefaultConstructorArguments.sayHello")
+            it
+              .hasName("ClazzWithDefaultConstructorArguments.sayHello")
               .hasNoParent()
               .hasAttributesSatisfyingExactly(
                 codeFunctionAssertions(ClazzWithDefaultConstructorArguments::class.qualifiedName, "sayHello")
@@ -458,9 +482,15 @@ class KotlinCoroutinesInstrumentationTest {
     tracer.spanBuilder(opName).startSpan().end()
   }
 
-  private fun <T> runTest(dispatcherWrapper: DispatcherWrapper, block: suspend CoroutineScope.() -> T): T = runTest(dispatcherWrapper.dispatcher, block)
+  private fun <T> runTest(
+    dispatcherWrapper: DispatcherWrapper,
+    block: suspend CoroutineScope.() -> T
+  ): T = runTest(dispatcherWrapper.dispatcher, block)
 
-  private fun <T> runTest(dispatcher: CoroutineDispatcher, block: suspend CoroutineScope.() -> T): T {
+  private fun <T> runTest(
+    dispatcher: CoroutineDispatcher,
+    block: suspend CoroutineScope.() -> T
+  ): T {
     val parentSpan = tracer.spanBuilder("parent").startSpan()
     val parentScope = parentSpan.makeCurrent()
     try {
@@ -509,18 +539,21 @@ class KotlinCoroutinesInstrumentationTest {
     span.end()
   }
 
-  private fun dispatchersSourceArguments(): Stream<Arguments> = Stream.of(
-    // Wrap dispatchers since it seems that ParameterizedTest tries to automatically close
-    // Closeable arguments with no way to avoid it.
-    arguments(DispatcherWrapper(Dispatchers.Default)),
-    arguments(DispatcherWrapper(Dispatchers.IO)),
-    arguments(DispatcherWrapper(Dispatchers.Unconfined)),
-    arguments(DispatcherWrapper(threadPool.asCoroutineDispatcher())),
-    arguments(DispatcherWrapper(singleThread.asCoroutineDispatcher())),
-    arguments(DispatcherWrapper(vertx.dispatcher()))
-  )
+  private fun dispatchersSourceArguments(): Stream<Arguments> =
+    Stream.of(
+      // Wrap dispatchers since it seems that ParameterizedTest tries to automatically close
+      // Closeable arguments with no way to avoid it.
+      arguments(DispatcherWrapper(Dispatchers.Default)),
+      arguments(DispatcherWrapper(Dispatchers.IO)),
+      arguments(DispatcherWrapper(Dispatchers.Unconfined)),
+      arguments(DispatcherWrapper(threadPool.asCoroutineDispatcher())),
+      arguments(DispatcherWrapper(singleThread.asCoroutineDispatcher())),
+      arguments(DispatcherWrapper(vertx.dispatcher()))
+    )
 
-  class DispatcherWrapper(val dispatcher: CoroutineDispatcher) {
+  class DispatcherWrapper(
+    val dispatcher: CoroutineDispatcher
+  ) {
     override fun toString(): String = dispatcher.toString()
   }
 
@@ -544,14 +577,19 @@ class KotlinCoroutinesInstrumentationTest {
     }
   }
 
-  class TestContextElement(private val otelContext: Context) : ThreadContextElement<Scope> {
+  class TestContextElement(
+    private val otelContext: Context
+  ) : ThreadContextElement<Scope> {
     companion object Key : CoroutineContext.Key<TestContextElement> {
     }
 
     override val key: CoroutineContext.Key<TestContextElement>
       get() = Key
 
-    override fun restoreThreadContext(context: CoroutineContext, oldState: Scope) {
+    override fun restoreThreadContext(
+      context: CoroutineContext,
+      oldState: Scope
+    ) {
       oldState.close()
     }
 
@@ -574,13 +612,15 @@ class KotlinCoroutinesInstrumentationTest {
     testing.waitAndAssertTraces(
       { trace ->
         trace.hasSpansSatisfyingExactly({
-          it.hasName("parent")
+          it
+            .hasName("parent")
             .hasNoParent()
         })
       },
       { trace ->
         trace.hasSpansSatisfyingExactly({
-          it.hasName("dispatched")
+          it
+            .hasName("dispatched")
             .hasNoParent()
         })
       }

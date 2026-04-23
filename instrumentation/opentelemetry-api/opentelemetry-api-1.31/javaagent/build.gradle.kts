@@ -14,7 +14,9 @@ dependencies {
 }
 
 configurations.configureEach {
-  if (name == "testRuntimeClasspath" || name == "testCompileClasspath" || name.startsWith("noopTest")) {
+  if (name == "testRuntimeClasspath" || name == "testCompileClasspath" ||
+    name.startsWith("noopTest")
+  ) {
     resolutionStrategy {
       force("io.opentelemetry:opentelemetry-api:1.31.0")
     }

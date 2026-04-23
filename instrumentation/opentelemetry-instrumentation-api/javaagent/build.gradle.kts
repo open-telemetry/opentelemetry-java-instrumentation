@@ -22,7 +22,12 @@ dependencies {
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
 
   compileOnly(project(":opentelemetry-api-shaded-for-instrumenting", configuration = "shadow"))
-  compileOnly(project(":opentelemetry-instrumentation-api-shaded-for-instrumenting", configuration = "shadow"))
+  compileOnly(
+    project(
+      ":opentelemetry-instrumentation-api-shaded-for-instrumenting",
+      configuration = "shadow",
+    ),
+  )
 
   testImplementation(project(":instrumentation-api-incubator"))
   testImplementation(project(":instrumentation:opentelemetry-instrumentation-api:testing"))
@@ -36,7 +41,9 @@ testing {
   suites {
     val testOldServerSpan by registering(JvmTestSuite::class) {
       dependencies {
-        implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv:$oldServerSpanVersion")
+        implementation(
+          "io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv:$oldServerSpanVersion",
+        )
         implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")
         implementation(project(":instrumentation:opentelemetry-instrumentation-api:testing"))
       }
@@ -47,7 +54,11 @@ testing {
 configurations.configureEach {
   if (name.startsWith("muzzle-Assert")) {
     // some names also start with "muzzle-AssertFail", which is conveniently the same length
-    val ver = name.substring("muzzle-AssertPass-io.opentelemetry.instrumentation-opentelemetry-instrumentation-api-".length)
+    val ver =
+      name.substring(
+        "muzzle-AssertPass-io.opentelemetry.instrumentation-opentelemetry-instrumentation-api-"
+          .length,
+      )
     resolutionStrategy {
       dependencySubstitution {
         substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api"))
@@ -59,7 +70,11 @@ configurations.configureEach {
     resolutionStrategy {
       dependencySubstitution {
         substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api"))
-          .using(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api:$oldServerSpanVersion"))
+          .using(
+            module(
+              "io.opentelemetry.instrumentation:opentelemetry-instrumentation-api:$oldServerSpanVersion",
+            ),
+          )
       }
     }
   }
@@ -68,13 +83,19 @@ configurations.configureEach {
 tasks {
 
   val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=code")
   }
 
   val testBothSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")
   }

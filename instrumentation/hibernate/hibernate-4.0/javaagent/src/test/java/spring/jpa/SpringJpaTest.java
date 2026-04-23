@@ -91,7 +91,8 @@ class SpringJpaTest {
                                 val ->
                                     val.matches(
                                         Pattern.compile(
-                                            "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName(.*)from Customer(.*)"))),
+                                            "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*),"
+                                                + " ([^.]+).lastName(.*)from Customer(.*)"))),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "SELECT Customer" : null),
@@ -159,7 +160,8 @@ class SpringJpaTest {
                                 val ->
                                     val.matches(
                                         Pattern.compile(
-                                            "insert into Customer (.*) values \\(.*, \\?, \\?\\)"))),
+                                            "insert into Customer (.*) values \\(.*, \\?,"
+                                                + " \\?\\)"))),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "INSERT Customer" : null),
@@ -307,7 +309,9 @@ class SpringJpaTest {
                                 val ->
                                     val.matches(
                                         Pattern.compile(
-                                            "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)where ([^.]+).id=\\?"))),
+                                            "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*),"
+                                                + " ([^.]+).lastName (.*)from Customer (.*)where"
+                                                + " ([^.]+).id=\\?"))),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "SELECT Customer" : null),
@@ -398,7 +402,9 @@ class SpringJpaTest {
                                 val ->
                                     val.matches(
                                         Pattern.compile(
-                                            "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)(where ([^.]+).lastName=\\?)"))),
+                                            "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*),"
+                                                + " ([^.]+).lastName (.*)from Customer (.*)(where"
+                                                + " ([^.]+).lastName=\\?)"))),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "SELECT Customer" : null),
@@ -448,7 +454,9 @@ class SpringJpaTest {
                                 val ->
                                     val.matches(
                                         Pattern.compile(
-                                            "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)where ([^.]+).id=\\?"))),
+                                            "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*),"
+                                                + " ([^.]+).lastName (.*)from Customer (.*)where"
+                                                + " ([^.]+).id=\\?"))),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "SELECT Customer" : null),
@@ -535,7 +543,9 @@ class SpringJpaTest {
                                 val ->
                                     val.matches(
                                         Pattern.compile(
-                                            "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)where ([^.]+).id=\\?"))),
+                                            "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*),"
+                                                + " ([^.]+).lastName (.*)from Customer (.*)where"
+                                                + " ([^.]+).id=\\?"))),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "SELECT Customer" : null),

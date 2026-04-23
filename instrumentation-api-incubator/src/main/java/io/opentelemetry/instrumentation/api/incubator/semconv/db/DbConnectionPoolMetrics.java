@@ -65,7 +65,8 @@ public final class DbConnectionPoolMetrics {
         .upDownCounterBuilder(metricName)
         .setUnit(emitStableDatabaseSemconv() ? "{connection}" : "{connections}")
         .setDescription(
-            "The number of connections that are currently in state described by the state attribute.")
+            "The number of connections that are currently in state described by the state"
+                + " attribute.")
         .buildObserver();
   }
 
@@ -114,7 +115,8 @@ public final class DbConnectionPoolMetrics {
         .setDescription(
             emitStableDatabaseSemconv()
                 ? "The number of current pending requests for an open connection."
-                : "The number of pending requests for an open connection, cumulative for the entire pool.")
+                : "The number of pending requests for an open connection, cumulative for the entire"
+                    + " pool.")
         .buildObserver();
   }
 
@@ -134,7 +136,8 @@ public final class DbConnectionPoolMetrics {
         .counterBuilder(metricName)
         .setUnit(emitStableDatabaseSemconv() ? "{timeout}" : "{timeouts}")
         .setDescription(
-            "The number of connection timeouts that have occurred trying to obtain a connection from the pool.")
+            "The number of connection timeouts that have occurred trying to obtain a connection"
+                + " from the pool.")
         .build();
   }
 

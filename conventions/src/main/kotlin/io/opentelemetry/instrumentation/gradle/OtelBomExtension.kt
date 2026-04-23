@@ -13,7 +13,11 @@ abstract class OtelBomExtension {
   abstract val projectFilter: Property<Predicate<Project>>
   val additionalDependencies: MutableSet<String> = hashSetOf()
 
-  fun addExtra(groupId: String, artifactId: String, version: String) {
+  fun addExtra(
+    groupId: String,
+    artifactId: String,
+    version: String
+  ) {
     this.additionalDependencies.add(groupId + ":" + artifactId + ":" + version)
   }
 }

@@ -20,7 +20,6 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class KotlinSpringDataTest {
-
   companion object {
     @JvmStatic
     @RegisterExtension

@@ -156,7 +156,8 @@ class ActiveMqTest extends TargetSystemTest {
                     .hasUnit("By")
                     .hasDataPointsWithAttributes(topicAttributes)
                     .hasDescription(
-                        "The amount of configured non-persistent storage limit for this destination"))
+                        "The amount of configured non-persistent storage limit for this"
+                            + " destination"))
         // broker metrics
         .add(
             "activemq.connection.count",

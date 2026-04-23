@@ -30,87 +30,96 @@ import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.milliseconds
 
 abstract class AbstractKtorHttpServerTest : AbstractHttpServerTest<EmbeddedServer<*, *>>() {
-
   abstract fun getTesting(): InstrumentationExtension
 
   abstract fun installOpenTelemetry(application: Application)
 
-  override fun setupServer(): EmbeddedServer<*, *> = embeddedServer(Netty, port = port) {
-    installOpenTelemetry(this)
+  override fun setupServer(): EmbeddedServer<*, *> =
+    embeddedServer(Netty, port = port) {
+      installOpenTelemetry(this)
 
-    routing {
-      get(ServerEndpoint.SUCCESS.path) {
-        controller(ServerEndpoint.SUCCESS) {
-          call.respondText(ServerEndpoint.SUCCESS.body, status = HttpStatusCode.fromValue(ServerEndpoint.SUCCESS.status))
+      routing {
+        get(ServerEndpoint.SUCCESS.path) {
+          controller(ServerEndpoint.SUCCESS) {
+            call.respondText(ServerEndpoint.SUCCESS.body, status = HttpStatusCode.fromValue(ServerEndpoint.SUCCESS.status))
+          }
+        }
+
+        get(ServerEndpoint.REDIRECT.path) {
+          controller(ServerEndpoint.REDIRECT) {
+            call.respondRedirect(ServerEndpoint.REDIRECT.body)
+          }
+        }
+
+        get(ServerEndpoint.ERROR.path) {
+          controller(ServerEndpoint.ERROR) {
+            call.respondText(ServerEndpoint.ERROR.body, status = HttpStatusCode.fromValue(ServerEndpoint.ERROR.status))
+          }
+        }
+
+        get(ServerEndpoint.EXCEPTION.path) {
+          controller(ServerEndpoint.EXCEPTION) {
+            throw IllegalStateException(ServerEndpoint.EXCEPTION.body)
+          }
+        }
+
+        get("/query") {
+          controller(ServerEndpoint.QUERY_PARAM) {
+            call.respondText("some=${call.request.queryParameters["some"]}", status = HttpStatusCode.fromValue(ServerEndpoint.QUERY_PARAM.status))
+          }
+        }
+
+        get("/path/{id}/param") {
+          controller(ServerEndpoint.PATH_PARAM) {
+            call.respondText(
+              call.parameters["id"]
+                ?: "",
+              status = HttpStatusCode.fromValue(ServerEndpoint.PATH_PARAM.status),
+            )
+          }
+        }
+
+        get("/child") {
+          // with ktor 3.0 triggers the issue described in https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/16430
+          withContext(Dispatchers.IO) {
+            delay(1.milliseconds)
+          }
+          controller(ServerEndpoint.INDEXED_CHILD) {
+            ServerEndpoint.INDEXED_CHILD.collectSpanAttributes { call.request.queryParameters[it] }
+            call.respondText(ServerEndpoint.INDEXED_CHILD.body, status = HttpStatusCode.fromValue(ServerEndpoint.INDEXED_CHILD.status))
+          }
+        }
+
+        get("/captureHeaders") {
+          controller(ServerEndpoint.CAPTURE_HEADERS) {
+            call.response.header("X-Test-Response", call.request.header("X-Test-Request") ?: "")
+            call.respondText(ServerEndpoint.CAPTURE_HEADERS.body, status = HttpStatusCode.fromValue(ServerEndpoint.CAPTURE_HEADERS.status))
+          }
         }
       }
-
-      get(ServerEndpoint.REDIRECT.path) {
-        controller(ServerEndpoint.REDIRECT) {
-          call.respondRedirect(ServerEndpoint.REDIRECT.body)
-        }
-      }
-
-      get(ServerEndpoint.ERROR.path) {
-        controller(ServerEndpoint.ERROR) {
-          call.respondText(ServerEndpoint.ERROR.body, status = HttpStatusCode.fromValue(ServerEndpoint.ERROR.status))
-        }
-      }
-
-      get(ServerEndpoint.EXCEPTION.path) {
-        controller(ServerEndpoint.EXCEPTION) {
-          throw IllegalStateException(ServerEndpoint.EXCEPTION.body)
-        }
-      }
-
-      get("/query") {
-        controller(ServerEndpoint.QUERY_PARAM) {
-          call.respondText("some=${call.request.queryParameters["some"]}", status = HttpStatusCode.fromValue(ServerEndpoint.QUERY_PARAM.status))
-        }
-      }
-
-      get("/path/{id}/param") {
-        controller(ServerEndpoint.PATH_PARAM) {
-          call.respondText(
-            call.parameters["id"]
-              ?: "",
-            status = HttpStatusCode.fromValue(ServerEndpoint.PATH_PARAM.status),
-          )
-        }
-      }
-
-      get("/child") {
-        // with ktor 3.0 triggers the issue described in https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/16430
-        withContext(Dispatchers.IO) {
-          delay(1.milliseconds)
-        }
-        controller(ServerEndpoint.INDEXED_CHILD) {
-          ServerEndpoint.INDEXED_CHILD.collectSpanAttributes { call.request.queryParameters[it] }
-          call.respondText(ServerEndpoint.INDEXED_CHILD.body, status = HttpStatusCode.fromValue(ServerEndpoint.INDEXED_CHILD.status))
-        }
-      }
-
-      get("/captureHeaders") {
-        controller(ServerEndpoint.CAPTURE_HEADERS) {
-          call.response.header("X-Test-Response", call.request.header("X-Test-Request") ?: "")
-          call.respondText(ServerEndpoint.CAPTURE_HEADERS.body, status = HttpStatusCode.fromValue(ServerEndpoint.CAPTURE_HEADERS.status))
-        }
-      }
-    }
-  }.start()
+    }.start()
 
   override fun stopServer(server: EmbeddedServer<*, *>) {
     server.stop(0, 10, TimeUnit.SECONDS)
   }
 
   // Copy in HttpServerTest.controller but make it a suspending function
-  private suspend fun controller(endpoint: ServerEndpoint, wrapped: suspend () -> Unit) {
+  private suspend fun controller(
+    endpoint: ServerEndpoint,
+    wrapped: suspend () -> Unit
+  ) {
     assert(Span.current().spanContext.isValid, { "Controller should have a parent span. " })
     if (endpoint == ServerEndpoint.NOT_FOUND) {
       wrapped()
       return
     }
-    val span = getTesting().openTelemetry.getTracer("test").spanBuilder("controller").setSpanKind(SpanKind.INTERNAL).startSpan()
+    val span =
+      getTesting()
+        .openTelemetry
+        .getTracer("test")
+        .spanBuilder("controller")
+        .setSpanKind(SpanKind.INTERNAL)
+        .startSpan()
     try {
       withContext(Context.current().with(span).asContextElement()) {
         wrapped()

@@ -18,8 +18,16 @@ val latestReleasedVersion: String by lazy {
   val temp: Configuration = configurations.create("tempConfig")
   temp.resolutionStrategy.cacheDynamicVersionsFor(0, TimeUnit.SECONDS)
   // pick the bom, since we don't use dependency substitution on it.
-  dependencies.add(temp.name, "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:latest.release")
-  val moduleVersion = configurations["tempConfig"].resolvedConfiguration.firstLevelModuleDependencies.elementAt(0).moduleVersion
+  dependencies.add(
+    temp.name,
+    "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:latest.release",
+  )
+  val moduleVersion =
+    configurations["tempConfig"]
+      .resolvedConfiguration.firstLevelModuleDependencies
+      .elementAt(
+        0,
+      ).moduleVersion
 
   configurations.remove(temp)
   logger.info("Discovered latest release version: $moduleVersion")
@@ -37,12 +45,14 @@ fun findArtifact(version: String): File {
     // Maven coordinates as the project, which Gradle would not allow otherwise.
     group = "virtual_group"
     val depJar = "${base.archivesName.get()}-$version.jar"
-    val configuration: Configuration = configurations.detachedConfiguration(
-      dependencies.create(depModule)
-    )
-    return files(configuration.files).filter {
-      it.name.equals(depJar)
-    }.singleFile
+    val configuration: Configuration =
+      configurations.detachedConfiguration(
+        dependencies.create(depModule),
+      )
+    return files(configuration.files)
+      .filter {
+        it.name.equals(depJar)
+      }.singleFile
   } finally {
     group = existingGroup
   }
@@ -59,8 +69,9 @@ if (project.findProperty("otel.stable") == "true" && project.path != ":javaagent
 
           // the japicmp "new" version is either the user-specified one, or the locally built jar.
           val apiNewVersion: String? by project
-          val newArtifact = apiNewVersion?.let { findArtifact(it) }
-            ?: file(getByName<Jar>("jar").archiveFile)
+          val newArtifact =
+            apiNewVersion?.let { findArtifact(it) }
+              ?: file(getByName<Jar>("jar").archiveFile)
           newClasspath.from(files(newArtifact))
 
           // only output changes, not everything
@@ -77,7 +88,7 @@ if (project.findProperty("otel.stable") == "true" && project.path != ":javaagent
               // so publish the whole API. We do that by flipping this flag, and comparing the current against nothing.
               onlyModified.set(false)
               files()
-            }
+            },
           )
 
           // Reproduce defaults from https://github.com/melix/japicmp-gradle-plugin/blob/09f52739ef1fccda6b4310cf3f4b19dc97377024/src/main/java/me/champeau/gradle/japicmp/report/ViolationsGenerator.java#L130
@@ -97,8 +108,14 @@ if (project.findProperty("otel.stable") == "true" && project.path != ":javaagent
           packageExcludes.addAll("*.internal", "*.internal.*")
           val baseVersionString = if (apiBaseVersion == null) "latest" else baselineVersion
           txtOutputFile.set(
-            apiNewVersion?.let { file("$rootDir/docs/apidiffs/${apiNewVersion}_vs_$baselineVersion/${base.archivesName.get()}.txt") }
-              ?: file("$rootDir/docs/apidiffs/current_vs_$baseVersionString/${base.archivesName.get()}.txt")
+            apiNewVersion?.let {
+              file(
+                "$rootDir/docs/apidiffs/${apiNewVersion}_vs_$baselineVersion/${base.archivesName.get()}.txt",
+              )
+            }
+              ?: file(
+                "$rootDir/docs/apidiffs/current_vs_$baseVersionString/${base.archivesName.get()}.txt",
+              ),
           )
         }
         // have the check task depend on the api comparison task, to make it more likely it will get used.

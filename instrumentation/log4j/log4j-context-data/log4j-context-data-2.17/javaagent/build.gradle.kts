@@ -14,11 +14,19 @@ muzzle {
 dependencies {
   library("org.apache.logging.log4j:log4j-core:2.17.0")
 
-  implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.17:library-autoconfigure"))
+  implementation(
+    project(
+      ":instrumentation:log4j:log4j-context-data:log4j-context-data-2.17:library-autoconfigure",
+    ),
+  )
 
-  testInstrumentation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.7:javaagent"))
+  testInstrumentation(
+    project(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.7:javaagent"),
+  )
 
-  testImplementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
+  testImplementation(
+    project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"),
+  )
 }
 
 testing {
@@ -32,14 +40,18 @@ testing {
         }
       }
       dependencies {
-        implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
+        implementation(
+          project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"),
+        )
       }
 
       targets {
         all {
           testTask.configure {
             jvmArgs("-Dlog4j2.enable.threadlocals=false")
-            jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
+            jvmArgs(
+              "-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language",
+            )
           }
         }
       }
@@ -47,7 +59,9 @@ testing {
 
     val testAddBaggage by registering(JvmTestSuite::class) {
       dependencies {
-        implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
+        implementation(
+          project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"),
+        )
       }
 
       targets {
@@ -62,7 +76,9 @@ testing {
 
     val testLoggingKeys by registering(JvmTestSuite::class) {
       dependencies {
-        implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
+        implementation(
+          project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"),
+        )
       }
 
       targets {
@@ -88,7 +104,9 @@ tasks {
   // now testing-common includes jetty / servlet.
   test {
     jvmArgs("-Dlog4j2.enable.threadlocals=true")
-    jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
+    jvmArgs(
+      "-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language",
+    )
   }
 
   named("check") {

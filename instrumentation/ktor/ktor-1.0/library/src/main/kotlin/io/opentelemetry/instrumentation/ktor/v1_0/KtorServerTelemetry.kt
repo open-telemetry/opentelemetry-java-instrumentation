@@ -30,7 +30,6 @@ import java.util.function.UnaryOperator
 class KtorServerTelemetry private constructor(
   private val instrumenter: Instrumenter<ApplicationRequest, ApplicationResponse>,
 ) {
-
   class Configuration {
     internal lateinit var builder: DefaultHttpServerInstrumenterBuilder<ApplicationRequest, ApplicationResponse>
 
@@ -51,10 +50,10 @@ class KtorServerTelemetry private constructor(
     ) {
       builder.setSpanStatusExtractorCustomizer { prevExtractor ->
         SpanStatusExtractor {
-            spanStatusBuilder: SpanStatusBuilder,
-            request: ApplicationRequest,
-            response: ApplicationResponse?,
-            throwable: Throwable?
+          spanStatusBuilder: SpanStatusBuilder,
+          request: ApplicationRequest,
+          response: ApplicationResponse?,
+          throwable: Throwable?
           ->
           extractor(prevExtractor).extract(spanStatusBuilder, request, response, throwable)
         }
@@ -97,7 +96,11 @@ class KtorServerTelemetry private constructor(
     return instrumenter.start(parentContext, call.request)
   }
 
-  private fun end(context: Context, call: ApplicationCall, error: Throwable?) {
+  private fun end(
+    context: Context,
+    call: ApplicationCall,
+    error: Throwable?
+  ) {
     instrumenter.end(context, call.request, call.response, error)
   }
 
@@ -109,18 +112,22 @@ class KtorServerTelemetry private constructor(
 
     override val key: AttributeKey<KtorServerTelemetry> = AttributeKey("OpenTelemetry")
 
-    override fun install(pipeline: Application, configure: Configuration.() -> Unit): KtorServerTelemetry {
+    override fun install(
+      pipeline: Application,
+      configure: Configuration.() -> Unit
+    ): KtorServerTelemetry {
       val configuration = Configuration().apply(configure)
 
       if (!configuration.isOpenTelemetryInitialized()) {
         throw IllegalArgumentException("OpenTelemetry must be set")
       }
 
-      val instrumenter = InstrumenterUtil.buildUpstreamInstrumenter(
-        configuration.builder.instrumenterBuilder(),
-        ApplicationRequestGetter,
-        configuration.spanKindExtractor(SpanKindExtractor.alwaysServer())
-      )
+      val instrumenter =
+        InstrumenterUtil.buildUpstreamInstrumenter(
+          configuration.builder.instrumenterBuilder(),
+          ApplicationRequestGetter,
+          configuration.spanKindExtractor(SpanKindExtractor.alwaysServer())
+        )
 
       val feature = KtorServerTelemetry(instrumenter)
 

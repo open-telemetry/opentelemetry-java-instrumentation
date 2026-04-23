@@ -8,12 +8,17 @@ dependencies {
   compileOnly(project(":javaagent-bootstrap"))
 
   // ensure no cross interference
-  testInstrumentation(project(":instrumentation:jboss-logmanager:jboss-logmanager-appender-1.1:javaagent"))
+  testInstrumentation(
+    project(":instrumentation:jboss-logmanager:jboss-logmanager-appender-1.1:javaagent"),
+  )
 }
 
 tasks {
   val testExperimental by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.java-util-logging.experimental-log-attributes=true")

@@ -44,7 +44,8 @@ public final class Constants {
   public static final String METRIC_DESCRIPTION_MEMORY = "Measure of memory used.";
   public static final String METRIC_NAME_MEMORY_AFTER = "jvm.memory.used_after_last_gc";
   public static final String METRIC_DESCRIPTION_MEMORY_AFTER =
-      "Measure of memory used, as measured after the most recent garbage collection event on this pool.";
+      "Measure of memory used, as measured after the most recent garbage collection event on this"
+          + " pool.";
   public static final String METRIC_NAME_MEMORY_ALLOCATION = "jvm.memory.allocation";
   public static final String METRIC_DESCRIPTION_MEMORY_ALLOCATION =
       "Measure of memory allocations.";

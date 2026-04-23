@@ -17,8 +17,9 @@ dependencies {
   runtimeOnly("org.slf4j:slf4j-simple")
 }
 
-val extraTag = findProperty("extraTag")
-  ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
+val extraTag =
+  findProperty("extraTag")
+    ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
 
 val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
 

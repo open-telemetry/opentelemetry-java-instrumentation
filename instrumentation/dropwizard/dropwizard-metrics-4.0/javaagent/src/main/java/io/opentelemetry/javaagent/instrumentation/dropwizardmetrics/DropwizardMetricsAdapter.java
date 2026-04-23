@@ -83,7 +83,8 @@ public class DropwizardMetricsAdapter implements MetricRegistryListener {
     if (sanitized.isEmpty()) {
       logger.log(
           WARNING,
-          "Dropwizard metric name ''{0}'' contains no valid characters after sanitization, skipping instrument creation",
+          "Dropwizard metric name ''{0}'' contains no valid characters after sanitization, skipping"
+              + " instrument creation",
           name);
       return null;
     }
@@ -92,7 +93,8 @@ public class DropwizardMetricsAdapter implements MetricRegistryListener {
     if (!Character.isLetter(sanitized.charAt(0))) {
       logger.log(
           WARNING,
-          "Dropwizard metric name ''{0}'' does not start with a letter after sanitization, skipping instrument creation",
+          "Dropwizard metric name ''{0}'' does not start with a letter after sanitization, skipping"
+              + " instrument creation",
           name);
       return null;
     }

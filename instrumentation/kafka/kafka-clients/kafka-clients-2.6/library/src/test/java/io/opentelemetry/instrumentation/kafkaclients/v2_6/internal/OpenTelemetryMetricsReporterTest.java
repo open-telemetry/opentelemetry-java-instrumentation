@@ -54,7 +54,8 @@ class OpenTelemetryMetricsReporterTest extends AbstractOpenTelemetryMetricsRepor
             })
         .hasRootCauseInstanceOf(IllegalStateException.class)
         .hasRootCauseMessage(
-            "Configuration property opentelemetry.supplier is not instance of OpenTelemetrySupplier");
+            "Configuration property opentelemetry.supplier is not instance of"
+                + " OpenTelemetrySupplier");
     assertThatThrownBy(
             () -> {
               Map<String, Object> producerConfig = producerConfig();
@@ -94,7 +95,8 @@ class OpenTelemetryMetricsReporterTest extends AbstractOpenTelemetryMetricsRepor
             })
         .hasRootCauseInstanceOf(IllegalStateException.class)
         .hasRootCauseMessage(
-            "Configuration property opentelemetry.supplier is not instance of OpenTelemetrySupplier");
+            "Configuration property opentelemetry.supplier is not instance of"
+                + " OpenTelemetrySupplier");
     assertThatThrownBy(
             () -> {
               Map<String, Object> consumerConfig = consumerConfig();

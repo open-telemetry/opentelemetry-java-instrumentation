@@ -106,7 +106,8 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
       jdbcTemplate
           .getObject()
           .execute(
-              "create table customer (id bigint not null, name varchar not null, primary key (id))");
+              "create table customer (id bigint not null, name varchar not null, primary key"
+                  + " (id))");
     }
 
     @Bean
@@ -188,7 +189,8 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
                         .hasKind(SpanKind.CLIENT)
                         .hasAttribute(
                             DB_STATEMENT,
-                            "create table customer (id bigint not null, name varchar not null, primary key (id))")),
+                            "create table customer (id bigint not null, name varchar not null,"
+                                + " primary key (id))")),
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(
                 clientSpan ->

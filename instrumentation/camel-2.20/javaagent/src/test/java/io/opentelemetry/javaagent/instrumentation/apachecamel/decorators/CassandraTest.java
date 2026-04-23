@@ -101,7 +101,8 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
             .withLocalDatacenter(cassandra.getLocalDatacenter())
             .build()) {
       cqlSession.execute(
-          "CREATE KEYSPACE IF NOT EXISTS test WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};");
+          "CREATE KEYSPACE IF NOT EXISTS test WITH replication = {'class': 'SimpleStrategy',"
+              + " 'replication_factor': 1};");
       cqlSession.execute("CREATE TABLE IF NOT EXISTS test.users (id int PRIMARY KEY, name TEXT);");
     }
   }

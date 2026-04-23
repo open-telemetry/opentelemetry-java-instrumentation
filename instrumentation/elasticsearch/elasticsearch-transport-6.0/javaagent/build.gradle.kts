@@ -34,7 +34,9 @@ dependencies {
   testLibrary("org.elasticsearch.plugin:transport-netty4-client:6.0.0")
 
   testImplementation(project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"))
-  testImplementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"))
+  testImplementation(
+    project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"),
+  )
   testImplementation("org.apache.logging.log4j:log4j-core:2.11.0")
   testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
 }
@@ -50,8 +52,12 @@ testing {
           implementation("org.elasticsearch.client:transport:6.0.0")
           implementation("org.elasticsearch.plugin:transport-netty4-client:6.0.0")
         }
-        implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"))
-        implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"))
+        implementation(
+          project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"),
+        )
+        implementation(
+          project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"),
+        )
       }
     }
 
@@ -64,8 +70,12 @@ testing {
           implementation("org.elasticsearch.client:transport:6.5.0")
           implementation("org.elasticsearch.plugin:transport-netty4-client:6.5.0")
         }
-        implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"))
-        implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"))
+        implementation(
+          project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"),
+        )
+        implementation(
+          project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"),
+        )
       }
     }
 
@@ -78,8 +88,12 @@ testing {
           implementation("org.elasticsearch.client:transport:7.0.0")
           implementation("org.elasticsearch.plugin:transport-netty4-client:7.0.0")
         }
-        implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"))
-        implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"))
+        implementation(
+          project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"),
+        )
+        implementation(
+          project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"),
+        )
       }
     }
   }
@@ -94,25 +108,30 @@ tasks {
 
   val testSuites = testing.suites.withType(JvmTestSuite::class)
 
-  val stableSemconvSuites = testSuites.map { suite ->
-    register<Test>("${suite.name}StableSemconv") {
-      testClassesDirs = suite.sources.output.classesDirs
-      classpath = suite.sources.runtimeClasspath
+  val stableSemconvSuites =
+    testSuites.map { suite ->
+      register<Test>("${suite.name}StableSemconv") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
 
-      jvmArgs("-Dotel.semconv-stability.opt-in=database")
-      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+        jvmArgs("-Dotel.semconv-stability.opt-in=database")
+        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+      }
     }
-  }
 
-  val experimentalSuites = testSuites.map { suite ->
-    register<Test>("${suite.name}Experimental") {
-      testClassesDirs = suite.sources.output.classesDirs
-      classpath = suite.sources.runtimeClasspath
+  val experimentalSuites =
+    testSuites.map { suite ->
+      register<Test>("${suite.name}Experimental") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
 
-      jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
-      systemProperty("metadataConfig", "otel.instrumentation.elasticsearch.experimental-span-attributes=true")
+        jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
+        systemProperty(
+          "metadataConfig",
+          "otel.instrumentation.elasticsearch.experimental-span-attributes=true",
+        )
+      }
     }
-  }
 
   check {
     dependsOn(testing.suites, stableSemconvSuites, experimentalSuites)

@@ -15,16 +15,19 @@ class KtorHttpClientSingleConnection(
   private val host: String,
   private val port: Int
 ) : SingleConnection {
-
-  override fun doRequest(path: String, requestHeaders: MutableMap<String, String>) = runBlocking {
-    val request = HttpRequestBuilder(
-      scheme = "http",
-      host = host,
-      port = port,
-      path = path,
-    ).apply {
-      requestHeaders.forEach { (name, value) -> headers.append(name, value) }
-    }
+  override fun doRequest(
+    path: String,
+    requestHeaders: MutableMap<String, String>
+  ) = runBlocking {
+    val request =
+      HttpRequestBuilder(
+        scheme = "http",
+        host = host,
+        port = port,
+        path = path,
+      ).apply {
+        requestHeaders.forEach { (name, value) -> headers.append(name, value) }
+      }
 
     client.request(request).status.value
   }

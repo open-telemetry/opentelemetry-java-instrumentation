@@ -26,8 +26,9 @@ dependencies {
 
 val targetJDK = project.findProperty("targetJDK") ?: "11"
 
-val tag = findProperty("tag")
-  ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
+val tag =
+  findProperty("tag")
+    ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
 
 java {
   // this is needed to avoid jib failing with

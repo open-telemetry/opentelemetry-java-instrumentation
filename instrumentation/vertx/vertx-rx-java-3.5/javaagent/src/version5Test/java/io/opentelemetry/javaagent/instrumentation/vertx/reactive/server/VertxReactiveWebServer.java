@@ -175,7 +175,8 @@ public class VertxReactiveWebServer extends AbstractVerticle {
               SqlConnection conn = res.result();
 
               conn.query(
-                      "CREATE TABLE IF NOT EXISTS products(id INT IDENTITY, name VARCHAR(255), price FLOAT, weight INT)")
+                      "CREATE TABLE IF NOT EXISTS products(id INT IDENTITY, name VARCHAR(255),"
+                          + " price FLOAT, weight INT)")
                   .execute()
                   .onComplete(
                       ddl -> {
@@ -185,7 +186,8 @@ public class VertxReactiveWebServer extends AbstractVerticle {
                         }
 
                         conn.query(
-                                "INSERT INTO products (name, price, weight) VALUES ('Egg Whisk', 3.99, 150), ('Tea Cosy', 5.99, 100), ('Spatula', 1.00, 80)")
+                                "INSERT INTO products (name, price, weight) VALUES ('Egg Whisk',"
+                                    + " 3.99, 150), ('Tea Cosy', 5.99, 100), ('Spatula', 1.00, 80)")
                             .execute()
                             .onComplete(
                                 fixtures -> {

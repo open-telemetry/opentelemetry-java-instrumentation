@@ -16,8 +16,9 @@ dependencies {
 
 val targetJDK = project.findProperty("targetJDK") ?: "11"
 
-val tag = findProperty("tag")
-  ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
+val tag =
+  findProperty("tag")
+    ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
 
 java {
   // needed by jib to detect java version used in project
@@ -32,7 +33,8 @@ jib {
   from.image = "eclipse-temurin:$targetJDK"
   to.image = "ghcr.io/$repo/smoke-test-security-manager:jdk$targetJDK-$tag"
   container.mainClass = "io.opentelemetry.smoketest.securitymanager.Main"
-  container.jvmFlags = listOf("-Djava.security.manager", "-Djava.security.policy=/app/resources/security.policy")
+  container.jvmFlags =
+    listOf("-Djava.security.manager", "-Djava.security.policy=/app/resources/security.policy")
 }
 
 tasks {

@@ -34,7 +34,8 @@ public abstract class AbstractR2DbcInstrumentationAutoConfigurationTest {
           DatabaseClient client = context.getBean(DatabaseClient.class);
           client
               .sql(
-                  "CREATE TABLE IF NOT EXISTS player(id INT NOT NULL AUTO_INCREMENT, name VARCHAR(255), age INT, PRIMARY KEY (id))")
+                  "CREATE TABLE IF NOT EXISTS player(id INT NOT NULL AUTO_INCREMENT, name"
+                      + " VARCHAR(255), age INT, PRIMARY KEY (id))")
               .fetch()
               .all()
               .blockLast();
@@ -46,7 +47,9 @@ public abstract class AbstractR2DbcInstrumentationAutoConfigurationTest {
                           span ->
                               span.hasAttribute(
                                   maybeStable(DB_STATEMENT),
-                                  "CREATE TABLE IF NOT EXISTS player(id INT NOT NULL AUTO_INCREMENT, name VARCHAR(?), age INT, PRIMARY KEY (id))")),
+                                  "CREATE TABLE IF NOT EXISTS player(id INT NOT NULL"
+                                      + " AUTO_INCREMENT, name VARCHAR(?), age INT, PRIMARY KEY"
+                                      + " (id))")),
                   trace ->
                       trace.hasSpansSatisfyingExactly(
                           span ->

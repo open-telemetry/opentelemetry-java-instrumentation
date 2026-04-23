@@ -44,7 +44,8 @@ public class DocGeneratorApplication {
       writer.write("# This file is generated and should not be manually edited.\n");
       writer.write("# The structure and contents are a work in progress and subject to change.\n");
       writer.write(
-          "# For more information see: https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13468\n\n");
+          "# For more information see:"
+              + " https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13468\n\n");
       writer.write("file_format: 0.5\n\n");
       YamlHelper.generateInstrumentationYaml(modules, writer);
     }

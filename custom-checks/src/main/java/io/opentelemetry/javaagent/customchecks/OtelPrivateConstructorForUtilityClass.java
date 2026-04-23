@@ -19,7 +19,9 @@ import com.sun.source.tree.ClassTree;
 @AutoService(BugChecker.class)
 @BugPattern(
     summary =
-        "Classes which are not intended to be instantiated should be made non-instantiable with a private constructor. This includes utility classes (classes with only static members), and the main class.",
+        "Classes which are not intended to be instantiated should be made non-instantiable with a"
+            + " private constructor. This includes utility classes (classes with only static"
+            + " members), and the main class.",
     severity = WARNING)
 public class OtelPrivateConstructorForUtilityClass extends BugChecker
     implements BugChecker.ClassTreeMatcher {

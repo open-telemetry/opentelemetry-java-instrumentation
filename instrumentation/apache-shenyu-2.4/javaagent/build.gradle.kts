@@ -42,7 +42,10 @@ if (otelProps.testLatestDeps) {
 tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.apache-shenyu.experimental-span-attributes=true")
 
-  systemProperty("metadataConfig", "otel.instrumentation.apache-shenyu.experimental-span-attributes=true")
+  systemProperty(
+    "metadataConfig",
+    "otel.instrumentation.apache-shenyu.experimental-span-attributes=true",
+  )
   systemProperty("collectMetadata", otelProps.collectMetadata)
 
   // required on jdk17

@@ -55,24 +55,30 @@ dependencies {
 
 val warDir = layout.buildDirectory.dir("testapp/war")
 
-val launcher = javaToolchains.launcherFor {
-  languageVersion.set(JavaLanguageVersion.of(8))
-}
+val launcher =
+  javaToolchains.launcherFor {
+    languageVersion.set(JavaLanguageVersion.of(8))
+  }
 
 class CompilerArgumentsProvider(
-  private val buildDir: Directory
+  private val buildDir: Directory,
 ) : CommandLineArgumentProvider {
-  override fun asArguments(): Iterable<String> = listOf(
-    // gwt module
-    "test.gwt.Greeting",
-    "-war", buildDir.dir("testapp/war").asFile.absolutePath,
-    "-logLevel", "INFO",
-    "-localWorkers", "2",
-    "-compileReport",
-    "-extra", buildDir.dir("testapp/extra").asFile.absolutePath,
-    // makes compile a bit faster
-    "-draftCompile",
-  )
+  override fun asArguments(): Iterable<String> =
+    listOf(
+      // gwt module
+      "test.gwt.Greeting",
+      "-war",
+      buildDir.dir("testapp/war").asFile.absolutePath,
+      "-logLevel",
+      "INFO",
+      "-localWorkers",
+      "2",
+      "-compileReport",
+      "-extra",
+      buildDir.dir("testapp/extra").asFile.absolutePath,
+      // makes compile a bit faster
+      "-draftCompile",
+    )
 }
 
 tasks {
@@ -91,9 +97,11 @@ tasks {
     argumentProviders.add(CompilerArgumentsProvider(layout.buildDirectory.get()))
 
     if (otelProps.testLatestDeps) {
-      javaLauncher.set(project.javaToolchains.launcherFor {
-        languageVersion = JavaLanguageVersion.of(11)
-      })
+      javaLauncher.set(
+        project.javaToolchains.launcherFor {
+          languageVersion = JavaLanguageVersion.of(11)
+        },
+      )
     }
   }
 
@@ -111,7 +119,10 @@ tasks {
     dependsOn(copyTestWebapp)
 
     // add test app classes to classpath
-    classpath = sourceSets.test.get().runtimeClasspath.plus(files(layout.buildDirectory.dir("testapp/classes")))
+    classpath =
+      sourceSets.test.get().runtimeClasspath.plus(
+        files(layout.buildDirectory.dir("testapp/classes")),
+      )
   }
 }
 

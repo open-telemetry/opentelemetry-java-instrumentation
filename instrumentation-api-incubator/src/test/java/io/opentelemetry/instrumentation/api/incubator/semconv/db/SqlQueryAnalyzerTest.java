@@ -252,7 +252,10 @@ class SqlQueryAnalyzerTest {
     assertThat(result).isNotNull();
     assertThat(result)
         .isEqualTo(
-            "SELECT very_long_table_name_0 very_long_table_name_1 very_long_table_name_2 very_long_table_name_3 very_long_table_name_4 very_long_table_name_5 very_long_table_name_6 very_long_table_name_7 very_long_table_name_8 very_long_table_name_9");
+            "SELECT very_long_table_name_0 very_long_table_name_1 very_long_table_name_2"
+                + " very_long_table_name_3 very_long_table_name_4 very_long_table_name_5"
+                + " very_long_table_name_6 very_long_table_name_7 very_long_table_name_8"
+                + " very_long_table_name_9");
     assertThat(result.length()).isEqualTo(236);
   }
 
@@ -468,14 +471,16 @@ class SqlQueryAnalyzerTest {
             "select col from table1 union select col from table2",
             expect("SELECT", null, "SELECT table1 SELECT table2")),
         Arguments.of(
-            "SELECT id, name FROM employees UNION ALL SELECT id, name FROM contractors UNION SELECT id, name FROM vendors",
+            "SELECT id, name FROM employees UNION ALL SELECT id, name FROM contractors UNION SELECT"
+                + " id, name FROM vendors",
             expect("SELECT", null, "SELECT employees SELECT contractors SELECT vendors")),
         // Parenthesized table with UNION - identifier cancels pending subquery push
         Arguments.of(
             "SELECT * FROM (t UNION SELECT * FROM t2), t3",
             expect("SELECT", null, "SELECT t SELECT t2")),
         Arguments.of(
-            "select id, (select max(foo) from (select foo from foos union all select foo from bars)) as foo from main_table",
+            "select id, (select max(foo) from (select foo from foos union all select foo from"
+                + " bars)) as foo from main_table",
             expect("SELECT", null, "SELECT SELECT SELECT foos SELECT bars main_table")),
         Arguments.of(
             "select col from table where col in (select * from anotherTable)",
@@ -861,11 +866,13 @@ class SqlQueryAnalyzerTest {
                 "SELECT")),
         // Multiple CTEs - CTE references filtered in main query
         Arguments.of(
-            "WITH a AS (SELECT * FROM t1), b AS (SELECT * FROM t2) SELECT * FROM a JOIN b ON a.id = b.id",
+            "WITH a AS (SELECT * FROM t1), b AS (SELECT * FROM t2) SELECT * FROM a JOIN b ON a.id ="
+                + " b.id",
             expect("SELECT", null, "SELECT t1 SELECT t2 SELECT")),
         // Recursive CTE - self-reference filtered in CTE body and main query
         Arguments.of(
-            "WITH RECURSIVE cte AS (SELECT id FROM t WHERE parent IS NULL UNION ALL SELECT t.id FROM t JOIN cte ON t.parent = cte.id) SELECT * FROM cte",
+            "WITH RECURSIVE cte AS (SELECT id FROM t WHERE parent IS NULL UNION ALL SELECT t.id"
+                + " FROM t JOIN cte ON t.parent = cte.id) SELECT * FROM cte",
             expect("SELECT", null, "SELECT t SELECT t SELECT")));
   }
 
@@ -897,9 +904,11 @@ class SqlQueryAnalyzerTest {
             "ALTER TABLE t2 DROP COLUMN c, DROP COLUMN d",
             expect("ALTER TABLE", "t2", "ALTER TABLE t2")),
         Arguments.of(
-            "ALTER TABLE users ADD COLUMN email VARCHAR(255), DROP COLUMN legacy_id, MODIFY COLUMN status INT",
+            "ALTER TABLE users ADD COLUMN email VARCHAR(255), DROP COLUMN legacy_id, MODIFY COLUMN"
+                + " status INT",
             expect(
-                "ALTER TABLE users ADD COLUMN email VARCHAR(?), DROP COLUMN legacy_id, MODIFY COLUMN status INT",
+                "ALTER TABLE users ADD COLUMN email VARCHAR(?), DROP COLUMN legacy_id, MODIFY"
+                    + " COLUMN status INT",
                 "ALTER TABLE",
                 "users",
                 "ALTER TABLE users")));

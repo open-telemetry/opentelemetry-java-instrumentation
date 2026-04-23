@@ -78,7 +78,8 @@ class CriteriaTest extends AbstractHibernateTest {
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
                     span.hasName(
-                            "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value")
+                            "SELECT"
+                                + " io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(

@@ -123,7 +123,8 @@ class AwsConnector {
 
   private static String getSqsPolicy(String resource) {
     return String.format(
-        "{\"Statement\": [{\"Effect\": \"Allow\", \"Principal\": \"*\", \"Action\": \"sqs:SendMessage\", \"Resource\": \"%s\"}]}",
+        "{\"Statement\": [{\"Effect\": \"Allow\", \"Principal\": \"*\", \"Action\":"
+            + " \"sqs:SendMessage\", \"Resource\": \"%s\"}]}",
         resource);
   }
 

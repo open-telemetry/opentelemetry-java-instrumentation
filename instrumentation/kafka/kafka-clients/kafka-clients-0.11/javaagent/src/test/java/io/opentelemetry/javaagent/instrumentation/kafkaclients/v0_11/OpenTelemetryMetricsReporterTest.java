@@ -23,7 +23,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
     named = "testLatestDeps",
     matches = "true",
     disabledReason =
-        "kafka-clients 0.11 emits a significantly different set of metrics; it's probably fine to just test the latest version")
+        "kafka-clients 0.11 emits a significantly different set of metrics; it's probably fine to"
+            + " just test the latest version")
 class OpenTelemetryMetricsReporterTest extends AbstractOpenTelemetryMetricsReporterTest {
 
   @RegisterExtension

@@ -15,7 +15,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import org.junit.jupiter.api.extension.RegisterExtension
 
 class KtorHttpServerTest : AbstractKtorHttpServerTest() {
-
   companion object {
     @JvmStatic
     @RegisterExtension
@@ -32,11 +31,13 @@ class KtorHttpServerTest : AbstractKtorHttpServerTest() {
         capturedResponseHeaders(TEST_RESPONSE_HEADER)
       }
 
-      install(createRouteScopedPlugin("Failure handler, that can mask exceptions if exception handling is in the wrong phase", ServerEndpoint.EXCEPTION.path, {}) {
-        on(CallFailed) { call, cause ->
-          call.respondText("failure: ${cause.message}", status = HttpStatusCode.InternalServerError)
+      install(
+        createRouteScopedPlugin("Failure handler, that can mask exceptions if exception handling is in the wrong phase", ServerEndpoint.EXCEPTION.path, {}) {
+          on(CallFailed) { call, cause ->
+            call.respondText("failure: ${cause.message}", status = HttpStatusCode.InternalServerError)
+          }
         }
-      })
+      )
     }
   }
 }

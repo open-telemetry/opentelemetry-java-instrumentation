@@ -9,9 +9,9 @@ import org.eclipse.aether.version.Version
 import java.util.Locale
 import java.util.function.Predicate
 
-class AcceptableVersions(private val skipVersions: Collection<String>) :
-  Predicate<Version?> {
-
+class AcceptableVersions(
+  private val skipVersions: Collection<String>
+) : Predicate<Version?> {
   override fun test(version: Version?): Boolean {
     if (version == null) {
       return false
@@ -20,22 +20,23 @@ class AcceptableVersions(private val skipVersions: Collection<String>) :
     if (skipVersions.contains(versionString)) {
       return false
     }
-    val draftVersion = versionString.contains("rc")
-      || versionString.contains(".cr")
-      || versionString.contains("alpha")
-      || versionString.contains("beta")
-      || versionString.contains("-b")
-      || versionString.contains(".m")
-      || versionString.contains("-m")
-      || versionString.contains("-dev")
-      || versionString.contains("-ea")
-      || versionString.contains("-atlassian-")
-      || versionString.contains("public_draft")
-      || versionString.contains("snapshot")
-      || versionString.contains("test")
-      || versionString.startsWith("0.0.0-")
-      || GIT_SHA_PATTERN.matches(versionString)
-      || DATETIME_PATTERN.matches(versionString)
+    val draftVersion =
+      versionString.contains("rc") ||
+        versionString.contains(".cr") ||
+        versionString.contains("alpha") ||
+        versionString.contains("beta") ||
+        versionString.contains("-b") ||
+        versionString.contains(".m") ||
+        versionString.contains("-m") ||
+        versionString.contains("-dev") ||
+        versionString.contains("-ea") ||
+        versionString.contains("-atlassian-") ||
+        versionString.contains("public_draft") ||
+        versionString.contains("snapshot") ||
+        versionString.contains("test") ||
+        versionString.startsWith("0.0.0-") ||
+        GIT_SHA_PATTERN.matches(versionString) ||
+        DATETIME_PATTERN.matches(versionString)
     return !draftVersion
   }
 

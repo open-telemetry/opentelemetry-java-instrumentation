@@ -414,7 +414,8 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
     StringBuilder sb = new StringBuilder();
     // Append table headers
     sb.append(
-            "| Metric Group | Metric Name | Attribute Keys | Instrument Name | Instrument Description | Instrument Type |")
+            "| Metric Group | Metric Name | Attribute Keys | Instrument Name | Instrument"
+                + " Description | Instrument Type |")
         .append(lineSeparator())
         .append(
             "|--------------|-------------|----------------|-----------------|------------------------|-----------------|")

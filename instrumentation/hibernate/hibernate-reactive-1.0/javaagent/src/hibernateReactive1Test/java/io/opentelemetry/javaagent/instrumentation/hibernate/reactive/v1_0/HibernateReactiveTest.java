@@ -319,7 +319,8 @@ class HibernateReactiveTest {
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
-                                "select value0_.id as id1_0_0_, value0_.name as name2_0_0_ from Value value0_ where value0_.id=$1"),
+                                "select value0_.id as id1_0_0_, value0_.name as name2_0_0_ from"
+                                    + " Value value0_ where value0_.id=$1"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "SELECT Value" : null),

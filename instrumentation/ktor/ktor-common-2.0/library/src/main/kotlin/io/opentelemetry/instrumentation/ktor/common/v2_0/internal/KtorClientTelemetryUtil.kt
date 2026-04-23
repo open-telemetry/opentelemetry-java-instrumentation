@@ -26,12 +26,18 @@ import kotlinx.coroutines.withContext
 object KtorClientTelemetryUtil {
   private val openTelemetryContextKey = AttributeKey<Context>("OpenTelemetry")
 
-  fun install(plugin: AbstractKtorClientTelemetry, scope: HttpClient) {
+  fun install(
+    plugin: AbstractKtorClientTelemetry,
+    scope: HttpClient
+  ) {
     installSpanCreation(plugin, scope)
     installSpanEnd(plugin, scope)
   }
 
-  private fun installSpanCreation(plugin: AbstractKtorClientTelemetry, scope: HttpClient) {
+  private fun installSpanCreation(
+    plugin: AbstractKtorClientTelemetry,
+    scope: HttpClient
+  ) {
     val initializeRequestPhase = PipelinePhase("OpenTelemetryInitializeRequest")
     scope.requestPipeline.insertPhaseAfter(HttpRequestPipeline.State, initializeRequestPhase)
 
@@ -64,7 +70,10 @@ object KtorClientTelemetryUtil {
   }
 
   @OptIn(InternalCoroutinesApi::class)
-  private fun installSpanEnd(plugin: AbstractKtorClientTelemetry, scope: HttpClient) {
+  private fun installSpanEnd(
+    plugin: AbstractKtorClientTelemetry,
+    scope: HttpClient
+  ) {
     val endSpanPhase = PipelinePhase("OpenTelemetryEndSpan")
     scope.receivePipeline.insertPhaseBefore(HttpReceivePipeline.State, endSpanPhase)
 
@@ -75,11 +84,12 @@ object KtorClientTelemetryUtil {
       scope.launch {
         val job = it.call.coroutineContext.job
         job.join()
-        val cause = if (!job.isCancelled) {
-          null
-        } else {
-          kotlin.runCatching { job.getCancellationException() }.getOrNull()
-        }
+        val cause =
+          if (!job.isCancelled) {
+            null
+          } else {
+            kotlin.runCatching { job.getCancellationException() }.getOrNull()
+          }
 
         plugin.endSpan(openTelemetryContext, it.call, cause)
       }

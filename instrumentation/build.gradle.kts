@@ -6,12 +6,13 @@ val instrumentationProjectTest = tasks.named("test")
 
 // batching up the muzzle tasks alphabetically into 4 chunks
 // to split them up into separate CI jobs (but not too many CI job)
-val instrumentationProjectMuzzle = listOf(
-  tasks.register("muzzle1"),
-  tasks.register("muzzle2"),
-  tasks.register("muzzle3"),
-  tasks.register("muzzle4"),
-)
+val instrumentationProjectMuzzle =
+  listOf(
+    tasks.register("muzzle1"),
+    tasks.register("muzzle2"),
+    tasks.register("muzzle3"),
+    tasks.register("muzzle4"),
+  )
 
 var counter = 0
 subprojects {

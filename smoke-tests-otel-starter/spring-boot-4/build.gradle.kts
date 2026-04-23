@@ -92,7 +92,8 @@ plugins.withId("org.graalvm.buildtools.native") {
   }
 
   // See https://github.com/graalvm/native-build-tools/issues/572
-  (extensions.getByName("graalvmNative") as ExtensionAware).extensions
+  (extensions.getByName("graalvmNative") as ExtensionAware)
+    .extensions
     .configure<org.graalvm.buildtools.gradle.dsl.GraalVMReachabilityMetadataRepositoryExtension> {
       enabled.set(false)
     }

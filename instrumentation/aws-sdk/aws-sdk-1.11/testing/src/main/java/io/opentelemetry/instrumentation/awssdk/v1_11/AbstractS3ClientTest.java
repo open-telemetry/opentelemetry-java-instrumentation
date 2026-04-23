@@ -166,7 +166,8 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
                             .hasNoParent()
                             .hasException(
                                 new SdkClientException(
-                                    "Unable to execute HTTP request: Request did not complete before the request timeout configuration."))
+                                    "Unable to execute HTTP request: Request did not complete"
+                                        + " before the request timeout configuration."))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(URL_FULL, server.httpUri().toString()),
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),

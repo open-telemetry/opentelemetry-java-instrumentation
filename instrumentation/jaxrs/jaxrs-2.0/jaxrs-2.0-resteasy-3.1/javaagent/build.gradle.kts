@@ -61,7 +61,8 @@ dependencies {
   // artifact name changed from 'resteasy-jaxrs' to 'resteasy-core' starting from version 4.0.0
   latestDepTestLibrary("org.jboss.resteasy:resteasy-core:5.+") // documented limitation
   latestDepTestLibrary("org.jboss.resteasy:resteasy-servlet-initializer:5.+") // documented limitation
-  latestDepTestLibrary("org.jboss.resteasy:resteasy-undertow:5.+") { // documented limitation
+  latestDepTestLibrary("org.jboss.resteasy:resteasy-undertow:5.+") {
+    // documented limitation
     exclude("org.jboss.resteasy", "resteasy-client")
   }
 }
@@ -75,7 +76,10 @@ tasks {
   }
 
   val testExperimental by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+      sourceSets.test
+        .get()
+        .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.jaxrs.experimental-span-attributes=true")

@@ -304,7 +304,8 @@ class SessionTest extends AbstractHibernateTest {
                   assertSessionSpan(
                       span,
                       trace.getSpan(0),
-                      "Session.save io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value");
+                      "Session.save"
+                          + " io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value");
                   sessionId1.set(
                       trace.getSpan(1).getAttributes().get(stringKey("hibernate.session_id")));
                 },
@@ -312,7 +313,8 @@ class SessionTest extends AbstractHibernateTest {
                   assertSessionSpan(
                       span,
                       trace.getSpan(0),
-                      "Session.insert io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value");
+                      "Session.insert"
+                          + " io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value");
                   sessionId2.set(
                       trace.getSpan(2).getAttributes().get(stringKey("hibernate.session_id")));
                 },
@@ -321,7 +323,8 @@ class SessionTest extends AbstractHibernateTest {
                   assertSessionSpan(
                       span,
                       trace.getSpan(0),
-                      "Session.save io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value");
+                      "Session.save"
+                          + " io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value");
                   sessionId3.set(
                       trace.getSpan(4).getAttributes().get(stringKey("hibernate.session_id")));
                 },
@@ -329,7 +332,8 @@ class SessionTest extends AbstractHibernateTest {
                     assertSpanWithSessionId(
                         span,
                         trace.getSpan(0),
-                        "Session.delete io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
+                        "Session.delete"
+                            + " io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
                         sessionId1.get()),
                 span ->
                     assertSpanWithSessionId(

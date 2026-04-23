@@ -8,7 +8,9 @@ package io.opentelemetry.instrumentation.gradle
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 
-open class OtelPropsExtension(private val project: Project) {
+open class OtelPropsExtension(
+  private val project: Project
+) {
   val testLatestDeps: Boolean
     get() = project.findProperty("testLatestDeps") == "true"
 

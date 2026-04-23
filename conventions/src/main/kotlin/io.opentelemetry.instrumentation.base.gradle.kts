@@ -1,4 +1,4 @@
-/** Common setup for manual instrumentation of libraries and javaagent instrumentation. */
+// Common setup for manual instrumentation of libraries and javaagent instrumentation.
 
 import io.opentelemetry.instrumentation.gradle.OtelPropsExtension
 
@@ -35,18 +35,18 @@ val otelProps = the<OtelPropsExtension>()
 abstract class TestLatestDepsRule : ComponentMetadataRule {
   override fun execute(context: ComponentMetadataContext) {
     val version = context.details.id.version
-    if (version.contains("-alpha", true)
-      || version.contains("-beta", true)
-      || version.contains("-rc", true)
-      || version.contains(".rc", true)
-      || version.contains("-m", true) // e.g. spring milestones are published to grails repo
-      || version.contains(".m", true) // e.g. lettuce
-      || version.contains(".alpha", true) // e.g. netty
-      || version.contains(".beta", true) // e.g. hibernate
-      || version.contains(".cr", true) // e.g. hibernate
-      || version.endsWith("-nf-execution") // graphql
-      || GIT_SHA_PATTERN.matches(version) // graphql
-      || DATETIME_PATTERN.matches(version) // graphql
+    if (version.contains("-alpha", true) ||
+      version.contains("-beta", true) ||
+      version.contains("-rc", true) ||
+      version.contains(".rc", true) ||
+      version.contains("-m", true) || // e.g. spring milestones are published to grails repo
+      version.contains(".m", true) || // e.g. lettuce
+      version.contains(".alpha", true) || // e.g. netty
+      version.contains(".beta", true) || // e.g. hibernate
+      version.contains(".cr", true) || // e.g. hibernate
+      version.endsWith("-nf-execution") || // graphql
+      GIT_SHA_PATTERN.matches(version) || // graphql
+      DATETIME_PATTERN.matches(version) // graphql
     ) {
       context.details.status = "milestone"
     }
@@ -136,7 +136,8 @@ if (otelProps.testLatestDeps) {
     // fixes to release branches.
     // This is only needed for modules where base version and latest dep tests use a different
     // source directory.
-    var latestDepCompileTaskNames = arrayOf("compileLatestDepTestJava", "compileLatestDepTestGroovy", "compileLatestDepTestScala")
+    var latestDepCompileTaskNames =
+      arrayOf("compileLatestDepTestJava", "compileLatestDepTestGroovy", "compileLatestDepTestScala")
     for (compileTaskName in latestDepCompileTaskNames) {
       if (tasks.names.contains(compileTaskName)) {
         tasks.named(compileTaskName).configure {
@@ -154,7 +155,10 @@ tasks {
     inputs.property("instrumentation.name", name)
     inputs.property("instrumentation.version", version)
 
-    val propertiesDir = layout.buildDirectory.dir("generated/instrumentationVersion/META-INF/io/opentelemetry/instrumentation/")
+    val propertiesDir =
+      layout.buildDirectory.dir(
+        "generated/instrumentationVersion/META-INF/io/opentelemetry/instrumentation/",
+      )
     outputs.dir(propertiesDir)
 
     doLast {
@@ -164,15 +168,19 @@ tasks {
 }
 
 fun computeInstrumentationName(): String {
-  val name = when (projectDir.name) {
-    "javaagent", "library", "library-autoconfigure" -> projectDir.parentFile.name
-    else -> project.name
-  }
+  val name =
+    when (projectDir.name) {
+      "javaagent", "library", "library-autoconfigure" -> projectDir.parentFile.name
+      else -> project.name
+    }
   return "io.opentelemetry.$name"
 }
 
 sourceSets {
   main {
-    output.dir("build/generated/instrumentationVersion", "builtBy" to "generateInstrumentationVersionFile")
+    output.dir(
+      "build/generated/instrumentationVersion",
+      "builtBy" to "generateInstrumentationVersionFile",
+    )
   }
 }

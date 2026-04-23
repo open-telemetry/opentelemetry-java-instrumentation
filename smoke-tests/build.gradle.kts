@@ -43,15 +43,16 @@ tasks {
     // In addition to that we disable them on normal test task to only run when explicitly requested.
     enabled = enabled && gradle.startParameter.taskNames.any { it.startsWith(":smoke-tests:") }
 
-    val suites = mapOf(
-      "payara" to listOf("**/Payara*.*"),
-      "jetty" to listOf("**/Jetty*.*"),
-      "liberty" to listOf("**/Liberty*.*"),
-      "tomcat" to listOf("**/Tomcat*.*"),
-      "tomee" to listOf("**/Tomee*.*"),
-      "websphere" to listOf("**/Websphere*.*"),
-      "wildfly" to listOf("**/Wildfly*.*"),
-    )
+    val suites =
+      mapOf(
+        "payara" to listOf("**/Payara*.*"),
+        "jetty" to listOf("**/Jetty*.*"),
+        "liberty" to listOf("**/Liberty*.*"),
+        "tomcat" to listOf("**/Tomcat*.*"),
+        "tomee" to listOf("**/Tomee*.*"),
+        "websphere" to listOf("**/Websphere*.*"),
+        "wildfly" to listOf("**/Wildfly*.*"),
+      )
 
     val smokeTestSuite: String? by project
     val skipOpenJ9SmokeTests = (findProperty("skipOpenJ9SmokeTests") as String?) == "true"
@@ -78,7 +79,8 @@ tasks {
 
     val shadowTask = project(":javaagent").tasks.named<Jar>("shadowJar")
     val agentJarPath = shadowTask.flatMap { it.archiveFile }
-    inputs.files(agentJarPath)
+    inputs
+      .files(agentJarPath)
       .withPropertyName("javaagent")
       .withNormalizer(ClasspathNormalizer::class)
 
@@ -94,7 +96,7 @@ tasks {
       jvmArgs(
         "-Dio.opentelemetry.smoketest.agent.shadowJar.path=${agentJarPath.get()}",
         "-Dio.opentelemetry.smoketest.extension.path=${extensionJarPath.get()}",
-        "-Dio.opentelemetry.smoketest.extension.testapp.path=${extensionTestAppJarPath.get()}"
+        "-Dio.opentelemetry.smoketest.extension.testapp.path=${extensionTestAppJarPath.get()}",
       )
     }
   }

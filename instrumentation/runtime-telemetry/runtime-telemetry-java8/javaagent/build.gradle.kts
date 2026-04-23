@@ -9,7 +9,9 @@ dependencies {
   // used to verify jar analyzer package events
   testImplementation("commons-io:commons-io")
   testInstrumentation(project(":instrumentation:runtime-telemetry:javaagent"))
-  testInstrumentation(project(":instrumentation:runtime-telemetry:runtime-telemetry-java17:javaagent"))
+  testInstrumentation(
+    project(":instrumentation:runtime-telemetry:runtime-telemetry-java17:javaagent"),
+  )
 }
 
 tasks {

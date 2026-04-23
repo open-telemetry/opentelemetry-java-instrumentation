@@ -68,7 +68,8 @@ public abstract class AbstractOpenSearchRestTest {
     // limit memory usage and disable Log4j JMX to avoid cgroup detection issues in containers
     opensearch.withEnv(
         "OPENSEARCH_JAVA_OPTS",
-        "-Xmx256m -Xms256m -Dlog4j2.disableJmx=true -Dlog4j2.disable.jmx=true -XX:-UseContainerSupport");
+        "-Xmx256m -Xms256m -Dlog4j2.disableJmx=true -Dlog4j2.disable.jmx=true"
+            + " -XX:-UseContainerSupport");
     opensearch.start();
     httpHost = URI.create(opensearch.getHttpHostAddress());
 
