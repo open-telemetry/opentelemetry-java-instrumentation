@@ -92,8 +92,6 @@ class LogstashMarkerTest {
         logRecord ->
             logRecord
                 .hasBody("log message 1")
-                // 14 fields (including map keys)
-                .hasTotalAttributeCount(14)
                 .hasAttributesSatisfyingExactly(
                     equalTo(longKey("field1"), 1L),
                     equalTo(doubleKey("field2"), 2.0),

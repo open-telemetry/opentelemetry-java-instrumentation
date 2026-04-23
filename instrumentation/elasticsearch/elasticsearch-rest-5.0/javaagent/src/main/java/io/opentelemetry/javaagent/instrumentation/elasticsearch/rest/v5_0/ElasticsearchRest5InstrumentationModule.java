@@ -23,7 +23,7 @@ public class ElasticsearchRest5InstrumentationModule extends InstrumentationModu
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // org.elasticsearch.client.Request was added in 6.4.0
+    // added in 6.4.0
     return not(hasClassesNamed("org.elasticsearch.client.Request"));
   }
 

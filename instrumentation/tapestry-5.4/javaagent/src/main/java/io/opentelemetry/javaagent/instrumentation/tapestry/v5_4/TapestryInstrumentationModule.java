@@ -23,7 +23,7 @@ public class TapestryInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // class added in tapestry 5.4.0
+    // added in 5.4.0
     return hasClassesNamed("org.apache.tapestry5.Binding2");
   }
 

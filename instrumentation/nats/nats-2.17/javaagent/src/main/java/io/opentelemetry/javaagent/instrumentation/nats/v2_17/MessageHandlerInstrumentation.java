@@ -48,7 +48,7 @@ class MessageHandlerInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
 
-      public AdviceScope(NatsRequest request, Context context, Scope scope) {
+      private AdviceScope(NatsRequest request, Context context, Scope scope) {
         this.request = request;
         this.context = context;
         this.scope = scope;
@@ -72,13 +72,15 @@ class MessageHandlerInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static AdviceScope onEnter(@Advice.Argument(0) Message message) {
       return AdviceScope.start(message);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
         adviceScope.end(throwable);
       }
