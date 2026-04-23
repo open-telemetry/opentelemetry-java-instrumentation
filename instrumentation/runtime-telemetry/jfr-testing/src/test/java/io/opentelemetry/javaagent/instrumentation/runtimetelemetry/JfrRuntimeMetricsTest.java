@@ -22,18 +22,29 @@ class JfrRuntimeMetricsTest {
   static void setUp() {
     try {
       Class.forName("jdk.jfr.FlightRecorder");
-    } catch (ClassNotFoundException e) {
+    } catch (ClassNotFoundException ignored) {
       Assumptions.abort("JFR not present");
     }
     Assumptions.assumeTrue(FlightRecorder.isAvailable(), "JFR not available");
   }
 
   @Test
-  void shouldHaveJfrMetrics() {
+  void shouldHaveDefaultMetrics() {
+    boolean legacy =
+        Boolean.parseBoolean(
+            System.getProperty("otel.instrumentation.runtime-telemetry-java17.enabled"));
+
     // This should generate some events
     System.gc();
 
-    testing.waitAndAssertMetrics(
-        "io.opentelemetry.runtime-telemetry", metric -> metric.hasName("jvm.cpu.context_switch"));
+    if (legacy) {
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.runtime-telemetry-java17",
+          metric -> metric.hasName("jvm.cpu.limit"),
+          metric -> metric.hasName("jvm.cpu.context_switch"));
+    } else {
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.runtime-telemetry", metric -> metric.hasName("jvm.cpu.context_switch"));
+    }
   }
 }
