@@ -6,6 +6,7 @@ semantic_conventions:
 library_link: https://github.com/openai/openai-java
 configurations:
   - name: otel.instrumentation.genai.capture-message-content
+    declarative_name: java.common.gen_ai.capture_message_content
     type: boolean
     default: false
     description: >
