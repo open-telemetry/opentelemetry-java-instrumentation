@@ -63,7 +63,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
   static final String PLUGIN_NAME = "OpenTelemetry";
 
   private final LogEventMapper<ReadOnlyStringMap> mapper;
-  private volatile OpenTelemetry openTelemetry;
+  @Nullable private volatile OpenTelemetry openTelemetry;
 
   private final BlockingQueue<LogEventToReplay> eventsToReplay;
   private final AtomicBoolean replayLimitWarningLogged = new AtomicBoolean();
@@ -112,7 +112,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     @PluginBuilderAttribute private boolean captureCodeAttributes;
     @PluginBuilderAttribute private boolean captureMapMessageAttributes;
     @PluginBuilderAttribute private boolean captureMarkerAttribute;
-    @PluginBuilderAttribute private String captureContextDataAttributes;
+    @Nullable @PluginBuilderAttribute private String captureContextDataAttributes;
     @PluginBuilderAttribute private boolean captureEventName;
     @PluginBuilderAttribute private int numLogsCapturedBeforeOtelInstall;
 
@@ -187,10 +187,10 @@ public class OpenTelemetryAppender extends AbstractAppender {
     }
 
     /**
-     * Log telemetry is emitted after the initialization of the OpenTelemetry Logback appender with
-     * an {@link OpenTelemetry} object. This setting allows you to modify the size of the cache used
-     * to replay the logs that were emitted prior to setting the OpenTelemetry instance into the
-     * Logback appender.
+     * Log telemetry is emitted after the initialization of the OpenTelemetry Log4j appender with an
+     * {@link OpenTelemetry} object. This setting allows you to modify the size of the cache used to
+     * replay the logs that were emitted prior to setting the OpenTelemetry instance into the
+     * OpenTelemetry Log4j appender.
      */
     @CanIgnoreReturnValue
     public B setNumLogsCapturedBeforeOtelInstall(int numLogsCapturedBeforeOtelInstall) {
@@ -239,15 +239,15 @@ public class OpenTelemetryAppender extends AbstractAppender {
       boolean captureCodeAttributes,
       boolean captureMapMessageAttributes,
       boolean captureMarkerAttribute,
-      String captureContextDataAttributes,
+      @Nullable String captureContextDataAttributes,
       boolean captureEventName,
       int numLogsCapturedBeforeOtelInstall,
-      OpenTelemetry openTelemetry) {
+      @Nullable OpenTelemetry openTelemetry) {
     super(name, filter, layout, ignoreExceptions, properties);
 
-    DeclarativeConfigProperties comonConfig =
+    DeclarativeConfigProperties commonConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
-    boolean v3Preview = comonConfig.getBoolean("v3_preview", false);
+    boolean v3Preview = commonConfig.getBoolean("v3_preview", false);
 
     this.mapper =
         new LogEventMapper<>(
@@ -268,7 +268,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     }
   }
 
-  private static List<String> splitAndFilterBlanksAndNulls(String value) {
+  private static List<String> splitAndFilterBlanksAndNulls(@Nullable String value) {
     if (value == null) {
       return emptyList();
     }

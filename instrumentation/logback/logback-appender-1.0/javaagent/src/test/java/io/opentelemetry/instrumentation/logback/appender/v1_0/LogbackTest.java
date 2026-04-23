@@ -21,7 +21,7 @@ class LogbackTest extends AbstractLogbackTest {
 
   @Override
   protected boolean expectEventName() {
-    // TODO support event name in the agent once the attribute name is decided
+    // the javaagent tests do not enable the deprecated capture-event-name setting
     // see https://github.com/open-telemetry/semantic-conventions/issues/2913
     return false;
   }

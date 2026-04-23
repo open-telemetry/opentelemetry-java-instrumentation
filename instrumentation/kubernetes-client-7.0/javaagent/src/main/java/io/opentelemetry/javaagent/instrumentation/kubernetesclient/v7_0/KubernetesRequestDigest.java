@@ -44,7 +44,7 @@ class KubernetesRequestDigest {
           resourceMeta,
           KubernetesVerb.of(
               request.method(), hasNamePathParameter(resourceMeta), hasWatchParameter(request)));
-    } catch (ParseKubernetesResourceException e) {
+    } catch (IllegalArgumentException | ParseKubernetesResourceException e) {
       return nonResource(urlPath);
     }
   }

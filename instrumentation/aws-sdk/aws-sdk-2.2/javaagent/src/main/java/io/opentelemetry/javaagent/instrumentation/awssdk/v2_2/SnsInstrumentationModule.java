@@ -24,6 +24,8 @@ public class SnsInstrumentationModule extends AbstractAwsSdkInstrumentationModul
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // this instrumentation module targets software.amazon.awssdk:sns
+    // added in 2.2.0
     return hasClassesNamed("software.amazon.awssdk.services.sns.SnsClient");
   }
 

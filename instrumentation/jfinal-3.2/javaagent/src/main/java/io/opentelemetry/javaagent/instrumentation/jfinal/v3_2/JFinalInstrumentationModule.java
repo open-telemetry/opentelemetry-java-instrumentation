@@ -24,8 +24,7 @@ public class JFinalInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // In version 3.2, TypeConverter is moved from com.jfinal.core
-    // to com.jfinal.core.converter
+    // removed in 3.2 (moved to com.jfinal.core.converter)
     return not(hasClassesNamed("com.jfinal.core.TypeConverter"));
   }
 
