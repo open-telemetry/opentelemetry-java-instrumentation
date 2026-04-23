@@ -31,7 +31,6 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.Map;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -85,6 +84,7 @@ class LettuceSyncClientTest {
   @BeforeAll
   static void setUp() {
     redisServer.start();
+    cleanup.deferAfterAll(redisServer::stop);
 
     host = redisServer.getHost();
     port = redisServer.getMappedPort(6379);
@@ -94,8 +94,10 @@ class LettuceSyncClientTest {
     dbUriNonExistent = "redis://" + host + ":" + incorrectPort + "/" + DB_INDEX;
 
     redisClient = RedisClient.create(embeddedDbUri);
+    cleanup.deferAfterAll(redisClient::shutdown);
 
     connection = redisClient.connect();
+    cleanup.deferAfterAll(connection);
     syncCommands = connection.sync();
 
     syncCommands.set("TESTKEY", "TESTVAL");
@@ -104,13 +106,6 @@ class LettuceSyncClientTest {
     // 2 sets + 1 connect trace
     testing.waitForTraces(3);
     testing.clearData();
-  }
-
-  @AfterAll
-  static void cleanUp() {
-    connection.close();
-    redisClient.shutdown();
-    redisServer.stop();
   }
 
   @Test

@@ -28,16 +28,16 @@ class LogEventToReplay implements LogEvent {
   // Log4j 2 reuses LogEvent object, so we make a copy of all the fields that are used during export
   // in order to be able to replay the log event later.
 
-  private final String loggerName;
+  @Nullable private final String loggerName;
   private final Message message;
   private final Level level;
   private final Instant instant;
-  private final Throwable thrown;
-  private final Marker marker;
+  @Nullable private final Throwable thrown;
+  @Nullable private final Marker marker;
   private final ReadOnlyStringMap contextData;
   private final String threadName;
   private final long threadId;
-  private final StackTraceElement source;
+  @Nullable private final StackTraceElement source;
 
   LogEventToReplay(LogEvent logEvent, boolean captureCodeAttributes) {
     this.loggerName = logEvent.getLoggerName();
@@ -71,7 +71,7 @@ class LogEventToReplay implements LogEvent {
 
   @Override
   public LogEvent toImmutable() {
-    return null;
+    return this;
   }
 
   @SuppressWarnings("deprecation") // Override
@@ -91,6 +91,7 @@ class LogEventToReplay implements LogEvent {
     return null;
   }
 
+  @Nullable
   @Override
   public String getLoggerFqcn() {
     return null;
@@ -101,11 +102,13 @@ class LogEventToReplay implements LogEvent {
     return level;
   }
 
+  @Nullable
   @Override
   public String getLoggerName() {
     return loggerName;
   }
 
+  @Nullable
   @Override
   public Marker getMarker() {
     return marker;
@@ -118,7 +121,7 @@ class LogEventToReplay implements LogEvent {
 
   @Override
   public long getTimeMillis() {
-    return 0;
+    return instant.getEpochMillisecond();
   }
 
   @Override
@@ -126,6 +129,7 @@ class LogEventToReplay implements LogEvent {
     return instant;
   }
 
+  @Nullable
   @Override
   public StackTraceElement getSource() {
     return source;
@@ -146,11 +150,13 @@ class LogEventToReplay implements LogEvent {
     return 0;
   }
 
+  @Nullable
   @Override
   public Throwable getThrown() {
     return thrown;
   }
 
+  @Nullable
   @Override
   public ThrowableProxy getThrownProxy() {
     return null;
@@ -182,13 +188,14 @@ class LogEventToReplay implements LogEvent {
     private static final long serialVersionUID = 1L;
     private final String formattedMessage;
     private final String format;
-    private final Object[] parameters;
-    private final Throwable throwable;
+    @Nullable private final Object[] parameters;
+    @Nullable private final Throwable throwable;
 
     MessageCopy(Message message) {
       this.formattedMessage = message.getFormattedMessage();
       this.format = message.getFormat();
-      this.parameters = message.getParameters();
+      Object[] parameters = message.getParameters();
+      this.parameters = parameters == null ? null : parameters.clone();
       this.throwable = message.getThrowable();
     }
 
@@ -202,11 +209,13 @@ class LogEventToReplay implements LogEvent {
       return format;
     }
 
+    @Nullable
     @Override
     public Object[] getParameters() {
       return parameters;
     }
 
+    @Nullable
     @Override
     public Throwable getThrowable() {
       return throwable;

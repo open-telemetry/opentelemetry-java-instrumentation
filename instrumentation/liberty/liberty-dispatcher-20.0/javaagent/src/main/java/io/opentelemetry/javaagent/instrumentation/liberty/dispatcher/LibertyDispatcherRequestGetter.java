@@ -19,6 +19,7 @@ class LibertyDispatcherRequestGetter implements TextMapGetter<LibertyRequest> {
   }
 
   @Override
+  @Nullable
   public String get(@Nullable LibertyRequest carrier, String key) {
     if (carrier == null) {
       return null;

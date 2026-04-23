@@ -73,10 +73,12 @@ public class ThreadLocalContext {
     local.set(ctx);
   }
 
+  @Nullable
   public static ThreadLocalContext get() {
     return local.get();
   }
 
+  @Nullable
   public static ThreadLocalContext endRequest() {
     ThreadLocalContext ctx = local.get();
     if (ctx != null) {

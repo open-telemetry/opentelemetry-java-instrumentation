@@ -23,7 +23,7 @@ public class SpringWebInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // class added in 6.0
+    // added in 6.0
     return hasClassesNamed("org.springframework.web.ErrorResponse");
   }
 

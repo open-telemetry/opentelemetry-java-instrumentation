@@ -41,9 +41,9 @@ public class Log4j2InstrumentationModule extends InstrumentationModule
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return hasClassesNamed(
-        // class added in 2.17.0 and backported to 2.12.3
+        // added in 2.17.0 and backported to 2.12.3
         "org.apache.logging.log4j.core.lookup.ConfigurationStrSubstitutor",
-        // class added in 2.15.0
+        // added in 2.15.0
         "org.apache.logging.log4j.core.config.arbiters.DefaultArbiter");
   }
 

@@ -33,6 +33,7 @@ public class AnnotationInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 1.16.0
     return hasClassesNamed("application.io.opentelemetry.instrumentation.annotations.WithSpan");
   }
 
