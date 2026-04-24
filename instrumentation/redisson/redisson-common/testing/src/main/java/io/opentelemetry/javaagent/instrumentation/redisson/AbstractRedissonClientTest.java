@@ -198,8 +198,7 @@ public abstract class AbstractRedissonClientTest {
   }
 
   @Test
-  void batchCommand()
-      throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+  void batchCommand() throws ReflectiveOperationException {
     RBatch batch = createBatch(redisson);
     assertThat(batch).isNotNull();
     batch.getBucket("batch1").setAsync("v1");
@@ -222,8 +221,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(maybeStable(DB_STATEMENT), "SET batch1 ?;SET batch2 ?"))));
   }
 
-  private static void invokeExecute(RBatch batch)
-      throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+  private static void invokeExecute(RBatch batch) throws ReflectiveOperationException {
     batch.getClass().getMethod("execute").invoke(batch);
   }
 
@@ -367,8 +365,7 @@ public abstract class AbstractRedissonClientTest {
   }
 
   @Test
-  void sortedSetCommand()
-      throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+  void sortedSetCommand() throws ReflectiveOperationException {
     Map<String, Double> scores = new HashMap<>();
     scores.put("u1", 1.0d);
     scores.put("u2", 3.0d);
@@ -395,7 +392,7 @@ public abstract class AbstractRedissonClientTest {
   }
 
   private static void invokeAddAll(RScoredSortedSet<String> object, Map<String, Double> arg)
-      throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+      throws ReflectiveOperationException {
     object.getClass().getMethod("addAll", Map.class).invoke(object, arg);
   }
 
