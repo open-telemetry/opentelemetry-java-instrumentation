@@ -161,14 +161,12 @@ public abstract class AbstractJavalinTest {
     testing()
         .waitAndAssertMetrics(
             getJettyInstrumentation(),
-            "http.server.request.duration",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        point -> point.hasAttribute(HTTP_ROUTE, "/param/{id}")))));
+            metric ->
+                metric
+                    .hasName("http.server.request.duration")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point -> point.hasAttribute(HTTP_ROUTE, "/param/{id}"))));
   }
 }
