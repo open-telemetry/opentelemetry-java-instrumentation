@@ -32,7 +32,7 @@ public class BatchRecordsHandler implements Handler<KafkaConsumerRecords<String,
     GlobalTraceUtil.runWithSpan("batch consumer", () -> {});
     for (int i = 0; i < records.size(); ++i) {
       KafkaConsumerRecord<String, String> record = records.recordAt(i);
-      if (record.value().equals("error")) {
+      if ("error".equals(record.value())) {
         throw new IllegalArgumentException("boom");
       }
     }

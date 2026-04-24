@@ -73,7 +73,7 @@ class S3ClientTest extends AbstractS3ClientTest {
 
     List<RequestHandler2> requestHandler2s = extractRequestHandlers(client);
     assertThat(requestHandler2s).isNotNull();
-    assertThat(requestHandler2s.size()).isEqualTo(size);
+    assertThat(requestHandler2s).hasSize(size);
     assertThat(requestHandler2s.get(position).getClass().getSimpleName())
         .isEqualTo("TracingRequestHandler");
   }
@@ -95,7 +95,7 @@ class S3ClientTest extends AbstractS3ClientTest {
     List<RequestHandler2> requestHandler2s = extractRequestHandlers(client);
 
     assertThat(requestHandler2s).isNotNull();
-    assertThat(requestHandler2s.size()).isEqualTo(size);
+    assertThat(requestHandler2s).hasSize(size);
     assertThat(requestHandler2s.get(0).getClass().getSimpleName())
         .isEqualTo("TracingRequestHandler");
   }

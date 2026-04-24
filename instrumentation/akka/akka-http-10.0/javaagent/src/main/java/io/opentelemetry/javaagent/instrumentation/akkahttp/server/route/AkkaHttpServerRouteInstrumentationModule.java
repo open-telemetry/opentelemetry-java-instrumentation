@@ -25,11 +25,6 @@ public class AkkaHttpServerRouteInstrumentationModule extends InstrumentationMod
   }
 
   @Override
-  public boolean isIndyReady() {
-    return true;
-  }
-
-  @Override
   public String getModuleGroup() {
     return "akka-http";
   }

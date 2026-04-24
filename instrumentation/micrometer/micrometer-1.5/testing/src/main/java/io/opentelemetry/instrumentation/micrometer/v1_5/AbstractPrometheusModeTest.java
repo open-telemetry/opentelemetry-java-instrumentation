@@ -21,6 +21,7 @@ import io.micrometer.core.instrument.LongTaskTimer;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Timer;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.time.Duration;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("PreferJavaTimeOverload")
@@ -351,5 +352,49 @@ public abstract class AbstractPrometheusModeTest {
                                                 .hasValue(10.789)
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(stringKey("tag"), "value"))))));
+  }
+
+  @Test
+  void testTimerCustomBucketBoundaryFormatting() {
+    // given
+    Timer timer =
+        Timer.builder("testPrometheusTimerBoundary")
+            .description("This is a test timer")
+            .tags("tag", "value")
+            .serviceLevelObjectives(Duration.ofMillis(300))
+            .register(Metrics.globalRegistry);
+
+    // when
+    timer.record(100, MILLISECONDS);
+
+    // then
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            "testPrometheusTimerBoundary.seconds",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasDescription("This is a test timer")
+                            .hasUnit("s")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasSum(0.1)
+                                                .hasCount(1)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("tag"), "value"))
+                                                .satisfies(
+                                                    pointData -> {
+                                                      assertThat(pointData.getBoundaries())
+                                                          .hasSize(1);
+                                                      assertThat(
+                                                              Double.toString(
+                                                                  pointData.getBoundaries().get(0)))
+                                                          .isEqualTo("0.3");
+                                                    })))));
   }
 }

@@ -48,7 +48,7 @@ public class RabbitExtension implements BeforeEachCallback, AfterEachCallback {
   @Override
   public void beforeEach(ExtensionContext context) {
     rabbitMqContainer =
-        new GenericContainer<>("rabbitmq:latest")
+        new GenericContainer<>("rabbitmq:4.2")
             .withExposedPorts(5672)
             .waitingFor(Wait.forLogMessage(".*Server startup complete.*", 1))
             .withStartupTimeout(Duration.ofMinutes(2));

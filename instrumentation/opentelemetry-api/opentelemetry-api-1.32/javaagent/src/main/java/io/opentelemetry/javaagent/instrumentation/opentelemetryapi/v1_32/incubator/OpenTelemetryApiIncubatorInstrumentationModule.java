@@ -24,8 +24,7 @@ public class OpenTelemetryApiIncubatorInstrumentationModule extends Instrumentat
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // skip instrumentation when opentelemetry-extension-incubator is not present, instrumentation
-    // is handled by OpenTelemetryApiInstrumentationModule
+    // this instrumentation module targets io.opentelemetry:opentelemetry-extension-incubator
     return hasClassesNamed(
         // added in 1.31
         "application.io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder");
@@ -39,10 +38,5 @@ public class OpenTelemetryApiIncubatorInstrumentationModule extends Instrumentat
   @Override
   public String getModuleGroup() {
     return "opentelemetry-api-bridge";
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

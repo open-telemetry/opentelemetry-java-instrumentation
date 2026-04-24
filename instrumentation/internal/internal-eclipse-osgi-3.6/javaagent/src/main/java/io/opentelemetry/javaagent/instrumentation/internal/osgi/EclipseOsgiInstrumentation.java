@@ -56,7 +56,7 @@ class EclipseOsgiInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static boolean onExit(
         @Advice.Return boolean originalResult, @Advice.Enter boolean inClassLoaderMatcher) {
       return inClassLoaderMatcher ? false : originalResult;

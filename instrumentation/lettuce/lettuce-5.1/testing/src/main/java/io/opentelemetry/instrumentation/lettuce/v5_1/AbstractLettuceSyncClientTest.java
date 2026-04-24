@@ -55,7 +55,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
 
   private static String dbUriNonExistent;
 
-  private static final ImmutableMap<String, String> testHashMap =
+  private static final ImmutableMap<String, String> TEST_HASH_MAP =
       ImmutableMap.of(
           "firstname", "John",
           "lastname", "Doe",
@@ -82,7 +82,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     syncCommands = connection.sync();
 
     syncCommands.set("TESTKEY", "TESTVAL");
-    syncCommands.hmset("TESTHM", testHashMap);
+    syncCommands.hmset("TESTHM", TEST_HASH_MAP);
 
     // 2 sets
     testing().waitForTraces(2);
@@ -289,7 +289,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
 
   @Test
   void testHashSetCommand() {
-    String res = testing().runWithSpan("parent", () -> syncCommands.hmset("user", testHashMap));
+    String res = testing().runWithSpan("parent", () -> syncCommands.hmset("user", TEST_HASH_MAP));
     assertThat(res).isEqualTo("OK");
 
     testing()
@@ -319,7 +319,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
   @Test
   void testHashGetallCommand() {
     Map<String, String> res = testing().runWithSpan("parent", () -> syncCommands.hgetall("TESTHM"));
-    assertThat(res).isEqualTo(testHashMap);
+    assertThat(res).isEqualTo(TEST_HASH_MAP);
 
     testing()
         .waitAndAssertTraces(

@@ -24,11 +24,11 @@ import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 
 import io.avaje.jex.Jex.Server;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -38,6 +38,9 @@ class JexTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   private static Server app;
   private static int port;
   private static WebClient client;
@@ -45,13 +48,9 @@ class JexTest {
   @BeforeAll
   static void setup() {
     app = TestJexJavaApplication.initJex();
+    cleanup.deferAfterAll(app::shutdown);
     port = app.port();
     client = WebClient.of("http://localhost:" + port);
-  }
-
-  @AfterAll
-  static void cleanup() {
-    app.shutdown();
   }
 
   @Test

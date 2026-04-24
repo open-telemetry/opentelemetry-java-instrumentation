@@ -15,49 +15,45 @@ import org.junit.jupiter.api.Test;
 
 class LambdaParametersTest {
 
-  public void onlyContext(Context context) {}
+  void onlyContext(Context context) {}
 
-  public void noContext(String one) {}
+  void noContext(String one) {}
 
-  public void contextOnSecond(String one, Context context) {}
+  void contextOnSecond(String one, Context context) {}
 
-  public void contextOnThird(String one, String two, Context context) {}
+  void contextOnThird(String one, String two, Context context) {}
 
   @Test
   void shouldSetContextOnFirstPosition() throws NoSuchMethodException {
     // given
     Context context = mock(Context.class);
-    Method method = getClass().getMethod("onlyContext", Context.class);
+    Method method = getClass().getDeclaredMethod("onlyContext", Context.class);
     // when
     Object[] params = LambdaParameters.toArray(method, "", context, (o, c) -> o);
     // then
-    assertThat(params).hasSize(1);
-    assertThat(params[0]).isEqualTo(context);
+    assertThat(params).containsExactly(context);
   }
 
   @Test
   void shouldOnlySetInputWhenNoContext() throws NoSuchMethodException {
     // given
     Context context = mock(Context.class);
-    Method method = getClass().getMethod("noContext", String.class);
+    Method method = getClass().getDeclaredMethod("noContext", String.class);
     // when
     Object[] params = LambdaParameters.toArray(method, "", context, (o, c) -> o);
     // then
-    assertThat(params).hasSize(1);
-    assertThat(params[0]).isEqualTo("");
+    assertThat(params).containsExactly("");
   }
 
   @Test
   void shouldSetContextOnTheSecondPosition() throws NoSuchMethodException {
     // given
     Context context = mock(Context.class);
-    Method method = getClass().getMethod("contextOnSecond", String.class, Context.class);
+    Method method = getClass().getDeclaredMethod("contextOnSecond", String.class, Context.class);
     // when
     Object[] params = LambdaParameters.toArray(method, "", context, (o, c) -> o);
     // then
-    assertThat(params).hasSize(2);
-    assertThat(params[0]).isEqualTo("");
-    assertThat(params[1]).isEqualTo(context);
+    assertThat(params).containsExactly("", context);
   }
 
   @Test
@@ -65,20 +61,17 @@ class LambdaParametersTest {
     // given
     Context context = mock(Context.class);
     Method method =
-        getClass().getMethod("contextOnThird", String.class, String.class, Context.class);
+        getClass().getDeclaredMethod("contextOnThird", String.class, String.class, Context.class);
     // when
     Object[] params = LambdaParameters.toArray(method, "", context, (o, c) -> o);
     // then
-    assertThat(params).hasSize(3);
-    assertThat(params[0]).isEqualTo("");
-    assertThat(params[1]).isNull();
-    assertThat(params[2]).isEqualTo(context);
+    assertThat(params).containsExactly("", null, context);
   }
 
   @Test
   void shouldNotResolveInputWhenNoInput() throws NoSuchMethodException {
     // given
-    Method method = getClass().getMethod("onlyContext", Context.class);
+    Method method = getClass().getDeclaredMethod("onlyContext", Context.class);
     String giveInput = "testInput";
     // when
     Object resolvedInput =
@@ -93,7 +86,7 @@ class LambdaParametersTest {
   @Test
   void shouldResolveInputWithContext() throws NoSuchMethodException {
     // given
-    Method method = getClass().getMethod("contextOnSecond", String.class, Context.class);
+    Method method = getClass().getDeclaredMethod("contextOnSecond", String.class, Context.class);
     String givenInput = "testInput";
     // when
     Object resolvedInput =
@@ -102,14 +95,13 @@ class LambdaParametersTest {
             new ByteArrayInputStream(SerializationUtil.toJsonData(givenInput)),
             (i, c) -> SerializationUtil.fromJson(i, c));
     // then
-    assertThat(resolvedInput).isNotNull();
     assertThat(resolvedInput).isEqualTo(givenInput);
   }
 
   @Test
   void shouldResolveInputWithoutContext() throws NoSuchMethodException {
     // given
-    Method method = getClass().getMethod("noContext", String.class);
+    Method method = getClass().getDeclaredMethod("noContext", String.class);
     String givenInput = "testInput";
     // when
     Object resolvedInput =
@@ -118,7 +110,6 @@ class LambdaParametersTest {
             new ByteArrayInputStream(SerializationUtil.toJsonData(givenInput)),
             (i, c) -> SerializationUtil.fromJson(i, c));
     // then
-    assertThat(resolvedInput).isNotNull();
     assertThat(resolvedInput).isEqualTo(givenInput);
   }
 
@@ -126,37 +117,33 @@ class LambdaParametersTest {
   void shouldResolveParametersWhenOnlyContext() throws NoSuchMethodException {
     // given
     Context context = mock(Context.class);
-    Method method = getClass().getMethod("onlyContext", Context.class);
+    Method method = getClass().getDeclaredMethod("onlyContext", Context.class);
     // when
     Object[] params = LambdaParameters.toParameters(method, "", context);
     // then
-    assertThat(params).hasSize(1);
-    assertThat(params[0]).isEqualTo(context);
+    assertThat(params).containsExactly(context);
   }
 
   @Test
   void shouldResolveParametersWhenNoContext() throws NoSuchMethodException {
     // given
     Context context = mock(Context.class);
-    Method method = getClass().getMethod("noContext", String.class);
+    Method method = getClass().getDeclaredMethod("noContext", String.class);
     // when
     Object[] params = LambdaParameters.toParameters(method, "", context);
     // then
-    assertThat(params).hasSize(1);
-    assertThat(params[0]).isEqualTo("");
+    assertThat(params).containsExactly("");
   }
 
   @Test
   void shouldResolveParametersWhenContextOnTheSecondPosition() throws NoSuchMethodException {
     // given
     Context context = mock(Context.class);
-    Method method = getClass().getMethod("contextOnSecond", String.class, Context.class);
+    Method method = getClass().getDeclaredMethod("contextOnSecond", String.class, Context.class);
     // when
     Object[] params = LambdaParameters.toParameters(method, "", context);
     // then
-    assertThat(params).hasSize(2);
-    assertThat(params[0]).isEqualTo("");
-    assertThat(params[1]).isEqualTo(context);
+    assertThat(params).containsExactly("", context);
   }
 
   @Test
@@ -164,13 +151,10 @@ class LambdaParametersTest {
     // given
     Context context = mock(Context.class);
     Method method =
-        getClass().getMethod("contextOnThird", String.class, String.class, Context.class);
+        getClass().getDeclaredMethod("contextOnThird", String.class, String.class, Context.class);
     // when
     Object[] params = LambdaParameters.toParameters(method, "", context);
     // then
-    assertThat(params).hasSize(3);
-    assertThat(params[0]).isEqualTo("");
-    assertThat(params[1]).isNull();
-    assertThat(params[2]).isEqualTo(context);
+    assertThat(params).containsExactly("", null, context);
   }
 }

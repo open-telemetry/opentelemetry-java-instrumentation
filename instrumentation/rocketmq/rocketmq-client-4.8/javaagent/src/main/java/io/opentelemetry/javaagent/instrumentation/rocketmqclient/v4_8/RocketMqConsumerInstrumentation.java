@@ -32,7 +32,7 @@ class RocketMqConsumerInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class StartAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.FieldValue(
                 value = "defaultMQPushConsumerImpl",

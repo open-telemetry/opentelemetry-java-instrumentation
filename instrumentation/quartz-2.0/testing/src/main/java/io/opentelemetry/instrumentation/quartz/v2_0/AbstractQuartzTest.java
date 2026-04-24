@@ -31,6 +31,7 @@ import org.quartz.Job;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.impl.StdSchedulerFactory;
 
@@ -59,7 +60,7 @@ public abstract class AbstractQuartzTest {
   }
 
   @Test
-  void successfulJob() throws Exception {
+  void successfulJob() throws SchedulerException {
     Trigger trigger = newTrigger().build();
 
     JobDetail jobDetail = newJob().withIdentity("test", "jobs").ofType(SuccessfulJob.class).build();
@@ -88,7 +89,7 @@ public abstract class AbstractQuartzTest {
   }
 
   @Test
-  void failingJob() throws Exception {
+  void failingJob() throws SchedulerException {
     Trigger trigger = newTrigger().build();
 
     JobDetail jobDetail = newJob().withIdentity("fail", "jobs").ofType(FailingJob.class).build();

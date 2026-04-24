@@ -108,7 +108,7 @@ abstract class AbstractJms3Test {
   @ParameterizedTest
   @MethodSource("destinationArguments")
   void testMessageListener(DestinationFactory destinationFactory, boolean isTemporary)
-      throws Exception {
+      throws JMSException {
 
     // given
     Destination destination = destinationFactory.create(session);
@@ -129,7 +129,7 @@ abstract class AbstractJms3Test {
     testing.runWithSpan("parent", () -> producer.send(destination, sentMessage));
 
     // then
-    TextMessage receivedMessage = receivedMessageFuture.get(10, SECONDS);
+    TextMessage receivedMessage = receivedMessageFuture.orTimeout(10, SECONDS).join();
     assertThat(receivedMessage.getText()).isEqualTo(sentMessage.getText());
 
     String actualDestinationName = ((ActiveMQDestination) destination).getName();
@@ -186,7 +186,7 @@ abstract class AbstractJms3Test {
   @ParameterizedTest
   @MethodSource("destinationArguments")
   void shouldCaptureMessageHeaders(DestinationFactory destinationFactory, boolean isTemporary)
-      throws Exception {
+      throws JMSException {
 
     // given
     Destination destination = destinationFactory.create(session);
@@ -209,7 +209,7 @@ abstract class AbstractJms3Test {
     testing.runWithSpan("parent", () -> producer.send(sentMessage));
 
     // then
-    TextMessage receivedMessage = receivedMessageFuture.get(10, SECONDS);
+    TextMessage receivedMessage = receivedMessageFuture.orTimeout(10, SECONDS).join();
     assertThat(receivedMessage.getText()).isEqualTo(sentMessage.getText());
 
     String actualDestinationName = ((ActiveMQDestination) destination).getName();

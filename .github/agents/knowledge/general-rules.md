@@ -25,11 +25,12 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Javaagent | Incorrect `classLoaderMatcher()` | `classLoaderMatcher()` override that is redundant (muzzle already handles it) or missing when needed (muzzle cannot distinguish version range) | `javaagent-module-patterns.md` |
 | Semconv | Library vs javaagent semconv constant usage | Semconv constants/assertions | — |
 | Semconv | Dual semconv testing | `SemconvStability`, `maybeStable`, semconv Gradle tasks | `testing-semconv-stability.md` |
-| Testing | General test patterns | Test files in scope — assertion style, resource cleanup, attribute assertions | `testing-general-patterns.md` |
+| Testing | General test patterns | Test files in scope — assertion style, test method signatures and throws clauses, resource cleanup, attribute assertions | `testing-general-patterns.md` |
 | Testing | Experimental flag tests | `testExperimental`, experimental attribute assertions, `experimental` flags in JVM args or system properties | `testing-experimental-flags.md` |
 | Library | TelemetryBuilder/getter/setter patterns | Library instrumentation classes | `library-patterns.md` |
 | API | Deprecation and breaking-change policy | Public API changes | `api-deprecation-policy.md` |
 | Config | Config property stability/renames/removals | `otel.instrumentation.*` property changes, `DeclarativeConfigUtil` or `ConfigProperties` usage | `config-property-stability.md` |
+| Config | metadata.yaml format and declarative_name conversion — Mandatory for every instrumentation module | Any instrumentation module in scope (javaagent, library, or testing) | `metadata-yaml-format.md` |
 | Build | Gradle conventions, muzzle, test tasks, plugins | `build.gradle.kts`, `settings.gradle.kts` | `gradle-conventions.md` |
 | Build | `testcontainersBuildService` declaration | Testcontainers dependency without `usesService` | `gradle-conventions.md` |
 | Style | Prefer instance creation over singletons for stateless interface impls (except on hot paths or Kotlin `object` declarations) | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`, enum/static singletons | — |
@@ -66,8 +67,6 @@ application, do not silently swallow it unless the failure is an expected option
   established pattern and preserves module / class logger identity.
 - Silent suppression is acceptable for expected optional-probe paths, such as classpath or
   version-detection lookups where failure is routine and logging would be noisy.
-- Keep the message action-oriented and specific (for example, "Failed to customize Netty 4.1
-  HTTP server response").
 
 ## [Style] Style Guide
 
@@ -76,6 +75,20 @@ Read and apply `docs/contributing/style-guide.md`.
 Do not flag the following patterns (common false positives):
 
 - FQCN is acceptable when class-name collision makes import impossible.
+- Do not claim that a Java non-capturing lambda or method reference allocates per
+  call. On HotSpot / OpenJDK 8+, these are cached at the call site.
+
+## [Style] Visibility modifiers
+
+Follow the principle of minimal necessary visibility. Use the most restrictive access modifier that
+still allows the code to function correctly.
+
+**Exception — Single public class**: If a module has only one public class then don't change it to
+package-private. Javadoc task fails when module has no public classes.**
+
+**Exception — Used from advice**: All classes and methods used from methods annotated with
+`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` must be public. These methods are inlined into
+transformed classes and must be accessible from those classes, which may be in different packages.
 
 ## [Style] `@SuppressWarnings` Usage
 
@@ -156,6 +169,11 @@ All `put` / `setAttribute` methods on `AttributesBuilder`, `Span`, `SpanBuilder`
 `LogRecordBuilder` are no-ops when the value is `null` (upstream SDK guarantee).
 Do not wrap these calls in `if (value != null)` guards — pass the value directly.
 
+This rule applies only when the guarded value can be passed through directly to the
+attribute setter. If the null check is guarding a dereference or other derived
+computation, keep the explicit guard instead of rewriting it into a ternary
+expression just to feed `null` to `put()`.
+
 **Exception — `AttributeKey<Long>` with `Integer` value**: the only primitive-typed
 overload on these interfaces is a convenience method that accepts `int`:
 
@@ -188,6 +206,16 @@ Preferred:
 
 ```java
 attributes.put(SOME_KEY, getSomething());
+```
+
+Do **not** flag (the guard is preserving a safe dereference and is clearer than a
+ternary rewrite):
+
+```java
+View view = modelAndView.getView();
+if (view != null) {
+  attributes.put("spring-webmvc.view.type", view.getClass().getName());
+}
 ```
 
 Also flag (the guard is unnecessary — types match, generic overload handles null):
@@ -370,6 +398,13 @@ code. Flat `ConfigProperties` is only used directly in `AgentDistributionConfig`
 instrumentation enable/disable bootstrapping (`otel.instrumentation.<name>.enabled`,
 `otel.instrumentation.common.default-enabled`). All other config reads go through the
 declarative API. Do not flag `DeclarativeConfigUtil` usage as incorrect.
+
+## [Config] Mandatory metadata.yaml Review
+
+**For every instrumentation module in scope, you MUST review and update its `metadata.yaml` file.**
+
+This is mandatory regardless of whether metadata.yaml was modified in the PR. Load
+`metadata-yaml-format.md` and execute its full validation procedure for each module.
 
 ## [Testing] General Test Patterns
 

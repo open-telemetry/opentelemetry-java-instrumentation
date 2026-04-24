@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.myfaces;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
-import io.opentelemetry.javaagent.instrumentation.jsf.javax.JsfRequest;
+import io.opentelemetry.javaagent.instrumentation.jsf.common.javax.JsfRequest;
 
 final class MyFacesSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jsf-myfaces-1.2";

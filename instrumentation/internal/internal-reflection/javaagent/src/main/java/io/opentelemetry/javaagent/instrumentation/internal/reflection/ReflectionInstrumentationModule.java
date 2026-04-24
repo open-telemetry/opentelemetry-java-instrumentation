@@ -10,14 +10,10 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ReflectionInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class ReflectionInstrumentationModule extends InstrumentationModule {
   public ReflectionInstrumentationModule() {
     super("internal-reflection");
   }
@@ -31,21 +27,5 @@ public class ReflectionInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new ClassInstrumentation(), new ReflectionInstrumentation());
-  }
-
-  @Override
-  public void injectClasses(ClassInjector injector) {
-    // we do not use ByteBuddy Advice dispatching in this instrumentation
-    // Instead, we manually call ReflectionHelper via ASM
-    // Easiest solution to work with indy is to inject an indy-proxy to be invoked
-    injector
-        .proxyBuilder(
-            "io.opentelemetry.javaagent.instrumentation.internal.reflection.ReflectionHelper")
-        .inject(InjectionMode.CLASS_ONLY);
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

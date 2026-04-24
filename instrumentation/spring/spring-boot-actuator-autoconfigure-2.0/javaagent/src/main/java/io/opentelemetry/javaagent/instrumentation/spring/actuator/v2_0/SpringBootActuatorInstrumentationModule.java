@@ -13,8 +13,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilde
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -33,7 +31,7 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // added in micrometer-core 1.5
+    // added in io.micrometer:micrometer-core 1.5
     return hasClassesNamed("io.micrometer.core.instrument.config.validate.Validated");
   }
 
@@ -48,11 +46,9 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
   }
 
   @Override
-  public void injectClasses(ClassInjector injector) {
-    injector
-        .proxyBuilder(
-            "io.opentelemetry.javaagent.instrumentation.spring.actuator.v2_0.OpenTelemetryMeterRegistryAutoConfiguration")
-        .inject(InjectionMode.CLASS_ONLY);
+  public List<String> exposedClassNames() {
+    return singletonList(
+        "io.opentelemetry.javaagent.instrumentation.spring.actuator.v2_0.OpenTelemetryMeterRegistryAutoConfiguration");
   }
 
   @Override
@@ -64,10 +60,5 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
   public boolean defaultEnabled() {
     // produces a lot of metrics that are already captured - e.g. JVM memory usage
     return false;
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

@@ -17,6 +17,7 @@ import java.net.URLEncoder;
 import java.net.URLStreamHandler;
 import java.security.Permission;
 import java.security.PrivilegedAction;
+import javax.annotation.Nullable;
 
 public class ByteArrayUrl {
 
@@ -91,6 +92,7 @@ public class ByteArrayUrl {
         return inputStream;
       }
 
+      @Nullable
       @Override
       public Permission getPermission() {
         return null;

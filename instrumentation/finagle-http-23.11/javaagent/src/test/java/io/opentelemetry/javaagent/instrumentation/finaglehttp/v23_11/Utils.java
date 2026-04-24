@@ -19,8 +19,6 @@ import java.util.Map;
 
 class Utils {
 
-  private Utils() {}
-
   static Http.Client createClient(ClientType clientType) {
     Http.Client client =
         Http.client()
@@ -70,4 +68,6 @@ class Utils {
     headers.forEach((key, value) -> request.headerMap().put(key, value));
     return request;
   }
+
+  private Utils() {}
 }

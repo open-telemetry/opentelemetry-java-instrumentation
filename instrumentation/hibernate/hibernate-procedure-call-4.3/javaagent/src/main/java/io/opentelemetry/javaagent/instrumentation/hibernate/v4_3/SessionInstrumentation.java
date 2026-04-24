@@ -36,7 +36,7 @@ class SessionInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         returns(implementsInterface(named("org.hibernate.procedure.ProcedureCall"))),
-        SessionInstrumentation.class.getName() + "$GetProcedureCallAdvice");
+        getClass().getName() + "$GetProcedureCallAdvice");
   }
 
   @SuppressWarnings("unused")

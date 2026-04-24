@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
+import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.utility.JavaModule;
@@ -40,6 +41,7 @@ public final class AgentTooling {
     return new ClassTransformListener();
   }
 
+  @Nullable
   private static ClassLoader getBootstrapProxy() {
     Iterator<BootstrapProxyProvider> iterator =
         ServiceLoader.load(BootstrapProxyProvider.class, AgentTooling.class.getClassLoader())
@@ -66,7 +68,7 @@ public final class AgentTooling {
     return locators;
   }
 
-  public static boolean isTransforming(ClassLoader classLoader, String className) {
+  public static boolean isTransforming(@Nullable ClassLoader classLoader, String className) {
     CurrentTransform currentTransform = CURRENT_TRANSFORM.get();
     if (currentTransform == null) {
       return false;

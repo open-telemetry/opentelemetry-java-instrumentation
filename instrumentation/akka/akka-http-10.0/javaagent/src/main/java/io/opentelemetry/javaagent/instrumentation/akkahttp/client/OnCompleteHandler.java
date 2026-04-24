@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.akkahttp.client.AkkaHtt
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import io.opentelemetry.context.Context;
+import javax.annotation.Nullable;
 import scala.runtime.AbstractFunction1;
 import scala.util.Try;
 
@@ -22,6 +23,7 @@ public class OnCompleteHandler extends AbstractFunction1<Try<HttpResponse>, Void
     this.request = request;
   }
 
+  @Nullable
   @Override
   public Void apply(Try<HttpResponse> result) {
     if (result.isSuccess()) {

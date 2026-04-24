@@ -1,3 +1,4 @@
+display_name: AWS Lambda Events
 description: >
   This library instrumentation provides FaaS spans and messaging spans for AWS Lambda functions
   handling event types.

@@ -21,7 +21,7 @@ internal object KtorHttpServerAttributesGetter : HttpServerAttributesGetter<Appl
 
   private fun getRemoteAddressMethodHandle(): MethodHandle? = try {
     MethodHandles.lookup().findVirtual(RequestConnectionPoint::class.java, "getRemoteAddress", MethodType.methodType(String::class.java))
-  } catch (_: Exception) {
+  } catch (ignored: Exception) {
     null
   }
 
@@ -50,7 +50,7 @@ internal object KtorHttpServerAttributesGetter : HttpServerAttributesGetter<Appl
 
     val remote = try {
       getRemoteAddressMethodHandle.invoke(request.local) as String
-    } catch (_: Throwable) {
+    } catch (ignored: Throwable) {
       "unknown"
     }
     if ("unknown" != remote && isIpAddress(remote)) {

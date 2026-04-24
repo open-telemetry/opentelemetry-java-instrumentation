@@ -7,8 +7,6 @@ muzzle {
     group.set("log4j")
     module.set("log4j")
     versions.set("[1.2,)")
-    // version 1.2.15 has a bad dependency on javax.jms:jms:1.1 which was released as pom only
-    skip("1.2.15")
     assertInverse.set(true)
   }
 }
@@ -35,6 +33,5 @@ tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental log attributes
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=*")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-code-attributes=true")
-  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-event-name=true")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
 }

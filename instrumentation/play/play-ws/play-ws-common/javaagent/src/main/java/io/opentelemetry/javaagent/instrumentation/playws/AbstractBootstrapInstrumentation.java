@@ -31,7 +31,7 @@ public class AbstractBootstrapInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class DisablePropagationAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Scope onEnter() {
       // Prevent context from leaking by running this method under root context.
@@ -42,7 +42,7 @@ public class AbstractBootstrapInstrumentation implements TypeInstrumentation {
       return null;
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();

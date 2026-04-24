@@ -1,3 +1,4 @@
+import java.net.URLConnection
 import net.bytebuddy.ClassFileVersion
 import net.bytebuddy.build.gradle.ByteBuddySimpleTask
 
@@ -37,6 +38,10 @@ val inputClasspath = (sourceSet.output.resourcesDir?.let { codegen.plus(project.
   .plus(sourceSet.output.dirs) // needed to support embedding shadowed modules into instrumentation
   .plus(configurations.runtimeClasspath.get())
 
+// disable url connection caching to avoid java.util.zip.ZipException: ZipFile invalid LOC header (bad signature)
+// during byte buddy plugin discovery when muzzle jar has changed
+URLConnection.setDefaultUseCaches("jar", false)
+
 val languageTasks = LANGUAGES.map { language ->
   if (fileTree("src/${sourceSet.name}/${language}").isEmpty) {
     return@map null
@@ -61,6 +66,7 @@ fun createLanguageTask(
     group = "Byte Buddy"
     outputs.cacheIf { true }
     classFileVersion = ClassFileVersion.JAVA_V8
+    isWarnOnEmptyTypeSet = false
     val compileTask = compileTaskProvider.get()
     // this does not work for kotlin as compile task does not extend AbstractCompile
     if (compileTask is AbstractCompile) {

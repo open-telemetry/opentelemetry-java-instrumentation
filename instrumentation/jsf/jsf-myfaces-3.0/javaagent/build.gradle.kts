@@ -25,8 +25,8 @@ dependencies {
   library("org.apache.myfaces.core:myfaces-api:3.0.2")
   testLibrary("org.apache.myfaces.core:myfaces-impl:3.0.2")
 
-  implementation(project(":instrumentation:jsf:jsf-jakarta-common:javaagent"))
-  testImplementation(project(":instrumentation:jsf:jsf-jakarta-common:testing"))
+  implementation(project(":instrumentation:jsf:jsf-common-jakarta:javaagent"))
+  testImplementation(project(":instrumentation:jsf:jsf-common-jakarta:testing"))
 
   testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
   testInstrumentation(project(":instrumentation:jsf:jsf-myfaces-1.2:javaagent"))

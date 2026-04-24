@@ -31,11 +31,11 @@ import io.opentelemetry.instrumentation.testing.AgentTestRunner;
  * tests process with the {@code agent-for-testing} javaagent.
  */
 public class AgentInstrumentationExtension extends InstrumentationExtension {
-  private AgentInstrumentationExtension() {
-    super(AgentTestRunner.instance());
-  }
-
   public static AgentInstrumentationExtension create() {
     return new AgentInstrumentationExtension();
+  }
+
+  private AgentInstrumentationExtension() {
+    super(AgentTestRunner.instance());
   }
 }

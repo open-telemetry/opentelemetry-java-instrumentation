@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
+import javax.annotation.Nullable;
 
 public class InstrumentationPoints {
 
@@ -33,7 +34,7 @@ public class InstrumentationPoints {
   public static void afterCommand(
       RedisCommand<?, ?, ?> command,
       Context context,
-      Throwable throwable,
+      @Nullable Throwable throwable,
       AsyncCommand<?, ?, ?> asyncCommand) {
     if (throwable != null) {
       instrumenter().end(context, command, null, throwable);

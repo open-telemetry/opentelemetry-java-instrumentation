@@ -45,13 +45,8 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public boolean isIndyReady() {
-    return true;
-  }
-
-  @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // removed in 3.x
+    // removed in 3.0.0
     return hasClassesNamed("com.couchbase.client.java.CouchbaseAsyncBucket");
   }
 }
