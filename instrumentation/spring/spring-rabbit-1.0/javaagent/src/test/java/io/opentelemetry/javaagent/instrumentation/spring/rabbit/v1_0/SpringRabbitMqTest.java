@@ -73,7 +73,7 @@ class SpringRabbitMqTest {
   @BeforeAll
   static void setUp() throws UnknownHostException {
     rabbitMqContainer =
-        new GenericContainer<>("rabbitmq:latest")
+        new GenericContainer<>("rabbitmq:4.2")
             .withExposedPorts(5672)
             .waitingFor(Wait.forLogMessage(".*Server startup complete.*", 1))
             .withStartupTimeout(Duration.ofMinutes(2));
