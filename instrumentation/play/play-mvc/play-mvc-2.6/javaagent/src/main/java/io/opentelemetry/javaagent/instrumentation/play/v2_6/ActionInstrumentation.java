@@ -100,7 +100,7 @@ class ActionInstrumentation implements TypeInstrumentation {
     @Advice.AssignReturned.ToReturned
     public static Future<Result> stopTraceOnResponse(
         @Advice.This Action<?> thisAction,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Argument(0) Request<?> req,
         @Advice.Return Future<Result> responseFuture,
         @Advice.Enter @Nullable AdviceScope actionScope) {

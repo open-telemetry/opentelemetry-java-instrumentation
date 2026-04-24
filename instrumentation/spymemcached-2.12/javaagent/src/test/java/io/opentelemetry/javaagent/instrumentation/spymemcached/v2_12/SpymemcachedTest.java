@@ -82,7 +82,7 @@ class SpymemcachedTest {
   @BeforeAll
   static void setUp() {
     memcachedContainer =
-        new GenericContainer<>("memcached:latest")
+        new GenericContainer<>("memcached:1.6.41")
             .withExposedPorts(11211)
             .withStartupTimeout(Duration.ofMinutes(2));
     memcachedContainer.start();

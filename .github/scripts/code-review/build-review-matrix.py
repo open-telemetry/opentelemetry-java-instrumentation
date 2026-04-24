@@ -39,6 +39,10 @@ def parse_modules() -> list[tuple[str, str]]:
     pairs = []
     for entry in sorted(raw):
         parts = entry.split(":")
+        # Skip shared/helper modules (e.g. "cdi-testing") that don't follow the
+        # <library>:<variant> layout used for real instrumentation modules.
+        if len(parts) < 2:
+            continue
         module_dir = "instrumentation/" + "/".join(parts)
         # Gradle module name: second-to-last:last
         gradle_name = f"{parts[-2]}:{parts[-1]}"

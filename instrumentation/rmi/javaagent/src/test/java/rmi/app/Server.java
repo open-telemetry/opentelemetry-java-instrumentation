@@ -22,7 +22,7 @@ public class Server extends UnicastRemoteObject implements Greeter {
     return someMethod(name);
   }
 
-  public String someMethod(String name) {
+  private static String someMethod(String name) {
     return "Hello " + name;
   }
 

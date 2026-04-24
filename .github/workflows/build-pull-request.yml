@@ -10,7 +10,11 @@ on:
   workflow_call:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  # fixed group name (not github.workflow) so that runs triggered by pull_request
+  # and runs triggered via workflow_call from rebuild-pull-request-on-label.yml
+  # share the group, otherwise the PR build would run twice in parallel whenever
+  # a "test *" label is added
+  group: build-pull-request-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:

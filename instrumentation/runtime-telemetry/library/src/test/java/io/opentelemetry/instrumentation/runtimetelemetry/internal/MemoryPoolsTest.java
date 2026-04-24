@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.mockito.ArgumentMatchers.any;
@@ -81,105 +80,89 @@ class MemoryPoolsTest {
 
     testing.waitAndAssertMetrics(
         "test",
-        "jvm.memory.used",
-        metrics ->
-            metrics.anySatisfy(
-                metricData ->
-                    assertThat(metricData)
-                        .hasDescription("Measure of memory used.")
-                        .hasUnit("By")
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(11)
-                                            .hasAttribute(
-                                                stringKey("jvm.memory.pool.name"), "heap_pool")
-                                            .hasAttribute(stringKey("jvm.memory.type"), "heap"),
-                                    point ->
-                                        point
-                                            .hasValue(15)
-                                            .hasAttribute(
-                                                stringKey("jvm.memory.pool.name"), "non_heap_pool")
-                                            .hasAttribute(
-                                                stringKey("jvm.memory.type"), "non_heap")))));
+        metric ->
+            metric
+                .hasName("jvm.memory.used")
+                .hasDescription("Measure of memory used.")
+                .hasUnit("By")
+                .hasLongSumSatisfying(
+                    sum ->
+                        sum.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasValue(11)
+                                    .hasAttribute(stringKey("jvm.memory.pool.name"), "heap_pool")
+                                    .hasAttribute(stringKey("jvm.memory.type"), "heap"),
+                            point ->
+                                point
+                                    .hasValue(15)
+                                    .hasAttribute(
+                                        stringKey("jvm.memory.pool.name"), "non_heap_pool")
+                                    .hasAttribute(stringKey("jvm.memory.type"), "non_heap"))));
     testing.waitAndAssertMetrics(
         "test",
-        "jvm.memory.committed",
-        metrics ->
-            metrics.anySatisfy(
-                metricData ->
-                    assertThat(metricData)
-                        .hasDescription("Measure of memory committed.")
-                        .hasUnit("By")
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(12)
-                                            .hasAttribute(
-                                                stringKey("jvm.memory.pool.name"), "heap_pool")
-                                            .hasAttribute(stringKey("jvm.memory.type"), "heap"),
-                                    point ->
-                                        point
-                                            .hasValue(16)
-                                            .hasAttribute(
-                                                stringKey("jvm.memory.pool.name"), "non_heap_pool")
-                                            .hasAttribute(
-                                                stringKey("jvm.memory.type"), "non_heap")))));
+        metric ->
+            metric
+                .hasName("jvm.memory.committed")
+                .hasDescription("Measure of memory committed.")
+                .hasUnit("By")
+                .hasLongSumSatisfying(
+                    sum ->
+                        sum.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasValue(12)
+                                    .hasAttribute(stringKey("jvm.memory.pool.name"), "heap_pool")
+                                    .hasAttribute(stringKey("jvm.memory.type"), "heap"),
+                            point ->
+                                point
+                                    .hasValue(16)
+                                    .hasAttribute(
+                                        stringKey("jvm.memory.pool.name"), "non_heap_pool")
+                                    .hasAttribute(stringKey("jvm.memory.type"), "non_heap"))));
     testing.waitAndAssertMetrics(
         "test",
-        "jvm.memory.limit",
-        metrics ->
-            metrics.anySatisfy(
-                metricData ->
-                    assertThat(metricData)
-                        .hasDescription("Measure of max obtainable memory.")
-                        .hasUnit("By")
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(13)
-                                            .hasAttribute(
-                                                stringKey("jvm.memory.pool.name"), "heap_pool")
-                                            .hasAttribute(stringKey("jvm.memory.type"), "heap"),
-                                    point ->
-                                        point
-                                            .hasValue(17)
-                                            .hasAttribute(
-                                                stringKey("jvm.memory.pool.name"), "non_heap_pool")
-                                            .hasAttribute(
-                                                stringKey("jvm.memory.type"), "non_heap")))));
+        metric ->
+            metric
+                .hasName("jvm.memory.limit")
+                .hasDescription("Measure of max obtainable memory.")
+                .hasUnit("By")
+                .hasLongSumSatisfying(
+                    sum ->
+                        sum.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasValue(13)
+                                    .hasAttribute(stringKey("jvm.memory.pool.name"), "heap_pool")
+                                    .hasAttribute(stringKey("jvm.memory.type"), "heap"),
+                            point ->
+                                point
+                                    .hasValue(17)
+                                    .hasAttribute(
+                                        stringKey("jvm.memory.pool.name"), "non_heap_pool")
+                                    .hasAttribute(stringKey("jvm.memory.type"), "non_heap"))));
     testing.waitAndAssertMetrics(
         "test",
-        "jvm.memory.used_after_last_gc",
-        metrics ->
-            metrics.anySatisfy(
-                metricData ->
-                    assertThat(metricData)
-                        .hasDescription(
-                            "Measure of memory used, as measured after the most recent garbage collection event on this pool.")
-                        .hasUnit("By")
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(18)
-                                            .hasAttribute(
-                                                stringKey("jvm.memory.pool.name"), "heap_pool")
-                                            .hasAttribute(stringKey("jvm.memory.type"), "heap"),
-                                    point ->
-                                        point
-                                            .hasValue(19)
-                                            .hasAttribute(
-                                                stringKey("jvm.memory.pool.name"), "non_heap_pool")
-                                            .hasAttribute(
-                                                stringKey("jvm.memory.type"), "non_heap")))));
+        metric ->
+            metric
+                .hasName("jvm.memory.used_after_last_gc")
+                .hasDescription(
+                    "Measure of memory used, as measured after the most recent garbage collection event on this pool.")
+                .hasUnit("By")
+                .hasLongSumSatisfying(
+                    sum ->
+                        sum.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasValue(18)
+                                    .hasAttribute(stringKey("jvm.memory.pool.name"), "heap_pool")
+                                    .hasAttribute(stringKey("jvm.memory.type"), "heap"),
+                            point ->
+                                point
+                                    .hasValue(19)
+                                    .hasAttribute(
+                                        stringKey("jvm.memory.pool.name"), "non_heap_pool")
+                                    .hasAttribute(stringKey("jvm.memory.type"), "non_heap"))));
   }
 
   @Test
