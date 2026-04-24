@@ -71,7 +71,7 @@ final class RestletHeadersGetter implements TextMapGetter<Request> {
       @SuppressWarnings("unchecked") // casting MethodHandle.invoke result
       Map<String, Object> attributes = (Map<String, Object>) GET_ATTRIBUTES.invoke(carrier);
       return (Series<?>) attributes.get("org.restlet.http.headers");
-    } catch (Throwable e) {
+    } catch (Throwable ignored) {
       return null;
     }
   }

@@ -179,8 +179,7 @@ public abstract class AbstractRedissonAsyncClientTest {
   // regression test for
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/6033
   @Test
-  void scheduleCallable()
-      throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+  void scheduleCallable() throws ReflectiveOperationException {
     RScheduledExecutorService executorService = redisson.getExecutorService("EXECUTOR");
     //  Adapt different method signature:
     // `java.util.concurrent.ScheduledFuture<V> schedule(Callable,long,TimeUnit)` in 3.0.1
@@ -195,7 +194,7 @@ public abstract class AbstractRedissonAsyncClientTest {
   }
 
   private static Object invokeSchedule(RScheduledExecutorService executorService)
-      throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+      throws ReflectiveOperationException {
     return executorService
         .getClass()
         .getMethod("schedule", Callable.class, long.class, TimeUnit.class)

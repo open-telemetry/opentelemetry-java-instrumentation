@@ -73,7 +73,7 @@ public class PlayJavaStreamedWsClientBaseTest extends PlayWsClientBaseTest<Stand
   private static CompletionStage<StandaloneWSResponse> internalSendRequest(
       StandaloneWSRequest request) {
     CompletionStage<? extends StandaloneWSResponse> stream = request.stream();
-    // The status can be ready before the body so explicitly call wait for body to be ready
+    // The status can be ready before the body, so explicitly wait for the body to be ready.
     return stream
         .thenCompose(
             response -> response.getBodyAsSource().runFold("", (acc, out) -> "", materializer))

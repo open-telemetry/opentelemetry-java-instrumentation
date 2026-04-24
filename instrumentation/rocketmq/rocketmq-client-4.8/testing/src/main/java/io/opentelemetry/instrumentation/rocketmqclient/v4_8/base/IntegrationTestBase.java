@@ -44,15 +44,13 @@ public class IntegrationTestBase {
   private static final int INDEX_NUM = 1000;
 
   private static String createTempDir() {
-    String path = null;
     try {
       File file = Files.createTempDirectory("opentelemetry-rocketmq-client-temp").toFile();
       tempFiles.add(file);
-      path = file.getCanonicalPath();
+      return file.getCanonicalPath();
     } catch (IOException e) {
-      logger.warn("Error creating temporary directory.", e);
+      throw new IllegalStateException("Error creating temporary directory.", e);
     }
-    return path;
   }
 
   public static void deleteTempDir() {
@@ -85,7 +83,7 @@ public class IntegrationTestBase {
       logger.info("Name Server Start:{}", nameServerNettyServerConfig.getListenPort());
       namesrvController.start();
     } catch (Exception e) {
-      logger.info("Name Server start failed", e);
+      throw new IllegalStateException("Name Server start failed", e);
     }
     namesrvControllers.add(namesrvController);
     return namesrvController;

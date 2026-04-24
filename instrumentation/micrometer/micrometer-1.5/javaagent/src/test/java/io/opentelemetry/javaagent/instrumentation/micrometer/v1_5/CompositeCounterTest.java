@@ -57,21 +57,19 @@ class CompositeCounterTest {
 
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        "testCounter",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasDescription("This is a test counter")
-                        .hasUnit("items")
-                        .hasDoubleSumSatisfying(
-                            sum ->
-                                sum.isMonotonic()
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(1)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(stringKey("tag"), "value"))))));
+        metric ->
+            metric
+                .hasName("testCounter")
+                .hasDescription("This is a test counter")
+                .hasUnit("items")
+                .hasDoubleSumSatisfying(
+                    sum ->
+                        sum.isMonotonic()
+                            .hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value")))));
   }
 }

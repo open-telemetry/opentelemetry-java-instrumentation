@@ -176,8 +176,8 @@ class ContextPropagationOperatorInstrumentationTest {
                     (Mono<String>)
                         MONO_CONTEXT_WRITE_METHOD.invoke(
                             interim, new StoreOpenTelemetryContext(span));
-              } catch (Throwable e) {
-                throw new RuntimeException(e);
+              } catch (Throwable t) {
+                throw new RuntimeException(t);
               }
               return interim.doFinally(unused -> span.end());
             });

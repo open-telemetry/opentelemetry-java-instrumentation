@@ -56,7 +56,7 @@ class Slf4j2Test {
         .addKeyValue("long key", 4L)
         .addKeyValue("float key", 5.0f)
         .addKeyValue("double key", 6.0)
-        .addKeyValue("event.name", "MyEventName")
+        .addKeyValue("otel.event.name", "MyEventName")
         .log();
 
     testing.waitAndAssertLogRecords(

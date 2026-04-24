@@ -121,6 +121,7 @@ public class ApplicationSpanBuilder140Incubator extends ApplicationSpanBuilder
   }
 
   @Override
+  @CanIgnoreReturnValue
   public application.io.opentelemetry.api.incubator.trace.ExtendedSpanBuilder setParentFrom(
       application.io.opentelemetry.context.propagation.ContextPropagators contextPropagators,
       Map<String, String> map) {

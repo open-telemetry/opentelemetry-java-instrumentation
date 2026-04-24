@@ -53,8 +53,8 @@ abstract class PlayWsClientBaseTest<REQUEST> extends AbstractHttpClientTest<REQU
     system = ActorSystem.create(name);
     materializer = ActorMaterializer.create(ActorMaterializerSettings.create(system), system, name);
 
-    // Replace dns name resolver with custom implementation that returns only once address for each
-    // host. This is needed for "connection error dropped request" because in case of connection
+    // Replace the DNS name resolver with a custom implementation that returns one address per host.
+    // This is needed for "connection error dropped request" because in case of connection
     // failure ahc will try the next address which isn't necessary for this test.
     RequestBuilderBase.DEFAULT_NAME_RESOLVER =
         new CustomNameResolver(ImmediateEventExecutor.INSTANCE);

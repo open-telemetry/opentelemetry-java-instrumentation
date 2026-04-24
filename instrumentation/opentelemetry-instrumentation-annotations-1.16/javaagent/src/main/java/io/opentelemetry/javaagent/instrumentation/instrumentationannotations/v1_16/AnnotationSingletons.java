@@ -146,7 +146,8 @@ public class AnnotationSingletons {
             application.io.opentelemetry.instrumentation.annotations.WithSpan.class);
     try {
       return (boolean) INHERIT_CONTEXT_METHOD_HANDLE.invoke(annotation);
-    } catch (Throwable ignored) {
+    } catch (Throwable t) {
+      logger.log(FINE, "failed to read @WithSpan inheritContext()", t);
       return true;
     }
   }

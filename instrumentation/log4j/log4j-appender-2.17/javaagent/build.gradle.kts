@@ -76,7 +76,6 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-map-message-attributes=true")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=*")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-marker-attribute=true")
-  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-event-name=true")
 }
 
 configurations {

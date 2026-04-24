@@ -64,7 +64,7 @@ abstract class AbstractJms1Test {
   @BeforeAll
   static void setUp() throws JMSException {
     broker =
-        new GenericContainer<>("rmohr/activemq:latest")
+        new GenericContainer<>("apache/activemq-classic:5.19.2")
             .withExposedPorts(61616, 8161)
             .withLogConsumer(new Slf4jLogConsumer(logger));
     broker.start();
