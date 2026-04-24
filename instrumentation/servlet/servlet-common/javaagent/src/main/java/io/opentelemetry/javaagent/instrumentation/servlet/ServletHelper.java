@@ -27,10 +27,10 @@ public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST,
       ServletRequestContext<REQUEST> requestContext,
       REQUEST request,
       RESPONSE response,
-      Throwable throwable,
+      @Nullable Throwable throwable,
       boolean topLevel,
-      Context context,
-      Scope scope) {
+      @Nullable Context context,
+      @Nullable Scope scope) {
 
     if (scope != null) {
       scope.close();
