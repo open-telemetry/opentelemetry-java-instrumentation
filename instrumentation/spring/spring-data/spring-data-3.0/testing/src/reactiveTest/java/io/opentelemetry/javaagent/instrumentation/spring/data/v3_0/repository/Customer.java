@@ -50,7 +50,7 @@ public class Customer {
   @Override
   public String toString() {
     return String.format(
-        Locale.ROOT, "Customer[id=%d, firstName='%s', lastName='%s']", id, firstName, lastName);
+        Locale.ROOT, "Customer[id=%s, firstName='%s', lastName='%s']", id, firstName, lastName);
   }
 
   @Override
