@@ -38,7 +38,7 @@ public class DecoratorFunctions {
     @Override
     public final void accept(M message, Connection connection) {
       Channel channel = connection.channel();
-      // don't try to get the client span from the netty channel when forceParentSpan is true
+      // don't try to get the client span from the netty channel when forceParentContext is true
       // this way the parent context will always be propagated
       if (forceParentContext) {
         channel = null;

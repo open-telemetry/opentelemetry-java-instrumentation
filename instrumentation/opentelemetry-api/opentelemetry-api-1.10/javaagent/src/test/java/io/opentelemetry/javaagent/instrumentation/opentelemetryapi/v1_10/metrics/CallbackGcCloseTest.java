@@ -159,7 +159,7 @@ class CallbackGcCloseTest {
               resolveClass(c);
             }
             return c;
-          } catch (ClassNotFoundException e) {
+          } catch (ClassNotFoundException ignored) {
             // fall through to parent
           }
         }
