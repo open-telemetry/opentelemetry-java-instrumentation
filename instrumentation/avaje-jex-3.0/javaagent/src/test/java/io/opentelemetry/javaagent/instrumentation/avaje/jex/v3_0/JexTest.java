@@ -121,14 +121,12 @@ class JexTest {
     assertThat(response.status().code()).isEqualTo(200);
     testing.waitAndAssertMetrics(
         instrumentation,
-        "http.server.request.duration",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point -> point.hasAttribute(HTTP_ROUTE, "/test/param/{id}")))));
+        metric ->
+            metric
+                .hasName("http.server.request.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point -> point.hasAttribute(HTTP_ROUTE, "/test/param/{id}"))));
   }
 }

@@ -11,8 +11,7 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import javax.annotation.Nullable;
 
-public class RabbitDeliveryNetAttributesGetter
-    implements NetworkAttributesGetter<DeliveryRequest, Void> {
+class RabbitDeliveryNetAttributesGetter implements NetworkAttributesGetter<DeliveryRequest, Void> {
 
   @Nullable
   @Override

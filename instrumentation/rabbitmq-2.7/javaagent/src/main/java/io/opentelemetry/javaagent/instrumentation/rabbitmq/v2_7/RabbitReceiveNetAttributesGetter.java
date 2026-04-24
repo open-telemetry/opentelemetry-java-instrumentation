@@ -12,7 +12,7 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import javax.annotation.Nullable;
 
-public class RabbitReceiveNetAttributesGetter
+class RabbitReceiveNetAttributesGetter
     implements NetworkAttributesGetter<ReceiveRequest, GetResponse> {
 
   @Nullable

@@ -13,6 +13,7 @@ import static java.util.Collections.emptySet;
 import io.netty.channel.ConnectTimeoutException;
 import io.netty.handler.timeout.ReadTimeoutException;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
@@ -21,9 +22,9 @@ import java.time.Duration;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.condition.OS;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import ratpack.exec.Operation;
 import ratpack.exec.Promise;
 import ratpack.func.Action;
@@ -33,6 +34,8 @@ import ratpack.http.client.ReceivedResponse;
 import ratpack.test.exec.ExecHarness;
 
 public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void> {
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected final ExecHarness exec = ExecHarness.harness();
 
@@ -46,13 +49,9 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
           client = buildHttpClient();
           singleConnectionClient = buildHttpClient(spec -> spec.poolSize(1));
         });
-  }
-
-  @AfterAll
-  void cleanUpClient() {
-    client.close();
-    singleConnectionClient.close();
-    exec.close();
+    cleanup.deferAfterAll(exec);
+    cleanup.deferAfterAll(client);
+    cleanup.deferAfterAll(singleConnectionClient);
   }
 
   protected HttpClient buildHttpClient() throws Exception {

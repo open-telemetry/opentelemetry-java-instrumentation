@@ -352,8 +352,8 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     Throwable thrown = null;
     try {
       callback.accept(channel);
-    } catch (RuntimeException re) {
-      thrown = re.getCause();
+    } catch (RuntimeException e) {
+      thrown = e.getCause();
       assertThat(thrown.getClass().getName()).contains(accessor.getString(1));
     }
 

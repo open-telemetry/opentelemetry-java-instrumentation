@@ -19,6 +19,8 @@ public final class OpenTelemetryExecInterceptor implements ExecInterceptor {
 
   public static final ExecInterceptor INSTANCE = new OpenTelemetryExecInterceptor();
 
+  private OpenTelemetryExecInterceptor() {}
+
   @Override
   public void intercept(Execution execution, ExecType type, Block continuation) throws Exception {
     Context otelCtx = execution.maybeGet(Context.class).orElse(null);
