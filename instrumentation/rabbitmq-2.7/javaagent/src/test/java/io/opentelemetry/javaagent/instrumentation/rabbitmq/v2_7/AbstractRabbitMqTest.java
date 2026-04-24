@@ -42,7 +42,7 @@ abstract class AbstractRabbitMqTest {
   @BeforeAll
   static void startRabbit() throws UnknownHostException {
     rabbitMqContainer =
-        new GenericContainer<>("rabbitmq:latest")
+        new GenericContainer<>("rabbitmq:4.2")
             .withExposedPorts(5672)
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .waitingFor(Wait.forLogMessage(".*Server startup complete.*", 1))
