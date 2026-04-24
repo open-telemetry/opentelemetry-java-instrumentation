@@ -33,9 +33,8 @@ val otelProps = the<OtelPropsExtension>()
  *   to restrict the latest version to a specific range, e.g. `2.+` to stay on major version 2.
  */
 
-val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 val resolveLatestDeps = gradle.startParameter.projectProperties["resolveLatestDeps"] == "true"
-val pinLatestDeps = testLatestDeps && !resolveLatestDeps
+val pinLatestDeps = otelProps.testLatestDeps && !resolveLatestDeps
 
 fun getPinnedVersions(): Map<String, String> {
   if (!pinLatestDeps) return emptyMap()
@@ -113,7 +112,7 @@ configurations {
     // mutating the version for latest dep tests.
     configuration.dependencies.whenObjectAdded {
       val dep = copy()
-      if (testLatestDeps) {
+      if (otelProps.testLatestDeps) {
         val extDep = this as ExternalDependency
         val pinnedVersion = lookupPinnedVersion(extDep.group, extDep.name, "latest.release")
         (dep as ExternalDependency).version {
@@ -172,7 +171,7 @@ configurations {
   // 2. pinLatestDeps pinned versions: when pinning is enabled, any dependency still using
   //    "latest.release" or "+" versions (e.g. transitive deps) gets pinned to a concrete
   //    version from the JSON file.
-  if (testLatestDeps) {
+  if (otelProps.testLatestDeps) {
     // Only apply to test-related configurations, not build tool configurations like Zinc
     // (the Scala compiler). Overriding scala-library in Zinc's configuration breaks compilation.
     configureEach {

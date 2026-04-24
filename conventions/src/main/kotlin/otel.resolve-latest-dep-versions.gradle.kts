@@ -1,11 +1,17 @@
 import io.opentelemetry.javaagent.muzzle.AcceptableVersions
 import io.opentelemetry.javaagent.muzzle.MuzzleExtension
-import org.gradle.util.internal.VersionNumber
+import org.eclipse.aether.util.version.GenericVersionScheme
 
 tasks {
   val resolveLatestDepVersions by registering {
     group = "help"
     description = "Resolve latest dependency versions and write to .github/config/latest-dep-versions.json"
+
+    // This task intentionally walks every subproject's resolved configurations from the root
+    // build at execution time, which is incompatible with the configuration cache and project
+    // isolation. It is run only on demand (nightly latest-deps refresh), so opt out explicitly
+    // rather than block configuration-cache progress for the rest of the build.
+    notCompatibleWithConfigurationCache("walks all subprojects' resolved configurations")
 
     doLast {
       if (gradle.startParameter.projectProperties["testLatestDeps"] != "true" ||
@@ -24,6 +30,8 @@ tasks {
       val versions = sortedMapOf<String, String>()
       versions.putAll(existingVersions)
 
+      val versionScheme = GenericVersionScheme()
+
       fun recordVersion(key: String, version: String) {
         val existing = versions[key]
         if (existing == null) {
@@ -34,7 +42,7 @@ tasks {
           // Prefer stable over pre-release even if numerically lower, so that a pre-release
           // already in the JSON (e.g. 5.7.0-beta1) gets replaced by the latest stable (5.6.4).
           if ((!existingStable && newStable) ||
-            (existingStable == newStable && VersionNumber.parse(version) > VersionNumber.parse(existing))) {
+            (existingStable == newStable && versionScheme.parseVersion(version) > versionScheme.parseVersion(existing))) {
             versions[key] = version
           }
         }
@@ -149,15 +157,7 @@ tasks {
       }
 
       outputFile.parentFile.mkdirs()
-      outputFile.printWriter().use { writer ->
-        writer.println("{")
-        val entries = versions.entries.toList()
-        entries.forEachIndexed { index, (key, value) ->
-          val comma = if (index < entries.size - 1) "," else ""
-          writer.println("  \"$key\": \"$value\"$comma")
-        }
-        writer.println("}")
-      }
+      outputFile.writeText(groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(versions)) + "\n")
 
       logger.lifecycle("Wrote ${versions.size} pinned versions to ${outputFile.path}")
     }
