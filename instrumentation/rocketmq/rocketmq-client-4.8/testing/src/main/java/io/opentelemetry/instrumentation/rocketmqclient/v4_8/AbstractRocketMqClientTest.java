@@ -19,7 +19,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
@@ -30,6 +29,8 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
@@ -40,6 +41,7 @@ import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.common.message.Message;
+import org.apache.rocketmq.remoting.exception.RemotingException;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.AfterAll;
@@ -134,29 +136,30 @@ abstract class AbstractRocketMqClientTest {
   }
 
   @Test
-  void testRocketmqProduceCallback() {
+  void testRocketmqProduceCallback()
+      throws RemotingException,
+          InterruptedException,
+          MQClientException,
+          ExecutionException,
+          TimeoutException {
     CompletableFuture<SendResult> result = new CompletableFuture<>();
-    AtomicReference<SendResult> sendResult = new AtomicReference<>();
-    assertThatCode(
-            () ->
-                producer.send(
-                    msg,
-                    new SendCallback() {
-                      @Override
-                      public void onSuccess(SendResult sendResult) {
-                        result.complete(sendResult);
-                      }
+    producer.send(
+        msg,
+        new SendCallback() {
+          @Override
+          public void onSuccess(SendResult sendResult) {
+            result.complete(sendResult);
+          }
 
-                      @Override
-                      public void onException(Throwable throwable) {
-                        result.completeExceptionally(throwable);
-                      }
-                    }))
-        .doesNotThrowAnyException();
-    assertThatCode(() -> sendResult.set(result.get(10, SECONDS))).doesNotThrowAnyException();
-    assertThat(sendResult.get().getSendStatus()).isEqualTo(SendStatus.SEND_OK);
+          @Override
+          public void onException(Throwable throwable) {
+            result.completeExceptionally(throwable);
+          }
+        });
+    SendResult sendResult = result.get(10, SECONDS);
+    assertThat(sendResult.getSendStatus()).isEqualTo(SendStatus.SEND_OK);
     // waiting longer than assertTraces below does on its own because of CI flakiness
-    assertThatCode(() -> tracingMessageListener.waitForMessages()).doesNotThrowAnyException();
+    tracingMessageListener.waitForMessages();
 
     testing()
         .waitAndAssertTraces(
@@ -208,19 +211,16 @@ abstract class AbstractRocketMqClientTest {
   }
 
   @Test
-  void testRocketmqProduceAndConsume() {
-    assertThatCode(
-            () ->
-                testing()
-                    .runWithSpan(
-                        "parent",
-                        () -> {
-                          SendResult sendResult = producer.send(msg);
-                          assertThat(sendResult.getSendStatus()).isEqualTo(SendStatus.SEND_OK);
-                        }))
-        .doesNotThrowAnyException();
+  void testRocketmqProduceAndConsume() throws Exception {
+    testing()
+        .runWithSpan(
+            "parent",
+            () -> {
+              SendResult sendResult = producer.send(msg);
+              assertThat(sendResult.getSendStatus()).isEqualTo(SendStatus.SEND_OK);
+            });
     // waiting longer than assertTraces below does on its own because of CI flakiness
-    assertThatCode(() -> tracingMessageListener.waitForMessages()).doesNotThrowAnyException();
+    tracingMessageListener.waitForMessages();
 
     testing()
         .waitAndAssertTraces(
@@ -274,7 +274,7 @@ abstract class AbstractRocketMqClientTest {
   }
 
   @Test
-  void testRocketmqProduceAndBatchConsume() throws InterruptedException {
+  void testRocketmqProduceAndBatchConsume() throws Exception {
     // context propagation doesn't work for batch messages in 5.3.4
     Assumptions.assumeFalse(Boolean.getBoolean("testLatestDeps"));
 
@@ -287,13 +287,12 @@ abstract class AbstractRocketMqClientTest {
     for (int i = 0; i < maxAttempts; i++) {
       tracingMessageListener.reset();
 
-      assertThatCode(() -> testing().runWithSpan("parent", () -> producer.send(msgs)))
-          .doesNotThrowAnyException();
+      testing().runWithSpan("parent", () -> producer.send(msgs));
 
       tracingMessageListener.waitForMessages();
       if (tracingMessageListener.getLastBatchSize() == 2) {
         break;
-      } else if (i < maxAttempts - 1) {
+      } else if (i < maxAttempts) {
         // if messages weren't received as a batch we get 1 trace instead of 2
         testing().waitForTraces(1);
         Thread.sleep(2_000);
@@ -420,26 +419,21 @@ abstract class AbstractRocketMqClientTest {
   }
 
   @Test
-  void captureMessageHeaderAsSpanAttributes() {
+  void captureMessageHeaderAsSpanAttributes() throws Exception {
     tracingMessageListener.reset();
-    assertThatCode(
-            () ->
-                testing()
-                    .runWithSpan(
-                        "parent",
-                        () -> {
-                          Message msg =
-                              new Message(
-                                  sharedTopic,
-                                  "TagA",
-                                  "Hello RocketMQ".getBytes(Charset.defaultCharset()));
-                          msg.putUserProperty("Test-Message-Header", "test");
-                          SendResult sendResult = producer.send(msg);
-                          assertThat(sendResult.getSendStatus()).isEqualTo(SendStatus.SEND_OK);
-                        }))
-        .doesNotThrowAnyException();
+    testing()
+        .runWithSpan(
+            "parent",
+            () -> {
+              Message msg =
+                  new Message(
+                      sharedTopic, "TagA", "Hello RocketMQ".getBytes(Charset.defaultCharset()));
+              msg.putUserProperty("Test-Message-Header", "test");
+              SendResult sendResult = producer.send(msg);
+              assertThat(sendResult.getSendStatus()).isEqualTo(SendStatus.SEND_OK);
+            });
     // waiting longer than assertTraces below does on its own because of CI flakiness
-    assertThatCode(() -> tracingMessageListener.waitForMessages()).doesNotThrowAnyException();
+    tracingMessageListener.waitForMessages();
 
     testing()
         .waitAndAssertTraces(
@@ -499,11 +493,10 @@ abstract class AbstractRocketMqClientTest {
   }
 
   @Test
-  void testRocketmqProduceOneway() {
-    assertThatCode(() -> testing().runWithSpan("parent", () -> producer.sendOneway(msg)))
-        .doesNotThrowAnyException();
+  void testRocketmqProduceOneway() throws Exception {
+    testing().runWithSpan("parent", () -> producer.sendOneway(msg));
     // waiting longer than assertTraces below does on its own because of CI flakiness
-    assertThatCode(() -> tracingMessageListener.waitForMessages()).doesNotThrowAnyException();
+    tracingMessageListener.waitForMessages();
 
     testing()
         .waitAndAssertTraces(
