@@ -33,7 +33,7 @@ public enum ProtocolSpecificEvent {
   SWITCHING_PROTOCOLS("http.response.status_code.101.upgrade") {
 
     @Override
-    void addEvent(Context context, HttpRequest request, HttpResponse response) {
+    void addEvent(Context context, @Nullable HttpRequest request, HttpResponse response) {
       Span.fromContext(context)
           .addEvent(
               eventName(),
@@ -62,6 +62,5 @@ public enum ProtocolSpecificEvent {
     return eventName;
   }
 
-  abstract void addEvent(
-      Context context, @Nullable HttpRequest request, @Nullable HttpResponse response);
+  abstract void addEvent(Context context, @Nullable HttpRequest request, HttpResponse response);
 }

@@ -83,13 +83,11 @@ class CallbackGcCloseTest {
     // 3. Verify the gauge is producing metrics.
     testing.waitAndAssertMetrics(
         instrumentationName,
-        "test.gc.close",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasLongGaugeSatisfying(
-                            gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(42)))));
+        metric ->
+            metric
+                .hasName("test.gc.close")
+                .hasLongGaugeSatisfying(
+                    gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(42))));
 
     // 4. Release the classloader — simulates app undeploy.
     WeakReference<ClassLoader> clRef = new WeakReference<>(childCl);
@@ -125,13 +123,11 @@ class CallbackGcCloseTest {
 
     testing.waitAndAssertMetrics(
         instrumentationName,
-        "test.gc.alive",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasLongGaugeSatisfying(
-                            gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(99)))));
+        metric ->
+            metric
+                .hasName("test.gc.alive")
+                .hasLongGaugeSatisfying(
+                    gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(99))));
 
     // prevent callback from being collected during the test
     assertThat(callback).isNotNull();

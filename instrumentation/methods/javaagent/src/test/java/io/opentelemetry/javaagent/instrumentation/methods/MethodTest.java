@@ -18,6 +18,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.naming.NamingException;
 import javax.naming.NoInitialContextException;
 import javax.naming.directory.InitialDirContext;
 import javax.naming.ldap.InitialLdapContext;
@@ -43,7 +44,7 @@ class MethodTest {
   }
 
   @Test
-  void bootLoaderMethodTraced() throws Exception {
+  void bootLoaderMethodTraced() throws NamingException {
     InitialLdapContext context = new InitialLdapContext();
     AtomicReference<Throwable> throwableReference = new AtomicReference<>();
     assertThatThrownBy(

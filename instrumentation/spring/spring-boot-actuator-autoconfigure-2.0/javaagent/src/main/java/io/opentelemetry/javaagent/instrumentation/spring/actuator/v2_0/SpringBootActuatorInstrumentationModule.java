@@ -31,7 +31,7 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // added in micrometer-core 1.5
+    // added in io.micrometer:micrometer-core 1.5
     return hasClassesNamed("io.micrometer.core.instrument.config.validate.Validated");
   }
 

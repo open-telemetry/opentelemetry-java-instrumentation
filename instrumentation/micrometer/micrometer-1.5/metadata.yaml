@@ -7,18 +7,24 @@ description: >
 library_link: https://micrometer.io/
 configurations:
   - name: otel.instrumentation.micrometer.prometheus-mode.enabled
+    declarative_name: java.micrometer.prometheus_mode.enabled
     description: >
       Simulates the behavior of Micrometer's PrometheusMeterRegistry. The instruments will be
       renamed to match Micrometer instrument naming, and the base time unit will be set to seconds.
     type: boolean
     default: false
   - name: otel.instrumentation.micrometer.base-time-unit
+    declarative_name: java.micrometer.base_time_unit
     description: >
       Sets the base time unit for the OpenTelemetry MeterRegistry. Supported values: ns, us, ms, s,
       min, h, d.
     type: string
     default: s
+    examples:
+      - ns
+      - milliseconds
   - name: otel.instrumentation.micrometer.histogram-gauges.enabled
+    declarative_name: java.micrometer.histogram_gauges.enabled
     description: >
       Enables gauge-based Micrometer histograms for DistributionSummary and Timer instruments.
     type: boolean

@@ -41,6 +41,7 @@ tasks {
     }
     include("**/KafkaClientPropagationDisabledTest.*")
     jvmArgs("-Dotel.instrumentation.kafka.producer-propagation.enabled=false")
+    systemProperty("metadataConfig", "otel.instrumentation.kafka.producer-propagation.enabled=false")
   }
 
   val testReceiveSpansDisabled by registering(Test::class) {

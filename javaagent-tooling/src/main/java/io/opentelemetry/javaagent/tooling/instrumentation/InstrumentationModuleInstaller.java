@@ -16,17 +16,20 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
+<<<<<<< inspect-advice
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule.HelperClassStrategy;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
+=======
+>>>>>>> main
 import io.opentelemetry.javaagent.tooling.HelperClassDefinition;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
+import io.opentelemetry.javaagent.tooling.InjectionMode;
 import io.opentelemetry.javaagent.tooling.ModuleOpener;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.bytebuddy.LoggingFailSafeMatcher;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstallerFactory;
-import io.opentelemetry.javaagent.tooling.instrumentation.indy.ClassInjectorImpl;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.ForwardIndyAdviceTransformer;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyTypeTransformerImpl;
@@ -160,12 +163,6 @@ public final class InstrumentationModuleInstaller {
       injectedHelperClassNames = emptyList();
     }
 
-    ClassInjectorImpl injectedClassesCollector = new ClassInjectorImpl(instrumentationModule);
-    if (instrumentationModule instanceof ExperimentalInstrumentationModule) {
-      ((ExperimentalInstrumentationModule) instrumentationModule)
-          .injectClasses(injectedClassesCollector);
-    }
-
     MuzzleMatcher muzzleMatcher =
         new MuzzleMatcher(
             logger,
@@ -180,8 +177,7 @@ public final class InstrumentationModuleInstaller {
 
     Function<ClassLoader, List<HelperClassDefinition>> helperGenerator =
         cl -> {
-          List<HelperClassDefinition> helpers =
-              new ArrayList<>(injectedClassesCollector.getClassesToInject(cl));
+          List<HelperClassDefinition> helpers = new ArrayList<>();
           for (String helperName : injectedHelperClassNames) {
             helpers.add(
                 HelperClassDefinition.create(

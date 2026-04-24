@@ -29,7 +29,7 @@ final class NettyHttpClientAttributesGetter
       String hostHeader = getHost(requestAndChannel);
       String target = requestAndChannel.getRequest().getUri();
       URI uri = new URI(target);
-      if ((uri.getHost() == null || uri.getHost().equals("")) && hostHeader != null) {
+      if ((uri.getHost() == null || uri.getHost().isEmpty()) && hostHeader != null) {
         return getScheme(requestAndChannel) + "://" + hostHeader + target;
       }
       return uri.toString();

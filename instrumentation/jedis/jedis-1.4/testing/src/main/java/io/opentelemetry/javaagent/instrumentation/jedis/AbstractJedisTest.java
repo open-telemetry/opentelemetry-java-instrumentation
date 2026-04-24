@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.io.IOException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,7 +37,7 @@ public abstract class AbstractJedisTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private static final GenericContainer<?> REDIS_SERVER =
+  private static final GenericContainer<?> redisServer =
       new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
 
   private static String host;
@@ -47,15 +48,16 @@ public abstract class AbstractJedisTest {
 
   @BeforeAll
   static void setup() {
-    REDIS_SERVER.start();
-    host = REDIS_SERVER.getHost();
-    port = REDIS_SERVER.getMappedPort(6379);
+    redisServer.start();
+    host = redisServer.getHost();
+    port = redisServer.getMappedPort(6379);
     jedis = new Jedis(host, port);
   }
 
   @AfterAll
-  static void cleanup() {
-    REDIS_SERVER.stop();
+  static void cleanup() throws IOException {
+    jedis.disconnect();
+    redisServer.stop();
   }
 
   @BeforeEach

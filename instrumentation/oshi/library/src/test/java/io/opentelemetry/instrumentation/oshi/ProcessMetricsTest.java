@@ -19,7 +19,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class ProcessMetricsTest extends AbstractProcessMetricsTest {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   private static List<AutoCloseable> observables;
 

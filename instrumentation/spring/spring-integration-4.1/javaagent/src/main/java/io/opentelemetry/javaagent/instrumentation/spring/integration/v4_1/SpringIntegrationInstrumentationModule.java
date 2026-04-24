@@ -22,6 +22,7 @@ public class SpringIntegrationInstrumentationModule extends InstrumentationModul
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 4.1.0.RELEASE
     return hasClassesNamed("org.springframework.messaging.support.ChannelInterceptor");
   }
 
