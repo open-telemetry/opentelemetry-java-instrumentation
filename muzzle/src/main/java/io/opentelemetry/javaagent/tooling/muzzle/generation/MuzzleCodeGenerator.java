@@ -619,7 +619,7 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
               null);
       mv.visitCode();
 
-      mv.visitLdcInsn(result ? Opcodes.ICONST_1 : Opcodes.ICONST_0);
+      mv.visitInsn(result ? Opcodes.ICONST_1 : Opcodes.ICONST_0);
       mv.visitMethodInsn(
           Opcodes.INVOKESTATIC,
           "java/lang/Boolean",

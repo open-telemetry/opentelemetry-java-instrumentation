@@ -10,7 +10,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.Collection;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -40,7 +40,7 @@ public class AdviceInspector {
   }
 
   public boolean useIsolatedAdvice(InstrumentationModule instrumentationModule) {
-    Set<String> adviceClassNames = new LinkedHashSet<>();
+    Set<String> adviceClassNames = new HashSet<>();
     for (TypeInstrumentation typeInstrumentation : instrumentationModule.typeInstrumentations()) {
       typeInstrumentation.transform(
           new TypeTransformer() {
@@ -68,6 +68,8 @@ public class AdviceInspector {
       InstrumentationModule instrumentationModule, Collection<String> adviceClassNames) {
     TypePool typePool = AgentBuilder.PoolStrategy.Default.FAST.typePool(classFileLocator, null);
 
+    int inlineCount = 0;
+    int nonInlineCount = 0;
     for (String adviceClassName : adviceClassNames) {
       TypeDescription type = typePool.describe(adviceClassName).resolve();
       MethodList<MethodDescription.InDefinedShape> methodList = type.getDeclaredMethods();
@@ -84,13 +86,33 @@ public class AdviceInspector {
             // indy.
             // Similarly inline advice could be used with indy instrumentation, but we assume that
             // if inline advice is used, then it is not indy ready.
-            return value.getState().isDefined() && Boolean.FALSE.equals(value.resolve());
+            if (value.getState().isDefined() && Boolean.FALSE.equals(value.resolve())) {
+              nonInlineCount++;
+            } else {
+              inlineCount++;
+            }
           }
         }
       }
     }
+    // mixed inline and non-inline advice
+    if (inlineCount > 0 && nonInlineCount > 0) {
+      return null;
+    }
+    if (inlineCount > 0) {
+      return false;
+    }
+    // While it is possible to use non-inline advice with the non-indy instrumentation, by
+    // adding the advice classes as helper classes, we assume that nobody relies on that.
+    // Having all advice non-inline is treated as a marker that the instrumentation can use indy.
+    // Similarly inline advice could be used with indy instrumentation. For now, we default to
+    // non-indy instrumentation in that case, but users can override that by explicitly choosing
+    // whether to inject or isolate helper classes when mixed advice is used.
+    if (nonInlineCount > 0) {
+      return true;
+    }
 
-    // no advice annotations were used so the instrumentation is using a AgentBuilder.Transformer
+    // no advice annotations were used so the instrumentation is using an AgentBuilder.Transformer
     if (instrumentationModule instanceof ExperimentalInstrumentationModule) {
       ExperimentalInstrumentationModule experimentalModule =
           (ExperimentalInstrumentationModule) instrumentationModule;
