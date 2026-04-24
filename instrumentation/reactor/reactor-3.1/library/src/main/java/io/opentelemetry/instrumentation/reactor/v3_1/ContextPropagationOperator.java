@@ -58,12 +58,7 @@ public final class ContextPropagationOperator {
   @Nullable
   private static final MethodHandle FLUX_CONTEXT_WRITE_METHOD = getContextWriteMethod(Flux.class);
 
-  private static final String SCHEDULERS_HOOK_KEY = RunnableWrapper.class.getName();
-
   @Nullable private static final MethodHandle SCHEDULERS_HOOK_METHOD = getSchedulersHookMethod();
-
-  @Nullable
-  private static final MethodHandle SCHEDULERS_RESET_HOOK_METHOD = getSchedulersResetHookMethod();
 
   @Nullable
   private static MethodHandle getContextWriteMethod(Class<?> type) {
@@ -87,18 +82,6 @@ public final class ContextPropagationOperator {
     try {
       return lookup.findStatic(
           Schedulers.class, "onScheduleHook", methodType(void.class, String.class, Function.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
-      // ignore
-    }
-    return null;
-  }
-
-  @Nullable
-  private static MethodHandle getSchedulersResetHookMethod() {
-    MethodHandles.Lookup lookup = MethodHandles.publicLookup();
-    try {
-      return lookup.findStatic(
-          Schedulers.class, "resetOnScheduleHook", methodType(void.class, String.class));
     } catch (NoSuchMethodException | IllegalAccessException e) {
       // ignore
     }
@@ -188,7 +171,7 @@ public final class ContextPropagationOperator {
       Hooks.onEachOperator(
           TracingSubscriber.class.getName(), tracingLift(asyncOperationEndStrategy));
       AsyncOperationEndStrategies.instance().registerStrategy(asyncOperationEndStrategy);
-      registerScheduleHook(SCHEDULERS_HOOK_KEY, RunnableWrapper::new);
+      registerScheduleHook(RunnableWrapper.class.getName(), RunnableWrapper::new);
       enabled = true;
     }
   }
@@ -204,17 +187,6 @@ public final class ContextPropagationOperator {
     }
   }
 
-  private static void resetScheduleHook(String key) {
-    if (SCHEDULERS_RESET_HOOK_METHOD == null) {
-      return;
-    }
-    try {
-      SCHEDULERS_RESET_HOOK_METHOD.invoke(key);
-    } catch (Throwable t) {
-      logger.log(WARNING, "Failed to remove scheduler hook", t);
-    }
-  }
-
   /** Unregisters the hook registered by {@link #registerOnEachOperator()}. */
   public void resetOnEachOperator() {
     synchronized (lock) {
@@ -223,7 +195,6 @@ public final class ContextPropagationOperator {
       }
       Hooks.resetOnEachOperator(TracingSubscriber.class.getName());
       AsyncOperationEndStrategies.instance().unregisterStrategy(asyncOperationEndStrategy);
-      resetScheduleHook(SCHEDULERS_HOOK_KEY);
       enabled = false;
     }
   }
