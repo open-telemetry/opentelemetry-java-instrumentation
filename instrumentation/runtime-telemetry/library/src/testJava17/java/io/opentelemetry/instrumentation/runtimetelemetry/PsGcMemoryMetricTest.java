@@ -28,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
-import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.testing.assertj.LongSumAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -52,32 +52,32 @@ class PsGcMemoryMetricTest {
                 .hasName(METRIC_NAME_MEMORY)
                 .hasUnit(BYTES)
                 .hasDescription(METRIC_DESCRIPTION_MEMORY)
-                .satisfies(PsGcMemoryMetricTest::hasGcAttributes),
+                .hasLongSumSatisfying(PsGcMemoryMetricTest::hasGcAttributes),
         metric ->
             metric
                 .hasName(METRIC_NAME_COMMITTED)
                 .hasUnit(BYTES)
                 .hasDescription(METRIC_DESCRIPTION_COMMITTED)
-                .satisfies(PsGcMemoryMetricTest::hasGcAttributes),
+                .hasLongSumSatisfying(PsGcMemoryMetricTest::hasGcAttributes),
         metric ->
             metric
                 .hasName(METRIC_NAME_MEMORY_LIMIT)
                 .hasUnit(BYTES)
                 .hasDescription(METRIC_DESCRIPTION_MEMORY_LIMIT)
-                .satisfies(PsGcMemoryMetricTest::hasGcAttributes),
+                .hasLongSumSatisfying(PsGcMemoryMetricTest::hasGcAttributes),
         metric ->
             metric
                 .hasName(METRIC_NAME_MEMORY_AFTER)
                 .hasUnit(BYTES)
                 .hasDescription(METRIC_DESCRIPTION_MEMORY_AFTER)
-                .satisfies(PsGcMemoryMetricTest::hasGcAttributes));
+                .hasLongSumSatisfying(PsGcMemoryMetricTest::hasGcAttributes));
   }
 
-  private static void hasGcAttributes(MetricData data) {
-    assertThat(data.getLongSumData().getPoints())
-        .anyMatch(p -> p.getAttributes().equals(ATTR_PS_EDEN_SPACE))
-        .anyMatch(p -> p.getAttributes().equals(ATTR_PS_SURVIVOR_SPACE))
-        .anyMatch(p -> p.getAttributes().equals(ATTR_PS_OLD_GEN));
+  private static void hasGcAttributes(LongSumAssert sum) {
+    sum.containsPointsSatisfying(
+        point -> point.hasAttributes(ATTR_PS_EDEN_SPACE),
+        point -> point.hasAttributes(ATTR_PS_SURVIVOR_SPACE),
+        point -> point.hasAttributes(ATTR_PS_OLD_GEN));
   }
 
   @Test
