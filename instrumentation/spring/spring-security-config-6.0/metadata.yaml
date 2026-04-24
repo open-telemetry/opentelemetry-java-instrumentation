@@ -19,10 +19,12 @@ configurations:
     type: boolean
     default: false
   - name: otel.instrumentation.spring-security.enduser.role.granted-authority-prefix
+    declarative_name: java.spring_security.enduser.role.granted_authority_prefix
     description: Prefix of granted authorities identifying roles to capture in the `enduser.role` semantic attribute.
-    type: String
+    type: string
     default: "ROLE_"
-  - name: otel.instrumentation.spring-security.scope.role.granted-authority-prefix
-    description: Prefix of granted authorities identifying scopes to capture in the `enduser.scopes` semantic attribute.
-    type: String
+  - name: otel.instrumentation.spring-security.enduser.scope.granted-authority-prefix
+    declarative_name: java.spring_security.enduser.scope.granted_authority_prefix
+    description: Prefix of granted authorities identifying scopes to capture in the `enduser.scope` semantic attribute.
+    type: string
     default: "SCOPE_"
