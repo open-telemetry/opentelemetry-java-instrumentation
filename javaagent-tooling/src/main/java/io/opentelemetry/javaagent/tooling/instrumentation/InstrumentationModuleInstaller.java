@@ -16,11 +16,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-<<<<<<< inspect-advice
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule.HelperClassStrategy;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
-=======
->>>>>>> main
 import io.opentelemetry.javaagent.tooling.HelperClassDefinition;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.InjectionMode;
