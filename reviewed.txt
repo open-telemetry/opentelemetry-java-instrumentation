@@ -458,3 +458,12 @@ spring-boot-actuator-autoconfigure-2.0:javaagent
 spring:spring-boot-autoconfigure
 spring-boot-autoconfigure:testing
 spring-boot-resources:javaagent
+spring-boot-resources:javaagent-unit-tests
+spring-cloud-aws-3.0:javaagent
+spring-cloud-gateway-2.0:javaagent
+spring-cloud-gateway-2.2:testing
+spring-cloud-gateway-common:javaagent
+spring-cloud-gateway-common:testing
+spring-cloud-gateway-webflux-4.3:testing
+spring-cloud-gateway-webmvc-4.3:javaagent
+spring-core-2.0:javaagent
