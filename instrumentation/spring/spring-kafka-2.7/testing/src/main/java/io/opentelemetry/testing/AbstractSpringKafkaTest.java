@@ -42,7 +42,7 @@ public abstract class AbstractSpringKafkaTest {
       AttributeKey.stringKey("messaging.client_id");
   protected static KafkaContainer kafka;
 
-  ConfigurableApplicationContext applicationContext;
+  private ConfigurableApplicationContext applicationContext;
   protected KafkaTemplate<String, String> kafkaTemplate;
 
   @BeforeAll
@@ -91,7 +91,7 @@ public abstract class AbstractSpringKafkaTest {
     }
   }
 
-  static final MethodHandle send;
+  private static final MethodHandle send;
 
   static {
     MethodHandle sendMethod = null;
