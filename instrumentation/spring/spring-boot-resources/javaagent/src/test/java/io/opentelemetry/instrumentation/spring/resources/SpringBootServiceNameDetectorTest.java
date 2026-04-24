@@ -8,15 +8,17 @@ package io.opentelemetry.instrumentation.spring.resources;
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonMap;
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -30,12 +32,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class SpringBootServiceNameDetectorTest {
 
-  static final String APPLICATION_PROPS = "application.properties";
-  static final String APPLICATION_YML = "application.yml";
+  private static final String APPLICATION_PROPS = "application.properties";
+  private static final String APPLICATION_YML = "application.yml";
 
-  static final String BOOTSTRAP_PROPS = "bootstrap.properties";
+  private static final String BOOTSTRAP_PROPS = "bootstrap.properties";
 
-  static final String BOOTSTRAP_YML = "bootstrap.yml";
+  private static final String BOOTSTRAP_YML = "bootstrap.yml";
 
   @Mock ConfigProperties config;
   @Mock SystemHelper system;
@@ -70,7 +72,7 @@ class SpringBootServiceNameDetectorTest {
   }
 
   @Test
-  void propertiesFileInCurrentDir() throws Exception {
+  void propertiesFileInCurrentDir() throws IOException {
     Path propsPath = Paths.get(APPLICATION_PROPS);
     try {
       writeString(propsPath, "spring.application.name=fish-tank\n");
@@ -124,12 +126,10 @@ class SpringBootServiceNameDetectorTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"application.yaml", APPLICATION_YML})
-  void yamlFileInCurrentDir(String fileName) throws Exception {
+  void yamlFileInCurrentDir(String fileName) throws IOException {
     Path yamlPath = Paths.get(fileName);
     try {
-      URL url = getClass().getClassLoader().getResource(APPLICATION_YML);
-      String content = readString(Paths.get(url.toURI()));
-      writeString(yamlPath, content);
+      writeString(yamlPath, readClasspathResource(APPLICATION_YML));
       when(system.openFile(fileName)).thenCallRealMethod();
       SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
       Resource result = guesser.createResource(config);
@@ -140,7 +140,7 @@ class SpringBootServiceNameDetectorTest {
   }
 
   @Test
-  void getFromCommandlineArgsWithProcessHandle() throws Exception {
+  void getFromCommandlineArgsWithProcessHandle() throws ReflectiveOperationException {
     when(system.attemptGetCommandLineArgsViaReflection())
         .thenReturn(
             new String[] {
@@ -196,15 +196,23 @@ class SpringBootServiceNameDetectorTest {
     assertThat(result.getAttribute(SERVICE_NAME)).isEqualTo(expected);
   }
 
-  private static void writeString(Path path, String value) throws Exception {
+  private static void writeString(Path path, String value) throws IOException {
     try (OutputStream out = Files.newOutputStream(path)) {
       out.write(value.getBytes(UTF_8));
     }
   }
 
-  private static String readString(Path path) throws Exception {
-    byte[] allBytes = Files.readAllBytes(path);
-    return new String(allBytes, UTF_8);
+  private String readClasspathResource(String resource) throws IOException {
+    try (InputStream in = openClasspathResource(resource)) {
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      byte[] buffer = new byte[1024];
+      int bytesRead;
+      InputStream input = requireNonNull(in);
+      while ((bytesRead = input.read(buffer)) != -1) {
+        out.write(buffer, 0, bytesRead);
+      }
+      return new String(out.toByteArray(), UTF_8);
+    }
   }
 
   private InputStream openClasspathResource(String resource) {

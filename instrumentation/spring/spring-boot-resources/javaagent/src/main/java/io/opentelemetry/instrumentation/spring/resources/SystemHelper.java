@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.resources;
 
 import static java.util.logging.Level.FINER;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
@@ -44,11 +45,14 @@ class SystemHelper {
   }
 
   InputStream openClasspathResource(String directory, String filename) {
-    String path = directory + "/" + filename;
+    String path =
+        addBootInfPrefix
+            ? "BOOT-INF/classes/" + directory + "/" + filename
+            : directory + "/" + filename;
     return classLoader.getResourceAsStream(path);
   }
 
-  InputStream openFile(String filename) throws Exception {
+  InputStream openFile(String filename) throws IOException {
     return Files.newInputStream(Paths.get(filename));
   }
 
@@ -57,7 +61,7 @@ class SystemHelper {
    * main method arguments). Will only succeed on java 9+.
    */
   @SuppressWarnings("unchecked")
-  String[] attemptGetCommandLineArgsViaReflection() throws Exception {
+  String[] attemptGetCommandLineArgsViaReflection() throws ReflectiveOperationException {
     Class<?> clazz = Class.forName("java.lang.ProcessHandle");
     Method currentMethod = clazz.getDeclaredMethod("current");
     Method infoMethod = clazz.getDeclaredMethod("info");
