@@ -24,7 +24,7 @@ public class SpringJmsInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // removed in 6.0
+    // added in 2.0
     return not(hasClassesNamed("org.springframework.jms.remoting.JmsInvokerProxyFactoryBean"));
   }
 
