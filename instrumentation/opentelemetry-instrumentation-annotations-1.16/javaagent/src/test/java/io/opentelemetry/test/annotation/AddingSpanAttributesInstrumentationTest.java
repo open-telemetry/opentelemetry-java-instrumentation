@@ -22,7 +22,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class AddingSpanAttributesInstrumentationTest {
 
   @RegisterExtension
-  public static final AgentInstrumentationExtension testing =
+  private static final AgentInstrumentationExtension testing =
       AgentInstrumentationExtension.create();
 
   @SuppressWarnings("deprecation") // using deprecated semconv

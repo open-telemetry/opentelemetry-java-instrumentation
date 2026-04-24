@@ -16,8 +16,8 @@ import javax.annotation.Nullable;
 
 final class WithSpanParameterAttributeNamesExtractor implements ParameterAttributeNamesExtractor {
 
-  private static final Class<? extends Annotation> spanAttributeAnnotation;
-  private static final Function<Annotation, String> spanAttributeValueFunction;
+  @Nullable private static final Class<? extends Annotation> spanAttributeAnnotation;
+  @Nullable private static final Function<Annotation, String> spanAttributeValueFunction;
 
   static {
     ClassLoader classLoader = WithSpanParameterAttributeNamesExtractor.class.getClassLoader();
@@ -52,6 +52,7 @@ final class WithSpanParameterAttributeNamesExtractor implements ParameterAttribu
 
   @Nullable
   private static String attributeName(Parameter parameter) {
+    // when spanAttributeAnnotation is non-null, so is spanAttributeValueFunction
     if (spanAttributeAnnotation == null) {
       return null;
     }

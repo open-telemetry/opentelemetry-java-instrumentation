@@ -17,6 +17,7 @@ import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -45,6 +46,7 @@ class PekkoDefaultSystemMessageQueueInstrumentation implements TypeInstrumentati
   @SuppressWarnings("unused")
   public static class DispatchSystemAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static PropagatedContext enter(@Advice.Argument(1) SystemMessage systemMessage) {
       Context context = Java8BytecodeBridge.currentContext();
@@ -58,8 +60,8 @@ class PekkoDefaultSystemMessageQueueInstrumentation implements TypeInstrumentati
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exit(
         @Advice.Argument(1) SystemMessage systemMessage,
-        @Advice.Enter PropagatedContext propagatedContext,
-        @Advice.Thrown Throwable throwable) {
+        @Advice.Enter @Nullable PropagatedContext propagatedContext,
+        @Advice.Thrown @Nullable Throwable throwable) {
       ExecutorAdviceHelper.cleanUpAfterSubmit(
           propagatedContext, throwable, SYSTEM_MESSAGE_PROPAGATED_CONTEXT, systemMessage);
     }
