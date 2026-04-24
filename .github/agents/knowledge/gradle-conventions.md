@@ -102,6 +102,24 @@ should be active in the test agent.
 - **Sibling cross-version references are required**: every javaagent module in a version
   family must list all other sibling `:javaagent` modules via `testInstrumentation`.
 
+### Exception: modules already bundled into `agent-for-testing`
+
+A small set of javaagent modules are bundled directly into the main agent via
+`baseJavaagentLibs(...)` in `javaagent/build.gradle.kts`, and therefore into
+`agent-for-testing` as well. For these, the sibling cross-version rule does **not** apply:
+they are already loaded in every test JVM, so adding them via `testInstrumentation`
+from a sibling's `build.gradle.kts` is redundant and should be rejected in review.
+
+In particular, do not add `testInstrumentation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.N:javaagent"))`
+entries to sibling `opentelemetry-api-*` modules — all `opentelemetry-api-1.*:javaagent`
+versions are already bundled in the test agent. The same applies to the other modules listed
+under `baseJavaagentLibs` in `javaagent/build.gradle.kts` (e.g. `executors`,
+`opentelemetry-instrumentation-annotations-1.16`, and the `internal/*` modules).
+
+Before adding a `testInstrumentation` for a sibling, check
+[`javaagent/build.gradle.kts`](../../../javaagent/build.gradle.kts): if the sibling appears
+in a `baseJavaagentLibs(...)` line, omit the `testInstrumentation` entry.
+
 ### How to check for missing siblings (step by step)
 
 When reviewing a `javaagent/` module:
