@@ -76,7 +76,10 @@ Do not flag the following patterns (common false positives):
 
 - FQCN is acceptable when class-name collision makes import impossible.
 - Do not claim that a Java non-capturing lambda or method reference allocates per
-  call. On HotSpot / OpenJDK 8+, these are cached at the call site.
+  call. On HotSpot / OpenJDK 8+, these are cached at the `invokedynamic` call site.
+  Do not suggest hoisting such a lambda into a `private static final` field for
+  allocation/performance reasons — it is pure noise. If a PR makes that hoist,
+  flag it and recommend reverting to the in-line lambda.
 
 ## [Style] Visibility modifiers
 
