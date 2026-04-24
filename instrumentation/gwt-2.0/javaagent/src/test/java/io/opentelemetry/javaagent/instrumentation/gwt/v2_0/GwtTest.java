@@ -80,7 +80,7 @@ class GwtTest {
     Testcontainers.exposeHostPorts(port);
 
     browser =
-        new BrowserWebDriverContainer("selenium/standalone-chrome")
+        new BrowserWebDriverContainer("selenium/standalone-chrome:4.43.0")
             .withLogConsumer(new Slf4jLogConsumer(logger));
     cleanup.deferAfterAll(browser::stop);
     browser.start();
