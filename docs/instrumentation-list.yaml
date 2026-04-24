@@ -5274,6 +5274,67 @@ libraries:
           type: STRING
         - name: rpc.system
           type: STRING
+  hbase:
+  - name: hbase-client-2.0.0
+    description: |
+      This instrumentation enables database client spans and database client metrics for the Apache HBase client.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    library_link: https://hbase.apache.org/
+    source_path: instrumentation/hbase/hbase-client-2.0.0
+    scope:
+      name: io.opentelemetry.hbase-client-2.0.0
+    javaagent_target_versions:
+    - org.apache.hbase:hbase-client:[2.0.0, 2.5.0)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: db.user
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   helidon:
   - name: helidon-4.3
     description: This instrumentation enables HTTP server spans and HTTP server metrics
