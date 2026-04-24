@@ -14,11 +14,11 @@ import org.apache.pekko.http.scaladsl.model.HttpResponse;
 
 public class PekkoHttpClientSingletons {
 
-  private static final HttpHeaderSetter SETTER;
+  private static final HttpHeaderSetter setter;
   private static final Instrumenter<HttpRequest, HttpResponse> instrumenter;
 
   static {
-    SETTER = new HttpHeaderSetter(GlobalOpenTelemetry.getPropagators());
+    setter = new HttpHeaderSetter(GlobalOpenTelemetry.getPropagators());
 
     instrumenter =
         JavaagentHttpClientInstrumenters.create(
@@ -30,7 +30,7 @@ public class PekkoHttpClientSingletons {
   }
 
   public static HttpHeaderSetter setter() {
-    return SETTER;
+    return setter;
   }
 
   private PekkoHttpClientSingletons() {}

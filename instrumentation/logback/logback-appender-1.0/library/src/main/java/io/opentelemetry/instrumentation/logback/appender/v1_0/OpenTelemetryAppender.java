@@ -42,7 +42,6 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private boolean captureLogstashMarkerAttributes = false;
   private boolean captureLogstashStructuredArguments = false;
   private List<String> captureMdcAttributes = emptyList();
-  private boolean captureEventName = false;
 
   private volatile OpenTelemetry openTelemetry;
   private LoggingEventMapper mapper;
@@ -106,12 +105,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             .setCaptureArguments(captureArguments)
             .setCaptureLogstashMarkerAttributes(captureLogstashMarkerAttributes)
             .setCaptureLogstashStructuredArguments(captureLogstashStructuredArguments)
-            .setCaptureEventName(captureEventName)
             .build();
-    if (captureEventName) {
-      addWarn(
-          "The captureEventName setting is deprecated and will be removed in a future version.");
-    }
     eventsToReplay = new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
     super.start();
   }
@@ -232,22 +226,6 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     } else {
       captureMdcAttributes = emptyList();
     }
-  }
-
-  /**
-   * Sets whether the value of the {@code event.name} attribute is used as the log event name.
-   *
-   * <p>The {@code event.name} attribute is captured via any other mechanism supported by this
-   * appender, such as when {@code captureKeyValuePairAttributes} is true.
-   *
-   * <p>When {@code captureEventName} is true, then the value of the {@code event.name} attribute
-   * will be used as the log event name, and {@code event.name} attribute will be removed.
-   *
-   * @param captureEventName to enable or disable capturing the {@code event.name} attribute as the
-   *     log event name
-   */
-  public void setCaptureEventName(boolean captureEventName) {
-    this.captureEventName = captureEventName;
   }
 
   /**

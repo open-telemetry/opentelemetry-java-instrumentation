@@ -20,12 +20,8 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledInNativeImage;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 
 @DisabledInNativeImage // conflict with Mockito
 class LoggingEventMapperTest {
@@ -83,45 +79,14 @@ class LoggingEventMapperTest {
     verifyNoMoreInteractions(builder);
   }
 
-  private static Stream<Arguments> eventNameProperties() {
-    return Stream.of(Arguments.of("event.name", true), Arguments.of("otel.event.name", false));
-  }
-
-  @ParameterizedTest
-  @MethodSource("eventNameProperties")
-  void testEventNameMdc(String eventNameProperty, boolean captureEventName) {
+  @Test
+  void testEventNameMdc() {
     // given
     LoggingEventMapper mapper =
-        LoggingEventMapper.builder()
-            .setCaptureEventName(captureEventName)
-            .setCaptureMdcAttributes(singletonList("key1"))
-            .build();
+        LoggingEventMapper.builder().setCaptureMdcAttributes(singletonList("key1")).build();
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
-    contextData.put(eventNameProperty, "MyEventName");
-    LogRecordBuilder builder = mock(LogRecordBuilder.class);
-
-    // when
-    mapper.captureMdcAttributes(builder, contextData);
-
-    // then
-    verify(builder).setAttribute(stringKey("key1"), "value1");
-    verify(builder).setEventName("MyEventName");
-    verifyNoMoreInteractions(builder);
-  }
-
-  @ParameterizedTest
-  @MethodSource("eventNameProperties")
-  void testEventNameMdcWithCaptureAll(String eventNameProperty, boolean captureEventName) {
-    // given
-    LoggingEventMapper mapper =
-        LoggingEventMapper.builder()
-            .setCaptureEventName(captureEventName)
-            .setCaptureMdcAttributes(singletonList("*"))
-            .build();
-    Map<String, String> contextData = new HashMap<>();
-    contextData.put("key1", "value1");
-    contextData.put(eventNameProperty, "MyEventName");
+    contextData.put("otel.event.name", "MyEventName");
     LogRecordBuilder builder = mock(LogRecordBuilder.class);
 
     // when
@@ -134,33 +99,68 @@ class LoggingEventMapperTest {
   }
 
   @Test
+  void testEventNameMdcWithCaptureAll() {
+    // given
+    LoggingEventMapper mapper =
+        LoggingEventMapper.builder().setCaptureMdcAttributes(singletonList("*")).build();
+    Map<String, String> contextData = new HashMap<>();
+    contextData.put("key1", "value1");
+    contextData.put("otel.event.name", "MyEventName");
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    // when
+    mapper.captureMdcAttributes(builder, contextData);
+
+    // then
+    verify(builder).setAttribute(stringKey("key1"), "value1");
+    verify(builder).setEventName("MyEventName");
+    verifyNoMoreInteractions(builder);
+  }
+
+  @Test
+  void testEventNameMdcWithoutMdcCapture() {
+    // given
+    LoggingEventMapper mapper = LoggingEventMapper.builder().build();
+    Map<String, String> contextData = new HashMap<>();
+    contextData.put("otel.event.name", "MyEventName");
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    // when
+    mapper.captureMdcAttributes(builder, contextData);
+
+    // then
+    verify(builder).setEventName("MyEventName");
+    verifyNoMoreInteractions(builder);
+  }
+
+  @Test
   void testCaptureAttributeArray() {
     LogRecordBuilder builder = mock(LogRecordBuilder.class);
 
-    LoggingEventMapper.captureAttribute(builder, false, "booleanArray", new boolean[] {true});
-    LoggingEventMapper.captureAttribute(builder, false, "BooleanArray", new Boolean[] {true});
+    LoggingEventMapper.captureAttribute(builder, "booleanArray", new boolean[] {true});
+    LoggingEventMapper.captureAttribute(builder, "BooleanArray", new Boolean[] {true});
 
-    LoggingEventMapper.captureAttribute(builder, false, "byteArray", new byte[] {2});
-    LoggingEventMapper.captureAttribute(builder, false, "ByteArray", new Byte[] {2});
+    LoggingEventMapper.captureAttribute(builder, "byteArray", new byte[] {2});
+    LoggingEventMapper.captureAttribute(builder, "ByteArray", new Byte[] {2});
 
-    LoggingEventMapper.captureAttribute(builder, false, "shortArray", new short[] {2});
-    LoggingEventMapper.captureAttribute(builder, false, "ShortArray", new Short[] {2});
+    LoggingEventMapper.captureAttribute(builder, "shortArray", new short[] {2});
+    LoggingEventMapper.captureAttribute(builder, "ShortArray", new Short[] {2});
 
-    LoggingEventMapper.captureAttribute(builder, false, "intArray", new int[] {2});
-    LoggingEventMapper.captureAttribute(builder, false, "IntegerArray", new Integer[] {2});
+    LoggingEventMapper.captureAttribute(builder, "intArray", new int[] {2});
+    LoggingEventMapper.captureAttribute(builder, "IntegerArray", new Integer[] {2});
 
-    LoggingEventMapper.captureAttribute(builder, false, "longArray", new long[] {2});
-    LoggingEventMapper.captureAttribute(builder, false, "LongArray", new Long[] {2L});
+    LoggingEventMapper.captureAttribute(builder, "longArray", new long[] {2});
+    LoggingEventMapper.captureAttribute(builder, "LongArray", new Long[] {2L});
 
-    LoggingEventMapper.captureAttribute(builder, false, "floatArray", new float[] {2.0f});
-    LoggingEventMapper.captureAttribute(builder, false, "FloatArray", new Float[] {2.0f});
+    LoggingEventMapper.captureAttribute(builder, "floatArray", new float[] {2.0f});
+    LoggingEventMapper.captureAttribute(builder, "FloatArray", new Float[] {2.0f});
 
-    LoggingEventMapper.captureAttribute(builder, false, "doubleArray", new double[] {2.0});
-    LoggingEventMapper.captureAttribute(builder, false, "DoubleArray", new Double[] {2.0});
+    LoggingEventMapper.captureAttribute(builder, "doubleArray", new double[] {2.0});
+    LoggingEventMapper.captureAttribute(builder, "DoubleArray", new Double[] {2.0});
 
-    LoggingEventMapper.captureAttribute(builder, false, "ObjectArray", new Object[] {"test"});
-    LoggingEventMapper.captureAttribute(builder, false, "List", singletonList("test"));
-    LoggingEventMapper.captureAttribute(builder, false, "Set", singleton("test"));
+    LoggingEventMapper.captureAttribute(builder, "ObjectArray", new Object[] {"test"});
+    LoggingEventMapper.captureAttribute(builder, "List", singletonList("test"));
+    LoggingEventMapper.captureAttribute(builder, "Set", singleton("test"));
 
     verify(builder).setAttribute(booleanArrayKey("booleanArray"), singletonList(true));
     verify(builder).setAttribute(booleanArrayKey("BooleanArray"), singletonList(true));

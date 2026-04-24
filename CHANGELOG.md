@@ -22,6 +22,11 @@
 - Removed previously deprecated experimental config property
   `otel.instrumentation.servlet.experimental.add-trace-id-request-attribute`; use
   `otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled` instead.
+- Removed the previously deprecated `captureEventName` library builder setting from the
+  logback-appender-1.0 and log4j-appender-2.17 `OpenTelemetryAppender`, and the corresponding
+  `otel.instrumentation.{logback-appender,log4j-appender,jboss-logmanager}.experimental.capture-event-name`
+  javaagent properties. Use the `otel.event.name` key in MDC / context data / key-value pairs /
+  Logstash markers / structured arguments instead.
 
 ## Version 2.27.0 (2026-04-21)
 

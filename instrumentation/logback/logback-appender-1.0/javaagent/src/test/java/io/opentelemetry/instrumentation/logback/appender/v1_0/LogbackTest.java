@@ -18,11 +18,4 @@ class LogbackTest extends AbstractLogbackTest {
   protected InstrumentationExtension testing() {
     return testing;
   }
-
-  @Override
-  protected boolean expectEventName() {
-    // the javaagent tests do not enable the deprecated capture-event-name setting
-    // see https://github.com/open-telemetry/semantic-conventions/issues/2913
-    return false;
-  }
 }

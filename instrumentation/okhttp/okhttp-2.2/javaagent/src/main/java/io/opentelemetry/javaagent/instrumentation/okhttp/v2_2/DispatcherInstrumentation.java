@@ -15,6 +15,7 @@ import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -36,6 +37,7 @@ class DispatcherInstrumentation implements TypeInstrumentation {
   public static class AttachStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static PropagatedContext onEnter(@Advice.Argument(0) Runnable call) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, call)) {
@@ -47,7 +49,7 @@ class DispatcherInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(0) Runnable call,
-        @Advice.Enter PropagatedContext propagatedContext,
+        @Advice.Enter @Nullable PropagatedContext propagatedContext,
         @Advice.Thrown Throwable throwable) {
       ExecutorAdviceHelper.cleanUpAfterSubmit(
           propagatedContext, throwable, PROPAGATED_CONTEXT, call);
