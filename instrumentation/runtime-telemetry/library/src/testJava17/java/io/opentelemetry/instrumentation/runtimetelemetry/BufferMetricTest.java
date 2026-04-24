@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.runtimetelemetry;
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.BYTES;
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.UNIT_BUFFERS;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -55,11 +54,9 @@ class BufferMetricTest {
                     sum ->
                         sum.hasPointsSatisfying(
                             point ->
-                                point.satisfies(
-                                    pointData -> {
-                                      assertThat(pointData.getValue()).isGreaterThan(0);
-                                      assertThat(pointData.getAttributes()).isEqualTo(directBuffer);
-                                    }))),
+                                point
+                                    .hasAttributes(directBuffer)
+                                    .hasValueSatisfying(v -> v.isPositive()))),
         metric ->
             metric
                 .hasName("jvm.buffer.memory.limit")
@@ -69,11 +66,9 @@ class BufferMetricTest {
                     sum ->
                         sum.hasPointsSatisfying(
                             point ->
-                                point.satisfies(
-                                    pointData -> {
-                                      assertThat(pointData.getValue()).isGreaterThan(0);
-                                      assertThat(pointData.getAttributes()).isEqualTo(directBuffer);
-                                    }))),
+                                point
+                                    .hasAttributes(directBuffer)
+                                    .hasValueSatisfying(v -> v.isPositive()))),
         metric ->
             metric
                 .hasName("jvm.buffer.memory.used")
@@ -83,10 +78,8 @@ class BufferMetricTest {
                     sum ->
                         sum.hasPointsSatisfying(
                             point ->
-                                point.satisfies(
-                                    pointData -> {
-                                      assertThat(pointData.getValue()).isGreaterThan(0);
-                                      assertThat(pointData.getAttributes()).isEqualTo(directBuffer);
-                                    }))));
+                                point
+                                    .hasAttributes(directBuffer)
+                                    .hasValueSatisfying(v -> v.isPositive()))));
   }
 }
