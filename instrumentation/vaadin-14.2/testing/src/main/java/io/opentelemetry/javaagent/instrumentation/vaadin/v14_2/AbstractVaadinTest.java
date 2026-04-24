@@ -80,7 +80,7 @@ public abstract class AbstractVaadinTest
     Testcontainers.exposeHostPorts(port);
 
     browser =
-        new BrowserWebDriverContainer("selenium/standalone-chrome")
+        new BrowserWebDriverContainer("selenium/standalone-chrome:4.43.0")
             .withLogConsumer(new Slf4jLogConsumer(logger));
     browser.start();
 
