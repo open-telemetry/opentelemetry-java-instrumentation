@@ -375,3 +375,15 @@ play-ws-common:javaagent
 play-ws-common:testing
 powerjob-4.0:javaagent
 pulsar-2.8:javaagent
+pulsar-2.8:javaagent-unit-tests
+quarkus-resteasy-reactive:javaagent
+quarkus-resteasy-reactive:quarkus-2.0-testing
+quarkus-resteasy-reactive:quarkus-3.0-testing
+quarkus-resteasy-reactive:quarkus-3.9-testing
+quartz-2.0:javaagent
+quartz-2.0:library
+quartz-2.0:testing
+r2dbc-1.0:javaagent
+r2dbc-1.0:library
+r2dbc-1.0:library-instrumentation-shaded
+r2dbc-1.0:testing
