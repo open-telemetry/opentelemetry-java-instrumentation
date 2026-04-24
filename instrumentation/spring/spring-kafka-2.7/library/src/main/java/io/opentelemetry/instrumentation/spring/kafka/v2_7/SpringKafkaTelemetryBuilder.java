@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.kafka.v2_7;
 
 import static java.util.Collections.emptyList;
+import static java.util.Objects.requireNonNull;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
@@ -26,7 +27,7 @@ public final class SpringKafkaTelemetryBuilder {
   private boolean messagingReceiveInstrumentationEnabled = false;
 
   SpringKafkaTelemetryBuilder(OpenTelemetry openTelemetry) {
-    this.openTelemetry = openTelemetry;
+    this.openTelemetry = requireNonNull(openTelemetry);
   }
 
   @CanIgnoreReturnValue
