@@ -14,9 +14,9 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class Servlet2Accessor extends JavaxServletAccessor<HttpServletResponse>
+class Servlet2Accessor extends JavaxServletAccessor<HttpServletResponse>
     implements HttpServerResponseMutator<HttpServletResponse> {
-  public static final Servlet2Accessor INSTANCE = new Servlet2Accessor();
+  static final Servlet2Accessor INSTANCE = new Servlet2Accessor();
 
   private Servlet2Accessor() {}
 
