@@ -83,7 +83,6 @@ public class IntegrationTestBase {
       logger.info("Name Server Start:{}", nameServerNettyServerConfig.getListenPort());
       namesrvController.start();
     } catch (Exception e) {
-      logger.error("Name Server start failed", e);
       throw new IllegalStateException("Name Server start failed", e);
     }
     namesrvControllers.add(namesrvController);
