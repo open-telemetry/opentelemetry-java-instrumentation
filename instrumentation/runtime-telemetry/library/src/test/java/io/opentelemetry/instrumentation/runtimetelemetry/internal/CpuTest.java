@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -29,29 +28,21 @@ class CpuTest {
 
     testing.waitAndAssertMetrics(
         "test",
-        "jvm.cpu.time",
-        metrics ->
-            metrics.anySatisfy(
-                metricData ->
-                    assertThat(metricData)
-                        .hasDescription("CPU time used by the process as reported by the JVM.")
-                        .hasUnit("s")
-                        .hasDoubleSumSatisfying(
-                            count ->
-                                count
-                                    .isMonotonic()
-                                    .hasPointsSatisfying(point -> point.hasValue(42)))));
+        metric ->
+            metric
+                .hasName("jvm.cpu.time")
+                .hasDescription("CPU time used by the process as reported by the JVM.")
+                .hasUnit("s")
+                .hasDoubleSumSatisfying(
+                    count -> count.isMonotonic().hasPointsSatisfying(point -> point.hasValue(42))));
     testing.waitAndAssertMetrics(
         "test",
-        "jvm.cpu.recent_utilization",
-        metrics ->
-            metrics.anySatisfy(
-                metricData ->
-                    assertThat(metricData)
-                        .hasDescription(
-                            "Recent CPU utilization for the process as reported by the JVM.")
-                        .hasUnit("1")
-                        .hasDoubleGaugeSatisfying(
-                            gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(0.05)))));
+        metric ->
+            metric
+                .hasName("jvm.cpu.recent_utilization")
+                .hasDescription("Recent CPU utilization for the process as reported by the JVM.")
+                .hasUnit("1")
+                .hasDoubleGaugeSatisfying(
+                    gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(0.05))));
   }
 }
