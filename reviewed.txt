@@ -483,3 +483,12 @@ spring-kafka-2.7:testing
 spring-pulsar-1.0:javaagent
 spring-pulsar-1.0:testing
 spring-rabbit-1.0:javaagent
+spring-rmi-4.0:javaagent
+spring-scheduling-3.1:bootstrap
+spring-scheduling-3.1:javaagent
+spring-security-config-6.0:javaagent
+spring-security-config-6.0:library
+spring-web-3.1:library
+spring-web-3.1:testing
+spring-web-6.0:javaagent
+spring-webflux-5.0:javaagent
