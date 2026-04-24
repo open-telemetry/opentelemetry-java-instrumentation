@@ -19,13 +19,10 @@ import io.opentelemetry.api.logs.LogRecordBuilder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.stream.Stream;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class LogEventMapperTest {
@@ -35,14 +32,7 @@ class LogEventMapperTest {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE,
-            false,
-            false,
-            false,
-            false,
-            emptyList(),
-            false,
-            false);
+            ContextDataAccessorImpl.INSTANCE, false, false, false, false, emptyList(), false);
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
@@ -66,7 +56,6 @@ class LogEventMapperTest {
             false,
             false,
             singletonList("key2"),
-            false,
             false);
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
@@ -92,7 +81,6 @@ class LogEventMapperTest {
             false,
             false,
             singletonList("*"),
-            false,
             false);
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
@@ -108,13 +96,8 @@ class LogEventMapperTest {
     verifyNoMoreInteractions(builder);
   }
 
-  private static Stream<Arguments> eventNameProperties() {
-    return Stream.of(Arguments.of("event.name", true), Arguments.of("otel.event.name", false));
-  }
-
-  @ParameterizedTest
-  @MethodSource("eventNameProperties")
-  void testCaptureEventNameFromContextData(String eventNameProperty, boolean captureEventName) {
+  @Test
+  void testCaptureEventNameFromContextDataWithCaptureAll() {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
@@ -123,12 +106,11 @@ class LogEventMapperTest {
             false,
             false,
             false,
-            singletonList("key1"),
-            captureEventName,
+            singletonList("*"),
             false);
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
-    contextData.put(eventNameProperty, "MyEventName");
+    contextData.put("otel.event.name", "MyEventName");
     LogRecordBuilder builder = mock(LogRecordBuilder.class);
 
     // when
@@ -151,7 +133,6 @@ class LogEventMapperTest {
             false,
             false,
             singletonList("*"),
-            false,
             false);
 
     StringMapMessage message = new StringMapMessage();
@@ -180,7 +161,6 @@ class LogEventMapperTest {
             true,
             false,
             singletonList("*"),
-            false,
             v3Preview);
 
     StringMapMessage message = new StringMapMessage();
@@ -211,7 +191,6 @@ class LogEventMapperTest {
             true,
             false,
             singletonList("*"),
-            false,
             v3Preview);
 
     StringMapMessage message = new StringMapMessage();
@@ -244,7 +223,6 @@ class LogEventMapperTest {
             true,
             false,
             singletonList("*"),
-            false,
             v3Preview);
 
     StructuredDataMessage message = new StructuredDataMessage("an id", "a message", "a type");

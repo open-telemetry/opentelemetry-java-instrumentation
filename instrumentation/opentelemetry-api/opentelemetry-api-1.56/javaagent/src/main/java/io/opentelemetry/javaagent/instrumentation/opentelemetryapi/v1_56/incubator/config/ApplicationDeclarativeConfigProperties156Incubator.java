@@ -12,11 +12,11 @@ import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
 
-public class ApplicationDeclarativeConfigProperties156Incubator
+class ApplicationDeclarativeConfigProperties156Incubator
     implements application.io.opentelemetry.api.incubator.config.DeclarativeConfigProperties {
   private final DeclarativeConfigProperties instrumentationConfig;
 
-  public ApplicationDeclarativeConfigProperties156Incubator(
+  ApplicationDeclarativeConfigProperties156Incubator(
       DeclarativeConfigProperties instrumentationConfig) {
     this.instrumentationConfig = instrumentationConfig;
   }
