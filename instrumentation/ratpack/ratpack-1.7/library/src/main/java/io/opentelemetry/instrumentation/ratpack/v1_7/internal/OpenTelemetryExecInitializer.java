@@ -15,6 +15,8 @@ import ratpack.exec.Execution;
 public final class OpenTelemetryExecInitializer implements ExecInitializer {
   public static final ExecInitializer INSTANCE = new OpenTelemetryExecInitializer();
 
+  private OpenTelemetryExecInitializer() {}
+
   @Override
   public void init(Execution execution) {
     // Propagates ContextHolder to child execution because the response interceptor is triggered in

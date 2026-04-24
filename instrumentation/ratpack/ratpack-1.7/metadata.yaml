@@ -14,18 +14,22 @@ features:
 library_link: https://ratpack.io/
 configurations:
   - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+    declarative_name: java.common.controller_telemetry/development.enabled
     description: Enables the creation of experimental controller spans.
     type: boolean
     default: false
   - name: otel.instrumentation.http.server.capture-request-headers
+    declarative_name: general.http.server.request_captured_headers
     description: List of HTTP request headers to capture in HTTP server telemetry.
     type: list
     default: ""
   - name: otel.instrumentation.http.server.capture-response-headers
+    declarative_name: general.http.server.response_captured_headers
     description: List of HTTP response headers to capture in HTTP server telemetry.
     type: list
     default: ""
   - name: otel.instrumentation.http.server.emit-experimental-telemetry
+    declarative_name: java.common.http.server.emit_experimental_telemetry/development
     description: >
       Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size`
       and `http.response.body.size` attributes to spans, and records `http.server.request.size` and
@@ -33,16 +37,19 @@ configurations:
     type: boolean
     default: false
   - name: otel.instrumentation.http.known-methods
+    declarative_name: java.common.http.known_methods
     description: >
       Configures the instrumentation to recognize an alternative set of HTTP request methods. All
       other methods will be treated as `_OTHER`.
     type: list
     default: "CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE"
   - name: otel.instrumentation.http.client.capture-request-headers
+    declarative_name: general.http.client.request_captured_headers
     description: List of HTTP request headers to capture in HTTP client telemetry.
     type: list
     default: ""
   - name: otel.instrumentation.http.client.capture-response-headers
+    declarative_name: general.http.client.response_captured_headers
     description: List of HTTP response headers to capture in HTTP client telemetry.
     type: list
     default: ""
@@ -51,6 +58,7 @@ configurations:
     type: map
     default: ""
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
+    declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: >
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size`
       and `http.response.body.size` attributes to spans, and records `http.client.request.size` and
@@ -58,6 +66,7 @@ configurations:
     type: boolean
     default: false
   - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    declarative_name: java.common.http.client.redact_query_parameters/development
     description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
     type: boolean
     default: true
