@@ -6,10 +6,19 @@
 package io.opentelemetry.instrumentation.reactor.v3_1;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.TraceFlags;
+import io.opentelemetry.api.trace.TraceState;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import org.junit.jupiter.api.Test;
 import reactor.core.CoreSubscriber;
 import reactor.core.Disposable;
@@ -17,6 +26,14 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 class HooksTest {
+
+  private static final Span PARENT_SPAN =
+      Span.wrap(
+          SpanContext.create(
+              "11111111111111111111111111111111",
+              "1111111111111111",
+              TraceFlags.getSampled(),
+              TraceState.getDefault()));
 
   @Test
   void canResetOurHooks() {
@@ -33,6 +50,25 @@ class HooksTest {
     operator.resetOnEachOperator();
     new CapturingMono(subscriber).map(i -> i + 1).subscribe();
     assertThat(subscriber.get()).extracting("actual").isNotInstanceOf(TracingSubscriber.class);
+  }
+
+  @Test
+  void canResetSchedulerHook() throws InterruptedException {
+    if (!schedulerHooksSupported()) {
+      return;
+    }
+
+    ContextPropagationOperator operator = ContextPropagationOperator.create();
+
+    assertThat(scheduledSpanIsCurrent()).isFalse();
+
+    operator.registerOnEachOperator();
+    try {
+      assertThat(scheduledSpanIsCurrent()).isTrue();
+    } finally {
+      operator.resetOnEachOperator();
+    }
+    assertThat(scheduledSpanIsCurrent()).isFalse();
   }
 
   private static class CapturingMono extends Mono<Integer> {
@@ -70,5 +106,30 @@ class HooksTest {
 
     disposable.dispose();
     operator.resetOnEachOperator();
+  }
+
+  private static boolean schedulerHooksSupported() {
+    try {
+      Schedulers.class.getMethod("onScheduleHook", String.class, Function.class);
+      Schedulers.class.getMethod("resetOnScheduleHook", String.class);
+      return true;
+    } catch (NoSuchMethodException e) {
+      return false;
+    }
+  }
+
+  private static boolean scheduledSpanIsCurrent() throws InterruptedException {
+    CountDownLatch latch = new CountDownLatch(1);
+    AtomicReference<Boolean> currentSpanValid = new AtomicReference<>(false);
+    try (Scope ignored = Context.root().with(PARENT_SPAN).makeCurrent()) {
+      Schedulers.single()
+          .schedule(
+              () -> {
+                currentSpanValid.set(Span.current().getSpanContext().isValid());
+                latch.countDown();
+              });
+    }
+    assertThat(latch.await(5, SECONDS)).isTrue();
+    return currentSpanValid.get();
   }
 }
