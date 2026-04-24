@@ -27,27 +27,15 @@ public final class IpcCallInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("callComplete")),
-        IpcCallInstrumentation.class.getName() + "$CallCompleteAdvice");
-
-    transformer.applyAdviceToMethod(
-        isMethod().and(named("setTimeout")),
-        IpcCallInstrumentation.class.getName() + "$CallTimeoutAdvice");
+        isMethod().and(named("callComplete").or(named("setTimeout"))),
+        IpcCallInstrumentation.class.getName() + "$CallAdvice");
   }
 
-  public static class CallCompleteAdvice {
+  public static class CallAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This Object call, @Advice.FieldValue(value = "error") IOException error) {
-      CallMethodHelper.handleOnEnter(error, call, instrumenter());
-    }
-  }
-
-  public static class CallTimeoutAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.This Object call, @Advice.FieldValue(value = "error") IOException error) {
-      CallMethodHelper.handleOnEnter(error, call, instrumenter());
+      CallMethodHelper.finishSpan(error, call, instrumenter());
     }
   }
 }

@@ -6,6 +6,8 @@ dependencies {
   library("org.apache.hbase:hbase-shaded-client:2.0.0")
 
   testInstrumentation(project(":instrumentation:hbase:hbase-client-2.0.0:javaagent"))
+  testImplementation(project(":instrumentation:hbase:hbase-common:testing"))
+  latestDepTestLibrary("org.apache.hbase:hbase-shaded-client:2.4.+")
 }
 
 tasks {

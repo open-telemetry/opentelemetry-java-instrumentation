@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.latestDepTestLibrary
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -18,6 +20,8 @@ dependencies {
   testLibrary("org.apache.hbase:hbase-client:2.3.7")
   latestDepTestLibrary("org.apache.hbase:hbase-client:2.4.+")
   testImplementation("com.google.code.findbugs:annotations:3.0.1")
+  testImplementation(project(":instrumentation:hbase:hbase-common:testing"))
+  latestDepTestLibrary("org.apache.hbase:hbase-client:2.4.+")
 }
 
 tasks {

@@ -19,23 +19,28 @@ public class CallMethodHelper {
     return HbaseRequest.create(operation, tableName, user, addr.getHostString(), addr.getPort());
   }
 
+  public static HbaseRequest buildRequest(
+      String operation, String tableName, String user, String hostname, int port) {
+    return HbaseRequest.create(operation, tableName, user, hostname, port);
+  }
+
   public static void handleOnExit(
       Throwable throwable,
-      Scope scope,
-      Context context,
-      HbaseRequest request,
+      RequestAndContext requestAndContext,
       Instrumenter<HbaseRequest, Void> instrumenter,
       boolean end) {
+    Scope scope = requestAndContext.getScope();
     if (scope == null) {
       return;
     }
     scope.close();
     if (end || throwable != null) {
-      instrumenter.end(context, request, null, throwable);
+      instrumenter.end(
+          requestAndContext.getContext(), requestAndContext.getRequest(), null, throwable);
     }
   }
 
-  public static void handleOnEnter(
+  public static void finishSpan(
       Throwable throwable, Object call, Instrumenter<HbaseRequest, Void> instrumenter) {
     VirtualField<Object, RequestAndContext> virtualField =
         VirtualField.find(Object.class, RequestAndContext.class);

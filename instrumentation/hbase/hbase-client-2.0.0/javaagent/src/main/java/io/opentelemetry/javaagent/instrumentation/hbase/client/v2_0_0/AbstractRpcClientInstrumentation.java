@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0_0;
 
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0_0.HbaseSingletons.RC_THREAD_LOCAL;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0_0.HbaseSingletons.TABLE_THREAD_LOCAL;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0_0.HbaseSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.hbase.common.HbaseInstrumenterFactory.RC_THREAD_LOCAL;
-import static io.opentelemetry.javaagent.instrumentation.hbase.common.HbaseInstrumenterFactory.TABLE_THREAD_LOCAL;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -20,6 +20,7 @@ import io.opentelemetry.javaagent.instrumentation.hbase.common.CallMethodHelper;
 import io.opentelemetry.javaagent.instrumentation.hbase.common.HbaseRequest;
 import io.opentelemetry.javaagent.instrumentation.hbase.common.RequestAndContext;
 import java.net.InetSocketAddress;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -63,71 +64,71 @@ public final class AbstractRpcClientInstrumentation implements TypeInstrumentati
   @SuppressWarnings("unused")
   public static class CallMethodAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
+    public static RequestAndContext onEnter(
         @Advice.Argument(0) Descriptors.MethodDescriptor md,
         @Advice.Argument(4) User ticket,
-        @Advice.Argument(5) InetSocketAddress addr,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelHbaseRequest") HbaseRequest request) {
-      request =
+        @Advice.Argument(5) InetSocketAddress addr) {
+      HbaseRequest request =
           CallMethodHelper.buildRequest(
               md.getName(), TABLE_THREAD_LOCAL.get(), ticket.getName(), addr);
       Context parentContext = Java8BytecodeBridge.currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
-        return;
+        return null;
       }
-      context = instrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
-      RequestAndContext requestAndContext = RequestAndContext.create(request, context);
+      Context context = instrumenter().start(parentContext, request);
+      Scope scope = context.makeCurrent();
+      RequestAndContext requestAndContext = RequestAndContext.create(request, scope, context);
       RC_THREAD_LOCAL.set(requestAndContext);
+      return requestAndContext;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelHbaseRequest") HbaseRequest request) {
+        @Advice.Enter @Nullable RequestAndContext requestAndContext) {
+      if (requestAndContext == null) {
+        return;
+      }
       RC_THREAD_LOCAL.remove();
-      CallMethodHelper.handleOnExit(throwable, scope, context, request, instrumenter(), false);
+      CallMethodHelper.handleOnExit(throwable, requestAndContext, instrumenter(), false);
     }
   }
 
   @SuppressWarnings("unused")
   public static class CallMethodLastAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
+    public static RequestAndContext onEnter(
         @Advice.Argument(0) Descriptors.MethodDescriptor md,
         @Advice.Argument(4) User ticket,
-        @Advice.Argument(5) Address addr,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelHbaseRequest") HbaseRequest request) {
-      InetSocketAddress isa =
-          InetSocketAddress.createUnresolved(addr.getHostname(), addr.getPort());
-      request =
+        @Advice.Argument(5) Address addr) {
+      HbaseRequest request =
           CallMethodHelper.buildRequest(
-              md.getName(), TABLE_THREAD_LOCAL.get(), ticket.getName(), isa);
+              md.getName(),
+              TABLE_THREAD_LOCAL.get(),
+              ticket.getName(),
+              addr.getHostname(),
+              addr.getPort());
       Context parentContext = Java8BytecodeBridge.currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
-        return;
+        return null;
       }
-      context = instrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
+      Context context = instrumenter().start(parentContext, request);
+      Scope scope = context.makeCurrent();
 
-      RequestAndContext requestAndContext = RequestAndContext.create(request, context);
+      RequestAndContext requestAndContext = RequestAndContext.create(request, scope, context);
       RC_THREAD_LOCAL.set(requestAndContext);
+      return requestAndContext;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelHbaseRequest") HbaseRequest request) {
+        @Advice.Enter @Nullable RequestAndContext requestAndContext) {
+      if (requestAndContext == null) {
+        return;
+      }
       RC_THREAD_LOCAL.remove();
-      CallMethodHelper.handleOnExit(throwable, scope, context, request, instrumenter(), false);
+      CallMethodHelper.handleOnExit(throwable, requestAndContext, instrumenter(), false);
     }
   }
 }

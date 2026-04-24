@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0_0;
 
-import static io.opentelemetry.javaagent.instrumentation.hbase.common.HbaseInstrumenterFactory.TABLE_THREAD_LOCAL;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0_0.HbaseSingletons.TABLE_THREAD_LOCAL;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 

@@ -13,8 +13,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
 public final class HbaseInstrumenterFactory {
-  public static final ThreadLocal<String> TABLE_THREAD_LOCAL = new ThreadLocal<>();
-  public static final ThreadLocal<RequestAndContext> RC_THREAD_LOCAL = new ThreadLocal<>();
 
   public static Instrumenter<HbaseRequest, Void> instrumenter(String instrumentationName) {
     HbaseAttributesGetter hbaseAttributesGetter = new HbaseAttributesGetter();

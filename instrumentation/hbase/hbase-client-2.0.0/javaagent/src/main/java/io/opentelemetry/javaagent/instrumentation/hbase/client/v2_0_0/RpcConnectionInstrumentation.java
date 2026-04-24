@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.instrumentation.hbase.common.HbaseInstrumenterFactory.RC_THREAD_LOCAL;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0_0.HbaseSingletons.RC_THREAD_LOCAL;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0_0.HbaseSingletons.REQUEST_AND_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.hbase.common.RequestAndContext;
@@ -36,9 +36,7 @@ public final class RpcConnectionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(0) Object call) {
       RequestAndContext requestAndContext = RC_THREAD_LOCAL.get();
-      VirtualField<Object, RequestAndContext> virtualField =
-          VirtualField.find(Object.class, RequestAndContext.class);
-      virtualField.set(call, requestAndContext);
+      REQUEST_AND_CONTEXT.set(call, requestAndContext);
     }
   }
 }
