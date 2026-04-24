@@ -2,8 +2,23 @@
 
 ## Quick Reference
 
-- Use when: reviewing public API removals/renames, `@Deprecated` usage, stable-vs-alpha compatibility
-- Review focus: deprecate-then-remove timing, delegation direction, required Javadoc/CHANGELOG coverage
+- Use when: reviewing public API removals/renames, `@Deprecated` usage, stable-vs-alpha compatibility, or any module rename that touches user-facing config keys or emitted telemetry identity
+- Review focus: deprecate-then-remove timing, delegation direction, required Javadoc/CHANGELOG coverage, v3-preview gating for config keys and scope names
+
+## What Counts as "Public API"
+
+"API" here means **anything a user's code or configuration depends on by name**, including:
+
+- Java symbols in published artifacts (classes, methods, fields in `:library`, `:testing`,
+  `instrumentation-api*`).
+- User-facing configuration keys — `otel.instrumentation.<name>.enabled`, any
+  `otel.instrumentation.*` property, and the equivalent declarative YAML keys.
+- Outgoing telemetry identity — anything users can match on in their backend, including
+  `otel.scope.name`, span names, metric names, attribute keys, and attribute values. Users
+  build dashboards, filters, and alerts on these values, so silently renaming them is a
+  breaking change.
+
+A rename of any of these surfaces is a breaking change even if no Java symbol moved.
 
 ## When Are Breaking Changes Allowed?
 
@@ -75,6 +90,74 @@ default void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
 }
 ```
 
+## Module renames: config keys and emitted scope names
+
+A module rename touches **two user-facing API surfaces** that must each be preserved by default
+and only change under `otel.instrumentation.common.v3-preview`. The mechanism differs because
+the surfaces are different: config keys can coexist as aliases, emitted scope names cannot.
+
+### 1. `InstrumentationModule` names (controls `otel.instrumentation.<name>.enabled`)
+
+The names passed to the `InstrumentationModule` constructor drive the
+`otel.instrumentation.<name>.enabled` config keys — any of them, not just the first. A rename
+silently breaks users who have the old key in their config.
+
+Keep the pre-rename name by passing it inline alongside the current name using the
+{@code "<current>|deprecated:<old>"} marker recognized by the `InstrumentationModule`
+constructor:
+
+```java
+public CxfInstrumentationModule() {
+  super("cxf", "jaxws-2.0-cxf-3.0|deprecated:jaxws-cxf-3.0", "jaxws");
+}
+```
+
+The framework (`DeprecatedInstrumentationNames.expand`) splits the marker and registers both
+names, so both `otel.instrumentation.jaxws-2.0-cxf-3.0.enabled` and
+`otel.instrumentation.jaxws-cxf-3.0.enabled` keep working (flat properties and YAML alike).
+Under `otel.instrumentation.common.v3-preview=true` the deprecated name is dropped; if the
+legacy key is explicitly set, a one-time WARNING is logged pointing at the new key.
+
+No per-module `AgentCommonConfig` branching, `isV3Preview()` checks, or bespoke logging are
+needed — one string literal is the entire change.
+
+### 2. Emitted instrumentation scope name (`INSTRUMENTATION_NAME` in `*Singletons`)
+
+The `INSTRUMENTATION_NAME` string passed to `Instrumenter.builder(...)` becomes the
+`otel.scope.name` attribute on every emitted span / metric / log. A rename silently breaks
+dashboards and filters that match on the old scope.
+
+Keep emitting the **pre-rename** scope name by default, and switch to the new one only under
+v3-preview:
+
+```java
+public class CxfSingletons {
+  private static final String INSTRUMENTATION_NAME =
+      AgentCommonConfig.get().isV3Preview()
+          ? "io.opentelemetry.jaxws-2.0-cxf-3.0"
+          // keep the pre-rename scope name so existing dashboards/filters on
+          // otel.scope.name="io.opentelemetry.jaxws-cxf-3.0" continue to work
+          : "io.opentelemetry.jaxws-cxf-3.0";
+  ...
+}
+```
+
+Note the asymmetry with the config-key case: there the list carries **both** names at once
+(aliases); here only **one** scope name is emitted at a time, and the default is the **old**
+one. Do not log a deprecation warning here — users cannot switch the scope name without
+enabling v3-preview globally (which affects every module), so a warning would push them
+toward something they are not expected to enable generally.
+
+### CHANGELOG
+
+The rename is **not** a breaking change or a deprecation in the current release: by default
+the old config keys and scope names continue to work unchanged, and the new names are only
+visible under `otel.instrumentation.common.v3-preview` — a preview flag that users are not
+generally encouraged to enable. Do not add a `⚠️ Breaking changes to non-stable APIs` or
+`🚫 Deprecations` entry for this kind of rename. If mentioned at all, it belongs in whatever
+section tracks v3-preview changes. The breaking change will be recorded when v3-preview
+becomes the default in 3.0.
+
 ## What to Flag in Review
 
 - **Breaking change without a prior deprecation**: a method/class was removed or its signature
@@ -98,3 +181,10 @@ default void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
 
 - **Missing CHANGELOG entry**: a breaking change PR that does not add an
   `⚠️ Breaking changes to non-stable APIs` bullet in the `Unreleased` section of `CHANGELOG.md`.
+
+- **Module rename without backcompat**: `InstrumentationModule` constructor uses only the new
+  name, dropping the pre-rename name that drove the legacy
+  `otel.instrumentation.<old>.enabled` config key (it should be appended to the new name with
+  the {@code "|deprecated:<old>"} marker so `DeprecatedInstrumentationNames` can gate it on
+  v3-preview); and/or `*Singletons#INSTRUMENTATION_NAME` was changed unconditionally instead
+  of being gated on `AgentCommonConfig.get().isV3Preview()`.

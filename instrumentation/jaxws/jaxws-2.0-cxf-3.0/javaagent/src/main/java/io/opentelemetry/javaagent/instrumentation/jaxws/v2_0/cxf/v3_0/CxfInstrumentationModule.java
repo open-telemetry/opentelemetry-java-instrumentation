@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.cxf.v3_0;
 
+import static io.opentelemetry.javaagent.extension.instrumentation.internal.DeprecatedInstrumentationNames.expandDeprecatedNames;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
@@ -14,8 +15,9 @@ import java.util.List;
 
 @AutoService(InstrumentationModule.class)
 public class CxfInstrumentationModule extends InstrumentationModule {
+
   public CxfInstrumentationModule() {
-    super("cxf", "jaxws-2.0-cxf-3.0", "jaxws");
+    super("cxf", expandDeprecatedNames("jaxws-2.0-cxf-3.0|deprecated:jaxws-cxf-3.0", "jaxws"));
   }
 
   @Override
