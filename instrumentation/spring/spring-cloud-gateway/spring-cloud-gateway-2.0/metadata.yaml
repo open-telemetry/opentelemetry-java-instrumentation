@@ -8,6 +8,7 @@ features:
   - HTTP_ROUTE
 configurations:
   - name: otel.instrumentation.spring-cloud-gateway.experimental-span-attributes
+    declarative_name: java.spring_cloud_gateway.experimental_span_attributes/development
     type: boolean
     default: false
     description: > 
