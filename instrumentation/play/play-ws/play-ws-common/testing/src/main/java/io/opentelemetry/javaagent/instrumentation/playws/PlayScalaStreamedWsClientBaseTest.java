@@ -85,7 +85,7 @@ public class PlayScalaStreamedWsClientBaseTest extends PlayWsClientBaseTest<Stan
 
   private static Future<StandaloneWSResponse> internalSendRequest(StandaloneWSRequest request) {
     Future<StandaloneWSResponse> futureResponse = request.stream();
-    // The status can be ready before the body so explicitly call wait for body to be ready
+    // The status can be ready before the body, so explicitly wait for the body to be ready.
     Future<String> bodyResponse =
         futureResponse.flatMap(
             new Function1<StandaloneWSResponse, Future<String>>() {
