@@ -12,7 +12,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class SpringCloudStreamProducerTest extends AbstractSpringCloudStreamProducerTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   SpringCloudStreamProducerTest() {
     super(testing, null);
