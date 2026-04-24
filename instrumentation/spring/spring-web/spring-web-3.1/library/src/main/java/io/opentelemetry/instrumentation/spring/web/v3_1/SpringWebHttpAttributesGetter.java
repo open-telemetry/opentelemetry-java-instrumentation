@@ -31,10 +31,10 @@ class SpringWebHttpAttributesGetter
 
     try {
       httpStatusCodeClass = Class.forName("org.springframework.http.HttpStatusCode");
-    } catch (ClassNotFoundException e) {
+    } catch (ClassNotFoundException ignored) {
       try {
         httpStatusCodeClass = Class.forName("org.springframework.http.HttpStatus");
-      } catch (ClassNotFoundException ignored) {
+      } catch (ClassNotFoundException ignore) {
         // ignored
       }
     }
@@ -84,7 +84,7 @@ class SpringWebHttpAttributesGetter
     try {
       Object statusCode = GET_STATUS_CODE.invoke(clientHttpResponse);
       return (int) STATUS_CODE_VALUE.invoke(statusCode);
-    } catch (Throwable e) {
+    } catch (Throwable ignored) {
       return null;
     }
   }
