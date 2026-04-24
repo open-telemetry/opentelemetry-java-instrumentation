@@ -25,7 +25,7 @@ public class RestletSingletons {
   }
 
   public static HttpServerRouteGetter<String> serverSpanName() {
-    ServletContextPath::prepend;
+    return ServletContextPath::prepend;
   }
 
   private RestletSingletons() {}
