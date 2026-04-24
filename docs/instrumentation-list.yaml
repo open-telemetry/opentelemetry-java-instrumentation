@@ -6813,7 +6813,7 @@ libraries:
     spans:
     - span_kind: INTERNAL
       attributes: []
-- name: jaxws-2.0-jws-api-1.1
+- name: jaxws-jws-api-1.1
   display_name: JWS API
   description: |
     This instrumentation enables controller spans for methods annotated with the @WebService annotation from the JWS API (controller spans are disabled by default).
@@ -6821,9 +6821,9 @@ libraries:
   disabled_by_default: true
   features:
   - CONTROLLER_SPANS
-  source_path: instrumentation/jaxws/jaxws-2.0-jws-api-1.1
+  source_path: instrumentation/jaxws/jaxws-jws-api-1.1
   scope:
-    name: io.opentelemetry.jaxws-2.0-jws-api-1.1
+    name: io.opentelemetry.jaxws-jws-api-1.1
   has_javaagent: true
   javaagent_target_versions:
   - javax.jws:javax.jws-api:[1.1,]

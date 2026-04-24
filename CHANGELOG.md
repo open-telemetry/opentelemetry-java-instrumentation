@@ -3170,7 +3170,7 @@ too disruptive to adopt right away.
   - `io.opentelemetry.resteasy-3.0` → `io.opentelemetry.jaxrs-2.0-resteasy-3.0`
   - `io.opentelemetry.resteasy-3.1` → `io.opentelemetry.jaxrs-2.0-resteasy-3.1`
   - `io.opentelemetry.resteasy-6.0` → `io.opentelemetry.jaxrs-3.0-resteasy-6.0`
-  - `io.opentelemetry.jws-1.1` → `io.opentelemetry.jaxws-2.0-jws-api-1.1`
+  - `io.opentelemetry.jws-1.1` → `io.opentelemetry.jaxws-jws-api-1.1`
   - `io.opentelemetry.vertx-kafka-client-3.5` → `io.opentelemetry.vertx-kafka-client-3.6`
   - `io.opentelemetry.hibernate-4.3` → `io.opentelemetry.hibernate-procedure-call-4.3`
 - All methods in all `*Getter` classes in `instrumentation-api-semconv` have been renamed
