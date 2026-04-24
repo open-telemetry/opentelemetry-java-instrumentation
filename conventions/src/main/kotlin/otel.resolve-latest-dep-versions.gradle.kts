@@ -109,7 +109,7 @@ tasks {
       listOf("3.+", "4.+").forEach { range ->
         val resolvedVersion = resolveStableVersion(project, "org.springframework.boot", "spring-boot-dependencies", range)
         if (resolvedVersion != null) {
-          versions["org.springframework.boot:spring-boot-dependencies#$range"] = resolvedVersion
+          recordVersion("org.springframework.boot:spring-boot-dependencies#$range", resolvedVersion)
         }
       }
 

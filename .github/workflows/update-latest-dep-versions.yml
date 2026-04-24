@@ -72,8 +72,7 @@ jobs:
           # If the remote branch already exists, only force-push when its tip
           # was authored by otelbot. This preserves any manual commits that
           # may have pushed on top of an open auto-PR.
-          remote_tip_author=$(git ls-remote --heads origin "$branch" | awk '{print $1}')
-          if [ -n "$remote_tip_author" ]; then
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null; then
             git fetch origin "$branch"
             author_email=$(git log -1 --format='%ae' "origin/$branch")
             if [ "$author_email" != "197425009+otelbot@users.noreply.github.com" ]; then

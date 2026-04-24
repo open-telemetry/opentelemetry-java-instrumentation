@@ -32,9 +32,9 @@ dependencyResolutionManagement {
   }
 
   versionCatalogs {
-    val latestDepTest = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
+    val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
     val resolveLatestDeps = gradle.startParameter.projectProperties["resolveLatestDeps"] == "true"
-    val pinLatestDeps = latestDepTest && !resolveLatestDeps
+    val pinLatestDeps = testLatestDeps && !resolveLatestDeps
 
     @Suppress("UNCHECKED_CAST")
     val pinnedVersions: Map<String, String> = if (pinLatestDeps) {
@@ -51,9 +51,14 @@ dependencyResolutionManagement {
     fun addSpringBootCatalog(name: String, minVersion: String, maxVersion: String) {
       create(name) {
         val pinnedVersion = pinnedVersions["org.springframework.boot:spring-boot-dependencies#$maxVersion"]
+        if (pinLatestDeps && pinnedVersion == null) {
+          throw GradleException(
+            "No pinned latest-dep version found for spring-boot-dependencies#$maxVersion."
+          )
+        }
         val version =
           gradle.startParameter.projectProperties["${name}Version"]
-            ?: (if (latestDepTest) (pinnedVersion ?: maxVersion) else minVersion)
+            ?: (if (testLatestDeps) (pinnedVersion ?: maxVersion) else minVersion)
         plugin("versions", "org.springframework.boot").version(version)
       }
     }
