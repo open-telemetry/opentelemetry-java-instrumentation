@@ -11,8 +11,7 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import javax.annotation.Nullable;
 
-public class RabbitChannelNetAttributesGetter
-    implements NetworkAttributesGetter<ChannelAndMethod, Void> {
+class RabbitChannelNetAttributesGetter implements NetworkAttributesGetter<ChannelAndMethod, Void> {
 
   @Nullable
   @Override
