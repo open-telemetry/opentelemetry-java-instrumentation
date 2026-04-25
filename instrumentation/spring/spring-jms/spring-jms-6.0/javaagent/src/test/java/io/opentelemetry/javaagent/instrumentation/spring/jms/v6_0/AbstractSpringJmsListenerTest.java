@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -54,13 +53,7 @@ abstract class AbstractSpringJmsListenerTest {
             .withStartupTimeout(Duration.ofMinutes(2))
             .withLogConsumer(new Slf4jLogConsumer(logger));
     broker.start();
-  }
-
-  @AfterAll
-  static void tearDown() {
-    if (broker != null) {
-      broker.close();
-    }
+    cleanup.deferAfterAll(broker);
   }
 
   @ParameterizedTest

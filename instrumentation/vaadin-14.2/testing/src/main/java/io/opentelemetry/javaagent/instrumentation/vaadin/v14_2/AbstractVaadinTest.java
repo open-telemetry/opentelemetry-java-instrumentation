@@ -29,7 +29,6 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -76,6 +75,7 @@ public abstract class AbstractVaadinTest
   @BeforeAll
   protected void setup() throws URISyntaxException {
     startServer();
+    cleanup.deferAfterAll(this::cleanupServer);
 
     Testcontainers.exposeHostPorts(port);
 
@@ -83,16 +83,9 @@ public abstract class AbstractVaadinTest
         new BrowserWebDriverContainer("selenium/standalone-chrome:4.43.0")
             .withLogConsumer(new Slf4jLogConsumer(logger));
     browser.start();
+    cleanup.deferAfterAll(browser::stop);
 
     address = new URI("http://host.testcontainers.internal:" + port + getContextPath() + "/");
-  }
-
-  @AfterAll
-  void cleanup() {
-    cleanupServer();
-    if (browser != null) {
-      browser.stop();
-    }
   }
 
   protected void prepareVaadinBaseDir(File baseDir) {}

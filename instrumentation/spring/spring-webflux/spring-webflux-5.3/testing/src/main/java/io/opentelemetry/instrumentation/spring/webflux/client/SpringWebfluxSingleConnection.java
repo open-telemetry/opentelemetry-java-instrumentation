@@ -25,7 +25,7 @@ class SpringWebfluxSingleConnection implements SingleConnection {
   private final int port;
   private final WebClient webClient;
 
-  public SpringWebfluxSingleConnection(
+  SpringWebfluxSingleConnection(
       String host, int port, UnaryOperator<WebClient.Builder> instrumentationFunction) {
     this.host = host;
     this.port = port;

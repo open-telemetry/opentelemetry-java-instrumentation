@@ -35,6 +35,8 @@
   `throws` clause. That noisy try/catch inside the lambda is worse than leaving
   `throws Exception` (or `throws IOException`) on the `@Test` method. Only introduce such
   wrapping when the lambda already needs its own error handling for behavioral reasons.
+- Do **not** choose `CompletableFuture.runAsync(...)` over the simpler
+  `executor.submit(runnable).get()` just to avoid the checked exceptions thrown by `Future.get()`.
 
 ## Test Resource Cleanup
 

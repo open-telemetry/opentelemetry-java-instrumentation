@@ -106,7 +106,14 @@ abstract class AbstractVertxRxHttpServerTest extends AbstractHttpServerTest<Vert
           .createHttpServer()
           .requestHandler(router)
           .listen(port)
-          .onComplete(httpServerAsyncResult -> startFuture.complete());
+          .onComplete(
+              httpServerAsyncResult -> {
+                if (httpServerAsyncResult.failed()) {
+                  startFuture.fail(httpServerAsyncResult.cause());
+                  return;
+                }
+                startFuture.complete();
+              });
     }
   }
 }
