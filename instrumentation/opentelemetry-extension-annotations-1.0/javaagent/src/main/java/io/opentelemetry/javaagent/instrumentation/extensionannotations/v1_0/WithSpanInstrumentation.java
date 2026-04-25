@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.extensionannotations.v1_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.extensionannotations.WithSpanSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.extensionannotations.WithSpanSingletons.instrumenterWithAttributes;
+import static io.opentelemetry.javaagent.instrumentation.extensionannotations.v1_0.WithSpanSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.extensionannotations.v1_0.WithSpanSingletons.instrumenterWithAttributes;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.hasParameters;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
