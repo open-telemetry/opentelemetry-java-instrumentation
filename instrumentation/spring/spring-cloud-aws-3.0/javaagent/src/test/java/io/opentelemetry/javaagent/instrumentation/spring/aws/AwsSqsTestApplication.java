@@ -19,7 +19,7 @@ import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 @SpringBootApplication
 class AwsSqsTestApplication {
   static int sqsPort;
-  static Consumer<String> messageHandler;
+  static volatile Consumer<String> messageHandler;
 
   @Bean
   SqsTemplate sqsTemplate(SqsAsyncClient sqsAsyncClient) {

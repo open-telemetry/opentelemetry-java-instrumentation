@@ -24,7 +24,7 @@ configurations:
     default: true
   - name: otel.experimental.javascript-snippet
     declarative_name: java.servlet.javascript_snippet/development
-    description: HTML snippet to inject into `text/html` servlet responses.
+    description: Experimental setting to inject a JavaScript snippet into HTML responses after the opening `<head>` tag.
     type: string
     default: ""
     examples:

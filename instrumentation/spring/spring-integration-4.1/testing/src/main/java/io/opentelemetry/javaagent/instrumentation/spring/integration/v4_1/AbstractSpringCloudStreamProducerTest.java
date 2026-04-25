@@ -17,7 +17,7 @@ public abstract class AbstractSpringCloudStreamProducerTest {
   private static final boolean HAS_PRODUCER_SPAN =
       Boolean.getBoolean("otel.instrumentation.spring-integration.producer.enabled");
 
-  @RegisterExtension final RabbitExtension rabbit;
+  @RegisterExtension private final RabbitExtension rabbit;
 
   protected final InstrumentationExtension testing;
 
