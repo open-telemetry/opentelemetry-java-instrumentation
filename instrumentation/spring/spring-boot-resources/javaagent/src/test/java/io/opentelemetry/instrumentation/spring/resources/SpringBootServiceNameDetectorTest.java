@@ -10,6 +10,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonMap;
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.common.Attributes;
@@ -22,6 +23,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -41,6 +43,12 @@ class SpringBootServiceNameDetectorTest {
 
   @Mock ConfigProperties config;
   @Mock SystemHelper system;
+
+  @BeforeEach
+  void setUp() throws ReflectiveOperationException {
+    // mirror the real SystemHelper behavior of returning an empty array rather than null
+    lenient().when(system.attemptGetCommandLineArgsViaReflection()).thenReturn(new String[0]);
+  }
 
   @Test
   void findByEnvVar() {
