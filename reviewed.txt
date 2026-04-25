@@ -505,3 +505,11 @@ spring-webmvc-6.0:library
 spring-webmvc-common:javaagent
 spring-webmvc-common:testing
 spring-ws-2.0:javaagent
+spring-ws-2.0:testing
+starters:spring-boot-starter
+starters:zipkin-spring-boot-starter
+spymemcached-2.12:javaagent
+struts-2.3:javaagent
+struts-7.0:javaagent
+tapestry-5.4:javaagent
+tomcat-10.0:javaagent
