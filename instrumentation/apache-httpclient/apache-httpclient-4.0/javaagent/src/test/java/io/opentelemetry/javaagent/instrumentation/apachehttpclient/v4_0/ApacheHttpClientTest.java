@@ -76,13 +76,13 @@ class ApacheHttpClientTest {
   @Nested
   class ApacheClientHostRequestTest extends AbstractTest<BasicHttpRequest> {
     @Override
-    public BasicHttpRequest createRequest(String method, URI uri) {
+    BasicHttpRequest createRequest(String method, URI uri) {
       // also testing with an absolute path below
       return new BasicHttpRequest(method, fullPathFromUri(uri));
     }
 
     @Override
-    public HttpResponse doExecuteRequest(BasicHttpRequest request, URI uri) throws Exception {
+    HttpResponse doExecuteRequest(BasicHttpRequest request, URI uri) throws Exception {
       return getClient(uri).execute(getHost(uri), request);
     }
 
@@ -90,6 +90,25 @@ class ApacheHttpClientTest {
     void executeRequestWithCallback(BasicHttpRequest request, URI uri, HttpClientResult result)
         throws Exception {
       getClient(uri).execute(getHost(uri), request, new HttpResponseHandler(result));
+    }
+  }
+
+  @Nested
+  class ApacheClientNullHttpHostRequestTest extends AbstractTest<BasicHttpRequest> {
+    @Override
+    BasicHttpRequest createRequest(String method, URI uri) {
+      return new BasicHttpRequest(method, uri.toString());
+    }
+
+    @Override
+    HttpResponse doExecuteRequest(BasicHttpRequest request, URI uri) throws Exception {
+      return getClient(uri).execute(null, request);
+    }
+
+    @Override
+    void executeRequestWithCallback(BasicHttpRequest request, URI uri, HttpClientResult result)
+        throws Exception {
+      getClient(uri).execute(null, request, new HttpResponseHandler(result));
     }
   }
 
