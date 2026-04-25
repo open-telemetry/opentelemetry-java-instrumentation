@@ -31,7 +31,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import org.apache.dubbo.common.utils.NetUtils;
 import org.apache.dubbo.config.ApplicationConfig;
@@ -280,8 +279,7 @@ public abstract class AbstractDubboTest {
   }
 
   @Test
-  void testApacheDubboTest()
-      throws ExecutionException, InterruptedException, ReflectiveOperationException {
+  void testApacheDubboTest() throws ReflectiveOperationException {
     int port = PortUtils.findOpenPort();
     protocolConfig.setPort(port);
 
@@ -315,7 +313,7 @@ public abstract class AbstractDubboTest {
                 genericService.$invokeAsync(
                     "hello", new String[] {String.class.getName()}, new Object[] {"hello"}));
 
-    assertThat(response.get()).isEqualTo("hello");
+    assertThat(response.join()).isEqualTo("hello");
 
     testing()
         .waitAndAssertTraces(
