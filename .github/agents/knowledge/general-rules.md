@@ -89,7 +89,7 @@ still allows the code to function correctly.
 **Exception — Single public class**: If a module has only one public class then don't change it to
 package-private. Javadoc task fails when module has no public classes.**
 
-**Exception — Directly referenced from advice**: Classes and methods that are *directly*
+**Exception — Directly referenced from advice**: Classes and methods that are _directly_
 referenced from methods annotated with `@Advice.OnMethodEnter` or `@Advice.OnMethodExit` must be
 public, since the advice may be applied to classes in other packages.
 
