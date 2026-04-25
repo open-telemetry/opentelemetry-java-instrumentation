@@ -45,7 +45,6 @@ class SpringBootServiceNameDetectorTest {
 
   @BeforeEach
   void setUp() throws ReflectiveOperationException {
-    // mirror the real SystemHelper behavior of returning an empty array rather than null
     lenient().when(system.attemptGetCommandLineArgsViaReflection()).thenReturn(new String[0]);
   }
 
