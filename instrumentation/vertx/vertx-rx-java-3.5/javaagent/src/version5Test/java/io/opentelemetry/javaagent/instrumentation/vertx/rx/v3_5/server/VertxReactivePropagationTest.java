@@ -61,7 +61,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -80,12 +79,8 @@ class VertxReactivePropagationTest {
   static void setUp() throws ExecutionException, InterruptedException, TimeoutException {
     port = PortUtils.findOpenPort();
     server = VertxReactiveWebServer.start(port);
+    cleanup.deferAfterAll(server::close);
     client = WebClient.of("h1c://localhost:" + port);
-  }
-
-  @AfterAll
-  static void cleanUp() {
-    server.close();
   }
 
   // Verifies that context is correctly propagated and sql query span has correct parent.
