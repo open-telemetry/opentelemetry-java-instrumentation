@@ -104,7 +104,7 @@ class RedisStandaloneConnectionInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Future<Response> onExit(
-        @Advice.Thrown Throwable throwable,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Return @Nullable Future<Response> responseFuture,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
 
