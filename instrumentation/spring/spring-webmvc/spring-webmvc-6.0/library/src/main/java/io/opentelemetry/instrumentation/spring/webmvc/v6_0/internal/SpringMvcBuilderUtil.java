@@ -11,7 +11,6 @@ import io.opentelemetry.instrumentation.spring.webmvc.v6_0.SpringWebMvcTelemetry
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.function.Function;
-import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -19,13 +18,11 @@ import javax.annotation.Nullable;
  */
 public final class SpringMvcBuilderUtil {
   // allows access to the private field for the spring starter
-  @Nullable
   private static Function<
           SpringWebMvcTelemetryBuilder,
           DefaultHttpServerInstrumenterBuilder<HttpServletRequest, HttpServletResponse>>
       builderExtractor;
 
-  @Nullable
   public static Function<
           SpringWebMvcTelemetryBuilder,
           DefaultHttpServerInstrumenterBuilder<HttpServletRequest, HttpServletResponse>>
