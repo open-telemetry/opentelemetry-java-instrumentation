@@ -51,8 +51,6 @@ tasks {
       val stableVersionCache = mutableMapOf<Triple<String, String, String>, String?>()
 
       // Resolve an artifact with a stability filter, rejecting pre-release versions.
-      // Also rejects versions whose transitive dependency graph contains unresolvable deps
-      // (e.g. a release that references a non-existent transitive version).
       // Results are cached to avoid repeated Maven Central lookups for the same artifact.
       fun resolveStableVersion(project: Project, group: String, module: String, version: String): String? {
         return stableVersionCache.getOrPut(Triple(group, module, version)) {

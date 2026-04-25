@@ -21,8 +21,8 @@ import org.eclipse.aether.resolution.VersionRangeResult
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory
 import org.eclipse.aether.spi.connector.transport.TransporterFactory
 import org.eclipse.aether.transport.http.HttpTransporterFactory
-import org.eclipse.aether.version.Version
 import org.eclipse.aether.util.version.GenericVersionScheme
+import org.eclipse.aether.version.Version
 import java.net.URL
 import java.net.URLClassLoader
 import java.util.stream.StreamSupport
