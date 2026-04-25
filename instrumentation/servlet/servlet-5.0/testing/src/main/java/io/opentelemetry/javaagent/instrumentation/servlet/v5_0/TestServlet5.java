@@ -32,8 +32,6 @@ import java.util.concurrent.CountDownLatch;
 
 public class TestServlet5 {
 
-  private TestServlet5() {}
-
   @WebServlet
   public static class Sync extends HttpServlet {
     @Override
@@ -305,4 +303,6 @@ public class TestServlet5 {
       }
     }
   }
+
+  private TestServlet5() {}
 }
