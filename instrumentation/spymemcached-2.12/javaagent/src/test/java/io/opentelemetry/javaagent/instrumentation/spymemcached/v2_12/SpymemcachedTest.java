@@ -55,7 +55,6 @@ import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.internal.CheckedOperationTimeoutException;
 import net.spy.memcached.ops.Operation;
 import net.spy.memcached.ops.OperationQueueFactory;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -86,14 +85,10 @@ class SpymemcachedTest {
             .withExposedPorts(11211)
             .withStartupTimeout(Duration.ofMinutes(2));
     memcachedContainer.start();
+    cleanup.deferAfterAll(memcachedContainer::stop);
     memcachedAddress =
         new InetSocketAddress(
             memcachedContainer.getHost(), memcachedContainer.getMappedPort(11211));
-  }
-
-  @AfterAll
-  static void cleanUp() {
-    memcachedContainer.stop();
   }
 
   private static MemcachedClient getMemcached() {

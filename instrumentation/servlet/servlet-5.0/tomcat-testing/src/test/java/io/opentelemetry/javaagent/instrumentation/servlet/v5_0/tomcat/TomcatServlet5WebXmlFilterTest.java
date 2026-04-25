@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
@@ -42,12 +43,12 @@ import org.junit.jupiter.api.io.TempDir;
 class TomcatServlet5WebXmlFilterTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @TempDir static File tempDir;
+  @TempDir private static File tempDir;
 
-  static Tomcat tomcat;
-  static int port;
+  private static Tomcat tomcat;
+  private static int port;
 
   @BeforeAll
   static void setup() throws Exception {
@@ -119,7 +120,7 @@ class TomcatServlet5WebXmlFilterTest {
     }
   }
 
-  private static String readFully(InputStream is) throws Exception {
+  private static String readFully(InputStream is) throws IOException {
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
     byte[] data = new byte[1024];
     int len;
@@ -129,7 +130,7 @@ class TomcatServlet5WebXmlFilterTest {
     return buffer.toString(UTF_8.name());
   }
 
-  private static void copyClassFile(Class<?> clazz, File targetDir) throws Exception {
+  private static void copyClassFile(Class<?> clazz, File targetDir) throws IOException {
     String classFileName = clazz.getSimpleName() + ".class";
     String classResourcePath = clazz.getName().replace('.', '/') + ".class";
     try (InputStream is = clazz.getClassLoader().getResourceAsStream(classResourcePath)) {
@@ -140,7 +141,7 @@ class TomcatServlet5WebXmlFilterTest {
   }
 
   @Test
-  void filterLoadedFromWebXmlDoesNotCauseClassCastException() throws Exception {
+  void filterLoadedFromWebXmlDoesNotCauseClassCastException() throws IOException {
     HttpURLConnection connection =
         (HttpURLConnection)
             URI.create("http://localhost:" + port + "/app/users/123").toURL().openConnection();

@@ -123,7 +123,7 @@ abstract class AbstractRocketMqClientTest {
   }
 
   @Test
-  void testSendAndConsumeNormalMessage() throws Throwable {
+  void testSendAndConsumeNormalMessage() throws ClientException {
     String[] keys = new String[] {"yourMessageKey-0", "yourMessageKey-1"};
     byte[] body = "foobar".getBytes(UTF_8);
     Message message =
@@ -138,7 +138,8 @@ abstract class AbstractRocketMqClientTest {
     SendReceipt sendReceipt =
         testing()
             .runWithSpan(
-                "parent", (ThrowingSupplier<SendReceipt, Throwable>) () -> producer.send(message));
+                "parent",
+                (ThrowingSupplier<SendReceipt, ClientException>) () -> producer.send(message));
     AtomicReference<SpanData> sendSpanData = new AtomicReference<>();
     testing()
         .waitAndAssertSortedTraces(
@@ -173,7 +174,7 @@ abstract class AbstractRocketMqClientTest {
   }
 
   @Test
-  void testSendAsyncMessage() throws Exception {
+  void testSendAsyncMessage() {
     String[] keys = new String[] {"yourMessageKey-0", "yourMessageKey-1"};
     byte[] body = "foobar".getBytes(UTF_8);
     Message message =
@@ -196,7 +197,7 @@ abstract class AbstractRocketMqClientTest {
                             (result, throwable) -> {
                               testing().runWithSpan("child", () -> {});
                             })
-                        .get());
+                        .join());
     AtomicReference<SpanData> sendSpanData = new AtomicReference<>();
     testing()
         .waitAndAssertSortedTraces(
@@ -232,7 +233,7 @@ abstract class AbstractRocketMqClientTest {
   }
 
   @Test
-  void testSendAndConsumeFifoMessage() throws Throwable {
+  void testSendAndConsumeFifoMessage() throws ClientException {
     String[] keys = new String[] {"yourMessageKey-0", "yourMessageKey-1"};
     byte[] body = "foobar".getBytes(UTF_8);
     String messageGroup = "yourMessageGroup";
@@ -249,7 +250,8 @@ abstract class AbstractRocketMqClientTest {
     SendReceipt sendReceipt =
         testing()
             .runWithSpan(
-                "parent", (ThrowingSupplier<SendReceipt, Throwable>) () -> producer.send(message));
+                "parent",
+                (ThrowingSupplier<SendReceipt, ClientException>) () -> producer.send(message));
     AtomicReference<SpanData> sendSpanData = new AtomicReference<>();
     testing()
         .waitAndAssertSortedTraces(
@@ -286,7 +288,7 @@ abstract class AbstractRocketMqClientTest {
   }
 
   @Test
-  void testSendAndConsumeDelayMessage() throws Throwable {
+  void testSendAndConsumeDelayMessage() throws ClientException {
     String[] keys = new String[] {"yourMessageKey-0", "yourMessageKey-1"};
     byte[] body = "foobar".getBytes(UTF_8);
     long deliveryTimestamp = System.currentTimeMillis();
@@ -303,7 +305,8 @@ abstract class AbstractRocketMqClientTest {
     SendReceipt sendReceipt =
         testing()
             .runWithSpan(
-                "parent", (ThrowingSupplier<SendReceipt, Throwable>) () -> producer.send(message));
+                "parent",
+                (ThrowingSupplier<SendReceipt, ClientException>) () -> producer.send(message));
     AtomicReference<SpanData> sendSpanData = new AtomicReference<>();
     testing()
         .waitAndAssertSortedTraces(
@@ -340,7 +343,7 @@ abstract class AbstractRocketMqClientTest {
   }
 
   @Test
-  void testCapturedMessageHeaders() throws Throwable {
+  void testCapturedMessageHeaders() throws ClientException {
     String[] keys = new String[] {"yourMessageKey-0", "yourMessageKey-1"};
     byte[] body = "foobar".getBytes(UTF_8);
     Message message =
@@ -356,7 +359,8 @@ abstract class AbstractRocketMqClientTest {
     SendReceipt sendReceipt =
         testing()
             .runWithSpan(
-                "parent", (ThrowingSupplier<SendReceipt, Throwable>) () -> producer.send(message));
+                "parent",
+                (ThrowingSupplier<SendReceipt, ClientException>) () -> producer.send(message));
     AtomicReference<SpanData> sendSpanData = new AtomicReference<>();
     testing()
         .waitAndAssertSortedTraces(

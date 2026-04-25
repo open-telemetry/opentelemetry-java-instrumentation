@@ -11,7 +11,6 @@ dependencies {
 
   // Bring in various archives to test introspection logic
   testImplementation("io.opentelemetry:opentelemetry-api")
-  testImplementation("io.opentelemetry:opentelemetry-api-incubator")
   testImplementation("org.springframework:spring-webmvc:3.1.0.RELEASE")
   testImplementation("com.google.guava:guava")
 }
