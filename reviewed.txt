@@ -513,3 +513,10 @@ struts-2.3:javaagent
 struts-7.0:javaagent
 tapestry-5.4:javaagent
 tomcat-10.0:javaagent
+tomcat-7.0:javaagent
+tomcat-common:javaagent
+tomcat-jdbc:javaagent
+twilio-6.6:javaagent
+undertow-1.4:bootstrap
+undertow-1.4:javaagent
+vaadin-14.2:javaagent
