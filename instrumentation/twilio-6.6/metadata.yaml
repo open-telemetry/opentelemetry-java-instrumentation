@@ -5,6 +5,7 @@ description: >
 library_link: https://github.com/twilio/twilio-java
 configurations:
   - name: otel.instrumentation.twilio.experimental-span-attributes
+    declarative_name: java.twilio.experimental_span_attributes/development
     description: >
       Enables experimental span attributes `twilio.type`, `twilio.account`, `twilio.sid`, and
       `twilio.status`.

@@ -92,7 +92,7 @@ class TwilioExperimentalAttributesExtractor implements AttributesExtractor<Strin
         attributes.put(tag, value.toString());
       }
 
-    } catch (Exception e) {
+    } catch (Exception ignored) {
       // Expected that this won't work for all result types
     }
   }

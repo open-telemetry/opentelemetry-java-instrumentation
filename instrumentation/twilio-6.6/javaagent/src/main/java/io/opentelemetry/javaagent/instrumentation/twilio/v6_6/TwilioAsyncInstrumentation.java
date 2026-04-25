@@ -147,7 +147,7 @@ class TwilioAsyncInstrumentation implements TypeInstrumentation {
     }
 
     @Override
-    public void onSuccess(Object result) {
+    public void onSuccess(T result) {
       instrumenter().end(context, spanName, result, null);
     }
 
