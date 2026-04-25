@@ -45,10 +45,7 @@ class SystemHelper {
   }
 
   InputStream openClasspathResource(String directory, String filename) {
-    String path =
-        addBootInfPrefix
-            ? "BOOT-INF/classes/" + directory + "/" + filename
-            : directory + "/" + filename;
+    String path = directory + "/" + filename;
     return classLoader.getResourceAsStream(path);
   }
 
