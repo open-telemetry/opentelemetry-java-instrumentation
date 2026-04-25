@@ -25,7 +25,7 @@ from pathlib import Path
 
 SETTINGS_FILE = "settings.gradle.kts"
 # Skip the run entirely if at least this many automated review PRs are already open.
-MAX_OPEN_PRS = 10
+MAX_OPEN_PRS = 5
 # Upper bound on modules the review job will walk through in a single run,
 # even if the file-count threshold is never reached. Keeps one run bounded.
 MODULE_LIMIT_PER_RUN = 50
