@@ -141,8 +141,8 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
     } catch (ClassNotFoundException e) {
       try {
         httpStatusCodeClass = Class.forName("org.springframework.http.HttpStatus");
-      } catch (ClassNotFoundException e2) {
-        throw new LinkageError("Did not find neither HttpStatus nor HttpStatusCode class", e2);
+      } catch (ClassNotFoundException f) {
+        throw new LinkageError("Did not find neither HttpStatus nor HttpStatusCode class", f);
       }
     }
 
@@ -164,8 +164,8 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
     try {
       Object statusCode = GET_STATUS_CODE.invoke(response);
       return (int) STATUS_CODE_VALUE.invoke(statusCode);
-    } catch (Throwable e) {
-      throw new AssertionError(e);
+    } catch (Throwable t) {
+      throw new AssertionError(t);
     }
   }
 
